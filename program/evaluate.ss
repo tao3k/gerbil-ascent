@@ -21,7 +21,7 @@
 (export gerbil-ascent-evaluate-program)
 
 (def (gerbil-ascent-evaluate-program program)
-  ;; The declaration constructor validates the full Foundation contract.
+  ;; The declaration constructor validates the full Core contract.
   ;; Evaluation checks mutable rows and clause bindings for this snapshot.
   (unless (object? program)
     (error "invalid ASCENT program" program))

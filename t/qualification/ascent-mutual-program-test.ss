@@ -4,9 +4,9 @@
 
 (import (only-in :std/test check-equal? test-suite)
         (only-in :clan/poo/object .o .ref)
-        (only-in :poo-flow-foundation/module-system/observability/debug
+        (only-in :core/observability/debug
                  poo-flow-debug-memory-policy)
-        (only-in :poo-flow-foundation/module-system/observability/testing-case
+        (only-in :core/observability/testing-case
                  poo-flow-test-case poo-flow-test-case/with
                  poo-flow-default-testing-case-profile)
         (only-in :gerbil-ascent/t/qualification/ascent-mutual-program-fixture

@@ -3,9 +3,9 @@
 
 # gerbil-ascent
 
-Scheme-native ASCENT implementation built on Gerbil POO and POO Flow Foundation.
-`gerbil.pkg` declares Foundation as its sole direct package dependency;
-Foundation supplies the POO package used by the Scheme modules. The separate
+Scheme-native ASCENT implementation built on Gerbil POO and POO Flow Core.
+`gerbil.pkg` declares Core as its sole direct package dependency;
+Core supplies the shared POO contracts used by the Scheme modules. The separate
 SS benchmark qualification uses ASP from the development test environment.
 Each top-level directory is a Gerbil module namespace:
 
@@ -41,7 +41,7 @@ The [related-work matrix](docs/related-work-matrix.org) maps the Ascent papers
 and adjacent research on incremental updates, monotonicity, equality,
 constraints, and provenance to concrete parity and Agent research questions.
 
-Scheme qualification extends Foundation's Observability Case profile with
+Scheme qualification extends Core's Observability Case profile with
 ASCENT-specific memory and duration budgets; it does not own a test runner.
 
 ```sh

@@ -4,9 +4,9 @@
 
 (import (only-in :std/test check-equal? check-exception test-suite)
         (only-in :clan/poo/object .o .ref)
-        (only-in :poo-flow-foundation/module-system/observability/debug
+        (only-in :core/observability/debug
                  poo-flow-debug-memory-policy)
-        (only-in :poo-flow-foundation/module-system/observability/testing-case
+        (only-in :core/observability/testing-case
                  poo-flow-default-testing-case-profile
                  poo-flow-test-case/with)
         (only-in :gerbil-ascent/t/qualification/ascent-rule-program-fixture
@@ -29,7 +29,7 @@
 (def (a name . terms) (gerbil-ascent-atom name terms))
 (def (r head . body) (gerbil-ascent-rule (list head) body))
 
-;;; ASCENT contributes only its Case budget to Foundation's native profile.
+;;; ASCENT contributes only its Case budget to Core's native profile.
 (def +positive-case-profile+
   (.o (:: @ poo-flow-default-testing-case-profile)
       (identity 'ascent/positive-case)

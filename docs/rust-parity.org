@@ -19,7 +19,7 @@ proposals rather than core parity claims.
 
 * POO Flow programming style in the Scheme implementation
 
-ASCENT declarations are POO values admitted by Foundation =define-type=
+ASCENT declarations are POO values admitted by Core =define-type=
 contracts. Clause planning has one independently extensible receiver family,
 so its public dispatch is the slot generic =gerbil-ascent-clause-plan=.
 Relation indexing is a separate one-receiver Provider family with slot
@@ -68,7 +68,7 @@ execution state.
 | Lattice declarations and recursive joins | =program/=, =table/= | POO lattice declaration with user join; selected recursive shortest-path and duplicate-key snapshots match Rust | broader join families, lattice/negation composition, invalid join laws and scale receipts |
 | Relation indexes and selected physical plan | =table/=, =program/= | bound-column hash index plan for generic relation clauses above a 32-row threshold; 50-edge two-hop SS scenario passes | broader arities, composite and lattice indexes, provider choice and scale comparison |
 | BYODS data structure provider protocol | =table/= | POO index Provider with default hash and custom alist fixtures; set, =eqrel=, =trrel= and =trrel_uf= storage Providers have bounded Scheme functions; selected binary and grouped ternary materialized rows plus a string-keyed BYODS/body join match Rust =ascent-byods-rels 0.8.0=; split-producer =trrel= / =trrel_uf= joins match, while Rust =eqrel= has an observed split-producer discrepancy | isolate the =eqrel= split-producer behavior, binary/ternary storage merge semantics and scale parity; wider grouped arity is a later extension |
-| Parallel execution | =core/=, =table/= | four independent Scheme program evaluations pass a concurrent reentrancy qualification under Foundation Observability; intra-program evaluation is serial | deterministic intra-program serial/parallel parity, bounded worker failure behavior and contention benchmark |
+| Parallel execution | =core/=, =table/= | four independent Scheme program evaluations pass a concurrent reentrancy qualification under Core Observability; intra-program evaluation is serial | deterministic intra-program serial/parallel parity, bounded worker failure behavior and contention benchmark |
 | Gerbil module and macro embedding | =program/=, =interface/= | reusable Gerbil module exports a rule-program constructor; lexical origin capture matches selected Rust =ascent_run!= snapshots | generated declarations, module composition beyond one rule family, macro diagnostics and performance |
 
 The current Rust oracle in =rust/ascent-oracle/= covers positive binary
@@ -139,7 +139,7 @@ cost.
 1. Freeze a representative Rust 0.8.0 fixture corpus and error corpus for
    each matrix row; keep it under =rust/ascent-oracle/=.
 2. Generalize relation columns and rule bindings in =program/=,
-   retaining POO Foundation and standard-library operations as the substrate.
+   retaining POO Core and standard-library operations as the substrate.
 3. Implement and compare stratification, negation, generators, aggregation,
    and generic lattice behavior. Preserve explicit bounds and typed failures.
 4. Add the BYODS provider boundary, repeated-run semantics, then serial and

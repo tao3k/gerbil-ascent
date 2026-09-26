@@ -6,7 +6,7 @@
 ;;; algorithms live in funs.ss; this module owns the POO extension boundary.
 (import (only-in :clan/poo/object .o .ref)
         (only-in :clan/poo/mop .defgeneric define-type validate)
-        (only-in :poo-flow-foundation/module-system/types
+        (only-in :core/types
                  PooFlowNativeObjectContract.
                  poo-flow-predicate-contract)
         (only-in "funs.ss" gerbil-ascent-eqrel-extension

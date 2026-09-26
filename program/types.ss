@@ -2,11 +2,11 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-;;; Rule declarations are Foundation POO contracts. Relation rows
+;;; Rule declarations are Core POO contracts. Relation rows
 ;;; remain ordinary Scheme values; constructors check their declared arity.
 (import (only-in :clan/poo/object .o .ref)
         (only-in :clan/poo/mop define-type element?)
-        (only-in :poo-flow-foundation/module-system/types
+        (only-in :core/types
                  PooFlowNativeObjectContract.
                  poo-flow-predicate-contract)
         (only-in :gerbil-ascent/table/provider

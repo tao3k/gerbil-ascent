@@ -4,7 +4,7 @@
 
 (import (only-in :std/test check-equal? check-exception test-suite)
         (only-in :clan/poo/object .o .ref)
-        (only-in :poo-flow-foundation/module-system/observability/testing-case
+        (only-in :core/observability/testing-case
                  poo-flow-test-case)
         (only-in :gerbil-ascent/t/qualification/ascent-index-program-fixture
                  ascent-index-fixture-program ascent-index-alist-provider)

@@ -5,19 +5,21 @@
 (import (only-in :gerbil-ascent/program/interface
                  gerbil-ascent-relation gerbil-ascent-variable
                  gerbil-ascent-atom gerbil-ascent-guard
-                 gerbil-ascent-generator gerbil-ascent-rule
-                 gerbil-ascent-positive-program
-                 gerbil-ascent-evaluate-positive-program))
+                 gerbil-ascent-generator gerbil-ascent-binding
+                 gerbil-ascent-negation
+                 gerbil-ascent-rule
+                 gerbil-ascent-program
+                 gerbil-ascent-evaluate-program))
 
-(export ascent-positive-fixture-program
-        ascent-positive-fixture-evaluate)
+(export ascent-rule-fixture-program
+        ascent-rule-fixture-evaluate)
 
 (def (v name) (gerbil-ascent-variable name))
 (def (a name . terms) (gerbil-ascent-atom name terms))
 (def (r head . body) (gerbil-ascent-rule (list head) body))
 
-(def (ascent-positive-fixture-program edges (derived-limit 32))
-  (gerbil-ascent-positive-program
+(def (ascent-rule-fixture-program edges (derived-limit 32))
+  (gerbil-ascent-program
         (list (gerbil-ascent-relation 'edge 3 edges)
               (gerbil-ascent-relation 'node 1 '((1) (2) (3)))
               (gerbil-ascent-relation 'labelled 4 [])
@@ -26,6 +28,11 @@
               (gerbil-ascent-relation 'selected 2 [])
               (gerbil-ascent-relation 'choice 2 [])
               (gerbil-ascent-relation 'generated 1 [])
+              (gerbil-ascent-relation 'successor 2 [])
+              (gerbil-ascent-relation 'blocked 2 [])
+              (gerbil-ascent-relation 'allowed 2 [])
+              (gerbil-ascent-relation 'denied 2 [])
+              (gerbil-ascent-relation 'safe-reach 2 [])
               (gerbil-ascent-relation 'reach 2 []))
         (list
          (r (a 'labelled (v 'x) (v 'z) (v 'first) (v 'second))
@@ -44,6 +51,24 @@
             (gerbil-ascent-guard '(x y) (lambda (x y) (not (= x y)))))
          (r (a 'generated (v 'x))
             (gerbil-ascent-generator 'x [] (lambda () '(1 2 3))))
+         (r (a 'successor (v 'x) (v 'y))
+            (a 'node (v 'x))
+            (gerbil-ascent-binding 'y '(x) (lambda (x) (+ x 1))))
+         (r (a 'blocked (v 'x) (v 'y))
+            (a 'edge (v 'x) (v 'y) (v 'label))
+            (gerbil-ascent-guard '(label)
+                                 (lambda (label) (equal? label "c"))))
+         (r (a 'allowed (v 'x) (v 'y))
+            (a 'edge (v 'x) (v 'y) (v 'label))
+            (gerbil-ascent-negation 'blocked (list (v 'x) (v 'y))))
+         (r (a 'denied (v 'x) (v 'y))
+            (a 'edge (v 'x) (v 'y) (v 'label))
+            (gerbil-ascent-negation 'allowed (list (v 'x) (v 'y))))
+         (r (a 'safe-reach (v 'x) (v 'y))
+            (a 'allowed (v 'x) (v 'y)))
+         (r (a 'safe-reach (v 'x) (v 'z))
+            (a 'safe-reach (v 'x) (v 'y))
+            (a 'allowed (v 'y) (v 'z)))
          (r (a 'reach (v 'x) (v 'y))
             (a 'edge (v 'x) (v 'y) (v 'label)))
          (r (a 'reach (v 'x) (v 'z))
@@ -51,6 +76,6 @@
             (a 'edge (v 'y) (v 'z) (v 'label))))
         16 derived-limit 64))
 
-(def (ascent-positive-fixture-evaluate edges (derived-limit 32))
-  (gerbil-ascent-evaluate-positive-program
-   (ascent-positive-fixture-program edges derived-limit)))
+(def (ascent-rule-fixture-evaluate edges (derived-limit 32))
+  (gerbil-ascent-evaluate-program
+   (ascent-rule-fixture-program edges derived-limit)))

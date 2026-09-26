@@ -38,8 +38,8 @@ ascent-guarded:
 ascent-candidates:
     @timeout 90s gerbil {{ gerbil_test_runtime_options }} t/qualification/ascent-closure-candidates-output.ss
 
-positive-rows:
-    @timeout 15s gerbil {{ gerbil_test_runtime_options }} t/qualification/ascent-positive-program-output.ss
+rule-rows:
+    @timeout 15s gerbil {{ gerbil_test_runtime_options }} t/qualification/ascent-rule-program-output.ss
 
 oracle:
     cargo test --locked --manifest-path rust/ascent-oracle/Cargo.toml

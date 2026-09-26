@@ -2,7 +2,7 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-;;; Positive-rule declarations are Foundation POO contracts. Relation rows
+;;; Rule declarations are Foundation POO contracts. Relation rows
 ;;; remain ordinary Scheme values; constructors check their declared arity.
 (import (only-in :clan/poo/object .o .ref)
         (only-in :clan/poo/mop define-type element?)
@@ -15,6 +15,8 @@
         GerbilAscentAtomContract
         GerbilAscentGuardContract
         GerbilAscentGeneratorContract
+        GerbilAscentBindingContract
+        GerbilAscentNegationContract
         GerbilAscentRuleContract
         GerbilAscentProgramContract)
 
@@ -26,8 +28,8 @@
 (def +arity+ (slot-contract 'ascent/arity
                            (lambda (value)
                              (and (exact-integer? value) (<= 0 value)))))
-(def +positive-budget+
-  (slot-contract 'ascent/positive-budget
+(def +fact-budget+
+  (slot-contract 'ascent/fact-budget
                  (lambda (value)
                    (and (exact-integer? value) (> value 0)))))
 (def +rows+ (slot-contract 'ascent/rows list?))
@@ -82,6 +84,21 @@
                       variable: +symbol+ variables: +variables+
                       generate: +procedure+))
 
+(define-type (GerbilAscentBindingContract @ PooFlowNativeObjectContract.)
+  identity: 'ascent/binding
+  proto: (.o)
+  responsibilities: (.o ascent-clause-kind:
+                      (clause-kind-contract 'binding)
+                      variable: +symbol+ variables: +variables+
+                      compute: +procedure+))
+
+(define-type (GerbilAscentNegationContract @ PooFlowNativeObjectContract.)
+  identity: 'ascent/negation
+  proto: (.o)
+  responsibilities: (.o ascent-clause-kind:
+                      (clause-kind-contract 'negation)
+                      relation: +symbol+ terms: +terms+))
+
 (def +clauses+
   (slot-contract 'ascent/clauses
                  (lambda (value)
@@ -89,7 +106,9 @@
                         (andmap (lambda (clause)
                                   (or (element? GerbilAscentAtomContract clause)
                                       (element? GerbilAscentGuardContract clause)
-                                      (element? GerbilAscentGeneratorContract clause)))
+                                      (element? GerbilAscentGeneratorContract clause)
+                                      (element? GerbilAscentBindingContract clause)
+                                      (element? GerbilAscentNegationContract clause)))
                                 value)))))
 (def +heads+
   (slot-contract 'ascent/heads
@@ -121,11 +140,11 @@
                                 value)))))
 
 (define-type (GerbilAscentProgramContract @ PooFlowNativeObjectContract.)
-  identity: 'ascent/positive-program
+  identity: 'ascent/program
   proto: (.o)
   responsibilities:
   (.o relations: +relations+
       rules: +rules+
-      max-input-facts: +positive-budget+
-      max-derived-facts: +positive-budget+
-      max-output-facts: +positive-budget+))
+      max-input-facts: +fact-budget+
+      max-derived-facts: +fact-budget+
+      max-output-facts: +fact-budget+))

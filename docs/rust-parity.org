@@ -23,9 +23,9 @@ proposals rather than core parity claims.
 |---------------------------+------------------+---------------+---------------------------|
 | Relation declaration, arbitrary arity and column types | =program/= | positive generic path handles unary through four-column mixed rows; binary fast path remains | broader column types and scale/performance receipts |
 | Multiple heads, relation clauses, repeated variables, joins | =program/= | positive generic multi-head rules, joins and repeated-variable equality pass selected Rust oracle fixtures | arbitrary body shape, invalid-program corpus and performance receipts |
-| Semi-naive least fixed point, dependencies and strata | =program/=, =core/= | positive recursive generic path and binary fast path | recursive SCCs, stratification, rule order and termination parity |
-| Conditions and generators | =program/=, =core/= | generic POO guard and finite list generator clauses with ordered binding checks; binary predicate path remains | broader iterator/pattern shapes and scale receipts |
-| Stratified negation | =core/= | absent | negated relation fixtures, unsafe-cycle rejection |
+| Semi-naive least fixed point, dependencies and strata | =program/=, =core/= | generic recursive path supports positive and negative strata; binary fast path remains | recursive SCCs, rule order and termination parity |
+| Conditions, bindings and generators | =program/=, =core/= | generic POO guard, =let= binding and finite list generator clauses with ordered binding checks | broader iterator/pattern shapes and scale receipts |
+| Stratified negation | =program/= | 3-level negated relation fixture and negative-cycle rejection pass selected Rust oracle comparison | broader safe/unsafe programs and performance receipts |
 | Aggregation and custom aggregators | =core/= | absent | count, sum, min, max, mean and custom iterator aggregators |
 | Lattice declarations and recursive joins | =table/=, =core/= | selected minimum distance projection only | generic lattice interface, recursive lattice fixtures, invalid join tests |
 | Relation indexes and selected physical plan | =table/= | private dense/sparse binary adjacency | index selection and relation access parity across arities |
@@ -35,19 +35,20 @@ proposals rather than core parity claims.
 
 The current Rust oracle in =rust/ascent-oracle/= covers positive binary
 closure, guarded filter/copy/join, shortest source support, and selected
-arbitrary-column positive rules, =if= guards, and =for= generators across
+arbitrary-column rules, =if= guards, =let= bindings, =for= generators and stratified negation across
 source snapshots. Scheme generators currently return finite lists and name
 their input variables explicitly. These fixtures do
 not close the rows above. =candidate/= and
 =interface/= hold existing experimental projections; their MRR or Agent use
 cannot substitute for Rust feature parity.
 
-The standard =ascent-positive-clauses= SS scenario measures evaluation of one
+The standard =ascent-rule-clauses= SS scenario measures evaluation of one
 predeclared program over three ternary edges. A local 20-sample run measured
-293 us p95 after removing repeated deep contract checks and repeated POO slot
-reads from the row loop. The 1 ms ceiling is a local gate, not yet a scale or
-cross-platform performance claim. Declaration construction is outside this
-particular timing window and remains a separate cost.
+768 us p95 after adding bindings and three-level negation. A preceding run
+measured 1.145 ms p95 with two long-tail samples, so the 1 ms ceiling is not
+yet robust. This is not a scale or cross-platform performance claim.
+Declaration construction is outside this timing window and remains a separate
+cost.
 
 * Implementation order
 

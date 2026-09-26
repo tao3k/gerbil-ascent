@@ -10,14 +10,14 @@ Each top-level directory is a Gerbil module namespace:
 
 | Namespace | Current responsibility |
 | --- | --- |
-| `:gerbil-ascent/program/*` | Typed POO rule declarations and generic positive evaluation |
+| `:gerbil-ascent/program/*` | Typed POO rule declarations and stratified evaluation |
 | `:gerbil-ascent/core/*` | Indexed binary evaluation path |
 | `:gerbil-ascent/table/*` | Binary relation indexes and projections |
 | `:gerbil-ascent/candidate/*` | Experimental candidate and support projection |
 | `:gerbil-ascent/interface/*` | Inert request projection |
 
-`program/` exposes POO `atom`, `guard`, and finite-list `generator` clauses.
-Guards and generators declare their input variables explicitly, and rule
+`program/` exposes POO `atom`, `negation`, `guard`, `binding`, and finite-list `generator` clauses.
+Guards, bindings, and generators declare their input variables explicitly, and rule
 bodies check bindings in source order. The evaluator reads validated clause
 slots once per run before iterating relation rows.
 

@@ -302,6 +302,11 @@ fn ascent_positive_rows(edges: &[(u32, u32, &str)]) -> Vec<String> {
         relation selected(u32, u32);
         relation choice(u32, u32);
         relation generated(u32);
+        relation successor(u32, u32);
+        relation blocked(u32, u32);
+        relation allowed(u32, u32);
+        relation denied(u32, u32);
+        relation safe_reach(u32, u32);
         relation reach(u32, u32);
 
         labelled(x, z, first.clone(), second.clone()) <--
@@ -310,6 +315,12 @@ fn ascent_positive_rows(edges: &[(u32, u32, &str)]) -> Vec<String> {
         hot(x), selected(x, y) <-- edge(x, y, label), if label.as_str() == "a";
         choice(x, y) <-- node(x), for y in 1..=3, if *x != y;
         generated(x) <-- for x in 1..=3;
+        successor(x, y) <-- node(x), let y = *x + 1;
+        blocked(x, y) <-- edge(x, y, label), if label.as_str() == "c";
+        allowed(x, y) <-- edge(x, y, _), !blocked(x, y);
+        denied(x, y) <-- edge(x, y, _), !allowed(x, y);
+        safe_reach(x, y) <-- allowed(x, y);
+        safe_reach(x, z) <-- safe_reach(x, y), allowed(y, z);
         reach(x, y) <-- edge(x, y, _);
         reach(x, z) <-- reach(x, y), edge(y, z, _);
     }
@@ -351,6 +362,36 @@ fn ascent_positive_rows(edges: &[(u32, u32, &str)]) -> Vec<String> {
     );
     rows.extend(
         program
+            .successor
+            .iter()
+            .map(|(from, to)| format!("successor\t{from}\t{to}")),
+    );
+    rows.extend(
+        program
+            .blocked
+            .iter()
+            .map(|(from, to)| format!("blocked\t{from}\t{to}")),
+    );
+    rows.extend(
+        program
+            .allowed
+            .iter()
+            .map(|(from, to)| format!("allowed\t{from}\t{to}")),
+    );
+    rows.extend(
+        program
+            .denied
+            .iter()
+            .map(|(from, to)| format!("denied\t{from}\t{to}")),
+    );
+    rows.extend(
+        program
+            .safe_reach
+            .iter()
+            .map(|(from, to)| format!("safe-reach\t{from}\t{to}")),
+    );
+    rows.extend(
+        program
             .reach
             .iter()
             .map(|(from, to)| format!("reach\t{from}\t{to}")),
@@ -368,7 +409,7 @@ fn arbitrary_relation_columns_and_repeated_variables_match_ascent() {
         &[(1, 2, "a"), (3, 3, "c")],
     ];
     for edges in snapshots {
-        let output = scheme_output("positive-rows", &positive_request(edges));
+        let output = scheme_output("rule-rows", &positive_request(edges));
         let lines: Vec<_> = output.lines().collect();
         assert_eq!(lines.last(), Some(&"END"), "Scheme fixture did not finish");
         let mut scheme: Vec<_> = lines[..lines.len() - 1]

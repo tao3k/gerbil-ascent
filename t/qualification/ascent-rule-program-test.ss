@@ -9,17 +9,19 @@
         (only-in :poo-flow-foundation/module-system/observability/testing-case
                  poo-flow-default-testing-case-profile
                  poo-flow-test-case/with)
-        (only-in :gerbil-ascent/t/qualification/ascent-positive-program-fixture
-                 ascent-positive-fixture-evaluate)
+        (only-in :gerbil-ascent/t/qualification/ascent-rule-program-fixture
+                 ascent-rule-fixture-evaluate)
         (only-in :gerbil-ascent/program/interface
                  gerbil-ascent-relation gerbil-ascent-variable
                  gerbil-ascent-literal gerbil-ascent-atom
                  gerbil-ascent-guard gerbil-ascent-generator
+                 gerbil-ascent-binding
+                 gerbil-ascent-negation
                  gerbil-ascent-rule
-                 gerbil-ascent-positive-program
-                 gerbil-ascent-evaluate-positive-program))
+                 gerbil-ascent-program
+                 gerbil-ascent-evaluate-program))
 
-(export ascent-positive-program-test)
+(export ascent-rule-program-test)
 
 (def (v name) (gerbil-ascent-variable name))
 (def (a name . terms) (gerbil-ascent-atom name terms))
@@ -38,12 +40,12 @@
       (max-duration-milliseconds 2000)))
 
 (def (evaluate edges (derived-limit 32))
-  (ascent-positive-fixture-evaluate edges derived-limit))
+  (ascent-rule-fixture-evaluate edges derived-limit))
 
 (def (rows result name)
   ((.ref result 'rows-of) name))
 
-(def ascent-positive-program-test
+(def ascent-rule-program-test
   (test-suite "ASCENT positive relations with arbitrary columns"
     (poo-flow-test-case/with +positive-case-profile+
       "mixed ternary inputs derive four-column, unary and recursive rows"
@@ -63,6 +65,13 @@
         (check-equal? (not (not (member '(1 2) (rows result 'choice)))) #t)
         (check-equal? (member '(1 1) (rows result 'choice)) #f)
         (check-equal? (length (rows result 'generated)) 3)
+        (check-equal? (length (rows result 'successor)) 3)
+        (check-equal? (not (not (member '(3 4)
+                                        (rows result 'successor)))) #t)
+        (check-equal? (rows result 'blocked) '((3 3)))
+        (check-equal? (length (rows result 'allowed)) 2)
+        (check-equal? (rows result 'denied) '((3 3)))
+        (check-equal? (length (rows result 'safe-reach)) 3)
         (check-equal? (length reach) 4)
         (check-equal? (length (rows result 'node)) 3)))
     (poo-flow-test-case/with +positive-case-profile+
@@ -75,8 +84,8 @@
     (poo-flow-test-case/with +positive-case-profile+
       "empty rule set preserves sources and returns"
       (let (result
-            (gerbil-ascent-evaluate-positive-program
-             (gerbil-ascent-positive-program
+            (gerbil-ascent-evaluate-program
+             (gerbil-ascent-program
               (list (gerbil-ascent-relation 'r 1 '((1)))) [] 2 2 2)))
         (check-equal? (rows result 'r) '((1)))))
     (poo-flow-test-case/with +positive-case-profile+
@@ -85,16 +94,16 @@
        (gerbil-ascent-relation 'broken 2 '((1))) true)
       (check-exception (gerbil-ascent-atom 'out '(raw-term)) true)
       (check-exception
-       (gerbil-ascent-positive-program [] [] 0 2 2) true)
+       (gerbil-ascent-program [] [] 0 2 2) true)
       (check-exception (evaluate '((1 2 "a") (2 3 "b")) 1) true)
       (check-exception
-       (gerbil-ascent-evaluate-positive-program
-        (gerbil-ascent-positive-program
+       (gerbil-ascent-evaluate-program
+        (gerbil-ascent-program
          (list (gerbil-ascent-relation 'out 1 []))
          (list (r (a 'out (v 'free)))) 2 2 2)) true)
       (check-exception
-       (gerbil-ascent-evaluate-positive-program
-        (gerbil-ascent-positive-program
+       (gerbil-ascent-evaluate-program
+        (gerbil-ascent-program
          (list (gerbil-ascent-relation 'source 1 '((1)))
                (gerbil-ascent-relation 'out 1 [])
                (gerbil-ascent-relation 'bad 1 []))
@@ -103,24 +112,24 @@
                 (list (a 'source (v 'x)))))
          2 2 3)) true)
       (check-exception
-       (gerbil-ascent-evaluate-positive-program
-        (gerbil-ascent-positive-program
+       (gerbil-ascent-evaluate-program
+        (gerbil-ascent-program
          (list (gerbil-ascent-relation 'out 1 []))
          (list (r (a 'out (v 'x))
                   (gerbil-ascent-guard '(x) (lambda (x) #t))
                   (gerbil-ascent-generator 'x [] (lambda () '(1)))))
          2 2 3)) true)
       (check-exception
-       (gerbil-ascent-evaluate-positive-program
-        (gerbil-ascent-positive-program
+       (gerbil-ascent-evaluate-program
+        (gerbil-ascent-program
          (list (gerbil-ascent-relation 'out 1 []))
          (list (r (a 'out (v 'x))
                   (gerbil-ascent-generator 'x '(missing)
                                            (lambda (_) '(1)))))
          2 2 3)) true)
       (check-exception
-       (gerbil-ascent-evaluate-positive-program
-        (gerbil-ascent-positive-program
+       (gerbil-ascent-evaluate-program
+        (gerbil-ascent-program
          (list (gerbil-ascent-relation 'source 1 '((1)))
                (gerbil-ascent-relation 'out 1 []))
          (list (r (a 'out (v 'x))
@@ -128,8 +137,8 @@
                   (gerbil-ascent-generator 'x [] (lambda () '(2)))))
          2 2 3)) true)
       (check-exception
-       (gerbil-ascent-evaluate-positive-program
-        (gerbil-ascent-positive-program
+       (gerbil-ascent-evaluate-program
+        (gerbil-ascent-program
          (list (gerbil-ascent-relation 'source 1 '((1)))
                (gerbil-ascent-relation 'out 1 []))
          (list (r (a 'out (v 'x))
@@ -137,10 +146,31 @@
                   (gerbil-ascent-guard '(x) (lambda (_) 'yes))))
          2 2 3)) true)
       (check-exception
-       (gerbil-ascent-evaluate-positive-program
-        (gerbil-ascent-positive-program
+       (gerbil-ascent-evaluate-program
+        (gerbil-ascent-program
          (list (gerbil-ascent-relation 'out 1 []))
          (list (r (a 'out (v 'x))
                   (gerbil-ascent-generator 'x [] (lambda () '#(1)))))
          2 2 3)) true)
+      (check-exception
+       (gerbil-ascent-evaluate-program
+        (gerbil-ascent-program
+         (list (gerbil-ascent-relation 'node 1 '((1)))
+               (gerbil-ascent-relation 'left 1 [])
+               (gerbil-ascent-relation 'right 1 []))
+         (list (r (a 'left (v 'x))
+                  (a 'node (v 'x))
+                  (gerbil-ascent-negation 'right (list (v 'x))))
+               (r (a 'right (v 'x))
+                  (a 'node (v 'x))
+                  (gerbil-ascent-negation 'left (list (v 'x)))))
+         3 3 6)) true)
+      (check-exception
+       (gerbil-ascent-evaluate-program
+        (gerbil-ascent-program
+         (list (gerbil-ascent-relation 'left 1 [])
+               (gerbil-ascent-relation 'right 1 []))
+         (list (r (a 'left (v 'x))
+                  (gerbil-ascent-negation 'right (list (v 'x)))))
+         3 3 6)) true)
       (check-equal? (.ref (gerbil-ascent-literal "x") 'value) "x"))))

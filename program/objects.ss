@@ -2,7 +2,7 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-;;; Public POO declarations for positive ASCENT rules. No table state lives
+;;; Public POO declarations for ASCENT rules. No table state lives
 ;;; in these objects; each evaluation owns its own relation storage.
 (import (only-in :clan/poo/object .o .ref)
         (only-in :clan/poo/mop validate)
@@ -12,6 +12,8 @@
                  GerbilAscentAtomContract
                  GerbilAscentGuardContract
                  GerbilAscentGeneratorContract
+                 GerbilAscentBindingContract
+                 GerbilAscentNegationContract
                  GerbilAscentRuleContract
                  GerbilAscentProgramContract))
 
@@ -21,14 +23,18 @@
         gerbil-ascent-atom
         gerbil-ascent-guard
         gerbil-ascent-generator
+        gerbil-ascent-binding
+        gerbil-ascent-negation
         gerbil-ascent-rule
-        gerbil-ascent-positive-program)
+        gerbil-ascent-program)
 
 (def Relation. (.ref GerbilAscentRelationContract 'proto))
 (def Term. (.ref GerbilAscentTermContract 'proto))
 (def Atom. (.ref GerbilAscentAtomContract 'proto))
 (def Guard. (.ref GerbilAscentGuardContract 'proto))
 (def Generator. (.ref GerbilAscentGeneratorContract 'proto))
+(def Binding. (.ref GerbilAscentBindingContract 'proto))
+(def Negation. (.ref GerbilAscentNegationContract 'proto))
 (def Rule. (.ref GerbilAscentRuleContract 'proto))
 (def Program. (.ref GerbilAscentProgramContract 'proto))
 
@@ -73,11 +79,23 @@
                 variable: output-variable
                 variables: input-variables generate: generator-procedure)))
 
+(def (gerbil-ascent-binding output-variable input-variables
+                            binding-procedure)
+  (validate GerbilAscentBindingContract
+            (.o (:: @ Binding.) ascent-clause-kind: 'binding
+                variable: output-variable variables: input-variables
+                compute: binding-procedure)))
+
+(def (gerbil-ascent-negation relation-name atom-terms)
+  (validate GerbilAscentNegationContract
+            (.o (:: @ Negation.) ascent-clause-kind: 'negation
+                relation: relation-name terms: atom-terms)))
+
 (def (gerbil-ascent-rule head-atoms body-atoms)
   (validate GerbilAscentRuleContract
             (.o (:: @ Rule.) heads: head-atoms body: body-atoms)))
 
-(def (gerbil-ascent-positive-program declared-relations declared-rules
+(def (gerbil-ascent-program declared-relations declared-rules
                                      input-fact-limit derived-fact-limit
                                      output-fact-limit)
   (validate GerbilAscentProgramContract

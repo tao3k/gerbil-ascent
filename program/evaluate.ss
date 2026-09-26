@@ -2,18 +2,18 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-;;; Generic positive semi-naive evaluator. Mutable row buffers are local to
+;;; Generic stratified semi-naive evaluator. Mutable row buffers are local to
 ;;; one run; the public declarations and returned projection are POO values.
 (import (only-in :clan/poo/object .o .ref object?)
         (only-in :clan/poo/support/base until))
 
-(export gerbil-ascent-evaluate-positive-program)
+(export gerbil-ascent-evaluate-program)
 
-(def (gerbil-ascent-evaluate-positive-program program)
+(def (gerbil-ascent-evaluate-program program)
   ;; The declaration constructor validates the full Foundation contract.
   ;; Evaluation checks mutable rows and clause bindings for this snapshot.
   (unless (object? program)
-    (error "invalid ASCENT positive program" program))
+    (error "invalid ASCENT program" program))
   (let* ((relations (.ref program 'relations))
          (rules (.ref program 'rules))
          (input-limit (.ref program 'max-input-facts))
@@ -23,7 +23,7 @@
                  (exact-integer? input-limit) (> input-limit 0)
                  (exact-integer? derived-limit) (> derived-limit 0)
                  (exact-integer? output-limit) (> output-limit 0))
-      (error "invalid ASCENT positive program bounds"))
+      (error "invalid ASCENT program bounds"))
     (let* ((count (length relations))
            (names (make-vector count #f))
            (arity (make-vector count #f))
@@ -44,7 +44,8 @@
           kind))
       (def (atom-plan atom)
         (unless (and (object? atom)
-                     (eq? (.ref atom 'ascent-clause-kind) 'atom))
+                     (memq (.ref atom 'ascent-clause-kind)
+                           '(atom negation)))
           (error "invalid ASCENT atom declaration" atom))
         (let* ((index (position-of (.ref atom 'relation)))
                (terms (.ref atom 'terms)))
@@ -129,21 +130,37 @@
                     (when (eq? (car term) 'variable)
                       (set! bound (cons (cdr term) bound))))
                   (vector-ref plan 1))))
-              ((guard generator)
+              ((negation)
+               (let (plan (atom-plan clause))
+                 (for-each
+                  (lambda (term)
+                    (when (eq? (car term) 'variable)
+                      (unless (memq (cdr term) bound)
+                        (error "unsafe ASCENT negation variable"
+                               (cdr term)))))
+                  (vector-ref plan 1))
+                 (set! body-plans
+                   (cons (vector 'negation plan) body-plans))))
+              ((guard generator binding)
                (let (inputs (.ref clause 'variables))
                  (for-each
                   (lambda (name)
                     (unless (memq name bound)
                       (error "unbound ASCENT clause variable" name)))
                   inputs)
-                 (if (eq? (.ref clause 'ascent-clause-kind) 'generator)
+                 (if (memq (.ref clause 'ascent-clause-kind)
+                           '(generator binding))
                    (let (name (.ref clause 'variable))
                      (when (memq name bound)
                        (error "ASCENT generator variable already bound" name))
                      (set! bound (cons name bound))
                      (set! body-plans
-                       (cons (vector 'generator name inputs
-                                     (.ref clause 'generate))
+                       (cons (vector (.ref clause 'ascent-clause-kind)
+                                     name inputs
+                                     (if (eq? (.ref clause 'ascent-clause-kind)
+                                              'generator)
+                                       (.ref clause 'generate)
+                                       (.ref clause 'compute)))
                              body-plans)))
                    (set! body-plans
                      (cons (vector 'guard inputs (.ref clause 'predicate))
@@ -152,6 +169,9 @@
            (.ref rule 'body))
           (let (head-plans
                 (map (lambda (head)
+                       (unless (and (object? head)
+                                    (eq? (.ref head 'ascent-clause-kind) 'atom))
+                         (error "invalid ASCENT rule head" head))
                        (let (plan (atom-plan head))
                          (for-each
                           (lambda (term)
@@ -163,9 +183,81 @@
                          plan))
                      (.ref rule 'heads)))
             (vector head-plans (reverse body-plans) atoms))))
-      (let ((rule-plans (map prepare-rule rules))
-            (active? #t) (round 0))
-        (until (not active?)
+      (let* ((rule-plans (map prepare-rule rules))
+             (strata (make-vector count 0))
+             (dependencies []))
+        (for-each
+         (lambda (rule)
+           (for-each
+            (lambda (head)
+              (for-each
+               (lambda (clause)
+                 (when (memq (vector-ref clause 0) '(atom negation))
+                   (let (body-atom (vector-ref clause 1))
+                     (set! dependencies
+                       (cons (vector (vector-ref head 0)
+                                     (vector-ref body-atom 0)
+                                     (if (eq? (vector-ref clause 0) 'negation)
+                                       1 0))
+                             dependencies)))))
+               (vector-ref rule 1)))
+            (vector-ref rule 0)))
+         rule-plans)
+        (let relax ((pass 0))
+          (let (changed? #f)
+            (for-each
+             (lambda (dependency)
+               (let* ((head (vector-ref dependency 0))
+                      (body (vector-ref dependency 1))
+                      (required (+ (vector-ref strata body)
+                                   (vector-ref dependency 2))))
+                 (when (> required (vector-ref strata head))
+                   (vector-set! strata head required)
+                   (set! changed? #t))))
+             dependencies)
+            (when changed?
+              (when (>= pass (- count 1))
+                (error "unstratifiable ASCENT negation cycle"))
+              (relax (+ pass 1)))))
+        (def (delta-positions body stratum)
+          (let loop ((remaining body) (depth 0) (selected []))
+            (if (null? remaining)
+              (reverse selected)
+              (let (clause (car remaining))
+                (if (eq? (vector-ref clause 0) 'atom)
+                  (loop (cdr remaining) (+ depth 1)
+                        (if (= (vector-ref strata
+                                           (vector-ref (vector-ref clause 1) 0))
+                               stratum)
+                          (cons depth selected)
+                          selected))
+                  (loop (cdr remaining) depth selected))))))
+        (let evaluate-stratum ((stratum 0))
+          (when (< stratum count)
+            (let ((active-rules []) (active? #t) (round 0))
+              (for-each
+               (lambda (rule)
+                 (let (heads
+                       (filter (lambda (head)
+                                 (= (vector-ref strata (vector-ref head 0))
+                                    stratum))
+                               (vector-ref rule 0)))
+                   (unless (null? heads)
+                     (set! active-rules
+                       (cons (vector heads (vector-ref rule 1)
+                                     (delta-positions (vector-ref rule 1)
+                                                      stratum))
+                             active-rules)))))
+               rule-plans)
+              (set! active-rules (reverse active-rules))
+              (let reset-delta ((index 0))
+                (when (< index count)
+                  (vector-set! delta index
+                    (if (= (vector-ref strata index) stratum)
+                      (vector-ref all index)
+                      []))
+                  (reset-delta (+ index 1))))
+              (until (not active?)
           (set! round (+ round 1))
           (let ((pending (make-vector count []))
                 (pending-seen (make-vector count #f))
@@ -213,6 +305,17 @@
                              (visit-body (cdr body) delta-at (+ depth 1)
                                          bound consume))))
                        rows)))
+                   ((eq? (vector-ref clause 0) 'negation)
+                    (let* ((atom (vector-ref clause 1))
+                           (index (vector-ref atom 0))
+                           (rows (vector-ref all index)))
+                      (unless (ormap
+                               (lambda (row)
+                                 (bind-row (vector-ref atom 1)
+                                           row environment))
+                               rows)
+                        (visit-body (cdr body) delta-at depth
+                                    environment consume))))
                    ((eq? (vector-ref clause 0) 'guard)
                     (let (pass? (apply (vector-ref clause 2)
                                        (clause-inputs (vector-ref clause 1)
@@ -234,28 +337,36 @@
                                      (cons (cons (vector-ref clause 1) value)
                                            environment)
                                      consume))
-                       values)))))))
+                       values)))
+                   ((eq? (vector-ref clause 0) 'binding)
+                    (let (value (apply (vector-ref clause 3)
+                                       (clause-inputs (vector-ref clause 2)
+                                                      environment)))
+                      (visit-body (cdr body) delta-at depth
+                                  (cons (cons (vector-ref clause 1) value)
+                                        environment)
+                                  consume)))))))
             (for-each
              (lambda (rule)
                (let ((heads (vector-ref rule 0))
                      (body (vector-ref rule 1))
-                     (atom-count (vector-ref rule 2)))
-                 (if (= atom-count 0)
+                     (positions (vector-ref rule 2)))
+                 (if (null? positions)
                    (when (= round 1)
                      (visit-body body -1 0 []
                                  (lambda (environment)
                                    (for-each
                                     (lambda (head) (emit! head environment))
                                     heads))))
-                   (let select-delta ((index 0))
-                     (when (< index atom-count)
-                       (visit-body body index 0 []
-                                   (lambda (environment)
-                                     (for-each
-                                      (lambda (head) (emit! head environment))
-                                      heads)))
-                       (select-delta (+ index 1)))))))
-             rule-plans)
+                   (for-each
+                    (lambda (delta-at)
+                      (visit-body body delta-at 0 []
+                                  (lambda (environment)
+                                    (for-each
+                                     (lambda (head) (emit! head environment))
+                                     heads))))
+                    positions))))
+             active-rules)
             (set! active? #f)
             (let commit ((index 0))
               (when (< index count)
@@ -267,8 +378,9 @@
                    (set! active? #t))
                  (vector-ref pending index))
                 (vector-set! delta index (vector-ref pending index))
-                (commit (+ index 1)))))))
+                (commit (+ index 1))))))
+            (evaluate-stratum (+ stratum 1)))))
       (.o (relation-names (vector->list names))
-          (evaluation-path 'positive-semi-naive)
+          (evaluation-path 'stratified-semi-naive)
           (rows-of (lambda (name)
-                     (reverse (vector-ref all (position-of name)))))))))
+                     (reverse (vector-ref all (position-of name))))))))))

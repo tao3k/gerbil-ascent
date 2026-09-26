@@ -27,7 +27,7 @@ proposals rather than core parity claims.
 | Conditions, bindings and generators | =program/=, =core/= | generic POO guard, =let= binding and finite list generator clauses with ordered binding checks | broader iterator/pattern shapes and scale receipts |
 | Stratified negation | =program/= | 3-level negated relation fixture and negative-cycle rejection pass selected Rust oracle comparison | broader safe/unsafe programs and performance receipts |
 | Aggregation and custom aggregators | =program/= | count, sum, min, max, mean and custom iterator aggregators pass empty, duplicate-input and grouped Rust fixtures | recursive aggregate corpus, broader type behavior and performance receipts |
-| Lattice declarations and recursive joins | =table/=, =core/= | selected minimum distance projection only | generic lattice interface, recursive lattice fixtures, invalid join tests |
+| Lattice declarations and recursive joins | =program/=, =table/= | POO lattice declaration with user join; selected recursive shortest-path and duplicate-key snapshots match Rust | broader join families, lattice/negation composition, invalid join laws and scale receipts |
 | Relation indexes and selected physical plan | =table/= | private dense/sparse binary adjacency | index selection and relation access parity across arities |
 | BYODS data structure provider protocol | =table/= | absent | default provider, equivalence, transitive relation and user provider fixtures |
 | Parallel execution | =core/=, =table/= | absent | deterministic serial/parallel parity and contention benchmark |
@@ -35,7 +35,7 @@ proposals rather than core parity claims.
 
 The current Rust oracle in =rust/ascent-oracle/= covers positive binary
 closure, guarded filter/copy/join, shortest source support, and selected
-arbitrary-column rules, =if= guards, =let= bindings, =for= generators, stratified negation and selected aggregation across
+arbitrary-column rules, =if= guards, =let= bindings, =for= generators, stratified negation, selected aggregation and shortest-path lattice joins across
 source snapshots. Scheme generators currently return finite lists and name
 their input variables explicitly. These fixtures do
 not close the rows above. =candidate/= and
@@ -43,11 +43,11 @@ not close the rows above. =candidate/= and
 cannot substitute for Rust feature parity.
 
 The standard =ascent-rule-clauses= SS scenario measures evaluation of one
-predeclared program over three ternary edges. A local 20-sample run measured
-493 and 573 us p95 in isolated runs after bounding stratum traversal to
-populated strata. Earlier runs measured 1.145 and 2.169 ms p95 with long-tail
-samples, so the 1 ms
-ceiling is not yet robust. This is not a scale or cross-platform claim.
+predeclared program over three ternary edges. Isolated 20-sample runs after
+bounding stratum traversal measured 493 and 573 us p95, but two runs after
+lattice support measured 1.689 and 1.515 ms p95 with a few long-tail samples
+amid approximately 0.5 ms medians. The 1 ms ceiling is not stable. This is
+not a scale or cross-platform claim.
 Declaration construction is outside this timing window and remains a separate
 cost.
 

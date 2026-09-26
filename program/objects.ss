@@ -8,6 +8,7 @@
         (only-in :clan/poo/mop .defgeneric validate)
         (only-in "types.ss"
                  GerbilAscentRelationContract
+                 GerbilAscentLatticeContract
                  GerbilAscentTermContract
                  GerbilAscentAtomContract
                  GerbilAscentGuardContract
@@ -19,6 +20,7 @@
                  GerbilAscentProgramContract))
 
 (export gerbil-ascent-relation
+        gerbil-ascent-lattice
         gerbil-ascent-variable
         gerbil-ascent-literal
         gerbil-ascent-atom
@@ -32,6 +34,7 @@
         gerbil-ascent-program)
 
 (def Relation. (.ref GerbilAscentRelationContract 'proto))
+(def Lattice. (.ref GerbilAscentLatticeContract 'proto))
 (def Term. (.ref GerbilAscentTermContract 'proto))
 (def Atom. (.ref GerbilAscentAtomContract 'proto))
 (def Guard. (.ref GerbilAscentGuardContract 'proto))
@@ -113,7 +116,24 @@
    source-rows)
   (validate GerbilAscentRelationContract
             (.o (:: @ Relation.)
-                name: relation-name arity: column-count rows: source-rows)))
+                name: relation-name arity: column-count rows: source-rows
+                storage-kind: 'relation)))
+
+(def (gerbil-ascent-lattice relation-name column-count source-rows
+                            join-procedure)
+  (unless (and (symbol? relation-name)
+               (exact-integer? column-count) (> column-count 0)
+               (list? source-rows) (procedure? join-procedure))
+    (error "invalid ASCENT lattice declaration" relation-name column-count))
+  (for-each
+   (lambda (row)
+     (unless (and (list? row) (= (length row) column-count))
+       (error "invalid ASCENT lattice row" relation-name row column-count)))
+   source-rows)
+  (validate GerbilAscentLatticeContract
+            (.o (:: @ Lattice.)
+                name: relation-name arity: column-count rows: source-rows
+                storage-kind: 'lattice join: join-procedure)))
 
 (def (gerbil-ascent-variable name)
   (unless (symbol? name) (error "ASCENT variable name must be a symbol" name))

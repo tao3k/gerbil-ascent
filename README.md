@@ -17,10 +17,11 @@ Each top-level directory is a Gerbil module namespace:
 | `:gerbil-ascent/candidate/*` | Experimental candidate and support projection |
 | `:gerbil-ascent/interface/*` | Inert request projection |
 
-`program/` exposes POO `atom`, `negation`, `guard`, `binding`, `aggregate`,
+`program/` exposes POO `relation`, `lattice`, `atom`, `negation`, `guard`, `binding`, `aggregate`,
 and finite-list `generator` clauses. A slot Generic lowers each clause to a
 private execution plan; count, sum, min, max, mean, and custom aggregate
-procedures run over matched tuples.
+procedures run over matched tuples. Lattice declarations join the last column
+for equal prefix keys and propagate improvements through the same fixed point.
 Guards, bindings, and generators declare their input variables explicitly, and rule
 bodies check bindings in source order. The evaluator reads validated clause
 slots once per run before iterating relation rows.

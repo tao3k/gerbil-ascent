@@ -11,6 +11,7 @@
                  poo-flow-predicate-contract))
 
 (export GerbilAscentRelationContract
+        GerbilAscentLatticeContract
         GerbilAscentTermContract
         GerbilAscentAtomContract
         GerbilAscentGuardContract
@@ -45,7 +46,15 @@
 (define-type (GerbilAscentRelationContract @ PooFlowNativeObjectContract.)
   identity: 'ascent/relation
   proto: (.o)
-  responsibilities: (.o name: +symbol+ arity: +arity+ rows: +rows+))
+  responsibilities: (.o name: +symbol+ arity: +arity+ rows: +rows+
+                      storage-kind: (clause-kind-contract 'relation)))
+
+(define-type (GerbilAscentLatticeContract @ PooFlowNativeObjectContract.)
+  identity: 'ascent/lattice
+  proto: (.o)
+  responsibilities: (.o name: +symbol+ arity: +arity+ rows: +rows+
+                      storage-kind: (clause-kind-contract 'lattice)
+                      join: (slot-contract 'ascent/lattice-join procedure?)))
 
 (define-type (GerbilAscentTermContract @ PooFlowNativeObjectContract.)
   identity: 'ascent/term
@@ -142,7 +151,8 @@
                  (lambda (value)
                    (and (list? value)
                         (andmap (lambda (relation)
-                                  (element? GerbilAscentRelationContract relation))
+                                  (or (element? GerbilAscentRelationContract relation)
+                                      (element? GerbilAscentLatticeContract relation)))
                                 value)))))
 (def +rules+
   (slot-contract 'ascent/rules

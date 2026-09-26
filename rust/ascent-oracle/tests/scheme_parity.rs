@@ -547,3 +547,50 @@ fn builtin_and_custom_aggregators_match_ascent() {
         assert_eq!(rows, ascent_aggregate_rows(values), "values: {values:?}");
     }
 }
+
+fn ascent_lattice_rows(edges: &[(u32, u32, u32)]) -> Vec<String> {
+    ascent! {
+        relation edge(u32, u32, u32);
+        lattice shortest(u32, u32, Dual<u32>);
+        shortest(x, y, Dual(*weight)) <-- edge(x, y, weight);
+        shortest(x, z, Dual(first + second)) <--
+            shortest(x, y, ?Dual(first)), edge(y, z, second);
+    }
+    let mut program = AscentProgram {
+        edge: edges.to_vec(),
+        ..AscentProgram::default()
+    };
+    program.run();
+    let mut rows: Vec<_> = program
+        .shortest
+        .iter()
+        .map(|(from, to, Dual(distance))| format!("{from}\t{to}\t{distance}"))
+        .collect();
+    rows.sort_unstable();
+    rows
+}
+
+#[test]
+fn recursive_lattice_join_matches_ascent() {
+    let snapshots: &[&[(u32, u32, u32)]] = &[
+        &[],
+        &[(1, 2, 3), (1, 3, 1), (3, 2, 1), (2, 4, 1), (3, 4, 5)],
+        &[(1, 2, 5), (1, 2, 2), (2, 3, 1)],
+        &[(1, 2, 3), (2, 1, 1)],
+    ];
+    for edges in snapshots {
+        let request = format!(
+            "({})\n",
+            edges
+                .iter()
+                .map(|(from, to, weight)| format!("({from} {to} {weight})"))
+                .collect::<Vec<_>>()
+                .join(" ")
+        );
+        let output = scheme_output("lattice-rows", &request);
+        let mut rows: Vec<_> = output.lines().map(str::to_owned).collect();
+        assert_eq!(rows.pop().as_deref(), Some("END"));
+        rows.sort_unstable();
+        assert_eq!(rows, ascent_lattice_rows(edges), "edges: {edges:?}");
+    }
+}

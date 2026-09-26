@@ -5,6 +5,7 @@
 
 use ascent::aggregators::{count, max, mean, min, sum};
 use ascent::{ascent, Dual};
+use ascent_byods_rels::{eqrel, trrel};
 use std::{
     cmp::Reverse,
     collections::{BTreeSet, BinaryHeap},
@@ -620,5 +621,137 @@ fn indexed_two_hop_join_matches_ascent() {
         assert_eq!(actual.pop().as_deref(), Some("END"));
         actual.sort_unstable();
         assert_eq!(actual, expected, "provider recipe: {recipe}");
+    }
+}
+
+fn ascent_eqrel_rows(binary: &[(u32, u32)], grouped: &[(u32, u32, u32)]) -> Vec<String> {
+    ascent! {
+        relation binary_seed(u32, u32);
+        relation grouped_seed(u32, u32, u32);
+        #[ds(eqrel)]
+        relation binary_eq(u32, u32);
+        #[ds(eqrel)]
+        relation grouped_eq(u32, u32, u32);
+        relation binary_output(u32, u32);
+        relation grouped_output(u32, u32, u32);
+        binary_eq(x, y) <-- binary_seed(x, y);
+        grouped_eq(g, x, y) <-- grouped_seed(g, x, y);
+        binary_output(x, y) <-- binary_eq(x, y);
+        grouped_output(g, x, y) <-- grouped_eq(g, x, y);
+    }
+    let mut program = AscentProgram {
+        binary_seed: binary.to_vec(),
+        grouped_seed: grouped.to_vec(),
+        ..AscentProgram::default()
+    };
+    program.run();
+    let mut rows: Vec<_> = program
+        .binary_output
+        .iter()
+        .map(|(x, y)| format!("binary-output\t{x}\t{y}"))
+        .chain(
+            program
+                .grouped_output
+                .iter()
+                .map(|(g, x, y)| format!("grouped-output\t{g}\t{x}\t{y}")),
+        )
+        .collect();
+    rows.sort_unstable();
+    rows
+}
+
+#[test]
+fn binary_and_grouped_eqrel_match_ascent_byods() {
+    let snapshots: &[(Vec<(u32, u32)>, Vec<(u32, u32, u32)>)] = &[
+        (vec![], vec![]),
+        (vec![(1, 2)], vec![(0, 3, 4)]),
+        (vec![(1, 2), (2, 3)], vec![(0, 1, 2), (1, 2, 3)]),
+        (
+            vec![(1, 2), (3, 4), (2, 3), (1, 2)],
+            vec![(0, 1, 2), (0, 2, 3), (1, 4, 5)],
+        ),
+    ];
+    for (binary, grouped) in snapshots {
+        let binary_request = binary
+            .iter()
+            .map(|(x, y)| format!("({x} {y})"))
+            .collect::<Vec<_>>()
+            .join(" ");
+        let grouped_request = grouped
+            .iter()
+            .map(|(g, x, y)| format!("({g} {x} {y})"))
+            .collect::<Vec<_>>()
+            .join(" ");
+        let request = format!("(({binary_request}) ({grouped_request}))\n");
+        let output = scheme_output("eqrel-rows", &request);
+        let mut actual: Vec<_> = output.lines().map(str::to_owned).collect();
+        assert_eq!(actual.pop().as_deref(), Some("END"));
+        actual.sort_unstable();
+        assert_eq!(actual, ascent_eqrel_rows(binary, grouped));
+    }
+}
+
+fn ascent_trrel_rows(binary: &[(u32, u32)], grouped: &[(u32, u32, u32)]) -> Vec<String> {
+    ascent! {
+        relation binary_seed(u32, u32);
+        relation grouped_seed(u32, u32, u32);
+        #[ds(trrel)]
+        relation binary_tr(u32, u32);
+        #[ds(trrel)]
+        relation grouped_tr(u32, u32, u32);
+        relation binary_output(u32, u32);
+        relation grouped_output(u32, u32, u32);
+        binary_tr(x, y) <-- binary_seed(x, y);
+        grouped_tr(g, x, y) <-- grouped_seed(g, x, y);
+        binary_output(x, y) <-- binary_tr(x, y);
+        grouped_output(g, x, y) <-- grouped_tr(g, x, y);
+    }
+    let mut program = AscentProgram {
+        binary_seed: binary.to_vec(),
+        grouped_seed: grouped.to_vec(),
+        ..AscentProgram::default()
+    };
+    program.run();
+    let mut rows: Vec<_> = program
+        .binary_output
+        .iter()
+        .map(|(x, y)| format!("binary-output\t{x}\t{y}"))
+        .chain(
+            program
+                .grouped_output
+                .iter()
+                .map(|(g, x, y)| format!("grouped-output\t{g}\t{x}\t{y}")),
+        )
+        .collect();
+    rows.sort_unstable();
+    rows
+}
+
+#[test]
+fn binary_and_grouped_trrel_match_ascent_byods() {
+    let snapshots: &[(Vec<(u32, u32)>, Vec<(u32, u32, u32)>)] = &[
+        (vec![], vec![]),
+        (vec![(1, 2)], vec![(0, 3, 4)]),
+        (vec![(1, 2), (2, 3)], vec![(0, 1, 2), (1, 2, 3)]),
+        (vec![(1, 2), (2, 3), (3, 1)], vec![(0, 1, 2), (0, 2, 1)]),
+        (vec![(1, 2), (3, 4), (2, 3)], vec![(0, 1, 2), (1, 2, 3)]),
+    ];
+    for (binary, grouped) in snapshots {
+        let binary_request = binary
+            .iter()
+            .map(|(x, y)| format!("({x} {y})"))
+            .collect::<Vec<_>>()
+            .join(" ");
+        let grouped_request = grouped
+            .iter()
+            .map(|(g, x, y)| format!("({g} {x} {y})"))
+            .collect::<Vec<_>>()
+            .join(" ");
+        let request = format!("(({binary_request}) ({grouped_request}))\n");
+        let output = scheme_output("trrel-rows", &request);
+        let mut actual: Vec<_> = output.lines().map(str::to_owned).collect();
+        assert_eq!(actual.pop().as_deref(), Some("END"));
+        actual.sort_unstable();
+        assert_eq!(actual, ascent_trrel_rows(binary, grouped));
     }
 }

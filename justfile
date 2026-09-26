@@ -53,5 +53,11 @@ index-rows:
 index-rows-alist:
     @timeout 15s gerbil {{ gerbil_test_runtime_options }} t/qualification/ascent-index-program-output.ss alist
 
+eqrel-rows:
+    @timeout 15s gerbil {{ gerbil_test_runtime_options }} t/qualification/ascent-eqrel-program-output.ss
+
+trrel-rows:
+    @timeout 15s gerbil {{ gerbil_test_runtime_options }} t/qualification/ascent-eqrel-program-output.ss trrel
+
 oracle:
     cargo test --locked --manifest-path rust/ascent-oracle/Cargo.toml

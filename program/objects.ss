@@ -8,6 +8,8 @@
         (only-in :clan/poo/mop .defgeneric validate)
         (only-in :gerbil-ascent/table/provider
                  gerbil-ascent-hash-index-provider)
+        (only-in :gerbil-ascent/table/storage
+                 gerbil-ascent-set-storage-provider)
         (only-in "types.ss"
                  GerbilAscentRelationContract
                  GerbilAscentLatticeContract
@@ -119,7 +121,8 @@
             (cons name bound) 0)))
 
 (def (gerbil-ascent-relation relation-name column-count source-rows
-                             (provider-value gerbil-ascent-hash-index-provider))
+                             (provider-value gerbil-ascent-hash-index-provider)
+                             (storage-value gerbil-ascent-set-storage-provider))
   (unless (and (symbol? relation-name)
                (exact-integer? column-count) (<= 0 column-count)
                (list? source-rows))
@@ -132,7 +135,8 @@
   (validate GerbilAscentRelationContract
             (.o (:: @ Relation.)
                 name: relation-name arity: column-count rows: source-rows
-                storage-kind: 'relation index-provider: provider-value)))
+                storage-kind: 'relation index-provider: provider-value
+                storage-provider: storage-value)))
 
 (def (gerbil-ascent-lattice relation-name column-count source-rows
                             join-procedure

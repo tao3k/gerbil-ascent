@@ -10,7 +10,9 @@
                  PooFlowNativeObjectContract.
                  poo-flow-predicate-contract)
         (only-in :gerbil-ascent/table/provider
-                 GerbilAscentIndexProviderContract))
+                 GerbilAscentIndexProviderContract)
+        (only-in :gerbil-ascent/table/storage
+                 GerbilAscentStorageProviderContract))
 
 (export GerbilAscentRelationContract
         GerbilAscentLatticeContract
@@ -41,6 +43,10 @@
   (slot-contract 'ascent/index-provider
                  (lambda (value)
                    (element? GerbilAscentIndexProviderContract value))))
+(def +storage-provider+
+  (slot-contract 'ascent/storage-provider
+                 (lambda (value)
+                   (element? GerbilAscentStorageProviderContract value))))
 (def +term-kind+
   (slot-contract 'ascent/term-kind
                  (lambda (value) (memq value '(variable literal)))))
@@ -54,7 +60,8 @@
   proto: (.o)
   responsibilities: (.o name: +symbol+ arity: +arity+ rows: +rows+
                       storage-kind: (clause-kind-contract 'relation)
-                      index-provider: +provider+))
+                      index-provider: +provider+
+                      storage-provider: +storage-provider+))
 
 (define-type (GerbilAscentLatticeContract @ PooFlowNativeObjectContract.)
   identity: 'ascent/lattice

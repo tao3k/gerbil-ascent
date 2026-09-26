@@ -6,8 +6,9 @@
 
 (defbuild-script
   '("table/expression"
-    "table/index"
+    "table/funs"
     "table/provider"
+    "table/storage"
     "table/interface"
     "program/types"
     "program/objects"

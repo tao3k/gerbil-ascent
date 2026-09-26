@@ -29,13 +29,17 @@ the relevant method slots; the alist qualification fixture exercises this
 surface. Public Provider construction does not require a positional pair of
 callback functions.
 
-Index construction and rule evaluation remain named Scheme algorithms. The
+Index construction, equivalence closure and rule evaluation remain named Scheme algorithms. The
 tagged vectors inside the evaluator are private lowered plans, not a second
 public declaration language. There is currently no independently growing
 Provider-by-Profile crossing, so adding CLOS methods here would not satisfy
 the POO Flow two-axis rule. A future BYODS storage Provider needs its own
 semantic contract and Rust parity fixtures before it can become an extension
-surface.
+surface. Pure table algorithms live in =table/funs.ss=, following the POO Flow
+module-system source-role rule; =table/storage.ss= owns only the POO storage
+Provider contract and method selection. This separation allows Gerbil and its
+Standard Library to determine the implementation instead of copying Rust's
+data-structure layout.
 
 * Feature matrix
 
@@ -49,7 +53,7 @@ surface.
 | Aggregation and custom aggregators | =program/= | count, sum, min, max, mean and custom iterator aggregators pass empty, duplicate-input and grouped Rust fixtures | recursive aggregate corpus, broader type behavior and performance receipts |
 | Lattice declarations and recursive joins | =program/=, =table/= | POO lattice declaration with user join; selected recursive shortest-path and duplicate-key snapshots match Rust | broader join families, lattice/negation composition, invalid join laws and scale receipts |
 | Relation indexes and selected physical plan | =table/=, =program/= | bound-column hash index plan for generic relation clauses above a 32-row threshold; 50-edge two-hop SS scenario passes | broader arities, composite and lattice indexes, provider choice and scale comparison |
-| BYODS data structure provider protocol | =table/= | POO index Provider with default hash and custom alist fixtures; both match selected Rust join output | storage/merge Provider semantics, equivalence and transitive providers, scale parity |
+| BYODS data structure provider protocol | =table/= | POO index Provider with default hash and custom alist fixtures; set, =eqrel= and =trrel= storage Providers have bounded Scheme functions; selected binary and grouped ternary materialized rows match Rust =ascent-byods-rels 0.8.0= | broader storage/merge semantics, =trrel_uf= provider, scale parity |
 | Parallel execution | =core/=, =table/= | absent | deterministic serial/parallel parity and contention benchmark |
 | Gerbil module and macro embedding | =core/=, =interface/= | callable Scheme functions, no full declaration surface | module reuse, local bindings, generated declarations and diagnostics |
 
@@ -71,6 +75,11 @@ The 1 ms ceiling is not stable. The =ascent-indexed-joins= SS scenario uses 50
 binary edges and measured 800 us p95 with the default index, and 663 and
 851 us after adding the Provider seam. These are not cross-platform or
 large-scale claims.
+After adding storage Providers, one local 20-sample run measured 1.305 ms p95
+for indexed joins and 1.804 ms p95 for the rule clauses; the latter exceeded
+its 1 ms budget. The samples show that the new dispatch path needs further
+optimization and that semantic parity alone does not close the performance
+row.
 Declaration construction is outside this timing window and remains a separate
 cost.
 

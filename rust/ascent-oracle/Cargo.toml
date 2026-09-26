@@ -7,3 +7,6 @@ publish = false
 
 [dependencies]
 ascent = "=0.8.0"
+
+[dev-dependencies]
+ascent-byods-rels = "=0.8.0"

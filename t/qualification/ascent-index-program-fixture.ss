@@ -9,7 +9,7 @@
                  gerbil-ascent-program)
         (only-in :gerbil-ascent/table/interface
                  gerbil-ascent-hash-index-provider)
-        (only-in :gerbil-ascent/table/index
+        (only-in :gerbil-ascent/table/funs
                  gerbil-ascent-index-key))
 
 (export ascent-index-fixture-program ascent-index-alist-provider)

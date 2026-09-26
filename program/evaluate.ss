@@ -9,6 +9,8 @@
         (only-in :gerbil-ascent/table/provider
                  gerbil-ascent-index-provider-build
                  gerbil-ascent-index-provider-lookup)
+        (only-in :gerbil-ascent/table/storage
+                 gerbil-ascent-storage-extend)
         (only-in :clan/poo/support/base until))
 
 (export gerbil-ascent-evaluate-program)
@@ -41,10 +43,12 @@
            (all-indexes (make-vector count #f))
            (delta-indexes (make-vector count #f))
            (index-providers (make-vector count #f))
+           (storage-providers (make-vector count #f))
            (seen (make-vector count #f))
            (lattice-joins (make-vector count #f))
            (lattice-rows (make-vector count #f))
            (source-count 0)
+           (source-materialized-count 0)
            (derived-count 0))
       (def (lattice-key row)
         (reverse (cdr (reverse row))))
@@ -165,11 +169,13 @@
                   (error "invalid ASCENT lattice join" name))
                 (vector-set! lattice-joins index join)
                 (vector-set! lattice-rows index (make-hash-table))))
+            (when (eq? kind 'relation)
+              (vector-set! storage-providers index
+                (.ref relation 'storage-provider)))
             (for-each
              (lambda (row)
                (unless (and (list? row) (= (length row) width))
                  (error "invalid ASCENT relation row" name row))
-               (hash-put! present row #t)
                (set! source-count (+ source-count 1))
                (when (or (> source-count input-limit)
                          (> source-count output-limit))
@@ -185,6 +191,9 @@
                                         (lattice-value row)))
                                   row)))
                    (hash-put! keyed key merged)
+                   (unless previous
+                     (set! source-materialized-count
+                       (+ source-materialized-count 1)))
                    (vector-set! all index
                      (cons merged
                            (if previous
@@ -193,8 +202,25 @@
                                                     key)))
                                      (vector-ref all index))
                              (vector-ref all index)))))
-                 (vector-set! all index
-                   (cons row (vector-ref all index)))))
+                 (let (materialized
+                       (gerbil-ascent-storage-extend
+                        (vector-ref storage-providers index)
+                        (vector-ref all index) [] row
+                        (- output-limit source-materialized-count)))
+                   (unless (list? materialized)
+                     (error "ASCENT storage provider returned non-list rows"))
+                   (for-each
+                    (lambda (stored)
+                      (unless (and (list? stored) (= (length stored) width))
+                        (error "invalid ASCENT storage provider row" stored))
+                      (hash-put! present stored #t)
+                      (set! source-materialized-count
+                        (+ source-materialized-count 1))
+                      (when (> source-materialized-count output-limit)
+                        (error "ASCENT source fact budget exceeded"))
+                      (vector-set! all index
+                        (cons stored (vector-ref all index))))
+                    materialized))))
              rows)
             (vector-set! seen index present)
             (vector-set! index-providers index
@@ -357,12 +383,29 @@
                                         (not (equal? (lattice-key existing)
                                                      key)))
                                       (vector-ref pending index))))))
-                  (unless (or (hash-get (vector-ref seen index) row)
-                              (hash-get (vector-ref pending-seen index) row))
-                    (hash-put! (vector-ref pending-seen index) row #t)
-                    (set! pending-count (+ pending-count 1))
-                    (vector-set! pending index
-                      (cons row (vector-ref pending index)))))
+                  (let (expanded
+                        (gerbil-ascent-storage-extend
+                         (vector-ref storage-providers index)
+                         (vector-ref all index)
+                         (vector-ref pending index) row
+                         (- output-limit
+                            (+ source-count derived-count pending-count))))
+                    (unless (list? expanded)
+                      (error "ASCENT storage provider returned non-list rows"))
+                    (for-each
+                     (lambda (stored)
+                       (unless (and (list? stored)
+                                    (= (length stored)
+                                       (vector-ref arity index)))
+                         (error "invalid ASCENT storage provider row" stored))
+                       (unless (or (hash-get (vector-ref seen index) stored)
+                                   (hash-get (vector-ref pending-seen index)
+                                             stored))
+                         (hash-put! (vector-ref pending-seen index) stored #t)
+                         (set! pending-count (+ pending-count 1))
+                         (vector-set! pending index
+                           (cons stored (vector-ref pending index)))))
+                     expanded)))
                 (when (> (+ derived-count pending-count) derived-limit)
                   (error "ASCENT derived fact budget exceeded"))
                 (when (> (+ source-count derived-count pending-count)

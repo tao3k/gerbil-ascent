@@ -9,7 +9,7 @@
         (only-in :poo-flow-foundation/module-system/types
                  PooFlowNativeObjectContract.
                  poo-flow-predicate-contract)
-        (only-in "index.ss" gerbil-ascent-index-build))
+        (only-in "funs.ss" gerbil-ascent-index-build))
 
 (export GerbilAscentIndexProviderContract
         gerbil-ascent-hash-index-provider

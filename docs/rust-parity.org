@@ -68,7 +68,7 @@ execution state.
 | Lattice declarations and recursive joins | =program/=, =table/= | POO lattice declaration with user join; selected recursive shortest-path and duplicate-key snapshots match Rust | broader join families, lattice/negation composition, invalid join laws and scale receipts |
 | Relation indexes and selected physical plan | =table/=, =program/= | bound-column hash index plan for generic relation clauses above a 32-row threshold; 50-edge two-hop SS scenario passes | broader arities, composite and lattice indexes, provider choice and scale comparison |
 | BYODS data structure provider protocol | =table/= | POO index Provider with default hash and custom alist fixtures; set, =eqrel=, =trrel= and =trrel_uf= storage Providers have bounded Scheme functions; selected binary and grouped ternary materialized rows match Rust =ascent-byods-rels 0.8.0= | broader storage/merge semantics and scale parity |
-| Parallel execution | =core/=, =table/= | absent | deterministic serial/parallel parity, bounded worker failure behavior and contention benchmark |
+| Parallel execution | =core/=, =table/= | four independent Scheme program evaluations pass a concurrent reentrancy qualification under Foundation Observability; intra-program evaluation is serial | deterministic intra-program serial/parallel parity, bounded worker failure behavior and contention benchmark |
 | Gerbil module and macro embedding | =program/=, =interface/= | reusable Gerbil module exports a rule-program constructor; lexical origin capture matches selected Rust =ascent_run!= snapshots | generated declarations, module composition beyond one rule family, macro diagnostics and performance |
 
 The current Rust oracle in =rust/ascent-oracle/= covers positive binary
@@ -83,6 +83,10 @@ The mutual-recursion fixture declares its seed rule after the two recursive
 rules and includes a directed cycle. Both =path0= and =path1= match Rust after
 deduplication for a cycle, reversed source order, and a finite chain. This is
 evidence for one SCC shape, not a general termination proof.
+The concurrent qualification launches four independent fixed-point programs
+with Gerbil workers and checks every returned relation projection. It checks
+reentrancy across programs; it does not establish intra-program parallel
+execution or a throughput gain.
 
 The standard =ascent-rule-clauses= SS scenario measures evaluation of one
 predeclared program over three ternary edges. A post-index isolated 20-sample

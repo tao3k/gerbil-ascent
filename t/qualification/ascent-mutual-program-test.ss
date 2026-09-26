@@ -3,9 +3,12 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 (import (only-in :std/test check-equal? test-suite)
-        (only-in :clan/poo/object .ref)
+        (only-in :clan/poo/object .o .ref)
+        (only-in :poo-flow-foundation/module-system/observability/debug
+                 poo-flow-debug-memory-policy)
         (only-in :poo-flow-foundation/module-system/observability/testing-case
-                 poo-flow-test-case)
+                 poo-flow-test-case poo-flow-test-case/with
+                 poo-flow-default-testing-case-profile)
         (only-in :gerbil-ascent/t/qualification/ascent-mutual-program-fixture
                  ascent-mutual-evaluate))
 
@@ -14,6 +17,17 @@
 (def (same-rows? left right)
   (and (= (length left) (length right))
        (andmap (lambda (row) (member row right)) left)))
+
+(def +concurrent-case-profile+
+  (.o (:: @ poo-flow-default-testing-case-profile)
+      (identity 'ascent/concurrent-snapshots)
+      (memory-policy
+       (poo-flow-debug-memory-policy
+        'ascent/concurrent-snapshots heap-limit-bytes: 1073741824
+        live-growth-limit-bytes: 67108864
+        sample-interval-milliseconds: 10
+        collect-before-sample?: #t))
+      (max-duration-milliseconds 15000)))
 
 (def ascent-mutual-program-test
   (test-suite "ASCENT mutually recursive relations"
@@ -37,4 +51,23 @@
             (not (not (same-rows? ((.ref first 'rows-of) name)
                                   ((.ref reverse-source 'rows-of) name))))
             #t))
-         '(path0 path1))))))
+         '(path0 path1))))
+    (poo-flow-test-case/with +concurrent-case-profile+
+      "independent fixed-point runs are reentrant across workers"
+      (let* ((sources '(((1 2) (2 3) (3 1))
+                       ((1 2) (2 3))
+                       ((4 5) (5 6) (6 4))
+                       ((1 2) (2 1))))
+             (workers
+              (map (lambda (edges)
+                     (spawn
+                      (lambda ()
+                        (let (result (ascent-mutual-evaluate edges))
+                          (list ((.ref result 'rows-of) 'path0)
+                                ((.ref result 'rows-of) 'path1))))))
+                   sources))
+             (results (map thread-join! workers)))
+        (check-equal? (map (lambda (rows) (length (car rows))) results)
+                      '(9 2 9 2))
+        (check-equal? (map (lambda (rows) (length (cadr rows))) results)
+                      '(9 1 9 2))))))

@@ -24,7 +24,7 @@ proposals rather than core parity claims.
 | Relation declaration, arbitrary arity and column types | =program/= | positive generic path handles unary through four-column mixed rows; binary fast path remains | broader column types and scale/performance receipts |
 | Multiple heads, relation clauses, repeated variables, joins | =program/= | positive generic multi-head rules, joins and repeated-variable equality pass selected Rust oracle fixtures | arbitrary body shape, invalid-program corpus and performance receipts |
 | Semi-naive least fixed point, dependencies and strata | =program/=, =core/= | positive recursive generic path and binary fast path | recursive SCCs, stratification, rule order and termination parity |
-| Conditions and generators | =core/= | Scheme predicate over two binary endpoints | Rust =if= and =for= fixtures, binding scope, invalid binding cases |
+| Conditions and generators | =program/=, =core/= | generic POO guard and finite list generator clauses with ordered binding checks; binary predicate path remains | broader iterator/pattern shapes and scale receipts |
 | Stratified negation | =core/= | absent | negated relation fixtures, unsafe-cycle rejection |
 | Aggregation and custom aggregators | =core/= | absent | count, sum, min, max, mean and custom iterator aggregators |
 | Lattice declarations and recursive joins | =table/=, =core/= | selected minimum distance projection only | generic lattice interface, recursive lattice fixtures, invalid join tests |
@@ -35,10 +35,19 @@ proposals rather than core parity claims.
 
 The current Rust oracle in =rust/ascent-oracle/= covers positive binary
 closure, guarded filter/copy/join, shortest source support, and selected
-arbitrary-column positive rules across source snapshots. These fixtures do
+arbitrary-column positive rules, =if= guards, and =for= generators across
+source snapshots. Scheme generators currently return finite lists and name
+their input variables explicitly. These fixtures do
 not close the rows above. =candidate/= and
 =interface/= hold existing experimental projections; their MRR or Agent use
 cannot substitute for Rust feature parity.
+
+The standard =ascent-positive-clauses= SS scenario measures evaluation of one
+predeclared program over three ternary edges. A local 20-sample run measured
+293 us p95 after removing repeated deep contract checks and repeated POO slot
+reads from the row loop. The 1 ms ceiling is a local gate, not yet a scale or
+cross-platform performance claim. Declaration construction is outside this
+particular timing window and remains a separate cost.
 
 * Implementation order
 

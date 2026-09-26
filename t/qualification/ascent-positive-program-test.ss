@@ -13,7 +13,9 @@
                  ascent-positive-fixture-evaluate)
         (only-in :gerbil-ascent/program/interface
                  gerbil-ascent-relation gerbil-ascent-variable
-                 gerbil-ascent-literal gerbil-ascent-atom gerbil-ascent-rule
+                 gerbil-ascent-literal gerbil-ascent-atom
+                 gerbil-ascent-guard gerbil-ascent-generator
+                 gerbil-ascent-rule
                  gerbil-ascent-positive-program
                  gerbil-ascent-evaluate-positive-program))
 
@@ -57,6 +59,10 @@
         (check-equal? (rows result 'cycle) '((3)))
         (check-equal? (rows result 'hot) '((1)))
         (check-equal? (rows result 'selected) '((1 2)))
+        (check-equal? (length (rows result 'choice)) 6)
+        (check-equal? (not (not (member '(1 2) (rows result 'choice)))) #t)
+        (check-equal? (member '(1 1) (rows result 'choice)) #f)
+        (check-equal? (length (rows result 'generated)) 3)
         (check-equal? (length reach) 4)
         (check-equal? (length (rows result 'node)) 3)))
     (poo-flow-test-case/with +positive-case-profile+
@@ -95,5 +101,46 @@
          (list (gerbil-ascent-rule
                 (list (a 'out (v 'x)) (a 'bad (v 'free)))
                 (list (a 'source (v 'x)))))
+         2 2 3)) true)
+      (check-exception
+       (gerbil-ascent-evaluate-positive-program
+        (gerbil-ascent-positive-program
+         (list (gerbil-ascent-relation 'out 1 []))
+         (list (r (a 'out (v 'x))
+                  (gerbil-ascent-guard '(x) (lambda (x) #t))
+                  (gerbil-ascent-generator 'x [] (lambda () '(1)))))
+         2 2 3)) true)
+      (check-exception
+       (gerbil-ascent-evaluate-positive-program
+        (gerbil-ascent-positive-program
+         (list (gerbil-ascent-relation 'out 1 []))
+         (list (r (a 'out (v 'x))
+                  (gerbil-ascent-generator 'x '(missing)
+                                           (lambda (_) '(1)))))
+         2 2 3)) true)
+      (check-exception
+       (gerbil-ascent-evaluate-positive-program
+        (gerbil-ascent-positive-program
+         (list (gerbil-ascent-relation 'source 1 '((1)))
+               (gerbil-ascent-relation 'out 1 []))
+         (list (r (a 'out (v 'x))
+                  (a 'source (v 'x))
+                  (gerbil-ascent-generator 'x [] (lambda () '(2)))))
+         2 2 3)) true)
+      (check-exception
+       (gerbil-ascent-evaluate-positive-program
+        (gerbil-ascent-positive-program
+         (list (gerbil-ascent-relation 'source 1 '((1)))
+               (gerbil-ascent-relation 'out 1 []))
+         (list (r (a 'out (v 'x))
+                  (a 'source (v 'x))
+                  (gerbil-ascent-guard '(x) (lambda (_) 'yes))))
+         2 2 3)) true)
+      (check-exception
+       (gerbil-ascent-evaluate-positive-program
+        (gerbil-ascent-positive-program
+         (list (gerbil-ascent-relation 'out 1 []))
+         (list (r (a 'out (v 'x))
+                  (gerbil-ascent-generator 'x [] (lambda () '#(1)))))
          2 2 3)) true)
       (check-equal? (.ref (gerbil-ascent-literal "x") 'value) "x"))))

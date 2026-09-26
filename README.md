@@ -16,6 +16,11 @@ Each top-level directory is a Gerbil module namespace:
 | `:gerbil-ascent/candidate/*` | Experimental candidate and support projection |
 | `:gerbil-ascent/interface/*` | Inert request projection |
 
+`program/` exposes POO `atom`, `guard`, and finite-list `generator` clauses.
+Guards and generators declare their input variables explicitly, and rule
+bodies check bindings in source order. The evaluator reads validated clause
+slots once per run before iterating relation rows.
+
 `t/` contains Scheme qualification; `rust/ascent-oracle/` contains the
 test-only Rust Ascent differential oracle. The [parity matrix](docs/rust-parity.org)
 tracks the unfinished Rust 0.8.0 feature surface. Complete Scheme parity is

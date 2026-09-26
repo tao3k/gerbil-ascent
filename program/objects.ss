@@ -10,6 +10,8 @@
                  GerbilAscentRelationContract
                  GerbilAscentTermContract
                  GerbilAscentAtomContract
+                 GerbilAscentGuardContract
+                 GerbilAscentGeneratorContract
                  GerbilAscentRuleContract
                  GerbilAscentProgramContract))
 
@@ -17,12 +19,16 @@
         gerbil-ascent-variable
         gerbil-ascent-literal
         gerbil-ascent-atom
+        gerbil-ascent-guard
+        gerbil-ascent-generator
         gerbil-ascent-rule
         gerbil-ascent-positive-program)
 
 (def Relation. (.ref GerbilAscentRelationContract 'proto))
 (def Term. (.ref GerbilAscentTermContract 'proto))
 (def Atom. (.ref GerbilAscentAtomContract 'proto))
+(def Guard. (.ref GerbilAscentGuardContract 'proto))
+(def Generator. (.ref GerbilAscentGeneratorContract 'proto))
 (def Rule. (.ref GerbilAscentRuleContract 'proto))
 (def Program. (.ref GerbilAscentProgramContract 'proto))
 
@@ -51,7 +57,21 @@
 
 (def (gerbil-ascent-atom relation-name atom-terms)
   (validate GerbilAscentAtomContract
-            (.o (:: @ Atom.) relation: relation-name terms: atom-terms)))
+            (.o (:: @ Atom.) ascent-clause-kind: 'atom
+                relation: relation-name terms: atom-terms)))
+
+(def (gerbil-ascent-guard input-variables guard-procedure)
+  (validate GerbilAscentGuardContract
+            (.o (:: @ Guard.) ascent-clause-kind: 'guard
+                variables: input-variables
+                predicate: guard-procedure)))
+
+(def (gerbil-ascent-generator output-variable input-variables
+                              generator-procedure)
+  (validate GerbilAscentGeneratorContract
+            (.o (:: @ Generator.) ascent-clause-kind: 'generator
+                variable: output-variable
+                variables: input-variables generate: generator-procedure)))
 
 (def (gerbil-ascent-rule head-atoms body-atoms)
   (validate GerbilAscentRuleContract

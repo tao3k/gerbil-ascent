@@ -13,6 +13,8 @@
 (export GerbilAscentRelationContract
         GerbilAscentTermContract
         GerbilAscentAtomContract
+        GerbilAscentGuardContract
+        GerbilAscentGeneratorContract
         GerbilAscentRuleContract
         GerbilAscentProgramContract)
 
@@ -33,6 +35,8 @@
   (slot-contract 'ascent/term-kind
                  (lambda (value) (memq value '(variable literal)))))
 (def +any+ (slot-contract 'ascent/value (lambda (_value) #t)))
+(def (clause-kind-contract kind)
+  (slot-contract 'ascent/clause-kind (lambda (value) (eq? value kind))))
 
 (define-type (GerbilAscentRelationContract @ PooFlowNativeObjectContract.)
   identity: 'ascent/relation
@@ -55,14 +59,37 @@
 (define-type (GerbilAscentAtomContract @ PooFlowNativeObjectContract.)
   identity: 'ascent/atom
   proto: (.o)
-  responsibilities: (.o relation: +symbol+ terms: +terms+))
+  responsibilities: (.o ascent-clause-kind: (clause-kind-contract 'atom)
+                      relation: +symbol+ terms: +terms+))
 
-(def +atoms+
-  (slot-contract 'ascent/atoms
+(def +variables+
+  (slot-contract 'ascent/variables
+                 (lambda (value)
+                   (and (list? value) (andmap symbol? value)))))
+(def +procedure+ (slot-contract 'ascent/procedure procedure?))
+
+(define-type (GerbilAscentGuardContract @ PooFlowNativeObjectContract.)
+  identity: 'ascent/guard
+  proto: (.o)
+  responsibilities: (.o ascent-clause-kind: (clause-kind-contract 'guard)
+                      variables: +variables+ predicate: +procedure+))
+
+(define-type (GerbilAscentGeneratorContract @ PooFlowNativeObjectContract.)
+  identity: 'ascent/generator
+  proto: (.o)
+  responsibilities: (.o ascent-clause-kind:
+                      (clause-kind-contract 'generator)
+                      variable: +symbol+ variables: +variables+
+                      generate: +procedure+))
+
+(def +clauses+
+  (slot-contract 'ascent/clauses
                  (lambda (value)
                    (and (list? value)
-                        (andmap (lambda (atom)
-                                  (element? GerbilAscentAtomContract atom))
+                        (andmap (lambda (clause)
+                                  (or (element? GerbilAscentAtomContract clause)
+                                      (element? GerbilAscentGuardContract clause)
+                                      (element? GerbilAscentGeneratorContract clause)))
                                 value)))))
 (def +heads+
   (slot-contract 'ascent/heads
@@ -76,7 +103,7 @@
 (define-type (GerbilAscentRuleContract @ PooFlowNativeObjectContract.)
   identity: 'ascent/rule
   proto: (.o)
-  responsibilities: (.o heads: +heads+ body: +atoms+))
+  responsibilities: (.o heads: +heads+ body: +clauses+))
 
 (def +relations+
   (slot-contract 'ascent/relations

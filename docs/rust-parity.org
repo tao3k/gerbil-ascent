@@ -54,8 +54,12 @@ qualification case checks that a two-edge =eqrel= source cannot materialize
 nine rows and then derive nine more under a twelve-row output limit.
 Dependency stratification, delta-position planning, lattice row operations
 and rule binding live in =program/funs.ss= as named Scheme functions. The
-evaluator retains snapshot-local fact buffers, pending deltas and rule
-execution state.
+evaluator retains session-local fact buffers, pending deltas and rule
+execution state. Its public =GerbilAscentSessionContract= exposes
+=.append-source!= and =.run= procedures. =gerbil-ascent-open-session= creates
+one session; the one-shot API executes that session once. Results contain
+stable row snapshots. A second run without new materialized rows reuses its
+result, while positive relation-atom rules consume appended source deltas.
 
 * Feature matrix
 
@@ -64,7 +68,7 @@ execution state.
 | Relation declaration, arbitrary arity and column types | =program/= | positive generic path handles nullary through four-column mixed rows, including a nullary rule gate over boolean and string columns; binary fast path remains | broader column types and scale/performance receipts |
 | Multiple heads, relation clauses, repeated variables, joins | =program/= | positive generic multi-head rules, joins and repeated-variable equality pass selected Rust oracle fixtures | arbitrary body shape, invalid-program corpus and performance receipts |
 | Semi-naive least fixed point, dependencies and strata | =program/=, =core/= | generic recursive path supports positive and negative strata; a two-relation mutually recursive SCC with cyclic and reordered sources matches selected Rust fixed-point snapshots | broader SCC/rule order, invalid-program and termination corpus |
-| Repeated =run()= after source relation updates | =program/= | Scheme reevaluation of immutable POO snapshots matches Rust across insertion, unchanged rerun, duplicate insertion and cycle completion; Rust 0.8.0 retains its program object and refreshes indexes on each run, while Scheme has no retained program state | measure repeated-run update cost and define a Scheme session boundary before claiming state reuse |
+| Repeated =run()= after source relation updates | =program/= | Retained Scheme session reuses rows, indexes and BYODS state for positive atom-only source additions; insertion, unchanged rerun, duplicate and cycle snapshots match selected Rust fixtures. Source deletion and nonpositive updates require fresh evaluation | measure session update cost and compare wider positive corpus; characterize Rust retained-state behavior for negation and aggregates |
 | Conditions, bindings and generators | =program/=, =core/= | generic POO guard, =let= binding and finite list generator clauses with ordered binding checks | broader iterator/pattern shapes and scale receipts |
 | Stratified negation | =program/= | 3-level negated relation fixture and negative-cycle rejection pass selected Rust oracle comparison | broader safe/unsafe programs and performance receipts |
 | Aggregation and custom aggregators | =program/= | count, sum, min, max, mean and custom iterator aggregators pass empty, duplicate-input and grouped Rust fixtures | recursive aggregate corpus, broader type behavior and performance receipts |
@@ -98,8 +102,15 @@ reevaluation at each changed prefix. Pinned Ascent 0.8.0 calls
 =update_indices_priv= at the start of =run=; its generated
 =compile_update_indices_function_body= iterates every row in each relation.
 Therefore Rust's retained program object is not evidence of an O(delta)
-update. Scheme currently has no public retained execution session or
-measured repeated-run cost; snapshot parity does not close those gaps.
+update. Scheme now has a public retained session for positive atom-only
+source additions; the reachability and grouped BYODS fixtures compare its
+results with fresh evaluations while checking earlier snapshots stay stable.
+No measured update-cost receipt exists yet. The Rust oracle also records
+that appending a blocking fact does not retract a previously derived negated
+row, and that appending an aggregate source can retain the old total and
+produce a new total different from a fresh program. These are observed
+Rust 0.8.0 repeated-run behaviors, not a claim that nonmonotone updates have
+clean incremental semantics. Scheme rejects such session updates.
 The concurrent qualification launches four independent fixed-point programs
 with Gerbil workers and checks every returned relation projection. It checks
 reentrancy across programs; it does not establish intra-program parallel

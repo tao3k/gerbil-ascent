@@ -12,15 +12,14 @@
                  gerbil-ascent-atom gerbil-ascent-rule
                  gerbil-ascent-program gerbil-ascent-evaluate-program))
 
-(export ascent-byods-query-evaluate)
+(export ascent-byods-query-program ascent-byods-query-evaluate)
 
 (def (v name) (gerbil-ascent-variable name))
 (def (a name . terms) (gerbil-ascent-atom name terms))
 (def (r head . body) (gerbil-ascent-rule (list head) body))
 
-(def (ascent-byods-query-evaluate seed wanted (seed-extra []))
-  (gerbil-ascent-evaluate-program
-   (gerbil-ascent-program
+(def (ascent-byods-query-program seed wanted (seed-extra []))
+  (gerbil-ascent-program
     (list
      (gerbil-ascent-relation 'seed 3 seed)
      (gerbil-ascent-relation 'seed-extra 3 seed-extra)
@@ -59,4 +58,8 @@
      (r (a 'uf-match (v 'g) (v 'x) (v 'y))
         (a 'uf (v 'g) (v 'x) (v 'y))
         (a 'wanted (v 'g) (v 'y))))
-    64 256 320)))
+    64 256 320))
+
+(def (ascent-byods-query-evaluate seed wanted (seed-extra []))
+  (gerbil-ascent-evaluate-program
+   (ascent-byods-query-program seed wanted seed-extra)))

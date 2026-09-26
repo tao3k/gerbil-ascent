@@ -1157,6 +1157,51 @@ fn rust_repeated_run_source_update_oracle() {
 }
 
 #[test]
+fn rust_repeated_run_after_negated_source_update() {
+    ascent! {
+        relation candidate(u32);
+        relation blocked(u32);
+        relation allowed(u32);
+        allowed(x) <-- candidate(x), !blocked(x);
+    }
+    let mut program = AscentProgram {
+        candidate: vec![(1,)],
+        ..AscentProgram::default()
+    };
+    program.run();
+    assert_eq!(program.allowed, vec![(1,)]);
+    program.blocked.push((1,));
+    program.run();
+    assert_eq!(program.allowed, vec![(1,)]);
+}
+
+#[test]
+fn rust_repeated_run_after_aggregate_source_update() {
+    ascent! {
+        relation number(i32);
+        relation total(i32);
+        total(value) <-- agg value = sum(x) in number(x);
+    }
+    let mut program = AscentProgram {
+        number: vec![(1,)],
+        ..AscentProgram::default()
+    };
+    program.run();
+    assert_eq!(program.total, vec![(1,)]);
+    program.number.push((2,));
+    program.run();
+    program.total.sort_unstable();
+    assert_eq!(program.total, vec![(1,), (4,)]);
+
+    let mut fresh = AscentProgram {
+        number: vec![(1,), (2,)],
+        ..AscentProgram::default()
+    };
+    fresh.run();
+    assert_eq!(fresh.total, vec![(3,)]);
+}
+
+#[test]
 fn mutually_recursive_scc_matches_ascent() {
     ascent! {
         relation edge(u32, u32);

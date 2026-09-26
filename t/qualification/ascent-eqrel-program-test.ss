@@ -17,12 +17,16 @@
         (only-in :gerbil-ascent/program/interface
                  gerbil-ascent-relation gerbil-ascent-program
                  gerbil-ascent-evaluate-program
+                 gerbil-ascent-open-session
+                 gerbil-ascent-session-append-source!
+                 gerbil-ascent-session-run
                  gerbil-ascent-variable gerbil-ascent-atom
                  gerbil-ascent-rule)
         (only-in :gerbil-ascent/t/qualification/ascent-eqrel-program-fixture
                  ascent-eqrel-fixture-evaluate
                  ascent-storage-fixture-evaluate)
         (only-in :gerbil-ascent/t/qualification/ascent-byods-query-fixture
+                 ascent-byods-query-program
                  ascent-byods-query-evaluate))
 
 (export ascent-eqrel-program-test)
@@ -182,6 +186,29 @@
              (check-equal? (length rows) 3)
              (check-equal? (not (not (member '("alpha" 1 3) rows))) #t)))
          (list split reversed combined))))
+    (poo-flow-test-case "BYODS session joins a later source producer"
+      (let* ((session
+              (gerbil-ascent-open-session
+               (ascent-byods-query-program
+                '(("alpha" 1 2)) '(("alpha" 3)))))
+             (first (gerbil-ascent-session-run session)))
+        (check-equal? ((.ref first 'rows-of) 'eq-match) [])
+        (gerbil-ascent-session-append-source!
+         session 'seed-extra '("alpha" 2 3))
+        (let ((second (gerbil-ascent-session-run session))
+              (fresh (ascent-byods-query-evaluate
+                      '(("alpha" 1 2)) '(("alpha" 3))
+                      '(("alpha" 2 3)))))
+          (for-each
+           (lambda (name)
+             (check-equal?
+              (length ((.ref second 'rows-of) name))
+              (length ((.ref fresh 'rows-of) name))))
+           '(eq-match tr-match uf-match))
+          (check-equal? (not (not (member '("alpha" 1 3)
+                                          ((.ref second 'rows-of) 'eq-match))))
+                        #t)
+          (check-equal? ((.ref first 'rows-of) 'eq-match) []))))
     (poo-flow-test-case "BYODS providers emit only new rows across edge prefixes"
       (for-each
        (lambda (provider edges expected-sizes)

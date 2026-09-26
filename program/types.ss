@@ -24,7 +24,8 @@
         GerbilAscentNegationContract
         GerbilAscentAggregateContract
         GerbilAscentRuleContract
-        GerbilAscentProgramContract)
+        GerbilAscentProgramContract
+        GerbilAscentSessionContract)
 
 (def (slot-contract identity predicate)
   (poo-flow-predicate-contract identity predicate
@@ -186,3 +187,10 @@
       max-input-facts: +fact-budget+
       max-derived-facts: +fact-budget+
       max-output-facts: +fact-budget+))
+
+(define-type (GerbilAscentSessionContract @ PooFlowNativeObjectContract.)
+  identity: 'ascent/session
+  proto: (.o)
+  responsibilities:
+  (.o .append-source!: +procedure+
+      .run: +procedure+))

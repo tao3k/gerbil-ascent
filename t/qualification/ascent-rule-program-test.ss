@@ -21,7 +21,10 @@
                  gerbil-ascent-negation
                  gerbil-ascent-rule
                  gerbil-ascent-program
-                 gerbil-ascent-evaluate-program))
+                 gerbil-ascent-evaluate-program
+                 gerbil-ascent-open-session
+                 gerbil-ascent-session-append-source!
+                 gerbil-ascent-session-run))
 
 (export ascent-rule-program-test)
 
@@ -90,6 +93,53 @@
         (check-equal? (length (rows first 'reach)) 4)
         (check-equal? (length (rows withdrawn 'reach)) 2)
         (check-equal? (length (rows first 'reach)) 4)))
+    (poo-flow-test-case/with +two-snapshot-case-profile+
+      "positive session retains rows across source additions"
+      (let* ((program
+              (gerbil-ascent-program
+               (list (gerbil-ascent-relation 'edge 2 '((1 2)))
+                     (gerbil-ascent-relation 'reach 2 []))
+               (list (r (a 'reach (v 'x) (v 'y))
+                        (a 'edge (v 'x) (v 'y)))
+                     (r (a 'reach (v 'x) (v 'z))
+                        (a 'reach (v 'x) (v 'y))
+                        (a 'edge (v 'y) (v 'z))))
+               8 16 32))
+             (session (gerbil-ascent-open-session program))
+             (first (gerbil-ascent-session-run session)))
+        (check-equal? (rows first 'reach) '((1 2)))
+        (check-equal? (eq? first (gerbil-ascent-session-run session)) #t)
+        (gerbil-ascent-session-append-source! session 'edge '(2 3))
+        (let (second (gerbil-ascent-session-run session))
+          (check-equal? (length (rows second 'reach)) 3)
+          (check-equal? (not (not (member '(1 3) (rows second 'reach)))) #t)
+          (gerbil-ascent-session-append-source! session 'edge '(2 3))
+          (check-equal? (length (rows (gerbil-ascent-session-run session)
+                                     'reach)) 3)
+          (gerbil-ascent-session-append-source! session 'edge '(3 1))
+          (check-equal? (length (rows (gerbil-ascent-session-run session)
+                                     'reach)) 9)
+          (check-equal? (length (rows second 'reach)) 3)
+          (check-equal? (rows first 'reach) '((1 2))))))
+    (poo-flow-test-case/with +positive-case-profile+
+      "session rejects source updates through negation"
+      (let* ((program
+              (gerbil-ascent-program
+               (list (gerbil-ascent-relation 'candidate 1 '((1)))
+                     (gerbil-ascent-relation 'blocked 1 [])
+                     (gerbil-ascent-relation 'allowed 1 []))
+               (list (r (a 'allowed (v 'x))
+                        (a 'candidate (v 'x))
+                        (gerbil-ascent-negation 'blocked (list (v 'x)))))
+               4 4 8))
+             (session (gerbil-ascent-open-session program)))
+        (check-equal? (rows (gerbil-ascent-session-run session)
+                            'allowed) '((1)))
+        (check-exception
+         (gerbil-ascent-session-append-source!
+          session 'blocked '(1)) true)
+        (check-equal? (rows (gerbil-ascent-session-run session)
+                            'allowed) '((1)))))
     (poo-flow-test-case/with +positive-case-profile+
       "empty rule set preserves sources and returns"
       (let (result

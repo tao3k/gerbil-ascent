@@ -35,6 +35,15 @@ Guards, bindings, and generators declare their input variables explicitly, and r
 bodies check bindings in source order. The evaluator reads validated clause
 slots once per run before iterating relation rows.
 
+`gerbil-ascent-open-session` retains relation rows, indexes, BYODS state, and
+semi-naive deltas across calls to `gerbil-ascent-session-run`. After the first
+run, `gerbil-ascent-session-append-source!` accepts source rows for programs
+whose rule bodies contain only positive relation atoms. Each run returns a
+stable POO result snapshot; an unchanged run returns its previous result.
+Negation, aggregation, lattice updates, and source deletion still require a
+fresh program evaluation. The one-shot `gerbil-ascent-evaluate-program` uses
+the same evaluator.
+
 `t/` contains Scheme qualification; `rust/ascent-oracle/` contains the
 test-only Rust Ascent differential oracle. The [parity matrix](docs/rust-parity.org)
 tracks the unfinished Rust 0.8.0 feature surface. Complete Scheme parity is

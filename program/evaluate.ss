@@ -2,10 +2,12 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-;;; Generic stratified semi-naive evaluator. Mutable row buffers are local to
-;;; one run; the public declarations and returned projection are POO values.
+;;; Generic stratified semi-naive evaluator. Mutable row buffers belong to one
+;;; session; public declarations and returned snapshots are POO values.
 (import (only-in :clan/poo/object .o .ref object?)
+        (only-in :clan/poo/mop validate)
         (only-in "objects.ss" gerbil-ascent-clause-plan)
+        (only-in "types.ss" GerbilAscentSessionContract)
         (only-in "funs.ss" gerbil-ascent-rule-strata
                  gerbil-ascent-delta-positions
                  gerbil-ascent-lattice-key
@@ -20,9 +22,14 @@
                  gerbil-ascent-storage-make-state)
         (only-in :clan/poo/support/base until))
 
-(export gerbil-ascent-evaluate-program)
+(export gerbil-ascent-evaluate-program
+        gerbil-ascent-open-session
+        gerbil-ascent-session-append-source!
+        gerbil-ascent-session-run)
 
-(def (gerbil-ascent-evaluate-program program)
+(def Session. (.ref GerbilAscentSessionContract 'proto))
+
+(def (gerbil-ascent-open-session program)
   ;; The declaration constructor validates the full Core contract.
   ;; Evaluation checks mutable rows and clause bindings for this snapshot.
   (unless (object? program)
@@ -246,9 +253,71 @@
                      (.ref rule 'heads)))
             (vector head-plans (reverse body-plans) atoms))))
       (let* ((rule-plans (map prepare-rule rules))
-             (strata (gerbil-ascent-rule-strata rule-plans count)))
-        (let ((highest-stratum
-               (if (= count 0) -1 (apply max (vector->list strata)))))
+             (strata (gerbil-ascent-rule-strata rule-plans count))
+             (highest-stratum
+              (if (= count 0) -1 (apply max (vector->list strata))))
+             (positive-rules?
+              (andmap
+               (lambda (rule)
+                 (andmap (lambda (clause)
+                           (eq? (vector-ref clause 0) 'atom))
+                         (vector-ref rule 1)))
+               rule-plans))
+             (first-run? #t)
+             (dirty? #t)
+             (last-result #f))
+        (def (append-source! name row)
+          (when first-run?
+            (error "ASCENT session must run before source updates"))
+          (unless positive-rules?
+            (error "ASCENT session updates require positive rules"))
+          (let* ((index (position-of name))
+                 (width (vector-ref arity index)))
+            (when (vector-ref lattice-joins index)
+              (error "ASCENT session lattice updates are unsupported" name))
+            (unless (and (list? row) (= (length row) width))
+              (error "invalid ASCENT session source row" name row))
+            (when (>= source-count input-limit)
+              (error "ASCENT session input fact budget exceeded"))
+            (let ((changed? #f)
+                  (expanded
+                  ((vector-ref storage-extensions index)
+                   (vector-ref storage-states index)
+                   (vector-ref all index)
+                   (vector-ref delta index) row
+                   (- output-limit
+                      (+ source-materialized-count derived-count)))))
+              (unless (list? expanded)
+                (error "ASCENT storage provider returned non-list rows"))
+              (set! source-count (+ source-count 1))
+              (for-each
+               (lambda (stored)
+                 (unless (and (list? stored) (= (length stored) width))
+                   (error "invalid ASCENT storage provider row" stored))
+                 (unless (hash-get (vector-ref seen index) stored)
+                   (when (>= (+ source-materialized-count derived-count)
+                             output-limit)
+                     (error "ASCENT session output fact budget exceeded"))
+                   (hash-put! (vector-ref seen index) stored #t)
+                   (set! source-materialized-count
+                     (+ source-materialized-count 1))
+                   (vector-set! all index
+                     (cons stored (vector-ref all index)))
+                   (vector-set! delta index
+                     (cons stored (vector-ref delta index)))
+                   (set! changed? #t)
+                   (set! dirty? #t)))
+               expanded)
+              (when changed?
+                (vector-set! all-size index (length (vector-ref all index)))
+                (vector-set! delta-size index
+                  (length (vector-ref delta index)))
+                (vector-set! all-version index
+                  (+ 1 (vector-ref all-version index)))
+                (vector-set! delta-version index
+                  (+ 1 (vector-ref delta-version index)))))))
+        (def (run!)
+         (when dirty?
          (let evaluate-stratum ((stratum 0))
           (when (<= stratum highest-stratum)
             (let ((active-rules []) (active? #t) (round 0))
@@ -271,12 +340,12 @@
                 (when (< index count)
                   (vector-set! delta index
                     (if (= (vector-ref strata index) stratum)
-                      (vector-ref all index)
+                      (if (or first-run? (> stratum 0))
+                        (vector-ref all index)
+                        (vector-ref delta index))
                       []))
                   (vector-set! delta-size index
-                    (if (= (vector-ref strata index) stratum)
-                      (vector-ref all-size index)
-                      0))
+                    (length (vector-ref delta index)))
                   (vector-set! delta-version index
                     (+ 1 (vector-ref delta-version index)))
                   (reset-delta (+ index 1))))
@@ -443,7 +512,7 @@
                      (body (vector-ref rule 1))
                      (positions (vector-ref rule 2)))
                  (if (null? positions)
-                   (when (= round 1)
+                   (when (and (= round 1) first-run?)
                      (visit-body body -1 0 []
                                  (lambda (environment)
                                    (for-each
@@ -487,8 +556,27 @@
                 (vector-set! delta-version index
                   (+ 1 (vector-ref delta-version index)))
                 (commit (+ index 1))))))
-            (evaluate-stratum (+ stratum 1))))))
-      (.o (relation-names (vector->list names))
-          (evaluation-path 'stratified-semi-naive)
-          (rows-of (lambda (name)
-                     (reverse (vector-ref all (position-of name))))))))))
+            (evaluate-stratum (+ stratum 1)))))
+         (set! first-run? #f)
+         (set! dirty? #f)
+         (let (snapshots
+               (vector-map (lambda (rows) (reverse rows)) all))
+           (set! last-result
+             (.o (relation-names (vector->list names))
+                 (evaluation-path 'stratified-semi-naive)
+                 (rows-of (lambda (name)
+                            (vector-ref snapshots (position-of name))))))))
+         last-result)
+        (validate GerbilAscentSessionContract
+                  (.o (:: @ Session.)
+                      (.append-source! append-source!)
+                      (.run run!)))))))
+
+(def (gerbil-ascent-session-append-source! session name row)
+  ((.ref session '.append-source!) name row))
+
+(def (gerbil-ascent-session-run session)
+  ((.ref session '.run)))
+
+(def (gerbil-ascent-evaluate-program program)
+  (gerbil-ascent-session-run (gerbil-ascent-open-session program)))

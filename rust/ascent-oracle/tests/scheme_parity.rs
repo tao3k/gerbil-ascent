@@ -1127,6 +1127,33 @@ fn rust_repeated_run_source_update_oracle() {
     second.sort_unstable();
     assert_eq!(second, vec![(1, 2), (1, 3), (2, 3)]);
     assert_eq!(scheme_pairs(&program.edge, true), second);
+
+    program.run();
+    let mut unchanged = program.reach.clone();
+    unchanged.sort_unstable();
+    assert_eq!(unchanged, second);
+
+    program.edge.push((2, 3));
+    program.run();
+    let mut duplicate_source = program.reach.clone();
+    duplicate_source.sort_unstable();
+    assert_eq!(duplicate_source, second);
+    assert_eq!(scheme_pairs(&program.edge, true), duplicate_source);
+
+    program.edge.push((3, 1));
+    program.run();
+    let mut cycle = program.reach.clone();
+    cycle.sort_unstable();
+    assert_eq!(cycle.len(), 9);
+    assert_eq!(scheme_pairs(&program.edge, true), cycle);
+
+    let mut fresh = AscentProgram {
+        edge: program.edge.clone(),
+        ..AscentProgram::default()
+    };
+    fresh.run();
+    fresh.reach.sort_unstable();
+    assert_eq!(cycle, fresh.reach);
 }
 
 #[test]

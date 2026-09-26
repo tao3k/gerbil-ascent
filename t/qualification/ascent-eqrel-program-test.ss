@@ -11,7 +11,9 @@
                  gerbil-ascent-set-storage-provider
                  gerbil-ascent-eqrel-storage-provider
                  gerbil-ascent-trrel-storage-provider
-                 gerbil-ascent-trrel-uf-storage-provider)
+                 gerbil-ascent-trrel-uf-storage-provider
+                 gerbil-ascent-storage-make-state
+                 gerbil-ascent-storage-extend)
         (only-in :gerbil-ascent/program/interface
                  gerbil-ascent-relation gerbil-ascent-program
                  gerbil-ascent-evaluate-program
@@ -180,6 +182,31 @@
              (check-equal? (length rows) 3)
              (check-equal? (not (not (member '("alpha" 1 3) rows))) #t)))
          (list split reversed combined))))
+    (poo-flow-test-case "BYODS providers emit only new rows across edge prefixes"
+      (for-each
+       (lambda (provider edges expected-sizes)
+         (let* ((state (gerbil-ascent-storage-make-state provider))
+                (all []))
+           (for-each
+            (lambda (edge expected-size)
+              (let (new-rows
+                    (gerbil-ascent-storage-extend
+                     provider state all [] edge 32))
+                (for-each
+                 (lambda (row)
+                   (check-equal? (member row all) #f))
+                 new-rows)
+                (set! all (append new-rows all))
+                (check-equal? (length all) expected-size)))
+            edges expected-sizes)))
+       (list gerbil-ascent-eqrel-storage-provider
+             gerbil-ascent-trrel-storage-provider
+             gerbil-ascent-trrel-uf-storage-provider)
+       '((("alpha" 1 2) ("alpha" 2 3) ("alpha" 1 3)
+          ("beta" 1 2) ("alpha" 3 4))
+         ((1 2) (2 3) (3 1))
+         ((1 2) (2 3) (3 1)))
+       '((4 9 9 13 20) (1 3 6) (3 6 9))))
     (poo-flow-test-case "invalid storage method output fails at the boundary"
       (check-exception
        (gerbil-ascent-evaluate-program

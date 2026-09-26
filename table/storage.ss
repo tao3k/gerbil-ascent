@@ -39,8 +39,8 @@
 
 (def StorageProvider. (.ref GerbilAscentStorageProviderContract 'proto))
 
-(.defgeneric (gerbil-ascent-storage-make-state provider)
-  slot: .make-state)
+(def (gerbil-ascent-storage-make-state provider)
+  ((.ref provider '.make-state)))
 
 (.defgeneric (gerbil-ascent-storage-extend provider state all pending row budget)
   slot: .extend-rows)

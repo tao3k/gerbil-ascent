@@ -64,7 +64,7 @@ execution state.
 | Relation declaration, arbitrary arity and column types | =program/= | positive generic path handles nullary through four-column mixed rows, including a nullary rule gate over boolean and string columns; binary fast path remains | broader column types and scale/performance receipts |
 | Multiple heads, relation clauses, repeated variables, joins | =program/= | positive generic multi-head rules, joins and repeated-variable equality pass selected Rust oracle fixtures | arbitrary body shape, invalid-program corpus and performance receipts |
 | Semi-naive least fixed point, dependencies and strata | =program/=, =core/= | generic recursive path supports positive and negative strata; a two-relation mutually recursive SCC with cyclic and reordered sources matches selected Rust fixed-point snapshots | broader SCC/rule order, invalid-program and termination corpus |
-| Repeated =run()= after source relation updates | =program/= | Scheme reevaluation of POO-refined immutable snapshots matches a Rust two-run source update oracle; no retained incremental program state | state reuse and update-cost receipt |
+| Repeated =run()= after source relation updates | =program/= | Scheme reevaluation of immutable POO snapshots matches Rust across insertion, unchanged rerun, duplicate insertion and cycle completion; Rust 0.8.0 retains its program object and refreshes indexes on each run, while Scheme has no retained program state | measure repeated-run update cost and define a Scheme session boundary before claiming state reuse |
 | Conditions, bindings and generators | =program/=, =core/= | generic POO guard, =let= binding and finite list generator clauses with ordered binding checks | broader iterator/pattern shapes and scale receipts |
 | Stratified negation | =program/= | 3-level negated relation fixture and negative-cycle rejection pass selected Rust oracle comparison | broader safe/unsafe programs and performance receipts |
 | Aggregation and custom aggregators | =program/= | count, sum, min, max, mean and custom iterator aggregators pass empty, duplicate-input and grouped Rust fixtures | recursive aggregate corpus, broader type behavior and performance receipts |
@@ -91,6 +91,15 @@ The mutual-recursion fixture declares its seed rule after the two recursive
 rules and includes a directed cycle. Both =path0= and =path1= match Rust after
 deduplication for a cycle, reversed source order, and a finite chain. This is
 evidence for one SCC shape, not a general termination proof.
+The repeated-run oracle now uses one Rust program for an initial edge, a
+second edge, an unchanged run, a duplicate source edge, and a closing cycle.
+It checks the final result against a fresh Rust program and Scheme snapshot
+reevaluation at each changed prefix. Pinned Ascent 0.8.0 calls
+=update_indices_priv= at the start of =run=; its generated
+=compile_update_indices_function_body= iterates every row in each relation.
+Therefore Rust's retained program object is not evidence of an O(delta)
+update. Scheme currently has no public retained execution session or
+measured repeated-run cost; snapshot parity does not close those gaps.
 The concurrent qualification launches four independent fixed-point programs
 with Gerbil workers and checks every returned relation projection. It checks
 reentrancy across programs; it does not establish intra-program parallel
@@ -137,6 +146,12 @@ oracle now compares this complete closure plus reversed, duplicate,
 reflexive and interleaved-group source snapshots. A concurrent qualification
 case checks that separate evaluations do not share the component state. The
 Rust split-producer discrepancy above remains.
+The public storage =make-state= helper now creates provider state rather
+than returning the method procedure. An evaluation calls this helper once
+per relation. A Scheme qualification advances =eqrel=, =trrel= and
+=trrel_uf= states across edge prefixes and verifies each extension returns
+only rows absent from the prior materialization. This verifies the Provider
+boundary but does not imply retained rule-program state.
 
 The standard =ascent-byods-eqrel= SS scenario times 20 evaluations of a
 predeclared 20-edge program per run. Before the component index, one local

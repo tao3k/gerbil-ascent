@@ -16,6 +16,8 @@
         (only-in :gerbil-ascent/table/provider
                  gerbil-ascent-index-provider-build
                  gerbil-ascent-index-provider-lookup)
+        (only-in :gerbil-ascent/table/storage
+                 gerbil-ascent-storage-make-state)
         (only-in :clan/poo/support/base until))
 
 (export gerbil-ascent-evaluate-program)
@@ -149,7 +151,8 @@
               (vector-set! storage-extensions index
                 (.ref (.ref relation 'storage-provider) '.extend-rows))
               (vector-set! storage-states index
-                ((.ref (.ref relation 'storage-provider) '.make-state))))
+                (gerbil-ascent-storage-make-state
+                 (.ref relation 'storage-provider))))
             (for-each
              (lambda (row)
                (unless (and (list? row) (= (length row) width))

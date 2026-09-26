@@ -3,7 +3,8 @@
 
 //! Independent Rust Ascent oracle for POO Flow's Scheme qualification fixtures.
 
-use ascent::{Dual, ascent};
+use ascent::aggregators::{count, max, mean, min, sum};
+use ascent::{ascent, Dual};
 use std::{
     cmp::Reverse,
     collections::{BTreeSet, BinaryHeap},
@@ -29,21 +30,23 @@ fn scheme_output(recipe: &str, request: &str) -> String {
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .stderr(Stdio::piped());
-    let gerbil_path = std::env::var_os("GERBIL_PATH").unwrap_or_else(|| root.join(".gerbil").into());
+    let gerbil_path =
+        std::env::var_os("GERBIL_PATH").unwrap_or_else(|| root.join(".gerbil").into());
     let inherited = std::env::var("GERBIL_LOADPATH").unwrap_or_default();
     command.env("GERBIL_PATH", gerbil_path);
-    command.env(
-        "GERBIL_LOADPATH",
-        format!("{}:{inherited}", root.display()),
-    );
-    let mut child = command.spawn().expect("launch gerbil-ascent Scheme fixture");
+    command.env("GERBIL_LOADPATH", format!("{}:{inherited}", root.display()));
+    let mut child = command
+        .spawn()
+        .expect("launch gerbil-ascent Scheme fixture");
     child
         .stdin
         .take()
         .expect("Scheme fixture stdin")
         .write_all(request.as_bytes())
         .expect("write Scheme fixture request");
-    let output = child.wait_with_output().expect("collect Scheme fixture output");
+    let output = child
+        .wait_with_output()
+        .expect("collect Scheme fixture output");
     assert!(
         output.status.success(),
         "Scheme fixture failed: {}",
@@ -64,7 +67,10 @@ fn pair_request(edges: &[(u32, u32)], generic: bool) -> String {
 
 fn parse_pair(line: &str) -> (u32, u32) {
     let (from, to) = line.split_once('\t').expect("Scheme pair has two columns");
-    (from.parse().expect("numeric from"), to.parse().expect("numeric to"))
+    (
+        from.parse().expect("numeric from"),
+        to.parse().expect("numeric to"),
+    )
 }
 
 fn scheme_pairs(edges: &[(u32, u32)], generic: bool) -> Vec<(u32, u32)> {
@@ -101,8 +107,16 @@ fn fast_and_composable_closure_match_ascent() {
     ];
     for (index, edges) in snapshots.iter().enumerate() {
         let expected = ascent_pairs(edges);
-        assert_eq!(scheme_pairs(edges, false), expected, "fast snapshot {index}");
-        assert_eq!(scheme_pairs(edges, true), expected, "generic snapshot {index}");
+        assert_eq!(
+            scheme_pairs(edges, false),
+            expected,
+            "fast snapshot {index}"
+        );
+        assert_eq!(
+            scheme_pairs(edges, true),
+            expected,
+            "generic snapshot {index}"
+        );
     }
 }
 
@@ -144,7 +158,11 @@ fn scheme_guarded(edges: &[(u32, u32)]) -> GuardedRows {
     for line in scheme_output("ascent-guarded", &pair_request(edges, false)).lines() {
         let mut fields = line.split('\t');
         let relation = fields.next().expect("relation name");
-        let from = fields.next().expect("from node").parse().expect("numeric from");
+        let from = fields
+            .next()
+            .expect("from node")
+            .parse()
+            .expect("numeric from");
         let to = fields.next().expect("to node").parse().expect("numeric to");
         assert!(fields.next().is_none(), "unexpected Scheme output field");
         let target = match relation {
@@ -273,7 +291,13 @@ fn shortest_support_matches_ascent_and_canonical_source_order() {
         &[(1, 2, 100), (2, 3, 101), (1, 4, 99), (4, 3, 103)],
         &[(1, 2, 100), (1, 4, 99), (4, 3, 103)],
         &[(1, 2, 100), (1, 4, 99)],
-        &[(1, 2, 100), (2, 3, 101), (3, 4, 102), (4, 2, 103), (1, 3, 104)],
+        &[
+            (1, 2, 100),
+            (2, 3, 101),
+            (3, 4, 102),
+            (4, 2, 103),
+            (1, 3, 104),
+        ],
         &[(1, 2, 100), (2, 3, 101), (3, 4, 102), (1, 3, 104)],
     ];
     for (index, edges) in snapshots.iter().enumerate() {
@@ -418,5 +442,108 @@ fn arbitrary_relation_columns_and_repeated_variables_match_ascent() {
             .collect();
         scheme.sort_unstable();
         assert_eq!(scheme, ascent_positive_rows(edges), "edges: {edges:?}");
+    }
+}
+
+fn extrema<'a>(input: impl Iterator<Item = (&'a i32,)>) -> impl Iterator<Item = i32> {
+    let values: Vec<_> = input.map(|(value,)| *value).collect();
+    values
+        .iter()
+        .min()
+        .copied()
+        .into_iter()
+        .chain(values.iter().max().copied())
+}
+
+fn ascent_aggregate_rows(values: &[i32]) -> Vec<String> {
+    ascent! {
+        relation number(i32);
+        relation group_key(u32);
+        relation pair(u32, i32);
+        relation by_group(u32, i32);
+        relation minimum(i32);
+        relation maximum(i32);
+        relation total(i32);
+        relation cardinality(usize);
+        relation average(i32);
+        relation custom(i32);
+        minimum(value) <-- agg value = min(x) in number(x);
+        maximum(value) <-- agg value = max(x) in number(x);
+        total(value) <-- agg value = sum(x) in number(x);
+        cardinality(value) <-- agg value = count() in number(_);
+        average(value.round() as i32) <-- agg value = mean(x) in number(x);
+        custom(value) <-- agg value = extrema(x) in number(x);
+        by_group(group, total) <-- group_key(group), agg total = sum(x) in pair(group, x);
+    }
+    let mut program = AscentProgram {
+        number: values.iter().copied().map(|value| (value,)).collect(),
+        group_key: vec![(1,), (2,)],
+        pair: vec![(1, 10), (1, 20), (2, 5)],
+        ..AscentProgram::default()
+    };
+    program.run();
+    let mut rows = Vec::new();
+    rows.extend(
+        program
+            .by_group
+            .iter()
+            .map(|(group, total)| format!("by-group\t{group}\t{total}")),
+    );
+    rows.extend(
+        program
+            .minimum
+            .iter()
+            .map(|(value,)| format!("minimum\t{value}")),
+    );
+    rows.extend(
+        program
+            .maximum
+            .iter()
+            .map(|(value,)| format!("maximum\t{value}")),
+    );
+    rows.extend(
+        program
+            .total
+            .iter()
+            .map(|(value,)| format!("total\t{value}")),
+    );
+    rows.extend(
+        program
+            .cardinality
+            .iter()
+            .map(|(value,)| format!("cardinality\t{value}")),
+    );
+    rows.extend(
+        program
+            .average
+            .iter()
+            .map(|(value,)| format!("average\t{value}")),
+    );
+    rows.extend(
+        program
+            .custom
+            .iter()
+            .map(|(value,)| format!("custom\t{value}")),
+    );
+    rows.sort_unstable();
+    rows
+}
+
+#[test]
+fn builtin_and_custom_aggregators_match_ascent() {
+    for values in [&[][..], &[1, 2, 3, 4, 5][..], &[5, 2, 5, 1][..]] {
+        let request = format!(
+            "({})\n",
+            values
+                .iter()
+                .map(i32::to_string)
+                .collect::<Vec<_>>()
+                .join(" ")
+        );
+        let output = scheme_output("aggregate-rows", &request);
+        let mut rows: Vec<_> = output.lines().map(str::to_owned).collect();
+        assert_eq!(rows.pop().as_deref(), Some("END"));
+        rows.sort_unstable();
+        assert_eq!(rows, ascent_aggregate_rows(values), "values: {values:?}");
     }
 }

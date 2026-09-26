@@ -53,7 +53,7 @@
              (result (evaluate source))
              (labelled (rows result 'labelled))
              (reach (rows result 'reach)))
-        (check-equal? (length (rows result 'edge)) 3)
+        (check-equal? (length (rows result 'edge)) 4)
         (check-equal? (length labelled) 3)
         (check-equal? (not (not (member '(1 3 "a" "b") labelled))) #t)
         (check-equal? (not (not (member '(2 3 "b" "c") labelled))) #t)

@@ -5,7 +5,8 @@
 
 Scheme-native ASCENT implementation built on Gerbil POO and POO Flow Foundation.
 `gerbil.pkg` declares Foundation as its sole direct package dependency;
-Foundation supplies the POO and ASP packages used by the Scheme modules.
+Foundation supplies the POO package used by the Scheme modules. The separate
+SS benchmark qualification uses ASP from the development test environment.
 Each top-level directory is a Gerbil module namespace:
 
 | Namespace | Current responsibility |
@@ -16,7 +17,10 @@ Each top-level directory is a Gerbil module namespace:
 | `:gerbil-ascent/candidate/*` | Experimental candidate and support projection |
 | `:gerbil-ascent/interface/*` | Inert request projection |
 
-`program/` exposes POO `atom`, `negation`, `guard`, `binding`, and finite-list `generator` clauses.
+`program/` exposes POO `atom`, `negation`, `guard`, `binding`, `aggregate`,
+and finite-list `generator` clauses. A slot Generic lowers each clause to a
+private execution plan; count, sum, min, max, mean, and custom aggregate
+procedures run over matched tuples.
 Guards, bindings, and generators declare their input variables explicitly, and rule
 bodies check bindings in source order. The evaluator reads validated clause
 slots once per run before iterating relation rows.

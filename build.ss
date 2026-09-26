@@ -8,6 +8,7 @@
   '("table/expression"
     "program/types"
     "program/objects"
+    "program/aggregators"
     "program/evaluate"
     "program/interface"
     "core/binary-program"

@@ -41,5 +41,8 @@ ascent-candidates:
 rule-rows:
     @timeout 15s gerbil {{ gerbil_test_runtime_options }} t/qualification/ascent-rule-program-output.ss
 
+aggregate-rows:
+    @timeout 15s gerbil {{ gerbil_test_runtime_options }} t/qualification/ascent-aggregate-program-output.ss
+
 oracle:
     cargo test --locked --manifest-path rust/ascent-oracle/Cargo.toml

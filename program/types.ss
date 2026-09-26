@@ -17,6 +17,7 @@
         GerbilAscentGeneratorContract
         GerbilAscentBindingContract
         GerbilAscentNegationContract
+        GerbilAscentAggregateContract
         GerbilAscentRuleContract
         GerbilAscentProgramContract)
 
@@ -37,6 +38,7 @@
   (slot-contract 'ascent/term-kind
                  (lambda (value) (memq value '(variable literal)))))
 (def +any+ (slot-contract 'ascent/value (lambda (_value) #t)))
+(def +plan+ (slot-contract 'ascent/clause-plan procedure?))
 (def (clause-kind-contract kind)
   (slot-contract 'ascent/clause-kind (lambda (value) (eq? value kind))))
 
@@ -62,7 +64,7 @@
   identity: 'ascent/atom
   proto: (.o)
   responsibilities: (.o ascent-clause-kind: (clause-kind-contract 'atom)
-                      relation: +symbol+ terms: +terms+))
+                      relation: +symbol+ terms: +terms+ .plan: +plan+))
 
 (def +variables+
   (slot-contract 'ascent/variables
@@ -74,7 +76,8 @@
   identity: 'ascent/guard
   proto: (.o)
   responsibilities: (.o ascent-clause-kind: (clause-kind-contract 'guard)
-                      variables: +variables+ predicate: +procedure+))
+                      variables: +variables+ predicate: +procedure+
+                      .plan: +plan+))
 
 (define-type (GerbilAscentGeneratorContract @ PooFlowNativeObjectContract.)
   identity: 'ascent/generator
@@ -82,7 +85,7 @@
   responsibilities: (.o ascent-clause-kind:
                       (clause-kind-contract 'generator)
                       variable: +symbol+ variables: +variables+
-                      generate: +procedure+))
+                      generate: +procedure+ .plan: +plan+))
 
 (define-type (GerbilAscentBindingContract @ PooFlowNativeObjectContract.)
   identity: 'ascent/binding
@@ -90,14 +93,23 @@
   responsibilities: (.o ascent-clause-kind:
                       (clause-kind-contract 'binding)
                       variable: +symbol+ variables: +variables+
-                      compute: +procedure+))
+                      compute: +procedure+ .plan: +plan+))
 
 (define-type (GerbilAscentNegationContract @ PooFlowNativeObjectContract.)
   identity: 'ascent/negation
   proto: (.o)
   responsibilities: (.o ascent-clause-kind:
                       (clause-kind-contract 'negation)
-                      relation: +symbol+ terms: +terms+))
+                      relation: +symbol+ terms: +terms+ .plan: +plan+))
+
+(define-type (GerbilAscentAggregateContract @ PooFlowNativeObjectContract.)
+  identity: 'ascent/aggregate
+  proto: (.o)
+  responsibilities: (.o ascent-clause-kind:
+                      (clause-kind-contract 'aggregate)
+                      variable: +symbol+ relation: +symbol+
+                      terms: +terms+ variables: +variables+
+                      aggregate: +procedure+ .plan: +plan+))
 
 (def +clauses+
   (slot-contract 'ascent/clauses
@@ -108,7 +120,8 @@
                                       (element? GerbilAscentGuardContract clause)
                                       (element? GerbilAscentGeneratorContract clause)
                                       (element? GerbilAscentBindingContract clause)
-                                      (element? GerbilAscentNegationContract clause)))
+                                      (element? GerbilAscentNegationContract clause)
+                                      (element? GerbilAscentAggregateContract clause)))
                                 value)))))
 (def +heads+
   (slot-contract 'ascent/heads

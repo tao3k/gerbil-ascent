@@ -5,7 +5,7 @@
 ;;; Public POO declarations for ASCENT rules. No table state lives
 ;;; in these objects; each evaluation owns its own relation storage.
 (import (only-in :clan/poo/object .o .ref)
-        (only-in :clan/poo/mop validate)
+        (only-in :clan/poo/mop .defgeneric validate)
         (only-in "types.ss"
                  GerbilAscentRelationContract
                  GerbilAscentTermContract
@@ -14,6 +14,7 @@
                  GerbilAscentGeneratorContract
                  GerbilAscentBindingContract
                  GerbilAscentNegationContract
+                 GerbilAscentAggregateContract
                  GerbilAscentRuleContract
                  GerbilAscentProgramContract))
 
@@ -25,6 +26,8 @@
         gerbil-ascent-generator
         gerbil-ascent-binding
         gerbil-ascent-negation
+        gerbil-ascent-aggregate
+        gerbil-ascent-clause-plan
         gerbil-ascent-rule
         gerbil-ascent-program)
 
@@ -35,8 +38,68 @@
 (def Generator. (.ref GerbilAscentGeneratorContract 'proto))
 (def Binding. (.ref GerbilAscentBindingContract 'proto))
 (def Negation. (.ref GerbilAscentNegationContract 'proto))
+(def Aggregate. (.ref GerbilAscentAggregateContract 'proto))
 (def Rule. (.ref GerbilAscentRuleContract 'proto))
 (def Program. (.ref GerbilAscentProgramContract 'proto))
+
+;;; Clause lowering has one open receiver axis. The evaluator consumes the
+;;; resulting private plan without dispatching through POO in the row loop.
+(.defgeneric (gerbil-ascent-clause-plan clause atom-plan bound)
+  slot: .plan)
+
+(def (require-bound names bound)
+  (for-each
+   (lambda (name)
+     (unless (memq name bound)
+       (error "unbound ASCENT clause variable" name)))
+   names))
+
+(def (atom-clause-plan clause atom-plan bound)
+  (let* ((plan (atom-plan clause))
+         (next-bound
+          (foldl (lambda (term prior)
+                   (if (eq? (car term) 'variable)
+                     (cons (cdr term) prior)
+                     prior))
+                 bound (vector-ref plan 1))))
+    (vector (vector 'atom plan) next-bound 1)))
+
+(def (negation-clause-plan clause atom-plan bound)
+  (let (plan (atom-plan clause))
+    (for-each
+     (lambda (term)
+       (when (and (eq? (car term) 'variable)
+                  (not (memq (cdr term) bound)))
+         (error "unsafe ASCENT negation variable" (cdr term))))
+     (vector-ref plan 1))
+    (vector (vector 'negation plan) bound 0)))
+
+(def (computed-clause-plan clause kind function-slot bound)
+  (let* ((inputs (.ref clause 'variables))
+         (name (.ref clause 'variable)))
+    (require-bound inputs bound)
+    (when (memq name bound)
+      (error "ASCENT computed variable already bound" name))
+    (vector (vector kind name inputs (.ref clause function-slot))
+            (cons name bound) 0)))
+
+(def (aggregate-clause-plan clause atom-plan bound)
+  (let* ((plan (atom-plan clause))
+         (name (.ref clause 'variable))
+         (inputs (.ref clause 'variables))
+         (terms (vector-ref plan 1)))
+    (when (memq name bound)
+      (error "ASCENT aggregate variable already bound" name))
+    (for-each
+     (lambda (input)
+       (unless (ormap (lambda (term)
+                        (and (eq? (car term) 'variable)
+                             (eq? (cdr term) input)))
+                      terms)
+         (error "ASCENT aggregate input absent from atom" input)))
+     inputs)
+    (vector (vector 'aggregate plan name inputs (.ref clause 'aggregate))
+            (cons name bound) 0)))
 
 (def (gerbil-ascent-relation relation-name column-count source-rows)
   (unless (and (symbol? relation-name)
@@ -63,33 +126,58 @@
 
 (def (gerbil-ascent-atom relation-name atom-terms)
   (validate GerbilAscentAtomContract
-            (.o (:: @ Atom.) ascent-clause-kind: 'atom
-                relation: relation-name terms: atom-terms)))
+            (.o (:: self Atom.) ascent-clause-kind: 'atom
+                relation: relation-name terms: atom-terms
+                (.plan (lambda (atom-plan bound)
+                         (atom-clause-plan self atom-plan bound))))))
 
 (def (gerbil-ascent-guard input-variables guard-procedure)
   (validate GerbilAscentGuardContract
-            (.o (:: @ Guard.) ascent-clause-kind: 'guard
+            (.o (:: self Guard.) ascent-clause-kind: 'guard
                 variables: input-variables
-                predicate: guard-procedure)))
+                predicate: guard-procedure
+                (.plan (lambda (_atom-plan bound)
+                         (require-bound (.ref self 'variables) bound)
+                         (vector (vector 'guard (.ref self 'variables)
+                                         (.ref self 'predicate))
+                                 bound 0))))))
 
 (def (gerbil-ascent-generator output-variable input-variables
                               generator-procedure)
   (validate GerbilAscentGeneratorContract
-            (.o (:: @ Generator.) ascent-clause-kind: 'generator
+            (.o (:: self Generator.) ascent-clause-kind: 'generator
                 variable: output-variable
-                variables: input-variables generate: generator-procedure)))
+                variables: input-variables generate: generator-procedure
+                (.plan (lambda (_atom-plan bound)
+                         (computed-clause-plan self 'generator
+                                               'generate bound))))))
 
 (def (gerbil-ascent-binding output-variable input-variables
                             binding-procedure)
   (validate GerbilAscentBindingContract
-            (.o (:: @ Binding.) ascent-clause-kind: 'binding
+            (.o (:: self Binding.) ascent-clause-kind: 'binding
                 variable: output-variable variables: input-variables
-                compute: binding-procedure)))
+                compute: binding-procedure
+                (.plan (lambda (_atom-plan bound)
+                         (computed-clause-plan self 'binding
+                                               'compute bound))))))
 
 (def (gerbil-ascent-negation relation-name atom-terms)
   (validate GerbilAscentNegationContract
-            (.o (:: @ Negation.) ascent-clause-kind: 'negation
-                relation: relation-name terms: atom-terms)))
+            (.o (:: self Negation.) ascent-clause-kind: 'negation
+                relation: relation-name terms: atom-terms
+                (.plan (lambda (atom-plan bound)
+                         (negation-clause-plan self atom-plan bound))))))
+
+(def (gerbil-ascent-aggregate output-variable relation-name atom-terms
+                              value-variables aggregate-procedure)
+  (validate GerbilAscentAggregateContract
+            (.o (:: self Aggregate.) ascent-clause-kind: 'aggregate
+                variable: output-variable relation: relation-name
+                terms: atom-terms variables: value-variables
+                aggregate: aggregate-procedure
+                (.plan (lambda (atom-plan bound)
+                         (aggregate-clause-plan self atom-plan bound))))))
 
 (def (gerbil-ascent-rule head-atoms body-atoms)
   (validate GerbilAscentRuleContract

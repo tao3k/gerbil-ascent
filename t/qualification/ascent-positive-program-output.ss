@@ -19,5 +19,5 @@
           (for-each (lambda (column) (display #\tab) (display column)) row)
           (newline))
         (rows-of name)))
-     '(labelled cycle hot reach))
+     '(labelled cycle hot selected reach))
     (display "END\n")))

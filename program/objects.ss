@@ -53,9 +53,9 @@
   (validate GerbilAscentAtomContract
             (.o (:: @ Atom.) relation: relation-name terms: atom-terms)))
 
-(def (gerbil-ascent-rule head-atom body-atoms)
+(def (gerbil-ascent-rule head-atoms body-atoms)
   (validate GerbilAscentRuleContract
-            (.o (:: @ Rule.) head: head-atom body: body-atoms)))
+            (.o (:: @ Rule.) heads: head-atoms body: body-atoms)))
 
 (def (gerbil-ascent-positive-program declared-relations declared-rules
                                      input-fact-limit derived-fact-limit

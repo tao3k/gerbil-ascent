@@ -21,7 +21,7 @@
 
 (def (v name) (gerbil-ascent-variable name))
 (def (a name . terms) (gerbil-ascent-atom name terms))
-(def (r head . body) (gerbil-ascent-rule head body))
+(def (r head . body) (gerbil-ascent-rule (list head) body))
 
 ;;; ASCENT contributes only its Case budget to Foundation's native profile.
 (def +positive-case-profile+
@@ -56,6 +56,7 @@
         (check-equal? (not (not (member '(3 3 "c" "c") labelled))) #t)
         (check-equal? (rows result 'cycle) '((3)))
         (check-equal? (rows result 'hot) '((1)))
+        (check-equal? (rows result 'selected) '((1 2)))
         (check-equal? (length reach) 4)
         (check-equal? (length (rows result 'node)) 3)))
     (poo-flow-test-case/with +positive-case-profile+
@@ -85,4 +86,14 @@
         (gerbil-ascent-positive-program
          (list (gerbil-ascent-relation 'out 1 []))
          (list (r (a 'out (v 'free)))) 2 2 2)) true)
+      (check-exception
+       (gerbil-ascent-evaluate-positive-program
+        (gerbil-ascent-positive-program
+         (list (gerbil-ascent-relation 'source 1 '((1)))
+               (gerbil-ascent-relation 'out 1 [])
+               (gerbil-ascent-relation 'bad 1 []))
+         (list (gerbil-ascent-rule
+                (list (a 'out (v 'x)) (a 'bad (v 'free)))
+                (list (a 'source (v 'x)))))
+         2 2 3)) true)
       (check-equal? (.ref (gerbil-ascent-literal "x") 'value) "x"))))

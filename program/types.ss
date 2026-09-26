@@ -64,15 +64,19 @@
                         (andmap (lambda (atom)
                                   (element? GerbilAscentAtomContract atom))
                                 value)))))
-(def +head+
-  (slot-contract 'ascent/head
+(def +heads+
+  (slot-contract 'ascent/heads
                  (lambda (value)
-                   (element? GerbilAscentAtomContract value))))
+                   (and (pair? value)
+                        (list? value)
+                        (andmap (lambda (head)
+                                  (element? GerbilAscentAtomContract head))
+                                value)))))
 
 (define-type (GerbilAscentRuleContract @ PooFlowNativeObjectContract.)
   identity: 'ascent/rule
   proto: (.o)
-  responsibilities: (.o head: +head+ body: +atoms+))
+  responsibilities: (.o heads: +heads+ body: +atoms+))
 
 (def +relations+
   (slot-contract 'ascent/relations

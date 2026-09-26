@@ -299,12 +299,13 @@ fn ascent_positive_rows(edges: &[(u32, u32, &str)]) -> Vec<String> {
         relation labelled(u32, u32, String, String);
         relation cycle(u32);
         relation hot(u32);
+        relation selected(u32, u32);
         relation reach(u32, u32);
 
         labelled(x, z, first.clone(), second.clone()) <--
             edge(x, y, first), edge(y, z, second);
         cycle(x) <-- edge(x, x, _);
-        hot(x) <-- edge(x, _, label), if label.as_str() == "a";
+        hot(x), selected(x, y) <-- edge(x, y, label), if label.as_str() == "a";
         reach(x, y) <-- edge(x, y, _);
         reach(x, z) <-- reach(x, y), edge(y, z, _);
     }
@@ -326,6 +327,12 @@ fn ascent_positive_rows(edges: &[(u32, u32, &str)]) -> Vec<String> {
     );
     rows.extend(program.cycle.iter().map(|(node,)| format!("cycle\t{node}")));
     rows.extend(program.hot.iter().map(|(node,)| format!("hot\t{node}")));
+    rows.extend(
+        program
+            .selected
+            .iter()
+            .map(|(from, to)| format!("selected\t{from}\t{to}")),
+    );
     rows.extend(
         program
             .reach

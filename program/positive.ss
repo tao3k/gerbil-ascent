@@ -103,25 +103,28 @@
             (initialize (cdr remaining) (+ index 1)))))
       (for-each
        (lambda (rule)
-         (let ((head (.ref rule 'head)) (body (.ref rule 'body)))
+         (let ((heads (.ref rule 'heads)) (body (.ref rule 'body)))
            (unless (list? body) (error "invalid ASCENT rule body"))
-           (check-atom head)
+           (for-each check-atom heads)
            (for-each check-atom body)
            ;; A head variable must be bound by a positive body atom. Runtime
            ;; binding still verifies the value on every emitted row.
            (for-each
-            (lambda (term)
-              (when (eq? (term-kind term) 'variable)
-                (unless (ormap
-                         (lambda (atom)
-                           (ormap (lambda (candidate)
-                                    (and (eq? (term-kind candidate) 'variable)
-                                         (eq? (.ref candidate 'value)
-                                              (.ref term 'value))))
-                                  (.ref atom 'terms)))
-                         body)
-                  (error "unsafe ASCENT head variable" (.ref term 'value)))))
-            (.ref head 'terms))))
+            (lambda (head)
+              (for-each
+               (lambda (term)
+                 (when (eq? (term-kind term) 'variable)
+                   (unless (ormap
+                            (lambda (atom)
+                              (ormap (lambda (candidate)
+                                       (and (eq? (term-kind candidate) 'variable)
+                                            (eq? (.ref candidate 'value)
+                                                 (.ref term 'value))))
+                                     (.ref atom 'terms)))
+                            body)
+                     (error "unsafe ASCENT head variable" (.ref term 'value)))))
+               (.ref head 'terms)))
+            heads)))
        rules)
       (let ((active? #t) (round 0))
         (until (not active?)
@@ -163,14 +166,17 @@
                    rows))))
             (for-each
              (lambda (rule)
-               (let ((head (.ref rule 'head)) (body (.ref rule 'body)))
+               (let ((heads (.ref rule 'heads)) (body (.ref rule 'body)))
                  (if (null? body)
-                   (when (= round 1) (emit! head []))
+                   (when (= round 1)
+                     (for-each (lambda (head) (emit! head [])) heads))
                    (let select-delta ((index 0))
                      (when (< index (length body))
                        (visit-body body index 0 []
                                    (lambda (environment)
-                                     (emit! head environment)))
+                                     (for-each
+                                      (lambda (head) (emit! head environment))
+                                      heads)))
                        (select-delta (+ index 1)))))))
              rules)
             (set! active? #f)

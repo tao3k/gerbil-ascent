@@ -414,6 +414,11 @@ revocation and generation changes invalidating stale work.
 
 * Reading and research hypotheses
 
+The [[file:related-work-matrix.org][related-work matrix]] maintains the full bibliography, each work's
+mechanism, implementation status, Agent question, and next falsifiable
+receipt.  The short list below names the first studies that shaped this
+research program.
+
 - [[https://s-arash.github.io/ascent/cc22main-p95-seamless-deductive-inference-via-macros.pdf][Ascent]] supplies a macro-compiled, semi-naive fixed-point baseline.
 - [[https://kmicinski.com/assets/byods.pdf][BYODS]] supplies a relation-storage and compiled-join seam.
 - [[https://arxiv.org/abs/2203.16684][DBSP]] motivates exact incremental maintenance across richer operations.

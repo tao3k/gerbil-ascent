@@ -1,0 +1,93 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+#+TITLE: ASCENT Related Work and Research Matrix
+#+DATE: 2026-09-26
+#+STATUS: research map; not an implementation or parity receipt
+
+* Scope and reading rule
+
+This matrix collects the papers already used in the gerbil-ascent and MRR
+research programs, plus the published Soufflé and differential-dataflow
+baselines needed to compare physical plans and concurrent updates.  A paper's
+result is a hypothesis or an independent baseline for this project until a
+named fixture and benchmark reproduce the relevant property.  The [[file:rust-parity.org][Rust
+Ascent parity contract]] remains the completion gate for the Scheme kernel.
+
+The =gerbil-ascent= column describes executable mechanism or missing evidence.
+The MRR/Agent column describes a downstream research question, not a transfer
+of source identity, admission, authorization, or effect ownership to the
+evaluator.  A model score is a judgment over supplied state, not a derivation
+or permission to act.
+
+* Mechanism-to-question matrix
+
+| Paper | Core result relevant here | gerbil-ascent position | MRR/Agent question | Next falsifiable receipt |
+|-------+---------------------------+------------------------+--------------------+-------------------------|
+| A22: Ascent | Embedded macro rules, semi-naive fixed points, lattices | Selected Scheme/Rust 0.8.0 differential fixtures pass; the [[file:rust-parity.org][parity matrix]] lists open surface | Can bounded closure expose complete candidate support for one source generation? | Finish missing Rust 0.8.0 fixtures, invalid programs, concurrent execution, and SS scale receipts |
+| B23: BYODS | User-provided relation representation with concretization and incremental semantics | POO storage Provider and selected =eqrel=, =trrel=, =trrel_uf= snapshots; merge/scale parity open | Does a specialized representation preserve the same admitted facts and supports? | Compare provider merge, delta/total and scale against =ascent-byods-rels 0.8.0= |
+| S16: Soufflé | Rule specialization, index selection and parallel compiled analyses | Bound-column hash lookup and local SS scenarios only | Can a chosen plan meet a task budget without changing evidence? | Same rules and facts across default/custom indexes; report output, memory, latency and p95 |
+| D13: Differential dataflow | Versioned deltas for nested iterative computation and parallel dataflow | Reentrant concurrent snapshots pass; retained updates and intra-program parallelism open | Which prior candidate decisions become stale after source revision? | Insert/delete cycle and multi-support graph; compare every generation with full recomputation and record work |
+| D23: DBSP | Algebraic incremental maintenance across aggregation and recursion | No derivative program or retained incremental state | Is exact re-evaluation affordable for an Agent's evolving context? | Freeze rule pack and source sequence; compare derivative and full results, support receipts, memory and update cost |
+| H18: Materialisation maintenance | DRed, Backward/Forward and Counting hybrids for deletions | Snapshot recomputation only | Does removing one support invalidate only the right claims and decisions? | Diamond/cycle deletions with surviving support; compare H18 and D23 strategies to full recomputation |
+| F16: Datafun | Monotonicity tracked by types for higher-order fixed points | Bounds and stratification checks exist; no general monotonicity/lattice-law admission | Which user functions can safely participate in recursive reasoning? | Admit/reject monotone and nonmonotone rule/lattice fixtures; verify termination and typed errors |
+| E23: egglog | Datalog fixed points with equality saturation and congruence closure | BYODS equivalence snapshots exist; no rewrite or e-graph authority | Can a rule or physical plan be optimized with a checkable equivalence witness? | Replay equivalent and inequivalent rewrites against an independent oracle before plan admission |
+| F20: Formulog | Typed Datalog plus SMT formulas for static analysis | No SMT clause/provider | Can constraints improve a coding Agent's candidate analysis without treating solver output as source truth? | Freeze a constraint-heavy case, solver version, timeout and independent satisfiability oracle |
+| P07: Provenance semirings | Algebraic annotations for alternative derivations and recursive fixed points | Evaluator returns rows, not complete provenance polynomials | Which exact sources support a result under multiple derivations? | Compare finite diamond support annotations and withdrawal with MRR's admitted lineage |
+| P22: Recursive Datalog provenance | Recursive annotation semantics can diverge and are not interchangeable | No public recursive provenance contract | What finite explanation is sound for a cyclic claim? | Choose one semantics; test cyclic equations, bounded witnesses, truncation and alternate support |
+
+* Priority and ownership
+
+1. Complete A22/B23 behavioral parity before promoting a new Agent extension.
+   Use the Rust oracle for behavior and the standard SS scenarios for cost.
+2. Use D13/D23/H18 to compare retained updates with full recomputation after
+   every insertion and deletion.  Equality includes the fact set and MRR's
+   required supports for the same generation; an update-cost claim also needs
+   a cold/warm workload receipt.
+3. Use F16 to specify which user-supplied procedures and lattice joins can be
+   admitted safely.  E23 and F20 are separate optional extensions, each with
+   its own equivalence or constraint oracle.
+4. Keep P07/P22 provenance semantics in MRR.  gerbil-ascent may emit bounded
+   candidate evidence, but it cannot assign source authority or select the
+   meaning of an admitted explanation.
+
+The first Agent-facing comparisons use frozen coding-Agent, incident-triage,
+and research-Agent fixtures from the [[https://github.com/tao3k/meta-relational-reasoning/blob/research/ascent-poo-flow/research/ascent-poo-flow-research-program.org][MRR research program]].  Under the same
+source snapshot, action set and budget, compare retrieval plus model judgment
+with retrieval plus admitted MRR derivations plus judgment.  Measure affected
+fact recall, unsupported action rate, explanation fidelity, abstention,
+end-to-end outcome, latency, memory and cost.  The decision model is a
+consumer of admitted evidence, not the oracle for it.
+
+* Bibliography and attribution
+
+- A22 — Arash Sahebolamri, Thomas Gilray, and Kristopher Micinski (2022),
+  [[https://doi.org/10.1145/3497776.3517779][Seamless Deductive Inference via Macros]], CC 2022.
+- B23 — Arash Sahebolamri, Langston Barrett, Scott Moore, and Kristopher
+  Micinski (2023), [[https://doi.org/10.1145/3622840][Bring Your Own Data Structures to Datalog]],
+  OOPSLA2 2023.
+- S16 — Herbert Jordan, Bernhard Scholz, and Pavle Subotic (2016),
+  [[https://souffle-lang.github.io/pdf/cav16.pdf][Soufflé: On Synthesis of Program Analyzers]], CAV 2016.
+- D13 — Frank McSherry, Derek G. Murray, Rebecca Isaacs, and Michael Isard
+  (2013), [[https://www.cidrdb.org/cidr2013/Papers/CIDR13_Paper111.pdf][Differential dataflow]], CIDR 2013.
+- D23 — Mihai Budiu, Tej Chajed, Frank McSherry, Leonid Ryzhyk, and Val
+  Tannen (2023), [[https://www.vldb.org/pvldb/vol16/p1601-budiu.pdf][DBSP: Automatic Incremental View Maintenance for Rich Query
+  Languages]], PVLDB 16(7).  This cites the published five-author paper;
+  the earlier [[https://arxiv.org/abs/2203.16684][arXiv version]] lists four authors.
+- H18 — Pan Hu, Boris Motik, and Ian Horrocks (2018),
+  [[https://doi.org/10.1609/aaai.v32i1.11554][Optimised Maintenance of Datalog Materialisations]], AAAI 2018.
+- F16 — Michael Arntzenius and Neelakantan R. Krishnaswami (2016),
+  [[https://doi.org/10.1145/3022670.2951948][Datafun: a Functional Datalog]], ICFP 2016.
+- E23 — Yihong Zhang, Yisu Remy Wang, Oliver Flatt, David Cao, Philip
+  Zucker, Eli Rosenthal, Zachary Tatlock, and Max Willsey (2023),
+  [[https://doi.org/10.1145/3591239][Better Together: Unifying Datalog and Equality Saturation]], PLDI 2023.
+- F20 — Aaron Bembenek, Michael Greenberg, and Stephen Chong (2020),
+  [[https://doi.org/10.1145/3428209][Formulog: Datalog for SMT-Based Static Analysis]], OOPSLA 2020.
+- P07 — Todd J. Green, Grigoris Karvounarakis, and Val Tannen (2007),
+  [[https://www.cs.ucdavis.edu/~green/papers/pods07.pdf][Provenance Semirings]], PODS 2007.
+- P22 — Camille Bourgaux, Pierre Bourhis, Liat Peterfreund, and Michael
+  Thomazo (2022), [[https://proceedings.kr.org/2022/10/kr2022-0010-bourgaux-et-al.pdf][Revisiting Semiring Provenance for Datalog]], KR 2022.
+
+[[https://github.com/rust-lang/datafrog][Datafrog]] is an implementation comparator, not a paper in this
+matrix.  The [[https://github.com/s-arash/ascent][Ascent Rust repository]] is the pinned execution oracle; paper
+citations do not imply that its source or a paper's text is copied here.

@@ -37,6 +37,10 @@ the gate before new Agent-specific extensions. POO Flow consumes this package
 as a pinned submodule. MRR owns the semantic adapter and admission of its
 own evidence.
 
+The [related-work matrix](docs/related-work-matrix.org) maps the Ascent papers
+and adjacent research on incremental updates, monotonicity, equality,
+constraints, and provenance to concrete parity and Agent research questions.
+
 Scheme qualification extends Foundation's Observability Case profile with
 ASCENT-specific memory and duration budgets; it does not own a test runner.
 
@@ -66,6 +70,8 @@ The differential oracle depends on the upstream
 individual contributors; its [source license is MIT](https://github.com/s-arash/ascent/blob/master/LICENSE).
 The papers retain their authors' and publishers' rights. Citations here
 acknowledge their research; the papers are not redistributed in this repository.
+The other cited papers and their authors are listed in the
+[related-work bibliography](docs/related-work-matrix.org).
 
 The Scheme implementation and repository-authored qualification code are
 copyright © 2026 tao3k team and Contributors and are licensed under

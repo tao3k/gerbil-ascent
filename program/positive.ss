@@ -2,36 +2,17 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-;;; Direct POO declarations for positive, arbitrary-arity relation rules.
-;;; This is the generic semantic path; core/binary-program retains the indexed
-;;; binary fast path. Neither path creates a second public compile language.
-
+;;; Generic positive semi-naive evaluator. Mutable row buffers are local to
+;;; one run; the public declarations and returned projection are POO values.
 (import (only-in :clan/poo/object .o .ref)
-        (only-in :clan/poo/support/base until))
+        (only-in :clan/poo/mop validate)
+        (only-in :clan/poo/support/base until)
+        (only-in "types.ss" GerbilAscentProgramContract))
 
-(export gerbil-ascent-variable
-        gerbil-ascent-literal
-        gerbil-ascent-atom
-        gerbil-ascent-rule
-        gerbil-ascent-evaluate-positive-program)
-
-(def (gerbil-ascent-variable name)
-  (unless (symbol? name) (error "ASCENT variable name must be a symbol" name))
-  (.o (kind 'variable) (value name)))
-
-(def (gerbil-ascent-literal literal-value)
-  (.o (kind 'literal) (value literal-value)))
-
-(def (gerbil-ascent-atom relation-name atom-terms)
-  (unless (and (symbol? relation-name) (list? atom-terms))
-    (error "invalid ASCENT relation atom" relation-name atom-terms))
-  (.o (relation relation-name) (terms atom-terms)))
-
-(def (gerbil-ascent-rule head-atom body-atoms)
-  (unless (list? body-atoms) (error "invalid ASCENT rule body" body-atoms))
-  (.o (head head-atom) (body body-atoms)))
+(export gerbil-ascent-evaluate-positive-program)
 
 (def (gerbil-ascent-evaluate-positive-program program)
+  (validate GerbilAscentProgramContract program)
   (let* ((relations (.ref program 'relations))
          (rules (.ref program 'rules))
          (input-limit (.ref program 'max-input-facts))

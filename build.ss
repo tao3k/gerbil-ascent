@@ -5,9 +5,11 @@
 (import (only-in :std/build-script defbuild-script))
 
 (defbuild-script
-  '("table/relation"
-    "table/expression"
+  '("table/expression"
+    "program/types"
+    "program/objects"
+    "program/positive"
+    "program/interface"
     "core/binary-program"
-    "core/positive-program"
     "candidate/closure"
     "interface/request"))

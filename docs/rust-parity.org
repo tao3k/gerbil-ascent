@@ -21,9 +21,9 @@ proposals rather than core parity claims.
 
 | Rust Ascent 0.8.0 feature | Scheme namespace | Current state | Required closing evidence |
 |---------------------------+------------------+---------------+---------------------------|
-| Relation declaration, arbitrary arity and column types | =core/=, =table/= | positive generic path handles unary through four-column mixed rows; binary fast path remains | broader column types and scale/performance receipts |
-| Multiple heads, relation clauses, repeated variables, joins | =core/= | positive generic joins and repeated-variable equality pass one Rust oracle fixture | arbitrary body shape, invalid-program corpus and performance receipts |
-| Semi-naive least fixed point, dependencies and strata | =core/= | positive recursive generic path and binary fast path | recursive SCCs, stratification, rule order and termination parity |
+| Relation declaration, arbitrary arity and column types | =program/= | positive generic path handles unary through four-column mixed rows; binary fast path remains | broader column types and scale/performance receipts |
+| Multiple heads, relation clauses, repeated variables, joins | =program/= | positive generic joins and repeated-variable equality pass one Rust oracle fixture | arbitrary body shape, invalid-program corpus and performance receipts |
+| Semi-naive least fixed point, dependencies and strata | =program/=, =core/= | positive recursive generic path and binary fast path | recursive SCCs, stratification, rule order and termination parity |
 | Conditions and generators | =core/= | Scheme predicate over two binary endpoints | Rust =if= and =for= fixtures, binding scope, invalid binding cases |
 | Stratified negation | =core/= | absent | negated relation fixtures, unsafe-cycle rejection |
 | Aggregation and custom aggregators | =core/= | absent | count, sum, min, max, mean and custom iterator aggregators |
@@ -44,7 +44,7 @@ cannot substitute for Rust feature parity.
 
 1. Freeze a representative Rust 0.8.0 fixture corpus and error corpus for
    each matrix row; keep it under =rust/ascent-oracle/=.
-2. Generalize relation columns and rule bindings in =table/= and =core/=,
+2. Generalize relation columns and rule bindings in =program/=,
    retaining POO Foundation and standard-library operations as the substrate.
 3. Implement and compare stratification, negation, generators, aggregation,
    and generic lattice behavior. Preserve explicit bounds and typed failures.

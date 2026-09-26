@@ -8,8 +8,9 @@ Each top-level directory is a Gerbil module namespace:
 
 | Namespace | Current responsibility |
 | --- | --- |
-| `:gerbil-ascent/core/*` | Rule evaluation and fixed-point execution |
-| `:gerbil-ascent/table/*` | Relation storage, indexes, and projections |
+| `:gerbil-ascent/program/*` | Typed POO rule declarations and generic positive evaluation |
+| `:gerbil-ascent/core/*` | Indexed binary evaluation path |
+| `:gerbil-ascent/table/*` | Binary relation indexes and projections |
 | `:gerbil-ascent/candidate/*` | Experimental candidate and support projection |
 | `:gerbil-ascent/interface/*` | Inert request projection |
 

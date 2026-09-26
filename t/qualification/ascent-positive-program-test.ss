@@ -9,12 +9,12 @@
         (only-in :poo-flow-foundation/module-system/observability/testing-case
                  poo-flow-default-testing-case-profile
                  poo-flow-test-case/with)
-        (only-in :gerbil-ascent/table/relation gerbil-ascent-relation)
         (only-in :gerbil-ascent/t/qualification/ascent-positive-program-fixture
                  ascent-positive-fixture-evaluate)
-        (only-in :gerbil-ascent/core/positive-program
-                 gerbil-ascent-variable gerbil-ascent-literal
-                 gerbil-ascent-atom gerbil-ascent-rule
+        (only-in :gerbil-ascent/program/interface
+                 gerbil-ascent-relation gerbil-ascent-variable
+                 gerbil-ascent-literal gerbil-ascent-atom gerbil-ascent-rule
+                 gerbil-ascent-positive-program
                  gerbil-ascent-evaluate-positive-program))
 
 (export ascent-positive-program-test)
@@ -69,19 +69,20 @@
       "empty rule set preserves sources and returns"
       (let (result
             (gerbil-ascent-evaluate-positive-program
-             (.o (relations (list (gerbil-ascent-relation 'r 1 '((1)))))
-                 (rules []) (max-input-facts 2) (max-derived-facts 2)
-                 (max-output-facts 2))))
+             (gerbil-ascent-positive-program
+              (list (gerbil-ascent-relation 'r 1 '((1)))) [] 2 2 2)))
         (check-equal? (rows result 'r) '((1)))))
     (poo-flow-test-case/with +positive-case-profile+
       "arity, unsafe heads, and derived budgets reject"
       (check-exception
        (gerbil-ascent-relation 'broken 2 '((1))) true)
+      (check-exception (gerbil-ascent-atom 'out '(raw-term)) true)
+      (check-exception
+       (gerbil-ascent-positive-program [] [] 0 2 2) true)
       (check-exception (evaluate '((1 2 "a") (2 3 "b")) 1) true)
       (check-exception
        (gerbil-ascent-evaluate-positive-program
-        (.o (relations (list (gerbil-ascent-relation 'out 1 [])))
-            (rules (list (r (a 'out (v 'free)))))
-            (max-input-facts 2) (max-derived-facts 2)
-            (max-output-facts 2))) true)
+        (gerbil-ascent-positive-program
+         (list (gerbil-ascent-relation 'out 1 []))
+         (list (r (a 'out (v 'free)))) 2 2 2)) true)
       (check-equal? (.ref (gerbil-ascent-literal "x") 'value) "x"))))

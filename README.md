@@ -48,3 +48,27 @@ just oracle
 ```
 
 The Rust oracle is a qualification dependency, not part of the Scheme runtime.
+
+## Credits and copyright
+
+This project builds on the research ideas and published semantics of Ascent:
+
+- Arash Sahebolamri, Thomas Gilray, and Kristopher Micinski,
+  [“Seamless Deductive Inference via Macros”](https://doi.org/10.1145/3497776.3517779),
+  *CC 2022*.
+- Arash Sahebolamri, Langston Barrett, Scott Moore, and Kristopher Micinski,
+  [“Bring Your Own Data Structures to Datalog”](https://doi.org/10.1145/3622840),
+  *Proceedings of the ACM on Programming Languages, OOPSLA2 2023*.
+
+The differential oracle depends on the upstream
+[Ascent Rust project](https://github.com/s-arash/ascent) and
+`ascent-byods-rels` 0.8.0. Copyright in that project belongs to its
+individual contributors; its [source license is MIT](https://github.com/s-arash/ascent/blob/master/LICENSE).
+The papers retain their authors' and publishers' rights. Citations here
+acknowledge their research; the papers are not redistributed in this repository.
+
+The Scheme implementation and repository-authored qualification code are
+copyright © 2026 tao3k team and Contributors and are licensed under
+`Apache-2.0 AND LGPL-2.1-or-later`, as stated in [LICENSE](LICENSE) and
+the source file SPDX headers. That project license does not change the
+upstream project's license or the papers' rights.

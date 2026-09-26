@@ -862,3 +862,29 @@ fn gerbil_module_and_lexical_origin_match_ascent_run() {
         assert_eq!(actual, ascent_local_origin_rows(edges, origin));
     }
 }
+
+#[test]
+fn rust_repeated_run_source_update_oracle() {
+    ascent! {
+        relation edge(u32, u32);
+        relation reach(u32, u32);
+        reach(x, y) <-- edge(x, y);
+        reach(x, z) <-- reach(x, y), edge(y, z);
+    }
+    let mut program = AscentProgram {
+        edge: vec![(1, 2)],
+        ..AscentProgram::default()
+    };
+    program.run();
+    let mut first = program.reach.clone();
+    first.sort_unstable();
+    assert_eq!(first, vec![(1, 2)]);
+    assert_eq!(scheme_pairs(&program.edge, true), first);
+
+    program.edge.push((2, 3));
+    program.run();
+    let mut second = program.reach.clone();
+    second.sort_unstable();
+    assert_eq!(second, vec![(1, 2), (1, 3), (2, 3)]);
+    assert_eq!(scheme_pairs(&program.edge, true), second);
+}

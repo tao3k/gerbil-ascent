@@ -61,13 +61,14 @@ execution state.
 | Relation declaration, arbitrary arity and column types | =program/= | positive generic path handles unary through four-column mixed rows; binary fast path remains | broader column types and scale/performance receipts |
 | Multiple heads, relation clauses, repeated variables, joins | =program/= | positive generic multi-head rules, joins and repeated-variable equality pass selected Rust oracle fixtures | arbitrary body shape, invalid-program corpus and performance receipts |
 | Semi-naive least fixed point, dependencies and strata | =program/=, =core/= | generic recursive path supports positive and negative strata; binary fast path remains | recursive SCCs, rule order and termination parity |
+| Repeated =run()= after source relation updates | =program/= | Scheme reevaluation of POO-refined immutable snapshots matches a Rust two-run source update oracle; no retained incremental program state | state reuse and update-cost receipt |
 | Conditions, bindings and generators | =program/=, =core/= | generic POO guard, =let= binding and finite list generator clauses with ordered binding checks | broader iterator/pattern shapes and scale receipts |
 | Stratified negation | =program/= | 3-level negated relation fixture and negative-cycle rejection pass selected Rust oracle comparison | broader safe/unsafe programs and performance receipts |
 | Aggregation and custom aggregators | =program/= | count, sum, min, max, mean and custom iterator aggregators pass empty, duplicate-input and grouped Rust fixtures | recursive aggregate corpus, broader type behavior and performance receipts |
 | Lattice declarations and recursive joins | =program/=, =table/= | POO lattice declaration with user join; selected recursive shortest-path and duplicate-key snapshots match Rust | broader join families, lattice/negation composition, invalid join laws and scale receipts |
 | Relation indexes and selected physical plan | =table/=, =program/= | bound-column hash index plan for generic relation clauses above a 32-row threshold; 50-edge two-hop SS scenario passes | broader arities, composite and lattice indexes, provider choice and scale comparison |
 | BYODS data structure provider protocol | =table/= | POO index Provider with default hash and custom alist fixtures; set, =eqrel=, =trrel= and =trrel_uf= storage Providers have bounded Scheme functions; selected binary and grouped ternary materialized rows match Rust =ascent-byods-rels 0.8.0= | broader storage/merge semantics and scale parity |
-| Parallel execution | =core/=, =table/= | absent | deterministic serial/parallel parity and contention benchmark |
+| Parallel execution | =core/=, =table/= | absent | deterministic serial/parallel parity, bounded worker failure behavior and contention benchmark |
 | Gerbil module and macro embedding | =program/=, =interface/= | reusable Gerbil module exports a rule-program constructor; lexical origin capture matches selected Rust =ascent_run!= snapshots | generated declarations, module composition beyond one rule family, macro diagnostics and performance |
 
 The current Rust oracle in =rust/ascent-oracle/= covers positive binary
@@ -111,7 +112,8 @@ cost.
    retaining POO Foundation and standard-library operations as the substrate.
 3. Implement and compare stratification, negation, generators, aggregation,
    and generic lattice behavior. Preserve explicit bounds and typed failures.
-4. Add the BYODS provider boundary, then serial and parallel execution parity.
+4. Add the BYODS provider boundary, repeated-run semantics, then serial and
+   parallel execution parity.
 5. Qualify Gerbil module and macro embedding plus performance against the
    corresponding Rust fixtures. Only then admit Agent-specific extensions as
    a separate research track.

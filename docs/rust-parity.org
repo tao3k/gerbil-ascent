@@ -116,10 +116,14 @@ The minimized counterexample has only one group: =first(alpha, 1, 2)=,
 =second(alpha, 2, 3)= and =wanted(alpha, 3)=. Pinned Rust omits
 =matched(alpha, 1, 3)= with two producers but emits it when both edges enter
 the first producer. Scheme emits it for either producer order and for the
-combined input. This establishes a rule-partition-sensitive Rust 0.8.0
-result, not yet the precise internal merge step responsible for it. The
-Scheme implementation retains equivalence closure semantics; it does not
-copy the missing Rust row.
+combined input. In pinned =ascent-byods-rels 0.8.0=,
+=eqrel_ternary.rs::merge_delta_to_total_new_to_delta= drains =delta.map=,
+removes the matching group from =new.map=, merges their indexes, and does
+not put that merged group back into =delta.map=. The following loop inserts
+only groups still left in =new.map=. This explains the missing group at the
+next delta read; it is specific to the ternary grouped provider path tested
+here. Scheme retains equivalence closure semantics and does not copy the
+missing Rust row.
 
 The =eqrel= component index emits only newly joined cross-component pairs.
 It avoids scanning all previously materialized pairs for every input edge.

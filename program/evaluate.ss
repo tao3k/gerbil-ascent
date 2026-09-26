@@ -29,7 +29,7 @@
 
 (def Session. (.ref GerbilAscentSessionContract 'proto))
 
-(def (gerbil-ascent-open-session program)
+(def (gerbil-ascent-make-engine program session?)
   ;; The declaration constructor validates the full Core contract.
   ;; Evaluation checks mutable rows and clause bindings for this snapshot.
   (unless (object? program)
@@ -569,10 +569,15 @@
                  (rows-of (lambda (name)
                             (vector-ref snapshots (position-of name))))))))
          last-result)
-        (validate GerbilAscentSessionContract
-                  (.o (:: @ Session.)
-                      (.append-source! append-source!)
-                      (.run run!)))))))
+        (if session?
+          (validate GerbilAscentSessionContract
+                    (.o (:: @ Session.)
+                        (.append-source! append-source!)
+                        (.run run!)))
+          run!)))))
+
+(def (gerbil-ascent-open-session program)
+  (gerbil-ascent-make-engine program #t))
 
 (def (gerbil-ascent-session-append-source! session name row)
   ((.ref session '.append-source!) name row))
@@ -581,4 +586,4 @@
   ((.ref session '.run)))
 
 (def (gerbil-ascent-evaluate-program program)
-  (gerbil-ascent-session-run (gerbil-ascent-open-session program)))
+  ((gerbil-ascent-make-engine program #f)))

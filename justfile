@@ -59,5 +59,8 @@ eqrel-rows:
 trrel-rows:
     @timeout 15s gerbil {{ gerbil_test_runtime_options }} t/qualification/ascent-eqrel-program-output.ss trrel
 
+trrel-uf-rows:
+    @timeout 15s gerbil {{ gerbil_test_runtime_options }} t/qualification/ascent-eqrel-program-output.ss trrel-uf
+
 oracle:
     cargo test --locked --manifest-path rust/ascent-oracle/Cargo.toml

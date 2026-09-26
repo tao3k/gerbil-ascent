@@ -5,7 +5,8 @@
 (import (only-in :clan/poo/object .ref)
         (only-in :gerbil-ascent/table/interface
                  gerbil-ascent-eqrel-storage-provider
-                 gerbil-ascent-trrel-storage-provider)
+                 gerbil-ascent-trrel-storage-provider
+                 gerbil-ascent-trrel-uf-storage-provider)
         (only-in :gerbil-ascent/t/qualification/ascent-eqrel-program-fixture
                  ascent-storage-fixture-evaluate))
 
@@ -13,9 +14,12 @@
 
 (def (main . args)
   (let* ((request (read))
-         (provider (if (member "trrel" args)
-                     gerbil-ascent-trrel-storage-provider
-                     gerbil-ascent-eqrel-storage-provider))
+         (provider (cond
+                    ((member "trrel-uf" args)
+                     gerbil-ascent-trrel-uf-storage-provider)
+                    ((member "trrel" args)
+                     gerbil-ascent-trrel-storage-provider)
+                    (else gerbil-ascent-eqrel-storage-provider)))
          (result (ascent-storage-fixture-evaluate
                   (car request) (cadr request) provider))
          (rows-of (.ref result 'rows-of)))

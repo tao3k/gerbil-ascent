@@ -6,7 +6,8 @@
 ;;; method slots; the evaluator owns cache invalidation and fact budgets.
 (export gerbil-ascent-index-build gerbil-ascent-index-key
         gerbil-ascent-eqrel-extension
-        gerbil-ascent-trrel-extension)
+        gerbil-ascent-trrel-extension
+        gerbil-ascent-trrel-uf-extension)
 
 (def (gerbil-ascent-index-key row columns)
   (map (lambda (column) (list-ref row column)) columns))
@@ -124,7 +125,9 @@
                 (if (= width 3)
                   (list group from to)
                   (list from to)))
-            (unless (or (equal? from to)
+            (unless (or (and (equal? from to)
+                             (not (and (equal? left right)
+                                       (equal? from left))))
                         (hash-get known candidate))
               (hash-put! known candidate #t)
               (set! added (cons candidate added))
@@ -134,3 +137,31 @@
         successors))
      predecessors)
     (reverse added)))
+
+(def (gerbil-ascent-trrel-uf-extension all pending row budget)
+  (let* ((width (length row))
+         (_ (unless (memq width '(2 3))
+              (error "ASCENT trrel_uf requires two or three columns" row)))
+         (group (if (= width 3) (car row) #f))
+         (left (list-ref row (- width 2)))
+         (right (list-ref row (- width 1)))
+         (known (make-hash-table))
+         (non-reflexive
+          (gerbil-ascent-trrel-extension all pending row budget))
+         (added non-reflexive))
+    (for-each (lambda (fact) (hash-put! known fact #t)) all)
+    (for-each (lambda (fact) (hash-put! known fact #t)) pending)
+    (for-each (lambda (fact) (hash-put! known fact #t)) non-reflexive)
+    (for-each
+     (lambda (node)
+       (let (self-fact
+             (if (= width 3)
+               (list group node node)
+               (list node node)))
+         (unless (hash-get known self-fact)
+           (hash-put! known self-fact #t)
+           (set! added (cons self-fact added))
+           (when (> (length added) budget)
+             (error "ASCENT trrel_uf output fact budget exceeded")))))
+     (list left right))
+    added))

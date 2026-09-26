@@ -10,7 +10,8 @@
                  gerbil-ascent-hash-index-provider
                  gerbil-ascent-set-storage-provider
                  gerbil-ascent-eqrel-storage-provider
-                 gerbil-ascent-trrel-storage-provider)
+                 gerbil-ascent-trrel-storage-provider
+                 gerbil-ascent-trrel-uf-storage-provider)
         (only-in :gerbil-ascent/program/interface
                  gerbil-ascent-relation gerbil-ascent-program
                  gerbil-ascent-evaluate-program)
@@ -70,6 +71,23 @@
              'binary-output))
         (check-equal? (length rows) 6)
         (check-equal? (member '(2 2) rows) #f)))
+    (poo-flow-test-case "trrel keeps explicit reflexive facts"
+      (let (rows
+            ((.ref (ascent-storage-fixture-evaluate
+                    '((1 1)) [] gerbil-ascent-trrel-storage-provider)
+                   'rows-of)
+             'binary-output))
+        (check-equal? rows '((1 1)))))
+    (poo-flow-test-case "trrel_uf exposes reflexive transitive closure"
+      (let (rows
+            ((.ref (ascent-storage-fixture-evaluate
+                    '((1 2) (2 3)) []
+                    gerbil-ascent-trrel-uf-storage-provider) 'rows-of)
+             'binary-output))
+        (check-equal? (length rows) 6)
+        (check-equal? (not (not (member '(1 1) rows))) #t)
+        (check-equal? (not (not (member '(3 3) rows))) #t)
+        (check-equal? (member '(3 1) rows) #f)))
     (poo-flow-test-case "invalid storage method output fails at the boundary"
       (check-exception
        (gerbil-ascent-evaluate-program

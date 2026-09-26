@@ -10,12 +10,14 @@
                  PooFlowNativeObjectContract.
                  poo-flow-predicate-contract)
         (only-in "funs.ss" gerbil-ascent-eqrel-extension
-                 gerbil-ascent-trrel-extension))
+                 gerbil-ascent-trrel-extension
+                 gerbil-ascent-trrel-uf-extension))
 
 (export GerbilAscentStorageProviderContract
         gerbil-ascent-set-storage-provider
         gerbil-ascent-eqrel-storage-provider
         gerbil-ascent-trrel-storage-provider
+        gerbil-ascent-trrel-uf-storage-provider
         gerbil-ascent-storage-extend)
 
 (def +extend+
@@ -48,3 +50,8 @@
   (validate GerbilAscentStorageProviderContract
             (.o (:: @ gerbil-ascent-set-storage-provider)
                 (.extend-rows gerbil-ascent-trrel-extension))))
+
+(def gerbil-ascent-trrel-uf-storage-provider
+  (validate GerbilAscentStorageProviderContract
+            (.o (:: @ gerbil-ascent-set-storage-provider)
+                (.extend-rows gerbil-ascent-trrel-uf-extension))))

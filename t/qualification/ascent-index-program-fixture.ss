@@ -2,12 +2,13 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(import (only-in :gerbil-ascent/program/interface
+(import (only-in :clan/poo/object .o)
+        (only-in :gerbil-ascent/program/interface
                  gerbil-ascent-relation gerbil-ascent-variable
                  gerbil-ascent-atom gerbil-ascent-rule
                  gerbil-ascent-program)
         (only-in :gerbil-ascent/table/interface
-                 gerbil-ascent-index-provider)
+                 gerbil-ascent-hash-index-provider)
         (only-in :gerbil-ascent/table/index
                  gerbil-ascent-index-key))
 
@@ -39,13 +40,15 @@
                       index)))))))
 
 (def (ascent-index-alist-provider (on-build (lambda () (void))))
-  (gerbil-ascent-index-provider
-   (lambda (rows columns)
-     (on-build)
-     (alist-index-build rows columns))
-   (lambda (index key)
-     (let (entry (assoc key index))
-       (if entry (cdr entry) [])))))
+  (.o (:: @ gerbil-ascent-hash-index-provider)
+      (.build-index
+       (lambda (rows columns)
+         (on-build)
+         (alist-index-build rows columns)))
+      (.lookup-index
+       (lambda (index key)
+         (let (entry (assoc key index))
+           (if entry (cdr entry) []))))))
 
 (def (ascent-index-fixture-program (edge-count 50) (index-provider #f))
   (gerbil-ascent-program

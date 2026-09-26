@@ -3,15 +3,15 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 (import (only-in :std/test check-equal? check-exception test-suite)
-        (only-in :clan/poo/object .ref)
+        (only-in :clan/poo/object .o .ref)
         (only-in :poo-flow-foundation/module-system/observability/testing-case
                  poo-flow-test-case)
         (only-in :gerbil-ascent/t/qualification/ascent-index-program-fixture
                  ascent-index-fixture-program ascent-index-alist-provider)
         (only-in :gerbil-ascent/table/interface
-                 gerbil-ascent-index-provider)
+                 gerbil-ascent-hash-index-provider)
         (only-in :gerbil-ascent/program/interface
-                 gerbil-ascent-evaluate-program))
+                 gerbil-ascent-evaluate-program gerbil-ascent-relation))
 
 (export ascent-index-program-test)
 
@@ -39,11 +39,16 @@
         (check-equal? (length rows) 49)
         (check-equal? (not (not (member '(48 50) rows))) #t)))
     (poo-flow-test-case "malformed Provider values fail at the boundary"
-      (check-exception (gerbil-ascent-index-provider #f #f) true)
+      (check-exception
+       (gerbil-ascent-relation
+        'invalid 2 []
+        (.o (:: @ gerbil-ascent-hash-index-provider)
+            (.build-index #f)))
+       true)
       (check-exception
        (gerbil-ascent-evaluate-program
         (ascent-index-fixture-program
-         50 (gerbil-ascent-index-provider
-             (lambda (_rows _columns) 'broken)
-             (lambda (_index _key) 'broken))))
+         50 (.o (:: @ gerbil-ascent-hash-index-provider)
+                (.build-index (lambda (_rows _columns) 'broken))
+                (.lookup-index (lambda (_index _key) 'broken)))))
        true))))

@@ -17,6 +17,26 @@ test where relevant, and a measured performance receipt. Until then, this
 repository is a partial implementation, and Agent extensions are research
 proposals rather than core parity claims.
 
+* POO Flow programming style in the Scheme implementation
+
+ASCENT declarations are POO values admitted by Foundation =define-type=
+contracts. Clause planning has one independently extensible receiver family,
+so its public dispatch is the slot generic =gerbil-ascent-clause-plan=.
+Relation indexing is a separate one-receiver Provider family with slot
+generics for build and lookup. A downstream index Provider extends
+=gerbil-ascent-hash-index-provider= with native =.o= inheritance and overrides
+the relevant method slots; the alist qualification fixture exercises this
+surface. Public Provider construction does not require a positional pair of
+callback functions.
+
+Index construction and rule evaluation remain named Scheme algorithms. The
+tagged vectors inside the evaluator are private lowered plans, not a second
+public declaration language. There is currently no independently growing
+Provider-by-Profile crossing, so adding CLOS methods here would not satisfy
+the POO Flow two-axis rule. A future BYODS storage Provider needs its own
+semantic contract and Rust parity fixtures before it can become an extension
+surface.
+
 * Feature matrix
 
 | Rust Ascent 0.8.0 feature | Scheme namespace | Current state | Required closing evidence |

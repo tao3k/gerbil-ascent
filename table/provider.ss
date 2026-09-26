@@ -12,7 +12,6 @@
         (only-in "index.ss" gerbil-ascent-index-build))
 
 (export GerbilAscentIndexProviderContract
-        gerbil-ascent-index-provider
         gerbil-ascent-hash-index-provider
         gerbil-ascent-index-provider-build
         gerbil-ascent-index-provider-lookup)
@@ -36,13 +35,9 @@
 (.defgeneric (gerbil-ascent-index-provider-lookup provider index key)
   slot: .lookup-index)
 
-(def (gerbil-ascent-index-provider build lookup)
+(def gerbil-ascent-hash-index-provider
   (validate GerbilAscentIndexProviderContract
             (.o (:: @ IndexProvider.)
-                (.build-index build)
-                (.lookup-index lookup))))
-
-(def gerbil-ascent-hash-index-provider
-  (gerbil-ascent-index-provider
-   gerbil-ascent-index-build
-   (lambda (index key) (or (hash-get index key) []))))
+                (.build-index gerbil-ascent-index-build)
+                (.lookup-index
+                 (lambda (index key) (or (hash-get index key) []))))))

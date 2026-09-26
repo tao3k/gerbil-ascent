@@ -314,7 +314,8 @@
                          (vector-ref all index)
                          (vector-ref pending index) row
                          (- output-limit
-                            (+ source-count derived-count pending-count))))
+                            (+ source-materialized-count
+                               derived-count pending-count))))
                     (unless (list? expanded)
                       (error "ASCENT storage provider returned non-list rows"))
                     (for-each
@@ -333,7 +334,8 @@
                      expanded)))
                 (when (> (+ derived-count pending-count) derived-limit)
                   (error "ASCENT derived fact budget exceeded"))
-                (when (> (+ source-count derived-count pending-count)
+                (when (> (+ source-materialized-count
+                            derived-count pending-count)
                          output-limit)
                   (error "ASCENT output fact budget exceeded"))))
             (def (clause-inputs variables environment)

@@ -14,7 +14,9 @@
                  gerbil-ascent-trrel-uf-storage-provider)
         (only-in :gerbil-ascent/program/interface
                  gerbil-ascent-relation gerbil-ascent-program
-                 gerbil-ascent-evaluate-program)
+                 gerbil-ascent-evaluate-program
+                 gerbil-ascent-variable gerbil-ascent-atom
+                 gerbil-ascent-rule)
         (only-in :gerbil-ascent/t/qualification/ascent-eqrel-program-fixture
                  ascent-eqrel-fixture-evaluate
                  ascent-storage-fixture-evaluate))
@@ -107,4 +109,19 @@
           (8 9) (9 10) (10 11) (11 12) (12 13) (13 14)
           (14 15) (15 16) (16 17) (17 18) (18 19))
         [])
-       true))))
+       true))
+    (poo-flow-test-case "materialized source facts count toward total output"
+      (let* ((x (gerbil-ascent-variable 'x))
+             (y (gerbil-ascent-variable 'y))
+             (program
+              (gerbil-ascent-program
+               (list (gerbil-ascent-relation
+                      'eq 2 '((1 2) (2 3))
+                      gerbil-ascent-hash-index-provider
+                      gerbil-ascent-eqrel-storage-provider)
+                     (gerbil-ascent-relation 'copied 2 []))
+               (list (gerbil-ascent-rule
+                      (list (gerbil-ascent-atom 'copied (list x y)))
+                      (list (gerbil-ascent-atom 'eq (list x y)))))
+               4 16 12)))
+        (check-exception (gerbil-ascent-evaluate-program program) true)))))

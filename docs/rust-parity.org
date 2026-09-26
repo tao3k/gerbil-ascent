@@ -45,6 +45,10 @@ The evaluator resolves each storage Provider method slot once when it
 initializes a relation, then invokes the selected Scheme function in the row
 loop. This preserves the public POO extension point without repeated slot
 dispatch for every fact.
+Input budgets count declared source rows; total output budgets count
+materialized source rows after BYODS expansion plus derived rows. A
+qualification case checks that a two-edge =eqrel= source cannot materialize
+nine rows and then derive nine more under a twelve-row output limit.
 Dependency stratification, delta-position planning, lattice row operations
 and rule binding live in =program/funs.ss= as named Scheme functions. The
 evaluator retains snapshot-local fact buffers, pending deltas and rule

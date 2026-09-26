@@ -9,7 +9,7 @@
 
 (import (only-in :clan/poo/object .o .mix .ref .call)
         (only-in :clan/poo/trie UIntTrieSet)
-        (only-in :gerbil-ascent/ascent-table-expression
+        (only-in :gerbil-ascent/table/expression
                  gerbil-ascent-table-expression-prototype))
 
 (export gerbil-ascent-closure-candidates)

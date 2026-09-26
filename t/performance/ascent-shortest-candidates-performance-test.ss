@@ -10,7 +10,7 @@
                  benchmark-fixture-ref
                  benchmark-receipt-pass?
                  benchmark-run/result)
-        (only-in :gerbil-ascent/ascent-closure-candidates
+        (only-in :gerbil-ascent/candidate/closure
                  gerbil-ascent-closure-candidates))
 
 (export ascent-shortest-candidates-performance-test)
@@ -40,5 +40,5 @@
           (check-equal? (.ref (list-ref items 18) 'distance) 19)
           (check-equal? (.ref (list-ref items 18) 'support) (iota 19)))
         (check-equal? (benchmark-receipt-pass? receipt) #t)
-        (display "[poo-flow-benchmark] ascent-shortest-candidates p95=")
+        (display "[gerbil-ascent-benchmark] ascent-shortest-candidates p95=")
         (displayln (benchmark-fixture-ref receipt 'elapsed))))))

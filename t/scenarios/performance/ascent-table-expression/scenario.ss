@@ -13,7 +13,7 @@
                  benchmark-run/result)
         (only-in :clan/poo/object .o .mix .ref .call)
         (only-in :clan/poo/trie UIntTrieSet)
-        (only-in :gerbil-ascent/ascent-table-expression
+        (only-in :gerbil-ascent/table/expression
                  gerbil-ascent-table-expression-prototype)
         (only-in :gerbil-ascent/t/scenarios/performance/ascent-table-expression/baseline
                  ascent-table-expression-baseline))
@@ -60,7 +60,7 @@
                (benchmark-fixture-ref baseline-receipt 'p95Ns))
       (error "ASCENT indexed projection did not improve the persistent baseline"
              baseline-receipt candidate-receipt))
-    (display "[poo-flow-benchmark] ascent-table-expression baseline-p95=")
+    (display "[gerbil-ascent-benchmark] ascent-table-expression baseline-p95=")
     (display (benchmark-fixture-ref baseline-receipt 'elapsed))
     (display " candidate-p95=")
     (display (benchmark-fixture-ref candidate-receipt 'elapsed))

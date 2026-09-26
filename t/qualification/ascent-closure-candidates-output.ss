@@ -7,7 +7,7 @@
 ;;; same order as its canonical FactIds and compares the result with Ascent.
 
 (import (only-in :clan/poo/object .ref)
-        (only-in :gerbil-ascent/ascent-closure-candidates
+        (only-in :gerbil-ascent/candidate/closure
                  gerbil-ascent-closure-candidates))
 
 (export main)

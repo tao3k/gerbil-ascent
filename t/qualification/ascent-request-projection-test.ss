@@ -5,7 +5,7 @@
 
 (import (only-in :std/test check-equal? check-exception test-case test-suite)
         (only-in :clan/poo/object .o .ref .slot?)
-        (only-in :gerbil-ascent/ascent-request-projection
+        (only-in :gerbil-ascent/interface/request
                  gerbil-ascent-project-request))
 
 (export ascent-request-projection-test)

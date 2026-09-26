@@ -12,7 +12,7 @@
                  benchmark-run/result)
         (only-in :clan/poo/object .o .mix .ref .call)
         (only-in :clan/poo/trie UIntTrieSet)
-        (only-in :gerbil-ascent/ascent-table-expression
+        (only-in :gerbil-ascent/table/expression
                  gerbil-ascent-table-expression-prototype))
 
 (def fixture
@@ -64,7 +64,7 @@
                (benchmark-fixture-ref baseline-receipt 'p95Ns))
       (error "indexed membership did not beat repeated list membership"
              baseline-receipt candidate-receipt))
-    (display "[poo-flow-benchmark] ascent-membership baseline-p95=")
+    (display "[gerbil-ascent-benchmark] ascent-membership baseline-p95=")
     (display (benchmark-fixture-ref baseline-receipt 'elapsed))
     (display " candidate-p95=")
     (display (benchmark-fixture-ref candidate-receipt 'elapsed))

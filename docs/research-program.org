@@ -6,6 +6,13 @@
 #+DATE: 2026-09-25
 #+STATUS: research proposal
 
+* Implementation gate
+
+The [[file:rust-parity.org][Rust parity matrix]] is the acceptance contract. Complete behavioral
+parity with pinned Rust Ascent comes before Agent-specific extension work.
+This document records existing experiments and proposals; the bounded binary
+fragment does not claim complete Rust equivalence.
+
 * Question and first decision
 
 Can the native POO fixed point carry the Ascent kernel inside POO
@@ -110,7 +117,7 @@ compute shortest =FactId= support, bind an MRR generation, or admit a receipt.
 
 The next Scheme slice reuses those =closure-pairs= and computes shortest source
 support from caller-labelled edges in
-=ascent-closure-candidates.ss=.  It selects the shortest
+=candidate/closure.ss=.  It selects the shortest
 path, then the lexicographically smallest source-label sequence among equal
 length paths.  Its POO result carries each encoded pair, distance, support,
 and base/transitive rule kind; input and theoretical pair bounds reject before
@@ -136,7 +143,7 @@ selection; the local optimized p95 was 306us against a 1000us target and
 generic lattice values remain open.
 
 The first multi-relation Scheme rule evaluator is now
-=ascent-binary-program.ss=.  It accepts POO relation and
+=core/binary-program.ss=.  It accepts POO relation and
 rule objects for positive binary =copy=, guarded =filter=, and =join= rules, validates names and
 encoded pairs, and computes a simultaneous semi-naive fixed point.  Input,
 newly derived, and complete published pair budgets are separate positive

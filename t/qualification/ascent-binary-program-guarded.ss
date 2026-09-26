@@ -8,7 +8,7 @@
 
 (import (only-in :clan/poo/object .o .ref .call)
         (only-in :clan/poo/trie UIntTrieSet)
-        (only-in :gerbil-ascent/ascent-binary-program
+        (only-in :gerbil-ascent/core/binary-program
                  gerbil-ascent-binary-relation
                  gerbil-ascent-binary-copy-rule
                  gerbil-ascent-binary-filter-rule

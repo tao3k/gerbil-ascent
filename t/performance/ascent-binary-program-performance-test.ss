@@ -11,7 +11,7 @@
                  benchmark-fixture-ref
                  benchmark-receipt-pass?
                  benchmark-run/result)
-        (only-in :gerbil-ascent/ascent-binary-program
+        (only-in :gerbil-ascent/core/binary-program
                  gerbil-ascent-binary-relation
                  gerbil-ascent-binary-copy-rule
                  gerbil-ascent-binary-join-rule
@@ -60,6 +60,6 @@
         (let (reach ((.ref actual 'pair-list-of) 'reach))
           (check-equal? (length reach) 190)
           (check-equal? reach (expected-chain-pairs)))
-        (display "[poo-flow-benchmark] ascent-binary-program p95=")
+        (display "[gerbil-ascent-benchmark] ascent-binary-program p95=")
         (displayln (benchmark-fixture-ref receipt 'elapsed))
         (check-equal? (benchmark-receipt-pass? receipt) #t)))))

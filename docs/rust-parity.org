@@ -1,0 +1,53 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+#+TITLE: Rust Ascent to Gerbil parity contract
+#+DATE: 2026-09-26
+#+STATUS: incomplete implementation matrix
+
+* Authority and completion rule
+
+The first target is behavioral parity with the pinned =ascent 0.8.0= oracle,
+interpreted through Scheme and Gerbil modules. The [[https://s-arash.github.io/ascent/cc22main-p95-seamless-deductive-inference-via-macros.pdf][CC 2022 paper]],
+[[https://kmicinski.com/assets/byods.pdf][BYODS paper]], and [[https://github.com/s-arash/ascent][Rust implementation]] define the baseline.
+Rust-specific surface syntax and ownership rules need equivalent Scheme APIs
+and macro behavior; copying Rust syntax is not a requirement. Each row closes
+only with a matching Rust fixture, Scheme result comparison, invalid-program
+test where relevant, and a measured performance receipt. Until then, this
+repository is a partial implementation, and Agent extensions are research
+proposals rather than core parity claims.
+
+* Feature matrix
+
+| Rust Ascent 0.8.0 feature | Scheme namespace | Current state | Required closing evidence |
+|---------------------------+------------------+---------------+---------------------------|
+| Relation declaration, arbitrary arity and column types | =core/=, =table/= | bounded encoded binary pairs only | unary, binary, ternary, mixed types, duplicates, empty relations |
+| Multiple heads, relation clauses, repeated variables, joins | =core/= | binary copy, filter, join and multiple heads | arbitrary body shape, equality binding, repeated relation, self joins |
+| Semi-naive least fixed point, dependencies and strata | =core/= | positive binary fixed point | recursive SCCs, stratification, rule order and termination parity |
+| Conditions and generators | =core/= | Scheme predicate over two binary endpoints | Rust =if= and =for= fixtures, binding scope, invalid binding cases |
+| Stratified negation | =core/= | absent | negated relation fixtures, unsafe-cycle rejection |
+| Aggregation and custom aggregators | =core/= | absent | count, sum, min, max, mean and custom iterator aggregators |
+| Lattice declarations and recursive joins | =table/=, =core/= | selected minimum distance projection only | generic lattice interface, recursive lattice fixtures, invalid join tests |
+| Relation indexes and selected physical plan | =table/= | private dense/sparse binary adjacency | index selection and relation access parity across arities |
+| BYODS data structure provider protocol | =table/= | absent | default provider, equivalence, transitive relation and user provider fixtures |
+| Parallel execution | =core/=, =table/= | absent | deterministic serial/parallel parity and contention benchmark |
+| Gerbil module and macro embedding | =core/=, =interface/= | callable Scheme functions, no full declaration surface | module reuse, local bindings, generated declarations and diagnostics |
+
+The current Rust oracle in =rust/ascent-oracle/= covers positive binary
+closure, guarded filter/copy/join, and shortest source support across source
+snapshots. Those cases do not close the rows above. =candidate/= and
+=interface/= hold existing experimental projections; their MRR or Agent use
+cannot substitute for Rust feature parity.
+
+* Implementation order
+
+1. Freeze a representative Rust 0.8.0 fixture corpus and error corpus for
+   each matrix row; keep it under =rust/ascent-oracle/=.
+2. Generalize relation columns and rule bindings in =table/= and =core/=,
+   retaining POO Foundation and standard-library operations as the substrate.
+3. Implement and compare stratification, negation, generators, aggregation,
+   and generic lattice behavior. Preserve explicit bounds and typed failures.
+4. Add the BYODS provider boundary, then serial and parallel execution parity.
+5. Qualify Gerbil module and macro embedding plus performance against the
+   corresponding Rust fixtures. Only then admit Agent-specific extensions as
+   a separate research track.

@@ -5,7 +5,7 @@
 
 (import (only-in :std/test check-equal? check-exception test-case test-suite)
         (only-in :clan/poo/object .ref)
-        (only-in :gerbil-ascent/ascent-closure-candidates
+        (only-in :gerbil-ascent/candidate/closure
                  gerbil-ascent-closure-candidates))
 
 (export ascent-closure-candidates-test)

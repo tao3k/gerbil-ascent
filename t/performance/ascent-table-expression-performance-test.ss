@@ -12,7 +12,7 @@
                  benchmark-fixture-contract-pass?
                  benchmark-receipt-pass?
                  benchmark-run)
-        (only-in :gerbil-ascent/ascent-table-expression
+        (only-in :gerbil-ascent/table/expression
                  gerbil-ascent-table-expression-prototype))
 
 (export ascent-table-expression-performance-test)
@@ -54,10 +54,10 @@
          #t)
         (check-equal? (.call UIntTrieSet .count pairs) 512)
         (check-equal? (length projected) 1024)
-        (display "[poo-flow-benchmark] ascent-table-expression p95=")
+        (display "[gerbil-ascent-benchmark] ascent-table-expression p95=")
         (display (cdr (assoc 'elapsed receipt)))
         (newline)
-        (display "[poo-flow-benchmark] ascent-table-expression ")
+        (display "[gerbil-ascent-benchmark] ascent-table-expression ")
         (write receipt)
         (newline)
         (force-output)

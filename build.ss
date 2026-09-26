@@ -5,7 +5,7 @@
 (import (only-in :std/build-script defbuild-script))
 
 (defbuild-script
-  '("ascent-table-expression"
-    "ascent-binary-program"
-    "ascent-closure-candidates"
-    "ascent-request-projection"))
+  '("table/expression"
+    "core/binary-program"
+    "candidate/closure"
+    "interface/request"))

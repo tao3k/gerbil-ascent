@@ -6,7 +6,7 @@
 (import (only-in :std/test check-equal? check-exception test-case test-suite)
         (only-in :clan/poo/object .o .mix .ref .call)
         (only-in :clan/poo/trie UIntTrieSet)
-        (only-in :gerbil-ascent/ascent-table-expression
+        (only-in :gerbil-ascent/table/expression
                  gerbil-ascent-table-expression-prototype))
 
 (export ascent-table-expression-test)

@@ -10,7 +10,7 @@
                  benchmark-run/result)
         (only-in :clan/poo/object .o .mix .ref .call)
         (only-in :clan/poo/trie UIntTrieSet)
-        (only-in :gerbil-ascent/ascent-table-expression
+        (only-in :gerbil-ascent/table/expression
                  gerbil-ascent-table-expression-prototype))
 
 (def fixture
@@ -49,7 +49,7 @@
     (error "ASCENT closure changed the complete chain relation"))
   (unless (benchmark-receipt-pass? receipt)
     (error "ASCENT closure exceeded the benchmark budget" receipt))
-  (display "[poo-flow-benchmark] ascent-reachability-closure p95=")
+  (display "[gerbil-ascent-benchmark] ascent-reachability-closure p95=")
   (display (benchmark-fixture-ref receipt 'elapsed))
   (displayln " pairs=190 semanticEquivalent=#t")
   (force-output))

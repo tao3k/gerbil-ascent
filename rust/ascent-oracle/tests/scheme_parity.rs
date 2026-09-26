@@ -745,6 +745,7 @@ fn binary_and_grouped_trrel_match_ascent_byods() {
         (vec![(1, 2), (2, 3)], vec![(0, 1, 2), (1, 2, 3)]),
         (vec![(1, 2), (2, 3), (3, 1)], vec![(0, 1, 2), (0, 2, 1)]),
         (vec![(1, 2), (3, 4), (2, 3)], vec![(0, 1, 2), (1, 2, 3)]),
+        ((0..20).map(|node| (node, node + 1)).collect(), vec![]),
     ];
     for (binary, grouped) in snapshots {
         let binary_request = binary
@@ -811,6 +812,7 @@ fn binary_and_grouped_trrel_uf_match_ascent_byods() {
         (vec![(1, 2), (2, 3)], vec![(0, 1, 2), (1, 2, 3)]),
         (vec![(1, 2), (2, 3), (3, 1)], vec![(0, 1, 2), (0, 2, 1)]),
         (vec![(1, 2), (3, 4), (2, 3)], vec![(0, 1, 2), (1, 2, 3)]),
+        ((0..20).map(|node| (node, node + 1)).collect(), vec![]),
     ];
     for (binary, grouped) in snapshots {
         let binary_request = binary

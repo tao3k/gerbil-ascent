@@ -1,0 +1,22 @@
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+((benchmarkKind . scenario-e2e)
+ (max_total . 1000us)
+ (target_total . 700us)
+ (regression_budget . 300us)
+ (expected_over_input_budget . 0us)
+ (sampleCount . 20)
+ (targetRationale . "Materialize each directed or reflexive transitive closure of a twenty-edge chain from its predeclared POO program.")
+ (unit . "us")
+ (sourcePath . "t/scenarios/performance/ascent-byods-trrel/benchmark.ss")
+ (rule . GERBIL-SCHEME-AGENT-R031)
+ (feature . ascent-byods-trrel)
+ (optimizationFocus . "incremental predecessor and successor indexes")
+ (inputShape . "one twenty-edge chain per Provider, producing 210 or 231 facts")
+ (expectedOutcome . "complete directed and reflexive transitive closures")
+ (expectedRepair . "replace repeated whole-table scans with adjacency indexes")
+ (baseline . "scan all materialized pairs for every inserted edge")
+ (candidate . "track predecessors and successors per group")
+ (measurementPhases candidate-clauses assert-semantic-gate assert-time-gate)
+ (tags poo ascent byods trrel performance))

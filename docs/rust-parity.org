@@ -37,6 +37,7 @@ the POO Flow two-axis rule. The current BYODS storage Provider has a separate
 semantic contract and selected Rust parity fixtures; its broader merge and
 scale behavior remain open. Pure transitive algorithms live in
 =table/funs.ss=; =table/eqrel.ss= owns an evaluation-local component index;
+=table/trrel.ss= owns evaluation-local predecessor and successor indexes;
 =table/storage.ss= owns the POO storage Provider contract and method selection.
 The Provider's =.make-state= slot creates one private state per relation and
 evaluation. Its =.extend-rows= slot receives that state, the current rows,
@@ -125,6 +126,19 @@ predeclared 20-edge program per run. Before the component index, one local
 run measured 3.508 ms p95. Three local runs after the change measured 450,
 448 and 965 us p95, all below its 1 ms budget. These local samples do not
 establish a cross-platform or large-scale performance bound.
+
+The =trrel= and =trrel_uf= Providers now record accepted predecessors and
+successors per relation run. Their 20-edge directed and reflexive closures
+produce 210 and 231 facts and match the pinned Rust oracle. The Rust
+differential also compares binary/grouped cycle and explicit-self snapshots;
+four concurrent Scheme evaluations verify that Provider state is not shared.
+An early combined =ascent-byods-trrel= SS case measured 2.493 ms p95 before
+the index. The current scenario measures =trrel= and =trrel_uf= separately,
+each on a 20-edge chain with a strict 1 ms admission ceiling. Local =trrel=
+runs after the input-edge index ranged from 473 us to 3.748 ms p95; one
+successful =trrel_uf= run measured 535 us p95. Several local runs failed the
+1 ms gate. The combined baseline and separate-provider results are not a
+direct speedup comparison, and stable submillisecond performance remains open.
 
 The standard =ascent-rule-clauses= SS scenario measures evaluation of one
 predeclared program over three ternary edges. A post-index isolated 20-sample

@@ -2,11 +2,8 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-;;; Pure relation algorithms. Providers select these functions through POO
-;;; method slots; the evaluator owns cache invalidation and fact budgets.
-(export gerbil-ascent-index-build gerbil-ascent-index-key
-        gerbil-ascent-trrel-extension
-        gerbil-ascent-trrel-uf-extension)
+;;; Pure index algorithms. The evaluator owns cache invalidation.
+(export gerbil-ascent-index-build gerbil-ascent-index-key)
 
 (def (gerbil-ascent-index-key row columns)
   (map (lambda (column) (list-ref row column)) columns))
@@ -19,84 +16,3 @@
          (hash-put! index key (cons row (or (hash-get index key) [])))))
      rows)
     index))
-
-(def (gerbil-ascent-trrel-extension all pending row budget)
-  (let* ((width (length row))
-         (_ (unless (memq width '(2 3))
-              (error "ASCENT trrel requires two or three columns" row)))
-         (group (if (= width 3) (car row) #f))
-         (left (list-ref row (- width 2)))
-         (right (list-ref row (- width 1)))
-         (known (make-hash-table))
-         (predecessor-set (make-hash-table))
-         (successor-set (make-hash-table))
-         (predecessors (list left))
-         (successors (list right))
-         (added [])
-         (added-count 0))
-    (hash-put! predecessor-set left #t)
-    (hash-put! successor-set right #t)
-    (def (visit-known existing)
-      (hash-put! known existing #t)
-      (when (and (= (length existing) width)
-                 (or (= width 2) (equal? (car existing) group)))
-        (let ((from (list-ref existing (- width 2)))
-              (to (list-ref existing (- width 1))))
-          (when (equal? to left)
-            (unless (hash-get predecessor-set from)
-              (hash-put! predecessor-set from #t)
-              (set! predecessors (cons from predecessors))))
-          (when (equal? from right)
-            (unless (hash-get successor-set to)
-              (hash-put! successor-set to #t)
-              (set! successors (cons to successors)))))))
-    (for-each visit-known all)
-    (for-each visit-known pending)
-    (for-each
-     (lambda (from)
-       (for-each
-        (lambda (to)
-          (let (candidate
-                (if (= width 3)
-                  (list group from to)
-                  (list from to)))
-            (unless (or (and (equal? from to)
-                             (not (and (equal? left right)
-                                       (equal? from left))))
-                        (hash-get known candidate))
-              (hash-put! known candidate #t)
-              (set! added (cons candidate added))
-              (set! added-count (+ added-count 1))
-              (when (> added-count budget)
-                (error "ASCENT trrel output fact budget exceeded")))))
-        successors))
-     predecessors)
-    (reverse added)))
-
-(def (gerbil-ascent-trrel-uf-extension all pending row budget)
-  (let* ((width (length row))
-         (_ (unless (memq width '(2 3))
-              (error "ASCENT trrel_uf requires two or three columns" row)))
-         (group (if (= width 3) (car row) #f))
-         (left (list-ref row (- width 2)))
-         (right (list-ref row (- width 1)))
-         (known (make-hash-table))
-         (non-reflexive
-          (gerbil-ascent-trrel-extension all pending row budget))
-         (added non-reflexive))
-    (for-each (lambda (fact) (hash-put! known fact #t)) all)
-    (for-each (lambda (fact) (hash-put! known fact #t)) pending)
-    (for-each (lambda (fact) (hash-put! known fact #t)) non-reflexive)
-    (for-each
-     (lambda (node)
-       (let (self-fact
-             (if (= width 3)
-               (list group node node)
-               (list node node)))
-         (unless (hash-get known self-fact)
-           (hash-put! known self-fact #t)
-           (set! added (cons self-fact added))
-           (when (> (length added) budget)
-             (error "ASCENT trrel_uf output fact budget exceeded")))))
-     (list left right))
-    added))

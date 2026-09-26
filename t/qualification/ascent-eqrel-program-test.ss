@@ -112,6 +112,33 @@
         (check-equal? (not (not (member '(1 1) rows))) #t)
         (check-equal? (not (not (member '(3 3) rows))) #t)
         (check-equal? (member '(3 1) rows) #f)))
+    (poo-flow-test-case "directed closure state is private to concurrent runs"
+      (let* ((edges '((1 2) (2 3)))
+             (program
+              (gerbil-ascent-program
+               (list (gerbil-ascent-relation
+                      'tr 2 edges
+                      gerbil-ascent-hash-index-provider
+                      gerbil-ascent-trrel-storage-provider)
+                     (gerbil-ascent-relation
+                      'uf 2 edges
+                      gerbil-ascent-hash-index-provider
+                      gerbil-ascent-trrel-uf-storage-provider))
+               [] 16 16 32))
+             (workers
+              (map (lambda (_)
+                     (spawn
+                      (lambda ()
+                        (let (rows-of
+                              (.ref (gerbil-ascent-evaluate-program program)
+                                    'rows-of))
+                          (list (rows-of 'tr) (rows-of 'uf))))))
+                   (iota 4)))
+             (results (map thread-join! workers)))
+        (check-equal? (map (lambda (rows) (length (car rows))) results)
+                      '(3 3 3 3))
+        (check-equal? (map (lambda (rows) (length (cadr rows))) results)
+                      '(6 6 6 6))))
     (poo-flow-test-case "BYODS relations join with typed group and wanted facts"
       (let* ((result (ascent-byods-query-evaluate
                       '(("alpha" 1 2) ("alpha" 2 3)

@@ -29,6 +29,8 @@ the rule program.
 The BYODS storage Provider creates private state for each relation evaluation.
 The `eqrel` implementation maintains component membership and emits new
 cross-component facts when an edge joins two components.
+The `trrel` and `trrel_uf` implementations index known predecessors and
+successors per relation run, preserving explicit self facts and grouped keys.
 Guards, bindings, and generators declare their input variables explicitly, and rule
 bodies check bindings in source order. The evaluator reads validated clause
 slots once per run before iterating relation rows.

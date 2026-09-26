@@ -8,6 +8,7 @@
   '("table/expression"
     "table/funs"
     "table/eqrel"
+    "table/trrel"
     "table/provider"
     "table/storage"
     "table/interface"

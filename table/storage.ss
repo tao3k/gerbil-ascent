@@ -11,7 +11,8 @@
                  poo-flow-predicate-contract)
         (only-in "eqrel.ss" gerbil-ascent-eqrel-state
                  gerbil-ascent-eqrel-extension)
-        (only-in "funs.ss" gerbil-ascent-trrel-extension
+        (only-in "trrel.ss" gerbil-ascent-trrel-state
+                 gerbil-ascent-trrel-extension
                  gerbil-ascent-trrel-uf-extension))
 
 (export GerbilAscentStorageProviderContract
@@ -60,14 +61,11 @@
 (def gerbil-ascent-trrel-storage-provider
   (validate GerbilAscentStorageProviderContract
             (.o (:: @ gerbil-ascent-set-storage-provider)
-                (.extend-rows
-                 (lambda (_state all pending row budget)
-                   (gerbil-ascent-trrel-extension all pending row budget))))))
+                (.make-state gerbil-ascent-trrel-state)
+                (.extend-rows gerbil-ascent-trrel-extension))))
 
 (def gerbil-ascent-trrel-uf-storage-provider
   (validate GerbilAscentStorageProviderContract
             (.o (:: @ gerbil-ascent-set-storage-provider)
-                (.extend-rows
-                 (lambda (_state all pending row budget)
-                   (gerbil-ascent-trrel-uf-extension
-                    all pending row budget))))))
+                (.make-state gerbil-ascent-trrel-state)
+                (.extend-rows gerbil-ascent-trrel-uf-extension))))

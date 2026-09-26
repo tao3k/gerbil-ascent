@@ -823,6 +823,87 @@ fn binary_and_grouped_trrel_uf_match_ascent_byods() {
     }
 }
 
+#[test]
+fn grouped_byods_join_with_string_keys_matches_ascent() {
+    ascent! {
+        relation seed(String, u32, u32);
+        relation wanted(String, u32);
+        #[ds(eqrel)]
+        relation eq(String, u32, u32);
+        #[ds(trrel)]
+        relation tr(String, u32, u32);
+        #[ds(trrel_uf)]
+        relation uf(String, u32, u32);
+        relation eq_match(String, u32, u32);
+        relation tr_match(String, u32, u32);
+        relation uf_match(String, u32, u32);
+        eq(g, x, y) <-- seed(g, x, y);
+        tr(g, x, y) <-- seed(g, x, y);
+        uf(g, x, y) <-- seed(g, x, y);
+        eq_match(g, x, y) <-- eq(g, x, y), wanted(g, y);
+        tr_match(g, x, y) <-- tr(g, x, y), wanted(g, y);
+        uf_match(g, x, y) <-- uf(g, x, y), wanted(g, y);
+    }
+    for (seed, wanted) in [
+        (vec![], vec![]),
+        (
+            vec![
+                ("alpha".to_owned(), 1, 2),
+                ("alpha".to_owned(), 2, 3),
+                ("beta".to_owned(), 1, 2),
+            ],
+            vec![("alpha".to_owned(), 3), ("beta".to_owned(), 2)],
+        ),
+        (
+            vec![("alpha".to_owned(), 1, 2), ("alpha".to_owned(), 2, 1)],
+            vec![("alpha".to_owned(), 1)],
+        ),
+    ] {
+        let mut program = AscentProgram {
+            seed: seed.clone(),
+            wanted: wanted.clone(),
+            ..AscentProgram::default()
+        };
+        program.run();
+        let mut expected = program
+            .eq_match
+            .iter()
+            .map(|(g, x, y)| format!("eq-match\t{g}\t{x}\t{y}"))
+            .chain(
+                program
+                    .tr_match
+                    .iter()
+                    .map(|(g, x, y)| format!("tr-match\t{g}\t{x}\t{y}")),
+            )
+            .chain(
+                program
+                    .uf_match
+                    .iter()
+                    .map(|(g, x, y)| format!("uf-match\t{g}\t{x}\t{y}")),
+            )
+            .collect::<Vec<_>>();
+        expected.sort_unstable();
+        let seed_request = seed
+            .iter()
+            .map(|(g, x, y)| format!("({g:?} {x} {y})"))
+            .collect::<Vec<_>>()
+            .join(" ");
+        let wanted_request = wanted
+            .iter()
+            .map(|(g, y)| format!("({g:?} {y})"))
+            .collect::<Vec<_>>()
+            .join(" ");
+        let request = format!("(({seed_request}) ({wanted_request}))\n");
+        let mut actual = scheme_output("byods-query-rows", &request)
+            .lines()
+            .map(str::to_owned)
+            .collect::<Vec<_>>();
+        assert_eq!(actual.pop().as_deref(), Some("END"));
+        actual.sort_unstable();
+        assert_eq!(actual, expected, "seed {seed:?}, wanted {wanted:?}");
+    }
+}
+
 fn ascent_local_origin_rows(edges: &[(u32, u32)], origin: u32) -> Vec<String> {
     let result = ascent_run! {
         relation edge(u32, u32);

@@ -19,7 +19,9 @@
                  gerbil-ascent-rule)
         (only-in :gerbil-ascent/t/qualification/ascent-eqrel-program-fixture
                  ascent-eqrel-fixture-evaluate
-                 ascent-storage-fixture-evaluate))
+                 ascent-storage-fixture-evaluate)
+        (only-in :gerbil-ascent/t/qualification/ascent-byods-query-fixture
+                 ascent-byods-query-evaluate))
 
 (export ascent-eqrel-program-test)
 
@@ -90,6 +92,18 @@
         (check-equal? (not (not (member '(1 1) rows))) #t)
         (check-equal? (not (not (member '(3 3) rows))) #t)
         (check-equal? (member '(3 1) rows) #f)))
+    (poo-flow-test-case "BYODS relations join with typed group and wanted facts"
+      (let* ((result (ascent-byods-query-evaluate
+                      '(("alpha" 1 2) ("alpha" 2 3)
+                        ("beta" 1 2))
+                      '(("alpha" 3) ("beta" 2))))
+             (rows-of (.ref result 'rows-of)))
+        (check-equal? (length (rows-of 'eq-match)) 5)
+        (check-equal? (length (rows-of 'tr-match)) 3)
+        (check-equal? (length (rows-of 'uf-match)) 5)
+        (check-equal? (not (not (member '("alpha" 1 3)
+                                        (rows-of 'tr-match)))) #t)
+        (check-equal? (member '("beta" 3 2) (rows-of 'eq-match)) #f)))
     (poo-flow-test-case "invalid storage method output fails at the boundary"
       (check-exception
        (gerbil-ascent-evaluate-program

@@ -25,7 +25,7 @@ or permission to act.
 | Paper | Core result relevant here | gerbil-ascent position | MRR/Agent question | Next falsifiable receipt |
 |-------+---------------------------+------------------------+--------------------+-------------------------|
 | A22: Ascent | Embedded macro rules, semi-naive fixed points, lattices | Selected Scheme/Rust 0.8.0 differential fixtures pass; the [[file:rust-parity.org][parity matrix]] lists open surface | Can bounded closure expose complete candidate support for one source generation? | Finish missing Rust 0.8.0 fixtures, invalid programs, concurrent execution, and SS scale receipts |
-| B23: BYODS | User-provided relation representation with concretization and incremental semantics | POO storage Provider and selected =eqrel=, =trrel=, =trrel_uf= snapshots; merge/scale parity open | Does a specialized representation preserve the same admitted facts and supports? | Compare provider merge, delta/total and scale against =ascent-byods-rels 0.8.0= |
+| B23: BYODS | User-provided relation representation with concretization and incremental semantics | POO storage Provider, selected =eqrel= / =trrel= / =trrel_uf= snapshots and string-keyed body joins; merge/scale parity open; the pinned Rust providers accept only binary and ternary declarations | Does a specialized representation preserve the same admitted facts and supports? | Compare provider merge, delta/total and scale against =ascent-byods-rels 0.8.0=; consider wider grouping only after baseline parity |
 | S16: Soufflé | Rule specialization, index selection and parallel compiled analyses | Bound-column hash lookup and local SS scenarios only | Can a chosen plan meet a task budget without changing evidence? | Same rules and facts across default/custom indexes; report output, memory, latency and p95 |
 | D13: Differential dataflow | Versioned deltas for nested iterative computation and parallel dataflow | Reentrant concurrent snapshots pass; retained updates and intra-program parallelism open | Which prior candidate decisions become stale after source revision? | Insert/delete cycle and multi-support graph; compare every generation with full recomputation and record work |
 | D23: DBSP | Algebraic incremental maintenance across aggregation and recursion | No derivative program or retained incremental state | Is exact re-evaluation affordable for an Agent's evolving context? | Freeze rule pack and source sequence; compare derivative and full results, support receipts, memory and update cost |
@@ -40,6 +40,10 @@ or permission to act.
 
 1. Complete A22/B23 behavioral parity before promoting a new Agent extension.
    Use the Rust oracle for behavior and the standard SS scenarios for cost.
+   The pinned =ascent-byods-rels 0.8.0= provider macros match two- and
+   three-column relations.  A four-column grouped =eqrel= / =trrel= /
+   =trrel_uf= probe fails at Rust macro expansion; wider grouping is a later
+   extension proposal, not an unmet 0.8.0 parity feature.
 2. Use D13/D23/H18 to compare retained updates with full recomputation after
    every insertion and deletion.  Equality includes the fact set and MRR's
    required supports for the same generation; an update-cost claim also needs

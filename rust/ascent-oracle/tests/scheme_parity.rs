@@ -282,3 +282,77 @@ fn shortest_support_matches_ascent_and_canonical_source_order() {
         assert_eq!(scheme_support(edges), expected, "support snapshot {index}");
     }
 }
+
+fn positive_request(edges: &[(u32, u32, &str)]) -> String {
+    let mut request = String::from("(");
+    for &(from, to, label) in edges {
+        request.push_str(&format!(" ({from} {to} \"{label}\")"));
+    }
+    request.push_str(")\n");
+    request
+}
+
+fn ascent_positive_rows(edges: &[(u32, u32, &str)]) -> Vec<String> {
+    ascent! {
+        relation edge(u32, u32, String);
+        relation node(u32);
+        relation labelled(u32, u32, String, String);
+        relation cycle(u32);
+        relation hot(u32);
+        relation reach(u32, u32);
+
+        labelled(x, z, first.clone(), second.clone()) <--
+            edge(x, y, first), edge(y, z, second);
+        cycle(x) <-- edge(x, x, _);
+        hot(x) <-- edge(x, _, label), if label.as_str() == "a";
+        reach(x, y) <-- edge(x, y, _);
+        reach(x, z) <-- reach(x, y), edge(y, z, _);
+    }
+    let mut program = AscentProgram {
+        edge: edges
+            .iter()
+            .map(|&(from, to, label)| (from, to, label.to_owned()))
+            .collect(),
+        node: vec![(1,), (2,), (3,)],
+        ..AscentProgram::default()
+    };
+    program.run();
+    let mut rows = Vec::new();
+    rows.extend(
+        program
+            .labelled
+            .iter()
+            .map(|(from, to, first, second)| format!("labelled\t{from}\t{to}\t{first}\t{second}")),
+    );
+    rows.extend(program.cycle.iter().map(|(node,)| format!("cycle\t{node}")));
+    rows.extend(program.hot.iter().map(|(node,)| format!("hot\t{node}")));
+    rows.extend(
+        program
+            .reach
+            .iter()
+            .map(|(from, to)| format!("reach\t{from}\t{to}")),
+    );
+    rows.sort_unstable();
+    rows
+}
+
+#[test]
+fn arbitrary_relation_columns_and_repeated_variables_match_ascent() {
+    let snapshots: &[&[(u32, u32, &str)]] = &[
+        &[],
+        &[(1, 2, "a"), (2, 3, "b"), (3, 3, "c")],
+        &[(1, 2, "a"), (2, 3, "b"), (3, 3, "c"), (1, 2, "a")],
+        &[(1, 2, "a"), (3, 3, "c")],
+    ];
+    for edges in snapshots {
+        let output = scheme_output("positive-rows", &positive_request(edges));
+        let lines: Vec<_> = output.lines().collect();
+        assert_eq!(lines.last(), Some(&"END"), "Scheme fixture did not finish");
+        let mut scheme: Vec<_> = lines[..lines.len() - 1]
+            .iter()
+            .map(|line| (*line).to_owned())
+            .collect();
+        scheme.sort_unstable();
+        assert_eq!(scheme, ascent_positive_rows(edges), "edges: {edges:?}");
+    }
+}

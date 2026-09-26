@@ -5,7 +5,9 @@
 (import (only-in :std/build-script defbuild-script))
 
 (defbuild-script
-  '("table/expression"
+  '("table/relation"
+    "table/expression"
     "core/binary-program"
+    "core/positive-program"
     "candidate/closure"
     "interface/request"))

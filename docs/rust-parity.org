@@ -21,9 +21,9 @@ proposals rather than core parity claims.
 
 | Rust Ascent 0.8.0 feature | Scheme namespace | Current state | Required closing evidence |
 |---------------------------+------------------+---------------+---------------------------|
-| Relation declaration, arbitrary arity and column types | =core/=, =table/= | bounded encoded binary pairs only | unary, binary, ternary, mixed types, duplicates, empty relations |
-| Multiple heads, relation clauses, repeated variables, joins | =core/= | binary copy, filter, join and multiple heads | arbitrary body shape, equality binding, repeated relation, self joins |
-| Semi-naive least fixed point, dependencies and strata | =core/= | positive binary fixed point | recursive SCCs, stratification, rule order and termination parity |
+| Relation declaration, arbitrary arity and column types | =core/=, =table/= | positive generic path handles unary through four-column mixed rows; binary fast path remains | broader column types and scale/performance receipts |
+| Multiple heads, relation clauses, repeated variables, joins | =core/= | positive generic joins and repeated-variable equality pass one Rust oracle fixture | arbitrary body shape, invalid-program corpus and performance receipts |
+| Semi-naive least fixed point, dependencies and strata | =core/= | positive recursive generic path and binary fast path | recursive SCCs, stratification, rule order and termination parity |
 | Conditions and generators | =core/= | Scheme predicate over two binary endpoints | Rust =if= and =for= fixtures, binding scope, invalid binding cases |
 | Stratified negation | =core/= | absent | negated relation fixtures, unsafe-cycle rejection |
 | Aggregation and custom aggregators | =core/= | absent | count, sum, min, max, mean and custom iterator aggregators |
@@ -34,8 +34,9 @@ proposals rather than core parity claims.
 | Gerbil module and macro embedding | =core/=, =interface/= | callable Scheme functions, no full declaration surface | module reuse, local bindings, generated declarations and diagnostics |
 
 The current Rust oracle in =rust/ascent-oracle/= covers positive binary
-closure, guarded filter/copy/join, and shortest source support across source
-snapshots. Those cases do not close the rows above. =candidate/= and
+closure, guarded filter/copy/join, shortest source support, and selected
+arbitrary-column positive rules across source snapshots. These fixtures do
+not close the rows above. =candidate/= and
 =interface/= hold existing experimental projections; their MRR or Agent use
 cannot substitute for Rust feature parity.
 

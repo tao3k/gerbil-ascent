@@ -6,8 +6,9 @@
 ;;; one run; the public declarations and returned projection are POO values.
 (import (only-in :clan/poo/object .o .ref object?)
         (only-in "objects.ss" gerbil-ascent-clause-plan)
-        (only-in :gerbil-ascent/table/index
-                 gerbil-ascent-index-build)
+        (only-in :gerbil-ascent/table/provider
+                 gerbil-ascent-index-provider-build
+                 gerbil-ascent-index-provider-lookup)
         (only-in :clan/poo/support/base until))
 
 (export gerbil-ascent-evaluate-program)
@@ -39,6 +40,7 @@
            (delta-size (make-vector count 0))
            (all-indexes (make-vector count #f))
            (delta-indexes (make-vector count #f))
+           (index-providers (make-vector count #f))
            (seen (make-vector count #f))
            (lattice-joins (make-vector count #f))
            (lattice-rows (make-vector count #f))
@@ -117,7 +119,9 @@
                    (lookup
                     (if (and entry (= (car entry) version))
                       (cdr entry)
-                      (let (built (gerbil-ascent-index-build rows columns))
+                      (let (built (gerbil-ascent-index-provider-build
+                                   (vector-ref index-providers index)
+                                   rows columns))
                         (hash-put! cache columns (cons version built))
                         built)))
                    (terms (vector-ref atom 1))
@@ -132,7 +136,13 @@
                                           (cdr term)))
                                  (cdr bound)))))
                          columns)))
-              (or (hash-get lookup key) [])))))
+              (let (matched
+                    (gerbil-ascent-index-provider-lookup
+                     (vector-ref index-providers index) lookup key))
+                (unless (list? matched)
+                  (error "ASCENT index provider returned non-list rows"
+                         matched))
+                matched)))))
       (let initialize ((remaining relations) (index 0))
         (unless (null? remaining)
           (let* ((relation (car remaining))
@@ -187,6 +197,8 @@
                    (cons row (vector-ref all index)))))
              rows)
             (vector-set! seen index present)
+            (vector-set! index-providers index
+              (.ref relation 'index-provider))
             (vector-set! all-indexes index (make-hash-table))
             (vector-set! delta-indexes index (make-hash-table))
             (vector-set! delta index (vector-ref all index))

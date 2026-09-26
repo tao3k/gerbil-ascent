@@ -614,9 +614,11 @@ fn indexed_two_hop_join_matches_ascent() {
         .map(|(from, to)| format!("{from}\t{to}"))
         .collect();
     expected.sort_unstable();
-    let output = scheme_output("index-rows", "50\n");
-    let mut actual: Vec<_> = output.lines().map(str::to_owned).collect();
-    assert_eq!(actual.pop().as_deref(), Some("END"));
-    actual.sort_unstable();
-    assert_eq!(actual, expected);
+    for recipe in ["index-rows", "index-rows-alist"] {
+        let output = scheme_output(recipe, "50\n");
+        let mut actual: Vec<_> = output.lines().map(str::to_owned).collect();
+        assert_eq!(actual.pop().as_deref(), Some("END"));
+        actual.sort_unstable();
+        assert_eq!(actual, expected, "provider recipe: {recipe}");
+    }
 }

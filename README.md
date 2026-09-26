@@ -23,7 +23,9 @@ private execution plan; count, sum, min, max, mean, and custom aggregate
 procedures run over matched tuples. Lattice declarations join the last column
 for equal prefix keys and propagate improvements through the same fixed point.
 Generic relation clauses plan bound columns and use a cached table index when
-the relation has at least 32 rows.
+the relation has at least 32 rows. `table/interface.ss` exposes a POO index
+Provider; a custom provider can replace the physical index without changing
+the rule program.
 Guards, bindings, and generators declare their input variables explicitly, and rule
 bodies check bindings in source order. The evaluator reads validated clause
 slots once per run before iterating relation rows.

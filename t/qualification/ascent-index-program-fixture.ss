@@ -5,9 +5,13 @@
 (import (only-in :gerbil-ascent/program/interface
                  gerbil-ascent-relation gerbil-ascent-variable
                  gerbil-ascent-atom gerbil-ascent-rule
-                 gerbil-ascent-program))
+                 gerbil-ascent-program)
+        (only-in :gerbil-ascent/table/interface
+                 gerbil-ascent-index-provider)
+        (only-in :gerbil-ascent/table/index
+                 gerbil-ascent-index-key))
 
-(export ascent-index-fixture-program)
+(export ascent-index-fixture-program ascent-index-alist-provider)
 
 (def (v name) (gerbil-ascent-variable name))
 (def (a name . terms) (gerbil-ascent-atom name terms))
@@ -19,9 +23,36 @@
       (loop (+ position 1)
             (cons (list position (+ position 1)) rows)))))
 
-(def (ascent-index-fixture-program (edge-count 50))
+(def (alist-index-build rows columns)
+  (let loop ((remaining rows) (index []))
+    (if (null? remaining)
+      index
+      (let* ((row (car remaining))
+             (key (gerbil-ascent-index-key row columns))
+             (entry (assoc key index)))
+        (loop (cdr remaining)
+              (cons (cons key (cons row (if entry (cdr entry) [])))
+                    (if entry
+                      (filter (lambda (item)
+                                (not (equal? (car item) key)))
+                              index)
+                      index)))))))
+
+(def (ascent-index-alist-provider (on-build (lambda () (void))))
+  (gerbil-ascent-index-provider
+   (lambda (rows columns)
+     (on-build)
+     (alist-index-build rows columns))
+   (lambda (index key)
+     (let (entry (assoc key index))
+       (if entry (cdr entry) [])))))
+
+(def (ascent-index-fixture-program (edge-count 50) (index-provider #f))
   (gerbil-ascent-program
-   (list (gerbil-ascent-relation 'edge 2 (chain-edges edge-count))
+   (list (if index-provider
+           (gerbil-ascent-relation 'edge 2 (chain-edges edge-count)
+                                   index-provider)
+           (gerbil-ascent-relation 'edge 2 (chain-edges edge-count)))
          (gerbil-ascent-relation 'two-hop 2 []))
    (list (gerbil-ascent-rule
           (list (a 'two-hop (v 'x) (v 'z)))

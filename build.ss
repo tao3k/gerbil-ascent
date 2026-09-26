@@ -7,6 +7,8 @@
 (defbuild-script
   '("table/expression"
     "table/index"
+    "table/provider"
+    "table/interface"
     "program/types"
     "program/objects"
     "program/aggregators"

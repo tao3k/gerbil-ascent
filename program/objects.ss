@@ -6,6 +6,8 @@
 ;;; in these objects; each evaluation owns its own relation storage.
 (import (only-in :clan/poo/object .o .ref)
         (only-in :clan/poo/mop .defgeneric validate)
+        (only-in :gerbil-ascent/table/provider
+                 gerbil-ascent-hash-index-provider)
         (only-in "types.ss"
                  GerbilAscentRelationContract
                  GerbilAscentLatticeContract
@@ -116,7 +118,8 @@
     (vector (vector 'aggregate plan name inputs (.ref clause 'aggregate))
             (cons name bound) 0)))
 
-(def (gerbil-ascent-relation relation-name column-count source-rows)
+(def (gerbil-ascent-relation relation-name column-count source-rows
+                             (provider-value gerbil-ascent-hash-index-provider))
   (unless (and (symbol? relation-name)
                (exact-integer? column-count) (<= 0 column-count)
                (list? source-rows))
@@ -129,10 +132,11 @@
   (validate GerbilAscentRelationContract
             (.o (:: @ Relation.)
                 name: relation-name arity: column-count rows: source-rows
-                storage-kind: 'relation)))
+                storage-kind: 'relation index-provider: provider-value)))
 
 (def (gerbil-ascent-lattice relation-name column-count source-rows
-                            join-procedure)
+                            join-procedure
+                            (provider-value gerbil-ascent-hash-index-provider))
   (unless (and (symbol? relation-name)
                (exact-integer? column-count) (> column-count 0)
                (list? source-rows) (procedure? join-procedure))
@@ -145,7 +149,8 @@
   (validate GerbilAscentLatticeContract
             (.o (:: @ Lattice.)
                 name: relation-name arity: column-count rows: source-rows
-                storage-kind: 'lattice join: join-procedure)))
+                storage-kind: 'lattice join: join-procedure
+                index-provider: provider-value)))
 
 (def (gerbil-ascent-variable name)
   (unless (symbol? name) (error "ASCENT variable name must be a symbol" name))

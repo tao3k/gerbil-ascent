@@ -7,7 +7,9 @@
         (only-in :core/observability/testing-case
                  poo-flow-test-case)
         (only-in :gerbil-ascent/t/qualification/ascent-index-program-fixture
-                 ascent-index-fixture-program ascent-index-alist-provider)
+                 ascent-index-fixture-program
+                 ascent-composite-index-fixture-program
+                 ascent-index-alist-provider)
         (only-in :gerbil-ascent/table/interface
                  gerbil-ascent-hash-index-provider)
         (only-in :gerbil-ascent/program/interface
@@ -29,7 +31,7 @@
       (let* ((builds 0)
              (provider
               (ascent-index-alist-provider
-               (lambda () (set! builds (+ builds 1)))))
+               (lambda (_columns) (set! builds (+ builds 1)))))
              (rows
               ((.ref (gerbil-ascent-evaluate-program
                       (ascent-index-fixture-program 50 provider))
@@ -38,6 +40,22 @@
         (check-equal? (> builds 0) #t)
         (check-equal? (length rows) 49)
         (check-equal? (not (not (member '(48 50) rows))) #t)))
+    (poo-flow-test-case "composite group and node index preserves two-hop joins"
+      (let* ((built-columns [])
+             (provider
+              (ascent-index-alist-provider
+               (lambda (columns)
+                 (set! built-columns (cons columns built-columns)))))
+             (rows
+              ((.ref (gerbil-ascent-evaluate-program
+                      (ascent-composite-index-fixture-program 50 provider))
+                     'rows-of)
+               'two-hop)))
+        (check-equal? (not (not (member '(0 1) built-columns))) #t)
+        (check-equal? (length rows) 98)
+        (check-equal? (not (not (member '(0 0 2) rows))) #t)
+        (check-equal? (not (not (member '(1 148 150) rows))) #t)
+        (check-equal? (member '(0 100 102) rows) #f)))
     (poo-flow-test-case "malformed Provider values fail at the boundary"
       (check-exception
        (gerbil-ascent-relation

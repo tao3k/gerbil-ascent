@@ -12,7 +12,9 @@
         (only-in :gerbil-ascent/table/funs
                  gerbil-ascent-index-key))
 
-(export ascent-index-fixture-program ascent-index-alist-provider)
+(export ascent-index-fixture-program
+        ascent-composite-index-fixture-program
+        ascent-index-alist-provider)
 
 (def (v name) (gerbil-ascent-variable name))
 (def (a name . terms) (gerbil-ascent-atom name terms))
@@ -39,11 +41,11 @@
                               index)
                       index)))))))
 
-(def (ascent-index-alist-provider (on-build (lambda () (void))))
+(def (ascent-index-alist-provider (on-build (lambda (_columns) (void))))
   (.o (:: @ gerbil-ascent-hash-index-provider)
       (.build-index
        (lambda (rows columns)
-         (on-build)
+         (on-build columns)
          (alist-index-build rows columns)))
       (.lookup-index
        (lambda (index key)
@@ -62,3 +64,23 @@
           (list (a 'edge (v 'x) (v 'y))
                 (a 'edge (v 'y) (v 'z)))))
    (+ edge-count 14) (+ edge-count 14) (* edge-count 3)))
+
+(def (ascent-composite-index-fixture-program (edge-count 50)
+                                             (index-provider #f))
+  (let (edges
+        (append (map (lambda (row) (cons 0 row))
+                     (chain-edges edge-count))
+                (map (lambda (row)
+                       (cons 1 (map (lambda (node) (+ 100 node)) row)))
+                     (chain-edges edge-count))))
+    (gerbil-ascent-program
+     (list (if index-provider
+             (gerbil-ascent-relation 'edge 3 edges index-provider)
+             (gerbil-ascent-relation 'edge 3 edges))
+           (gerbil-ascent-relation 'two-hop 3 []))
+     (list (gerbil-ascent-rule
+            (list (a 'two-hop (v 'g) (v 'x) (v 'z)))
+            (list (a 'edge (v 'g) (v 'x) (v 'y))
+                  (a 'edge (v 'g) (v 'y) (v 'z)))))
+     (+ (* 2 edge-count) 14) (+ (* 2 edge-count) 14)
+     (* 6 edge-count))))

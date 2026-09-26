@@ -624,6 +624,39 @@ fn indexed_two_hop_join_matches_ascent() {
     }
 }
 
+#[test]
+fn indexed_composite_group_and_node_join_matches_ascent() {
+    ascent! {
+        relation edge(u32, u32, u32);
+        relation two_hop(u32, u32, u32);
+        two_hop(group, from, to) <--
+            edge(group, from, via), edge(group, via, to);
+    }
+    let edges: Vec<_> = (0..50)
+        .map(|from| (0, from, from + 1))
+        .chain((0..50).map(|from| (1, from + 100, from + 101)))
+        .collect();
+    let mut program = AscentProgram {
+        edge: edges,
+        ..AscentProgram::default()
+    };
+    program.run();
+    let mut expected: Vec<_> = program
+        .two_hop
+        .iter()
+        .map(|(group, from, to)| format!("{group}\t{from}\t{to}"))
+        .collect();
+    expected.sort_unstable();
+    assert_eq!(expected.len(), 98);
+    for recipe in ["index-composite-rows", "index-composite-rows-alist"] {
+        let output = scheme_output(recipe, "50\n");
+        let mut actual: Vec<_> = output.lines().map(str::to_owned).collect();
+        assert_eq!(actual.pop().as_deref(), Some("END"));
+        actual.sort_unstable();
+        assert_eq!(actual, expected, "provider recipe: {recipe}");
+    }
+}
+
 fn ascent_eqrel_rows(binary: &[(u32, u32)], grouped: &[(u32, u32, u32)]) -> Vec<String> {
     ascent! {
         relation binary_seed(u32, u32);

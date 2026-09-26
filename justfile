@@ -65,6 +65,9 @@ trrel-uf-rows:
 byods-query-rows:
     @timeout 60s gerbil {{ gerbil_test_runtime_options }} t/qualification/ascent-byods-query-output.ss
 
+typed-rows:
+    @timeout 60s gerbil {{ gerbil_test_runtime_options }} t/qualification/ascent-typed-program-output.ss
+
 module-rows:
     @timeout 60s gerbil {{ gerbil_test_runtime_options }} t/qualification/ascent-module-program-output.ss
 

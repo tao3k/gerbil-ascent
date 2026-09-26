@@ -11,6 +11,8 @@
                  poo-flow-test-case/with)
         (only-in :gerbil-ascent/t/qualification/ascent-rule-program-fixture
                  ascent-rule-fixture-evaluate)
+        (only-in :gerbil-ascent/t/qualification/ascent-typed-program-fixture
+                 ascent-typed-program-evaluate)
         (only-in :gerbil-ascent/program/interface
                  gerbil-ascent-relation gerbil-ascent-variable
                  gerbil-ascent-literal gerbil-ascent-atom
@@ -95,6 +97,17 @@
              (gerbil-ascent-program
               (list (gerbil-ascent-relation 'r 1 '((1)))) [] 2 2 2)))
         (check-equal? (rows result 'r) '((1)))))
+    (poo-flow-test-case/with +positive-case-profile+
+      "zero-column fact gates typed boolean and string rows"
+      (check-equal?
+       (rows (ascent-typed-program-evaluate
+              #f '((#t "alpha"))) 'selected)
+       [])
+      (check-equal?
+       (rows (ascent-typed-program-evaluate
+              #t '((#t "alpha") (#f "beta") (#f "beta")))
+             'selected)
+       '((#t "alpha") (#f "beta"))))
     (poo-flow-test-case/with +positive-case-profile+
       "arity, unsafe heads, and derived budgets reject"
       (check-exception

@@ -930,6 +930,55 @@ fn grouped_byods_join_with_string_keys_matches_ascent() {
     }
 }
 
+#[test]
+#[allow(unused_variables)] // Ascent 0.8.0 emits an unused tuple binding for nullary relations.
+fn nullary_gate_with_boolean_and_string_columns_matches_ascent() {
+    ascent! {
+        relation enabled();
+        relation input(bool, String);
+        relation selected(bool, String);
+        selected(flag, name) <-- enabled(), input(flag, name);
+    }
+    for (enabled, input) in [
+        (false, vec![]),
+        (false, vec![(true, "alpha".to_owned())]),
+        (
+            true,
+            vec![(true, "alpha".to_owned()), (false, "beta".to_owned())],
+        ),
+        (true, vec![(false, "".to_owned()), (false, "".to_owned())]),
+    ] {
+        let mut program = AscentProgram {
+            enabled: if enabled { vec![()] } else { vec![] },
+            input: input.clone(),
+            ..AscentProgram::default()
+        };
+        program.run();
+        let mut expected = program
+            .selected
+            .iter()
+            .map(|(flag, name)| format!("{flag}\t{name}"))
+            .collect::<Vec<_>>();
+        expected.sort_unstable();
+        let input_request = input
+            .iter()
+            .map(|(flag, name)| format!("({} {name:?})", if *flag { "#t" } else { "#f" }))
+            .collect::<Vec<_>>()
+            .join(" ");
+        let request = format!(
+            "({} ({input_request}))\n",
+            if enabled { "#t" } else { "#f" }
+        );
+        let mut actual = scheme_output("typed-rows", &request)
+            .lines()
+            .map(str::to_owned)
+            .collect::<Vec<_>>();
+        assert_eq!(actual.pop().as_deref(), Some("END"));
+        actual.sort_unstable();
+        assert_eq!(actual, expected, "enabled={enabled}, input={input:?}");
+    }
+}
+
 fn ascent_local_origin_rows(edges: &[(u32, u32)], origin: u32) -> Vec<String> {
     let result = ascent_run! {
         relation edge(u32, u32);

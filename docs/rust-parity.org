@@ -58,7 +58,7 @@ execution state.
 
 | Rust Ascent 0.8.0 feature | Scheme namespace | Current state | Required closing evidence |
 |---------------------------+------------------+---------------+---------------------------|
-| Relation declaration, arbitrary arity and column types | =program/= | positive generic path handles unary through four-column mixed rows; binary fast path remains | broader column types and scale/performance receipts |
+| Relation declaration, arbitrary arity and column types | =program/= | positive generic path handles nullary through four-column mixed rows, including a nullary rule gate over boolean and string columns; binary fast path remains | broader column types and scale/performance receipts |
 | Multiple heads, relation clauses, repeated variables, joins | =program/= | positive generic multi-head rules, joins and repeated-variable equality pass selected Rust oracle fixtures | arbitrary body shape, invalid-program corpus and performance receipts |
 | Semi-naive least fixed point, dependencies and strata | =program/=, =core/= | generic recursive path supports positive and negative strata; a two-relation mutually recursive SCC with cyclic and reordered sources matches selected Rust fixed-point snapshots | broader SCC/rule order, invalid-program and termination corpus |
 | Repeated =run()= after source relation updates | =program/= | Scheme reevaluation of POO-refined immutable snapshots matches a Rust two-run source update oracle; no retained incremental program state | state reuse and update-cost receipt |
@@ -79,6 +79,11 @@ their input variables explicitly. These fixtures do
 not close the rows above. =candidate/= and
 =interface/= hold existing experimental projections; their MRR or Agent use
 cannot substitute for Rust feature parity.
+The nullary-gate fixture checks absent and present zero-column facts with
+boolean and string data, duplicate input rows, and empty strings against
+the pinned Rust Ascent 0.8.0 oracle. The macro's generated Rust code emits
+an unused local binding for this nullary declaration; the test suppresses
+that warning only for this fixture.
 The mutual-recursion fixture declares its seed rule after the two recursive
 rules and includes a directed cycle. Both =path0= and =path1= match Rust after
 deduplication for a cycle, reversed source order, and a finite chain. This is

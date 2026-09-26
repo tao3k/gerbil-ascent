@@ -39,6 +39,13 @@
         collect-before-sample?: #t))
       (max-duration-milliseconds 2000)))
 
+;;; This case constructs and evaluates two separately admitted POO programs.
+;;; Keep its memory policy while allowing the second contract admission.
+(def +two-snapshot-case-profile+
+  (.o (:: @ +positive-case-profile+)
+      (identity 'ascent/two-snapshot-case)
+      (max-duration-milliseconds 5000)))
+
 (def (evaluate edges (derived-limit 32))
   (ascent-rule-fixture-evaluate edges derived-limit))
 
@@ -74,7 +81,7 @@
         (check-equal? (length (rows result 'safe-reach)) 3)
         (check-equal? (length reach) 4)
         (check-equal? (length (rows result 'node)) 3)))
-    (poo-flow-test-case/with +positive-case-profile+
+    (poo-flow-test-case/with +two-snapshot-case-profile+
       "source withdrawal recomputes without changing earlier result"
       (let* ((first (evaluate '((1 2 "a") (2 3 "b") (3 3 "c"))))
              (withdrawn (evaluate '((1 2 "a") (3 3 "c")))))

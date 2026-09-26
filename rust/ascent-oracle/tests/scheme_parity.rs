@@ -888,3 +888,52 @@ fn rust_repeated_run_source_update_oracle() {
     assert_eq!(second, vec![(1, 2), (1, 3), (2, 3)]);
     assert_eq!(scheme_pairs(&program.edge, true), second);
 }
+
+#[test]
+fn mutually_recursive_scc_matches_ascent() {
+    ascent! {
+        relation edge(u32, u32);
+        relation path0(u32, u32);
+        relation path1(u32, u32);
+        path1(x, z) <-- path0(x, y), edge(y, z);
+        path0(x, z) <-- path1(x, y), edge(y, z);
+        path0(x, y) <-- edge(x, y);
+    }
+    for edges in [
+        vec![(1, 2), (2, 3), (3, 1)],
+        vec![(3, 1), (2, 3), (1, 2)],
+        vec![(1, 2), (2, 3)],
+    ] {
+        let mut program = AscentProgram {
+            edge: edges.clone(),
+            ..AscentProgram::default()
+        };
+        program.run();
+        let mut rust_rows = program
+            .path0
+            .iter()
+            .map(|(x, y)| format!("path0\t{x}\t{y}"))
+            .chain(
+                program
+                    .path1
+                    .iter()
+                    .map(|(x, y)| format!("path1\t{x}\t{y}")),
+            )
+            .collect::<Vec<_>>();
+        rust_rows.sort();
+        let request = format!(
+            "({})\n",
+            edges
+                .iter()
+                .map(|(x, y)| format!("({x} {y})"))
+                .collect::<Vec<_>>()
+                .join(" ")
+        );
+        let mut scheme_rows = scheme_output("mutual-rows", &request)
+            .lines()
+            .map(str::to_owned)
+            .collect::<Vec<_>>();
+        scheme_rows.sort();
+        assert_eq!(scheme_rows, rust_rows, "source {edges:?}");
+    }
+}

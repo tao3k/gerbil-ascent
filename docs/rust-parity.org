@@ -60,7 +60,7 @@ execution state.
 |---------------------------+------------------+---------------+---------------------------|
 | Relation declaration, arbitrary arity and column types | =program/= | positive generic path handles unary through four-column mixed rows; binary fast path remains | broader column types and scale/performance receipts |
 | Multiple heads, relation clauses, repeated variables, joins | =program/= | positive generic multi-head rules, joins and repeated-variable equality pass selected Rust oracle fixtures | arbitrary body shape, invalid-program corpus and performance receipts |
-| Semi-naive least fixed point, dependencies and strata | =program/=, =core/= | generic recursive path supports positive and negative strata; binary fast path remains | recursive SCCs, rule order and termination parity |
+| Semi-naive least fixed point, dependencies and strata | =program/=, =core/= | generic recursive path supports positive and negative strata; a two-relation mutually recursive SCC with cyclic and reordered sources matches selected Rust fixed-point snapshots | broader SCC/rule order, invalid-program and termination corpus |
 | Repeated =run()= after source relation updates | =program/= | Scheme reevaluation of POO-refined immutable snapshots matches a Rust two-run source update oracle; no retained incremental program state | state reuse and update-cost receipt |
 | Conditions, bindings and generators | =program/=, =core/= | generic POO guard, =let= binding and finite list generator clauses with ordered binding checks | broader iterator/pattern shapes and scale receipts |
 | Stratified negation | =program/= | 3-level negated relation fixture and negative-cycle rejection pass selected Rust oracle comparison | broader safe/unsafe programs and performance receipts |
@@ -79,6 +79,10 @@ their input variables explicitly. These fixtures do
 not close the rows above. =candidate/= and
 =interface/= hold existing experimental projections; their MRR or Agent use
 cannot substitute for Rust feature parity.
+The mutual-recursion fixture declares its seed rule after the two recursive
+rules and includes a directed cycle. Both =path0= and =path1= match Rust after
+deduplication for a cycle, reversed source order, and a finite chain. This is
+evidence for one SCC shape, not a general termination proof.
 
 The standard =ascent-rule-clauses= SS scenario measures evaluation of one
 predeclared program over three ternary edges. A post-index isolated 20-sample

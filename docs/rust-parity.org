@@ -68,7 +68,7 @@ result, while positive relation-atom rules consume appended source deltas.
 | Relation declaration, arbitrary arity and column types | =program/= | positive generic path handles nullary through four-column mixed rows, including a nullary rule gate over boolean and string columns; binary fast path remains | broader column types and scale/performance receipts |
 | Multiple heads, relation clauses, repeated variables, joins | =program/= | positive generic multi-head rules, joins and repeated-variable equality pass selected Rust oracle fixtures | arbitrary body shape, invalid-program corpus and performance receipts |
 | Semi-naive least fixed point, dependencies and strata | =program/=, =core/= | generic recursive path supports positive and negative strata; a two-relation mutually recursive SCC with cyclic and reordered sources matches selected Rust fixed-point snapshots | broader SCC/rule order, invalid-program and termination corpus |
-| Repeated =run()= after source relation updates | =program/= | Retained Scheme session reuses rows, indexes and BYODS state for positive atom-only source additions; insertion, unchanged rerun, duplicate and cycle snapshots match selected Rust fixtures. Source deletion and nonpositive updates require fresh evaluation | measure session update cost and compare wider positive corpus; characterize Rust retained-state behavior for negation and aggregates |
+| Repeated =run()= after source relation updates | =program/= | Retained Scheme session reuses rows, indexes and BYODS state for positive atom-only source additions; insertion, unchanged rerun, duplicate and cycle snapshots match selected Rust fixtures. A 20-sample Linux SS update gate passes at 581.207 µs p95. Source deletion and nonpositive updates require fresh evaluation | compare wider positive corpus and update shapes; characterize Rust retained-state behavior for negation and aggregates |
 | Conditions, bindings and generators | =program/=, =core/= | generic POO guard, =let= binding and finite list generator clauses with ordered binding checks | broader iterator/pattern shapes and scale receipts |
 | Stratified negation | =program/= | 3-level negated relation fixture and negative-cycle rejection pass selected Rust oracle comparison | broader safe/unsafe programs and performance receipts |
 | Aggregation and custom aggregators | =program/= | count, sum, min, max, mean and custom iterator aggregators pass empty, duplicate-input and grouped Rust fixtures | recursive aggregate corpus, broader type behavior and performance receipts |
@@ -105,7 +105,11 @@ Therefore Rust's retained program object is not evidence of an O(delta)
 update. Scheme now has a public retained session for positive atom-only
 source additions; the reachability and grouped BYODS fixtures compare its
 results with fresh evaluations while checking earlier snapshots stay stable.
-No measured update-cost receipt exists yet. The Rust oracle also records
+The standard SS scenario =ascent-session-update= prepares 20 sessions outside
+the timed region, then times one source append and recursive closure per
+session. It checks all 20 results and passed the [[https://github.com/tao3k/poo-flow/actions/runs/36261908951/job/108459287469][POO Flow Ubuntu native gate]]
+at 581.207 µs p95 under the unchanged 1 ms budget. This is one bounded
+ten-edge chain shape, not a general update complexity result. The Rust oracle also records
 that appending a blocking fact does not retract a previously derived negated
 row, and that appending an aggregate source can retain the old total and
 produce a new total different from a fresh program. These are observed

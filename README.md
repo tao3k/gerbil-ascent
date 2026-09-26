@@ -4,6 +4,8 @@
 # gerbil-ascent
 
 Scheme-native ASCENT implementation built on Gerbil POO and POO Flow Foundation.
+`gerbil.pkg` declares Foundation as its sole direct package dependency;
+Foundation supplies the POO and ASP packages used by the Scheme modules.
 Each top-level directory is a Gerbil module namespace:
 
 | Namespace | Current responsibility |

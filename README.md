@@ -20,6 +20,9 @@ the gate before new Agent-specific extensions. POO Flow consumes this package
 as a pinned submodule. MRR owns the semantic adapter and admission of its
 own evidence.
 
+Scheme qualification extends Foundation's Observability Case profile with
+ASCENT-specific memory and duration budgets; it does not own a test runner.
+
 ```sh
 gerbil deps --install
 gerbil build

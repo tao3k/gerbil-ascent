@@ -2,11 +2,13 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(import (only-in :std/test check-equal? check-exception test-case test-suite)
+(import (only-in :std/test check-equal? check-exception test-suite)
         (only-in :clan/poo/object .o .ref)
         (only-in :poo-flow-foundation/module-system/observability/debug
-                 poo-flow-debug-memory-policy
-                 call-with-poo-flow-debug-memory-case-watchdog)
+                 poo-flow-debug-memory-policy)
+        (only-in :poo-flow-foundation/module-system/observability/testing-case
+                 poo-flow-default-testing-case-profile
+                 poo-flow-test-case/with)
         (only-in :gerbil-ascent/table/relation gerbil-ascent-relation)
         (only-in :gerbil-ascent/t/qualification/ascent-positive-program-fixture
                  ascent-positive-fixture-evaluate)
@@ -21,25 +23,17 @@
 (def (a name . terms) (gerbil-ascent-atom name terms))
 (def (r head . body) (gerbil-ascent-rule head body))
 
-;;; Foundation owns the watchdog. Assertions stay on the native test thread;
-;;; the fixture cannot silently allocate forever on a POO slot cycle.
-(def +positive-case-memory-policy+
-  (poo-flow-debug-memory-policy
-   'ascent/positive-case heap-limit-bytes: 268435456
-   live-growth-limit-bytes: 16777216
-   sample-interval-milliseconds: 10
-   collect-before-sample?: #t))
-
-(defrules ascent-observed-case ()
-  ((_ description body rest ...)
-   (test-case description
-     (call-with-values
-      (lambda ()
-        (call-with-poo-flow-debug-memory-case-watchdog
-         +positive-case-memory-policy+ (string->symbol description)
-         (lambda () body rest ...)
-         max-duration-milliseconds: 2000))
-      (lambda (value receipt) value)))))
+;;; ASCENT contributes only its Case budget to Foundation's native profile.
+(def +positive-case-profile+
+  (.o (:: @ poo-flow-default-testing-case-profile)
+      (identity 'ascent/positive-case)
+      (memory-policy
+       (poo-flow-debug-memory-policy
+        'ascent/positive-case heap-limit-bytes: 1073741824
+        live-growth-limit-bytes: 16777216
+        sample-interval-milliseconds: 10
+        collect-before-sample?: #t))
+      (max-duration-milliseconds 2000)))
 
 (def (evaluate edges (derived-limit 32))
   (ascent-positive-fixture-evaluate edges derived-limit))
@@ -49,7 +43,8 @@
 
 (def ascent-positive-program-test
   (test-suite "ASCENT positive relations with arbitrary columns"
-    (ascent-observed-case "mixed ternary inputs derive four-column, unary and recursive rows"
+    (poo-flow-test-case/with +positive-case-profile+
+      "mixed ternary inputs derive four-column, unary and recursive rows"
       (let* ((source '((1 2 "a") (2 3 "b") (3 3 "c") (1 2 "a")))
              (result (evaluate source))
              (labelled (rows result 'labelled))
@@ -63,20 +58,23 @@
         (check-equal? (rows result 'hot) '((1)))
         (check-equal? (length reach) 4)
         (check-equal? (length (rows result 'node)) 3)))
-    (ascent-observed-case "source withdrawal recomputes without changing earlier result"
+    (poo-flow-test-case/with +positive-case-profile+
+      "source withdrawal recomputes without changing earlier result"
       (let* ((first (evaluate '((1 2 "a") (2 3 "b") (3 3 "c"))))
              (withdrawn (evaluate '((1 2 "a") (3 3 "c")))))
         (check-equal? (length (rows first 'reach)) 4)
         (check-equal? (length (rows withdrawn 'reach)) 2)
         (check-equal? (length (rows first 'reach)) 4)))
-    (ascent-observed-case "empty rule set preserves sources and returns"
+    (poo-flow-test-case/with +positive-case-profile+
+      "empty rule set preserves sources and returns"
       (let (result
             (gerbil-ascent-evaluate-positive-program
              (.o (relations (list (gerbil-ascent-relation 'r 1 '((1)))))
                  (rules []) (max-input-facts 2) (max-derived-facts 2)
                  (max-output-facts 2))))
         (check-equal? (rows result 'r) '((1)))))
-    (ascent-observed-case "arity, unsafe heads, and derived budgets reject"
+    (poo-flow-test-case/with +positive-case-profile+
+      "arity, unsafe heads, and derived budgets reject"
       (check-exception
        (gerbil-ascent-relation 'broken 2 '((1))) true)
       (check-exception (evaluate '((1 2 "a") (2 3 "b")) 1) true)

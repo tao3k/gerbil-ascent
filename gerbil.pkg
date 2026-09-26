@@ -1,0 +1,9 @@
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+(package:
+ gerbil-ascent
+ depend:
+ ("github.com/tao3k/poo-flow-foundation@29add33cfa4a0e3ef88f10a6fa8ca45d00de3f49"
+  "github.com/tao3k/gerbil-poo@099b381588360a8a49fd772f666a1a00351366f5"
+  "github.com/tao3k/asp-gerbil-scheme@19bf659450f619a410cef46b093ccaa6bb203c03"))

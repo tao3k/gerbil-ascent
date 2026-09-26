@@ -1,0 +1,9 @@
+[package]
+name = "gerbil-ascent-oracle"
+version = "0.1.0"
+edition = "2021"
+license = "Apache-2.0 AND LGPL-2.1-or-later"
+publish = false
+
+[dependencies]
+ascent = "=0.8.0"

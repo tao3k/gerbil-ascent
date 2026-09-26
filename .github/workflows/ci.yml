@@ -1,0 +1,38 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  native-and-oracle:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    env:
+      GERBIL_RELEASE_ROOT: ${{ github.workspace }}/.ci/gerbil-release/v19
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential ca-certificates git jq libssl-dev openssl pkg-config zlib1g-dev
+      - name: Install immutable Gerbil v0.19 release
+        run: bash tools/ci/install-gerbil-v19-release.sh "$GERBIL_RELEASE_ROOT"
+      - name: Install declared Gerbil dependencies
+        run: |
+          mkdir -p "$HOME/.gerbil/pkg"
+          gerbil pkg dir --add git.cons.io/mighty-gerbils/gerbil-directory
+          gerbil deps --install
+      - name: Build Scheme package
+        run: gerbil build
+      - name: Install Just
+        run: cargo install just --version 1.56.0 --locked
+      - name: Qualify Scheme rules
+        run: gerbil env just test
+      - name: Compare with Rust Ascent
+        run: gerbil env just oracle

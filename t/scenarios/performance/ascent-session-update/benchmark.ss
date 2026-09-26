@@ -1,0 +1,22 @@
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+((benchmarkKind . scenario-e2e)
+ (max_total . 1000us)
+ (target_total . 700us)
+ (regression_budget . 300us)
+ (expected_over_input_budget . 0us)
+ (sampleCount . 20)
+ (targetRationale . "Append one edge to a retained positive ASCENT session and complete its recursive closure.")
+ (unit . "us")
+ (sourcePath . "t/scenarios/performance/ascent-session-update/benchmark.ss")
+ (rule . GERBIL-SCHEME-AGENT-R031)
+ (feature . ascent-session-update)
+ (optimizationFocus . "retain positive relation state and evaluate appended deltas")
+ (inputShape . "ten-edge chain plus one appended edge, producing 66 reachability facts")
+ (expectedOutcome . "complete eleven-edge chain closure with stable prior snapshots")
+ (expectedRepair . "reuse relation state and propagate only appended source deltas")
+ (baseline . "reconstruct and reevaluate the whole source snapshot")
+ (candidate . "append a source row and run a retained positive session")
+ (measurementPhases candidate-update assert-semantic-gate assert-time-gate)
+ (tags poo ascent incremental performance))

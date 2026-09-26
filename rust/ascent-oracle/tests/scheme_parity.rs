@@ -827,6 +827,7 @@ fn binary_and_grouped_trrel_uf_match_ascent_byods() {
 fn grouped_byods_join_with_string_keys_matches_ascent() {
     ascent! {
         relation seed(String, u32, u32);
+        relation seed_extra(String, u32, u32);
         relation wanted(String, u32);
         #[ds(eqrel)]
         relation eq(String, u32, u32);
@@ -840,32 +841,52 @@ fn grouped_byods_join_with_string_keys_matches_ascent() {
         eq(g, x, y) <-- seed(g, x, y);
         tr(g, x, y) <-- seed(g, x, y);
         uf(g, x, y) <-- seed(g, x, y);
+        eq(g, x, y) <-- seed_extra(g, x, y);
+        tr(g, x, y) <-- seed_extra(g, x, y);
+        uf(g, x, y) <-- seed_extra(g, x, y);
         eq_match(g, x, y) <-- eq(g, x, y), wanted(g, y);
         tr_match(g, x, y) <-- tr(g, x, y), wanted(g, y);
         uf_match(g, x, y) <-- uf(g, x, y), wanted(g, y);
     }
-    for (seed, wanted) in [
-        (vec![], vec![]),
+    for (seed, seed_extra, wanted) in [
+        (vec![], vec![], vec![]),
         (
             vec![
                 ("alpha".to_owned(), 1, 2),
                 ("alpha".to_owned(), 2, 3),
                 ("beta".to_owned(), 1, 2),
             ],
+            vec![],
             vec![("alpha".to_owned(), 3), ("beta".to_owned(), 2)],
         ),
         (
             vec![("alpha".to_owned(), 1, 2), ("alpha".to_owned(), 2, 1)],
+            vec![],
             vec![("alpha".to_owned(), 1)],
+        ),
+        (
+            vec![("alpha".to_owned(), 1, 2), ("beta".to_owned(), 1, 2)],
+            vec![("alpha".to_owned(), 2, 3), ("beta".to_owned(), 2, 1)],
+            vec![("alpha".to_owned(), 3), ("beta".to_owned(), 1)],
         ),
     ] {
         let mut program = AscentProgram {
             seed: seed.clone(),
+            seed_extra: seed_extra.clone(),
             wanted: wanted.clone(),
             ..AscentProgram::default()
         };
         program.run();
-        let mut expected = program
+        // In 0.8.0, eqrel's grouped read after two separate producer rules
+        // can drop the merged alpha component. A single producer over the
+        // same facts supplies the mathematical equivalence baseline instead.
+        let mut combined = AscentProgram {
+            seed: seed.iter().chain(seed_extra.iter()).cloned().collect(),
+            wanted: wanted.clone(),
+            ..AscentProgram::default()
+        };
+        combined.run();
+        let mut expected = combined
             .eq_match
             .iter()
             .map(|(g, x, y)| format!("eq-match\t{g}\t{x}\t{y}"))
@@ -893,7 +914,12 @@ fn grouped_byods_join_with_string_keys_matches_ascent() {
             .map(|(g, y)| format!("({g:?} {y})"))
             .collect::<Vec<_>>()
             .join(" ");
-        let request = format!("(({seed_request}) ({wanted_request}))\n");
+        let seed_extra_request = seed_extra
+            .iter()
+            .map(|(g, x, y)| format!("({g:?} {x} {y})"))
+            .collect::<Vec<_>>()
+            .join(" ");
+        let request = format!("(({seed_request}) ({wanted_request}) ({seed_extra_request}))\n");
         let mut actual = scheme_output("byods-query-rows", &request)
             .lines()
             .map(str::to_owned)

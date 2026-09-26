@@ -10,8 +10,7 @@
 
 (def (main . _)
   (let* ((request (read))
-         (rows-of (.ref (ascent-byods-query-evaluate
-                         (car request) (cadr request))
+         (rows-of (.ref (apply ascent-byods-query-evaluate request)
                         'rows-of)))
     (for-each
      (lambda (name)

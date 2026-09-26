@@ -104,6 +104,21 @@
         (check-equal? (not (not (member '("alpha" 1 3)
                                         (rows-of 'tr-match)))) #t)
         (check-equal? (member '("beta" 3 2) (rows-of 'eq-match)) #f)))
+    (poo-flow-test-case "BYODS rules merge independently sourced path segments"
+      (let* ((result (ascent-byods-query-evaluate
+                      '(("alpha" 1 2) ("beta" 1 2))
+                      '(("alpha" 3) ("beta" 1))
+                      '(("alpha" 2 3) ("beta" 2 1))))
+             (rows-of (.ref result 'rows-of)))
+        (check-equal? (not (not (member '("alpha" 1 3)
+                                        (rows-of 'eq-match)))) #t)
+        (check-equal? (not (not (member '("alpha" 1 3)
+                                        (rows-of 'tr-match)))) #t)
+        (check-equal? (not (not (member '("beta" 2 1)
+                                        (rows-of 'uf-match)))) #t)
+        (check-equal? (length (rows-of 'eq-match)) 5)
+        (check-equal? (length (rows-of 'tr-match)) 3)
+        (check-equal? (length (rows-of 'uf-match)) 5)))
     (poo-flow-test-case "invalid storage method output fails at the boundary"
       (check-exception
        (gerbil-ascent-evaluate-program

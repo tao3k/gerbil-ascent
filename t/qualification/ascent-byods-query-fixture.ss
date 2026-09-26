@@ -18,11 +18,12 @@
 (def (a name . terms) (gerbil-ascent-atom name terms))
 (def (r head . body) (gerbil-ascent-rule (list head) body))
 
-(def (ascent-byods-query-evaluate seed wanted)
+(def (ascent-byods-query-evaluate seed wanted (seed-extra []))
   (gerbil-ascent-evaluate-program
    (gerbil-ascent-program
     (list
      (gerbil-ascent-relation 'seed 3 seed)
+     (gerbil-ascent-relation 'seed-extra 3 seed-extra)
      (gerbil-ascent-relation 'wanted 2 wanted)
      (gerbil-ascent-relation
       'eq 3 [] gerbil-ascent-hash-index-provider
@@ -43,6 +44,12 @@
         (a 'seed (v 'g) (v 'x) (v 'y)))
      (r (a 'uf (v 'g) (v 'x) (v 'y))
         (a 'seed (v 'g) (v 'x) (v 'y)))
+     (r (a 'eq (v 'g) (v 'x) (v 'y))
+        (a 'seed-extra (v 'g) (v 'x) (v 'y)))
+     (r (a 'tr (v 'g) (v 'x) (v 'y))
+        (a 'seed-extra (v 'g) (v 'x) (v 'y)))
+     (r (a 'uf (v 'g) (v 'x) (v 'y))
+        (a 'seed-extra (v 'g) (v 'x) (v 'y)))
      (r (a 'eq-match (v 'g) (v 'x) (v 'y))
         (a 'eq (v 'g) (v 'x) (v 'y))
         (a 'wanted (v 'g) (v 'y)))

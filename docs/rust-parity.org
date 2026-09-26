@@ -41,6 +41,10 @@ module-system source-role rule; =table/storage.ss= owns only the POO storage
 Provider contract and method selection. This separation allows Gerbil and its
 Standard Library to determine the implementation instead of copying Rust's
 data-structure layout.
+The evaluator resolves each storage Provider method slot once when it
+initializes a relation, then invokes the selected Scheme function in the row
+loop. This preserves the public POO extension point without repeated slot
+dispatch for every fact.
 
 * Feature matrix
 
@@ -81,6 +85,10 @@ for indexed joins and 1.804 ms p95 for the rule clauses; the latter exceeded
 its 1 ms budget. The samples show that the new dispatch path needs further
 optimization and that semantic parity alone does not close the performance
 row.
+After resolving the storage method once per relation, isolated local SS runs
+measured 609 us p95 for rule clauses and 1.017 ms p95 for indexed joins, while
+another indexed-join run exceeded 3 ms p95. These samples do not establish a
+stable submillisecond gate.
 Declaration construction is outside this timing window and remains a separate
 cost.
 

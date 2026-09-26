@@ -8,7 +8,11 @@
                  poo-flow-test-case)
         (only-in :gerbil-ascent/t/qualification/ascent-lattice-program-fixture
                  ascent-lattice-fixture-evaluate)
-        (only-in :gerbil-ascent/program/interface gerbil-ascent-lattice))
+        (only-in :gerbil-ascent/program/interface
+                 gerbil-ascent-lattice gerbil-ascent-relation
+                 gerbil-ascent-program gerbil-ascent-open-session
+                 gerbil-ascent-session-run
+                 gerbil-ascent-session-append-source!))
 
 (export ascent-lattice-program-test)
 
@@ -28,4 +32,15 @@
       (check-equal? (shortest []) [])
       (check-exception (gerbil-ascent-lattice 'bad 0 [] min) true)
       (check-exception (gerbil-ascent-lattice 'bad 2 '((1)) min)
-                       true))))
+                       true))
+    (poo-flow-test-case "session rejects source updates in lattice programs"
+      (let (session
+            (gerbil-ascent-open-session
+             (gerbil-ascent-program
+              (list (gerbil-ascent-relation 'source 2 '((1 2)))
+                    (gerbil-ascent-lattice 'best 2 [] min))
+              [] 4 4 8)))
+        (gerbil-ascent-session-run session)
+        (check-exception
+         (gerbil-ascent-session-append-source! session 'source '(2 3))
+         true)))))

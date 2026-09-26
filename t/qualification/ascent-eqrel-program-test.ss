@@ -57,6 +57,26 @@
                     'eq)))
         (check-equal? (length rows) 9)
         (check-equal? (not (not (member '(3 1) rows))) #t)))
+    (poo-flow-test-case "eqrel component state is private to concurrent runs"
+      (let* ((program
+              (gerbil-ascent-program
+               (list (gerbil-ascent-relation
+                      'eq 2 '((1 2) (2 3))
+                      gerbil-ascent-hash-index-provider
+                      gerbil-ascent-eqrel-storage-provider))
+               [] 16 16 32))
+             (workers
+              (map (lambda (_)
+                     (spawn
+                      (lambda ()
+                        ((.ref (gerbil-ascent-evaluate-program program)
+                               'rows-of) 'eq))))
+                   (iota 4)))
+             (results (map thread-join! workers)))
+        (check-equal? (map length results) '(9 9 9 9))
+        (check-equal?
+         (andmap (lambda (rows) (not (not (member '(1 3) rows)))) results)
+         #t)))
     (poo-flow-test-case "trrel preserves directed reachability without reflexive facts"
       (let (rows
             ((.ref (ascent-storage-fixture-evaluate
@@ -128,7 +148,7 @@
                 gerbil-ascent-hash-index-provider
                 (.o (:: @ gerbil-ascent-set-storage-provider)
                     (.extend-rows
-                     (lambda (_all _pending _row _budget) 'broken)))))
+                     (lambda (_state _all _pending _row _budget) 'broken)))))
          [] 4 4 4))
        true))
     (poo-flow-test-case "eqrel output stays within the program fact budget"

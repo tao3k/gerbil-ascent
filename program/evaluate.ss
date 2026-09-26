@@ -49,6 +49,7 @@
            (delta-indexes (make-vector count #f))
            (index-providers (make-vector count #f))
            (storage-extensions (make-vector count #f))
+           (storage-states (make-vector count #f))
            (seen (make-vector count #f))
            (lattice-joins (make-vector count #f))
            (lattice-rows (make-vector count #f))
@@ -146,7 +147,9 @@
               ;; Resolve the POO method slot once per relation. The row loop
               ;; calls the selected Scheme function without redispatching.
               (vector-set! storage-extensions index
-                (.ref (.ref relation 'storage-provider) '.extend-rows)))
+                (.ref (.ref relation 'storage-provider) '.extend-rows))
+              (vector-set! storage-states index
+                ((.ref (.ref relation 'storage-provider) '.make-state))))
             (for-each
              (lambda (row)
                (unless (and (list? row) (= (length row) width))
@@ -179,6 +182,7 @@
                              (vector-ref all index)))))
                  (let (materialized
                        ((vector-ref storage-extensions index)
+                        (vector-ref storage-states index)
                         (vector-ref all index) [] row
                         (- output-limit source-materialized-count)))
                    (unless (list? materialized)
@@ -311,6 +315,7 @@
                                       (vector-ref pending index))))))
                   (let (expanded
                         ((vector-ref storage-extensions index)
+                         (vector-ref storage-states index)
                          (vector-ref all index)
                          (vector-ref pending index) row
                          (- output-limit

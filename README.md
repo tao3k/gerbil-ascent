@@ -26,6 +26,9 @@ Generic relation clauses plan bound columns and use a cached table index when
 the relation has at least 32 rows. `table/interface.ss` exposes a POO index
 Provider; a custom provider can replace the physical index without changing
 the rule program.
+The BYODS storage Provider creates private state for each relation evaluation.
+The `eqrel` implementation maintains component membership and emits new
+cross-component facts when an edge joins two components.
 Guards, bindings, and generators declare their input variables explicitly, and rule
 bodies check bindings in source order. The evaluator reads validated clause
 slots once per run before iterating relation rows.

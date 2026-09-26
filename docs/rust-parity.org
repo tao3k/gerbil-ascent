@@ -35,12 +35,14 @@ public declaration language. There is currently no independently growing
 Provider-by-Profile crossing, so adding CLOS methods here would not satisfy
 the POO Flow two-axis rule. The current BYODS storage Provider has a separate
 semantic contract and selected Rust parity fixtures; its broader merge and
-scale behavior remain open. Pure table algorithms live in =table/funs.ss=,
-following the POO Flow
-module-system source-role rule; =table/storage.ss= owns only the POO storage
-Provider contract and method selection. This separation allows Gerbil and its
-Standard Library to determine the implementation instead of copying Rust's
-data-structure layout.
+scale behavior remain open. Pure transitive algorithms live in
+=table/funs.ss=; =table/eqrel.ss= owns an evaluation-local component index;
+=table/storage.ss= owns the POO storage Provider contract and method selection.
+The Provider's =.make-state= slot creates one private state per relation and
+evaluation. Its =.extend-rows= slot receives that state, the current rows,
+the incoming row and the remaining fact budget. This separation allows Gerbil
+and its Standard Library to determine the implementation instead of copying
+Rust's data-structure layout.
 The evaluator resolves each storage Provider method slot once when it
 initializes a relation, then invokes the selected Scheme function in the row
 loop. This preserves the public POO extension point without repeated slot
@@ -109,6 +111,19 @@ two-rule merge, while a single Rust producer over the identical union of
 source facts and Scheme both returned it.  The differential test compares
 =eqrel= to that single-producer baseline and records the split-producer
 discrepancy separately.  It does not claim split-producer =eqrel= parity.
+
+The =eqrel= component index emits only newly joined cross-component pairs.
+It avoids scanning all previously materialized pairs for every input edge.
+The 20-edge source chain still produces all 441 expected facts, and a
+concurrent qualification case checks that separate evaluations do not share
+the component state. The existing grouped and split-producer Rust differential
+tests continue to pass; the Rust split-producer discrepancy above remains.
+
+The standard =ascent-byods-eqrel= SS scenario times 20 evaluations of a
+predeclared 20-edge program per run. Before the component index, one local
+run measured 3.508 ms p95. Three local runs after the change measured 450,
+448 and 965 us p95, all below its 1 ms budget. These local samples do not
+establish a cross-platform or large-scale performance bound.
 
 The standard =ascent-rule-clauses= SS scenario measures evaluation of one
 predeclared program over three ternary edges. A post-index isolated 20-sample

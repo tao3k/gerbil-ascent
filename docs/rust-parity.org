@@ -114,10 +114,11 @@ discrepancy separately.  It does not claim split-producer =eqrel= parity.
 
 The =eqrel= component index emits only newly joined cross-component pairs.
 It avoids scanning all previously materialized pairs for every input edge.
-The 20-edge source chain still produces all 441 expected facts, and a
-concurrent qualification case checks that separate evaluations do not share
-the component state. The existing grouped and split-producer Rust differential
-tests continue to pass; the Rust split-producer discrepancy above remains.
+The 20-edge source chain still produces all 441 expected facts, and the Rust
+oracle now compares this complete closure plus reversed, duplicate,
+reflexive and interleaved-group source snapshots. A concurrent qualification
+case checks that separate evaluations do not share the component state. The
+Rust split-producer discrepancy above remains.
 
 The standard =ascent-byods-eqrel= SS scenario times 20 evaluations of a
 predeclared 20-edge program per run. Before the component index, one local

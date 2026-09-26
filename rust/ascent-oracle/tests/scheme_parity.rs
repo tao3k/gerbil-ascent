@@ -670,6 +670,15 @@ fn binary_and_grouped_eqrel_match_ascent_byods() {
             vec![(1, 2), (3, 4), (2, 3), (1, 2)],
             vec![(0, 1, 2), (0, 2, 3), (1, 4, 5)],
         ),
+        (
+            vec![(3, 4), (1, 2), (4, 4), (2, 3), (4, 1)],
+            vec![(0, 3, 4), (1, 3, 4), (0, 1, 2), (0, 2, 3)],
+        ),
+        (
+            vec![(9, 9), (7, 8), (8, 7), (7, 7)],
+            vec![(0, 9, 9), (1, 7, 8), (1, 8, 7), (1, 7, 7)],
+        ),
+        ((0..20).map(|node| (node, node + 1)).collect(), vec![]),
     ];
     for (binary, grouped) in snapshots {
         let binary_request = binary

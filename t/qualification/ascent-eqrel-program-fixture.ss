@@ -44,7 +44,7 @@
      (gerbil-ascent-rule
       (list (a 'grouped-output (v 'g) (v 'x) (v 'y)))
       (list (a 'grouped-eq (v 'g) (v 'x) (v 'y)))))
-    64 256 320)))
+    64 2048 2048)))
 
 (def (ascent-eqrel-fixture-evaluate binary-seed grouped-seed)
   (ascent-storage-fixture-evaluate

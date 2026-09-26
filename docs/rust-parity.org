@@ -45,6 +45,10 @@ The evaluator resolves each storage Provider method slot once when it
 initializes a relation, then invokes the selected Scheme function in the row
 loop. This preserves the public POO extension point without repeated slot
 dispatch for every fact.
+Dependency stratification, delta-position planning, lattice row operations
+and rule binding live in =program/funs.ss= as named Scheme functions. The
+evaluator retains snapshot-local fact buffers, pending deltas and rule
+execution state.
 
 * Feature matrix
 
@@ -89,6 +93,9 @@ After resolving the storage method once per relation, isolated local SS runs
 measured 609 us p95 for rule clauses and 1.017 ms p95 for indexed joins, while
 another indexed-join run exceeded 3 ms p95. These samples do not establish a
 stable submillisecond gate.
+After the =program/funs.ss= role split, two isolated local rule-clause runs
+had approximately 0.58--0.59 ms medians but failed the 1 ms p95 gate at
+1.803 and 1.706 ms. The functional split does not close the latency tail.
 Declaration construction is outside this timing window and remains a separate
 cost.
 

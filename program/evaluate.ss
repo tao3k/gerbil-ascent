@@ -6,6 +6,13 @@
 ;;; one run; the public declarations and returned projection are POO values.
 (import (only-in :clan/poo/object .o .ref object?)
         (only-in "objects.ss" gerbil-ascent-clause-plan)
+        (only-in "funs.ss" gerbil-ascent-rule-strata
+                 gerbil-ascent-delta-positions
+                 gerbil-ascent-lattice-key
+                 gerbil-ascent-lattice-value
+                 gerbil-ascent-joined-row
+                 gerbil-ascent-bind-row
+                 gerbil-ascent-head-row)
         (only-in :gerbil-ascent/table/provider
                  gerbil-ascent-index-provider-build
                  gerbil-ascent-index-provider-lookup)
@@ -48,12 +55,6 @@
            (source-count 0)
            (source-materialized-count 0)
            (derived-count 0))
-      (def (lattice-key row)
-        (reverse (cdr (reverse row))))
-      (def (lattice-value row)
-        (car (reverse row)))
-      (def (joined-row key value)
-        (append key (list value)))
       (def (position-of name)
         (let (slot (hash-get positions name))
           (unless slot (error "unknown ASCENT relation" name))
@@ -76,32 +77,6 @@
                   (map (lambda (term)
                          (cons (term-kind term) (.ref term 'value)))
                        terms))))
-      (def (bind-row terms row environment)
-        (let loop ((patterns terms) (values row) (bindings environment))
-          (if (null? patterns)
-            bindings
-            (let* ((term (car patterns))
-                   (value (car values))
-                   (kind (car term)))
-              (if (eq? kind 'literal)
-                (and (equal? (cdr term) value)
-                     (loop (cdr patterns) (cdr values) bindings))
-                (let* ((name (cdr term))
-                       (previous (assq name bindings)))
-                  (if previous
-                    (and (equal? (cdr previous) value)
-                         (loop (cdr patterns) (cdr values) bindings))
-                    (loop (cdr patterns) (cdr values)
-                          (cons (cons name value) bindings)))))))))
-      (def (head-row terms environment)
-        (map (lambda (term)
-               (if (eq? (car term) 'literal)
-                 (cdr term)
-                 (let (binding (assq (cdr term) environment))
-                   (unless binding
-                     (error "unbound ASCENT head variable" (cdr term)))
-                   (cdr binding))))
-             terms))
       (def (indexed-rows atom environment use-delta?)
         (let* ((index (vector-ref atom 0))
                (columns (vector-ref atom 2))
@@ -181,14 +156,14 @@
                          (> source-count output-limit))
                  (error "ASCENT source fact budget exceeded"))
                (if (eq? kind 'lattice)
-                 (let* ((key (lattice-key row))
+                 (let* ((key (gerbil-ascent-lattice-key row))
                         (keyed (vector-ref lattice-rows index))
                         (previous (hash-get keyed key))
                         (merged (if previous
-                                  (joined-row
+                                  (gerbil-ascent-joined-row
                                    key ((vector-ref lattice-joins index)
-                                        (lattice-value previous)
-                                        (lattice-value row)))
+                                        (gerbil-ascent-lattice-value previous)
+                                        (gerbil-ascent-lattice-value row)))
                                   row)))
                    (hash-put! keyed key merged)
                    (unless previous
@@ -198,7 +173,7 @@
                      (cons merged
                            (if previous
                              (filter (lambda (existing)
-                                       (not (equal? (lattice-key existing)
+                                       (not (equal? (gerbil-ascent-lattice-key existing)
                                                     key)))
                                      (vector-ref all index))
                              (vector-ref all index)))))
@@ -264,56 +239,7 @@
                      (.ref rule 'heads)))
             (vector head-plans (reverse body-plans) atoms))))
       (let* ((rule-plans (map prepare-rule rules))
-             (strata (make-vector count 0))
-             (dependencies []))
-        (for-each
-         (lambda (rule)
-           (for-each
-            (lambda (head)
-              (for-each
-               (lambda (clause)
-                 (when (memq (vector-ref clause 0)
-                             '(atom negation aggregate))
-                   (let (body-atom (vector-ref clause 1))
-                     (set! dependencies
-                       (cons (vector (vector-ref head 0)
-                                     (vector-ref body-atom 0)
-                                     (if (memq (vector-ref clause 0)
-                                               '(negation aggregate))
-                                       1 0))
-                             dependencies)))))
-               (vector-ref rule 1)))
-            (vector-ref rule 0)))
-         rule-plans)
-        (let relax ((pass 0))
-          (let (changed? #f)
-            (for-each
-             (lambda (dependency)
-               (let* ((head (vector-ref dependency 0))
-                      (body (vector-ref dependency 1))
-                      (required (+ (vector-ref strata body)
-                                   (vector-ref dependency 2))))
-                 (when (> required (vector-ref strata head))
-                   (vector-set! strata head required)
-                   (set! changed? #t))))
-             dependencies)
-            (when changed?
-              (when (>= pass (- count 1))
-                (error "unstratifiable ASCENT negation cycle"))
-              (relax (+ pass 1)))))
-        (def (delta-positions body stratum)
-          (let loop ((remaining body) (depth 0) (selected []))
-            (if (null? remaining)
-              (reverse selected)
-              (let (clause (car remaining))
-                (if (eq? (vector-ref clause 0) 'atom)
-                  (loop (cdr remaining) (+ depth 1)
-                        (if (= (vector-ref strata
-                                           (vector-ref (vector-ref clause 1) 0))
-                               stratum)
-                          (cons depth selected)
-                          selected))
-                  (loop (cdr remaining) depth selected))))))
+             (strata (gerbil-ascent-rule-strata rule-plans count)))
         (let ((highest-stratum
                (if (= count 0) -1 (apply max (vector->list strata)))))
          (let evaluate-stratum ((stratum 0))
@@ -329,8 +255,8 @@
                    (unless (null? heads)
                      (set! active-rules
                        (cons (vector heads (vector-ref rule 1)
-                                     (delta-positions (vector-ref rule 1)
-                                                      stratum))
+                                     (gerbil-ascent-delta-positions
+                                      (vector-ref rule 1) strata stratum))
                              active-rules)))))
                rule-plans)
               (set! active-rules (reverse active-rules))
@@ -358,19 +284,20 @@
                 (init-pending (+ index 1))))
             (def (emit! atom environment)
               (let* ((index (vector-ref atom 0))
-                     (row (head-row (vector-ref atom 1) environment)))
+                     (row (gerbil-ascent-head-row
+                           (vector-ref atom 1) environment)))
                 (if (vector-ref lattice-joins index)
-                  (let* ((key (lattice-key row))
+                  (let* ((key (gerbil-ascent-lattice-key row))
                          (staged (hash-get (vector-ref pending-seen index)
                                            key))
                          (prior (or staged
                                     (hash-get (vector-ref lattice-rows index)
                                               key)))
                          (merged (if prior
-                                   (joined-row
+                                   (gerbil-ascent-joined-row
                                     key ((vector-ref lattice-joins index)
-                                         (lattice-value prior)
-                                         (lattice-value row)))
+                                         (gerbil-ascent-lattice-value prior)
+                                         (gerbil-ascent-lattice-value row)))
                                    row)))
                     (unless (and prior (equal? merged prior))
                       (unless staged
@@ -379,7 +306,7 @@
                       (vector-set! pending index
                         (cons merged
                               (filter (lambda (existing)
-                                        (not (equal? (lattice-key existing)
+                                        (not (equal? (gerbil-ascent-lattice-key existing)
                                                      key)))
                                       (vector-ref pending index))))))
                   (let (expanded
@@ -427,7 +354,7 @@
                                                (= depth delta-at))))
                       (for-each
                        (lambda (row)
-                         (let (bound (bind-row (vector-ref atom 1)
+                         (let (bound (gerbil-ascent-bind-row (vector-ref atom 1)
                                                 row environment))
                            (when bound
                              (visit-body (cdr body) delta-at (+ depth 1)
@@ -438,7 +365,7 @@
                            (rows (indexed-rows atom environment #f)))
                       (unless (ormap
                                (lambda (row)
-                                 (bind-row (vector-ref atom 1)
+                                 (gerbil-ascent-bind-row (vector-ref atom 1)
                                            row environment))
                                rows)
                         (visit-body (cdr body) delta-at depth
@@ -450,7 +377,7 @@
                            (tuples []))
                       (for-each
                        (lambda (row)
-                         (let (bound (bind-row (vector-ref atom 1)
+                         (let (bound (gerbil-ascent-bind-row (vector-ref atom 1)
                                                 row environment))
                            (when bound
                              (set! tuples
@@ -527,11 +454,11 @@
                 (for-each
                  (lambda (row)
                    (when (vector-ref lattice-joins index)
-                     (let (key (lattice-key row))
+                     (let (key (gerbil-ascent-lattice-key row))
                        (hash-put! (vector-ref lattice-rows index) key row)
                        (vector-set! all index
                          (filter (lambda (existing)
-                                   (not (equal? (lattice-key existing)
+                                   (not (equal? (gerbil-ascent-lattice-key existing)
                                                 key)))
                                  (vector-ref all index)))))
                    (hash-put! (vector-ref seen index) row #t)

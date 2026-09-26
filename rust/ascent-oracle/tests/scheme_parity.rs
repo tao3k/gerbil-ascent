@@ -4,7 +4,7 @@
 //! Independent Rust Ascent oracle for POO Flow's Scheme qualification fixtures.
 
 use ascent::aggregators::{count, max, mean, min, sum};
-use ascent::{ascent, Dual};
+use ascent::{ascent, ascent_run, Dual};
 use ascent_byods_rels::{eqrel, trrel, trrel_uf};
 use std::{
     cmp::Reverse,
@@ -820,5 +820,45 @@ fn binary_and_grouped_trrel_uf_match_ascent_byods() {
         assert_eq!(actual.pop().as_deref(), Some("END"));
         actual.sort_unstable();
         assert_eq!(actual, ascent_trrel_uf_rows(binary, grouped));
+    }
+}
+
+fn ascent_local_origin_rows(edges: &[(u32, u32)], origin: u32) -> Vec<String> {
+    let result = ascent_run! {
+        relation edge(u32, u32);
+        relation reach(u32, u32);
+        edge(x, y) <-- for &(x, y) in edges;
+        reach(x, y) <-- edge(x, y), if *x == origin;
+        reach(x, z) <-- reach(x, y), edge(y, z);
+    };
+    let mut rows: Vec<_> = result
+        .reach
+        .iter()
+        .map(|(x, y)| format!("{x}\t{y}"))
+        .collect();
+    rows.sort_unstable();
+    rows
+}
+
+#[test]
+fn gerbil_module_and_lexical_origin_match_ascent_run() {
+    let snapshots: &[(u32, &[(u32, u32)])] = &[
+        (1, &[(1, 2), (2, 3), (3, 4), (2, 5)]),
+        (2, &[(1, 2), (2, 3), (3, 4), (2, 5)]),
+        (3, &[(1, 2), (2, 3), (3, 4), (4, 2)]),
+        (9, &[(1, 2), (2, 3)]),
+    ];
+    for &(origin, edges) in snapshots {
+        let source = edges
+            .iter()
+            .map(|(x, y)| format!("({x} {y})"))
+            .collect::<Vec<_>>()
+            .join(" ");
+        let request = format!("({origin} ({source}))\n");
+        let output = scheme_output("module-rows", &request);
+        let mut actual: Vec<_> = output.lines().map(str::to_owned).collect();
+        assert_eq!(actual.pop().as_deref(), Some("END"));
+        actual.sort_unstable();
+        assert_eq!(actual, ascent_local_origin_rows(edges, origin));
     }
 }

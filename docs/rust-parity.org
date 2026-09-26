@@ -28,7 +28,7 @@ proposals rather than core parity claims.
 | Stratified negation | =program/= | 3-level negated relation fixture and negative-cycle rejection pass selected Rust oracle comparison | broader safe/unsafe programs and performance receipts |
 | Aggregation and custom aggregators | =program/= | count, sum, min, max, mean and custom iterator aggregators pass empty, duplicate-input and grouped Rust fixtures | recursive aggregate corpus, broader type behavior and performance receipts |
 | Lattice declarations and recursive joins | =program/=, =table/= | POO lattice declaration with user join; selected recursive shortest-path and duplicate-key snapshots match Rust | broader join families, lattice/negation composition, invalid join laws and scale receipts |
-| Relation indexes and selected physical plan | =table/= | private dense/sparse binary adjacency | index selection and relation access parity across arities |
+| Relation indexes and selected physical plan | =table/=, =program/= | bound-column hash index plan for generic relation clauses above a 32-row threshold; 50-edge two-hop SS scenario passes | broader arities, composite and lattice indexes, provider choice and scale comparison |
 | BYODS data structure provider protocol | =table/= | absent | default provider, equivalence, transitive relation and user provider fixtures |
 | Parallel execution | =core/=, =table/= | absent | deterministic serial/parallel parity and contention benchmark |
 | Gerbil module and macro embedding | =core/=, =interface/= | callable Scheme functions, no full declaration surface | module reuse, local bindings, generated declarations and diagnostics |
@@ -43,11 +43,12 @@ not close the rows above. =candidate/= and
 cannot substitute for Rust feature parity.
 
 The standard =ascent-rule-clauses= SS scenario measures evaluation of one
-predeclared program over three ternary edges. Isolated 20-sample runs after
-bounding stratum traversal measured 493 and 573 us p95, but two runs after
-lattice support measured 1.689 and 1.515 ms p95 with a few long-tail samples
-amid approximately 0.5 ms medians. The 1 ms ceiling is not stable. This is
-not a scale or cross-platform claim.
+predeclared program over three ternary edges. A post-index isolated 20-sample
+run measured 577 us p95; two earlier post-lattice runs measured 1.689 and
+1.515 ms p95 with a few long-tail samples amid approximately 0.5 ms medians.
+The 1 ms ceiling is not stable. The =ascent-indexed-joins= SS scenario uses 50
+binary edges and measured 800 us p95 locally. These are not cross-platform or
+large-scale claims.
 Declaration construction is outside this timing window and remains a separate
 cost.
 

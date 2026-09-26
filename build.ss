@@ -6,6 +6,7 @@
 
 (defbuild-script
   '("table/expression"
+    "table/index"
     "program/types"
     "program/objects"
     "program/aggregators"

@@ -57,8 +57,20 @@
        (error "unbound ASCENT clause variable" name)))
    names))
 
+(def (indexed-atom plan bound)
+  (let loop ((terms (vector-ref plan 1)) (column 0) (columns []))
+    (if (null? terms)
+      (vector (vector-ref plan 0) (vector-ref plan 1)
+              (reverse columns))
+      (let (term (car terms))
+        (loop (cdr terms) (+ column 1)
+              (if (or (eq? (car term) 'literal)
+                      (memq (cdr term) bound))
+                (cons column columns)
+                columns))))))
+
 (def (atom-clause-plan clause atom-plan bound)
-  (let* ((plan (atom-plan clause))
+  (let* ((plan (indexed-atom (atom-plan clause) bound))
          (next-bound
           (foldl (lambda (term prior)
                    (if (eq? (car term) 'variable)
@@ -68,7 +80,7 @@
     (vector (vector 'atom plan) next-bound 1)))
 
 (def (negation-clause-plan clause atom-plan bound)
-  (let (plan (atom-plan clause))
+  (let (plan (indexed-atom (atom-plan clause) bound))
     (for-each
      (lambda (term)
        (when (and (eq? (car term) 'variable)
@@ -87,7 +99,7 @@
             (cons name bound) 0)))
 
 (def (aggregate-clause-plan clause atom-plan bound)
-  (let* ((plan (atom-plan clause))
+  (let* ((plan (indexed-atom (atom-plan clause) bound))
          (name (.ref clause 'variable))
          (inputs (.ref clause 'variables))
          (terms (vector-ref plan 1)))

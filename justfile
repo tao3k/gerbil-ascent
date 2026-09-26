@@ -47,5 +47,8 @@ aggregate-rows:
 lattice-rows:
     @timeout 15s gerbil {{ gerbil_test_runtime_options }} t/qualification/ascent-lattice-program-output.ss
 
+index-rows:
+    @timeout 15s gerbil {{ gerbil_test_runtime_options }} t/qualification/ascent-index-program-output.ss
+
 oracle:
     cargo test --locked --manifest-path rust/ascent-oracle/Cargo.toml

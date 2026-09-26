@@ -594,3 +594,29 @@ fn recursive_lattice_join_matches_ascent() {
         assert_eq!(rows, ascent_lattice_rows(edges), "edges: {edges:?}");
     }
 }
+
+#[test]
+fn indexed_two_hop_join_matches_ascent() {
+    ascent! {
+        relation edge(u32, u32);
+        relation two_hop(u32, u32);
+        two_hop(from, to) <-- edge(from, via), edge(via, to);
+    }
+    let edges: Vec<_> = (0..50).map(|from| (from, from + 1)).collect();
+    let mut program = AscentProgram {
+        edge: edges,
+        ..AscentProgram::default()
+    };
+    program.run();
+    let mut expected: Vec<_> = program
+        .two_hop
+        .iter()
+        .map(|(from, to)| format!("{from}\t{to}"))
+        .collect();
+    expected.sort_unstable();
+    let output = scheme_output("index-rows", "50\n");
+    let mut actual: Vec<_> = output.lines().map(str::to_owned).collect();
+    assert_eq!(actual.pop().as_deref(), Some("END"));
+    actual.sort_unstable();
+    assert_eq!(actual, expected);
+}

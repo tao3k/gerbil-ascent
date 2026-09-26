@@ -6,6 +6,8 @@
 ;;; one run; the public declarations and returned projection are POO values.
 (import (only-in :clan/poo/object .o .ref object?)
         (only-in "objects.ss" gerbil-ascent-clause-plan)
+        (only-in :gerbil-ascent/table/index
+                 gerbil-ascent-index-build)
         (only-in :clan/poo/support/base until))
 
 (export gerbil-ascent-evaluate-program)
@@ -31,6 +33,12 @@
            (positions (make-hash-table-eq))
            (all (make-vector count []))
            (delta (make-vector count []))
+           (all-version (make-vector count 0))
+           (delta-version (make-vector count 0))
+           (all-size (make-vector count 0))
+           (delta-size (make-vector count 0))
+           (all-indexes (make-vector count #f))
+           (delta-indexes (make-vector count #f))
            (seen (make-vector count #f))
            (lattice-joins (make-vector count #f))
            (lattice-rows (make-vector count #f))
@@ -90,6 +98,41 @@
                      (error "unbound ASCENT head variable" (cdr term)))
                    (cdr binding))))
              terms))
+      (def (indexed-rows atom environment use-delta?)
+        (let* ((index (vector-ref atom 0))
+               (columns (vector-ref atom 2))
+               (rows (vector-ref (if use-delta? delta all) index)))
+          (if (or (null? columns)
+                  (< (vector-ref (if use-delta? delta-size all-size)
+                                 index)
+                     32))
+            rows
+            (let* ((cache (vector-ref
+                           (if use-delta? delta-indexes all-indexes)
+                           index))
+                   (version (vector-ref
+                             (if use-delta? delta-version all-version)
+                             index))
+                   (entry (hash-get cache columns))
+                   (lookup
+                    (if (and entry (= (car entry) version))
+                      (cdr entry)
+                      (let (built (gerbil-ascent-index-build rows columns))
+                        (hash-put! cache columns (cons version built))
+                        built)))
+                   (terms (vector-ref atom 1))
+                   (key (map
+                         (lambda (column)
+                           (let (term (list-ref terms column))
+                             (if (eq? (car term) 'literal)
+                               (cdr term)
+                               (let (bound (assq (cdr term) environment))
+                                 (unless bound
+                                   (error "unbound ASCENT index variable"
+                                          (cdr term)))
+                                 (cdr bound)))))
+                         columns)))
+              (or (hash-get lookup key) [])))))
       (let initialize ((remaining relations) (index 0))
         (unless (null? remaining)
           (let* ((relation (car remaining))
@@ -144,7 +187,12 @@
                    (cons row (vector-ref all index)))))
              rows)
             (vector-set! seen index present)
+            (vector-set! all-indexes index (make-hash-table))
+            (vector-set! delta-indexes index (make-hash-table))
             (vector-set! delta index (vector-ref all index))
+            (vector-set! all-size index (length (vector-ref all index)))
+            (vector-set! delta-size index
+              (vector-ref all-size index))
             (initialize (cdr remaining) (+ index 1)))))
       (def (prepare-rule rule)
         (let ((bound []) (atoms 0) (body-plans []))
@@ -255,6 +303,12 @@
                     (if (= (vector-ref strata index) stratum)
                       (vector-ref all index)
                       []))
+                  (vector-set! delta-size index
+                    (if (= (vector-ref strata index) stratum)
+                      (vector-ref all-size index)
+                      0))
+                  (vector-set! delta-version index
+                    (+ 1 (vector-ref delta-version index)))
                   (reset-delta (+ index 1))))
               (until (not active?)
           (set! round (+ round 1))
@@ -316,9 +370,8 @@
                   (cond
                    ((eq? (vector-ref clause 0) 'atom)
                     (let* ((atom (vector-ref clause 1))
-                           (index (vector-ref atom 0))
-                           (rows (vector-ref (if (= depth delta-at) delta all)
-                                             index)))
+                           (rows (indexed-rows atom environment
+                                               (= depth delta-at))))
                       (for-each
                        (lambda (row)
                          (let (bound (bind-row (vector-ref atom 1)
@@ -329,8 +382,7 @@
                        rows)))
                    ((eq? (vector-ref clause 0) 'negation)
                     (let* ((atom (vector-ref clause 1))
-                           (index (vector-ref atom 0))
-                           (rows (vector-ref all index)))
+                           (rows (indexed-rows atom environment #f)))
                       (unless (ormap
                                (lambda (row)
                                  (bind-row (vector-ref atom 1)
@@ -340,7 +392,7 @@
                                     environment consume))))
                    ((eq? (vector-ref clause 0) 'aggregate)
                     (let* ((atom (vector-ref clause 1))
-                           (rows (vector-ref all (vector-ref atom 0)))
+                           (rows (indexed-rows atom environment #f))
                            (variables (vector-ref clause 3))
                            (tuples []))
                       (for-each
@@ -434,7 +486,16 @@
                    (set! derived-count (+ derived-count 1))
                    (set! active? #t))
                  (vector-ref pending index))
+                (unless (null? (vector-ref pending index))
+                  (vector-set! all-version index
+                    (+ 1 (vector-ref all-version index)))
+                  (vector-set! all-size index
+                    (length (vector-ref all index))))
                 (vector-set! delta index (vector-ref pending index))
+                (vector-set! delta-size index
+                  (length (vector-ref pending index)))
+                (vector-set! delta-version index
+                  (+ 1 (vector-ref delta-version index)))
                 (commit (+ index 1))))))
             (evaluate-stratum (+ stratum 1))))))
       (.o (relation-names (vector->list names))

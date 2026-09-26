@@ -835,6 +835,46 @@ fn binary_and_grouped_trrel_uf_match_ascent_byods() {
 }
 
 #[test]
+fn grouped_eqrel_split_producers_expose_upstream_merge_gap() {
+    ascent! {
+        relation first(String, u32, u32);
+        relation second(String, u32, u32);
+        relation wanted(String, u32);
+        #[ds(eqrel)]
+        relation eq(String, u32, u32);
+        relation matched(String, u32, u32);
+        eq(g, x, y) <-- first(g, x, y);
+        eq(g, x, y) <-- second(g, x, y);
+        matched(g, x, y) <-- eq(g, x, y), wanted(g, y);
+    }
+    let first = vec![("alpha".to_owned(), 1, 2)];
+    let second = vec![("alpha".to_owned(), 2, 3)];
+    let wanted = vec![("alpha".to_owned(), 3)];
+    let mut split = AscentProgram {
+        first: first.clone(),
+        second: second.clone(),
+        wanted: wanted.clone(),
+        ..AscentProgram::default()
+    };
+    split.run();
+    let mut combined = AscentProgram {
+        first: first.into_iter().chain(second).collect(),
+        wanted,
+        ..AscentProgram::default()
+    };
+    combined.run();
+    let target = ("alpha".to_owned(), 1, 3);
+    assert!(combined.matched.contains(&target));
+    assert!(!split.matched.contains(&target));
+
+    let output = scheme_output(
+        "byods-query-rows",
+        "(((\"alpha\" 1 2)) ((\"alpha\" 3)) ((\"alpha\" 2 3)))\n",
+    );
+    assert!(output.lines().any(|line| line == "eq-match\talpha\t1\t3"));
+}
+
+#[test]
 fn grouped_byods_join_with_string_keys_matches_ascent() {
     ascent! {
         relation seed(String, u32, u32);

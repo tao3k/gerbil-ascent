@@ -70,7 +70,7 @@ execution state.
 | Aggregation and custom aggregators | =program/= | count, sum, min, max, mean and custom iterator aggregators pass empty, duplicate-input and grouped Rust fixtures | recursive aggregate corpus, broader type behavior and performance receipts |
 | Lattice declarations and recursive joins | =program/=, =table/= | POO lattice declaration with user join; selected recursive shortest-path and duplicate-key snapshots match Rust | broader join families, lattice/negation composition, invalid join laws and scale receipts |
 | Relation indexes and selected physical plan | =table/=, =program/= | bound-column hash index plan for generic relation clauses above a 32-row threshold; 50-edge two-hop SS scenario passes | broader arities, composite and lattice indexes, provider choice and scale comparison |
-| BYODS data structure provider protocol | =table/= | POO index Provider with default hash and custom alist fixtures; set, =eqrel=, =trrel= and =trrel_uf= storage Providers have bounded Scheme functions; selected binary and grouped ternary materialized rows plus a string-keyed BYODS/body join match Rust =ascent-byods-rels 0.8.0=; split-producer =trrel= / =trrel_uf= joins match, while Rust =eqrel= has an observed split-producer discrepancy | isolate the =eqrel= split-producer behavior, binary/ternary storage merge semantics and scale parity; wider grouped arity is a later extension |
+| BYODS data structure provider protocol | =table/= | POO index Provider with default hash and custom alist fixtures; set, =eqrel=, =trrel= and =trrel_uf= storage Providers have bounded Scheme functions; selected binary and grouped ternary materialized rows plus a string-keyed BYODS/body join match Rust =ascent-byods-rels 0.8.0=; split-producer =trrel= / =trrel_uf= joins match, while a minimal pinned-Rust =eqrel= split-producer counterexample is recorded | binary/ternary storage merge invariants, wider producer partitions and scale parity; wider grouped arity is a later extension |
 | Parallel execution | =core/=, =table/= | four independent Scheme program evaluations pass a concurrent reentrancy qualification under Core Observability; intra-program evaluation is serial | deterministic intra-program serial/parallel parity, bounded worker failure behavior and contention benchmark |
 | Gerbil module and macro embedding | =program/=, =interface/= | reusable Gerbil module exports a rule-program constructor; lexical origin capture matches selected Rust =ascent_run!= snapshots | generated declarations, module composition beyond one rule family, macro diagnostics and performance |
 
@@ -112,6 +112,14 @@ two-rule merge, while a single Rust producer over the identical union of
 source facts and Scheme both returned it.  The differential test compares
 =eqrel= to that single-producer baseline and records the split-producer
 discrepancy separately.  It does not claim split-producer =eqrel= parity.
+The minimized counterexample has only one group: =first(alpha, 1, 2)=,
+=second(alpha, 2, 3)= and =wanted(alpha, 3)=. Pinned Rust omits
+=matched(alpha, 1, 3)= with two producers but emits it when both edges enter
+the first producer. Scheme emits it for either producer order and for the
+combined input. This establishes a rule-partition-sensitive Rust 0.8.0
+result, not yet the precise internal merge step responsible for it. The
+Scheme implementation retains equivalence closure semantics; it does not
+copy the missing Rust row.
 
 The =eqrel= component index emits only newly joined cross-component pairs.
 It avoids scanning all previously materialized pairs for every input edge.

@@ -166,6 +166,20 @@
         (check-equal? (length (rows-of 'eq-match)) 5)
         (check-equal? (length (rows-of 'tr-match)) 3)
         (check-equal? (length (rows-of 'uf-match)) 5)))
+    (poo-flow-test-case "eqrel delta joins two producer rules in one group"
+      (let* ((wanted '(("alpha" 3)))
+             (first '(("alpha" 1 2)))
+             (second '(("alpha" 2 3)))
+             (split (ascent-byods-query-evaluate first wanted second))
+             (reversed (ascent-byods-query-evaluate second wanted first))
+             (combined (ascent-byods-query-evaluate
+                        (append first second) wanted)))
+        (for-each
+         (lambda (result)
+           (let (rows ((.ref result 'rows-of) 'eq-match))
+             (check-equal? (length rows) 3)
+             (check-equal? (not (not (member '("alpha" 1 3) rows))) #t)))
+         (list split reversed combined))))
     (poo-flow-test-case "invalid storage method output fails at the boundary"
       (check-exception
        (gerbil-ascent-evaluate-program

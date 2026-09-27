@@ -15,7 +15,7 @@
                  gerbil-ascent-storage-make-state
                  gerbil-ascent-storage-extend)
         (only-in :gerbil-ascent/program/interface
-                 gerbil-ascent-relation gerbil-ascent-program
+                 ascent gerbil-ascent-relation gerbil-ascent-program
                  gerbil-ascent-evaluate-program
                  gerbil-ascent-open-session
                  gerbil-ascent-session-append-source!
@@ -30,6 +30,20 @@
                  ascent-byods-query-evaluate))
 
 (export ascent-eqrel-program-test)
+
+(def (nonpositive-byods-program edges blocks)
+  (ascent
+   (relation edge ((from integer?) (to integer?)) edges)
+   (relation block ((node integer?)) (map list blocks))
+   (relation wanted ((node integer?)) '((3)))
+   (relation path ((from integer?) (to integer?)) []
+             (index gerbil-ascent-hash-index-provider)
+             (storage gerbil-ascent-trrel-uf-storage-provider))
+   (relation safe ((from integer?) (to integer?)))
+   ((path from to) <-- (edge from to))
+   ((safe from to) <-- (path from to) (wanted to)
+    (not (block from)))
+   (bounds 12 64 96)))
 
 (def ascent-eqrel-program-test
   (test-suite "ASCENT BYODS equivalence storage"
@@ -209,6 +223,50 @@
                                           ((.ref second 'rows-of) 'eq-match))))
                         #t)
           (check-equal? ((.ref first 'rows-of) 'eq-match) []))))
+    (poo-flow-test-case
+      "nonpositive BYODS session matches fresh state and rejects invalid input"
+      (let* ((session (gerbil-ascent-open-session
+                       (nonpositive-byods-program '((1 2)) [])))
+             (first (gerbil-ascent-session-run session)))
+        (gerbil-ascent-session-append-source! session 'edge '(2 3))
+        (let* ((second (gerbil-ascent-session-run session))
+               (fresh (gerbil-ascent-evaluate-program
+                       (nonpositive-byods-program '((1 2) (2 3)) []))))
+          (for-each
+           (lambda (name)
+             (let ((actual ((.ref second 'rows-of) name))
+                   (expected ((.ref fresh 'rows-of) name)))
+               (check-equal? (length actual) (length expected))
+               (for-each
+                (lambda (row)
+                  (check-equal? (not (not (member row actual))) #t))
+                expected)))
+           '(path safe))
+          (check-equal?
+           (not (not (member '(1 3) ((.ref second 'rows-of) 'safe))))
+           #t)
+          (check-exception
+           (gerbil-ascent-session-append-source! session 'block '("bad"))
+           true)
+          (check-equal? (eq? second (gerbil-ascent-session-run session)) #t)
+          (gerbil-ascent-session-append-source! session 'block '(1))
+          (let* ((third (gerbil-ascent-session-run session))
+                 (fresh-third (gerbil-ascent-evaluate-program
+                               (nonpositive-byods-program
+                                '((1 2) (2 3)) '(1)))))
+            (for-each
+             (lambda (name)
+               (let ((actual ((.ref third 'rows-of) name))
+                     (expected ((.ref fresh-third 'rows-of) name)))
+                 (check-equal? (length actual) (length expected))
+                 (for-each
+                  (lambda (row)
+                    (check-equal? (not (not (member row actual))) #t))
+                  expected)))
+             '(path safe))
+            (check-equal? (member '(1 3) ((.ref third 'rows-of) 'safe))
+                          #f)
+            (check-equal? ((.ref first 'rows-of) 'safe) [])))))
     (poo-flow-test-case "BYODS providers emit only new rows across edge prefixes"
       (for-each
        (lambda (provider edges expected-sizes)

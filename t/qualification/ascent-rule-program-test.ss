@@ -123,7 +123,7 @@
           (check-equal? (length (rows second 'reach)) 3)
           (check-equal? (rows first 'reach) '((1 2))))))
     (poo-flow-test-case/with +positive-case-profile+
-      "session rejects source updates through negation"
+      "session recomputes negation after source updates"
       (let* ((program
               (gerbil-ascent-program
                (list (gerbil-ascent-relation 'candidate 1 '((1)))
@@ -134,13 +134,36 @@
                         (gerbil-ascent-negation 'blocked (list (v 'x)))))
                4 4 8))
              (session (gerbil-ascent-open-session program)))
-        (check-equal? (rows (gerbil-ascent-session-run session)
-                            'allowed) '((1)))
+        (let (first (gerbil-ascent-session-run session))
+          (check-equal? (rows first 'allowed) '((1)))
+          (gerbil-ascent-session-append-source! session 'blocked '(1))
+          (let (second (gerbil-ascent-session-run session))
+            (check-equal? (rows second 'allowed) [])
+            (check-equal? (rows first 'allowed) '((1)))
+            (check-equal? (eq? second (gerbil-ascent-session-run session))
+                          #t)))))
+    (poo-flow-test-case/with +positive-case-profile+
+      "nonpositive recomputation rejects over-budget source atomically"
+      (let* ((program
+              (gerbil-ascent-program
+               (list (gerbil-ascent-relation 'candidate 1 '((1)))
+                     (gerbil-ascent-relation 'blocked 1 [])
+                     (gerbil-ascent-relation 'allowed 1 []))
+               (list (r (a 'allowed (v 'x))
+                        (a 'candidate (v 'x))
+                        (gerbil-ascent-negation 'blocked (list (v 'x)))))
+               4 4 3))
+             (session (gerbil-ascent-open-session program))
+             (first (gerbil-ascent-session-run session)))
         (check-exception
-         (gerbil-ascent-session-append-source!
-          session 'blocked '(1)) true)
-        (check-equal? (rows (gerbil-ascent-session-run session)
-                            'allowed) '((1)))))
+         (gerbil-ascent-session-append-source! session 'candidate '(2))
+         true)
+        (check-equal? (eq? first (gerbil-ascent-session-run session)) #t)
+        (gerbil-ascent-session-append-source! session 'blocked '(1))
+        (check-equal?
+         ((.ref (gerbil-ascent-session-run session) 'rows-of) 'allowed)
+         [])
+        (check-equal? (rows first 'allowed) '((1)))))
     (poo-flow-test-case/with +positive-case-profile+
       "empty rule set preserves sources and returns"
       (let (result

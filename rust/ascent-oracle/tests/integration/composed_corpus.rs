@@ -132,25 +132,46 @@ fn rust_rows(edges: &[Edge], blocked: &[u32]) -> Vec<String> {
     rows
 }
 
+fn render_snapshot(edges: &[Edge], blocked: &[u32]) -> String {
+    let edge_rows = edges
+        .iter()
+        .map(|(from, to)| format!("({from} {to})"))
+        .collect::<Vec<_>>()
+        .join(" ");
+    let blocked_nodes = blocked
+        .iter()
+        .map(u32::to_string)
+        .collect::<Vec<_>>()
+        .join(" ");
+    format!("(({edge_rows}) ({blocked_nodes}))")
+}
+
 fn scheme_request(cases: &[Case]) -> String {
     let rendered = cases
         .iter()
-        .map(|(edges, blocked)| {
-            let edge_rows = edges
-                .iter()
-                .map(|(from, to)| format!("({from} {to})"))
-                .collect::<Vec<_>>()
-                .join(" ");
-            let blocked_nodes = blocked
-                .iter()
-                .map(u32::to_string)
-                .collect::<Vec<_>>()
-                .join(" ");
-            format!("(({edge_rows}) ({blocked_nodes}))")
-        })
+        .map(|(edges, blocked)| render_snapshot(edges, blocked))
         .collect::<Vec<_>>()
         .join(" ");
     format!("({rendered})\n")
+}
+
+fn session_additions(index: usize) -> (Edge, u32) {
+    let from = (index % 3) as u32;
+    ((from, (from + 1) % 3), (from + 1) % 3)
+}
+
+fn scheme_session_request(cases: &[Case]) -> String {
+    let rendered = cases
+        .iter()
+        .enumerate()
+        .map(|(index, (edges, blocked))| {
+            let initial = render_snapshot(edges, blocked);
+            let ((from, to), added_block) = session_additions(index);
+            format!("({initial} ((({from} {to})) ({added_block})))")
+        })
+        .collect::<Vec<_>>()
+        .join(" ");
+    format!("(session ({rendered}))\n")
 }
 
 #[test]
@@ -172,4 +193,47 @@ fn complete_three_node_corpus_matches_rust_ascent() {
     }
     expected.sort_unstable();
     assert_eq!(actual, expected);
+}
+
+#[test]
+fn composed_nonpositive_sessions_match_fresh_fixed_points() {
+    let cases = cases();
+    let output = scheme_output("integrated-corpus-rows", &scheme_session_request(&cases));
+    let mut actual: Vec<_> = output.lines().map(str::to_owned).collect();
+    assert_eq!(actual.pop().as_deref(), Some("END"));
+    actual.sort_unstable();
+
+    let mut expected = Vec::new();
+    for (index, (edges, blocked)) in cases.iter().enumerate() {
+        expected.extend(
+            rust_rows(edges, blocked)
+                .into_iter()
+                .map(|row| format!("{index}\t0\t{row}")),
+        );
+        let (added_edge, added_block) = session_additions(index);
+        let mut combined_edges = edges.clone();
+        combined_edges.push(added_edge);
+        let mut combined_blocked = blocked.clone();
+        combined_blocked.push(added_block);
+        expected.extend(
+            rust_rows(&combined_edges, &combined_blocked)
+                .into_iter()
+                .map(|row| format!("{index}\t1\t{row}")),
+        );
+    }
+    expected.sort_unstable();
+    if actual != expected {
+        let first = actual
+            .iter()
+            .zip(&expected)
+            .position(|(left, right)| left != right)
+            .unwrap_or(actual.len().min(expected.len()));
+        panic!(
+            "composed session mismatch at {first}: Scheme {:?}, fresh Rust {:?} ({} vs {} rows)",
+            actual.get(first),
+            expected.get(first),
+            actual.len(),
+            expected.len()
+        );
+    }
 }

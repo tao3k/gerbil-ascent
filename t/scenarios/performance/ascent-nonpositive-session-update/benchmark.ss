@@ -1,0 +1,22 @@
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+((benchmarkKind . scenario-e2e)
+ (max_total . 1000us)
+ (target_total . 700us)
+ (regression_budget . 300us)
+ (expected_over_input_budget . 0us)
+ (sampleCount . 20)
+ (targetRationale . "Append one blocker to a session with recursion and negation, then publish its new fixed point.")
+ (unit . "us")
+ (sourcePath . "t/scenarios/performance/ascent-nonpositive-session-update/benchmark.ss")
+ (rule . GERBIL-SCHEME-AGENT-R031)
+ (feature . ascent-nonpositive-session-update)
+ (optimizationFocus . "recompute a changed nonpositive fixed point from accepted source rows")
+ (inputShape . "two-edge chain plus one blocker")
+ (expectedOutcome . "three path facts and one safe fact after blocking node 2")
+ (expectedRepair . "preserve the source snapshot and publish only a completed result")
+ (baseline . "reconstruct the whole declaration and external test process")
+ (candidate . "append a blocker and run the retained POO session")
+ (measurementPhases candidate-update assert-semantic-gate assert-time-gate)
+ (tags poo ascent negation incremental performance))

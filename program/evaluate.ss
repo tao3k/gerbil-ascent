@@ -397,8 +397,6 @@
         (def (append-source! name row)
           (when first-run?
             (error "ASCENT session must run before source updates"))
-          (unless positive-rules?
-            (error "ASCENT session updates require positive rules"))
           (let* ((index (position-of name))
                  (width (vector-ref arity index)))
             (unless (and (list? row) (= (length row) width))
@@ -408,11 +406,12 @@
             (when (>= source-count input-limit)
               (error "ASCENT session input fact budget exceeded"))
             (cond
-             ((or recompute-from-source?
+             ((or (not positive-rules?)
+                  recompute-from-source?
                   (vector-ref lattice-joins index))
-              ;; A lattice refinement can replace a value already consumed
-              ;; by another rule. Re-evaluate the accepted source snapshot
-              ;; before publishing any changed relation or lattice rows.
+              ;; Negation, aggregation, or a lattice refinement can invalidate
+              ;; previously consumed rows. Re-evaluate the accepted source
+              ;; snapshot before publishing a changed fixed point.
               (let* ((candidate (source-program-with index row))
                      (result (gerbil-ascent-evaluate-program candidate)))
                 (set! source-count (+ source-count 1))

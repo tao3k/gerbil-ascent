@@ -178,19 +178,32 @@
 
 (def (gerbil-ascent-relation relation-name column-count source-rows
                              (provider-value gerbil-ascent-hash-index-provider)
-                             (storage-value gerbil-ascent-set-storage-provider))
+                             (storage-value gerbil-ascent-set-storage-provider)
+                             (field-predicates-value []))
   (unless (and (symbol? relation-name)
                (exact-integer? column-count) (<= 0 column-count)
-               (list? source-rows))
+               (list? source-rows)
+               (list? field-predicates-value)
+               (or (null? field-predicates-value)
+                   (= (length field-predicates-value) column-count))
+               (andmap procedure? field-predicates-value))
     (error "invalid ASCENT relation declaration" relation-name column-count))
   (for-each
    (lambda (row)
      (unless (and (list? row) (= (length row) column-count))
-       (error "invalid ASCENT relation row" relation-name row column-count)))
+       (error "invalid ASCENT relation row" relation-name row column-count))
+     (when (pair? field-predicates-value)
+       (for-each
+        (lambda (predicate value)
+          (unless (predicate value)
+            (error "ASCENT relation source field type mismatch"
+                   relation-name row)))
+        field-predicates-value row)))
    source-rows)
   (validate GerbilAscentRelationContract
             (.o (:: @ Relation.)
                 name: relation-name arity: column-count rows: source-rows
+                field-predicates: field-predicates-value
                 storage-kind: 'relation index-provider: provider-value
                 storage-provider: storage-value)))
 

@@ -3,7 +3,11 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 ;;; Hygienic source forms lower to the existing POO contracts and evaluator.
-(import "objects.ss")
+(import "objects.ss"
+        (only-in :gerbil-ascent/table/provider
+                 gerbil-ascent-hash-index-provider)
+        (only-in :gerbil-ascent/table/storage
+                 gerbil-ascent-set-storage-provider))
 
 (export ascent)
 
@@ -32,6 +36,23 @@
     ((_ (name term ...))
      (syntax (gerbil-ascent-atom 'name
                                (list (ascent-term term) ...))))))
+
+(defsyntax (ascent-field-predicate stx)
+  (syntax-case stx ()
+    ((_ (name predicate))
+     (identifier? (syntax name))
+     (syntax predicate))
+    ((_ name)
+     (identifier? (syntax name))
+     (syntax (lambda (_value) #t)))))
+
+(defsyntax (ascent-field-predicates stx)
+  (syntax-case stx ()
+    ((_ (name ...))
+     (andmap identifier? (syntax->list (syntax (name ...))))
+     (syntax []))
+    ((_ (column ...))
+     (syntax (list (ascent-field-predicate column) ...)))))
 
 (defsyntax (ascent-clause stx)
   (syntax-case stx ()
@@ -114,16 +135,25 @@
   (syntax-case stx (index storage)
     ((_ (name (column ...) source (index provider) (storage storage-provider)))
      (syntax (gerbil-ascent-relation
-              'name (length '(column ...)) source provider storage-provider)))
+              'name (length '(column ...)) source provider storage-provider
+              (ascent-field-predicates (column ...)))))
     ((_ (name (column ...) source (index provider)))
      (syntax (gerbil-ascent-relation
-              'name (length '(column ...)) source provider)))
+              'name (length '(column ...)) source provider
+              gerbil-ascent-set-storage-provider
+              (ascent-field-predicates (column ...)))))
     ((_ (name (column ...) source))
      (syntax (gerbil-ascent-relation
-              'name (length '(column ...)) source)))
+              'name (length '(column ...)) source
+              gerbil-ascent-hash-index-provider
+              gerbil-ascent-set-storage-provider
+              (ascent-field-predicates (column ...)))))
     ((_ (name (column ...)))
      (syntax (gerbil-ascent-relation
-              'name (length '(column ...)) [])))))
+              'name (length '(column ...)) []
+              gerbil-ascent-hash-index-provider
+              gerbil-ascent-set-storage-provider
+              (ascent-field-predicates (column ...)))))))
 
 (defsyntax (ascent-lattice stx)
   (syntax-case stx (index)

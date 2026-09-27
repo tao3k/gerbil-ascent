@@ -18,8 +18,9 @@ The resulting Program and Relation declarations are POO objects. A caller can
 refine independent declaration axes with native =.o= and compose them with
 =.mix=. Gerbil POO's C4 order resolves which inherited slot wins. The
 [[file:../t/qualification/ascent-module-program-test.ss][module qualification]]
-combines a source-row refinement and a fact-budget refinement from the same
-base Program, then evaluates their composed result. This gives downstream
+combines source-row and field-predicate refinements on a Relation, then
+composes that Relation with a fact-budget refinement on the Program and
+evaluates the result. This gives downstream
 modules a typed extension point without a second rule language or a private
 precedence algorithm.
 
@@ -48,14 +49,17 @@ is evaluated. Bare rule identifiers denote logic variables. Use
 #+end_src
 
 The column identifiers declare arity and document each relation. They are
-not runtime variable bindings or types. The explicit bounds use the
-existing program contract.
+not runtime variable bindings. A column can instead be written
+=(name predicate)= to check source, retained-session and derived values with
+an ordinary Scheme predicate. This is a runtime contract; Rust field types
+remain compile-time constraints. The explicit bounds use the existing
+program contract.
 
 * Forms
 
 | Form | Meaning |
 |------+---------|
-| =(relation name (column ...) [source] [(index provider)] [(storage provider)])= | Set relation; omitted source is empty |
+| =(relation name (column ...) [source] [(index provider)] [(storage provider)])= | Set relation; each column is a name or =(name predicate)=; omitted source is empty |
 | =((head ...) <-- clause ...)= | One rule head |
 | =(((head ...) ...) <-- clause ...)= | Multiple heads sharing one body |
 | =(name term ...)= | Positive relation atom |
@@ -136,7 +140,7 @@ law evidence; the syntax alone cannot establish it.
 
 | Rust =ascent_macro 0.8.0= form | Scheme form | Status |
 |-------------------------------+-------------+--------|
-| =relation r(T,...) [= source];= | =(relation r (column ...) [source])= | Selected source, nullary and mixed-row oracle elsewhere; Scheme columns do not yet carry Rust type contracts |
+| =relation r(T,...) [= source];= | =(relation r ((column predicate) ...) [source])= | Runtime Scheme field predicates check source, update and derived rows; Rust compile-time type and diagnostics parity open |
 | =#[ds(provider)] relation ...= | =(relation ... source (index provider) (storage provider))= | POO Provider slot executes; wider BYODS parity in [[file:rust-parity.org][matrix]] |
 | =lattice r(T,...);= | =(lattice r (column ...) source join [index])= | Recursive shortest-path Scheme/Rust oracle |
 | =head;= and comma-separated heads | =(fact head)= / =(facts head ...)= | Rust differential for two fact heads |

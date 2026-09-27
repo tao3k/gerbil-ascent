@@ -73,11 +73,11 @@
 (def (ascent-syntax-parity-evaluate edges)
   (gerbil-ascent-evaluate-program
    (ascent
-    (relation edge (from to) edges)
+    (relation edge ((from integer?) (to integer?)) edges)
     (relation seed (value))
     (relation marker (value))
     (relation selected (value))
-    (relation successor (value))
+    (relation successor ((value integer?)))
     (relation optional (value) '(((some . 4)) (#f)))
     (relation unwrapped (value))
     (relation unwrapped-pattern (value))

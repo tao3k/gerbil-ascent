@@ -52,10 +52,16 @@
       (let* ((base (ascent-origin-reach-program '((1 2)) 1))
              (relation-values (.ref base 'relations))
              (edge (car relation-values))
+             (source-edge
+              (.o (:: @ edge) rows: '((1 2) (2 3))))
+             (typed-edge
+              (.o (:: @ edge)
+                  field-predicates: (list integer? integer?)))
+             (composed-edge (.mix source-edge typed-edge))
              (source-profile
               (.o (:: @ base)
                   relations:
-                  (cons (.o (:: @ edge) rows: '((1 2) (2 3)))
+                  (cons composed-edge
                         (cdr relation-values))))
              (budget-profile
               (.o (:: @ base) max-output-facts: 12))
@@ -63,5 +69,6 @@
              (rows ((.ref (gerbil-ascent-evaluate-program composed) 'rows-of)
                     'reach)))
         (check-equal? (.ref composed 'max-output-facts) 12)
+        (check-equal? (length (.ref composed-edge 'field-predicates)) 2)
         (check-equal? (length rows) 2)
         (check-equal? (not (not (member '(1 3) rows))) #t)))))

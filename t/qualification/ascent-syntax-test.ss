@@ -13,7 +13,10 @@
                  ascent-index-alist-provider)
         (only-in :gerbil-ascent/program/interface
                  ascent gerbil-ascent-evaluate-program
-                 gerbil-ascent-expression)
+                 gerbil-ascent-expression
+                 gerbil-ascent-open-session
+                 gerbil-ascent-session-append-source!
+                 gerbil-ascent-session-run)
         (only-in :gerbil-ascent/program/funs gerbil-ascent-bind-row))
 
 (export ascent-syntax-test)
@@ -130,4 +133,53 @@
         (check-equal? (not (not (member '(1 3) (rows-of 'let-pair)))) #t)
         (check-equal? (not (not (member '(3 5) (rows-of 'let-pair)))) #t)
         (check-equal? (length (rows-of 'for-pair)) 4)
-        (check-equal? (not (not (member '(2 1) (rows-of 'for-pair)))) #t)))))
+        (check-equal? (not (not (member '(2 1) (rows-of 'for-pair)))) #t)))
+    (poo-flow-test-case "typed relation checks source and derived fields"
+      (check-equal?
+       ((.ref
+         (gerbil-ascent-evaluate-program
+          (ascent
+           (relation mixed ((value integer?) tag) '((2 "ok")))
+           (bounds 4 4 8)))
+         'rows-of) 'mixed)
+       '((2 "ok")))
+      (check-equal?
+       ((.ref
+         (gerbil-ascent-evaluate-program
+          (ascent
+           (relation input ((value integer?)) '((2)))
+           (relation output ((value integer?)))
+           ((output (expr (x) (+ x 1))) <-- (input x))
+           (bounds 4 4 8)))
+         'rows-of) 'output)
+       '((3)))
+      (check-exception
+       (ascent
+        (relation input ((value integer?)) '(("bad")))
+        (bounds 4 4 8))
+       true)
+      (check-exception
+       (gerbil-ascent-evaluate-program
+        (ascent
+         (relation input ((value integer?)) '((2)))
+         (relation output ((value integer?)))
+         ((output (lit "bad")) <-- (input x))
+         (bounds 4 4 8)))
+       true))
+    (poo-flow-test-case "typed session update rejects before mutation"
+      (let* ((session
+              (gerbil-ascent-open-session
+               (ascent
+                (relation input ((value integer?)) '((1)))
+                (relation output ((value integer?)))
+                ((output x) <-- (input x))
+                (bounds 4 4 8))))
+             (first (gerbil-ascent-session-run session)))
+        (check-equal? ((.ref first 'rows-of) 'output) '((1)))
+        (check-exception
+         (gerbil-ascent-session-append-source! session 'input '("bad"))
+         true)
+        (gerbil-ascent-session-append-source! session 'input '(2))
+        (check-equal?
+         ((.ref (gerbil-ascent-session-run session) 'rows-of) 'output)
+         '((1) (2)))))))

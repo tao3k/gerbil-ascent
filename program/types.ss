@@ -40,6 +40,10 @@
                  (lambda (value)
                    (and (exact-integer? value) (> value 0)))))
 (def +rows+ (slot-contract 'ascent/rows list?))
+(def +field-predicates+
+  (slot-contract 'ascent/field-predicates
+                 (lambda (value)
+                   (and (list? value) (andmap procedure? value)))))
 (def +provider+
   (slot-contract 'ascent/index-provider
                  (lambda (value)
@@ -60,6 +64,7 @@
   identity: 'ascent/relation
   proto: (.o)
   responsibilities: (.o name: +symbol+ arity: +arity+ rows: +rows+
+                      field-predicates: +field-predicates+
                       storage-kind: (clause-kind-contract 'relation)
                       index-provider: +provider+
                       storage-provider: +storage-provider+))

@@ -28,7 +28,7 @@
   (ascent
     (relation edge ((from integer?) (to integer?)) edges)
     (relation block ((node integer?)) (map list blocked))
-    (relation root ((node integer?)) '((0) (1) (2)))
+    (relation root ((node integer?)) '((0) (1) (2) (3)))
     (relation path ((from integer?) (to integer?)))
     (relation witness ((node integer?)))
     (relation safe ((from integer?) (to integer?)))

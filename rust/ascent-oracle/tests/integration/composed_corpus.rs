@@ -11,7 +11,7 @@ type Edge = (u32, u32);
 type Case = (Vec<Edge>, Vec<u32>);
 
 fn cases() -> Vec<Case> {
-    let mut result = Vec::with_capacity(522);
+    let mut result = Vec::with_capacity(778);
     for mask in 0..(1u16 << 9) {
         let edges = (0..9)
             .filter(|bit| mask & (1 << bit) != 0)
@@ -27,6 +27,27 @@ fn cases() -> Vec<Case> {
     }
     result.push((vec![(0, 1), (0, 1), (1, 2)], vec![2]));
     result.push((vec![(2, 2), (2, 2), (0, 1)], vec![0, 0]));
+    let four_node_edges = [
+        (0, 0),
+        (0, 1),
+        (0, 2),
+        (1, 2),
+        (2, 1),
+        (2, 3),
+        (3, 0),
+        (3, 3),
+    ];
+    for mask in 0..256u16 {
+        let edges = four_node_edges
+            .iter()
+            .enumerate()
+            .filter_map(|(bit, edge)| (mask & (1 << bit) != 0).then_some(*edge))
+            .collect();
+        let blocked = (0..4u32)
+            .filter(|node| mask & (1 << (node + 4)) != 0)
+            .collect();
+        result.push((edges, blocked));
+    }
     result
 }
 
@@ -53,7 +74,7 @@ fn rust_rows(edges: &[Edge], blocked: &[u32]) -> Vec<String> {
     let mut program = AscentProgram {
         edge: edges.to_vec(),
         block: blocked.iter().map(|node| (*node,)).collect(),
-        root: vec![(0,), (1,), (2,)],
+        root: vec![(0,), (1,), (2,), (3,)],
         ..AscentProgram::default()
     };
     program.run();
@@ -123,8 +144,10 @@ fn scheme_request(cases: &[Case]) -> String {
 }
 
 fn session_additions(index: usize) -> (Edge, u32) {
-    let from = (index % 3) as u32;
-    ((from, (from + 1) % 3), (from + 1) % 3)
+    let nodes = if index < 522 { 3 } else { 4 };
+    let from = (index % nodes) as u32;
+    let to = (from + 1) % nodes as u32;
+    ((from, to), to)
 }
 
 fn scheme_session_request(cases: &[Case]) -> String {
@@ -142,9 +165,9 @@ fn scheme_session_request(cases: &[Case]) -> String {
 }
 
 #[test]
-fn complete_three_node_corpus_matches_rust_ascent() {
+fn composed_three_and_four_node_corpus_matches_rust_ascent() {
     let cases = cases();
-    assert_eq!(cases.len(), 522);
+    assert_eq!(cases.len(), 778);
     let output = scheme_output("integrated-corpus-rows", &scheme_request(&cases));
     let mut actual: Vec<_> = output.lines().map(str::to_owned).collect();
     assert_eq!(actual.pop().as_deref(), Some("END"));

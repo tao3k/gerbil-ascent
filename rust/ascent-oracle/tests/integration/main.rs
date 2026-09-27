@@ -14,3 +14,5 @@ mod positive_closure;
 mod session_corpus;
 mod syntax;
 mod typed_rules;
+mod upstream_examples;
+mod var_points_to;

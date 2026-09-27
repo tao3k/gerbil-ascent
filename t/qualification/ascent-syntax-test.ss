@@ -130,6 +130,22 @@
          (fact (out (pat (x) x)))
          (bounds 4 4 8)))
        true))
+    (poo-flow-test-case "each wildcard ignores one column independently"
+      (let* ((result
+              (gerbil-ascent-evaluate-program
+               (ascent
+                (relation pair (left right) '((1 2) (2 3)))
+                (relation exists ())
+                ((exists) <-- (pair _ _))
+                (bounds 4 4 8)))))
+        (check-equal? ((.ref result 'rows-of) 'exists) '(())))
+      (check-exception
+       (gerbil-ascent-evaluate-program
+        (ascent
+         (relation out (value))
+         (fact (out _))
+         (bounds 4 4 8)))
+       true))
     (poo-flow-test-case "let and for destructure native Gerbil values"
       (let* ((result (ascent-pattern-clauses-evaluate '((1 2) (3 4))))
              (rows-of (.ref result 'rows-of)))

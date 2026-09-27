@@ -6,7 +6,7 @@
  (target_total . 700us)
  (regression_budget . 300us)
  (expected_over_input_budget . 0us)
- (sampleCount . 20)
+ (sampleCount . 1000)
  (targetRationale . "Append then withdraw one blocker in a recursive negation session, publishing both fixed points.")
  (unit . "us")
  (sourcePath . "t/scenarios/performance/ascent-nonpositive-session-update/benchmark.ss")

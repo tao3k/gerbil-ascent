@@ -6,7 +6,7 @@
  (target_total . 700us)
  (regression_budget . 300us)
  (expected_over_input_budget . 0us)
- (sampleCount . 20)
+ (sampleCount . 1000)
  (targetRationale . "Measure a two-relation recursive SCC whose first rule emits both a path and a witness.")
  (unit . "us")
  (sourcePath . "t/scenarios/performance/ascent-mutual-recursive-heads/benchmark.ss")

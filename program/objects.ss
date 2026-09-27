@@ -27,6 +27,7 @@
 (export gerbil-ascent-relation
         gerbil-ascent-lattice
         gerbil-ascent-variable
+        gerbil-ascent-wildcard
         gerbil-ascent-literal
         gerbil-ascent-expression
         gerbil-ascent-pattern
@@ -245,6 +246,10 @@
   (unless (symbol? name) (error "ASCENT variable name must be a symbol" name))
   (validate GerbilAscentTermContract
             (.o (:: @ Term.) kind: 'variable value: name)))
+
+(def (gerbil-ascent-wildcard)
+  (validate GerbilAscentTermContract
+            (.o (:: @ Term.) kind: 'wildcard value: #f)))
 
 (def (gerbil-ascent-literal literal-value)
   (validate GerbilAscentTermContract

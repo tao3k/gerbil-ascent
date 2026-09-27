@@ -39,6 +39,8 @@
              (value (car values))
              (kind (car term)))
         (case kind
+          ((wildcard)
+           (loop (cdr patterns) (cdr values) bindings))
           ((pattern)
            (let* ((payload (cdr term))
                   (matched ((vector-ref payload 1) value))
@@ -75,6 +77,8 @@
             (gerbil-ascent-expression-value (cdr term) environment))
            ((pattern)
             (error "ASCENT pattern is invalid in a rule head"))
+           ((wildcard)
+            (error "ASCENT wildcard is invalid in a rule head"))
            (else
             (let (binding (assq (cdr term) environment))
               (unless binding

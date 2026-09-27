@@ -79,6 +79,7 @@ program contract.
 | =((head ...) <-- clause ...)= | One rule head |
 | =(((head ...) ...) <-- clause ...)= | Multiple heads sharing one body |
 | =(name term ...)= | Positive relation atom |
+| =_= inside a body atom | Independent wildcard for that column; it neither binds nor requires equality with another =_= |
 | =(not (name term ...))= | Stratified negation |
 | =(guard (input ...) predicate)= | Scheme predicate over bound inputs |
 | =(bind output (input ...) procedure)= | Compute one output |
@@ -173,6 +174,7 @@ law evidence; the syntax alone cannot establish it.
 | =head;= and comma-separated heads | =(fact head)= / =(facts head ...)= | Rust differential for two fact heads |
 | =head,... <-- body,...;= | =((head ...) <-- clause ...)= | Mutual recursion and multi-head oracle |
 | Positive atom with repeated variable | =(r x x ...)= | Existing rule oracle |
+| Independent =_= wildcards | =(r _ _ ...)= | Full upstream =var_points_to= rule shape compared with Rust on empty, reference, and branching source snapshots; wildcard heads reject |
 | =!r(args)= | =(not (r args ...))= | Three-level stratification oracle |
 | =if expr= | =(if (bound ...) expression)= | Scheme expression and existing guard oracle |
 | =let pat=expr= | =(let (output ...) (bound ...) expr pattern)= | Scalar and destructured binding; Rust tuple differential |

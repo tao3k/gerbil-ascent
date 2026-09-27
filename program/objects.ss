@@ -21,6 +21,7 @@
                  GerbilAscentNegationContract
                  GerbilAscentAggregateContract
                  GerbilAscentRuleContract
+                 GerbilAscentFragmentContract
                  GerbilAscentProgramContract))
 
 (export gerbil-ascent-relation
@@ -37,6 +38,7 @@
         gerbil-ascent-aggregate
         gerbil-ascent-clause-plan
         gerbil-ascent-rule
+        gerbil-ascent-fragment
         gerbil-ascent-program)
 
 (def Relation. (.ref GerbilAscentRelationContract 'proto))
@@ -49,6 +51,7 @@
 (def Negation. (.ref GerbilAscentNegationContract 'proto))
 (def Aggregate. (.ref GerbilAscentAggregateContract 'proto))
 (def Rule. (.ref GerbilAscentRuleContract 'proto))
+(def Fragment. (.ref GerbilAscentFragmentContract 'proto))
 (def Program. (.ref GerbilAscentProgramContract 'proto))
 
 ;;; Clause lowering has one open receiver axis. The evaluator consumes the
@@ -316,6 +319,11 @@
 (def (gerbil-ascent-rule head-atoms body-atoms)
   (validate GerbilAscentRuleContract
             (.o (:: @ Rule.) heads: head-atoms body: body-atoms)))
+
+(def (gerbil-ascent-fragment relation-values rule-values)
+  (validate GerbilAscentFragmentContract
+            (.o (:: @ Fragment.)
+                relations: relation-values rules: rule-values)))
 
 (def (gerbil-ascent-program declared-relations declared-rules
                                      input-fact-limit derived-fact-limit

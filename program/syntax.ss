@@ -4,12 +4,13 @@
 
 ;;; Hygienic source forms lower to the existing POO contracts and evaluator.
 (import "objects.ss"
+        (only-in :clan/poo/object .ref)
         (only-in :gerbil-ascent/table/provider
                  gerbil-ascent-hash-index-provider)
         (only-in :gerbil-ascent/table/storage
                  gerbil-ascent-set-storage-provider))
 
-(export ascent)
+(export ascent ascent-fragment)
 
 (defsyntax (ascent-term stx)
   (syntax-case stx (lit expr pat)
@@ -191,69 +192,103 @@
      (syntax (list (ascent-rule (head <-- done ...)))))))
 
 (defsyntax (ascent-collect stx)
-  (syntax-case stx (relation lattice index storage fact facts bounds <--)
-    ((_ (declared ...) (lowered ...)
+  (syntax-case stx (program fragment relation lattice index storage
+                            fact facts include bounds <--)
+    ((_ mode (declared ...) (lowered ...)
         (lattice name (column ...) source join (index provider)) clause ...)
      (syntax (ascent-collect
-              (declared ... (ascent-lattice
-                             (name (column ...) source join (index provider))))
+              mode
+              (declared ...
+                        (list (ascent-lattice
+                               (name (column ...) source join
+                                     (index provider)))))
               (lowered ...) clause ...)))
-    ((_ (declared ...) (lowered ...)
+    ((_ mode (declared ...) (lowered ...)
         (lattice name (column ...) source join) clause ...)
      (syntax (ascent-collect
-              (declared ... (ascent-lattice (name (column ...) source join)))
+              mode
+              (declared ...
+                        (list (ascent-lattice (name (column ...) source join))))
               (lowered ...) clause ...)))
-    ((_ (declared ...) (lowered ...)
+    ((_ mode (declared ...) (lowered ...)
         (relation name (column ...) source (index provider)
                   (storage storage-provider)) clause ...)
      (syntax (ascent-collect
-              (declared ... (ascent-relation
-                             (name (column ...) source
-                                   (index provider) (storage storage-provider))))
+              mode
+              (declared ...
+                        (list (ascent-relation
+                               (name (column ...) source
+                                     (index provider)
+                                     (storage storage-provider)))))
               (lowered ...) clause ...)))
-    ((_ (declared ...) (lowered ...)
+    ((_ mode (declared ...) (lowered ...)
         (relation name (column ...) source (index provider)) clause ...)
      (syntax (ascent-collect
-              (declared ... (ascent-relation
-                             (name (column ...) source (index provider))))
+              mode
+              (declared ...
+                        (list (ascent-relation
+                               (name (column ...) source (index provider)))))
               (lowered ...) clause ...)))
-    ((_ (declared ...) (lowered ...)
+    ((_ mode (declared ...) (lowered ...)
         (relation name (column ...) source) clause ...)
      (syntax (ascent-collect
-              (declared ... (ascent-relation (name (column ...) source)))
+              mode
+              (declared ...
+                        (list (ascent-relation (name (column ...) source))))
               (lowered ...) clause ...)))
-    ((_ (declared ...) (lowered ...)
+    ((_ mode (declared ...) (lowered ...)
         (relation name (column ...)) clause ...)
      (syntax (ascent-collect
-              (declared ... (ascent-relation (name (column ...))))
+              mode
+              (declared ...
+                        (list (ascent-relation (name (column ...)))))
               (lowered ...) clause ...)))
-    ((_ (declared ...) (lowered ...)
+    ((_ mode (declared ...) (lowered ...)
+        (include imported-fragment) clause ...)
+     (identifier? (syntax imported-fragment))
+     (syntax (ascent-collect
+              mode
+              (declared ... (.ref imported-fragment 'relations))
+              (lowered ... (.ref imported-fragment 'rules))
+              clause ...)))
+    ((_ mode (declared ...) (lowered ...)
         (head <-- body ...) clause ...)
      (syntax (ascent-collect
+              mode
               (declared ...)
               (lowered ... (ascent-rule-family head () (body ...)))
               clause ...)))
-    ((_ (declared ...) (lowered ...)
+    ((_ mode (declared ...) (lowered ...)
         (fact (name term ...)) clause ...)
      (syntax (ascent-collect
+              mode
               (declared ...)
               (lowered ... (list (ascent-rule ((name term ...)))))
               clause ...)))
-    ((_ (declared ...) (lowered ...)
+    ((_ mode (declared ...) (lowered ...)
         (facts (name term ...) ...) clause ...)
      (syntax (ascent-collect
+              mode
               (declared ...)
               (lowered ...
                        (list (gerbil-ascent-rule
                               (list (ascent-atom (name term ...)) ...) [])))
               clause ...)))
-    ((_ (declared ...) (lowered ...)
+    ((_ program (declared ...) (lowered ...)
         (bounds input derived output))
      (syntax (gerbil-ascent-program
-              (list declared ...) (append lowered ...)
-              input derived output)))))
+              (append declared ...) (append lowered ...)
+              input derived output)))
+    ((_ fragment (declared ...) (lowered ...))
+     (syntax (gerbil-ascent-fragment
+              (append declared ...) (append lowered ...))))))
 
 (defsyntax (ascent stx)
   (syntax-case stx ()
     ((_ clause ...)
-     (syntax (ascent-collect () () clause ...)))))
+     (syntax (ascent-collect program () () clause ...)))))
+
+(defsyntax (ascent-fragment stx)
+  (syntax-case stx ()
+    ((_ clause ...)
+     (syntax (ascent-collect fragment () () clause ...)))))

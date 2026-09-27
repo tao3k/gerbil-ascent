@@ -28,9 +28,19 @@ C4 decides declaration precedence. It does not perform relational joins,
 semi-naive closure, safety validation, or provenance admission. Those remain
 with the ASCENT evaluator, Core contracts, and the appropriate downstream
 owner. Future imported rule fragments should expose POO declaration objects
-or hygienic Gerbil macros; their composition must define relation identity,
-duplicate declaration handling, and source diagnostics before it is admitted
-as a DSL form.
+or hygienic Gerbil macros. Included fragments use the evaluator's existing
+duplicate-relation rejection; broader generated fragments still need source
+diagnostics before parity can be claimed.
+
+An =ascent-fragment= is a validated POO object containing declarations and
+rules. Import it from a Gerbil module and use =(include fragment-name)= in
+an =ascent= program. The included fragment's relation and rule lists enter at
+the include position. Native =.o= / =.mix= may refine the fragment before
+inclusion. The fragment identifier is evaluated as a lexical Scheme binding,
+so its expressions keep their module origin; Rust =include_source!= instead
+resolves copied tokens in the containing Rust program. This difference is
+intentional and covered by a Rust/Scheme output comparison, not a claim of
+identical macro hygiene.
 
 The left arrow follows the rule direction in Rust Ascent and the A22 paper.
 Scheme syntax adds lexical capture. Source rows and bounds are evaluated at
@@ -70,6 +80,8 @@ program contract.
 | =(aggregate output operation (input ...) (name term ...))= | Aggregate rows of one relation |
 | =(aggregate (output ...) operation (input ...) (name term ...) pattern)= | Match each aggregate result and bind multiple outputs |
 | =(bounds input derived output)= | Existing finite program limits |
+| =(ascent-fragment clause ...)= | Exportable POO Relation/Rule fragment without program bounds |
+| =(include fragment-name)= | Include a lexical Gerbil module fragment in declaration order |
 | =(lattice name (column ...) source join [index])= | POO lattice declaration |
 | =(fact head)= / =(facts head ...)= | Rust rules with an empty body |
 | =(or (and clause ...) ...)= | Finite body disjunction, lowered to ordinary rules |
@@ -157,8 +169,8 @@ law evidence; the syntax alone cannot establish it.
 | Body argument expression | =(expr (bound ...) expression)= | Same-atom and indexed prior-bound qualification; broader Rust differential open |
 | =?pat= body argument | =(r (pat (output ...) pattern))= | Inline =Some= success/failure Rust differential; native Gerbil pattern semantics |
 | Inline =if= / =let= after atom arguments | Separate following clause | Selected output parity; source position diagnostics open |
-| Embedded macro definition/invocation | Native Gerbil =defsyntax= and imported rule fragments | Local fragment composition and hygiene differential open |
-| =include_source!= | Gerbil module import | Program inclusion and diagnostics open |
+| Embedded macro definition/invocation | Native Gerbil =defsyntax= and imported rule fragments | Inline Rust macro definition/invocation and diagnostics open |
+| =include_source!= | Imported =ascent-fragment= plus =(include name)= | Recursive closure Rust differential; Scheme preserves module lexical scope rather than Rust token-copy scope |
 | Struct signature, generics, visibility | Gerbil module export and POO type contract | Generated API/type parity open |
 | Other attributes | Named POO contract or execution option | Attribute-by-attribute inventory open |
 | =ascent_par!= and =ascent_run_par!= | Execution policy | Intra-program parallelism open |

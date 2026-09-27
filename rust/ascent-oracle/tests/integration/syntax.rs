@@ -6,6 +6,31 @@
 use super::common::scheme_output;
 use ascent::ascent;
 
+mod reusable {
+    ascent::ascent_source! { closure_source:
+        relation edge(u32, u32);
+        relation closure(u32, u32);
+        closure(x, y) <-- edge(x, y);
+        closure(x, z) <-- closure(x, y), edge(y, z);
+    }
+}
+
+fn rust_closure_rows(edges: &[(u32, u32)]) -> Vec<String> {
+    ascent! {
+        include_source!(reusable::closure_source);
+    }
+    let mut program = AscentProgram {
+        edge: edges.to_vec(),
+        ..AscentProgram::default()
+    };
+    program.run();
+    program
+        .closure
+        .iter()
+        .map(|(from, to)| format!("closure\t{from}\t{to}"))
+        .collect()
+}
+
 fn rust_rows(edges: &[(u32, u32)]) -> Vec<String> {
     ascent! {
         relation edge(u32, u32);
@@ -77,6 +102,7 @@ fn rust_rows(edges: &[(u32, u32)]) -> Vec<String> {
             .iter()
             .map(|(from, to)| format!("for-pair\t{from}\t{to}")),
     );
+    rows.extend(rust_closure_rows(edges));
     rows.sort_unstable();
     rows
 }

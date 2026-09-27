@@ -24,6 +24,7 @@
         GerbilAscentNegationContract
         GerbilAscentAggregateContract
         GerbilAscentRuleContract
+        GerbilAscentFragmentContract
         GerbilAscentProgramContract
         GerbilAscentSessionContract)
 
@@ -200,6 +201,11 @@
                         (andmap (lambda (rule)
                                   (element? GerbilAscentRuleContract rule))
                                 value)))))
+
+(define-type (GerbilAscentFragmentContract @ PooFlowNativeObjectContract.)
+  identity: 'ascent/fragment
+  proto: (.o)
+  responsibilities: (.o relations: +relations+ rules: +rules+))
 
 (define-type (GerbilAscentProgramContract @ PooFlowNativeObjectContract.)
   identity: 'ascent/program

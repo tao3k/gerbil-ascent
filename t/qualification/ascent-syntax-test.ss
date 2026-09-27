@@ -3,12 +3,15 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 (import (only-in :std/test check-equal? check-exception test-suite)
-        (only-in :clan/poo/object .ref)
+        (only-in :clan/poo/object .o .ref)
         (only-in :core/observability/testing-case poo-flow-test-case)
         (only-in :gerbil-ascent/t/qualification/ascent-syntax-fixture
                  ascent-syntax-evaluate ascent-expression-evaluate
                  ascent-index-expression-evaluate
-                 ascent-pattern-clauses-evaluate)
+                 ascent-pattern-clauses-evaluate
+                 ascent-included-fragment-evaluate)
+        (only-in :gerbil-ascent/t/qualification/ascent-fragment-source
+                 ascent-reach-fragment)
         (only-in :gerbil-ascent/t/qualification/ascent-index-program-fixture
                  ascent-index-alist-provider)
         (only-in :gerbil-ascent/program/interface
@@ -182,4 +185,35 @@
         (gerbil-ascent-session-append-source! session 'input '(2))
         (check-equal?
          ((.ref (gerbil-ascent-session-run session) 'rows-of) 'output)
-         '((1) (2)))))))
+         '((1) (2)))))
+    (poo-flow-test-case "imported Scheme fragment closes recursive path"
+      (let (rows ((.ref
+                   (ascent-included-fragment-evaluate
+                    '((1 2) (2 3) (3 1)))
+                   'rows-of)
+                  'closure))
+        (check-equal? (length rows) 9)
+        (check-equal? (not (not (member '(1 1) rows))) #t)))
+    (poo-flow-test-case "POO fragment refinement changes included source"
+      (let* ((base (ascent-reach-fragment '((1 2))))
+             (relation-values (.ref base 'relations))
+             (edge (car relation-values))
+             (refined
+              (.o (:: @ base)
+                  relations:
+                  (cons (.o (:: @ edge) rows: '((1 2) (2 3)))
+                        (cdr relation-values))))
+             (result
+              (gerbil-ascent-evaluate-program
+               (ascent (include refined) (bounds 8 16 24)))))
+        (check-equal? ((.ref result 'rows-of) 'closure)
+                      '((1 2) (2 3) (1 3)))))
+    (poo-flow-test-case "included relation identity rejects duplicates"
+      (let (source-fragment (ascent-reach-fragment '((1 2))))
+        (check-exception
+         (gerbil-ascent-evaluate-program
+          (ascent
+           (include source-fragment)
+           (relation edge (from to))
+           (bounds 8 16 24)))
+         true)))))

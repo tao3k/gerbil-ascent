@@ -5,7 +5,8 @@
 (import (only-in :clan/poo/object .ref)
         (only-in :gerbil-ascent/t/qualification/ascent-syntax-fixture
                  ascent-syntax-parity-evaluate
-                 ascent-pattern-clauses-evaluate))
+                 ascent-pattern-clauses-evaluate
+                 ascent-included-fragment-evaluate))
 
 (export main)
 
@@ -15,7 +16,9 @@
   (let* ((edges (read))
          (rows-of (.ref (ascent-syntax-parity-evaluate edges) 'rows-of))
          (pattern-rows-of
-          (.ref (ascent-pattern-clauses-evaluate edges) 'rows-of)))
+          (.ref (ascent-pattern-clauses-evaluate edges) 'rows-of))
+         (included-rows-of
+          (.ref (ascent-included-fragment-evaluate edges) 'rows-of)))
     (for-each
      (lambda (name)
        (for-each
@@ -34,5 +37,11 @@
           (newline))
         (pattern-rows-of name)))
      '(let-pair for-pair))
+    (for-each
+     (lambda (row)
+       (display "closure")
+       (for-each (lambda (column) (display #\tab) (display column)) row)
+       (newline))
+     (included-rows-of 'closure))
     (displayln "END")
     (force-output)))

@@ -1,0 +1,6 @@
+// SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+// SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+//! ASP Rust package policy for the independent Rust Ascent oracle.
+
+asp_rust::asp_rust_cargo_test_gate!();

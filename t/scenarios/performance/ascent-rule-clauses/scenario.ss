@@ -33,7 +33,7 @@
     (unless (and (= (length (rows-of 'hot)) 1)
                  (= (length (rows-of 'choice)) 6)
                  (= (length (rows-of 'generated)) 3)
-                 (equal? (rows-of 'dependent) '((1 2) (2 4) (3 6)))
+                 (equal? (rows-of 'dependent) '((2 0) (3 1) (3 0)))
                  (= (length (rows-of 'successor)) 3)
                  (= (length (rows-of 'blocked)) 1)
                  (= (length (rows-of 'allowed)) 2)

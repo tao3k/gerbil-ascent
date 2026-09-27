@@ -77,7 +77,7 @@
         (check-equal? (not (not (member '(1 2) (rows result 'choice)))) #t)
         (check-equal? (member '(1 1) (rows result 'choice)) #f)
         (check-equal? (length (rows result 'generated)) 3)
-        (check-equal? (rows result 'dependent) '((1 2) (2 4) (3 6)))
+        (check-equal? (rows result 'dependent) '((2 0) (3 1) (3 0)))
         (check-equal? (length (rows result 'successor)) 3)
         (check-equal? (not (not (member '(3 4)
                                         (rows result 'successor)))) #t)
@@ -240,7 +240,8 @@
         (gerbil-ascent-program
          (list (gerbil-ascent-relation 'out 1 []))
          (list (r (a 'out (v 'x))
-                  (gerbil-ascent-generator 'x [] (lambda () '#(1)))))
+                  (gerbil-ascent-generator 'x []
+                                           (lambda () 'not-iterable))))
          2 2 3)) true)
       (check-exception
        (gerbil-ascent-evaluate-program

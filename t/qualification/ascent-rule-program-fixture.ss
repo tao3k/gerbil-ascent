@@ -2,7 +2,8 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(import (only-in :gerbil-ascent/program/interface
+(import (only-in :std/iter in-range)
+        (only-in :gerbil-ascent/program/interface
                  gerbil-ascent-relation gerbil-ascent-variable
                  gerbil-ascent-atom gerbil-ascent-guard
                  gerbil-ascent-generator gerbil-ascent-binding
@@ -51,11 +52,11 @@
             (gerbil-ascent-generator 'y [] (lambda () '(1 2 3)))
             (gerbil-ascent-guard '(x y) (lambda (x y) (not (= x y)))))
          (r (a 'generated (v 'x))
-            (gerbil-ascent-generator 'x [] (lambda () '(1 2 3))))
+            (gerbil-ascent-generator 'x [] (lambda () '#(1 2 3))))
          (r (a 'dependent (v 'x) (v 'y))
             (a 'node (v 'x))
             (gerbil-ascent-generator 'y '(x)
-                                     (lambda (x) (list (* x 2)))))
+                                     (lambda (x) (in-range 0 (- x 1)))))
          (r (a 'successor (v 'x) (v 'y))
             (a 'node (v 'x))
             (gerbil-ascent-binding 'y '(x) (lambda (x) (+ x 1))))

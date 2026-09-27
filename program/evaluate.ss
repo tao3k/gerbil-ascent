@@ -6,6 +6,7 @@
 ;;; session; public declarations and returned snapshots are POO values.
 (import (only-in :clan/poo/object .o .ref object?)
         (only-in :clan/poo/mop validate)
+        :std/iter
         (only-in "objects.ss" gerbil-ascent-clause-plan)
         (only-in "types.ss" GerbilAscentSessionContract)
         (only-in "funs.ss" gerbil-ascent-rule-strata
@@ -526,15 +527,11 @@
                     (let (values (apply (vector-ref clause 3)
                                          (clause-inputs (vector-ref clause 2)
                                                         environment)))
-                      (unless (list? values)
-                        (error "ASCENT generator must return a list" values))
-                      (for-each
-                       (lambda (value)
-                         (visit-body (cdr body) delta-at depth
-                                     (cons (cons (vector-ref clause 1) value)
-                                           environment)
-                                     consume))
-                       values)))
+                      (for (value values)
+                        (visit-body (cdr body) delta-at depth
+                                    (cons (cons (vector-ref clause 1) value)
+                                          environment)
+                                    consume))))
                    ((eq? (vector-ref clause 0) 'binding)
                     (let (value (apply (vector-ref clause 3)
                                        (clause-inputs (vector-ref clause 2)

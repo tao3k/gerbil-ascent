@@ -75,7 +75,7 @@ result, while positive relation-atom rules consume appended source deltas.
 | Multiple heads, relation clauses, repeated variables, joins | =program/= | positive generic multi-head rules, joins and repeated-variable equality pass selected Rust oracle fixtures; one recursive SCC rule emits both a path and a unary witness, with a selected 544.178 us Linux SS p95 | arbitrary body shape, invalid-program corpus and wider performance receipts |
 | Semi-naive least fixed point, dependencies and strata | =program/=, =core/= | generic recursive path supports positive and negative strata; a two-relation mutually recursive SCC with cyclic and reordered sources matches selected Rust fixed-point snapshots, including a second head on one recursive rule | broader SCC/rule order, invalid-program and termination corpus |
 | Repeated =run()= after source relation updates | =program/= | Retained Scheme session reuses rows, indexes and BYODS state for positive atom-only source additions; one recursive multi-head SCC directly compares retained Scheme and Rust sessions through unchanged, duplicate, cycle and branching updates. A 20-sample Linux SS update gate passes at 581.207 µs p95. Source deletion and nonpositive updates require fresh evaluation | compare wider positive corpus and update shapes; characterize Rust retained-state behavior for negation and aggregates |
-| Conditions, bindings and generators | =program/=, =core/= | generic POO guard, =let= binding and finite list generator clauses with ordered binding checks; a generator depending on an earlier atom binding matches Rust =std::iter::once= | broader iterator/pattern shapes and scale receipts |
+| Conditions, bindings and generators | =program/=, =core/= | generic POO guard and =let= binding; generator clauses stream Gerbil Standard Library iterables with ordered binding checks. Lists, vectors, and a bound-dependent range including zero-, one-, and two-element results match selected Rust iterators | broader iterator and pattern shapes plus scale receipts |
 | Stratified negation | =program/= | 3-level negated relation fixture and negative-cycle rejection pass selected Rust oracle comparison | broader safe/unsafe programs and performance receipts |
 | Aggregation and custom aggregators | =program/= | count, sum, min, max, mean and custom iterator aggregators pass empty, duplicate-input and grouped Rust fixtures | recursive aggregate corpus, broader type behavior and performance receipts |
 | Lattice declarations and recursive joins | =program/=, =table/= | POO lattice declaration with user join; selected recursive shortest-path and duplicate-key snapshots match Rust | broader join families, lattice/negation composition, invalid join laws and scale receipts |
@@ -87,8 +87,8 @@ result, while positive relation-atom rules consume appended source deltas.
 The current Rust oracle in =rust/ascent-oracle/= covers positive binary
 closure, guarded filter/copy/join, shortest source support, and selected
 arbitrary-column rules, =if= guards, =let= bindings, =for= generators, stratified negation, selected aggregation and shortest-path lattice joins across
-source snapshots. Scheme generators currently return finite lists and name
-their input variables explicitly. These fixtures do
+source snapshots. Scheme generators consume Gerbil Standard Library iterables
+and name their input variables explicitly. These fixtures do
 not close the rows above. =candidate/= and
 =interface/= hold existing experimental projections; their MRR or Agent use
 cannot substitute for Rust feature parity.
@@ -98,9 +98,10 @@ fast path and generic rule path compare their complete sorted closure with
 the pinned Rust oracle for each snapshot. These finite graphs check boundary
 and deduplication behavior; they do not establish arbitrary-graph parity.
 The positive generic fixture also compares =dependent(x,y)= from =node(x)=
-and a one-element iterator computed from =x=. This exercises a generator
-whose input is bound by the preceding atom; its three rows fit within the
-same 32-fact derived budget used by the existing fixture.
+and the Standard Library =in-range= iterator bounded by =x=. The corresponding
+Rust =Range= yields zero, one, or two values for the three source nodes. The
+same fixture exercises a vector-backed generator and the original list-backed
+generator; all remain within the unchanged 32-fact derived budget.
 The nullary-gate fixture checks absent and present zero-column facts with
 boolean and string data, duplicate input rows, and empty strings against
 the pinned Rust Ascent 0.8.0 oracle. The macro's generated Rust code emits

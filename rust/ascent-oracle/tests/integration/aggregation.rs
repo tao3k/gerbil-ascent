@@ -109,3 +109,64 @@ fn builtin_and_custom_aggregators_match_ascent() {
         assert_eq!(rows, ascent_aggregate_rows(values), "values: {values:?}");
     }
 }
+
+fn ascent_derived_aggregate_rows(edges: &[(u32, u32)], roots: &[u32]) -> Vec<String> {
+    ascent! {
+        relation edge(u32, u32);
+        relation root(u32);
+        relation path(u32, u32);
+        relation reach_count(u32, usize);
+        path(source, target) <-- edge(source, target);
+        path(source, target) <-- path(source, middle), edge(middle, target);
+        reach_count(source, total) <-- root(source), agg total = count() in path(source, _);
+    }
+    let mut program = AscentProgram {
+        edge: edges.to_vec(),
+        root: roots.iter().copied().map(|node| (node,)).collect(),
+        ..AscentProgram::default()
+    };
+    program.run();
+    let mut rows: Vec<_> = program
+        .path
+        .iter()
+        .map(|(from, to)| format!("path\t{from}\t{to}"))
+        .chain(
+            program
+                .reach_count
+                .iter()
+                .map(|(source, total)| format!("reach-count\t{source}\t{total}")),
+        )
+        .collect();
+    rows.sort_unstable();
+    rows
+}
+
+#[test]
+fn aggregate_over_recursive_closure_matches_ascent() {
+    let cases: &[(&[(u32, u32)], &[u32])] = &[
+        (&[], &[0, 5]),
+        (&[(0, 1), (1, 2)], &[0, 1, 2, 5]),
+        (&[(0, 1), (1, 2), (2, 0)], &[0, 1, 2, 5]),
+        (&[(0, 1), (0, 1), (1, 2), (2, 3)], &[0, 1, 3, 5]),
+    ];
+    for &(edges, roots) in cases {
+        let edge_input = edges
+            .iter()
+            .map(|(from, to)| format!("({from} {to})"))
+            .collect::<Vec<_>>()
+            .join(" ");
+        let root_input = roots
+            .iter()
+            .map(u32::to_string)
+            .collect::<Vec<_>>()
+            .join(" ");
+        let output = scheme_output(
+            "derived-aggregate-rows",
+            &format!("(({edge_input}) ({root_input}))\n"),
+        );
+        let mut rows: Vec<_> = output.lines().map(str::to_owned).collect();
+        assert_eq!(rows.pop().as_deref(), Some("END"));
+        rows.sort_unstable();
+        assert_eq!(rows, ascent_derived_aggregate_rows(edges, roots));
+    }
+}

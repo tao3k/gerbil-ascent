@@ -7,7 +7,8 @@
         (only-in :core/observability/testing-case
                  poo-flow-test-case)
         (only-in :gerbil-ascent/t/qualification/ascent-aggregate-program-fixture
-                 ascent-aggregate-fixture-evaluate)
+                 ascent-aggregate-fixture-evaluate
+                 ascent-derived-aggregate-fixture-evaluate)
         (only-in :gerbil-ascent/program/interface
                  gerbil-ascent-relation gerbil-ascent-variable
                  gerbil-ascent-atom gerbil-ascent-rule
@@ -41,6 +42,16 @@
         (check-equal? (rows result 'total) '((0)))
         (check-equal? (rows result 'cardinality) '((0)))
         (check-equal? (rows result 'custom) [])))
+    (poo-flow-test-case "aggregate a completed recursive closure in a higher stratum"
+      (let (result (ascent-derived-aggregate-fixture-evaluate
+                   '((0 1) (1 2) (2 0)) '(0 1 2 5)))
+        (check-equal? (length (rows result 'path)) 9)
+        (check-equal? (length (rows result 'reach-count)) 4)
+        (for-each
+         (lambda (row)
+           (check-equal? (not (not (member row (rows result 'reach-count))))
+                         #t))
+         '((0 3) (1 3) (2 3) (5 0)))))
     (poo-flow-test-case "recursive aggregate dependency rejects"
       (check-exception
        (gerbil-ascent-evaluate-program

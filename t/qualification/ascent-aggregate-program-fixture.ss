@@ -11,7 +11,9 @@
                  gerbil-ascent-min gerbil-ascent-max
                  gerbil-ascent-mean))
 
-(export ascent-aggregate-fixture-evaluate)
+(export ascent-aggregate-fixture-evaluate
+        ascent-derived-aggregate-program
+        ascent-derived-aggregate-fixture-evaluate)
 
 (def (v name) (gerbil-ascent-variable name))
 (def (a name . terms) (gerbil-ascent-atom name terms))
@@ -52,3 +54,27 @@
                       (let (values (map car tuples))
                         (list (apply min values) (apply max values))))))))
     32 32 64)))
+
+(def (ascent-derived-aggregate-program edges roots)
+  (gerbil-ascent-program
+    (list (gerbil-ascent-relation 'edge 2 edges)
+          (gerbil-ascent-relation 'root 1 (map list roots))
+          (gerbil-ascent-relation 'path 2 [])
+          (gerbil-ascent-relation 'reach-count 2 []))
+    (list (r (a 'path (v 'source) (v 'target))
+             (a 'edge (v 'source) (v 'target)))
+          (gerbil-ascent-rule
+           (list (a 'path (v 'source) (v 'target)))
+           (list (a 'path (v 'source) (v 'middle))
+                 (a 'edge (v 'middle) (v 'target))))
+          (gerbil-ascent-rule
+           (list (a 'reach-count (v 'source) (v 'total)))
+           (list (a 'root (v 'source))
+                 (gerbil-ascent-aggregate
+                  'total 'path (list (v 'source) (v 'target))
+                  [] gerbil-ascent-count))))
+    32 128 160))
+
+(def (ascent-derived-aggregate-fixture-evaluate edges roots)
+  (gerbil-ascent-evaluate-program
+   (ascent-derived-aggregate-program edges roots)))

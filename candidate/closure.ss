@@ -91,8 +91,9 @@
            (expression
             (.mix gerbil-ascent-table-expression-prototype
                   (.o (source-pairs edges) (radix width))))
-           (pairs (.ref expression 'shortest-distance-pairs))
-           (distance-of (.ref expression 'shortest-distance-of))
+           (projection (.ref expression 'shortest-distance-projection))
+           (pairs (.ref projection 'pairs))
+           (distance-of (.ref projection 'distance-of))
            (all
             (let loop ((remaining pairs) (origin #f) (supports #f) (result []))
               (if (null? remaining)

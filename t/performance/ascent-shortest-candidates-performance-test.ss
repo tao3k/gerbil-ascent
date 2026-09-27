@@ -39,6 +39,6 @@
           (check-equal? (.ref (list-ref items 18) 'pair) 19)
           (check-equal? (.ref (list-ref items 18) 'distance) 19)
           (check-equal? (.ref (list-ref items 18) 'support) (iota 19)))
-        (check-equal? (benchmark-receipt-pass? receipt) #t)
         (display "[gerbil-ascent-benchmark] ascent-shortest-candidates p95=")
-        (displayln (benchmark-fixture-ref receipt 'elapsed))))))
+        (displayln (benchmark-fixture-ref receipt 'elapsed))
+        (check-equal? (benchmark-receipt-pass? receipt) #t)))))

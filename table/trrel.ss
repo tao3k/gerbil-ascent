@@ -2,15 +2,16 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-;;; Per-relation transitive closure state. Only incoming edges are indexed;
-;;; emitted closure rows stay in the fact set for duplicate suppression.
+;;; Per-relation transitive closure state. Index emitted reachability pairs so
+;;; a new edge combines its known predecessors and successors directly.
+(import (only-in :std/hash/misc hash-ensure-modify!))
+
 (export gerbil-ascent-trrel-state
         gerbil-ascent-trrel-extension
         gerbil-ascent-trrel-uf-extension)
 
 (def (gerbil-ascent-trrel-state)
-  (vector (make-hash-table) (make-hash-table) (make-hash-table)
-          (make-hash-table) 0))
+  (vector (make-hash-table) (make-hash-table) (make-hash-table)))
 
 (def (gerbil-ascent-trrel-extend state row budget reflexive?)
   (let* ((width (length row))
@@ -30,41 +31,42 @@
          (safe-budget? #f))
     (def (node-key node)
       (if (= width 3) (cons group node) node))
-    (def (reach root arcs)
-      (let* ((seen (vector-ref state 3))
-             (mark (+ 1 (vector-ref state 4)))
-             (todo (list root))
-             (nodes []))
-        (vector-set! state 4 mark)
-        (let loop ()
-          (unless (null? todo)
-            (let (node (car todo))
-              (set! todo (cdr todo))
-              (unless (equal? (hash-get seen node) mark)
-                (hash-put! seen node mark)
-                (set! nodes (cons node nodes))
-                (for-each
-                 (lambda (neighbor)
-                   (unless (equal? (hash-get seen neighbor) mark)
-                     (set! todo (cons neighbor todo))))
-                 (or (hash-get arcs (node-key node)) []))))
-            (loop)))
-        nodes))
+    (def (fact from to)
+      (if (= width 3) (list group from to) (list from to)))
+    (def (with-root node neighbors)
+      (if (hash-get known (fact node node))
+        neighbors
+        (cons node neighbors)))
+    (def (commit-fact! row)
+      (let* ((pair (if (= width 3) (cdr row) row))
+             (from (car pair))
+             (to (cadr pair)))
+        (hash-put! known row #t)
+        (hash-ensure-modify! successors (node-key from)
+                             (lambda () [])
+                             (lambda (targets) (cons to targets)))
+        (hash-ensure-modify! predecessors (node-key to)
+                             (lambda () [])
+                             (lambda (sources) (cons from sources)))))
     (def (emit! from to)
-      (let (fact (if (= width 3)
-                  (list group from to)
-                  (list from to)))
-        (unless (or (hash-get known fact)
-                    (and planned (hash-get planned fact)))
+      (let (row (fact from to))
+        (unless (or (hash-get known row)
+                    (and planned (hash-get planned row)))
           (unless safe-budget?
             (set! planned-count (+ planned-count 1))
             (when (> planned-count budget)
               (error "ASCENT trrel output fact budget exceeded"))
-            (hash-put! planned fact #t))
-          (when safe-budget? (hash-put! known fact #t))
-          (set! added (cons fact added)))))
-    (let ((from-nodes (if new-edge? (reach left predecessors) []))
-          (to-nodes (if new-edge? (reach right successors) [])))
+            (hash-put! planned row #t))
+          (when safe-budget? (commit-fact! row))
+          (set! added (cons row added)))))
+    (let ((from-nodes
+           (if new-edge?
+             (with-root left (or (hash-get predecessors (node-key left)) []))
+             []))
+          (to-nodes
+           (if new-edge?
+             (with-root right (or (hash-get successors (node-key right)) []))
+             [])))
       ;; A loose upper bound avoids an allocation and preflight pass for the
       ;; common case while still proving that no budget failure can occur.
       (set! safe-budget?
@@ -87,14 +89,7 @@
       (emit! right right))
     ;; Commit only after all new rows fit the caller's budget.
     (unless safe-budget?
-      (for-each (lambda (fact) (hash-put! known fact #t)) added))
-    (when new-edge?
-      (let ((left-key (node-key left))
-            (right-key (node-key right)))
-        (hash-put! successors left-key
-                   (cons right (or (hash-get successors left-key) [])))
-        (hash-put! predecessors right-key
-                   (cons left (or (hash-get predecessors right-key) [])))))
+      (for-each commit-fact! added))
     (reverse added)))
 
 (def (gerbil-ascent-trrel-extension state _all _pending row budget)

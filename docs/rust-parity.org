@@ -213,8 +213,12 @@ run measured 3.508 ms p95. Three local runs after the change measured 450,
 448 and 965 us p95, all below its 1 ms budget. These local samples do not
 establish a cross-platform or large-scale performance bound.
 
-The =trrel= and =trrel_uf= Providers now record accepted predecessors and
-successors per relation run. Their 20-edge directed and reflexive closures
+The =trrel= and =trrel_uf= Providers now index emitted reachability pairs by
+predecessor and successor per relation run. A new edge combines the already
+known predecessors of its left endpoint and successors of its right endpoint;
+it no longer searches the input-edge graph for each insertion. The Provider
+preflights any batch whose upper bound exceeds the remaining fact budget
+before committing a new pair to either index. Their 20-edge directed and reflexive closures
 produce 210 and 231 facts and match the pinned Rust oracle. The Rust
 differential also compares binary/grouped cycle and explicit-self snapshots;
 four concurrent Scheme evaluations verify that Provider state is not shared.

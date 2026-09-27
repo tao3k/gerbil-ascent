@@ -51,6 +51,8 @@ existing program contract.
 | =(or (and clause ...) ...)= | Finite body disjunction, lowered to ordinary rules |
 | =(if (input ...) expression)= | Scheme predicate over bound inputs |
 | =(let output (input ...) expression)= | Compute a bound output |
+| =(let (output ...) (input ...) expression pattern)= | Destructure a computed value with an irrefutable native Gerbil pattern |
+| =(for (output ...) (input ...) expression pattern)= | Destructure each generated value with a native Gerbil pattern |
 | =(if-let (output ...) (input ...) expression pattern)= | Native Gerbil match; failed pattern drops the candidate |
 | =(match (output ...) (input) pattern)= | Destructure one bound value with native Gerbil match |
 | =(expr (bound ...) expression)= | Head or body atom value computed from named bindings |
@@ -122,8 +124,8 @@ law evidence; the syntax alone cannot establish it.
 | Positive atom with repeated variable | =(r x x ...)= | Existing rule oracle |
 | =!r(args)= | =(not (r args ...))= | Three-level stratification oracle |
 | =if expr= | =(if (bound ...) expression)= | Scheme expression and existing guard oracle |
-| =let pat=expr= | =(let output (bound ...) expression)= | Scalar binding; general pattern open |
-| =for pat in expr= | =(for output (bound ...) expression)= | Iterable scalar/tuple oracle; general pattern open |
+| =let pat=expr= | =(let (output ...) (bound ...) expr pattern)= | Scalar and destructured binding; Rust tuple differential |
+| =for pat in expr= | =(for (output ...) (bound ...) expr pattern)= | Iterable scalar and destructured tuple Rust differential |
 | =if let pat=expr= | =(if-let (output ...) (bound ...) expr pattern)= | =Some= success/failure Rust differential |
 | =agg pat=f(args) in r(args)= | =(aggregate output f (input ...) (r args ...))= | Grouped/derived/custom aggregate oracle; output pattern open |
 | Parenthesized =|= disjunction | =(or (and clause ...) ...)= | Two disjunction points qualified, one Rust differential |

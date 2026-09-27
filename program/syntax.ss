@@ -54,10 +54,28 @@
     ((_ (kind output (input ...) procedure))
      (eq? (syntax->datum (syntax kind)) 'bind)
      (syntax (gerbil-ascent-binding 'output '(input ...) procedure)))
+    ((_ (kind (output ...) (input ...) value pattern))
+     (eq? (syntax->datum (syntax kind)) 'let)
+     (syntax (gerbil-ascent-generator
+              '(output ...) '(input ...)
+              (lambda (input ...)
+                (match value
+                  (pattern (list (list output ...)))
+                  (_ (error "ASCENT let pattern did not match")))))))
     ((_ (kind output (input ...) value))
      (eq? (syntax->datum (syntax kind)) 'let)
      (syntax (gerbil-ascent-binding
               'output '(input ...) (lambda (input ...) value))))
+    ((_ (kind (output ...) (input ...) values pattern))
+     (eq? (syntax->datum (syntax kind)) 'for)
+     (syntax (gerbil-ascent-generator
+              '(output ...) '(input ...)
+              (lambda (input ...)
+                (map (lambda (value)
+                       (match value
+                         (pattern (list output ...))
+                         (_ (error "ASCENT for pattern did not match"))))
+                     values)))))
     ((_ (kind output (input ...) values))
      (eq? (syntax->datum (syntax kind)) 'for)
      (syntax (gerbil-ascent-generator

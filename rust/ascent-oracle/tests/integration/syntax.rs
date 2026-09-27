@@ -16,12 +16,16 @@ fn rust_rows(edges: &[(u32, u32)]) -> Vec<String> {
         relation optional(Option<u32>);
         relation unwrapped(u32);
         relation unwrapped_pattern(u32);
+        relation let_pair(u32, u32);
+        relation for_pair(u32, u32);
 
         seed(7), marker(8);
         selected(x) <-- (seed(x) | edge(x, _));
         successor(*x + 1) <-- edge(x, _);
         unwrapped(x) <-- optional(value), if let Some(x) = *value;
         unwrapped_pattern(*x) <-- optional(?Some(x));
+        let_pair(x, y) <-- edge(a, b), let (x, y) = (*a, *b + 1);
+        for_pair(x, y) <-- edge(a, b), for (x, y) in [(*a, *b), (*b, *a)];
     }
     let mut program = AscentProgram {
         edge: edges.to_vec(),
@@ -60,6 +64,18 @@ fn rust_rows(edges: &[(u32, u32)]) -> Vec<String> {
             .unwrapped_pattern
             .iter()
             .map(|(value,)| format!("unwrapped-pattern\t{value}")),
+    );
+    rows.extend(
+        program
+            .let_pair
+            .iter()
+            .map(|(from, to)| format!("let-pair\t{from}\t{to}")),
+    );
+    rows.extend(
+        program
+            .for_pair
+            .iter()
+            .map(|(from, to)| format!("for-pair\t{from}\t{to}")),
     );
     rows.sort_unstable();
     rows

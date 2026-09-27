@@ -7,7 +7,8 @@
         (only-in :core/observability/testing-case poo-flow-test-case)
         (only-in :gerbil-ascent/t/qualification/ascent-syntax-fixture
                  ascent-syntax-evaluate ascent-expression-evaluate
-                 ascent-index-expression-evaluate)
+                 ascent-index-expression-evaluate
+                 ascent-pattern-clauses-evaluate)
         (only-in :gerbil-ascent/t/qualification/ascent-index-program-fixture
                  ascent-index-alist-provider)
         (only-in :gerbil-ascent/program/interface
@@ -121,4 +122,12 @@
          (relation out (value))
          (fact (out (pat (x) x)))
          (bounds 4 4 8)))
-       true))))
+       true))
+    (poo-flow-test-case "let and for destructure native Gerbil values"
+      (let* ((result (ascent-pattern-clauses-evaluate '((1 2) (3 4))))
+             (rows-of (.ref result 'rows-of)))
+        (check-equal? (length (rows-of 'let-pair)) 2)
+        (check-equal? (not (not (member '(1 3) (rows-of 'let-pair)))) #t)
+        (check-equal? (not (not (member '(3 5) (rows-of 'let-pair)))) #t)
+        (check-equal? (length (rows-of 'for-pair)) 4)
+        (check-equal? (not (not (member '(2 1) (rows-of 'for-pair)))) #t)))))

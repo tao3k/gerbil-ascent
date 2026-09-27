@@ -11,7 +11,8 @@
 
 (export ascent-syntax-program ascent-syntax-evaluate
         ascent-expression-evaluate ascent-index-expression-evaluate
-        ascent-syntax-parity-evaluate)
+        ascent-syntax-parity-evaluate
+        ascent-pattern-clauses-evaluate)
 
 (def (ascent-syntax-program edges anchor)
   (ascent
@@ -89,3 +90,17 @@
     ((unwrapped-pattern x) <--
      (optional (pat (x) (cons 'some x))))
     (bounds 16 16 32))))
+
+(def (ascent-pattern-clauses-evaluate edges)
+  (gerbil-ascent-evaluate-program
+   (ascent
+    (relation edge (from to) edges)
+    (relation let-pair (from to))
+    (relation for-pair (from to))
+    ((let-pair x y) <-- (edge a b)
+     (let (x y) (a b) (vector a (+ b 1)) (vector x y)))
+    ((for-pair x y) <-- (edge a b)
+     (for (x y) (a b)
+          (list (vector a b) (vector b a))
+          (vector x y)))
+    (bounds 8 16 24))))

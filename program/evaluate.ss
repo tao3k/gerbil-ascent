@@ -18,6 +18,7 @@
                  gerbil-ascent-head-row)
         (only-in :gerbil-ascent/table/provider
                  gerbil-ascent-index-provider-build
+                 gerbil-ascent-index-provider-extend!
                  gerbil-ascent-index-provider-lookup)
         (only-in :gerbil-ascent/table/storage
                  gerbil-ascent-storage-make-state)
@@ -159,6 +160,19 @@
                   (error "ASCENT index provider returned non-list rows"
                          matched))
                 matched)))))
+      (def (advance-all-indexes! index new-rows)
+        (let (cache (vector-ref all-indexes index))
+          (when (and cache (pair? new-rows))
+            (let ((version (vector-ref all-version index))
+                  (provider (vector-ref index-providers index)))
+              (hash-for-each
+               (lambda (columns entry)
+                 (when (= (car entry) version)
+                   (hash-put! cache columns
+                     (cons (+ version 1)
+                           (gerbil-ascent-index-provider-extend!
+                            provider (cdr entry) new-rows columns)))))
+               cache)))))
       (let initialize ((remaining relations) (index 0))
         (unless (null? remaining)
           (let* ((relation (car remaining))
@@ -319,6 +333,7 @@
             (when (>= source-count input-limit)
               (error "ASCENT session input fact budget exceeded"))
             (let ((changed? #f)
+                  (new-rows [])
                   (expanded
                   ((vector-ref storage-extensions index)
                    (vector-ref storage-states index)
@@ -344,10 +359,12 @@
                      (cons stored (vector-ref all index)))
                    (vector-set! delta index
                      (cons stored (vector-ref delta index)))
+                   (set! new-rows (cons stored new-rows))
                    (set! changed? #t)
                    (set! dirty? #t)))
                expanded)
               (when changed?
+                (advance-all-indexes! index (reverse new-rows))
                 (vector-set! all-size index (length (vector-ref all index)))
                 (vector-set! delta-size index
                   (length (vector-ref delta index)))
@@ -592,6 +609,9 @@
                    (set! active? #t))
                  (vector-ref pending index))
                 (unless (null? (vector-ref pending index))
+                  (unless (vector-ref lattice-joins index)
+                    (advance-all-indexes! index
+                                          (vector-ref pending index)))
                   (vector-set! all-version index
                     (+ 1 (vector-ref all-version index)))
                   (vector-set! all-size index

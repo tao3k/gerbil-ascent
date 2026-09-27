@@ -26,20 +26,23 @@
       (loop (+ position 1)
             (cons (list position (+ position 1)) rows)))))
 
-(def (alist-index-build rows columns)
-  (let loop ((remaining rows) (index []))
+(def (alist-index-extend index rows columns)
+  (let loop ((remaining rows) (current index))
     (if (null? remaining)
-      index
+      current
       (let* ((row (car remaining))
              (key (gerbil-ascent-index-key row columns))
-             (entry (assoc key index)))
+             (entry (assoc key current)))
         (loop (cdr remaining)
               (cons (cons key (cons row (if entry (cdr entry) [])))
                     (if entry
                       (filter (lambda (item)
                                 (not (equal? (car item) key)))
-                              index)
-                      index)))))))
+                              current)
+                      current)))))))
+
+(def (alist-index-build rows columns)
+  (alist-index-extend [] (reverse rows) columns))
 
 (def (ascent-index-alist-provider (on-build (lambda (_columns) (void))))
   (.o (:: @ gerbil-ascent-hash-index-provider)
@@ -47,6 +50,7 @@
        (lambda (rows columns)
          (on-build columns)
          (alist-index-build rows columns)))
+      (.extend-index! alist-index-extend)
       (.lookup-index
        (lambda (index key)
          (let (entry (assoc key index))

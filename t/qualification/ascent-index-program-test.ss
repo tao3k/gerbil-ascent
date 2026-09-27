@@ -13,7 +13,10 @@
         (only-in :gerbil-ascent/table/interface
                  gerbil-ascent-hash-index-provider)
         (only-in :gerbil-ascent/program/interface
-                 gerbil-ascent-evaluate-program gerbil-ascent-relation))
+                 gerbil-ascent-evaluate-program gerbil-ascent-relation
+                 gerbil-ascent-open-session
+                 gerbil-ascent-session-append-source!
+                 gerbil-ascent-session-run))
 
 (export ascent-index-program-test)
 
@@ -56,6 +59,30 @@
         (check-equal? (not (not (member '(0 0 2) rows))) #t)
         (check-equal? (not (not (member '(1 148 150) rows))) #t)
         (check-equal? (member '(0 100 102) rows) #f)))
+    (poo-flow-test-case "source append extends an existing index without rebuilding"
+      (let* ((builds 0)
+             (provider
+              (ascent-index-alist-provider
+               (lambda (_columns) (set! builds (+ builds 1)))))
+             (session
+              (gerbil-ascent-open-session
+               (ascent-index-fixture-program 50 provider))))
+        (check-equal? (length ((.ref (gerbil-ascent-session-run session)
+                                  'rows-of) 'two-hop)) 49)
+        (check-equal? (> builds 0) #t)
+        (let (before builds)
+          (let append ((from 50))
+            (when (< from 60)
+              (gerbil-ascent-session-append-source!
+               session 'edge (list from (+ from 1)))
+              (let (rows ((.ref (gerbil-ascent-session-run session) 'rows-of)
+                          'two-hop))
+                (check-equal? (length rows) from)
+                (check-equal?
+                 (not (not (member (list (- from 1) (+ from 1)) rows)))
+                 #t)
+                (check-equal? builds before))
+              (append (+ from 1)))))))
     (poo-flow-test-case "malformed Provider values fail at the boundary"
       (check-exception
        (gerbil-ascent-relation

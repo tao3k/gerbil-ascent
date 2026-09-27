@@ -9,11 +9,13 @@
         (only-in :core/types
                  PooFlowNativeObjectContract.
                  poo-flow-predicate-contract)
-        (only-in "funs.ss" gerbil-ascent-index-build))
+        (only-in "funs.ss" gerbil-ascent-index-build
+                 gerbil-ascent-index-extend!))
 
 (export GerbilAscentIndexProviderContract
         gerbil-ascent-hash-index-provider
         gerbil-ascent-index-provider-build
+        gerbil-ascent-index-provider-extend!
         gerbil-ascent-index-provider-lookup)
 
 (def +procedure+
@@ -26,12 +28,15 @@
   identity: 'ascent/index-provider
   proto: (.o)
   responsibilities: (.o .build-index: +procedure+
+                      .extend-index!: +procedure+
                       .lookup-index: +procedure+))
 
 (def IndexProvider. (.ref GerbilAscentIndexProviderContract 'proto))
 
 (.defgeneric (gerbil-ascent-index-provider-build provider rows columns)
   slot: .build-index)
+(.defgeneric (gerbil-ascent-index-provider-extend! provider index rows columns)
+  slot: .extend-index!)
 (.defgeneric (gerbil-ascent-index-provider-lookup provider index key)
   slot: .lookup-index)
 
@@ -39,5 +44,6 @@
   (validate GerbilAscentIndexProviderContract
             (.o (:: @ IndexProvider.)
                 (.build-index gerbil-ascent-index-build)
+                (.extend-index! gerbil-ascent-index-extend!)
                 (.lookup-index
                  (lambda (index key) (or (hash-get index key) []))))))

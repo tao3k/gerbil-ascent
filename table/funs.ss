@@ -2,17 +2,27 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-;;; Pure index algorithms. The evaluator owns cache invalidation.
-(export gerbil-ascent-index-build gerbil-ascent-index-key)
+;;; Private index algorithms. The evaluator owns cache invalidation.
+(import (only-in :std/hash/misc hash-ensure-modify!))
+
+(export gerbil-ascent-index-build gerbil-ascent-index-extend!
+        gerbil-ascent-index-key)
 
 (def (gerbil-ascent-index-key row columns)
   (map (lambda (column) (list-ref row column)) columns))
 
 (def (gerbil-ascent-index-build rows columns)
   (let (index (make-hash-table))
-    (for-each
-     (lambda (row)
-       (let (key (gerbil-ascent-index-key row columns))
-         (hash-put! index key (cons row (or (hash-get index key) [])))))
-     rows)
-    index))
+    (gerbil-ascent-index-extend! index (reverse rows) columns)))
+
+(def (gerbil-ascent-index-extend! index new-rows columns)
+  ;; Rows are prepended to the relation. Process the new batch in insertion
+  ;; order so each bucket has the same order as the current relation snapshot.
+  (for-each
+   (lambda (row)
+     (hash-ensure-modify!
+      index (gerbil-ascent-index-key row columns)
+      (lambda () [])
+      (lambda (bucket) (cons row bucket))))
+   new-rows)
+  index)

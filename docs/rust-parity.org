@@ -131,7 +131,10 @@ execution state. Immutable lowered rules and strata are cached by the
 identity of the declared POO program with weak keys; cache access is
 serialized, while every evaluation builds separate fact buffers, indexes,
 BYODS state and budgets. POO refinement creates a new program identity and
-therefore receives its own analysis. This is Scheme planning inside the
+therefore receives its own analysis. A retained session's source-only
+replacement preserves declarations and rules, so its fresh fixed-point
+evaluation reuses the session's immutable rule plan; rows, indexes, Provider
+state and budgets are still rebuilt. This is Scheme planning inside the
 evaluator, not a separate source or runtime language. Its public
 =GerbilAscentSessionContract= exposes
 =.append-source!=, =.replace-source!= and =.run= procedures. =gerbil-ascent-open-session= creates

@@ -58,7 +58,7 @@
            (hash-put! +program-analysis-cache+ program fresh)))
         fresh))))
 
-(def (gerbil-ascent-make-engine program session?)
+(def (gerbil-ascent-make-engine program session? (analysis-override #f))
   ;; The declaration constructor validates the full Core contract.
   ;; Evaluation checks mutable rows and clause bindings for this snapshot.
   (unless (object? program)
@@ -335,36 +335,40 @@
                      heads))
             (vector head-plans (reverse body-plans) atoms))))
       (let* ((analysis
-              (gerbil-ascent-program-analysis
-               program relations rules
-               (lambda ()
-                 (let (plans (map prepare-rule rules))
-                   (let* ((strata (gerbil-ascent-rule-strata plans count))
-                          (highest (if (= count 0) -1
-                                     (apply max (vector->list strata))))
-                          (active (make-vector (+ highest 1) [])))
-                     (let plan-stratum ((stratum 0))
-                       (when (<= stratum highest)
-                         (let (selected
-                               (filter-map
-                                (lambda (rule)
-                                  (let (heads
-                                        (filter
-                                         (lambda (head)
-                                           (= (vector-ref strata
-                                                          (vector-ref head 0))
-                                              stratum))
-                                         (vector-ref rule 0)))
-                                    (and (pair? heads)
-                                         (vector
-                                          heads (vector-ref rule 1)
-                                          (gerbil-ascent-delta-positions
-                                           (vector-ref rule 1) strata
-                                           stratum)))))
-                                plans))
-                           (vector-set! active stratum selected)
-                           (plan-stratum (+ stratum 1)))))
-                     (vector relations rules plans strata active))))))
+              ;; Source-only replacement preserves declarations and rules.
+              ;; Its session reuses this immutable rule plan while the fresh
+              ;; engine still owns new rows, indexes, storage and budgets.
+              (or analysis-override
+                  (gerbil-ascent-program-analysis
+                   program relations rules
+                   (lambda ()
+                     (let (plans (map prepare-rule rules))
+                       (let* ((strata (gerbil-ascent-rule-strata plans count))
+                              (highest (if (= count 0) -1
+                                         (apply max (vector->list strata))))
+                              (active (make-vector (+ highest 1) [])))
+                         (let plan-stratum ((stratum 0))
+                           (when (<= stratum highest)
+                             (let (selected
+                                   (filter-map
+                                    (lambda (rule)
+                                      (let (heads
+                                            (filter
+                                             (lambda (head)
+                                               (= (vector-ref strata
+                                                              (vector-ref head 0))
+                                                  stratum))
+                                             (vector-ref rule 0)))
+                                        (and (pair? heads)
+                                             (vector
+                                              heads (vector-ref rule 1)
+                                              (gerbil-ascent-delta-positions
+                                               (vector-ref rule 1) strata
+                                               stratum)))))
+                                    plans))
+                               (vector-set! active stratum selected)
+                               (plan-stratum (+ stratum 1)))))
+                         (vector relations rules plans strata active)))))))
              (rule-plans (vector-ref analysis 2))
              (strata (vector-ref analysis 3))
              (active-by-stratum (vector-ref analysis 4))
@@ -423,7 +427,8 @@
               (let* ((replacement
                       (append (source-rows-at index) (list row)))
                      (candidate (source-program-with index replacement))
-                     (result (gerbil-ascent-evaluate-program candidate)))
+                     (result ((gerbil-ascent-make-engine
+                               candidate #f analysis))))
                 (set! source-count (+ source-count 1))
                 (vector-set! source-overrides index replacement)
                 (vector-set! source-additions index [])
@@ -503,7 +508,8 @@
               (when (> next-count input-limit)
                 (error "ASCENT session input fact budget exceeded"))
               (let* ((candidate (source-program-with index rows))
-                     (result (gerbil-ascent-evaluate-program candidate)))
+                     (result ((gerbil-ascent-make-engine
+                               candidate #f analysis))))
                 (set! source-count next-count)
                 (vector-set! source-overrides index rows)
                 (vector-set! source-additions index [])

@@ -3,7 +3,7 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 (import (only-in :gerbil-ascent/program/interface
-                 gerbil-ascent-relation gerbil-ascent-variable
+                 ascent gerbil-ascent-relation gerbil-ascent-variable
                  gerbil-ascent-atom gerbil-ascent-rule
                  gerbil-ascent-aggregate gerbil-ascent-program
                  gerbil-ascent-evaluate-program
@@ -56,24 +56,16 @@
     32 32 64)))
 
 (def (ascent-derived-aggregate-program edges roots)
-  (gerbil-ascent-program
-    (list (gerbil-ascent-relation 'edge 2 edges)
-          (gerbil-ascent-relation 'root 1 (map list roots))
-          (gerbil-ascent-relation 'path 2 [])
-          (gerbil-ascent-relation 'reach-count 2 []))
-    (list (r (a 'path (v 'source) (v 'target))
-             (a 'edge (v 'source) (v 'target)))
-          (gerbil-ascent-rule
-           (list (a 'path (v 'source) (v 'target)))
-           (list (a 'path (v 'source) (v 'middle))
-                 (a 'edge (v 'middle) (v 'target))))
-          (gerbil-ascent-rule
-           (list (a 'reach-count (v 'source) (v 'total)))
-           (list (a 'root (v 'source))
-                 (gerbil-ascent-aggregate
-                  'total 'path (list (v 'source) (v 'target))
-                  [] gerbil-ascent-count))))
-    32 128 160))
+  (ascent
+   (relation edge (from to) edges)
+   (relation root (node) (map list roots))
+   (relation path (from to))
+   (relation reach-count (node total))
+   ((path source target) <-- (edge source target))
+   ((path source target) <-- (path source middle) (edge middle target))
+   ((reach-count source total) <-- (root source)
+    (aggregate total gerbil-ascent-count () (path source target)))
+   (bounds 32 128 160)))
 
 (def (ascent-derived-aggregate-fixture-evaluate edges roots)
   (gerbil-ascent-evaluate-program

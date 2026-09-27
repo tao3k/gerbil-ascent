@@ -3,31 +3,20 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 (import (only-in :gerbil-ascent/program/interface
-                 gerbil-ascent-relation gerbil-ascent-variable
-                 gerbil-ascent-atom gerbil-ascent-rule
-                 gerbil-ascent-program gerbil-ascent-evaluate-program))
+                 ascent gerbil-ascent-evaluate-program))
 
 (export ascent-mutual-program ascent-mutual-evaluate)
 
-(def (v name) (gerbil-ascent-variable name))
-(def (a name . terms) (gerbil-ascent-atom name terms))
-(def (r head . body) (gerbil-ascent-rule (list head) body))
-
 (def (ascent-mutual-program edges)
-  (gerbil-ascent-program
-   (list (gerbil-ascent-relation 'edge 2 edges)
-         (gerbil-ascent-relation 'path0 2 [])
-         (gerbil-ascent-relation 'path1 2 [])
-         (gerbil-ascent-relation 'witness 1 []))
-   (list
-    (gerbil-ascent-rule
-     (list (a 'path1 (v 'x) (v 'z)) (a 'witness (v 'z)))
-     (list (a 'path0 (v 'x) (v 'y)) (a 'edge (v 'y) (v 'z))))
-    (r (a 'path0 (v 'x) (v 'z))
-       (a 'path1 (v 'x) (v 'y)) (a 'edge (v 'y) (v 'z)))
-    (r (a 'path0 (v 'x) (v 'y))
-       (a 'edge (v 'x) (v 'y))))
-   64 256 320))
+  (ascent
+   (relation edge (from to) edges)
+   (relation path0 (from to))
+   (relation path1 (from to))
+   (relation witness (node))
+   (((path1 x z) (witness z)) <-- (path0 x y) (edge y z))
+   ((path0 x z) <-- (path1 x y) (edge y z))
+   ((path0 x y) <-- (edge x y))
+   (bounds 64 256 320)))
 
 (def (ascent-mutual-evaluate edges)
   (gerbil-ascent-evaluate-program (ascent-mutual-program edges)))

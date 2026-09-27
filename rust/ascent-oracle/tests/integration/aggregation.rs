@@ -143,13 +143,29 @@ fn ascent_derived_aggregate_rows(edges: &[(u32, u32)], roots: &[u32]) -> Vec<Str
 
 #[test]
 fn aggregate_over_recursive_closure_matches_ascent() {
-    let cases: &[(&[(u32, u32)], &[u32])] = &[
-        (&[], &[0, 5]),
-        (&[(0, 1), (1, 2)], &[0, 1, 2, 5]),
-        (&[(0, 1), (1, 2), (2, 0)], &[0, 1, 2, 5]),
-        (&[(0, 1), (0, 1), (1, 2), (2, 3)], &[0, 1, 3, 5]),
+    struct ClosureCase {
+        edges: &'static [(u32, u32)],
+        roots: &'static [u32],
+    }
+    let cases = [
+        ClosureCase {
+            edges: &[],
+            roots: &[0, 5],
+        },
+        ClosureCase {
+            edges: &[(0, 1), (1, 2)],
+            roots: &[0, 1, 2, 5],
+        },
+        ClosureCase {
+            edges: &[(0, 1), (1, 2), (2, 0)],
+            roots: &[0, 1, 2, 5],
+        },
+        ClosureCase {
+            edges: &[(0, 1), (0, 1), (1, 2), (2, 3)],
+            roots: &[0, 1, 3, 5],
+        },
     ];
-    for &(edges, roots) in cases {
+    for ClosureCase { edges, roots } in cases {
         let edge_input = edges
             .iter()
             .map(|(from, to)| format!("({from} {to})"))

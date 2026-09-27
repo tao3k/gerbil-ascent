@@ -17,7 +17,9 @@ Each top-level directory is a Gerbil module namespace:
 | `:gerbil-ascent/candidate/*` | Experimental candidate and support projection |
 | `:gerbil-ascent/interface/*` | Inert request projection |
 
-`program/` exposes POO `relation`, `lattice`, `atom`, `negation`, `guard`, `binding`, `aggregate`,
+`program/` exposes the hygienic [`ascent` rule form](docs/scheme-syntax.org),
+which lowers Scheme declarations to the same POO contracts. It also exposes
+POO `relation`, `lattice`, `atom`, `negation`, `guard`, `binding`, `aggregate`,
 and Standard Library iterable `generator` clauses with scalar or tuple outputs. A slot Generic lowers each clause to a
 private execution plan; count, sum, min, max, mean, and custom aggregate
 procedures run over matched tuples. Lattice declarations join the last column

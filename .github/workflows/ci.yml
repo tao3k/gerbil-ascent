@@ -33,10 +33,10 @@ jobs:
       - name: Install Just
         run: cargo install just --version 1.56.0 --locked
       - name: Qualify Scheme rules
-        run: gerbil env just test
+        run: just test
       - name: Enforce Rust warnings and ASP policy
         run: |
           cargo clippy --locked --manifest-path rust/ascent-oracle/Cargo.toml --all-targets -- -D warnings
           cargo test --locked --manifest-path rust/ascent-oracle/Cargo.toml --test asp_rust_gate
       - name: Compare with Rust Ascent
-        run: gerbil env just oracle
+        run: just oracle

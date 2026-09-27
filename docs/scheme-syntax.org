@@ -1,0 +1,74 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+#+TITLE: ASCENT Scheme Rule Syntax
+#+STATUS: implemented syntax surface; semantic parity remains governed by rust-parity.org
+
+* Design boundary
+
+The =ascent= form is a hygienic Gerbil macro. It lowers declarations directly
+to =gerbil-ascent-relation=, =gerbil-ascent-rule= and
+=gerbil-ascent-program=. The existing POO contracts, planner and evaluator
+validate and execute the result. No second evaluator or independent
+fixed-point implementation is introduced.
+
+The left arrow follows the rule direction in Rust Ascent and the A22 paper.
+Scheme syntax adds lexical capture: input rows, predicates, generators,
+aggregators and bounds are ordinary Scheme expressions evaluated at the
+declaration site. Bare rule identifiers denote logic variables; use
+=(lit expression)= for a literal whose value comes from an expression.
+
+#+begin_src scheme
+(ascent
+ (relation edge (from to) edges)
+ (relation path (from to))
+ ((path source target) <-- (edge source target))
+ ((path source target) <-- (path source middle) (edge middle target))
+ (bounds 32 128 160))
+#+end_src
+
+The column identifiers declare arity and document each relation. They are
+not runtime variable bindings or types. The explicit bounds use the
+existing program contract.
+
+* Forms
+
+| Form | Meaning |
+|------+---------|
+| =(relation name (column ...) [source])= | Set relation; omitted source is empty |
+| =((head ...) <-- clause ...)= | One rule head |
+| =(((head ...) ...) <-- clause ...)= | Multiple heads sharing one body |
+| =(name term ...)= | Positive relation atom |
+| =(not (name term ...))= | Stratified negation |
+| =(guard (input ...) predicate)= | Scheme predicate over bound inputs |
+| =(bind output (input ...) procedure)= | Compute one output |
+| =(for output (input ...) procedure)= | Generate one or several outputs |
+| =(aggregate output operation (input ...) (name term ...))= | Aggregate rows of one relation |
+| =(bounds input derived output)= | Existing finite program limits |
+
+The evaluator checks bound variables, negation safety and dependency
+stratification. Syntax forms make those contracts readable; they do not
+weaken them. A recursive path relation may feed a later aggregation, while
+an aggregation dependency cycle remains outside the Rust 0.8.0 parity
+surface.
+
+* Extensions and evidence
+
+A22 motivates embedded rules and fixed-point semantics. B23 motivates
+relation-specific storage; the existing POO Provider boundary owns that
+feature, and a declarative provider slot can be added after its syntax and
+validation have an independent Rust comparison. F16 motivates
+monotonicity-aware future forms; arbitrary Scheme procedures are not
+silently admitted as monotone.
+
+The mutual recursion, derived aggregation and comprehensive rule fixtures
+exercise macro lowering against the existing qualification outputs. The
+[[file:rust-parity.org][parity matrix]] records broader Rust 0.8.0 gaps; syntax
+readability does not close those gaps.
+
+* Sources
+
+- [[https://doi.org/10.1145/3497776.3517779][Sahebolamri, Gilray, and Micinski, Seamless Deductive Inference via Macros]]
+- [[https://doi.org/10.1145/3622840][Sahebolamri et al., Bring Your Own Data Structures to Datalog]]
+- [[https://doi.org/10.1145/3022670.2951948][Arntzenius and Krishnaswami, Datafun]]
+- [[https://gerbil.scheme.org/reference/gerbil/prelude/macros.html][Gerbil Prelude Macros]]

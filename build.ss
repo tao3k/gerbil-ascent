@@ -15,6 +15,7 @@
     "program/types"
     "program/objects"
     "program/aggregators"
+    "program/syntax"
     "program/funs"
     "program/evaluate"
     "program/interface"

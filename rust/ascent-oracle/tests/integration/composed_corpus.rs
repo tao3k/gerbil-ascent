@@ -3,45 +3,12 @@
 
 //! Exhaustive small-graph differential for interacting Ascent features.
 
-use super::common::scheme_output;
-use std::cmp::Ordering;
+use super::common::{CoordinateMax, scheme_output};
 
-use ascent::{aggregators::count, ascent, lattice::Lattice};
+use ascent::{aggregators::count, ascent};
 
 type Edge = (u32, u32);
 type Case = (Vec<Edge>, Vec<u32>);
-
-// Ascent 0.8.0's public Product<T> lacks Hash, which its lattice storage
-// requires. This newtype uses the same coordinatewise product order.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-struct CoordinateMax(u32, u32);
-
-impl PartialOrd for CoordinateMax {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        match (self.0.cmp(&other.0), self.1.cmp(&other.1)) {
-            (Ordering::Equal, axis) | (axis, Ordering::Equal) => Some(axis),
-            (Ordering::Less, Ordering::Less) => Some(Ordering::Less),
-            (Ordering::Greater, Ordering::Greater) => Some(Ordering::Greater),
-            _ => None,
-        }
-    }
-}
-
-impl Lattice for CoordinateMax {
-    fn meet_mut(&mut self, other: Self) -> bool {
-        let joined = Self(self.0.min(other.0), self.1.min(other.1));
-        let changed = *self != joined;
-        *self = joined;
-        changed
-    }
-
-    fn join_mut(&mut self, other: Self) -> bool {
-        let joined = Self(self.0.max(other.0), self.1.max(other.1));
-        let changed = *self != joined;
-        *self = joined;
-        changed
-    }
-}
 
 fn cases() -> Vec<Case> {
     let mut result = Vec::with_capacity(522);

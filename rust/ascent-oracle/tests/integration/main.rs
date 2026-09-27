@@ -11,6 +11,7 @@ mod lattice_index;
 mod lattice_session;
 mod module_session;
 mod positive_closure;
+mod product_session;
 mod session_corpus;
 mod syntax;
 mod typed_rules;

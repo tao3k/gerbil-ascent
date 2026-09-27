@@ -4,10 +4,45 @@
 //! Shared Scheme process adapter for differential tests.
 
 use std::{
+    cmp::Ordering,
     io::Write,
     path::PathBuf,
     process::{Command, Stdio},
 };
+
+use ascent::lattice::Lattice;
+
+// Ascent 0.8.0's public Product<T> lacks Hash, which its lattice storage
+// requires. This newtype has the same coordinatewise product order.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub(super) struct CoordinateMax(pub u32, pub u32);
+
+impl PartialOrd for CoordinateMax {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        match (self.0.cmp(&other.0), self.1.cmp(&other.1)) {
+            (Ordering::Equal, axis) | (axis, Ordering::Equal) => Some(axis),
+            (Ordering::Less, Ordering::Less) => Some(Ordering::Less),
+            (Ordering::Greater, Ordering::Greater) => Some(Ordering::Greater),
+            _ => None,
+        }
+    }
+}
+
+impl Lattice for CoordinateMax {
+    fn meet_mut(&mut self, other: Self) -> bool {
+        let joined = Self(self.0.min(other.0), self.1.min(other.1));
+        let changed = *self != joined;
+        *self = joined;
+        changed
+    }
+
+    fn join_mut(&mut self, other: Self) -> bool {
+        let joined = Self(self.0.max(other.0), self.1.max(other.1));
+        let changed = *self != joined;
+        *self = joined;
+        changed
+    }
+}
 
 fn root() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))

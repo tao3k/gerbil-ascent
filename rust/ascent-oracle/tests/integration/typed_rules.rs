@@ -38,7 +38,7 @@ fn ascent_positive_rows(edges: &[(u32, u32, &str)]) -> Vec<String> {
         cycle(x) <-- edge(x, y, _), if x == y;
         hot(x), selected(x, y) <-- edge(x, y, label), if label.as_str() == "a";
         choice(x, y) <-- node(x), for y in 1..=3, if *x != y;
-        generated(x) <-- for x in 1..=3;
+        generated(x) <-- for (x, _unused) in [(1, 2), (2, 3), (3, 4)];
         dependent(x, y) <-- node(x), for y in 0..(*x - 1);
         successor(x, y) <-- node(x), let y = *x + 1;
         blocked(x, y) <-- edge(x, y, label), if label.as_str() == "c";

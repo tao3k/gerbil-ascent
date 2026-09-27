@@ -528,10 +528,22 @@
                                          (clause-inputs (vector-ref clause 2)
                                                         environment)))
                       (for (value values)
-                        (visit-body (cdr body) delta-at depth
-                                    (cons (cons (vector-ref clause 1) value)
-                                          environment)
-                                    consume))))
+                        (let* ((output (vector-ref clause 1))
+                               (next-environment
+                                (if (list? output)
+                                  (let (row (if (vector? value)
+                                               (vector->list value)
+                                               value))
+                                    (unless (and (list? row)
+                                                 (= (length row)
+                                                    (length output)))
+                                      (error "ASCENT generator tuple arity mismatch"
+                                             value))
+                                    (gerbil-ascent-bind-row output row
+                                                            environment))
+                                  (cons (cons output value) environment))))
+                          (visit-body (cdr body) delta-at depth
+                                      next-environment consume)))))
                    ((eq? (vector-ref clause 0) 'binding)
                     (let (value (apply (vector-ref clause 3)
                                        (clause-inputs (vector-ref clause 2)

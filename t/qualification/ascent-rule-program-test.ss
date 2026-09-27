@@ -244,6 +244,27 @@
                                            (lambda () 'not-iterable))))
          2 2 3)) true)
       (check-exception
+       (gerbil-ascent-generator '(x x) []
+                                (lambda () '#(#(1 2)))) true)
+      (check-exception
+       (gerbil-ascent-evaluate-program
+        (gerbil-ascent-program
+         (list (gerbil-ascent-relation 'out 1 []))
+         (list (r (a 'out (v 'x))
+                  (gerbil-ascent-generator '(x y) []
+                                           (lambda () '#(#(1))))))
+         2 2 3)) true)
+      (check-exception
+       (gerbil-ascent-evaluate-program
+        (gerbil-ascent-program
+         (list (gerbil-ascent-relation 'source 1 '((1)))
+               (gerbil-ascent-relation 'out 1 []))
+         (list (r (a 'out (v 'x))
+                  (a 'source (v 'x))
+                  (gerbil-ascent-generator '(x y) []
+                                           (lambda () '#(#(1 2))))))
+         2 2 3)) true)
+      (check-exception
        (gerbil-ascent-evaluate-program
         (gerbil-ascent-program
          (list (gerbil-ascent-relation 'node 1 '((1)))

@@ -95,6 +95,19 @@
   (slot-contract 'ascent/variables
                  (lambda (value)
                    (and (list? value) (andmap symbol? value)))))
+(def +generator-output+
+  (slot-contract
+   'ascent/generator-output
+   (lambda (value)
+     (or (symbol? value)
+         (and (pair? value)
+              (list? value)
+              (let loop ((remaining value) (seen []))
+                (or (null? remaining)
+                    (and (symbol? (car remaining))
+                         (not (memq (car remaining) seen))
+                         (loop (cdr remaining)
+                               (cons (car remaining) seen))))))))))
 (def +procedure+ (slot-contract 'ascent/procedure procedure?))
 
 (define-type (GerbilAscentGuardContract @ PooFlowNativeObjectContract.)
@@ -109,7 +122,7 @@
   proto: (.o)
   responsibilities: (.o ascent-clause-kind:
                       (clause-kind-contract 'generator)
-                      variable: +symbol+ variables: +variables+
+                      variable: +generator-output+ variables: +variables+
                       generate: +procedure+ .plan: +plan+))
 
 (define-type (GerbilAscentBindingContract @ PooFlowNativeObjectContract.)

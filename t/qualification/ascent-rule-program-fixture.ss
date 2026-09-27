@@ -52,7 +52,8 @@
             (gerbil-ascent-generator 'y [] (lambda () '(1 2 3)))
             (gerbil-ascent-guard '(x y) (lambda (x y) (not (= x y)))))
          (r (a 'generated (v 'x))
-            (gerbil-ascent-generator 'x [] (lambda () '#(1 2 3))))
+            (gerbil-ascent-generator '(x unused) []
+                                     (lambda () '#(#(1 2) #(2 3) #(3 4)))))
          (r (a 'dependent (v 'x) (v 'y))
             (a 'node (v 'x))
             (gerbil-ascent-generator 'y '(x)

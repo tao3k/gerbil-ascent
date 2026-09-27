@@ -95,12 +95,27 @@
 
 (def (computed-clause-plan clause kind function-slot bound)
   (let* ((inputs (.ref clause 'variables))
-         (name (.ref clause 'variable)))
+         (name (.ref clause 'variable))
+         (names (if (and (eq? kind 'generator) (list? name))
+                  name (list name))))
     (require-bound inputs bound)
-    (when (memq name bound)
-      (error "ASCENT computed variable already bound" name))
-    (vector (vector kind name inputs (.ref clause function-slot))
-            (cons name bound) 0)))
+    (let loop ((remaining names) (next-bound bound))
+      (if (null? remaining)
+        (vector
+         (vector kind
+                 (if (list? name)
+                   (map (lambda (output)
+                          (cons 'variable output))
+                        name)
+                   name)
+                 inputs (.ref clause function-slot))
+         next-bound 0)
+        (begin
+          (when (memq (car remaining) next-bound)
+            (error "ASCENT computed variable already bound"
+                   (car remaining)))
+          (loop (cdr remaining)
+                (cons (car remaining) next-bound)))))))
 
 (def (aggregate-clause-plan clause atom-plan bound)
   (let* ((plan (indexed-atom (atom-plan clause) bound))

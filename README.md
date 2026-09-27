@@ -18,7 +18,7 @@ Each top-level directory is a Gerbil module namespace:
 | `:gerbil-ascent/interface/*` | Inert request projection |
 
 `program/` exposes POO `relation`, `lattice`, `atom`, `negation`, `guard`, `binding`, `aggregate`,
-and Standard Library iterable `generator` clauses. A slot Generic lowers each clause to a
+and Standard Library iterable `generator` clauses with scalar or tuple outputs. A slot Generic lowers each clause to a
 private execution plan; count, sum, min, max, mean, and custom aggregate
 procedures run over matched tuples. Lattice declarations join the last column
 for equal prefix keys and propagate improvements through the same fixed point.

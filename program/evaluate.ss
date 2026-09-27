@@ -383,8 +383,6 @@
             (error "ASCENT session must run before source updates"))
           (unless positive-rules?
             (error "ASCENT session updates require positive rules"))
-          (when (ormap procedure? (vector->list lattice-joins))
-            (error "ASCENT session updates do not support lattice relations"))
           (let* ((index (position-of name))
                  (width (vector-ref arity index)))
             (when (vector-ref lattice-joins index)

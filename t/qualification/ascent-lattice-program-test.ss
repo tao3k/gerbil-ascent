@@ -53,7 +53,7 @@
                      join: (lambda (_left _right) "invalid")))
            [] 4 4 8))
          true)))
-    (poo-flow-test-case "session rejects source updates in lattice programs"
+    (poo-flow-test-case "session rejects direct lattice source updates"
       (let (session
             (gerbil-ascent-open-session
              (gerbil-ascent-program
@@ -62,5 +62,5 @@
               [] 4 4 8)))
         (gerbil-ascent-session-run session)
         (check-exception
-         (gerbil-ascent-session-append-source! session 'source '(2 3))
+         (gerbil-ascent-session-append-source! session 'best '(2 3))
          true)))))

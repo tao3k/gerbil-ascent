@@ -1219,7 +1219,8 @@ fn mutually_recursive_scc_matches_ascent() {
         relation edge(u32, u32);
         relation path0(u32, u32);
         relation path1(u32, u32);
-        path1(x, z) <-- path0(x, y), edge(y, z);
+        relation witness(u32);
+        path1(x, z), witness(z) <-- path0(x, y), edge(y, z);
         path0(x, z) <-- path1(x, y), edge(y, z);
         path0(x, y) <-- edge(x, y);
     }
@@ -1247,6 +1248,7 @@ fn mutually_recursive_scc_matches_ascent() {
                     .iter()
                     .map(|(x, y)| format!("path1\t{x}\t{y}")),
             )
+            .chain(program.witness.iter().map(|(z,)| format!("witness\t{z}")))
             .collect::<Vec<_>>();
         rust_rows.sort();
         let request = format!(

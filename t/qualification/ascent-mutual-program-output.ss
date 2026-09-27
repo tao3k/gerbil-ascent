@@ -16,9 +16,7 @@
        (for-each
         (lambda (row)
           (display name)
-          (display #\tab)
-          (display (car row))
-          (display #\tab)
-          (displayln (cadr row)))
+          (for-each (lambda (column) (display #\tab) (display column)) row)
+          (newline))
         (rows-of name)))
-     '(path0 path1))))
+     '(path0 path1 witness))))

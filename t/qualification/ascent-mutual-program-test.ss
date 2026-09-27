@@ -39,7 +39,9 @@
                                            '((1 1) (1 2) (1 3)
                                              (2 1) (2 2) (2 3)
                                              (3 1) (3 2) (3 3))))) #t)
-        (check-equal? (length (rows-of 'path1)) 9)))
+        (check-equal? (length (rows-of 'path1)) 9)
+        (check-equal? (not (not (same-rows? (rows-of 'witness)
+                                           '((1) (2) (3))))) #t)))
     (poo-flow-test-case "source order does not change the fixed point"
       (let* ((first (ascent-mutual-evaluate
                      '((1 2) (2 3) (3 1))))
@@ -51,7 +53,7 @@
             (not (not (same-rows? ((.ref first 'rows-of) name)
                                   ((.ref reverse-source 'rows-of) name))))
             #t))
-         '(path0 path1))))
+         '(path0 path1 witness))))
     (poo-flow-test-case/with +concurrent-case-profile+
       "independent fixed-point runs are reentrant across workers"
       (let* ((sources '(((1 2) (2 3) (3 1))
@@ -64,10 +66,13 @@
                       (lambda ()
                         (let (result (ascent-mutual-evaluate edges))
                           (list ((.ref result 'rows-of) 'path0)
-                                ((.ref result 'rows-of) 'path1))))))
+                                ((.ref result 'rows-of) 'path1)
+                                ((.ref result 'rows-of) 'witness))))))
                    sources))
              (results (map thread-join! workers)))
         (check-equal? (map (lambda (rows) (length (car rows))) results)
                       '(9 2 9 2))
         (check-equal? (map (lambda (rows) (length (cadr rows))) results)
-                      '(9 1 9 2))))))
+                      '(9 1 9 2))
+        (check-equal? (map (lambda (rows) (length (caddr rows))) results)
+                      '(3 1 3 2))))))

@@ -17,10 +17,12 @@
   (gerbil-ascent-program
    (list (gerbil-ascent-relation 'edge 2 edges)
          (gerbil-ascent-relation 'path0 2 [])
-         (gerbil-ascent-relation 'path1 2 []))
+         (gerbil-ascent-relation 'path1 2 [])
+         (gerbil-ascent-relation 'witness 1 []))
    (list
-    (r (a 'path1 (v 'x) (v 'z))
-       (a 'path0 (v 'x) (v 'y)) (a 'edge (v 'y) (v 'z)))
+    (gerbil-ascent-rule
+     (list (a 'path1 (v 'x) (v 'z)) (a 'witness (v 'z)))
+     (list (a 'path0 (v 'x) (v 'y)) (a 'edge (v 'y) (v 'z))))
     (r (a 'path0 (v 'x) (v 'z))
        (a 'path1 (v 'x) (v 'y)) (a 'edge (v 'y) (v 'z)))
     (r (a 'path0 (v 'x) (v 'y))

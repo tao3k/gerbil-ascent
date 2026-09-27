@@ -72,8 +72,8 @@ result, while positive relation-atom rules consume appended source deltas.
 | Rust Ascent 0.8.0 feature | Scheme namespace | Current state | Required closing evidence |
 |---------------------------+------------------+---------------+---------------------------|
 | Relation declaration, arbitrary arity and column types | =program/= | positive generic path handles nullary through four-column mixed rows, including a nullary rule gate over boolean and string columns; binary fast path remains | broader column types and scale/performance receipts |
-| Multiple heads, relation clauses, repeated variables, joins | =program/= | positive generic multi-head rules, joins and repeated-variable equality pass selected Rust oracle fixtures | arbitrary body shape, invalid-program corpus and performance receipts |
-| Semi-naive least fixed point, dependencies and strata | =program/=, =core/= | generic recursive path supports positive and negative strata; a two-relation mutually recursive SCC with cyclic and reordered sources matches selected Rust fixed-point snapshots | broader SCC/rule order, invalid-program and termination corpus |
+| Multiple heads, relation clauses, repeated variables, joins | =program/= | positive generic multi-head rules, joins and repeated-variable equality pass selected Rust oracle fixtures; one recursive SCC rule emits both a path and a unary witness | arbitrary body shape, invalid-program corpus and performance receipts |
+| Semi-naive least fixed point, dependencies and strata | =program/=, =core/= | generic recursive path supports positive and negative strata; a two-relation mutually recursive SCC with cyclic and reordered sources matches selected Rust fixed-point snapshots, including a second head on one recursive rule | broader SCC/rule order, invalid-program and termination corpus |
 | Repeated =run()= after source relation updates | =program/= | Retained Scheme session reuses rows, indexes and BYODS state for positive atom-only source additions; insertion, unchanged rerun, duplicate and cycle snapshots match selected Rust fixtures. A 20-sample Linux SS update gate passes at 581.207 µs p95. Source deletion and nonpositive updates require fresh evaluation | compare wider positive corpus and update shapes; characterize Rust retained-state behavior for negation and aggregates |
 | Conditions, bindings and generators | =program/=, =core/= | generic POO guard, =let= binding and finite list generator clauses with ordered binding checks; a generator depending on an earlier atom binding matches Rust =std::iter::once= | broader iterator/pattern shapes and scale receipts |
 | Stratified negation | =program/= | 3-level negated relation fixture and negative-cycle rejection pass selected Rust oracle comparison | broader safe/unsafe programs and performance receipts |
@@ -107,7 +107,8 @@ the pinned Rust Ascent 0.8.0 oracle. The macro's generated Rust code emits
 an unused local binding for this nullary declaration; the test suppresses
 that warning only for this fixture.
 The mutual-recursion fixture declares its seed rule after the two recursive
-rules and includes a directed cycle. Both =path0= and =path1= match Rust after
+rules and includes a directed cycle. One recursive rule has two heads:
+=path1(x,z)= and =witness(z)=. All three derived relations match Rust after
 deduplication for an empty source, a self-loop, a cycle, reversed source
 order, duplicate edges, a branching graph with a cycle, and a finite chain.
 This is evidence for one SCC shape, not a general termination proof.

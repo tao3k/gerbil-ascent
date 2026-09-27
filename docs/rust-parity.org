@@ -80,8 +80,10 @@ pinned Rust programs: initial sources, an added edge and blocker, then
 replacement with the original sources. It combines recursion, negation,
 aggregation, disjunction and a product lattice. Earlier snapshots remain stable.
 An over-budget recomputation rejects without accepting its source row;
-a later valid append can still succeed. A BYODS transitive Provider case
-checks the same policy across storage materialization and negation.
+a later valid append can still succeed. BYODS transitive Provider cases
+check the same policy across storage materialization and negation, including
+withdrawal and restoration of an edge in a twelve-edge chain. That larger
+Scheme/fresh-Scheme receipt is not a Rust differential or a scale benchmark.
 The standard 20-sample SS scenario =ascent-nonpositive-session-update=
 checks a recursive path program as a blocker is appended and withdrawn.
 Its local run passed the unchanged 1 ms bound; exact pinned Linux integration is
@@ -132,7 +134,7 @@ BYODS state and budgets. POO refinement creates a new program identity and
 therefore receives its own analysis. This is Scheme planning inside the
 evaluator, not a separate source or runtime language. Its public
 =GerbilAscentSessionContract= exposes
-=.append-source!= and =.run= procedures. =gerbil-ascent-open-session= creates
+=.append-source!=, =.replace-source!= and =.run= procedures. =gerbil-ascent-open-session= creates
 one session; the one-shot API executes that session once. Results contain
 stable row snapshots. A second run without new materialized rows reuses its
 result, while positive relation-atom rules consume appended source deltas.
@@ -223,8 +225,8 @@ and a closing cycle. Scheme checks =path0=, =path1= and =witness= against fresh
 evaluation after each changed prefix and checks that earlier snapshots stay
 stable. The Rust oracle repeats =run()= on one program through the same
 sequence and compares each result with both retained and fresh Scheme output.
-These checks cover one wider positive update shape, not deletion or
-nonmonotone incremental semantics. The Rust oracle package runs the ASP Rust
+These checks cover one wider positive update shape. Source replacement and
+nonpositive updates have separate fresh fixed-point receipts above. The Rust oracle package runs the ASP Rust
 package policy as a dedicated test. Its differential cases live in
 responsibility-specific integration modules mounted by a thin Cargo target.
 The standard SS scenario =ascent-session-update= prepares 20 sessions outside
@@ -236,7 +238,8 @@ that appending a blocking fact does not retract a previously derived negated
 row, and that appending an aggregate source can retain the old total and
 produce a new total different from a fresh program. These are observed
 Rust 0.8.0 repeated-run behaviors, not a claim that nonmonotone updates have
-clean incremental semantics. Scheme rejects such session updates.
+clean incremental semantics. Scheme reevaluates accepted sources for these
+updates and compares each result with a fresh pinned Rust program.
 The concurrent qualification launches four independent fixed-point programs
 with Gerbil workers and checks every returned relation projection. It checks
 reentrancy across programs; it does not establish intra-program parallel

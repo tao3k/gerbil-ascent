@@ -234,6 +234,70 @@
          ((1 2) (2 3) (3 1))
          ((1 2) (2 3) (3 1)))
        '((4 9 9 13 20) (1 3 6) (3 6 9))))
+    (poo-flow-test-case "BYODS budget rejection leaves provider state reusable"
+      (for-each
+       (lambda (provider first rejected retry first-budget retry-budget)
+         (let* ((state (gerbil-ascent-storage-make-state provider))
+                (initial (gerbil-ascent-storage-extend
+                          provider state [] [] first first-budget))
+                (fresh (gerbil-ascent-storage-make-state provider)))
+           (check-equal?
+            (gerbil-ascent-storage-extend provider state initial [] first 0)
+            [])
+           (check-exception
+            (gerbil-ascent-storage-extend
+             provider state initial [] rejected 0)
+            true)
+           (check-equal?
+            (gerbil-ascent-storage-extend
+             provider state initial [] retry retry-budget)
+            (begin
+              (gerbil-ascent-storage-extend
+               provider fresh [] [] first first-budget)
+              (gerbil-ascent-storage-extend
+               provider fresh initial [] retry retry-budget)))))
+       (list gerbil-ascent-eqrel-storage-provider
+             gerbil-ascent-trrel-storage-provider
+             gerbil-ascent-trrel-uf-storage-provider)
+       '((1 2) (1 2) (1 2))
+       '((2 3) (2 3) (2 3))
+       '((4 5) (4 5) (4 5))
+       '(4 1 3)
+       '(4 1 3)))
+    (poo-flow-test-case "BYODS session can continue after a rejected append"
+      (for-each
+       (lambda (provider limit first rejected retry)
+         (let* ((make-program
+                 (lambda (rows)
+                   (gerbil-ascent-program
+                    (list (gerbil-ascent-relation
+                           'stored 2 rows
+                           gerbil-ascent-hash-index-provider provider))
+                    [] 4 8 limit)))
+                (session (gerbil-ascent-open-session
+                          (make-program (list first)))))
+           (gerbil-ascent-session-run session)
+           (check-exception
+            (gerbil-ascent-session-append-source! session 'stored rejected)
+            true)
+           (gerbil-ascent-session-append-source! session 'stored retry)
+           (let ((actual ((.ref (gerbil-ascent-session-run session) 'rows-of)
+                          'stored))
+                 (expected ((.ref (gerbil-ascent-evaluate-program
+                                   (make-program (list first retry)))
+                                  'rows-of)
+                            'stored)))
+             (check-equal? (length actual) (length expected))
+             (for-each (lambda (row)
+                         (check-equal? (not (not (member row actual))) #t))
+                       expected))))
+       (list gerbil-ascent-eqrel-storage-provider
+             gerbil-ascent-trrel-storage-provider
+             gerbil-ascent-trrel-uf-storage-provider)
+       '(5 2 4)
+       '((1 2) (1 2) (1 2))
+       '((2 3) (2 3) (2 3))
+       '((4 4) (4 5) (4 4))))
     (poo-flow-test-case "invalid storage method output fails at the boundary"
       (check-exception
        (gerbil-ascent-evaluate-program

@@ -17,12 +17,8 @@
          (pair (if (= width 3) (cdr row) row))
          (left (car pair))
          (right (cadr pair))
-         (added [])
-         (added-count 0))
+         (added []))
     (def (emit! from to)
-      (set! added-count (+ added-count 1))
-      (when (> added-count budget)
-        (error "ASCENT eqrel output fact budget exceeded"))
       (set! added
         (cons (if (= width 3)
                 (list group from to)
@@ -36,6 +32,22 @@
               (hash-put! components key fresh)
               (emit! node node)
               fresh))))
+    ;; Count the reflexive facts and cross product before touching components.
+    ;; A rejected session append must leave the provider usable for a retry.
+    (let* ((left-known (hash-get components (cons group left)))
+           (right-known (hash-get components (cons group right)))
+           (new-nodes (+ (if left-known 0 1)
+                         (if (or right-known (equal? left right)) 0 1)))
+           (left-size (if left-known (vector-ref left-known 1) 1))
+           (right-size (if right-known (vector-ref right-known 1) 1))
+           (needed (+ new-nodes
+                      (if (or (and left-known right-known
+                                   (eq? left-known right-known))
+                              (equal? left right))
+                        0
+                        (* 2 left-size right-size)))))
+      (when (> needed budget)
+        (error "ASCENT eqrel output fact budget exceeded")))
     (let ((left-component (component-of left))
           (right-component (component-of right)))
       (unless (eq? left-component right-component)

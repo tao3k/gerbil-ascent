@@ -3,14 +3,15 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 (import (only-in :std/test check-equal? check-exception test-suite)
-        (only-in :clan/poo/object .ref)
+        (only-in :clan/poo/object .o .mix .ref)
         (only-in :core/observability/testing-case
                  poo-flow-test-case)
         (only-in :gerbil-ascent/t/qualification/ascent-lattice-program-fixture
                  ascent-lattice-fixture-evaluate)
         (only-in :gerbil-ascent/program/interface
                  gerbil-ascent-lattice gerbil-ascent-relation
-                 gerbil-ascent-program gerbil-ascent-open-session
+                 gerbil-ascent-program gerbil-ascent-evaluate-program
+                 gerbil-ascent-open-session
                  gerbil-ascent-session-run
                  gerbil-ascent-session-append-source!))
 
@@ -33,6 +34,25 @@
       (check-exception (gerbil-ascent-lattice 'bad 0 [] min) true)
       (check-exception (gerbil-ascent-lattice 'bad 2 '((1)) min)
                        true))
+    (poo-flow-test-case "C4 lattice refinements validate joined values"
+      (let* ((base (gerbil-ascent-lattice 'measure 2 '((1 2)) max))
+             (source-profile (.o (:: @ base) rows: '((1 2) (1 3))))
+             (type-profile
+              (.o (:: @ base)
+                  field-predicates: (list integer? integer?)))
+             (composed (.mix source-profile type-profile))
+             (program
+              (gerbil-ascent-program (list composed) [] 4 4 8)))
+        (check-equal?
+         ((.ref (gerbil-ascent-evaluate-program program) 'rows-of) 'measure)
+         '((1 3)))
+        (check-exception
+         (gerbil-ascent-evaluate-program
+          (gerbil-ascent-program
+           (list (.o (:: @ composed)
+                     join: (lambda (_left _right) "invalid")))
+           [] 4 4 8))
+         true)))
     (poo-flow-test-case "session rejects source updates in lattice programs"
       (let (session
             (gerbil-ascent-open-session

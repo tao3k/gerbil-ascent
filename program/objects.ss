@@ -212,19 +212,32 @@
 
 (def (gerbil-ascent-lattice relation-name column-count source-rows
                             join-procedure
-                            (provider-value gerbil-ascent-hash-index-provider))
+                            (provider-value gerbil-ascent-hash-index-provider)
+                            (field-predicates-value []))
   (unless (and (symbol? relation-name)
                (exact-integer? column-count) (> column-count 0)
-               (list? source-rows) (procedure? join-procedure))
+               (list? source-rows) (procedure? join-procedure)
+               (list? field-predicates-value)
+               (or (null? field-predicates-value)
+                   (= (length field-predicates-value) column-count))
+               (andmap procedure? field-predicates-value))
     (error "invalid ASCENT lattice declaration" relation-name column-count))
   (for-each
    (lambda (row)
      (unless (and (list? row) (= (length row) column-count))
-       (error "invalid ASCENT lattice row" relation-name row column-count)))
+       (error "invalid ASCENT lattice row" relation-name row column-count))
+     (when (pair? field-predicates-value)
+       (for-each
+        (lambda (predicate value)
+          (unless (predicate value)
+            (error "ASCENT lattice source field type mismatch"
+                   relation-name row)))
+        field-predicates-value row)))
    source-rows)
   (validate GerbilAscentLatticeContract
             (.o (:: @ Lattice.)
                 name: relation-name arity: column-count rows: source-rows
+                field-predicates: field-predicates-value
                 storage-kind: 'lattice join: join-procedure
                 index-provider: provider-value)))
 

@@ -88,7 +88,7 @@ program contract.
 | =(bounds input derived output)= | Existing finite program limits |
 | =(ascent-fragment clause ...)= | Exportable POO Relation/Rule fragment without program bounds |
 | =(include fragment-name)= | Include a lexical Gerbil module fragment in declaration order |
-| =(lattice name (column ...) source join [index])= | POO lattice declaration |
+| =(lattice name (column ...) source join [index])= | POO lattice declaration; columns may carry predicates checked on source, derived, and joined rows |
 | =(fact head)= / =(facts head ...)= | Rust rules with an empty body |
 | =(or (and clause ...) ...)= | Finite body disjunction, lowered to ordinary rules |
 | =(if (input ...) expression)= | Scheme predicate over bound inputs |
@@ -160,7 +160,7 @@ law evidence; the syntax alone cannot establish it.
 |-------------------------------+-------------+--------|
 | =relation r(T,...) [= source];= | =(relation r ((column predicate) ...) [source])= | Runtime Scheme field predicates check source, update and derived rows; Rust compile-time type and diagnostics parity open |
 | =#[ds(provider)] relation ...= | =(relation ... source (index provider) (storage provider))= | POO Provider slot executes; wider BYODS parity in [[file:rust-parity.org][matrix]] |
-| =lattice r(T,...);= | =(lattice r (column ...) source join [index])= | Recursive shortest-path Scheme/Rust oracle |
+| =lattice r(T,...);= | =(lattice r ((column predicate) ...) source join [index])= | Runtime column checks plus recursive shortest-path and Set-union Rust oracles; Rust compile-time type diagnostics open |
 | =head;= and comma-separated heads | =(fact head)= / =(facts head ...)= | Rust differential for two fact heads |
 | =head,... <-- body,...;= | =((head ...) <-- clause ...)= | Mutual recursion and multi-head oracle |
 | Positive atom with repeated variable | =(r x x ...)= | Existing rule oracle |

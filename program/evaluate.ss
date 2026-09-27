@@ -190,9 +190,7 @@
                   (and (eq? kind 'relation)
                        (.ref relation 'storage-provider)))
                  (predicates
-                  (if (eq? kind 'relation)
-                    (.ref relation 'field-predicates)
-                    []))
+                  (.ref relation 'field-predicates))
                  (present (make-hash-table)))
             (unless (and (symbol? name) (not (hash-get positions name))
                          (exact-integer? width) (<= 0 width) (list? rows)
@@ -248,6 +246,8 @@
                                         (gerbil-ascent-lattice-value previous)
                                         (gerbil-ascent-lattice-value row)))
                                   row)))
+                   (let (check (vector-ref field-checkers index))
+                     (when check (check merged)))
                    (hash-put! keyed key merged)
                    (unless previous
                      (set! source-materialized-count
@@ -491,6 +491,8 @@
                                          (gerbil-ascent-lattice-value prior)
                                          (gerbil-ascent-lattice-value row)))
                                    row)))
+                    (let (check (vector-ref field-checkers index))
+                      (when check (check merged)))
                     (unless (and prior (equal? merged prior))
                       (unless staged
                         (set! pending-count (+ pending-count 1)))

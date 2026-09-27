@@ -6,6 +6,7 @@
 mod aggregation;
 mod byods;
 mod common;
+mod composed_corpus;
 mod lattice_index;
 mod module_session;
 mod positive_closure;

@@ -160,10 +160,13 @@
   (syntax-case stx (index)
     ((_ (name (column ...) source join (index provider)))
      (syntax (gerbil-ascent-lattice
-              'name (length '(column ...)) source join provider)))
+              'name (length '(column ...)) source join provider
+              (ascent-field-predicates (column ...)))))
     ((_ (name (column ...) source join))
      (syntax (gerbil-ascent-lattice
-              'name (length '(column ...)) source join)))))
+              'name (length '(column ...)) source join
+              gerbil-ascent-hash-index-provider
+              (ascent-field-predicates (column ...)))))))
 
 (defsyntax (ascent-rule stx)
   (syntax-case stx (<--)

@@ -19,7 +19,7 @@
    (ascent
     (relation seed (node tag) seeds)
     (relation edge (from to) edges)
-    (lattice reach-tag (node tags) [] set-union)
+    (lattice reach-tag ((node integer?) (tags list?)) [] set-union)
     ((reach-tag node (expr (tag) (list tag))) <-- (seed node tag))
     ((reach-tag to (expr (tags) tags)) <--
      (reach-tag from tags) (edge from to))

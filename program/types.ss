@@ -74,6 +74,7 @@
   identity: 'ascent/lattice
   proto: (.o)
   responsibilities: (.o name: +symbol+ arity: +arity+ rows: +rows+
+                      field-predicates: +field-predicates+
                       storage-kind: (clause-kind-contract 'lattice)
                       join: (slot-contract 'ascent/lattice-join procedure?)
                       index-provider: +provider+))

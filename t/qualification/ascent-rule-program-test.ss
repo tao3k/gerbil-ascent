@@ -77,6 +77,7 @@
         (check-equal? (not (not (member '(1 2) (rows result 'choice)))) #t)
         (check-equal? (member '(1 1) (rows result 'choice)) #f)
         (check-equal? (length (rows result 'generated)) 3)
+        (check-equal? (rows result 'dependent) '((1 2) (2 4) (3 6)))
         (check-equal? (length (rows result 'successor)) 3)
         (check-equal? (not (not (member '(3 4)
                                         (rows result 'successor)))) #t)

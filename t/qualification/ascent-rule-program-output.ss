@@ -19,6 +19,6 @@
           (for-each (lambda (column) (display #\tab) (display column)) row)
           (newline))
         (rows-of name)))
-     '(labelled cycle hot selected choice generated successor
+     '(labelled cycle hot selected choice generated dependent successor
        blocked allowed denied safe-reach reach))
     (display "END\n")))

@@ -331,6 +331,7 @@ fn ascent_positive_rows(edges: &[(u32, u32, &str)]) -> Vec<String> {
         relation selected(u32, u32);
         relation choice(u32, u32);
         relation generated(u32);
+        relation dependent(u32, u32);
         relation successor(u32, u32);
         relation blocked(u32, u32);
         relation allowed(u32, u32);
@@ -344,6 +345,7 @@ fn ascent_positive_rows(edges: &[(u32, u32, &str)]) -> Vec<String> {
         hot(x), selected(x, y) <-- edge(x, y, label), if label.as_str() == "a";
         choice(x, y) <-- node(x), for y in 1..=3, if *x != y;
         generated(x) <-- for x in 1..=3;
+        dependent(x, y) <-- node(x), for y in std::iter::once(*x * 2);
         successor(x, y) <-- node(x), let y = *x + 1;
         blocked(x, y) <-- edge(x, y, label), if label.as_str() == "c";
         allowed(x, y) <-- edge(x, y, _), !blocked(x, y);
@@ -388,6 +390,12 @@ fn ascent_positive_rows(edges: &[(u32, u32, &str)]) -> Vec<String> {
             .generated
             .iter()
             .map(|(value,)| format!("generated\t{value}")),
+    );
+    rows.extend(
+        program
+            .dependent
+            .iter()
+            .map(|(from, to)| format!("dependent\t{from}\t{to}")),
     );
     rows.extend(
         program

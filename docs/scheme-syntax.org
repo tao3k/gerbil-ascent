@@ -12,6 +12,25 @@ to =gerbil-ascent-relation=, =gerbil-ascent-rule= and
 validate and execute the result. No second evaluator or independent
 fixed-point implementation is introduced.
 
+* POO/C4 program composition
+
+The resulting Program and Relation declarations are POO objects. A caller can
+refine independent declaration axes with native =.o= and compose them with
+=.mix=. Gerbil POO's C4 order resolves which inherited slot wins. The
+[[file:../t/qualification/ascent-module-program-test.ss][module qualification]]
+combines a source-row refinement and a fact-budget refinement from the same
+base Program, then evaluates their composed result. This gives downstream
+modules a typed extension point without a second rule language or a private
+precedence algorithm.
+
+C4 decides declaration precedence. It does not perform relational joins,
+semi-naive closure, safety validation, or provenance admission. Those remain
+with the ASCENT evaluator, Core contracts, and the appropriate downstream
+owner. Future imported rule fragments should expose POO declaration objects
+or hygienic Gerbil macros; their composition must define relation identity,
+duplicate declaration handling, and source diagnostics before it is admitted
+as a DSL form.
+
 The left arrow follows the rule direction in Rust Ascent and the A22 paper.
 Scheme syntax adds lexical capture. Source rows and bounds are evaluated at
 declaration time; predicates, generators and aggregators run when their rule

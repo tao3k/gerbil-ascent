@@ -3,7 +3,7 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 (import (only-in :std/test check-equal? test-suite)
-        (only-in :clan/poo/object .o .ref)
+        (only-in :clan/poo/object .o .mix .ref)
         (only-in :core/observability/testing-case
                  poo-flow-test-case)
         (only-in :gerbil-ascent/t/qualification/ascent-module-source
@@ -47,4 +47,21 @@
                'reach)))
         (check-equal? first '((1 2)))
         (check-equal? (length second) 2)
-        (check-equal? (not (not (member '(1 3) second))) #t)))))
+        (check-equal? (not (not (member '(1 3) second))) #t)))
+    (poo-flow-test-case "C4 combines independent ASCENT declaration refinements"
+      (let* ((base (ascent-origin-reach-program '((1 2)) 1))
+             (relation-values (.ref base 'relations))
+             (edge (car relation-values))
+             (source-profile
+              (.o (:: @ base)
+                  relations:
+                  (cons (.o (:: @ edge) rows: '((1 2) (2 3)))
+                        (cdr relation-values))))
+             (budget-profile
+              (.o (:: @ base) max-output-facts: 12))
+             (composed (.mix source-profile budget-profile))
+             (rows ((.ref (gerbil-ascent-evaluate-program composed) 'rows-of)
+                    'reach)))
+        (check-equal? (.ref composed 'max-output-facts) 12)
+        (check-equal? (length rows) 2)
+        (check-equal? (not (not (member '(1 3) rows))) #t)))))

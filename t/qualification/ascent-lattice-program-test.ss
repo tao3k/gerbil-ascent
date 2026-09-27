@@ -9,6 +9,7 @@
         (only-in :gerbil-ascent/t/qualification/ascent-lattice-program-fixture
                  ascent-lattice-fixture-evaluate)
         (only-in :gerbil-ascent/program/interface
+                 ascent
                  gerbil-ascent-lattice gerbil-ascent-relation
                  gerbil-ascent-atom gerbil-ascent-variable gerbil-ascent-rule
                  gerbil-ascent-program gerbil-ascent-evaluate-program
@@ -20,6 +21,15 @@
 
 (def (shortest edges)
   ((.ref (ascent-lattice-fixture-evaluate edges) 'rows-of) 'shortest))
+
+(def (mixed-program scores improvements)
+  (ascent
+   (lattice score ((node integer?) (value integer?)) scores min)
+   (relation improve ((node integer?) (value integer?)) improvements)
+   (lattice copy ((node integer?) (value integer?)) [] min)
+   ((score node value) <-- (improve node value))
+   ((copy node value) <-- (score node value))
+   (bounds 8 16 24)))
 
 (def ascent-lattice-program-test
   (test-suite "ASCENT lattice fixed point"
@@ -46,7 +56,7 @@
               (gerbil-ascent-program (list composed) [] 4 4 8)))
         (check-equal?
          ((.ref (gerbil-ascent-evaluate-program program) 'rows-of) 'measure)
-         '((1 2) (1 3)))
+         '((1 3)))
         (check-exception
          (gerbil-ascent-evaluate-program
           (gerbil-ascent-program
@@ -62,7 +72,7 @@
                                (gerbil-ascent-variable 'value))))))
            4 4 8))
          true)))
-    (poo-flow-test-case "session retains direct lattice source tuples"
+    (poo-flow-test-case "session joins direct lattice source values"
       (let (session
             (gerbil-ascent-open-session
              (gerbil-ascent-program
@@ -70,10 +80,10 @@
                     (gerbil-ascent-lattice 'best 2 '((1 2)) min))
               [] 4 4 8)))
         (let (first (gerbil-ascent-session-run session))
-          (gerbil-ascent-session-append-source! session 'best '(1 3))
+          (gerbil-ascent-session-append-source! session 'best '(1 1))
           (check-equal?
            ((.ref (gerbil-ascent-session-run session) 'rows-of) 'best)
-           '((1 2) (1 3)))
+           '((1 1)))
           (check-equal? ((.ref first 'rows-of) 'best) '((1 2))))))
     (poo-flow-test-case "direct lattice append rejects before changing state"
       (let* ((session
@@ -82,12 +92,44 @@
                 (list (gerbil-ascent-lattice 'best 2 '((1 2)) min))
                 [] 3 3 2)))
              (first (gerbil-ascent-session-run session)))
-        (gerbil-ascent-session-append-source! session 'best '(1 3))
+        (gerbil-ascent-session-append-source! session 'best '(2 3))
         (let (second (gerbil-ascent-session-run session))
           (check-exception
-           (gerbil-ascent-session-append-source! session 'best '(1 4))
+           (gerbil-ascent-session-append-source! session 'best '(3 4))
            true)
           (check-equal? (eq? second (gerbil-ascent-session-run session)) #t)
           (check-equal? ((.ref second 'rows-of) 'best)
-                        '((1 2) (1 3)))
-          (check-equal? ((.ref first 'rows-of) 'best) '((1 2))))))))
+                        '((1 2) (2 3)))
+          (check-equal? ((.ref first 'rows-of) 'best) '((1 2))))))
+    (poo-flow-test-case
+      "mixed lattice source and rule updates match fresh fixed points"
+      (let* ((session
+              (gerbil-ascent-open-session
+               (mixed-program [] '((0 2)))))
+             (first (gerbil-ascent-session-run session)))
+        (gerbil-ascent-session-append-source! session 'score '(0 2))
+        (let* ((second (gerbil-ascent-session-run session))
+               (fresh
+                (gerbil-ascent-evaluate-program
+                 (mixed-program '((0 2)) '((0 2))))))
+          (for-each
+           (lambda (name)
+             (check-equal? ((.ref second 'rows-of) name)
+                           ((.ref fresh 'rows-of) name)))
+           '(score copy))
+          (check-equal? (eq? second (gerbil-ascent-session-run session)) #t)
+          (gerbil-ascent-session-append-source! session 'score '(0 1))
+          (gerbil-ascent-session-append-source! session 'improve '(0 1))
+          (let* ((third (gerbil-ascent-session-run session))
+                 (fresh-third
+                  (gerbil-ascent-evaluate-program
+                   (mixed-program '((0 2) (0 1))
+                                  '((0 2) (0 1))))))
+            (for-each
+             (lambda (name)
+               (check-equal? ((.ref third 'rows-of) name)
+                             ((.ref fresh-third 'rows-of) name)))
+             '(score copy))
+            (check-equal? ((.ref first 'rows-of) 'score) '((0 2)))
+            (check-equal? ((.ref second 'rows-of) 'score)
+                          '((0 2)))))))))

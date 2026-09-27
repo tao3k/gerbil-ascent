@@ -5,6 +5,7 @@
 
 use super::common::scheme_output;
 use ascent::{Dual, ascent, lattice::set::Set};
+use std::collections::BTreeMap;
 
 type Edge = (u32, u32, u32);
 type Case = (Vec<Edge>, Vec<Edge>);
@@ -183,58 +184,25 @@ fn direct_cases() -> Vec<ScoreCase> {
     result
 }
 
-fn direct_phases(initial: &[(u32, u32)], added: &[(u32, u32)]) -> [Vec<String>; 2] {
-    ascent! {
-        lattice score(u32, Dual<u32>);
-        relation copy(u32, u32);
-        copy(node, *value) <-- score(node, ?Dual(value));
+fn canonical_min_rows(scores: &[Score], improvements: &[Score]) -> Vec<String> {
+    let mut joined = BTreeMap::new();
+    for &(node, value) in scores.iter().chain(improvements) {
+        joined
+            .entry(node)
+            .and_modify(|old: &mut u32| *old = (*old).min(value))
+            .or_insert(value);
     }
-    let rows = |program: &AscentProgram| {
-        let mut result = Vec::new();
-        result.extend(
-            program
-                .score
-                .iter()
-                .map(|(node, Dual(value))| format!("score\t{node}\t{value}")),
-        );
-        result.extend(
-            program
-                .copy
-                .iter()
-                .map(|(node, value)| format!("copy\t{node}\t{value}")),
-        );
-        result.sort_unstable();
-        result
-    };
-    let mut retained = AscentProgram {
-        score: initial
-            .iter()
-            .map(|(node, value)| (*node, Dual(*value)))
-            .collect(),
-        ..AscentProgram::default()
-    };
-    retained.run();
-    let first = rows(&retained);
-    retained
-        .score
-        .extend(added.iter().map(|(node, value)| (*node, Dual(*value))));
-    retained.run();
-    let second = rows(&retained);
-    let mut fresh = AscentProgram {
-        score: initial
-            .iter()
-            .chain(added)
-            .map(|(node, value)| (*node, Dual(*value)))
-            .collect(),
-        ..AscentProgram::default()
-    };
-    fresh.run();
-    assert_eq!(second, rows(&fresh));
-    [first, second]
+    let mut rows = Vec::new();
+    for (node, value) in joined {
+        rows.push(format!("score\t{node}\t{value}"));
+        rows.push(format!("copy\t{node}\t{value}"));
+    }
+    rows.sort_unstable();
+    rows
 }
 
 #[test]
-fn direct_lattice_source_corpus_matches_rust_ascent() {
+fn direct_lattice_source_corpus_matches_canonical_fixed_point() {
     let cases = direct_cases();
     assert_eq!(cases.len(), 66);
     let render = |scores: &[(u32, u32)]| {
@@ -258,7 +226,14 @@ fn direct_lattice_source_corpus_matches_rust_ascent() {
     actual.sort_unstable();
     let mut expected = Vec::new();
     for (index, (initial, added)) in cases.iter().enumerate() {
-        for (phase, rows) in direct_phases(initial, added).into_iter().enumerate() {
+        let combined: Vec<_> = initial.iter().chain(added).copied().collect();
+        for (phase, rows) in [
+            canonical_min_rows(initial, &[]),
+            canonical_min_rows(&combined, &[]),
+        ]
+        .into_iter()
+        .enumerate()
+        {
             expected.extend(
                 rows.into_iter()
                     .map(|row| format!("{index}\t{phase}\t{row}")),
@@ -326,4 +301,57 @@ fn rust_mixed_lattice_repeated_run_retains_an_extra_public_row() {
     fresh.run();
     assert_eq!(values(&retained), vec![(0, 2), (0, 2)]);
     assert_eq!(values(&fresh), vec![(0, 2)]);
+}
+
+#[test]
+fn mixed_lattice_sessions_match_canonical_fixed_points() {
+    let cases = direct_cases();
+    let render = |scores: &[Score]| {
+        scores
+            .iter()
+            .map(|(node, value)| format!("({node} {value})"))
+            .collect::<Vec<_>>()
+            .join(" ")
+    };
+    let rendered = cases
+        .iter()
+        .map(|(initial, added)| format!("(({}) ({}))", render(initial), render(added)))
+        .collect::<Vec<_>>()
+        .join(" ");
+    let output = scheme_output(
+        "lattice-session-corpus-rows",
+        &format!("(mixed ({rendered}))\n"),
+    );
+    let mut actual: Vec<_> = output.lines().map(str::to_owned).collect();
+    assert_eq!(actual.pop().as_deref(), Some("END"));
+    actual.sort_unstable();
+    let mut expected = Vec::new();
+    for (index, (initial, added)) in cases.iter().enumerate() {
+        expected.extend(
+            canonical_min_rows(initial, &[(0, 2), (1, 1)])
+                .into_iter()
+                .map(|row| format!("{index}\t0\t{row}")),
+        );
+        let combined: Vec<_> = initial.iter().chain(added).copied().collect();
+        expected.extend(
+            canonical_min_rows(&combined, &[(0, 2), (1, 1)])
+                .into_iter()
+                .map(|row| format!("{index}\t1\t{row}")),
+        );
+    }
+    expected.sort_unstable();
+    if actual != expected {
+        let first = actual
+            .iter()
+            .zip(&expected)
+            .position(|(left, right)| left != right)
+            .unwrap_or(actual.len().min(expected.len()));
+        panic!(
+            "mixed lattice mismatch at {first}: Scheme {:?}, canonical model {:?} ({} vs {} rows)",
+            actual.get(first),
+            expected.get(first),
+            actual.len(),
+            expected.len()
+        );
+    }
 }

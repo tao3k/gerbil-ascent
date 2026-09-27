@@ -42,10 +42,13 @@ semi-naive deltas across calls to `gerbil-ascent-session-run`. After the first
 run, `gerbil-ascent-session-append-source!` accepts source rows for programs
 whose rule bodies contain only positive relation atoms. Each run returns a
 stable POO result snapshot; an unchanged run returns its previous result.
-Positive source relation updates may feed recursive lattices, and direct
-lattice source rows remain visible as separate tuples across session runs.
-Negation, aggregation, source deletion, and mixed direct-source/derived
-lattice repeated runs still have open parity semantics. The one-shot
+Positive source relation updates may feed recursive lattices. Direct lattice
+source values join by key; after a direct lattice append, the session evaluates
+the accepted source snapshot so rule-derived values and downstream lattices
+reach the same fixed point as a fresh run. Rust Ascent 0.8.0 may expose raw
+same-key source tuples and different rows after a repeated mixed-source run;
+the Rust oracle records those implementation differences. Negation,
+aggregation, and source deletion still require a fresh evaluation. The one-shot
 `gerbil-ascent-evaluate-program` uses the same evaluator.
 
 `t/` contains Scheme qualification; `rust/ascent-oracle/` contains the

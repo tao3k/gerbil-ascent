@@ -9,7 +9,6 @@
         gerbil-ascent-lattice-key
         gerbil-ascent-lattice-value
         gerbil-ascent-joined-row
-        gerbil-ascent-drop-first-lattice-key
         gerbil-ascent-expression-value
         gerbil-ascent-bind-row
         gerbil-ascent-head-row)
@@ -22,14 +21,6 @@
 
 (def (gerbil-ascent-joined-row key value)
   (append key (list value)))
-
-(def (gerbil-ascent-drop-first-lattice-key rows key)
-  (let loop ((remaining rows))
-    (cond
-     ((null? remaining) [])
-     ((equal? (gerbil-ascent-lattice-key (car remaining)) key)
-      (cdr remaining))
-     (else (cons (car remaining) (loop (cdr remaining)))))))
 
 (def (gerbil-ascent-expression-value payload environment)
   (apply (vector-ref payload 1)

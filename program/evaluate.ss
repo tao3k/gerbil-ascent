@@ -14,7 +14,6 @@
                  gerbil-ascent-lattice-key
                  gerbil-ascent-lattice-value
                  gerbil-ascent-joined-row
-                 gerbil-ascent-drop-first-lattice-key
                  gerbil-ascent-expression-value
                  gerbil-ascent-bind-row
                  gerbil-ascent-head-row)
@@ -239,14 +238,28 @@
                  (error "ASCENT source fact budget exceeded"))
                (if (eq? kind 'lattice)
                  (let* ((key (gerbil-ascent-lattice-key row))
-                        (keyed (vector-ref lattice-rows index)))
-                   ;; Pinned Rust keeps every public lattice source tuple.
-                   ;; Only rule-head insertions join the indexed key value.
-                   (hash-put! keyed key row)
-                   (set! source-materialized-count
-                     (+ source-materialized-count 1))
+                        (keyed (vector-ref lattice-rows index))
+                        (previous (hash-get keyed key))
+                        (merged (if previous
+                                  (gerbil-ascent-joined-row
+                                   key ((vector-ref lattice-joins index)
+                                        (gerbil-ascent-lattice-value previous)
+                                        (gerbil-ascent-lattice-value row)))
+                                  row)))
+                   (let (check (vector-ref field-checkers index))
+                     (when check (check merged)))
+                   (hash-put! keyed key merged)
+                   (unless previous
+                     (set! source-materialized-count
+                       (+ source-materialized-count 1)))
                    (vector-set! all index
-                     (cons row (vector-ref all index))))
+                     (cons merged
+                           (if previous
+                             (filter (lambda (existing)
+                                       (not (equal? (gerbil-ascent-lattice-key existing)
+                                                    key)))
+                                     (vector-ref all index))
+                             (vector-ref all index)))))
                  (let (materialized
                        ((vector-ref storage-extensions index)
                         (vector-ref storage-states index)
@@ -362,9 +375,25 @@
                            (eq? (vector-ref clause 0) 'atom))
                          (vector-ref rule 1)))
                rule-plans))
+             (source-additions (make-vector count []))
+             (recompute-from-source? #f)
              (first-run? #t)
              (dirty? #t)
              (last-result #f))
+        (def (source-program-with index row)
+          (let (next-relations
+                (let loop ((remaining relations) (position 0))
+                  (if (null? remaining)
+                    []
+                    (let* ((relation (car remaining))
+                           (additions
+                            (reverse (vector-ref source-additions position)))
+                           (source-rows
+                            (append (.ref relation 'rows) additions
+                                    (if (= position index) (list row) []))))
+                      (cons (.o (:: @ relation) rows: source-rows)
+                            (loop (cdr remaining) (+ position 1)))))))
+            (.o (:: @ program) relations: next-relations)))
         (def (append-source! name row)
           (when first-run?
             (error "ASCENT session must run before source updates"))
@@ -378,25 +407,19 @@
               (when check (check row)))
             (when (>= source-count input-limit)
               (error "ASCENT session input fact budget exceeded"))
-            (if (vector-ref lattice-joins index)
-              (begin
-                (when (> (+ source-materialized-count derived-count 1)
-                         output-limit)
-                  (error "ASCENT session output fact budget exceeded"))
+            (cond
+             ((or recompute-from-source?
+                  (vector-ref lattice-joins index))
+              ;; A lattice refinement can replace a value already consumed
+              ;; by another rule. Re-evaluate the accepted source snapshot
+              ;; before publishing any changed relation or lattice rows.
+              (let* ((candidate (source-program-with index row))
+                     (result (gerbil-ascent-evaluate-program candidate)))
                 (set! source-count (+ source-count 1))
-                (set! source-materialized-count
-                  (+ source-materialized-count 1))
-                (hash-put! (vector-ref lattice-rows index)
-                           (gerbil-ascent-lattice-key row) row)
-                (vector-set! all index (cons row (vector-ref all index)))
-                (vector-set! delta index (cons row (vector-ref delta index)))
-                (set! dirty? #t)
-                (vector-set! all-size index (length (vector-ref all index)))
-                (vector-set! delta-size index (length (vector-ref delta index)))
-                (vector-set! all-version index
-                  (+ 1 (vector-ref all-version index)))
-                (vector-set! delta-version index
-                  (+ 1 (vector-ref delta-version index))))
+                (set! recompute-from-source? #t)
+                (set! dirty? #f)
+                (set! last-result result)))
+             (else
               (let* ((expanded
                     ((vector-ref storage-extensions index)
                      (vector-ref storage-states index)
@@ -445,8 +468,10 @@
                 (vector-set! all-version index
                   (+ 1 (vector-ref all-version index)))
                 (vector-set! delta-version index
-                  (+ 1 (vector-ref delta-version index))))))))
-        (def (run!)
+                  (+ 1 (vector-ref delta-version index)))))))
+            (vector-set! source-additions index
+              (cons row (vector-ref source-additions index)))))
+        (def (run-retained!)
          (when dirty?
          (let evaluate-stratum ((stratum 0))
           (when (<= stratum highest-stratum)
@@ -676,8 +701,10 @@
                      (let (key (gerbil-ascent-lattice-key row))
                        (hash-put! (vector-ref lattice-rows index) key row)
                        (vector-set! all index
-                         (gerbil-ascent-drop-first-lattice-key
-                          (vector-ref all index) key))))
+                         (filter (lambda (existing)
+                                   (not (equal? (gerbil-ascent-lattice-key existing)
+                                                key)))
+                                 (vector-ref all index)))))
                    (hash-put! (vector-ref seen index) row #t)
                    (vector-set! all index (cons row (vector-ref all index)))
                    (set! derived-count (+ derived-count 1))
@@ -708,6 +735,10 @@
                  (rows-of (lambda (name)
                             (vector-ref snapshots (position-of name))))))))
          last-result)
+        (def (run!)
+          (if recompute-from-source?
+            last-result
+            (run-retained!)))
         (if session?
           (validate GerbilAscentSessionContract
                     (.o (:: @ Session.)

@@ -51,10 +51,12 @@
         (cadr row)))
      (rows-of 'reach-tag))))
 
-(def (direct-program scores)
+(def (direct-program scores (improvements []))
   (ascent
    (lattice score ((node integer?) (value integer?)) scores min)
-   (relation copy ((node integer?) (value integer?)))
+   (relation improve ((node integer?) (value integer?)) improvements)
+   (lattice copy ((node integer?) (value integer?)) [] min)
+   ((score node value) <-- (improve node value))
    ((copy node value) <-- (score node value))
    (bounds 32 64 96)))
 
@@ -73,14 +75,16 @@
         (rows-of name)))
      '(score copy))))
 
-(def (print-direct-cases cases)
+(def (print-direct-cases cases mixed?)
   (let loop ((remaining cases) (index 0))
     (unless (null? remaining)
       (let* ((case (car remaining))
              (initial (car case))
              (added (cadr case))
-             (session (gerbil-ascent-open-session
-                       (direct-program initial)))
+             (session
+              (gerbil-ascent-open-session
+               (direct-program initial
+                               (if mixed? '((0 2) (1 1)) []))))
              (first (gerbil-ascent-session-run session))
              (first-rows-of (.ref first 'rows-of))
              (first-snapshot (map first-rows-of '(score copy))))
@@ -99,8 +103,8 @@
   (unless (null? args)
     (error "ASCENT lattice session corpus reads one case list"))
   (let (request (read))
-    (if (and (pair? request) (eq? (car request) 'direct))
-      (print-direct-cases (cadr request))
+    (if (and (pair? request) (memq (car request) '(direct mixed)))
+      (print-direct-cases (cadr request) (eq? (car request) 'mixed))
       (let loop ((cases request) (index 0))
         (unless (null? cases)
           (let* ((case (car cases))

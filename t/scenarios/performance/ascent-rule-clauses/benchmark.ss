@@ -15,7 +15,7 @@
  (feature . ascent-rule-clauses)
  (optimizationFocus . "ordered POO clause evaluation and semi-naive relation deltas")
  (inputShape . "three ternary edge rows and three node rows")
- (expectedOutcome . "one hot row, six choices, three generated rows, and four reachable pairs")
+ (expectedOutcome . "one hot row, six choices, three generated rows, three bound dependent rows, and four reachable pairs")
  (expectedRepair . "reduce repeated clause dispatch while retaining the Core POO declaration boundary")
  (baseline . "repeat deep Core contract validation and POO slot lookup on every evaluation")
  (candidate . "validate POO declarations at construction and read private clause plans once per evaluation")

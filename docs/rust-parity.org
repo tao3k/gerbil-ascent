@@ -112,6 +112,10 @@ rules and includes a directed cycle. One recursive rule has two heads:
 deduplication for an empty source, a self-loop, a cycle, reversed source
 order, duplicate edges, a branching graph with a cycle, and a finite chain.
 This is evidence for one SCC shape, not a general termination proof.
+The standard =ascent-mutual-recursive-heads= SS scenario measures 20
+evaluations of a predeclared three-edge cyclic program with a 1 ms p95
+ceiling. It checks all nine rows in each path relation and all three unary
+witnesses outside the timed region.
 The repeated-run oracle now uses one Rust program for an initial edge, a
 second edge, an unchanged run, a duplicate source edge, and a closing cycle.
 It checks the final result against a fresh Rust program and Scheme snapshot

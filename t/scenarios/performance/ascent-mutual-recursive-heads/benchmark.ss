@@ -1,0 +1,22 @@
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+((benchmarkKind . scenario-e2e)
+ (max_total . 1000us)
+ (target_total . 700us)
+ (regression_budget . 300us)
+ (expected_over_input_budget . 0us)
+ (sampleCount . 20)
+ (targetRationale . "Measure a two-relation recursive SCC whose first rule emits both a path and a witness.")
+ (unit . "us")
+ (sourcePath . "t/scenarios/performance/ascent-mutual-recursive-heads/benchmark.ss")
+ (rule . GERBIL-SCHEME-AGENT-R031)
+ (feature . ascent-mutual-recursive-heads)
+ (optimizationFocus . "semi-naive SCC deltas and multiple-head emission")
+ (inputShape . "three-edge directed cycle; 9 rows in each path relation and 3 witnesses")
+ (expectedOutcome . "both path relations contain the nine cycle pairs and witness contains all three nodes")
+ (expectedRepair . "reuse the Scheme rule analysis and delta plan while retaining POO declaration semantics")
+ (baseline . "rebuild rule strata and delta positions for every evaluation")
+ (candidate . "reuse immutable rule analysis for the same POO program")
+ (measurementPhases candidate-recursive-heads assert-semantic-gate assert-time-gate)
+ (tags poo ascent recursive multi-head performance))

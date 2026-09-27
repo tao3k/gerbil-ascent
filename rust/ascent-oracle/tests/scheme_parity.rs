@@ -1224,20 +1224,8 @@ fn mutually_recursive_scc_matches_ascent() {
         path0(x, z) <-- path1(x, y), edge(y, z);
         path0(x, y) <-- edge(x, y);
     }
-    for edges in [
-        vec![],
-        vec![(1, 1)],
-        vec![(1, 2), (2, 3), (3, 1)],
-        vec![(3, 1), (2, 3), (1, 2)],
-        vec![(1, 2), (1, 2), (2, 3), (3, 1)],
-        vec![(1, 2), (1, 3), (2, 4), (3, 4), (4, 2)],
-        vec![(1, 2), (2, 3)],
-    ] {
-        let mut program = AscentProgram {
-            edge: edges.clone(),
-            ..AscentProgram::default()
-        };
-        program.run();
+    let compare = |program: &AscentProgram, phase: &str| {
+        let edges = &program.edge;
         let mut rust_rows = program
             .path0
             .iter()
@@ -1264,6 +1252,39 @@ fn mutually_recursive_scc_matches_ascent() {
             .map(str::to_owned)
             .collect::<Vec<_>>();
         scheme_rows.sort();
-        assert_eq!(scheme_rows, rust_rows, "source {edges:?}");
+        assert_eq!(scheme_rows, rust_rows, "{phase}: source {edges:?}");
+    };
+    for edges in [
+        vec![],
+        vec![(1, 1)],
+        vec![(1, 2), (2, 3), (3, 1)],
+        vec![(3, 1), (2, 3), (1, 2)],
+        vec![(1, 2), (1, 2), (2, 3), (3, 1)],
+        vec![(1, 2), (1, 3), (2, 4), (3, 4), (4, 2)],
+        vec![(1, 2), (2, 3)],
+    ] {
+        let mut program = AscentProgram {
+            edge: edges.clone(),
+            ..AscentProgram::default()
+        };
+        program.run();
+        compare(&program, "fresh");
+    }
+    let mut retained = AscentProgram {
+        edge: vec![(1, 2)],
+        ..AscentProgram::default()
+    };
+    for (phase, addition) in [
+        ("initial", None),
+        ("append", Some((2, 3))),
+        ("unchanged", None),
+        ("duplicate", Some((2, 3))),
+        ("cycle", Some((3, 1))),
+    ] {
+        if let Some(edge) = addition {
+            retained.edge.push(edge);
+        }
+        retained.run();
+        compare(&retained, phase);
     }
 }

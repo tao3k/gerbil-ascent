@@ -25,8 +25,9 @@
          (predecessors (vector-ref state 1))
          (successors (vector-ref state 2))
          (added [])
-         (planned (make-hash-table))
-         (planned-count 0))
+         (planned #f)
+         (planned-count 0)
+         (safe-budget? #f))
     (def (node-key node)
       (if (= width 3) (cons group node) node))
     (def (reach root arcs)
@@ -49,33 +50,44 @@
                  (or (hash-get arcs (node-key node)) []))))
             (loop)))
         nodes))
-    (def (plan! from to)
+    (def (emit! from to)
       (let (fact (if (= width 3)
                   (list group from to)
                   (list from to)))
-        (unless (or (hash-get known fact) (hash-get planned fact))
-          (set! planned-count (+ planned-count 1))
-          (when (> planned-count budget)
-            (error "ASCENT trrel output fact budget exceeded"))
-          (hash-put! planned fact #t)
+        (unless (or (hash-get known fact)
+                    (and planned (hash-get planned fact)))
+          (unless safe-budget?
+            (set! planned-count (+ planned-count 1))
+            (when (> planned-count budget)
+              (error "ASCENT trrel output fact budget exceeded"))
+            (hash-put! planned fact #t))
+          (when safe-budget? (hash-put! known fact #t))
           (set! added (cons fact added)))))
-    (when new-edge?
-      (let ((from-nodes (reach left predecessors))
-            (to-nodes (reach right successors)))
+    (let ((from-nodes (if new-edge? (reach left predecessors) []))
+          (to-nodes (if new-edge? (reach right successors) [])))
+      ;; A loose upper bound avoids an allocation and preflight pass for the
+      ;; common case while still proving that no budget failure can occur.
+      (set! safe-budget?
+        (<= (+ (* (length from-nodes) (length to-nodes))
+               (if reflexive? 2 0))
+            budget))
+      (unless safe-budget? (set! planned (make-hash-table)))
+      (when new-edge?
         (for-each
          (lambda (from)
            (for-each
             (lambda (to)
               (when (or (not (equal? from to))
                         (and (equal? left right) (equal? from left)))
-                (plan! from to)))
+                (emit! from to)))
             to-nodes))
          from-nodes)))
     (when reflexive?
-      (plan! left left)
-      (plan! right right))
+      (emit! left left)
+      (emit! right right))
     ;; Commit only after all new rows fit the caller's budget.
-    (for-each (lambda (fact) (hash-put! known fact #t)) added)
+    (unless safe-budget?
+      (for-each (lambda (fact) (hash-put! known fact #t)) added))
     (when new-edge?
       (let ((left-key (node-key left))
             (right-key (node-key right)))

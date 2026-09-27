@@ -96,9 +96,12 @@
                                  index)
                      32))
             rows
-            (let* ((cache (vector-ref
-                           (if use-delta? delta-indexes all-indexes)
-                           index))
+            (let* ((caches (if use-delta? delta-indexes all-indexes))
+                   (cache
+                    (or (vector-ref caches index)
+                        (let (fresh (make-hash-table))
+                          (vector-set! caches index fresh)
+                          fresh)))
                    (version (vector-ref
                              (if use-delta? delta-version all-version)
                              index))
@@ -137,6 +140,9 @@
                  (width (.ref relation 'arity))
                  (rows (.ref relation 'rows))
                  (kind (.ref relation 'storage-kind))
+                 (storage-provider
+                  (and (eq? kind 'relation)
+                       (.ref relation 'storage-provider)))
                  (present (make-hash-table)))
             (unless (and (symbol? name) (not (hash-get positions name))
                          (exact-integer? width) (<= 0 width) (list? rows)
@@ -156,10 +162,9 @@
               ;; Resolve the POO method slot once per relation. The row loop
               ;; calls the selected Scheme function without redispatching.
               (vector-set! storage-extensions index
-                (.ref (.ref relation 'storage-provider) '.extend-rows))
+                (.ref storage-provider '.extend-rows))
               (vector-set! storage-states index
-                (gerbil-ascent-storage-make-state
-                 (.ref relation 'storage-provider))))
+                (gerbil-ascent-storage-make-state storage-provider)))
             (for-each
              (lambda (row)
                (unless (and (list? row) (= (length row) width))
@@ -213,19 +218,18 @@
             (vector-set! seen index present)
             (vector-set! index-providers index
               (.ref relation 'index-provider))
-            (vector-set! all-indexes index (make-hash-table))
-            (vector-set! delta-indexes index (make-hash-table))
             (vector-set! delta index (vector-ref all index))
             (vector-set! all-size index (length (vector-ref all index)))
             (vector-set! delta-size index
               (vector-ref all-size index))
             (initialize (cdr remaining) (+ index 1)))))
       (def (prepare-rule rule)
-        (let ((bound []) (atoms 0) (body-plans []))
-          (unless (and (object? rule)
-                       (list? (.ref rule 'body))
-                       (pair? (.ref rule 'heads))
-                       (list? (.ref rule 'heads)))
+        (unless (object? rule)
+          (error "invalid ASCENT rule declaration" rule))
+        (let* ((body (.ref rule 'body))
+               (heads (.ref rule 'heads))
+               (bound []) (atoms 0) (body-plans []))
+          (unless (and (list? body) (pair? heads) (list? heads))
             (error "invalid ASCENT rule declaration" rule))
           (for-each
            (lambda (clause)
@@ -235,7 +239,7 @@
                (set! body-plans (cons (vector-ref result 0) body-plans))
                (set! bound (vector-ref result 1))
                (set! atoms (+ atoms (vector-ref result 2)))))
-           (.ref rule 'body))
+           body)
           (let (head-plans
                 (map (lambda (head)
                        (unless (and (object? head)
@@ -250,7 +254,7 @@
                                        (cdr term)))))
                           (vector-ref plan 1))
                          plan))
-                     (.ref rule 'heads)))
+                     heads))
             (vector head-plans (reverse body-plans) atoms))))
       (let* ((rule-plans (map prepare-rule rules))
              (strata (gerbil-ascent-rule-strata rule-plans count))
@@ -351,23 +355,23 @@
                   (vector-set! delta-version index
                     (+ 1 (vector-ref delta-version index)))
                   (reset-delta (+ index 1))))
-              (until (not active?)
+          (until (not active?)
           (set! round (+ round 1))
           (let ((pending (make-vector count []))
                 (pending-seen (make-vector count #f))
                 (pending-count 0))
-            (let init-pending ((index 0))
-              (when (< index count)
-                (vector-set! pending-seen index (make-hash-table))
-                (init-pending (+ index 1))))
             (def (emit! atom environment)
               (let* ((index (vector-ref atom 0))
                      (row (gerbil-ascent-head-row
-                           (vector-ref atom 1) environment)))
+                           (vector-ref atom 1) environment))
+                     (pending-table
+                      (or (vector-ref pending-seen index)
+                          (let (fresh (make-hash-table))
+                            (vector-set! pending-seen index fresh)
+                            fresh))))
                 (if (vector-ref lattice-joins index)
                   (let* ((key (gerbil-ascent-lattice-key row))
-                         (staged (hash-get (vector-ref pending-seen index)
-                                           key))
+                         (staged (hash-get pending-table key))
                          (prior (or staged
                                     (hash-get (vector-ref lattice-rows index)
                                               key)))
@@ -380,7 +384,7 @@
                     (unless (and prior (equal? merged prior))
                       (unless staged
                         (set! pending-count (+ pending-count 1)))
-                      (hash-put! (vector-ref pending-seen index) key merged)
+                      (hash-put! pending-table key merged)
                       (vector-set! pending index
                         (cons merged
                               (filter (lambda (existing)
@@ -404,9 +408,8 @@
                                        (vector-ref arity index)))
                          (error "invalid ASCENT storage provider row" stored))
                        (unless (or (hash-get (vector-ref seen index) stored)
-                                   (hash-get (vector-ref pending-seen index)
-                                             stored))
-                         (hash-put! (vector-ref pending-seen index) stored #t)
+                                   (hash-get pending-table stored))
+                         (hash-put! pending-table stored #t)
                          (set! pending-count (+ pending-count 1))
                          (vector-set! pending index
                            (cons stored (vector-ref pending index)))))

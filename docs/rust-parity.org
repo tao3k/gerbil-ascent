@@ -10,6 +10,10 @@
 The first target is behavioral parity with the pinned =ascent 0.8.0= oracle,
 interpreted through Scheme and Gerbil modules. The [[https://s-arash.github.io/ascent/cc22main-p95-seamless-deductive-inference-via-macros.pdf][CC 2022 paper]],
 [[https://kmicinski.com/assets/byods.pdf][BYODS paper]], and [[https://github.com/s-arash/ascent][Rust implementation]] define the baseline.
+Where Rust 0.8.0 exposes raw same-key lattice source rows or retained-run
+artifacts that disagree with the paper's lattice fixed-point semantics,
+the Scheme result follows the fixed point and records the Rust difference
+with a pinned probe and an independent semilattice model.
 Rust-specific surface syntax and ownership rules need equivalent Scheme APIs
 and macro behavior; copying Rust syntax is not a requirement. Each row closes
 only with a matching Rust fixture, Scheme result comparison, invalid-program
@@ -26,7 +30,7 @@ interaction lacks executable evidence.
 | Gate | Required evidence | Current open work |
 |------+-------------------+-------------------|
 | Source and API | Scheme macro/module forms cover each pinned Rust syntax family; POO contracts reject malformed declarations before evaluation; exported session/program API is documented | generated API equivalents, complete invalid-program diagnostics, remaining attribute semantics |
-| Fixed point | Same-input Rust/Scheme differential covers recursive SCCs, strata, negation, aggregation, lattice joins, and their combinations; independent finite-model checks cover bounded graphs | product/other partial-order lattices, additional invalid dependency shapes, larger-scale behavior |
+| Fixed point | Same-input Rust/Scheme differential covers recursive SCCs, strata, negation, aggregation, lattice joins, and their combinations; independent finite-model checks cover bounded graphs and adjudicate pinned Rust lattice-source divergences | product/other partial-order lattices, additional invalid dependency shapes, larger-scale behavior |
 | State and storage | All pinned BYODS Provider families and repeated-run modes have differential and failure-atomic receipts; independent and intra-program concurrency are bounded | wider producer partitions, mixed direct-source/derived lattice performance, nonpositive update policy, intra-program parallel execution |
 | Admission | Full Scheme and Rust policy gates plus exact pinned POO Flow Linux integration and unchanged SS budgets pass at one final head | rerun after every new pin; no earlier green run substitutes for final-head evidence |
 

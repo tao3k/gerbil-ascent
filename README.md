@@ -53,7 +53,8 @@ aggregation, and source deletion still require a fresh evaluation. The one-shot
 
 `t/` contains Scheme qualification; `rust/ascent-oracle/` contains the
 test-only Rust Ascent differential oracle. The [parity matrix](docs/rust-parity.org)
-tracks the unfinished Rust 0.8.0 feature surface. Complete Scheme parity is
+tracks the unfinished Rust 0.8.0 feature surface and documented fixed-point
+divergences. Complete Scheme semantic coverage is
 the gate before new Agent-specific extensions. POO Flow consumes this package
 as a pinned submodule. MRR owns the semantic adapter and admission of its
 own evidence.

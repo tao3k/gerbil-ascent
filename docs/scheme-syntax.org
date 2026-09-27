@@ -54,6 +54,7 @@ existing program contract.
 | =(if-let (output ...) (input ...) expression pattern)= | Native Gerbil match; failed pattern drops the candidate |
 | =(match (output ...) (input) pattern)= | Destructure one bound value with native Gerbil match |
 | =(expr (bound ...) expression)= | Head or body atom value computed from named bindings |
+| =(pat (output ...) pattern)= | Match one positive atom column and bind native Gerbil pattern outputs |
 
 The evaluator checks bound variables, negation safety and dependency
 stratification. Syntax forms make those contracts readable; they do not
@@ -85,7 +86,8 @@ BYODS attributes. Current Scheme qualification covers the first group
 through the forms above. A Rust 0.8.0 differential fixture compares facts,
 disjunction, dynamic head expressions, =if let= and =?pattern= against the
 Scheme forms. Body expressions with named dependencies pass both row-local
-and indexed Provider qualification. Broader atom expressions and patterns,
+and indexed Provider qualification. Inline positive-atom patterns use native
+Gerbil =match=. Broader atom expressions and pattern contexts,
 aggregate output patterns, embedded rule fragments, typed declarations and
 the generated Rust API remain open. Parallel Ascent is an execution-policy
 gap, not a token-level grammar feature.
@@ -127,7 +129,7 @@ law evidence; the syntax alone cannot establish it.
 | Parenthesized =|= disjunction | =(or (and clause ...) ...)= | Two disjunction points qualified, one Rust differential |
 | Head expression | =(expr (bound ...) expression)= | Rust differential over three source snapshots |
 | Body argument expression | =(expr (bound ...) expression)= | Same-atom and indexed prior-bound qualification; broader Rust differential open |
-| =?pat= body argument | =(r value)= followed by =(match (output ...) (value) pattern)= | =Some= success/failure Rust differential; inline lowering open |
+| =?pat= body argument | =(r (pat (output ...) pattern))= | Inline =Some= success/failure Rust differential; native Gerbil pattern semantics |
 | Inline =if= / =let= after atom arguments | Separate following clause | Selected output parity; source position diagnostics open |
 | Embedded macro definition/invocation | Native Gerbil =defsyntax= and imported rule fragments | Local fragment composition and hygiene differential open |
 | =include_source!= | Gerbil module import | Program inclusion and diagnostics open |

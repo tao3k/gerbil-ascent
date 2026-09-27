@@ -90,4 +90,35 @@
                         (cons (list (+ 100 index) (+ 200 index)) rows)))))
              (result (ascent-index-expression-evaluate edges provider)))
         (check-equal? ((.ref result 'rows-of) 'anchored-target) '((9)))
-        (check-equal? (not (not (member '(0) builds))) #t)))))
+        (check-equal? (not (not (member '(0) builds))) #t)))
+    (poo-flow-test-case "inline pattern binds later columns in one atom"
+      (let* ((result
+              (gerbil-ascent-evaluate-program
+               (ascent
+                (relation optional-pair (value next)
+                          '(((some . 4) 5) ((some . 4) 6)
+                            (#f 5)))
+                (relation matched (value))
+                ((matched x) <--
+                 (optional-pair (pat (x) (cons 'some x))
+                                (expr (x) (+ x 1))))
+                (bounds 8 8 16))))
+             (rows ((.ref result 'rows-of) 'matched)))
+        (check-equal? rows '((4)))))
+    (poo-flow-test-case "inline pattern rejects duplicate bindings"
+      (check-exception
+       (gerbil-ascent-evaluate-program
+        (ascent
+         (relation item (value) '((1)))
+         (relation out (value))
+         ((out x) <-- (item x) (item (pat (x) x)))
+         (bounds 4 4 8)))
+       true))
+    (poo-flow-test-case "inline pattern cannot bind in rule head"
+      (check-exception
+       (gerbil-ascent-evaluate-program
+        (ascent
+         (relation out (value))
+         (fact (out (pat (x) x)))
+         (bounds 4 4 8)))
+       true))))

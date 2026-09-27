@@ -8,12 +8,19 @@
 (export ascent)
 
 (defsyntax (ascent-term stx)
-  (syntax-case stx (lit expr)
+  (syntax-case stx (lit expr pat)
     ((_ (lit value))
      (syntax (gerbil-ascent-literal value)))
     ((_ (expr (input ...) value))
      (syntax (gerbil-ascent-expression
               '(input ...) (lambda (input ...) value))))
+    ((_ (pat (output ...) pattern))
+     (syntax (gerbil-ascent-pattern
+              '(output ...)
+              (lambda (value)
+                (match value
+                  (pattern (list output ...))
+                  (_ #f))))))
     ((_ value)
      (identifier? (syntax value))
      (syntax (gerbil-ascent-variable 'value)))

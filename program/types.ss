@@ -50,7 +50,7 @@
                    (element? GerbilAscentStorageProviderContract value))))
 (def +term-kind+
   (slot-contract 'ascent/term-kind
-                 (lambda (value) (memq value '(variable literal expression)))))
+                 (lambda (value) (memq value '(variable literal expression pattern)))))
 (def +any+ (slot-contract 'ascent/value (lambda (_value) #t)))
 (def +plan+ (slot-contract 'ascent/clause-plan procedure?))
 (def (clause-kind-contract kind)

@@ -39,6 +39,18 @@
              (value (car values))
              (kind (car term)))
         (case kind
+          ((pattern)
+           (let* ((payload (cdr term))
+                  (matched ((vector-ref payload 1) value))
+                  (outputs (vector-ref payload 0)))
+             (and matched
+                  (begin
+                    (unless (and (list? matched)
+                                 (= (length matched) (length outputs)))
+                      (error "ASCENT pattern returned invalid bindings"
+                             matched outputs))
+                    (loop (cdr patterns) (cdr values)
+                          (append (map cons outputs matched) bindings))))))
           ((literal expression)
            (and (equal? (if (eq? kind 'literal)
                           (cdr term)
@@ -61,6 +73,8 @@
            ((literal) (cdr term))
            ((expression)
             (gerbil-ascent-expression-value (cdr term) environment))
+           ((pattern)
+            (error "ASCENT pattern is invalid in a rule head"))
            (else
             (let (binding (assq (cdr term) environment))
               (unless binding

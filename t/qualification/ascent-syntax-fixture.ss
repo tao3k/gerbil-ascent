@@ -86,6 +86,6 @@
     ((successor (expr (x) (+ x 1))) <-- (edge x y))
     ((unwrapped x) <-- (optional value)
      (if-let (x) (value) value (cons 'some x)))
-    ((unwrapped-pattern x) <-- (optional value)
-     (match (x) (value) (cons 'some x)))
+    ((unwrapped-pattern x) <--
+     (optional (pat (x) (cons 'some x))))
     (bounds 16 16 32))))

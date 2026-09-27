@@ -28,6 +28,7 @@
         gerbil-ascent-variable
         gerbil-ascent-literal
         gerbil-ascent-expression
+        gerbil-ascent-pattern
         gerbil-ascent-atom
         gerbil-ascent-guard
         gerbil-ascent-generator
@@ -62,6 +63,10 @@
        (error "unbound ASCENT clause variable" name)))
    names))
 
+(def (pattern-outputs term)
+  (and (eq? (car term) 'pattern)
+       (vector-ref (cdr term) 0)))
+
 (def (indexed-atom plan bound)
   (let loop ((terms (vector-ref plan 1)) (column 0)
              (columns []) (seen-bound bound))
@@ -81,17 +86,31 @@
                            (andmap (lambda (name) (memq name bound)) inputs)))
                 (cons column columns)
                 columns)
-              (if (eq? kind 'variable)
-                (cons (cdr term) seen-bound)
-                seen-bound))))))
+              (cond
+               ((eq? kind 'variable) (cons (cdr term) seen-bound))
+               ((eq? kind 'pattern)
+                (append (pattern-outputs term) seen-bound))
+               (else seen-bound)))))))
 
 (def (atom-clause-plan clause atom-plan bound)
   (let* ((plan (indexed-atom (atom-plan clause) bound))
          (next-bound
           (foldl (lambda (term prior)
-                   (if (eq? (car term) 'variable)
-                     (cons (cdr term) prior)
-                     prior))
+                   (cond
+                    ((eq? (car term) 'variable)
+                     (cons (cdr term) prior))
+                    ((eq? (car term) 'pattern)
+                     (let loop ((outputs (pattern-outputs term))
+                                (next prior))
+                       (if (null? outputs)
+                         next
+                         (begin
+                           (when (memq (car outputs) next)
+                             (error "ASCENT pattern variable already bound"
+                                    (car outputs)))
+                           (loop (cdr outputs)
+                                 (cons (car outputs) next))))))
+                    (else prior)))
                  bound (vector-ref plan 1))))
     (vector (vector 'atom plan) next-bound 1)))
 
@@ -99,6 +118,8 @@
   (let (plan (indexed-atom (atom-plan clause) bound))
     (for-each
      (lambda (term)
+       (when (eq? (car term) 'pattern)
+         (error "ASCENT pattern cannot bind in negation"))
        (when (and (eq? (car term) 'variable)
                   (not (memq (cdr term) bound)))
          (error "unsafe ASCENT negation variable" (cdr term))))
@@ -134,6 +155,8 @@
          (name (.ref clause 'variable))
          (inputs (.ref clause 'variables))
          (terms (vector-ref plan 1)))
+    (when (ormap pattern-outputs terms)
+      (error "ASCENT pattern cannot bind in aggregate"))
     (when (memq name bound)
       (error "ASCENT aggregate variable already bound" name))
     (for-each
@@ -200,6 +223,15 @@
   (validate GerbilAscentTermContract
             (.o (:: @ Term.) kind: 'expression
                 value: (vector input-variables compute))))
+
+(def (gerbil-ascent-pattern output-variables matcher)
+  (unless (and (list? output-variables)
+               (andmap symbol? output-variables)
+               (procedure? matcher))
+    (error "invalid ASCENT pattern" output-variables matcher))
+  (validate GerbilAscentTermContract
+            (.o (:: @ Term.) kind: 'pattern
+                value: (vector output-variables matcher))))
 
 (def (gerbil-ascent-atom relation-name atom-terms)
   (validate GerbilAscentAtomContract

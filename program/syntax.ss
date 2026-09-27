@@ -8,9 +8,12 @@
 (export ascent)
 
 (defsyntax (ascent-term stx)
-  (syntax-case stx (lit)
+  (syntax-case stx (lit expr)
     ((_ (lit value))
      (syntax (gerbil-ascent-literal value)))
+    ((_ (expr (input ...) value))
+     (syntax (gerbil-ascent-expression
+              '(input ...) (lambda (input ...) value))))
     ((_ value)
      (identifier? (syntax value))
      (syntax (gerbil-ascent-variable 'value)))
@@ -74,7 +77,7 @@
      (syntax (ascent-atom (name term ...))))))
 
 (defsyntax (ascent-relation stx)
-  (syntax-case stx ()
+  (syntax-case stx (index storage)
     ((_ (name (column ...) source (index provider) (storage storage-provider)))
      (syntax (gerbil-ascent-relation
               'name (length '(column ...)) source provider storage-provider)))
@@ -89,7 +92,7 @@
               'name (length '(column ...)) [])))))
 
 (defsyntax (ascent-lattice stx)
-  (syntax-case stx ()
+  (syntax-case stx (index)
     ((_ (name (column ...) source join (index provider)))
      (syntax (gerbil-ascent-lattice
               'name (length '(column ...)) source join provider)))
@@ -124,7 +127,7 @@
      (syntax (list (ascent-rule (head <-- done ...)))))))
 
 (defsyntax (ascent-collect stx)
-  (syntax-case stx (relation lattice bounds <--)
+  (syntax-case stx (relation lattice index storage fact facts bounds <--)
     ((_ (declared ...) (lowered ...)
         (lattice name (column ...) source join (index provider)) clause ...)
      (syntax (ascent-collect

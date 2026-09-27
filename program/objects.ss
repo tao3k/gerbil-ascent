@@ -27,6 +27,7 @@
         gerbil-ascent-lattice
         gerbil-ascent-variable
         gerbil-ascent-literal
+        gerbil-ascent-expression
         gerbil-ascent-atom
         gerbil-ascent-guard
         gerbil-ascent-generator
@@ -62,16 +63,27 @@
    names))
 
 (def (indexed-atom plan bound)
-  (let loop ((terms (vector-ref plan 1)) (column 0) (columns []))
+  (let loop ((terms (vector-ref plan 1)) (column 0)
+             (columns []) (seen-bound bound))
     (if (null? terms)
       (vector (vector-ref plan 0) (vector-ref plan 1)
               (reverse columns))
-      (let (term (car terms))
+      (let* ((term (car terms))
+             (kind (car term))
+             (inputs (and (eq? kind 'expression)
+                          (vector-ref (cdr term) 0))))
+        (when inputs (require-bound inputs seen-bound))
         (loop (cdr terms) (+ column 1)
-              (if (or (eq? (car term) 'literal)
-                      (memq (cdr term) bound))
+              (if (or (eq? kind 'literal)
+                      (and (eq? kind 'variable)
+                           (memq (cdr term) bound))
+                      (and inputs
+                           (andmap (lambda (name) (memq name bound)) inputs)))
                 (cons column columns)
-                columns))))))
+                columns)
+              (if (eq? kind 'variable)
+                (cons (cdr term) seen-bound)
+                seen-bound))))))
 
 (def (atom-clause-plan clause atom-plan bound)
   (let* ((plan (indexed-atom (atom-plan clause) bound))
@@ -179,6 +191,15 @@
 (def (gerbil-ascent-literal literal-value)
   (validate GerbilAscentTermContract
             (.o (:: @ Term.) kind: 'literal value: literal-value)))
+
+(def (gerbil-ascent-expression input-variables compute)
+  (unless (and (list? input-variables)
+               (andmap symbol? input-variables)
+               (procedure? compute))
+    (error "invalid ASCENT head expression" input-variables compute))
+  (validate GerbilAscentTermContract
+            (.o (:: @ Term.) kind: 'expression
+                value: (vector input-variables compute))))
 
 (def (gerbil-ascent-atom relation-name atom-terms)
   (validate GerbilAscentAtomContract

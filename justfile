@@ -47,6 +47,9 @@ aggregate-rows:
 derived-aggregate-rows:
     @timeout 60s gerbil {{ gerbil_test_runtime_options }} t/qualification/ascent-derived-aggregate-program-output.ss
 
+syntax-rows:
+    @timeout 60s gerbil {{ gerbil_test_runtime_options }} t/qualification/ascent-syntax-program-output.ss
+
 lattice-rows:
     @timeout 60s gerbil {{ gerbil_test_runtime_options }} t/qualification/ascent-lattice-program-output.ss
 

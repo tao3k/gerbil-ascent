@@ -9,4 +9,5 @@ mod common;
 mod lattice_index;
 mod module_session;
 mod positive_closure;
+mod syntax;
 mod typed_rules;

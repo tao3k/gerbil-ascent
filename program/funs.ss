@@ -9,6 +9,7 @@
         gerbil-ascent-lattice-key
         gerbil-ascent-lattice-value
         gerbil-ascent-joined-row
+        gerbil-ascent-expression-value
         gerbil-ascent-bind-row
         gerbil-ascent-head-row)
 
@@ -21,6 +22,15 @@
 (def (gerbil-ascent-joined-row key value)
   (append key (list value)))
 
+(def (gerbil-ascent-expression-value payload environment)
+  (apply (vector-ref payload 1)
+         (map (lambda (name)
+                (let (binding (assq name environment))
+                  (unless binding
+                    (error "unbound ASCENT expression variable" name))
+                  (cdr binding)))
+              (vector-ref payload 0))))
+
 (def (gerbil-ascent-bind-row terms row environment)
   (let loop ((patterns terms) (values row) (bindings environment))
     (if (null? patterns)
@@ -28,25 +38,34 @@
       (let* ((term (car patterns))
              (value (car values))
              (kind (car term)))
-        (if (eq? kind 'literal)
-          (and (equal? (cdr term) value)
-               (loop (cdr patterns) (cdr values) bindings))
-          (let* ((name (cdr term))
-                 (previous (assq name bindings)))
-            (if previous
-              (and (equal? (cdr previous) value)
-                   (loop (cdr patterns) (cdr values) bindings))
-              (loop (cdr patterns) (cdr values)
-                    (cons (cons name value) bindings)))))))))
+        (case kind
+          ((literal expression)
+           (and (equal? (if (eq? kind 'literal)
+                          (cdr term)
+                          (gerbil-ascent-expression-value
+                           (cdr term) bindings))
+                        value)
+                (loop (cdr patterns) (cdr values) bindings)))
+          (else
+           (let* ((name (cdr term))
+                  (previous (assq name bindings)))
+             (if previous
+               (and (equal? (cdr previous) value)
+                    (loop (cdr patterns) (cdr values) bindings))
+               (loop (cdr patterns) (cdr values)
+                     (cons (cons name value) bindings))))))))))
 
 (def (gerbil-ascent-head-row terms environment)
   (map (lambda (term)
-         (if (eq? (car term) 'literal)
-           (cdr term)
-           (let (binding (assq (cdr term) environment))
-             (unless binding
-               (error "unbound ASCENT head variable" (cdr term)))
-             (cdr binding))))
+         (case (car term)
+           ((literal) (cdr term))
+           ((expression)
+            (gerbil-ascent-expression-value (cdr term) environment))
+           (else
+            (let (binding (assq (cdr term) environment))
+              (unless binding
+                (error "unbound ASCENT head variable" (cdr term)))
+              (cdr binding)))))
        terms))
 
 (def (gerbil-ascent-rule-strata rule-plans relation-count)

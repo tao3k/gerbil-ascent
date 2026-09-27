@@ -14,6 +14,7 @@
                  gerbil-ascent-lattice-key
                  gerbil-ascent-lattice-value
                  gerbil-ascent-joined-row
+                 gerbil-ascent-expression-value
                  gerbil-ascent-bind-row
                  gerbil-ascent-head-row)
         (only-in :gerbil-ascent/table/provider
@@ -98,7 +99,7 @@
           (- slot 1)))
       (def (term-kind term)
         (let (kind (.ref term 'kind))
-          (unless (memq kind '(variable literal))
+          (unless (memq kind '(variable literal expression))
             (error "invalid ASCENT rule term" kind))
           kind))
       (def (atom-plan atom)
@@ -145,13 +146,17 @@
                    (key (map
                          (lambda (column)
                            (let (term (list-ref terms column))
-                             (if (eq? (car term) 'literal)
-                               (cdr term)
-                               (let (bound (assq (cdr term) environment))
-                                 (unless bound
-                                   (error "unbound ASCENT index variable"
-                                          (cdr term)))
-                                 (cdr bound)))))
+                             (case (car term)
+                               ((literal) (cdr term))
+                               ((expression)
+                                (gerbil-ascent-expression-value
+                                 (cdr term) environment))
+                               (else
+                                (let (bound (assq (cdr term) environment))
+                                  (unless bound
+                                    (error "unbound ASCENT index variable"
+                                           (cdr term)))
+                                  (cdr bound))))))
                          columns)))
               (let (matched
                     (gerbil-ascent-index-provider-lookup
@@ -288,10 +293,18 @@
                        (let (plan (atom-plan head))
                          (for-each
                           (lambda (term)
-                            (when (eq? (car term) 'variable)
-                              (unless (memq (cdr term) bound)
-                                (error "unsafe ASCENT head variable"
-                                       (cdr term)))))
+                            (case (car term)
+                              ((variable)
+                               (unless (memq (cdr term) bound)
+                                 (error "unsafe ASCENT head variable"
+                                        (cdr term))))
+                              ((expression)
+                               (for-each
+                                (lambda (name)
+                                  (unless (memq name bound)
+                                    (error "unsafe ASCENT head expression variable"
+                                           name)))
+                                (vector-ref (cdr term) 0)))))
                           (vector-ref plan 1))
                          plan))
                      heads))

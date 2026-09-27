@@ -13,10 +13,11 @@ validate and execute the result. No second evaluator or independent
 fixed-point implementation is introduced.
 
 The left arrow follows the rule direction in Rust Ascent and the A22 paper.
-Scheme syntax adds lexical capture: input rows, predicates, generators,
-aggregators and bounds are ordinary Scheme expressions evaluated at the
-declaration site. Bare rule identifiers denote logic variables; use
-=(lit expression)= for a literal whose value comes from an expression.
+Scheme syntax adds lexical capture. Source rows and bounds are evaluated at
+declaration time; predicates, generators and aggregators run when their rule
+is evaluated. Bare rule identifiers denote logic variables. Use
+=(lit expression)= for a declaration-time value and
+=(expr (bound ...) expression)= for a value computed from the current row.
 
 #+begin_src scheme
 (ascent
@@ -52,6 +53,7 @@ existing program contract.
 | =(let output (input ...) expression)= | Compute a bound output |
 | =(if-let (output ...) (input ...) expression pattern)= | Native Gerbil match; failed pattern drops the candidate |
 | =(match (output ...) (input) pattern)= | Destructure one bound value with native Gerbil match |
+| =(expr (bound ...) expression)= | Head or body atom value computed from named bindings |
 
 The evaluator checks bound variables, negation safety and dependency
 stratification. Syntax forms make those contracts readable; they do not
@@ -80,7 +82,10 @@ include declarations, facts, multiple heads, positive and negated atoms,
 conditions, =let=, =if let=, generators, aggregates, disjunction, relation
 patterns and expressions, local macro definitions, source inclusion and
 BYODS attributes. Current Scheme qualification covers the first group
-through the forms above. Head/body expression terms, atom-local patterns,
+through the forms above. A Rust 0.8.0 differential fixture compares facts,
+disjunction, dynamic head expressions, =if let= and =?pattern= against the
+Scheme forms. Body expressions with named dependencies pass both row-local
+and indexed Provider qualification. Broader atom expressions and patterns,
 aggregate output patterns, embedded rule fragments, typed declarations and
 the generated Rust API remain open. Parallel Ascent is an execution-policy
 gap, not a token-level grammar feature.
@@ -88,7 +93,8 @@ gap, not a token-level grammar feature.
 Gerbil modules and hygienic macros should own reusable rule fragments and
 namespaces. The =ascent= macro should expand those fragments into the same
 POO declarations before evaluation. Bare atom identifiers denote logic
-variables; Scheme values remain explicit through =(lit expression)=. This
+variables; Scheme values remain explicit through =(lit expression)= or
+=(expr (bound ...) expression)=. This
 avoids silently changing a join when an outer lexical variable has the same
 name. Patterns use Gerbil =match=, with failed matches producing no row.
 Negation and aggregation retain the existing stratification check. A future
@@ -101,3 +107,54 @@ law evidence; the syntax alone cannot establish it.
 - [[https://doi.org/10.1145/3622840][Sahebolamri et al., Bring Your Own Data Structures to Datalog]]
 - [[https://doi.org/10.1145/3022670.2951948][Arntzenius and Krishnaswami, Datafun]]
 - [[https://gerbil.scheme.org/reference/gerbil/prelude/macros.html][Gerbil Prelude Macros]]
+
+* Construct-by-construct parity ledger
+
+| Rust =ascent_macro 0.8.0= form | Scheme form | Status |
+|-------------------------------+-------------+--------|
+| =relation r(T,...) [= source];= | =(relation r (column ...) [source])= | Selected source, nullary and mixed-row oracle elsewhere; Scheme columns do not yet carry Rust type contracts |
+| =#[ds(provider)] relation ...= | =(relation ... source (index provider) (storage provider))= | POO Provider slot executes; wider BYODS parity in [[file:rust-parity.org][matrix]] |
+| =lattice r(T,...);= | =(lattice r (column ...) source join [index])= | Recursive shortest-path Scheme/Rust oracle |
+| =head;= and comma-separated heads | =(fact head)= / =(facts head ...)= | Rust differential for two fact heads |
+| =head,... <-- body,...;= | =((head ...) <-- clause ...)= | Mutual recursion and multi-head oracle |
+| Positive atom with repeated variable | =(r x x ...)= | Existing rule oracle |
+| =!r(args)= | =(not (r args ...))= | Three-level stratification oracle |
+| =if expr= | =(if (bound ...) expression)= | Scheme expression and existing guard oracle |
+| =let pat=expr= | =(let output (bound ...) expression)= | Scalar binding; general pattern open |
+| =for pat in expr= | =(for output (bound ...) expression)= | Iterable scalar/tuple oracle; general pattern open |
+| =if let pat=expr= | =(if-let (output ...) (bound ...) expr pattern)= | =Some= success/failure Rust differential |
+| =agg pat=f(args) in r(args)= | =(aggregate output f (input ...) (r args ...))= | Grouped/derived/custom aggregate oracle; output pattern open |
+| Parenthesized =|= disjunction | =(or (and clause ...) ...)= | Two disjunction points qualified, one Rust differential |
+| Head expression | =(expr (bound ...) expression)= | Rust differential over three source snapshots |
+| Body argument expression | =(expr (bound ...) expression)= | Same-atom and indexed prior-bound qualification; broader Rust differential open |
+| =?pat= body argument | =(r value)= followed by =(match (output ...) (value) pattern)= | =Some= success/failure Rust differential; inline lowering open |
+| Inline =if= / =let= after atom arguments | Separate following clause | Selected output parity; source position diagnostics open |
+| Embedded macro definition/invocation | Native Gerbil =defsyntax= and imported rule fragments | Local fragment composition and hygiene differential open |
+| =include_source!= | Gerbil module import | Program inclusion and diagnostics open |
+| Struct signature, generics, visibility | Gerbil module export and POO type contract | Generated API/type parity open |
+| Other attributes | Named POO contract or execution option | Attribute-by-attribute inventory open |
+| =ascent_par!= and =ascent_run_par!= | Execution policy | Intra-program parallelism open |
+
+* Scientific extension criteria
+
+A stronger Scheme syntax should add capability through explicit semantic
+contracts, not through more surface aliases. Rule fragments should be
+hygienic module exports, so an imported fragment has one lexical origin and
+does not capture a caller's logic variables accidentally. Relation names
+should resolve through module and POO identities before planning, while
+fact provenance and MRR admission remain outside the evaluator.
+
+Pattern matching may use Gerbil's native =match=, but the DSL must state
+which variables each pattern binds. A failed match removes the candidate;
+an unbound dependency is rejected before evaluation. The explicit
+dependency list in =(expr (bound ...) ...)= lets the planner safely choose a
+Provider index for expressions known before the atom, while an expression
+depending on an earlier column in the same atom is checked during row
+matching. The 33-row custom Provider test exercises the indexed path.
+
+For recursive user functions or lattice joins, monotonicity and join laws
+need an admitted contract and falsifiable qualification cases. The Datafun
+paper supplies a useful model for tracking monotonicity; it is a research
+direction here, not a property inferred from arbitrary Scheme procedures.
+Every extension needs the same Rust baseline fixture where applicable,
+invalid-program behavior, and an SS cost receipt before parity is claimed.

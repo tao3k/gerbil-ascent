@@ -9,7 +9,9 @@
         (only-in :gerbil-ascent/table/storage
                  gerbil-ascent-set-storage-provider))
 
-(export ascent-syntax-program ascent-syntax-evaluate)
+(export ascent-syntax-program ascent-syntax-evaluate
+        ascent-expression-evaluate ascent-index-expression-evaluate
+        ascent-syntax-parity-evaluate)
 
 (def (ascent-syntax-program edges anchor)
   (ascent
@@ -44,3 +46,46 @@
 (def (ascent-syntax-evaluate edges anchor)
   (gerbil-ascent-evaluate-program
    (ascent-syntax-program edges anchor)))
+
+(def (ascent-expression-evaluate edges)
+  (gerbil-ascent-evaluate-program
+   (ascent
+    (relation edge (from to) edges)
+    (relation anchor (value) '((7)))
+    (relation consecutive (from))
+    (relation anchored-target (to))
+    ((consecutive x) <-- (edge x (expr (x) (+ x 1))))
+    ((anchored-target y) <-- (anchor x)
+     (edge (expr (x) (+ x 1)) y))
+    (bounds 8 8 16))))
+
+(def (ascent-index-expression-evaluate edges provider)
+  (gerbil-ascent-evaluate-program
+   (ascent
+    (relation edge (from to) edges (index provider))
+    (relation anchor (value) '((7)))
+    (relation anchored-target (to))
+    ((anchored-target y) <-- (anchor x)
+     (edge (expr (x) (+ x 1)) y))
+    (bounds 40 4 44))))
+
+(def (ascent-syntax-parity-evaluate edges)
+  (gerbil-ascent-evaluate-program
+   (ascent
+    (relation edge (from to) edges)
+    (relation seed (value))
+    (relation marker (value))
+    (relation selected (value))
+    (relation successor (value))
+    (relation optional (value) '(((some . 4)) (#f)))
+    (relation unwrapped (value))
+    (relation unwrapped-pattern (value))
+    (facts (seed (lit 7)) (marker (lit 8)))
+    ((selected x) <--
+     (or (and (seed x)) (and (edge x y))))
+    ((successor (expr (x) (+ x 1))) <-- (edge x y))
+    ((unwrapped x) <-- (optional value)
+     (if-let (x) (value) value (cons 'some x)))
+    ((unwrapped-pattern x) <-- (optional value)
+     (match (x) (value) (cons 'some x)))
+    (bounds 16 16 32))))

@@ -31,7 +31,7 @@ interaction lacks executable evidence.
 |------+-------------------+-------------------|
 | Source and API | Scheme macro/module forms cover each pinned Rust syntax family; POO contracts reject malformed declarations before evaluation; exported session/program API is documented | generated API equivalents, complete invalid-program diagnostics, remaining attribute semantics |
 | Fixed point | Same-input Rust/Scheme differential covers recursive SCCs, strata, negation, aggregation, lattice joins, and their combinations; independent finite-model checks cover bounded graphs and adjudicate pinned Rust lattice-source divergences | product/other partial-order lattices, additional invalid dependency shapes, larger-scale behavior |
-| State and storage | All pinned BYODS Provider families and repeated-run modes have differential and failure-atomic receipts; independent and intra-program concurrency are bounded | wider producer partitions, mixed direct-source/derived lattice performance, source deletion policy, intra-program parallel execution |
+| State and storage | All pinned BYODS Provider families and repeated-run modes have differential and failure-atomic receipts; independent and intra-program concurrency are bounded | wider producer partitions, mixed direct-source/derived lattice performance, source replacement scale, intra-program parallel execution |
 | Admission | Full Scheme and Rust policy gates plus exact pinned POO Flow Linux integration and unchanged SS budgets pass at one final head | rerun after every new pin; no earlier green run substitutes for final-head evidence |
 
 The integrated corpus in =rust/ascent-oracle/tests/integration/composed_corpus.rs=
@@ -73,17 +73,18 @@ The pinned Rust retained run can expose a different multiset of public
 lattice rows than a fresh Rust run over the same source values. Rust probes
 preserve the raw-source and repeated-run divergences as version-specific
 evidence.
-For nonpositive updates, a retained Scheme session evaluates its complete
-accepted source snapshot before publishing a new result. The composed
-522-case corpus compares both phases with fresh pinned Rust programs after
-an added edge and blocker, combining recursion, negation, aggregation,
-disjunction and a product lattice. Earlier snapshots remain stable.
+For nonpositive updates and source replacement, a retained Scheme session
+evaluates its complete accepted source snapshot before publishing a new
+result. The composed 522-case corpus compares three phases with fresh
+pinned Rust programs: initial sources, an added edge and blocker, then
+replacement with the original sources. It combines recursion, negation,
+aggregation, disjunction and a product lattice. Earlier snapshots remain stable.
 An over-budget recomputation rejects without accepting its source row;
 a later valid append can still succeed. A BYODS transitive Provider case
 checks the same policy across storage materialization and negation.
 The standard 20-sample SS scenario =ascent-nonpositive-session-update=
-checks a recursive path program with one negated blocker. Its local p95 was
-296 us under the unchanged 1 ms bound; exact pinned Linux integration is
+checks a recursive path program as a blocker is appended and withdrawn.
+Its local run passed the unchanged 1 ms bound; exact pinned Linux integration is
 the admission receipt.
 
 * POO Flow programming style in the Scheme implementation
@@ -143,7 +144,7 @@ result, while positive relation-atom rules consume appended source deltas.
 | Relation declaration, arbitrary arity and column types | =program/= | positive generic path handles nullary through four-column mixed rows, including a nullary rule gate over boolean and string columns; binary fast path remains; Scheme =ascent= declarations accept per-column predicates and check source, retained updates, derived rows, and Provider outputs | Rust compile-time type diagnostics and broader column-type/scale receipts |
 | Multiple heads, relation clauses, repeated variables, joins | =program/= | positive generic multi-head rules, joins and repeated-variable equality pass selected Rust oracle fixtures; one recursive SCC rule emits both a path and a unary witness, with a selected 544.178 us Linux SS p95 | arbitrary body shape, invalid-program corpus and wider performance receipts |
 | Semi-naive least fixed point, dependencies and strata | =program/=, =core/= | generic recursive path supports positive and negative strata; a two-relation mutually recursive SCC with cyclic and reordered sources matches selected Rust fixed-point snapshots, including a second head on one recursive rule | broader SCC/rule order, invalid-program and termination corpus |
-| Repeated =run()= after source relation updates | =program/= | Retained Scheme session reuses rows, indexes and BYODS state for positive atom-only relation-source additions; all 512 three-node edge subsets plus two duplicate cases compare both phases of multi-head SCC and dual-lattice retained Scheme sessions with Rust 0.8.0. Direct lattice and nonpositive appends re-evaluate the accepted source snapshot. Two 66-case lattice corpora match an independent keywise min model; 522 composed nonpositive sessions match fresh pinned Rust results in both phases. Earlier snapshots stay stable. An over-budget recomputation is failure-atomic. The 20-sample Linux SS positive relation-update gate passes at 581.207 µs p95; the new nonpositive gate passed locally at 296 us p95 and awaits exact pinned Linux admission. Malformed or over-budget Provider batches reject before changing evaluator-owned session rows or input counters. Source deletion requires fresh evaluation | larger positive state and BYODS scale; recomputation scale/performance; Provider-owned state must obey its own failure-atomic contract |
+| Repeated =run()= after source relation updates | =program/= | Retained Scheme session reuses rows, indexes and BYODS state for positive atom-only relation-source additions; all 512 three-node edge subsets plus two duplicate cases compare both phases of multi-head SCC and dual-lattice retained Scheme sessions with Rust 0.8.0. Direct lattice, nonpositive and source replacement operations re-evaluate the accepted source snapshot. Two 66-case lattice corpora match an independent keywise min model; 522 composed sessions match fresh pinned Rust results in all three phases, including source withdrawal. Earlier snapshots stay stable. An over-budget recomputation and invalid replacement are failure-atomic. The 20-sample Linux SS positive relation-update gate passes at 581.207 µs p95; the new append-and-withdraw gate passed locally under 1 ms and awaits exact pinned Linux admission. Malformed or over-budget Provider batches reject before changing evaluator-owned session rows or input counters | larger positive state and BYODS scale; recomputation and replacement scale/performance; Provider-owned state must obey its own failure-atomic contract |
 | Conditions, bindings and generators | =program/=, =core/= | generic POO guard and =let= binding; generator clauses stream Gerbil Standard Library iterables with ordered binding checks. Lists, vectors, a bound-dependent range yielding zero to two values, and a vector of tuple outputs match selected Rust iterators and tuple patterns. Duplicate output names, already-bound names, and wrong tuple widths reject | broader iterator/pattern corpus and scale receipts |
 | Stratified negation | =program/= | 3-level negated relation fixture and negative-cycle rejection pass selected Rust oracle comparison | broader safe/unsafe programs and performance receipts |
 | Aggregation and custom aggregators | =program/= | count, sum, min, max, mean and custom iterator aggregators pass empty, duplicate-input and grouped Rust fixtures; a count over a completed recursive path closure matches pinned Rust for empty, chain, cycle and duplicate-edge snapshots, including a root with zero paths; Scheme rejects an aggregate dependency cycle as the pinned Rust macro does | broader derived-aggregate and type corpus, invalid-program diagnostics and performance receipts |

@@ -9,6 +9,7 @@
                  ascent gerbil-ascent-count gerbil-ascent-evaluate-program
                  gerbil-ascent-open-session
                  gerbil-ascent-session-append-source!
+                 gerbil-ascent-session-replace-source!
                  gerbil-ascent-session-run))
 
 (export main)
@@ -97,10 +98,21 @@
      (lambda (node)
        (gerbil-ascent-session-append-source! session 'block (list node)))
      (cadr added))
-    (let (second (gerbil-ascent-session-run session))
+    (let* ((second (gerbil-ascent-session-run session))
+           (second-rows-of (.ref second 'rows-of))
+           (second-snapshot (map second-rows-of names)))
       (emit-case index second 1)
       (unless (equal? snapshot (map first-rows-of names))
         (error "ASCENT composed session changed an earlier snapshot"
+               index))
+      (gerbil-ascent-session-replace-source!
+       session 'edge (car initial))
+      (gerbil-ascent-session-replace-source!
+       session 'block (map list (cadr initial)))
+      (emit-case index (gerbil-ascent-session-run session) 2)
+      (unless (and (equal? snapshot (map first-rows-of names))
+                   (equal? second-snapshot (map second-rows-of names)))
+        (error "ASCENT composed replacement changed an earlier snapshot"
                index)))))
 
 (def (main . args)

@@ -106,6 +106,15 @@ weaken them. A recursive path relation may feed a later aggregation, while
 an aggregation dependency cycle remains outside the Rust 0.8.0 parity
 surface.
 
+The session API is a POO object with =.append-source!=,
+=.replace-source!= and =.run= slots. The public functions
+=gerbil-ascent-session-append-source!= and
+=gerbil-ascent-session-replace-source!= call those slots. Replacing a source
+relation accepts a complete row list, including =[]= for withdrawal, then
+publishes a fresh fixed point only after validation and evaluation succeed.
+Positive-only appends retain their delta path; negation, aggregation,
+lattice-source and replacement updates use the accepted source snapshot.
+
 * Extensions and evidence
 
 A22 motivates embedded rules and fixed-point semantics. B23 motivates

@@ -15,7 +15,8 @@
                  gerbil-ascent-program gerbil-ascent-evaluate-program
                  gerbil-ascent-open-session
                  gerbil-ascent-session-run
-                 gerbil-ascent-session-append-source!))
+                 gerbil-ascent-session-append-source!
+                 gerbil-ascent-session-replace-source!))
 
 (export ascent-lattice-program-test)
 
@@ -131,5 +132,28 @@
                              ((.ref fresh-third 'rows-of) name)))
              '(score copy))
             (check-equal? ((.ref first 'rows-of) 'score) '((0 2)))
+            (check-equal? ((.ref second 'rows-of) 'score)
+                          '((0 2)))))))
+    (poo-flow-test-case
+      "source replacement retracts lattice and derived contributions"
+      (let* ((session
+              (gerbil-ascent-open-session
+               (mixed-program '((0 1)) '((0 2)))))
+             (first (gerbil-ascent-session-run session)))
+        (gerbil-ascent-session-replace-source!
+         session 'score '((0 4)))
+        (let (second (gerbil-ascent-session-run session))
+          (check-equal? ((.ref second 'rows-of) 'score) '((0 2)))
+          (check-exception
+           (gerbil-ascent-session-replace-source!
+            session 'score '((0 "bad")))
+           true)
+          (check-equal? (eq? second (gerbil-ascent-session-run session))
+                        #t)
+          (gerbil-ascent-session-replace-source! session 'improve [])
+          (let (third (gerbil-ascent-session-run session))
+            (check-equal? ((.ref third 'rows-of) 'score) '((0 4)))
+            (check-equal? ((.ref third 'rows-of) 'copy) '((0 4)))
+            (check-equal? ((.ref first 'rows-of) 'score) '((0 1)))
             (check-equal? ((.ref second 'rows-of) 'score)
                           '((0 2)))))))))

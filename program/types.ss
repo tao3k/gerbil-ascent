@@ -223,4 +223,5 @@
   proto: (.o)
   responsibilities:
   (.o .append-source!: +procedure+
+      .replace-source!: +procedure+
       .run: +procedure+))

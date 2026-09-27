@@ -24,6 +24,7 @@
                  gerbil-ascent-evaluate-program
                  gerbil-ascent-open-session
                  gerbil-ascent-session-append-source!
+                 gerbil-ascent-session-replace-source!
                  gerbil-ascent-session-run))
 
 (export ascent-rule-program-test)
@@ -141,7 +142,20 @@
             (check-equal? (rows second 'allowed) [])
             (check-equal? (rows first 'allowed) '((1)))
             (check-equal? (eq? second (gerbil-ascent-session-run session))
-                          #t)))))
+                          #t)
+            (check-exception
+             (gerbil-ascent-session-replace-source!
+              session 'blocked '((1 2)))
+             true)
+            (check-equal? (eq? second (gerbil-ascent-session-run session))
+                          #t)
+            (gerbil-ascent-session-replace-source! session 'blocked [])
+            (gerbil-ascent-session-append-source! session 'candidate '(2))
+            (check-equal?
+             (length (rows (gerbil-ascent-session-run session) 'allowed))
+             2)
+            (check-equal? (rows first 'allowed) '((1)))
+            (check-equal? (rows second 'allowed) [])))))
     (poo-flow-test-case/with +positive-case-profile+
       "nonpositive recomputation rejects over-budget source atomically"
       (let* ((program
@@ -157,6 +171,10 @@
              (first (gerbil-ascent-session-run session)))
         (check-exception
          (gerbil-ascent-session-append-source! session 'candidate '(2))
+         true)
+        (check-exception
+         (gerbil-ascent-session-replace-source!
+          session 'candidate '((1) (2)))
          true)
         (check-equal? (eq? first (gerbil-ascent-session-run session)) #t)
         (gerbil-ascent-session-append-source! session 'blocked '(1))

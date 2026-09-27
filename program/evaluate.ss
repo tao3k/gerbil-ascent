@@ -28,6 +28,7 @@
 (export gerbil-ascent-evaluate-program
         gerbil-ascent-open-session
         gerbil-ascent-session-append-source!
+        gerbil-ascent-session-replace-source!
         gerbil-ascent-session-run)
 
 (def Session. (.ref GerbilAscentSessionContract 'proto))
@@ -369,30 +370,37 @@
              (active-by-stratum (vector-ref analysis 4))
              (highest-stratum (- (vector-length active-by-stratum) 1))
              (positive-rules?
-              (andmap
-               (lambda (rule)
-                 (andmap (lambda (clause)
-                           (eq? (vector-ref clause 0) 'atom))
-                         (vector-ref rule 1)))
-               rule-plans))
-             (source-additions (make-vector count []))
+              (and session?
+                   (andmap
+                    (lambda (rule)
+                      (andmap (lambda (clause)
+                                (eq? (vector-ref clause 0) 'atom))
+                              (vector-ref rule 1)))
+                    rule-plans)))
+             (source-originals
+              (and session?
+                   (list->vector
+                    (map (lambda (relation) (.ref relation 'rows))
+                         relations))))
+             (source-additions (and session? (make-vector count [])))
+             (source-overrides (and session? (make-vector count #f)))
              (recompute-from-source? #f)
              (first-run? #t)
              (dirty? #t)
              (last-result #f))
-        (def (source-program-with index row)
+        (def (source-rows-at index)
+          (or (vector-ref source-overrides index)
+              (append (vector-ref source-originals index)
+                      (reverse (vector-ref source-additions index)))))
+        (def (source-program-with index replacement)
           (let (next-relations
-                (let loop ((remaining relations) (position 0))
-                  (if (null? remaining)
-                    []
-                    (let* ((relation (car remaining))
-                           (additions
-                            (reverse (vector-ref source-additions position)))
-                           (source-rows
-                            (append (.ref relation 'rows) additions
-                                    (if (= position index) (list row) []))))
-                      (cons (.o (:: @ relation) rows: source-rows)
-                            (loop (cdr remaining) (+ position 1)))))))
+                (map (lambda (relation position)
+                       (let (source-rows
+                             (if (= position index)
+                               replacement
+                               (source-rows-at position)))
+                         (.o (:: @ relation) rows: source-rows)))
+                     relations (iota count)))
             (.o (:: @ program) relations: next-relations)))
         (def (append-source! name row)
           (when first-run?
@@ -412,9 +420,13 @@
               ;; Negation, aggregation, or a lattice refinement can invalidate
               ;; previously consumed rows. Re-evaluate the accepted source
               ;; snapshot before publishing a changed fixed point.
-              (let* ((candidate (source-program-with index row))
+              (let* ((replacement
+                      (append (source-rows-at index) (list row)))
+                     (candidate (source-program-with index replacement))
                      (result (gerbil-ascent-evaluate-program candidate)))
                 (set! source-count (+ source-count 1))
+                (vector-set! source-overrides index replacement)
+                (vector-set! source-additions index [])
                 (set! recompute-from-source? #t)
                 (set! dirty? #f)
                 (set! last-result result)))
@@ -468,8 +480,36 @@
                   (+ 1 (vector-ref all-version index)))
                 (vector-set! delta-version index
                   (+ 1 (vector-ref delta-version index)))))))
-            (vector-set! source-additions index
-              (cons row (vector-ref source-additions index)))))
+            (unless (vector-ref source-overrides index)
+              (vector-set! source-additions index
+                (cons row (vector-ref source-additions index))))))
+        (def (replace-source! name rows)
+          (when first-run?
+            (error "ASCENT session must run before source updates"))
+          (let* ((index (position-of name))
+                 (width (vector-ref arity index)))
+            (unless (list? rows)
+              (error "invalid ASCENT replacement source rows" name rows))
+            (for-each
+             (lambda (row)
+               (unless (and (list? row) (= (length row) width))
+                 (error "invalid ASCENT replacement source row" name row))
+               (let (check (vector-ref field-checkers index))
+                 (when check (check row))))
+             rows)
+            (let (next-count
+                  (+ (- source-count (length (source-rows-at index)))
+                     (length rows)))
+              (when (> next-count input-limit)
+                (error "ASCENT session input fact budget exceeded"))
+              (let* ((candidate (source-program-with index rows))
+                     (result (gerbil-ascent-evaluate-program candidate)))
+                (set! source-count next-count)
+                (vector-set! source-overrides index rows)
+                (vector-set! source-additions index [])
+                (set! recompute-from-source? #t)
+                (set! dirty? #f)
+                (set! last-result result)))))
         (def (run-retained!)
          (when dirty?
          (let evaluate-stratum ((stratum 0))
@@ -742,6 +782,7 @@
           (validate GerbilAscentSessionContract
                     (.o (:: @ Session.)
                         (.append-source! append-source!)
+                        (.replace-source! replace-source!)
                         (.run run!)))
           run!)))))
 
@@ -750,6 +791,9 @@
 
 (def (gerbil-ascent-session-append-source! session name row)
   ((.ref session '.append-source!) name row))
+
+(def (gerbil-ascent-session-replace-source! session name rows)
+  ((.ref session '.replace-source!) name rows))
 
 (def (gerbil-ascent-session-run session)
   ((.ref session '.run)))

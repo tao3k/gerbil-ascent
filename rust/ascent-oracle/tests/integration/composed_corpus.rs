@@ -220,6 +220,11 @@ fn composed_nonpositive_sessions_match_fresh_fixed_points() {
                 .into_iter()
                 .map(|row| format!("{index}\t1\t{row}")),
         );
+        expected.extend(
+            rust_rows(edges, blocked)
+                .into_iter()
+                .map(|row| format!("{index}\t2\t{row}")),
+        );
     }
     expected.sort_unstable();
     if actual != expected {

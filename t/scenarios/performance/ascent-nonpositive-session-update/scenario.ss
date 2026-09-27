@@ -11,6 +11,7 @@
         (only-in :gerbil-ascent/program/interface
                  ascent gerbil-ascent-open-session
                  gerbil-ascent-session-append-source!
+                 gerbil-ascent-session-replace-source!
                  gerbil-ascent-session-run))
 
 (def fixture
@@ -37,7 +38,8 @@
                           (gerbil-ascent-session-run session)
                           session))
                       (iota (benchmark-fixture-ref fixture 'sampleCount))))
-       (sessions prepared))
+       (sessions prepared)
+       (blocked-snapshots []))
   (let-values (((receipt result)
                 (benchmark-run/result
                  fixture
@@ -46,9 +48,22 @@
                      (set! sessions (cdr sessions))
                      (gerbil-ascent-session-append-source!
                       session 'blocked '(2))
+                     (set! blocked-snapshots
+                       (cons (gerbil-ascent-session-run session)
+                             blocked-snapshots))
+                     (gerbil-ascent-session-replace-source!
+                      session 'blocked [])
                      (gerbil-ascent-session-run session))))))
     (unless (null? sessions)
       (error "ASCENT nonpositive update did not consume every sample"))
+    (for-each
+     (lambda (blocked)
+       (let (safe ((.ref blocked 'rows-of) 'safe))
+         (unless (and (= (length safe) 1)
+                      (member '(0 1) safe)
+                      (not (member '(0 2) safe)))
+           (error "ASCENT blocker update changed fixed-point semantics"))))
+     blocked-snapshots)
     (for-each
      (lambda (session)
        (let* ((rows-of
@@ -56,10 +71,10 @@
               (path (rows-of 'path))
               (safe (rows-of 'safe)))
          (unless (and (= (length path) 3)
-                      (= (length safe) 1)
+                      (= (length safe) 3)
                       (member '(0 1) safe)
-                      (not (member '(0 2) safe)))
-           (error "ASCENT nonpositive update changed fixed-point semantics"))))
+                      (member '(0 2) safe))
+           (error "ASCENT source replacement changed fixed-point semantics"))))
      prepared)
     (unless (benchmark-receipt-pass? receipt)
       (error "ASCENT nonpositive update exceeded the benchmark budget"

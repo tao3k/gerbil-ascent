@@ -32,9 +32,9 @@
          (request (if generic? (cdr raw-request) raw-request))
          (request-check
           (unless (and (list? request)
-                       (>= (length request) 3)
+                       (pair? request)
                        (odd? (length request)))
-            (error "ASCENT fixture expects (RADIX FROM TO [FROM TO ...])")))
+            (error "ASCENT fixture expects (RADIX [FROM TO ...])")))
          (width (car request))
          (radix-check
           (unless (and (exact-integer? width) (> width 1))

@@ -60,6 +60,9 @@ fn rust_rows(edges: &[(u32, u32)]) -> Vec<String> {
         relation unwrapped_pattern(u32);
         relation let_pair(u32, u32);
         relation for_pair(u32, u32);
+        relation consecutive(u32);
+        relation anchored_target(u32);
+        relation missing_successor(u32);
 
         seed(7), marker(8);
         selected(x) <-- (seed(x) | edge(x, _));
@@ -68,6 +71,9 @@ fn rust_rows(edges: &[(u32, u32)]) -> Vec<String> {
         unwrapped_pattern(*x) <-- optional(?Some(x));
         let_pair(x, y) <-- edge(a, b), let (x, y) = (*a, *b + 1);
         for_pair(x, y) <-- edge(a, b), for (x, y) in [(*a, *b), (*b, *a)];
+        consecutive(x) <-- edge(x, *x + 1);
+        anchored_target(y) <-- seed(x), edge(*x + 1, y);
+        missing_successor(x) <-- seed(x), !edge(x, *x + 1);
     }
     let mut program = AscentProgram {
         edge: edges.to_vec(),
@@ -119,6 +125,24 @@ fn rust_rows(edges: &[(u32, u32)]) -> Vec<String> {
             .iter()
             .map(|(from, to)| format!("for-pair\t{from}\t{to}")),
     );
+    rows.extend(
+        program
+            .consecutive
+            .iter()
+            .map(|(value,)| format!("consecutive\t{value}")),
+    );
+    rows.extend(
+        program
+            .anchored_target
+            .iter()
+            .map(|(value,)| format!("anchored-target\t{value}")),
+    );
+    rows.extend(
+        program
+            .missing_successor
+            .iter()
+            .map(|(value,)| format!("missing-successor\t{value}")),
+    );
     rows.extend(rust_closure_rows(edges));
     rows.extend(rust_macro_rows());
     rows.sort_unstable();
@@ -126,11 +150,13 @@ fn rust_rows(edges: &[(u32, u32)]) -> Vec<String> {
 }
 
 #[test]
-fn facts_disjunction_and_head_expression_match_scheme() {
+fn syntax_forms_and_body_expressions_match_scheme() {
     for edges in [
         &[][..],
         &[(1, 2), (2, 3), (1, 4)][..],
         &[(1, 2), (1, 2), (2, 3)][..],
+        &[(1, 2), (2, 4), (8, 9)][..],
+        &[(7, 8), (8, 9)][..],
     ] {
         let request = format!(
             "({})\n",

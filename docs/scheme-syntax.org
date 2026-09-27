@@ -182,8 +182,8 @@ law evidence; the syntax alone cannot establish it.
 | =if let pat=expr= | =(if-let (output ...) (bound ...) expr pattern)= | =Some= success/failure Rust differential |
 | =agg pat=f(args) in r(args)= | =(aggregate (output ...) f (input ...) (r args ...) pattern)= | Grouped/derived/custom aggregate oracle; tuple output pattern Rust differential |
 | Parenthesized =|= disjunction | =(or (and clause ...) ...)= | Two disjunction points qualified, one Rust differential |
-| Head expression | =(expr (bound ...) expression)= | Rust differential over three source snapshots |
-| Body argument expression | =(expr (bound ...) expression)= | Same-atom and indexed prior-bound qualification; broader Rust differential open |
+| Head expression | =(expr (bound ...) expression)= | Rust differential over four source snapshots |
+| Body argument expression | =(expr (bound ...) expression)= | Same-atom and prior-atom bound expressions match Rust over four source snapshots; indexed Provider qualification also passes; broader argument types remain open |
 | =?pat= body argument | =(r (pat (output ...) pattern))= | Inline =Some= success/failure Rust differential; native Gerbil pattern semantics |
 | Inline =if= / =let= after atom arguments | Separate following clause | Selected output parity; source position diagnostics open |
 | Embedded macro definition/invocation | Module =defsyntax= produces =ascent-fragment=; =(include name)= consumes it | Selected Rust embedded macro output differential; inline declaration syntax and diagnostics open |

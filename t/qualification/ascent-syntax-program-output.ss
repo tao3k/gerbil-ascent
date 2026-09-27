@@ -5,6 +5,7 @@
 (import (only-in :clan/poo/object .ref)
         (only-in :gerbil-ascent/t/qualification/ascent-syntax-fixture
                  ascent-syntax-parity-evaluate
+                 ascent-expression-evaluate
                  ascent-pattern-clauses-evaluate
                  ascent-included-fragment-evaluate
                  ascent-generated-fragment-evaluate))
@@ -16,6 +17,8 @@
     (error "ASCENT syntax fixture reads one edge snapshot from stdin"))
   (let* ((edges (read))
          (rows-of (.ref (ascent-syntax-parity-evaluate edges) 'rows-of))
+         (expression-rows-of
+          (.ref (ascent-expression-evaluate edges) 'rows-of))
          (pattern-rows-of
           (.ref (ascent-pattern-clauses-evaluate edges) 'rows-of))
          (included-rows-of
@@ -30,7 +33,17 @@
           (for-each (lambda (column) (display #\tab) (display column)) row)
           (newline))
         (rows-of name)))
-     '(seed marker selected successor unwrapped unwrapped-pattern))
+     '(seed marker selected successor unwrapped unwrapped-pattern
+            missing-successor))
+    (for-each
+     (lambda (name)
+       (for-each
+        (lambda (row)
+          (display name)
+          (for-each (lambda (column) (display #\tab) (display column)) row)
+          (newline))
+        (expression-rows-of name)))
+     '(consecutive anchored-target))
     (for-each
      (lambda (name)
        (for-each

@@ -85,6 +85,7 @@
     (relation optional (value) '(((some . 4)) (#f)))
     (relation unwrapped (value))
     (relation unwrapped-pattern (value))
+    (relation missing-successor (value))
     (facts (seed (lit 7)) (marker (lit 8)))
     ((selected x) <--
      (or (and (seed x)) (and (edge x y))))
@@ -93,6 +94,8 @@
      (if-let (x) (value) value (cons 'some x)))
     ((unwrapped-pattern x) <--
      (optional (pat (x) (cons 'some x))))
+    ((missing-successor x) <-- (seed x)
+     (not (edge x (expr (x) (+ x 1)))))
     (bounds 16 16 32))))
 
 (def (ascent-pattern-clauses-evaluate edges)

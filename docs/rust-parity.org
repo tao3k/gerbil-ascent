@@ -221,6 +221,12 @@ and name their input variables explicitly. These fixtures do
 not close the rows above. =candidate/= and
 =interface/= hold existing experimental projections; their MRR or Agent use
 cannot substitute for Rust feature parity.
+The syntax differential compares body argument expressions that read an
+earlier column in the same atom or a binding from a preceding atom. It also
+compares a negated atom whose second argument is an expression over its bound
+first argument, across empty, duplicate, branching, anchor-hit and
+anchor-miss sources. These bounded cases close the selected body-expression
+positions, not arbitrary expression types or diagnostic parity.
 The derived-aggregation differential lets =path= reach its recursive fixed
 point before =reach-count= counts paths for selected roots in the next stratum.
 Empty, chain, cycle and duplicate-edge inputs match Rust, including a zero
@@ -230,7 +236,7 @@ rejects a cycle through an aggregate with its
 ="use of aggregated relation ... cannot be stratified"= diagnostic in
 =ascent_mir.rs=, and the Scheme qualification rejects the same dependency.
 The standard =ascent-derived-aggregate= SS scenario evaluates the declared
-three-edge cycle and isolated root for 20 samples under the unchanged 1 ms
+three-edge cycle and isolated root for 1000 samples under the unchanged 1 ms
 budget used by the other small recursive scenarios. It checks all nine path
 facts and four counts outside the timed region. Its Linux performance receipt
 must be read from the exact pinned POO Flow CI head.
@@ -257,11 +263,11 @@ rules and includes a directed cycle. One recursive rule has two heads:
 deduplication for an empty source, a self-loop, a cycle, reversed source
 order, duplicate edges, a branching graph with a cycle, and a finite chain.
 This is evidence for one SCC shape, not a general termination proof.
-The standard =ascent-mutual-recursive-heads= SS scenario measures 20
+The standard =ascent-mutual-recursive-heads= SS scenario measures 1000
 evaluations of a predeclared three-edge cyclic program with a 1 ms p95
 ceiling. It checks all nine rows in each path relation and all three unary
-witnesses outside the timed region. The [[https://github.com/tao3k/poo-flow/actions/runs/36287894639/job/108532047947][POO Flow Ubuntu native job]] at
-POO Flow =6598403= and ASCENT =be30fef= measured 544.178 us p95 and passed
+witnesses outside the timed region. The [[https://github.com/tao3k/poo-flow/actions/runs/36330634991][last exact-head POO Flow Ubuntu run]] at
+POO Flow =b6fe0db= and ASCENT =84f279d= measured 511.008 us p95 and passed
 the unchanged ceiling. This is one selected recursive multi-head shape and
 does not close the wider performance or termination corpus.
 The repeated-run oracle uses one Rust program for an initial edge, a second
@@ -286,10 +292,10 @@ These checks cover one wider positive update shape. Source replacement and
 nonpositive updates have separate fresh fixed-point receipts above. The Rust oracle package runs the ASP Rust
 package policy as a dedicated test. Its differential cases live in
 responsibility-specific integration modules mounted by a thin Cargo target.
-The standard SS scenario =ascent-session-update= prepares 20 sessions outside
+The standard SS scenario =ascent-session-update= prepares 1000 sessions outside
 the timed region, then times one source append and recursive closure per
-session. It checks all 20 results and passed the [[https://github.com/tao3k/poo-flow/actions/runs/36261908951/job/108459287469][POO Flow Ubuntu native gate]]
-at 581.207 µs p95 under the unchanged 1 ms budget. This is one bounded
+session. It checks all 1000 results and passed the [[https://github.com/tao3k/poo-flow/actions/runs/36330634991][last exact-head POO Flow Ubuntu native gate]]
+at 533.652 µs p95 under the unchanged 1 ms budget. This is one bounded
 ten-edge chain shape, not a general update complexity result. The Rust oracle also records
 that appending a blocking fact does not retract a previously derived negated
 row, and that appending an aggregate source can retain the old total and
@@ -350,7 +356,7 @@ per relation. A Scheme qualification advances =eqrel=, =trrel= and
 only rows absent from the prior materialization. This verifies the Provider
 boundary but does not imply retained rule-program state.
 
-The standard =ascent-byods-eqrel= SS scenario times 20 evaluations of a
+The standard =ascent-byods-eqrel= SS scenario times 1000 evaluations of a
 predeclared 20-edge program per run. Before the component index, one local
 run measured 3.508 ms p95. Three local runs after the change measured 450,
 448 and 965 us p95, all below its 1 ms budget. These local samples do not

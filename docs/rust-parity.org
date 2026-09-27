@@ -72,7 +72,7 @@ result, while positive relation-atom rules consume appended source deltas.
 | Rust Ascent 0.8.0 feature | Scheme namespace | Current state | Required closing evidence |
 |---------------------------+------------------+---------------+---------------------------|
 | Relation declaration, arbitrary arity and column types | =program/= | positive generic path handles nullary through four-column mixed rows, including a nullary rule gate over boolean and string columns; binary fast path remains | broader column types and scale/performance receipts |
-| Multiple heads, relation clauses, repeated variables, joins | =program/= | positive generic multi-head rules, joins and repeated-variable equality pass selected Rust oracle fixtures; one recursive SCC rule emits both a path and a unary witness | arbitrary body shape, invalid-program corpus and performance receipts |
+| Multiple heads, relation clauses, repeated variables, joins | =program/= | positive generic multi-head rules, joins and repeated-variable equality pass selected Rust oracle fixtures; one recursive SCC rule emits both a path and a unary witness, with a selected 544.178 us Linux SS p95 | arbitrary body shape, invalid-program corpus and wider performance receipts |
 | Semi-naive least fixed point, dependencies and strata | =program/=, =core/= | generic recursive path supports positive and negative strata; a two-relation mutually recursive SCC with cyclic and reordered sources matches selected Rust fixed-point snapshots, including a second head on one recursive rule | broader SCC/rule order, invalid-program and termination corpus |
 | Repeated =run()= after source relation updates | =program/= | Retained Scheme session reuses rows, indexes and BYODS state for positive atom-only source additions; insertion, unchanged rerun, duplicate and cycle snapshots match selected Rust fixtures. A 20-sample Linux SS update gate passes at 581.207 µs p95. Source deletion and nonpositive updates require fresh evaluation | compare wider positive corpus and update shapes; characterize Rust retained-state behavior for negation and aggregates |
 | Conditions, bindings and generators | =program/=, =core/= | generic POO guard, =let= binding and finite list generator clauses with ordered binding checks; a generator depending on an earlier atom binding matches Rust =std::iter::once= | broader iterator/pattern shapes and scale receipts |
@@ -115,7 +115,10 @@ This is evidence for one SCC shape, not a general termination proof.
 The standard =ascent-mutual-recursive-heads= SS scenario measures 20
 evaluations of a predeclared three-edge cyclic program with a 1 ms p95
 ceiling. It checks all nine rows in each path relation and all three unary
-witnesses outside the timed region.
+witnesses outside the timed region. The [[https://github.com/tao3k/poo-flow/actions/runs/36287894639/job/108532047947][POO Flow Ubuntu native job]] at
+POO Flow =6598403= and ASCENT =be30fef= measured 544.178 us p95 and passed
+the unchanged ceiling. This is one selected recursive multi-head shape and
+does not close the wider performance or termination corpus.
 The repeated-run oracle now uses one Rust program for an initial edge, a
 second edge, an unchanged run, a duplicate source edge, and a closing cycle.
 It checks the final result against a fresh Rust program and Scheme snapshot

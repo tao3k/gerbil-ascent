@@ -104,8 +104,9 @@ an unused local binding for this nullary declaration; the test suppresses
 that warning only for this fixture.
 The mutual-recursion fixture declares its seed rule after the two recursive
 rules and includes a directed cycle. Both =path0= and =path1= match Rust after
-deduplication for a cycle, reversed source order, and a finite chain. This is
-evidence for one SCC shape, not a general termination proof.
+deduplication for an empty source, a self-loop, a cycle, reversed source
+order, duplicate edges, a branching graph with a cycle, and a finite chain.
+This is evidence for one SCC shape, not a general termination proof.
 The repeated-run oracle now uses one Rust program for an initial edge, a
 second edge, an unchanged run, a duplicate source edge, and a closing cycle.
 It checks the final result against a fresh Rust program and Scheme snapshot

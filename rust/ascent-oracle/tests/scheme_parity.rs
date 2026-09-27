@@ -1216,8 +1216,12 @@ fn mutually_recursive_scc_matches_ascent() {
         path0(x, y) <-- edge(x, y);
     }
     for edges in [
+        vec![],
+        vec![(1, 1)],
         vec![(1, 2), (2, 3), (3, 1)],
         vec![(3, 1), (2, 3), (1, 2)],
+        vec![(1, 2), (1, 2), (2, 3), (3, 1)],
+        vec![(1, 2), (1, 3), (2, 4), (3, 4), (4, 2)],
         vec![(1, 2), (2, 3)],
     ] {
         let mut program = AscentProgram {

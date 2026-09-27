@@ -310,6 +310,33 @@
                      (lambda (_state _all _pending _row _budget) 'broken)))))
          [] 4 4 4))
        true))
+    (poo-flow-test-case "invalid or over-budget Provider batch cannot partially update a session"
+      (for-each
+       (lambda (bad-rows)
+         (let* ((provider
+                 (.o (:: @ gerbil-ascent-set-storage-provider)
+                     (.extend-rows
+                      (lambda (_state _all _pending row _budget)
+                        (if (equal? row '(2 3)) bad-rows (list row))))))
+                (program
+                 (gerbil-ascent-program
+                  (list (gerbil-ascent-relation
+                         'stored 2 '((1 2))
+                         gerbil-ascent-hash-index-provider provider))
+                  [] 2 4 2))
+                (session (gerbil-ascent-open-session program)))
+           (gerbil-ascent-session-run session)
+           (check-exception
+            (gerbil-ascent-session-append-source! session 'stored '(2 3))
+            true)
+           (check-equal?
+            ((.ref (gerbil-ascent-session-run session) 'rows-of) 'stored)
+            '((1 2)))
+           (gerbil-ascent-session-append-source! session 'stored '(3 4))
+           (check-equal?
+            ((.ref (gerbil-ascent-session-run session) 'rows-of) 'stored)
+            '((1 2) (3 4)))))
+       (list (list '(2 3) 'broken) '((2 3) (3 2)))))
     (poo-flow-test-case "eqrel output stays within the program fact budget"
       (check-exception
        (ascent-eqrel-fixture-evaluate

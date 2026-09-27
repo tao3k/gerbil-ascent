@@ -332,39 +332,46 @@
               (error "invalid ASCENT session source row" name row))
             (when (>= source-count input-limit)
               (error "ASCENT session input fact budget exceeded"))
-            (let ((changed? #f)
-                  (new-rows [])
-                  (expanded
-                  ((vector-ref storage-extensions index)
-                   (vector-ref storage-states index)
-                   (vector-ref all index)
-                   (vector-ref delta index) row
-                   (- output-limit
-                      (+ source-materialized-count derived-count)))))
+            (let* ((expanded
+                    ((vector-ref storage-extensions index)
+                     (vector-ref storage-states index)
+                     (vector-ref all index)
+                     (vector-ref delta index) row
+                     (- output-limit
+                        (+ source-materialized-count derived-count))))
+                   (batch-seen (make-hash-table))
+                   (new-rows []))
               (unless (list? expanded)
                 (error "ASCENT storage provider returned non-list rows"))
-              (set! source-count (+ source-count 1))
+              ;; Validate the complete Provider batch before changing the
+              ;; evaluator's retained session, including its input counter.
               (for-each
                (lambda (stored)
                  (unless (and (list? stored) (= (length stored) width))
                    (error "invalid ASCENT storage provider row" stored))
-                 (unless (hash-get (vector-ref seen index) stored)
-                   (when (>= (+ source-materialized-count derived-count)
-                             output-limit)
-                     (error "ASCENT session output fact budget exceeded"))
-                   (hash-put! (vector-ref seen index) stored #t)
-                   (set! source-materialized-count
-                     (+ source-materialized-count 1))
-                   (vector-set! all index
-                     (cons stored (vector-ref all index)))
-                   (vector-set! delta index
-                     (cons stored (vector-ref delta index)))
-                   (set! new-rows (cons stored new-rows))
-                   (set! changed? #t)
-                   (set! dirty? #t)))
+                 (unless (or (hash-get (vector-ref seen index) stored)
+                             (hash-get batch-seen stored))
+                   (hash-put! batch-seen stored #t)
+                   (set! new-rows (cons stored new-rows))))
                expanded)
-              (when changed?
-                (advance-all-indexes! index (reverse new-rows))
+              (set! new-rows (reverse new-rows))
+              (when (> (+ source-materialized-count derived-count
+                          (length new-rows)) output-limit)
+                (error "ASCENT session output fact budget exceeded"))
+              (set! source-count (+ source-count 1))
+              (for-each
+               (lambda (stored)
+                 (hash-put! (vector-ref seen index) stored #t)
+                 (set! source-materialized-count
+                   (+ source-materialized-count 1))
+                 (vector-set! all index
+                   (cons stored (vector-ref all index)))
+                 (vector-set! delta index
+                   (cons stored (vector-ref delta index))))
+               new-rows)
+              (when (pair? new-rows)
+                (set! dirty? #t)
+                (advance-all-indexes! index new-rows)
                 (vector-set! all-size index (length (vector-ref all index)))
                 (vector-set! delta-size index
                   (length (vector-ref delta index)))

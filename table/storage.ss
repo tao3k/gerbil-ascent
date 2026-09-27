@@ -4,6 +4,8 @@
 
 ;;; A storage Provider changes which facts a relation exposes. Evaluation-local
 ;;; state belongs to the relation run, not the shared Provider declaration.
+;;; Stateful Providers must reject failures before mutating their private state;
+;;; the evaluator preflights returned batches before committing its own rows.
 (import (only-in :clan/poo/object .o .ref)
         (only-in :clan/poo/mop .defgeneric define-type validate)
         (only-in :core/types

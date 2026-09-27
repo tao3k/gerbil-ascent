@@ -35,16 +35,23 @@ existing program contract.
 
 | Form | Meaning |
 |------+---------|
-| =(relation name (column ...) [source])= | Set relation; omitted source is empty |
+| =(relation name (column ...) [source] [(index provider)] [(storage provider)])= | Set relation; omitted source is empty |
 | =((head ...) <-- clause ...)= | One rule head |
 | =(((head ...) ...) <-- clause ...)= | Multiple heads sharing one body |
 | =(name term ...)= | Positive relation atom |
 | =(not (name term ...))= | Stratified negation |
 | =(guard (input ...) predicate)= | Scheme predicate over bound inputs |
 | =(bind output (input ...) procedure)= | Compute one output |
-| =(for output (input ...) procedure)= | Generate one or several outputs |
+| =(for output (input ...) expression)= | Generate one or several outputs from a Scheme iterable |
 | =(aggregate output operation (input ...) (name term ...))= | Aggregate rows of one relation |
 | =(bounds input derived output)= | Existing finite program limits |
+| =(lattice name (column ...) source join [index])= | POO lattice declaration |
+| =(fact head)= / =(facts head ...)= | Rust rules with an empty body |
+| =(or (and clause ...) ...)= | Finite body disjunction, lowered to ordinary rules |
+| =(if (input ...) expression)= | Scheme predicate over bound inputs |
+| =(let output (input ...) expression)= | Compute a bound output |
+| =(if-let (output ...) (input ...) expression pattern)= | Native Gerbil match; failed pattern drops the candidate |
+| =(match (output ...) (input) pattern)= | Destructure one bound value with native Gerbil match |
 
 The evaluator checks bound variables, negation safety and dependency
 stratification. Syntax forms make those contracts readable; they do not
@@ -65,6 +72,28 @@ The mutual recursion, derived aggregation and comprehensive rule fixtures
 exercise macro lowering against the existing qualification outputs. The
 [[file:rust-parity.org][parity matrix]] records broader Rust 0.8.0 gaps; syntax
 readability does not close those gaps.
+
+* Rust 0.8.0 syntax inventory and next design
+
+The pinned =ascent_macro-0.8.0/src/ascent_syntax.rs= parser and A22 Figure 1
+include declarations, facts, multiple heads, positive and negated atoms,
+conditions, =let=, =if let=, generators, aggregates, disjunction, relation
+patterns and expressions, local macro definitions, source inclusion and
+BYODS attributes. Current Scheme qualification covers the first group
+through the forms above. Head/body expression terms, atom-local patterns,
+aggregate output patterns, embedded rule fragments, typed declarations and
+the generated Rust API remain open. Parallel Ascent is an execution-policy
+gap, not a token-level grammar feature.
+
+Gerbil modules and hygienic macros should own reusable rule fragments and
+namespaces. The =ascent= macro should expand those fragments into the same
+POO declarations before evaluation. Bare atom identifiers denote logic
+variables; Scheme values remain explicit through =(lit expression)=. This
+avoids silently changing a join when an outer lexical variable has the same
+name. Patterns use Gerbil =match=, with failed matches producing no row.
+Negation and aggregation retain the existing stratification check. A future
+monotonicity contract for user procedures and lattice joins needs executable
+law evidence; the syntax alone cannot establish it.
 
 * Sources
 

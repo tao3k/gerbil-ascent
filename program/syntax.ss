@@ -2,8 +2,7 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-;;; Source syntax only: declarations lower to the existing POO contracts.
-;;; The evaluator and its validation remain the single semantic authority.
+;;; Hygienic source forms lower to the existing POO contracts and evaluator.
 (import "objects.ss")
 
 (export ascent)
@@ -38,25 +37,65 @@
     ((_ (kind (input ...) predicate))
      (eq? (syntax->datum (syntax kind)) 'guard)
      (syntax (gerbil-ascent-guard '(input ...) predicate)))
+    ((_ (kind (input ...) predicate))
+     (eq? (syntax->datum (syntax kind)) 'if)
+     (syntax (gerbil-ascent-guard
+              '(input ...) (lambda (input ...) predicate))))
     ((_ (kind output (input ...) procedure))
      (eq? (syntax->datum (syntax kind)) 'bind)
      (syntax (gerbil-ascent-binding 'output '(input ...) procedure)))
-    ((_ (kind output (input ...) procedure))
+    ((_ (kind output (input ...) value))
+     (eq? (syntax->datum (syntax kind)) 'let)
+     (syntax (gerbil-ascent-binding
+              'output '(input ...) (lambda (input ...) value))))
+    ((_ (kind output (input ...) values))
      (eq? (syntax->datum (syntax kind)) 'for)
-     (syntax (gerbil-ascent-generator 'output '(input ...) procedure)))
+     (syntax (gerbil-ascent-generator
+              'output '(input ...) (lambda (input ...) values))))
+    ((_ (kind (output ...) (input ...) value pattern))
+     (eq? (syntax->datum (syntax kind)) 'if-let)
+     (syntax (gerbil-ascent-generator
+              '(output ...) '(input ...)
+              (lambda (input ...)
+                (match value
+                  (pattern (list (list output ...)))
+                  (_ []))))))
+    ((_ (kind (output ...) (input) pattern))
+     (eq? (syntax->datum (syntax kind)) 'match)
+     (syntax (gerbil-ascent-generator
+              '(output ...) '(input)
+              (lambda (input)
+                (match input
+                  (pattern (list (list output ...)))
+                  (_ []))))))
     ((_ (name term ...))
      (not (memq (syntax->datum (syntax name))
-                '(aggregate not guard bind for)))
+                '(aggregate not guard if bind let for if-let match)))
      (syntax (ascent-atom (name term ...))))))
 
 (defsyntax (ascent-relation stx)
   (syntax-case stx ()
+    ((_ (name (column ...) source (index provider) (storage storage-provider)))
+     (syntax (gerbil-ascent-relation
+              'name (length '(column ...)) source provider storage-provider)))
+    ((_ (name (column ...) source (index provider)))
+     (syntax (gerbil-ascent-relation
+              'name (length '(column ...)) source provider)))
     ((_ (name (column ...) source))
      (syntax (gerbil-ascent-relation
               'name (length '(column ...)) source)))
     ((_ (name (column ...)))
      (syntax (gerbil-ascent-relation
               'name (length '(column ...)) [])))))
+
+(defsyntax (ascent-lattice stx)
+  (syntax-case stx ()
+    ((_ (name (column ...) source join (index provider)))
+     (syntax (gerbil-ascent-lattice
+              'name (length '(column ...)) source join provider)))
+    ((_ (name (column ...) source join))
+     (syntax (gerbil-ascent-lattice
+              'name (length '(column ...)) source join)))))
 
 (defsyntax (ascent-rule stx)
   (syntax-case stx (<--)
@@ -67,10 +106,50 @@
     ((_ ((name term ...) <-- body ...))
      (syntax (gerbil-ascent-rule
               (list (ascent-atom (name term ...)))
-              (list (ascent-clause body) ...))))))
+              (list (ascent-clause body) ...))))
+    ((_ ((name term ...)))
+     (syntax (gerbil-ascent-rule
+              (list (ascent-atom (name term ...))) [])))))
+
+;;; Finite disjunctions become ordinary rules at expansion time.
+(defsyntax (ascent-rule-family stx)
+  (syntax-case stx (or and)
+    ((_ head (done ...) ((or (and branch ...) ...) rest ...))
+     (syntax (append
+              (ascent-rule-family head (done ...) (branch ... rest ...))
+              ...)))
+    ((_ head (done ...) (item rest ...))
+     (syntax (ascent-rule-family head (done ... item) (rest ...))))
+    ((_ head (done ...) ())
+     (syntax (list (ascent-rule (head <-- done ...)))))))
 
 (defsyntax (ascent-collect stx)
-  (syntax-case stx (relation bounds <--)
+  (syntax-case stx (relation lattice bounds <--)
+    ((_ (declared ...) (lowered ...)
+        (lattice name (column ...) source join (index provider)) clause ...)
+     (syntax (ascent-collect
+              (declared ... (ascent-lattice
+                             (name (column ...) source join (index provider))))
+              (lowered ...) clause ...)))
+    ((_ (declared ...) (lowered ...)
+        (lattice name (column ...) source join) clause ...)
+     (syntax (ascent-collect
+              (declared ... (ascent-lattice (name (column ...) source join)))
+              (lowered ...) clause ...)))
+    ((_ (declared ...) (lowered ...)
+        (relation name (column ...) source (index provider)
+                  (storage storage-provider)) clause ...)
+     (syntax (ascent-collect
+              (declared ... (ascent-relation
+                             (name (column ...) source
+                                   (index provider) (storage storage-provider))))
+              (lowered ...) clause ...)))
+    ((_ (declared ...) (lowered ...)
+        (relation name (column ...) source (index provider)) clause ...)
+     (syntax (ascent-collect
+              (declared ... (ascent-relation
+                             (name (column ...) source (index provider))))
+              (lowered ...) clause ...)))
     ((_ (declared ...) (lowered ...)
         (relation name (column ...) source) clause ...)
      (syntax (ascent-collect
@@ -85,12 +164,26 @@
         (head <-- body ...) clause ...)
      (syntax (ascent-collect
               (declared ...)
-              (lowered ... (ascent-rule (head <-- body ...)))
+              (lowered ... (ascent-rule-family head () (body ...)))
+              clause ...)))
+    ((_ (declared ...) (lowered ...)
+        (fact (name term ...)) clause ...)
+     (syntax (ascent-collect
+              (declared ...)
+              (lowered ... (list (ascent-rule ((name term ...)))))
+              clause ...)))
+    ((_ (declared ...) (lowered ...)
+        (facts (name term ...) ...) clause ...)
+     (syntax (ascent-collect
+              (declared ...)
+              (lowered ...
+                       (list (gerbil-ascent-rule
+                              (list (ascent-atom (name term ...)) ...) [])))
               clause ...)))
     ((_ (declared ...) (lowered ...)
         (bounds input derived output))
      (syntax (gerbil-ascent-program
-              (list declared ...) (list lowered ...)
+              (list declared ...) (append lowered ...)
               input derived output)))))
 
 (defsyntax (ascent stx)

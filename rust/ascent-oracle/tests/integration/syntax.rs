@@ -31,6 +31,23 @@ fn rust_closure_rows(edges: &[(u32, u32)]) -> Vec<String> {
         .collect()
 }
 
+fn rust_macro_rows() -> Vec<String> {
+    ascent! {
+        relation macro_seed(u32);
+        macro emit_seed($value: expr) {
+            macro_seed($value)
+        }
+        emit_seed!(9);
+    }
+    let mut program = AscentProgram::default();
+    program.run();
+    program
+        .macro_seed
+        .iter()
+        .map(|(value,)| format!("macro-seed\t{value}"))
+        .collect()
+}
+
 fn rust_rows(edges: &[(u32, u32)]) -> Vec<String> {
     ascent! {
         relation edge(u32, u32);
@@ -103,6 +120,7 @@ fn rust_rows(edges: &[(u32, u32)]) -> Vec<String> {
             .map(|(from, to)| format!("for-pair\t{from}\t{to}")),
     );
     rows.extend(rust_closure_rows(edges));
+    rows.extend(rust_macro_rows());
     rows.sort_unstable();
     rows
 }

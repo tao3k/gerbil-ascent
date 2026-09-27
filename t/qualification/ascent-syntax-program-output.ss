@@ -6,7 +6,8 @@
         (only-in :gerbil-ascent/t/qualification/ascent-syntax-fixture
                  ascent-syntax-parity-evaluate
                  ascent-pattern-clauses-evaluate
-                 ascent-included-fragment-evaluate))
+                 ascent-included-fragment-evaluate
+                 ascent-generated-fragment-evaluate))
 
 (export main)
 
@@ -18,7 +19,9 @@
          (pattern-rows-of
           (.ref (ascent-pattern-clauses-evaluate edges) 'rows-of))
          (included-rows-of
-          (.ref (ascent-included-fragment-evaluate edges) 'rows-of)))
+          (.ref (ascent-included-fragment-evaluate edges) 'rows-of))
+         (generated-rows-of
+          (.ref (ascent-generated-fragment-evaluate) 'rows-of)))
     (for-each
      (lambda (name)
        (for-each
@@ -43,5 +46,11 @@
        (for-each (lambda (column) (display #\tab) (display column)) row)
        (newline))
      (included-rows-of 'closure))
+    (for-each
+     (lambda (row)
+       (display "macro-seed")
+       (for-each (lambda (column) (display #\tab) (display column)) row)
+       (newline))
+     (generated-rows-of 'macro-seed))
     (displayln "END")
     (force-output)))

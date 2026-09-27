@@ -42,6 +42,12 @@ resolves copied tokens in the containing Rust program. This difference is
 intentional and covered by a Rust/Scheme output comparison, not a claim of
 identical macro hygiene.
 
+Gerbil =defsyntax= can generate a fragment in its defining module. The
+caller invokes that macro, binds the resulting fragment, and includes it by
+name. A Rust 0.8.0 fixture with an embedded =macro= definition and invocation
+produces the same rows. The syntax is deliberately Scheme-native; embedding a
+Rust-style macro declaration inside =ascent= remains outside this form.
+
 The left arrow follows the rule direction in Rust Ascent and the A22 paper.
 Scheme syntax adds lexical capture. Source rows and bounds are evaluated at
 declaration time; predicates, generators and aggregators run when their rule
@@ -169,7 +175,7 @@ law evidence; the syntax alone cannot establish it.
 | Body argument expression | =(expr (bound ...) expression)= | Same-atom and indexed prior-bound qualification; broader Rust differential open |
 | =?pat= body argument | =(r (pat (output ...) pattern))= | Inline =Some= success/failure Rust differential; native Gerbil pattern semantics |
 | Inline =if= / =let= after atom arguments | Separate following clause | Selected output parity; source position diagnostics open |
-| Embedded macro definition/invocation | Native Gerbil =defsyntax= and imported rule fragments | Inline Rust macro definition/invocation and diagnostics open |
+| Embedded macro definition/invocation | Module =defsyntax= produces =ascent-fragment=; =(include name)= consumes it | Selected Rust embedded macro output differential; inline declaration syntax and diagnostics open |
 | =include_source!= | Imported =ascent-fragment= plus =(include name)= | Recursive closure Rust differential; Scheme preserves module lexical scope rather than Rust token-copy scope |
 | Struct signature, generics, visibility | Gerbil module export and POO type contract | Generated API/type parity open |
 | Other attributes | Named POO contract or execution option | Attribute-by-attribute inventory open |

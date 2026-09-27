@@ -9,7 +9,8 @@
                  ascent-syntax-evaluate ascent-expression-evaluate
                  ascent-index-expression-evaluate
                  ascent-pattern-clauses-evaluate
-                 ascent-included-fragment-evaluate)
+                 ascent-included-fragment-evaluate
+                 ascent-generated-fragment-evaluate)
         (only-in :gerbil-ascent/t/qualification/ascent-fragment-source
                  ascent-reach-fragment)
         (only-in :gerbil-ascent/t/qualification/ascent-index-program-fixture
@@ -216,4 +217,9 @@
            (include source-fragment)
            (relation edge (from to))
            (bounds 8 16 24)))
-         true)))))
+         true)))
+    (poo-flow-test-case "Gerbil macro generates a reusable POO fragment"
+      (check-equal?
+       ((.ref (ascent-generated-fragment-evaluate) 'rows-of)
+        'macro-seed)
+       '((9))))))

@@ -5,7 +5,7 @@
 (import (only-in :gerbil-ascent/program/interface
                  ascent gerbil-ascent-evaluate-program)
         (only-in :gerbil-ascent/t/qualification/ascent-fragment-source
-                 ascent-reach-fragment)
+                 ascent-reach-fragment ascent-generated-seed-fragment)
         (only-in :gerbil-ascent/table/interface
                  gerbil-ascent-hash-index-provider)
         (only-in :gerbil-ascent/table/storage
@@ -15,6 +15,7 @@
         ascent-expression-evaluate ascent-index-expression-evaluate
         ascent-syntax-parity-evaluate
         ascent-included-fragment-evaluate
+        ascent-generated-fragment-evaluate
         ascent-pattern-clauses-evaluate)
 
 (def (ascent-syntax-program edges anchor)
@@ -114,3 +115,10 @@
      (ascent
       (include source-fragment)
       (bounds 16 32 48)))))
+
+(def (ascent-generated-fragment-evaluate)
+  (let (generated (ascent-generated-seed-fragment 9))
+    (gerbil-ascent-evaluate-program
+     (ascent
+      (include generated)
+      (bounds 4 4 8)))))

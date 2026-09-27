@@ -6,10 +6,79 @@
 use super::common::scheme_output;
 use ascent::ascent;
 use ascent_byods_rels::{eqrel, trrel, trrel_uf};
+use std::collections::BTreeSet;
 
 type BinaryRows = Vec<(u32, u32)>;
 type TernaryRows = Vec<(u32, u32, u32)>;
 type ByodsSnapshot = (BinaryRows, TernaryRows);
+
+fn four_node_edges() -> [(u32, u32); 8] {
+    [
+        (0, 0),
+        (0, 1),
+        (0, 2),
+        (1, 2),
+        (2, 1),
+        (2, 3),
+        (3, 0),
+        (3, 3),
+    ]
+}
+
+fn four_node_reference(edges: &[(u32, u32)], symmetric: bool, strict_trrel: bool) -> Vec<String> {
+    let nodes: BTreeSet<_> = edges.iter().flat_map(|&(from, to)| [from, to]).collect();
+    let mut expected = Vec::new();
+    for &from in &nodes {
+        let mut reached = BTreeSet::new();
+        let mut pending = vec![from];
+        while let Some(node) = pending.pop() {
+            if reached.insert(node) {
+                pending.extend(edges.iter().filter_map(|&(left, right)| {
+                    if left == node { Some(right) } else { None }
+                }));
+                if symmetric {
+                    pending.extend(edges.iter().filter_map(|&(left, right)| {
+                        if right == node { Some(left) } else { None }
+                    }));
+                }
+            }
+        }
+        for to in reached {
+            if !strict_trrel || from != to || edges.contains(&(from, from)) {
+                expected.push(format!("binary-output\t{from}\t{to}"));
+            }
+        }
+    }
+    expected.sort_unstable();
+    expected
+}
+
+#[test]
+fn four_node_byods_subsets_match_independent_closure() {
+    let possible = four_node_edges();
+    for mask in 0..(1u16 << possible.len()) {
+        let edges: Vec<_> = possible
+            .iter()
+            .enumerate()
+            .filter_map(|(bit, edge)| (mask & (1 << bit) != 0).then_some(*edge))
+            .collect();
+        assert_eq!(
+            ascent_eqrel_rows(&edges, &[]),
+            four_node_reference(&edges, true, false),
+            "eqrel mask={mask}"
+        );
+        assert_eq!(
+            ascent_trrel_rows(&edges, &[]),
+            four_node_reference(&edges, false, true),
+            "trrel mask={mask}"
+        );
+        assert_eq!(
+            ascent_trrel_uf_rows(&edges, &[]),
+            four_node_reference(&edges, false, false),
+            "trrel_uf mask={mask}"
+        );
+    }
+}
 
 fn ascent_eqrel_rows(binary: &[(u32, u32)], grouped: &[(u32, u32, u32)]) -> Vec<String> {
     ascent! {

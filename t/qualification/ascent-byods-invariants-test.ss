@@ -19,6 +19,10 @@
     (1 0) (1 1) (1 2)
     (2 0) (2 1) (2 2)))
 
+(def +four-node-edges+
+  '((0 0) (0 1) (0 2) (1 2)
+    (2 1) (2 3) (3 0) (3 3)))
+
 (def (subsets items)
   (if (null? items)
     (list [])
@@ -80,14 +84,14 @@
      nodes)
     wanted))
 
-(def (provider-rows provider edges)
+(def (provider-rows provider edges (budget 9))
   (let ((state (gerbil-ascent-storage-make-state provider))
         (rows []))
     (for-each
      (lambda (edge)
        (set! rows
          (append (gerbil-ascent-storage-extend
-                  provider state rows [] edge 9)
+                  provider state rows [] edge budget)
                  rows))
        (check-equal?
         (gerbil-ascent-storage-extend provider state rows [] edge 0)
@@ -98,8 +102,8 @@
 (def (grouped-rows group edges)
   (map (lambda (edge) (cons group edge)) edges))
 
-(def (check-provider-rows provider ordered wanted)
-  (let (actual (provider-rows provider ordered))
+(def (check-provider-rows provider ordered wanted (budget 9))
+  (let (actual (provider-rows provider ordered budget))
     (check-equal? (length actual) (length wanted))
     (for-each
      (lambda (row)
@@ -123,6 +127,21 @@
                 gerbil-ascent-trrel-storage-provider
                 gerbil-ascent-trrel-uf-storage-provider)))
        (subsets +possible-edges+)))
+    (poo-flow-test-case "four-node sparse subsets preserve larger merges"
+      (for-each
+       (lambda (edges)
+         (for-each
+          (lambda (kind provider)
+            (let (wanted (reference-rows kind edges))
+              (for-each
+               (lambda (ordered)
+                 (check-provider-rows provider ordered wanted 16))
+               (list edges (reverse edges)))))
+          '(eqrel trrel trrel-uf)
+          (list gerbil-ascent-eqrel-storage-provider
+                gerbil-ascent-trrel-storage-provider
+                gerbil-ascent-trrel-uf-storage-provider)))
+       (subsets +four-node-edges+)))
     (poo-flow-test-case "grouped storage isolates two interleaved edge sets"
       (let (beta '((0 1) (1 2) (2 0)))
         (for-each

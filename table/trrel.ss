@@ -4,7 +4,6 @@
 
 ;;; Per-relation transitive closure state. Index emitted reachability pairs so
 ;;; a new edge combines its known predecessors and successors directly.
-(import (only-in :std/hash/misc hash-ensure-modify!))
 
 (export gerbil-ascent-trrel-state
         gerbil-ascent-trrel-extension
@@ -40,14 +39,14 @@
     (def (commit-fact! row)
       (let* ((pair (if (= width 3) (cdr row) row))
              (from (car pair))
-             (to (cadr pair)))
+             (to (cadr pair))
+             (from-key (node-key from))
+             (to-key (node-key to)))
         (hash-put! known row #t)
-        (hash-ensure-modify! successors (node-key from)
-                             (lambda () [])
-                             (lambda (targets) (cons to targets)))
-        (hash-ensure-modify! predecessors (node-key to)
-                             (lambda () [])
-                             (lambda (sources) (cons from sources)))))
+        (hash-put! successors from-key
+                   (cons to (or (hash-get successors from-key) [])))
+        (hash-put! predecessors to-key
+                   (cons from (or (hash-get predecessors to-key) [])))))
     (def (emit! from to)
       (let (row (fact from to))
         (unless (or (hash-get known row)

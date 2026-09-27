@@ -10,6 +10,7 @@
                  ascent-lattice-fixture-evaluate)
         (only-in :gerbil-ascent/program/interface
                  gerbil-ascent-lattice gerbil-ascent-relation
+                 gerbil-ascent-atom gerbil-ascent-variable gerbil-ascent-rule
                  gerbil-ascent-program gerbil-ascent-evaluate-program
                  gerbil-ascent-open-session
                  gerbil-ascent-session-run
@@ -45,22 +46,48 @@
               (gerbil-ascent-program (list composed) [] 4 4 8)))
         (check-equal?
          ((.ref (gerbil-ascent-evaluate-program program) 'rows-of) 'measure)
-         '((1 3)))
+         '((1 2) (1 3)))
         (check-exception
          (gerbil-ascent-evaluate-program
           (gerbil-ascent-program
            (list (.o (:: @ composed)
-                     join: (lambda (_left _right) "invalid")))
-           [] 4 4 8))
+                     join: (lambda (_left _right) "invalid"))
+                 (gerbil-ascent-relation 'candidate 2 '((1 4))))
+           (list (gerbil-ascent-rule
+                  (list (gerbil-ascent-atom 'measure
+                         (list (gerbil-ascent-variable 'node)
+                               (gerbil-ascent-variable 'value))))
+                  (list (gerbil-ascent-atom 'candidate
+                         (list (gerbil-ascent-variable 'node)
+                               (gerbil-ascent-variable 'value))))))
+           4 4 8))
          true)))
-    (poo-flow-test-case "session rejects direct lattice source updates"
+    (poo-flow-test-case "session retains direct lattice source tuples"
       (let (session
             (gerbil-ascent-open-session
              (gerbil-ascent-program
               (list (gerbil-ascent-relation 'source 2 '((1 2)))
-                    (gerbil-ascent-lattice 'best 2 [] min))
+                    (gerbil-ascent-lattice 'best 2 '((1 2)) min))
               [] 4 4 8)))
-        (gerbil-ascent-session-run session)
-        (check-exception
-         (gerbil-ascent-session-append-source! session 'best '(2 3))
-         true)))))
+        (let (first (gerbil-ascent-session-run session))
+          (gerbil-ascent-session-append-source! session 'best '(1 3))
+          (check-equal?
+           ((.ref (gerbil-ascent-session-run session) 'rows-of) 'best)
+           '((1 2) (1 3)))
+          (check-equal? ((.ref first 'rows-of) 'best) '((1 2))))))
+    (poo-flow-test-case "direct lattice append rejects before changing state"
+      (let* ((session
+              (gerbil-ascent-open-session
+               (gerbil-ascent-program
+                (list (gerbil-ascent-lattice 'best 2 '((1 2)) min))
+                [] 3 3 2)))
+             (first (gerbil-ascent-session-run session)))
+        (gerbil-ascent-session-append-source! session 'best '(1 3))
+        (let (second (gerbil-ascent-session-run session))
+          (check-exception
+           (gerbil-ascent-session-append-source! session 'best '(1 4))
+           true)
+          (check-equal? (eq? second (gerbil-ascent-session-run session)) #t)
+          (check-equal? ((.ref second 'rows-of) 'best)
+                        '((1 2) (1 3)))
+          (check-equal? ((.ref first 'rows-of) 'best) '((1 2))))))))

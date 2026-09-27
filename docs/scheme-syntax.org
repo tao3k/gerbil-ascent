@@ -88,7 +88,7 @@ program contract.
 | =(bounds input derived output)= | Existing finite program limits |
 | =(ascent-fragment clause ...)= | Exportable POO Relation/Rule fragment without program bounds |
 | =(include fragment-name)= | Include a lexical Gerbil module fragment in declaration order |
-| =(lattice name (column ...) source join [index])= | POO lattice declaration; columns may carry predicates checked on source, derived, and joined rows |
+| =(lattice name (column ...) source join [index])= | POO lattice declaration; raw source tuples remain visible, while rule-head insertions join by key; columns may carry predicates checked on source, derived, and joined rows |
 | =(fact head)= / =(facts head ...)= | Rust rules with an empty body |
 | =(or (and clause ...) ...)= | Finite body disjunction, lowered to ordinary rules |
 | =(if (input ...) expression)= | Scheme predicate over bound inputs |

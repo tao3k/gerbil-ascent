@@ -51,28 +51,76 @@
         (cadr row)))
      (rows-of 'reach-tag))))
 
+(def (direct-program scores)
+  (ascent
+   (lattice score ((node integer?) (value integer?)) scores min)
+   (relation copy ((node integer?) (value integer?)))
+   ((copy node value) <-- (score node value))
+   (bounds 32 64 96)))
+
+(def (emit-direct-rows index phase result)
+  (let (rows-of (.ref result 'rows-of))
+    (for-each
+     (lambda (name)
+       (for-each
+        (lambda (row)
+          (display index) (display #\tab) (display phase)
+          (display #\tab) (display name)
+          (for-each
+           (lambda (column) (display #\tab) (display column))
+           row)
+          (newline))
+        (rows-of name)))
+     '(score copy))))
+
+(def (print-direct-cases cases)
+  (let loop ((remaining cases) (index 0))
+    (unless (null? remaining)
+      (let* ((case (car remaining))
+             (initial (car case))
+             (added (cadr case))
+             (session (gerbil-ascent-open-session
+                       (direct-program initial)))
+             (first (gerbil-ascent-session-run session))
+             (first-rows-of (.ref first 'rows-of))
+             (first-snapshot (map first-rows-of '(score copy))))
+        (emit-direct-rows index 0 first)
+        (for-each
+         (lambda (row)
+           (gerbil-ascent-session-append-source! session 'score row))
+         added)
+        (emit-direct-rows index 1 (gerbil-ascent-session-run session))
+        (unless (equal? first-snapshot (map first-rows-of '(score copy)))
+          (error "ASCENT direct lattice source changed a prior snapshot"
+                 index)))
+      (loop (cdr remaining) (+ index 1)))))
+
 (def (main . args)
   (unless (null? args)
     (error "ASCENT lattice session corpus reads one case list"))
-  (let loop ((cases (read)) (index 0))
-    (unless (null? cases)
-      (let* ((case (car cases))
-             (initial (car case))
-             (added (cadr case))
-             (session (gerbil-ascent-open-session (program initial)))
-             (first (gerbil-ascent-session-run session))
-             (first-rows-of (.ref first 'rows-of))
-             (first-snapshot
-              (map first-rows-of '(shortest reach-tag))))
-        (emit-rows index 0 first)
-        (for-each
-         (lambda (edge)
-           (gerbil-ascent-session-append-source! session 'edge edge))
-         added)
-        (emit-rows index 1 (gerbil-ascent-session-run session))
-        (unless (equal? first-snapshot
-                        (map first-rows-of '(shortest reach-tag)))
-          (error "ASCENT lattice session changed a prior snapshot" index)))
-      (loop (cdr cases) (+ index 1))))
+  (let (request (read))
+    (if (and (pair? request) (eq? (car request) 'direct))
+      (print-direct-cases (cadr request))
+      (let loop ((cases request) (index 0))
+        (unless (null? cases)
+          (let* ((case (car cases))
+                 (initial (car case))
+                 (added (cadr case))
+                 (session (gerbil-ascent-open-session (program initial)))
+                 (first (gerbil-ascent-session-run session))
+                 (first-rows-of (.ref first 'rows-of))
+                 (first-snapshot
+                  (map first-rows-of '(shortest reach-tag))))
+            (emit-rows index 0 first)
+            (for-each
+             (lambda (edge)
+               (gerbil-ascent-session-append-source! session 'edge edge))
+             added)
+            (emit-rows index 1 (gerbil-ascent-session-run session))
+            (unless (equal? first-snapshot
+                            (map first-rows-of '(shortest reach-tag)))
+              (error "ASCENT lattice session changed a prior snapshot"
+                     index)))
+          (loop (cdr cases) (+ index 1))))))
   (display "END\n")
   (force-output))

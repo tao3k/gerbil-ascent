@@ -66,10 +66,12 @@ All ASCENT standard SS fixtures now use 1000 measured samples; the 1000-row
 to 10000-row input-scale qualification is separate from repeated timing of
 the small reference examples. Older 20-sample receipts below are historical
 measurements and do not admit the new fixture heads.
-The local 1000-sample sweep passed all 16 fixtures. The indexed-join p95 was
-964us under its 1000us gate; the table-expression and shortest-candidate
-fixtures measured 1.209ms and 1.094ms under their existing 2000us gates.
-These local receipts require the pinned Linux job before merge admission.
+The local 1000-sample sweep passed all 16 fixtures. Indexed joins measured
+964us locally, but 1.693ms on exact-head Linux, missing its 1000us target
+while passing its unchanged 2000us hard gate. Table expression and shortest
+candidates measured 1.624ms and 1.499ms on Linux under their existing 2000us
+hard gates. The exact-head Linux native and package jobs passed; the target
+misses remain algorithmic performance work, not waived budget failures.
 Pinned Ascent 0.8.0 requires =Hash= for a lattice value, while its exported
 =Product<(u32,u32)>= does not implement =Hash=. The Rust corpus uses a local
 =CoordinateMax= newtype with the same product order and coordinatewise join;

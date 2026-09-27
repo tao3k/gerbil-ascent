@@ -55,7 +55,13 @@ nine rows and then derive nine more under a twelve-row output limit.
 Dependency stratification, delta-position planning, lattice row operations
 and rule binding live in =program/funs.ss= as named Scheme functions. The
 evaluator retains session-local fact buffers, pending deltas and rule
-execution state. Its public =GerbilAscentSessionContract= exposes
+execution state. Immutable lowered rules and strata are cached by the
+identity of the declared POO program with weak keys; cache access is
+serialized, while every evaluation builds separate fact buffers, indexes,
+BYODS state and budgets. POO refinement creates a new program identity and
+therefore receives its own analysis. This is Scheme planning inside the
+evaluator, not a separate source or runtime language. Its public
+=GerbilAscentSessionContract= exposes
 =.append-source!= and =.run= procedures. =gerbil-ascent-open-session= creates
 one session; the one-shot API executes that session once. Results contain
 stable row snapshots. A second run without new materialized rows reuses its

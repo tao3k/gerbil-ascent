@@ -147,6 +147,25 @@
              (gerbil-ascent-program
               (list (gerbil-ascent-relation 'r 1 '((1)))) [] 2 2 2)))
         (check-equal? (rows result 'r) '((1)))))
+    (poo-flow-test-case/with +two-snapshot-case-profile+
+      "POO rule refinement receives its own immutable analysis"
+      (let* ((base
+              (gerbil-ascent-program
+               (list (gerbil-ascent-relation 'edge 1 '((1)))
+                     (gerbil-ascent-relation 'reach 1 []))
+               (list (r (a 'reach (v 'x)) (a 'edge (v 'x))))
+               4 4 8))
+             (first (gerbil-ascent-evaluate-program base))
+             (refined
+              (.o (:: @ base)
+                  rules: (append (.ref base 'rules)
+                                 (list (r (a 'reach (gerbil-ascent-literal 2)))))))
+             (second (gerbil-ascent-evaluate-program refined)))
+        (check-equal? (rows first 'reach) '((1)))
+        (check-equal? (length (rows second 'reach)) 2)
+        (check-equal? (not (not (member '(2) (rows second 'reach)))) #t)
+        (check-equal? (rows (gerbil-ascent-evaluate-program base) 'reach)
+                      '((1)))))
     (poo-flow-test-case/with +positive-case-profile+
       "zero-column fact gates typed boolean and string rows"
       (check-equal?

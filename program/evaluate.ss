@@ -29,6 +29,31 @@
 
 (def Session. (.ref GerbilAscentSessionContract 'proto))
 
+;; Program declarations are POO values. Their lowered rule plan is immutable
+;; and can be shared; each evaluation still creates its own relation state.
+(def +program-analysis-cache+ (make-hash-table-eq weak-keys: #t))
+(def +program-analysis-lock+ (make-mutex 'ascent-program-analysis))
+
+(def (with-program-analysis-lock thunk)
+  (dynamic-wind
+   (lambda () (mutex-lock! +program-analysis-lock+))
+   thunk
+   (lambda () (mutex-unlock! +program-analysis-lock+))))
+
+(def (gerbil-ascent-program-analysis program relations rules build)
+  (let (cached
+        (with-program-analysis-lock
+         (lambda () (hash-get +program-analysis-cache+ program))))
+    (if (and cached
+             (eq? relations (vector-ref cached 0))
+             (eq? rules (vector-ref cached 1)))
+      cached
+      (let (fresh (build))
+        (with-program-analysis-lock
+         (lambda ()
+           (hash-put! +program-analysis-cache+ program fresh)))
+        fresh))))
+
 (def (gerbil-ascent-make-engine program session?)
   ;; The declaration constructor validates the full Core contract.
   ;; Evaluation checks mutable rows and clause bindings for this snapshot.
@@ -256,8 +281,15 @@
                          plan))
                      heads))
             (vector head-plans (reverse body-plans) atoms))))
-      (let* ((rule-plans (map prepare-rule rules))
-             (strata (gerbil-ascent-rule-strata rule-plans count))
+      (let* ((analysis
+              (gerbil-ascent-program-analysis
+               program relations rules
+               (lambda ()
+                 (let (plans (map prepare-rule rules))
+                   (vector relations rules plans
+                           (gerbil-ascent-rule-strata plans count))))))
+             (rule-plans (vector-ref analysis 2))
+             (strata (vector-ref analysis 3))
              (highest-stratum
               (if (= count 0) -1 (apply max (vector->list strata))))
              (positive-rules?

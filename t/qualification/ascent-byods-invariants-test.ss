@@ -4,7 +4,10 @@
 
 (import (only-in :std/test check-equal? test-suite)
         (only-in :std/hash/misc hash-ensure-modify!)
+        (only-in :clan/poo/object .ref)
         (only-in :core/observability/testing-case poo-flow-test-case)
+        (only-in :gerbil-ascent/t/qualification/ascent-byods-query-fixture
+                 ascent-byods-query-evaluate)
         (only-in :gerbil-ascent/table/interface
                  gerbil-ascent-eqrel-storage-provider
                  gerbil-ascent-trrel-storage-provider
@@ -142,6 +145,32 @@
                 gerbil-ascent-trrel-storage-provider
                 gerbil-ascent-trrel-uf-storage-provider)))
        (subsets +four-node-edges+)))
+    (poo-flow-test-case "four-node edges close across every two-producer partition"
+      (let* ((edges +four-node-edges+)
+             (wanted (map (lambda (node) (list "alpha" node)) '(0 1 2 3)))
+             (expected
+              (map (lambda (kind)
+                     (grouped-rows "alpha" (reference-rows kind edges)))
+                   '(eqrel trrel trrel-uf))))
+        (for-each
+         (lambda (first)
+           (let* ((second
+                   (filter (lambda (edge) (not (member edge first))) edges))
+                  (result
+                   (ascent-byods-query-evaluate
+                    (grouped-rows "alpha" first) wanted
+                    (grouped-rows "alpha" second)))
+                  (rows-of (.ref result 'rows-of)))
+             (for-each
+              (lambda (name rows)
+                (let (actual (rows-of name))
+                  (check-equal? (length actual) (length rows))
+                  (for-each
+                   (lambda (row)
+                     (check-equal? (not (not (member row actual))) #t))
+                   rows)))
+              '(eq-match tr-match uf-match) expected)))
+         (subsets edges))))
     (poo-flow-test-case "grouped storage isolates two interleaved edge sets"
       (let (beta '((0 1) (1 2) (2 0)))
         (for-each

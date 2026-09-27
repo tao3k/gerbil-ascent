@@ -92,6 +92,11 @@ their input variables explicitly. These fixtures do
 not close the rows above. =candidate/= and
 =interface/= hold existing experimental projections; their MRR or Agent use
 cannot substitute for Rust feature parity.
+The positive binary differential now includes an empty source, a self-loop,
+duplicate edges, disconnected cycles and overlapping paths. Both the binary
+fast path and generic rule path compare their complete sorted closure with
+the pinned Rust oracle for each snapshot. These finite graphs check boundary
+and deduplication behavior; they do not establish arbitrary-graph parity.
 The nullary-gate fixture checks absent and present zero-column facts with
 boolean and string data, duplicate input rows, and empty strings against
 the pinned Rust Ascent 0.8.0 oracle. The macro's generated Rust code emits
@@ -216,6 +221,29 @@ had approximately 0.58--0.59 ms medians but failed the 1 ms p95 gate at
 1.803 and 1.706 ms. The functional split does not close the latency tail.
 Declaration construction is outside this timing window and remains a separate
 cost.
+
+The [[https://github.com/tao3k/poo-flow/actions/runs/36283826484/job/108520664702][POO Flow Ubuntu native job]] at POO Flow =5a882a0= and
+ASCENT =c07c247= ran the complete selected SS performance set with semantic
+checks and unchanged limits. All entries passed in that one CI run:
+
+| Scenario | p95 | Admission ceiling |
+|----------+-----+-------------------|
+| =ascent-byods-tr= | 590.224 us | 1 ms |
+| =ascent-byods-uf= | 621.041 us | 1 ms |
+| =ascent-session-update= | 476.142 us | 1 ms |
+| =ascent-rule-clauses= | 687.342 us | 1 ms |
+| =ascent-indexed-joins= | 939.683 us | 2 ms |
+| =ascent-byods-eqrel= | 503.432 us | 1 ms |
+| =ascent-binary-program= | 362.169 us | 2 ms |
+| =ascent-reachability-closure= | 299.744 us | 1 ms |
+| =ascent-table-expression= | 1.235392 ms | 2 ms |
+| =ascent-membership= | 249.267 us | 500 us |
+| =ascent-shortest-candidates= | 1.140608 ms | 2 ms |
+
+The table-expression and membership scenarios also require a lower p95 than
+their baseline implementations; both passed. This is an exact-head Linux
+receipt for the selected inputs, not a claim of stable latency on every host
+or complete Rust feature parity.
 
 * Implementation order
 

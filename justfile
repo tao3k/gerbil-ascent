@@ -59,6 +59,9 @@ lattice-set-rows:
 integrated-corpus-rows:
     @timeout 90s gerbil {{ gerbil_test_runtime_options }} t/qualification/ascent-integrated-corpus-output.ss
 
+mutual-corpus-rows:
+    @timeout 120s gerbil {{ gerbil_test_runtime_options }} t/qualification/ascent-mutual-program-output.ss
+
 index-rows:
     @timeout 60s gerbil {{ gerbil_test_runtime_options }} t/qualification/ascent-index-program-output.ss
 

@@ -10,5 +10,6 @@ mod composed_corpus;
 mod lattice_index;
 mod module_session;
 mod positive_closure;
+mod session_corpus;
 mod syntax;
 mod typed_rules;

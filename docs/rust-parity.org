@@ -43,6 +43,15 @@ Pinned Ascent 0.8.0 requires =Hash= for a lattice value, while its exported
 =Product<(u32,u32)>= does not implement =Hash=. The Rust corpus uses a local
 =CoordinateMax= newtype with the same product order and coordinatewise join;
 it does not claim the exported =Product= type itself is usable in a lattice.
+The retained-session corpus in
+=rust/ascent-oracle/tests/integration/session_corpus.rs= partitions all 512
+three-node edge subsets into initial and appended facts, then compares both
+phases of one multi-head, mutually recursive Rust program with a retained
+Scheme session. Two additional cases exercise duplicate appends. Each Rust
+final phase is independently compared with a fresh Rust run, and the Scheme
+adapter verifies that the earlier result snapshot remains stable. This
+closes the bounded positive SCC update corpus, not nonmonotone or lattice
+updates.
 
 * POO Flow programming style in the Scheme implementation
 
@@ -101,7 +110,7 @@ result, while positive relation-atom rules consume appended source deltas.
 | Relation declaration, arbitrary arity and column types | =program/= | positive generic path handles nullary through four-column mixed rows, including a nullary rule gate over boolean and string columns; binary fast path remains; Scheme =ascent= declarations accept per-column predicates and check source, retained updates, derived rows, and Provider outputs | Rust compile-time type diagnostics and broader column-type/scale receipts |
 | Multiple heads, relation clauses, repeated variables, joins | =program/= | positive generic multi-head rules, joins and repeated-variable equality pass selected Rust oracle fixtures; one recursive SCC rule emits both a path and a unary witness, with a selected 544.178 us Linux SS p95 | arbitrary body shape, invalid-program corpus and wider performance receipts |
 | Semi-naive least fixed point, dependencies and strata | =program/=, =core/= | generic recursive path supports positive and negative strata; a two-relation mutually recursive SCC with cyclic and reordered sources matches selected Rust fixed-point snapshots, including a second head on one recursive rule | broader SCC/rule order, invalid-program and termination corpus |
-| Repeated =run()= after source relation updates | =program/= | Retained Scheme session reuses rows, indexes and BYODS state for positive atom-only source additions; one recursive multi-head SCC directly compares retained Scheme and Rust sessions through unchanged, duplicate, cycle and branching updates. A 20-sample Linux SS update gate passes at 581.207 µs p95. A malformed or over-budget custom Provider batch now rejects before changing evaluator-owned session rows or input counters, and a later valid append succeeds. Source deletion and nonpositive updates require fresh evaluation | compare wider positive corpus and update shapes; characterize Rust retained-state behavior for negation and aggregates; Provider-owned state must obey its own failure-atomic contract |
+| Repeated =run()= after source relation updates | =program/= | Retained Scheme session reuses rows, indexes and BYODS state for positive atom-only source additions; all 512 three-node edge subsets plus two duplicate cases compare both phases of a multi-head SCC retained Scheme session with Rust 0.8.0, including stable earlier snapshots and Rust fresh-run equality. A 20-sample Linux SS update gate passes at 581.207 µs p95. Malformed or over-budget Provider batches reject before changing evaluator-owned session rows or input counters. Source deletion and nonpositive updates require fresh evaluation | larger positive state and BYODS scale; characterize Rust retained-state behavior for negation, aggregates, and lattices; Provider-owned state must obey its own failure-atomic contract |
 | Conditions, bindings and generators | =program/=, =core/= | generic POO guard and =let= binding; generator clauses stream Gerbil Standard Library iterables with ordered binding checks. Lists, vectors, a bound-dependent range yielding zero to two values, and a vector of tuple outputs match selected Rust iterators and tuple patterns. Duplicate output names, already-bound names, and wrong tuple widths reject | broader iterator/pattern corpus and scale receipts |
 | Stratified negation | =program/= | 3-level negated relation fixture and negative-cycle rejection pass selected Rust oracle comparison | broader safe/unsafe programs and performance receipts |
 | Aggregation and custom aggregators | =program/= | count, sum, min, max, mean and custom iterator aggregators pass empty, duplicate-input and grouped Rust fixtures; a count over a completed recursive path closure matches pinned Rust for empty, chain, cycle and duplicate-edge snapshots, including a root with zero paths; Scheme rejects an aggregate dependency cycle as the pinned Rust macro does | broader derived-aggregate and type corpus, invalid-program diagnostics and performance receipts |

@@ -338,12 +338,36 @@
                program relations rules
                (lambda ()
                  (let (plans (map prepare-rule rules))
-                   (vector relations rules plans
-                           (gerbil-ascent-rule-strata plans count))))))
+                   (let* ((strata (gerbil-ascent-rule-strata plans count))
+                          (highest (if (= count 0) -1
+                                     (apply max (vector->list strata))))
+                          (active (make-vector (+ highest 1) [])))
+                     (let plan-stratum ((stratum 0))
+                       (when (<= stratum highest)
+                         (let (selected
+                               (filter-map
+                                (lambda (rule)
+                                  (let (heads
+                                        (filter
+                                         (lambda (head)
+                                           (= (vector-ref strata
+                                                          (vector-ref head 0))
+                                              stratum))
+                                         (vector-ref rule 0)))
+                                    (and (pair? heads)
+                                         (vector
+                                          heads (vector-ref rule 1)
+                                          (gerbil-ascent-delta-positions
+                                           (vector-ref rule 1) strata
+                                           stratum)))))
+                                plans))
+                           (vector-set! active stratum selected)
+                           (plan-stratum (+ stratum 1)))))
+                     (vector relations rules plans strata active))))))
              (rule-plans (vector-ref analysis 2))
              (strata (vector-ref analysis 3))
-             (highest-stratum
-              (if (= count 0) -1 (apply max (vector->list strata))))
+             (active-by-stratum (vector-ref analysis 4))
+             (highest-stratum (- (vector-length active-by-stratum) 1))
              (positive-rules?
               (andmap
                (lambda (rule)
@@ -424,22 +448,8 @@
          (when dirty?
          (let evaluate-stratum ((stratum 0))
           (when (<= stratum highest-stratum)
-            (let ((active-rules []) (active? #t) (round 0))
-              (for-each
-               (lambda (rule)
-                 (let (heads
-                       (filter (lambda (head)
-                                 (= (vector-ref strata (vector-ref head 0))
-                                    stratum))
-                               (vector-ref rule 0)))
-                   (unless (null? heads)
-                     (set! active-rules
-                       (cons (vector heads (vector-ref rule 1)
-                                     (gerbil-ascent-delta-positions
-                                      (vector-ref rule 1) strata stratum))
-                             active-rules)))))
-               rule-plans)
-              (set! active-rules (reverse active-rules))
+            (let ((active-rules (vector-ref active-by-stratum stratum))
+                  (active? #t) (round 0))
               (let reset-delta ((index 0))
                 (when (< index count)
                   (vector-set! delta index

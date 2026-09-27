@@ -45,6 +45,7 @@ existing program contract.
 | =(bind output (input ...) procedure)= | Compute one output |
 | =(for output (input ...) expression)= | Generate one or several outputs from a Scheme iterable |
 | =(aggregate output operation (input ...) (name term ...))= | Aggregate rows of one relation |
+| =(aggregate (output ...) operation (input ...) (name term ...) pattern)= | Match each aggregate result and bind multiple outputs |
 | =(bounds input derived output)= | Existing finite program limits |
 | =(lattice name (column ...) source join [index])= | POO lattice declaration |
 | =(fact head)= / =(facts head ...)= | Rust rules with an empty body |
@@ -90,7 +91,7 @@ disjunction, dynamic head expressions, =if let= and =?pattern= against the
 Scheme forms. Body expressions with named dependencies pass both row-local
 and indexed Provider qualification. Inline positive-atom patterns use native
 Gerbil =match=. Broader atom expressions and pattern contexts,
-aggregate output patterns, embedded rule fragments, typed declarations and
+embedded rule fragments, typed declarations and
 the generated Rust API remain open. Parallel Ascent is an execution-policy
 gap, not a token-level grammar feature.
 
@@ -127,7 +128,7 @@ law evidence; the syntax alone cannot establish it.
 | =let pat=expr= | =(let (output ...) (bound ...) expr pattern)= | Scalar and destructured binding; Rust tuple differential |
 | =for pat in expr= | =(for (output ...) (bound ...) expr pattern)= | Iterable scalar and destructured tuple Rust differential |
 | =if let pat=expr= | =(if-let (output ...) (bound ...) expr pattern)= | =Some= success/failure Rust differential |
-| =agg pat=f(args) in r(args)= | =(aggregate output f (input ...) (r args ...))= | Grouped/derived/custom aggregate oracle; output pattern open |
+| =agg pat=f(args) in r(args)= | =(aggregate (output ...) f (input ...) (r args ...) pattern)= | Grouped/derived/custom aggregate oracle; tuple output pattern Rust differential |
 | Parenthesized =|= disjunction | =(or (and clause ...) ...)= | Two disjunction points qualified, one Rust differential |
 | Head expression | =(expr (bound ...) expression)= | Rust differential over three source snapshots |
 | Body argument expression | =(expr (bound ...) expression)= | Same-atom and indexed prior-bound qualification; broader Rust differential open |

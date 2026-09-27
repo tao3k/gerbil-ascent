@@ -17,6 +17,16 @@ fn extrema<'a>(input: impl Iterator<Item = (&'a i32,)>) -> impl Iterator<Item = 
         .chain(values.iter().max().copied())
 }
 
+fn extrema_pair<'a>(input: impl Iterator<Item = (&'a i32,)>) -> impl Iterator<Item = (i32, i32)> {
+    let values: Vec<_> = input.map(|(value,)| *value).collect();
+    values
+        .iter()
+        .min()
+        .zip(values.iter().max())
+        .map(|(minimum, maximum)| (*minimum, *maximum))
+        .into_iter()
+}
+
 fn ascent_aggregate_rows(values: &[i32]) -> Vec<String> {
     ascent! {
         relation number(i32);
@@ -29,12 +39,14 @@ fn ascent_aggregate_rows(values: &[i32]) -> Vec<String> {
         relation cardinality(usize);
         relation average(i32);
         relation custom(i32);
+        relation extrema_pair(i32, i32);
         minimum(value) <-- agg value = min(x) in number(x);
         maximum(value) <-- agg value = max(x) in number(x);
         total(value) <-- agg value = sum(x) in number(x);
         cardinality(value) <-- agg value = count() in number(_);
         average(value.round() as i32) <-- agg value = mean(x) in number(x);
         custom(value) <-- agg value = extrema(x) in number(x);
+        extrema_pair(minimum, maximum) <-- agg (minimum, maximum) = extrema_pair(x) in number(x);
         by_group(group, total) <-- group_key(group), agg total = sum(x) in pair(group, x);
     }
     let mut program = AscentProgram {
@@ -86,6 +98,12 @@ fn ascent_aggregate_rows(values: &[i32]) -> Vec<String> {
             .custom
             .iter()
             .map(|(value,)| format!("custom\t{value}")),
+    );
+    rows.extend(
+        program
+            .extrema_pair
+            .iter()
+            .map(|(minimum, maximum)| format!("extrema-pair\t{minimum}\t{maximum}")),
     );
     rows.sort_unstable();
     rows

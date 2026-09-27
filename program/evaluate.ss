@@ -547,11 +547,22 @@
                                  values))
                         (for-each
                          (lambda (value)
-                           (visit-body (cdr body) delta-at depth
-                                       (cons (cons (vector-ref clause 2)
-                                                   value)
-                                             environment)
-                                       consume))
+                           (let* ((output (vector-ref clause 2))
+                                  (matcher (vector-ref clause 5))
+                                  (next-environment
+                                   (if matcher
+                                     (let (matched (matcher value))
+                                       (unless (and (list? matched)
+                                                    (= (length matched)
+                                                       (length output)))
+                                         (error "ASCENT aggregate pattern returned invalid bindings"
+                                                matched output))
+                                       (append (map cons output matched)
+                                               environment))
+                                     (cons (cons output value)
+                                           environment))))
+                             (visit-body (cdr body) delta-at depth
+                                         next-environment consume)))
                          values))))
                    ((eq? (vector-ref clause 0) 'guard)
                     (let (pass? (apply (vector-ref clause 2)

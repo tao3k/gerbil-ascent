@@ -109,6 +109,9 @@
                          (loop (cdr remaining)
                                (cons (car remaining) seen))))))))))
 (def +procedure+ (slot-contract 'ascent/procedure procedure?))
+(def +optional-procedure+
+  (slot-contract 'ascent/optional-procedure
+                 (lambda (value) (or (not value) (procedure? value)))))
 
 (define-type (GerbilAscentGuardContract @ PooFlowNativeObjectContract.)
   identity: 'ascent/guard
@@ -145,9 +148,11 @@
   proto: (.o)
   responsibilities: (.o ascent-clause-kind:
                       (clause-kind-contract 'aggregate)
-                      variable: +symbol+ relation: +symbol+
+                      variable: +generator-output+ relation: +symbol+
                       terms: +terms+ variables: +variables+
-                      aggregate: +procedure+ .plan: +plan+))
+                      aggregate: +procedure+
+                      output-pattern: +optional-procedure+
+                      .plan: +plan+))
 
 (def +clauses+
   (slot-contract 'ascent/clauses

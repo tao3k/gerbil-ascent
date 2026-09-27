@@ -35,6 +35,15 @@
 
 (defsyntax (ascent-clause stx)
   (syntax-case stx ()
+    ((_ (kind (output ...) operation (input ...) (name term ...) pattern))
+     (eq? (syntax->datum (syntax kind)) 'aggregate)
+     (syntax (gerbil-ascent-aggregate
+              '(output ...) 'name (list (ascent-term term) ...)
+              '(input ...) operation
+              (lambda (value)
+                (match value
+                  (pattern (list output ...))
+                  (_ (error "ASCENT aggregate pattern did not match")))))))
     ((_ (kind output operation (input ...) (name term ...)))
      (eq? (syntax->datum (syntax kind)) 'aggregate)
      (syntax (gerbil-ascent-aggregate

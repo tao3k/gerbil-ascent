@@ -153,12 +153,17 @@
 (def (aggregate-clause-plan clause atom-plan bound)
   (let* ((plan (indexed-atom (atom-plan clause) bound))
          (name (.ref clause 'variable))
+         (names (if (list? name) name (list name)))
          (inputs (.ref clause 'variables))
          (terms (vector-ref plan 1)))
     (when (ormap pattern-outputs terms)
       (error "ASCENT pattern cannot bind in aggregate"))
-    (when (memq name bound)
-      (error "ASCENT aggregate variable already bound" name))
+    (let loop ((remaining names) (next-bound bound))
+      (unless (null? remaining)
+        (when (memq (car remaining) next-bound)
+          (error "ASCENT aggregate variable already bound"
+                 (car remaining)))
+        (loop (cdr remaining) (cons (car remaining) next-bound))))
     (for-each
      (lambda (input)
        (unless (ormap (lambda (term)
@@ -167,8 +172,9 @@
                       terms)
          (error "ASCENT aggregate input absent from atom" input)))
      inputs)
-    (vector (vector 'aggregate plan name inputs (.ref clause 'aggregate))
-            (cons name bound) 0)))
+    (vector (vector 'aggregate plan name inputs (.ref clause 'aggregate)
+                    (.ref clause 'output-pattern))
+            (append names bound) 0)))
 
 (def (gerbil-ascent-relation relation-name column-count source-rows
                              (provider-value gerbil-ascent-hash-index-provider)
@@ -279,12 +285,18 @@
                          (negation-clause-plan self atom-plan bound))))))
 
 (def (gerbil-ascent-aggregate output-variable relation-name atom-terms
-                              value-variables aggregate-procedure)
+                              value-variables aggregate-procedure
+                              (matcher #f))
+  (unless (or (and (symbol? output-variable) (not matcher))
+              (and (pair? output-variable) (list? output-variable)
+                   (andmap symbol? output-variable)
+                   (procedure? matcher)))
+    (error "invalid ASCENT aggregate output" output-variable matcher))
   (validate GerbilAscentAggregateContract
             (.o (:: self Aggregate.) ascent-clause-kind: 'aggregate
                 variable: output-variable relation: relation-name
                 terms: atom-terms variables: value-variables
-                aggregate: aggregate-procedure
+                aggregate: aggregate-procedure output-pattern: matcher
                 (.plan (lambda (atom-plan bound)
                          (aggregate-clause-plan self atom-plan bound))))))
 

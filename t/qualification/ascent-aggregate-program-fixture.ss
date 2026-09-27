@@ -12,6 +12,7 @@
                  gerbil-ascent-mean))
 
 (export ascent-aggregate-fixture-evaluate
+        ascent-aggregate-pattern-evaluate
         ascent-derived-aggregate-program
         ascent-derived-aggregate-fixture-evaluate)
 
@@ -54,6 +55,23 @@
                       (let (values (map car tuples))
                         (list (apply min values) (apply max values))))))))
     32 32 64)))
+
+(def (ascent-aggregate-pattern-evaluate values)
+  (gerbil-ascent-evaluate-program
+   (ascent
+    (relation number (value) (map list values))
+    (relation extrema-pair (minimum maximum))
+    ((extrema-pair minimum maximum) <--
+     (aggregate (minimum maximum)
+                (lambda (tuples)
+                  (if (null? tuples)
+                    []
+                    (let (numbers (map car tuples))
+                      (list (vector (apply min numbers)
+                                    (apply max numbers))))))
+                (value) (number value)
+                (vector minimum maximum)))
+    (bounds 32 32 64))))
 
 (def (ascent-derived-aggregate-program edges roots)
   (ascent

@@ -95,6 +95,17 @@
      edges)
     rows))
 
+(def (grouped-rows group edges)
+  (map (lambda (edge) (cons group edge)) edges))
+
+(def (check-provider-rows provider ordered wanted)
+  (let (actual (provider-rows provider ordered))
+    (check-equal? (length actual) (length wanted))
+    (for-each
+     (lambda (row)
+       (check-equal? (not (not (member row actual))) #t))
+     wanted)))
+
 (def ascent-byods-invariants-test
   (test-suite "ASCENT BYODS exhaustive three-node invariants"
     (poo-flow-test-case "all directed edge subsets preserve closure and insertion order independence"
@@ -105,15 +116,34 @@
             (let (wanted (reference-rows kind edges))
               (for-each
                (lambda (ordered)
-                 (let (actual (provider-rows provider ordered))
-                   (check-equal? (length actual) (length wanted))
-                   (for-each
-                    (lambda (row)
-                      (check-equal? (not (not (member row actual))) #t))
-                    wanted)))
+                 (check-provider-rows provider ordered wanted))
                (list edges (reverse edges)))))
           '(eqrel trrel trrel-uf)
           (list gerbil-ascent-eqrel-storage-provider
                 gerbil-ascent-trrel-storage-provider
                 gerbil-ascent-trrel-uf-storage-provider)))
-       (subsets +possible-edges+)))))
+       (subsets +possible-edges+)))
+    (poo-flow-test-case "grouped storage isolates two interleaved edge sets"
+      (let (beta '((0 1) (1 2) (2 0)))
+        (for-each
+         (lambda (alpha)
+           (for-each
+            (lambda (kind provider)
+              (let* ((alpha-edges (grouped-rows 'alpha alpha))
+                     (beta-edges (grouped-rows 'beta beta))
+                     (wanted (append
+                              (grouped-rows 'alpha
+                                            (reference-rows kind alpha))
+                              (grouped-rows 'beta
+                                            (reference-rows kind beta)))))
+                (check-provider-rows provider
+                                     (append alpha-edges beta-edges)
+                                     wanted)
+                (check-provider-rows provider
+                                     (append beta-edges (reverse alpha-edges))
+                                     wanted)))
+            '(eqrel trrel trrel-uf)
+            (list gerbil-ascent-eqrel-storage-provider
+                  gerbil-ascent-trrel-storage-provider
+                  gerbil-ascent-trrel-uf-storage-provider)))
+         (subsets +possible-edges+))))))

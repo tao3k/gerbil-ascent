@@ -53,6 +53,9 @@ syntax-rows:
 lattice-rows:
     @timeout 60s gerbil {{ gerbil_test_runtime_options }} t/qualification/ascent-lattice-program-output.ss
 
+lattice-set-rows:
+    @timeout 60s gerbil {{ gerbil_test_runtime_options }} t/qualification/ascent-lattice-set-output.ss
+
 index-rows:
     @timeout 60s gerbil {{ gerbil_test_runtime_options }} t/qualification/ascent-index-program-output.ss
 

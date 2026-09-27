@@ -127,10 +127,11 @@ nine rows and then derive nine more under a twelve-row output limit.
 Dependency stratification, delta-position planning, lattice row operations
 and rule binding live in =program/funs.ss= as named Scheme functions. The
 evaluator retains session-local fact buffers, pending deltas and rule
-execution state. Immutable lowered rules and strata are cached by the
-identity of the declared POO program with weak keys; cache access is
-serialized, while every evaluation builds separate fact buffers, indexes,
-BYODS state and budgets. POO refinement creates a new program identity and
+execution state. Validated relation schema and immutable lowered rules and
+strata are cached by the identity of the declared POO program with weak keys;
+cache access is serialized, while every evaluation checks its current source
+rows and builds separate fact buffers, indexes, BYODS state and budgets.
+POO refinement creates a new program identity and
 therefore receives its own analysis. A retained session's source-only
 replacement preserves declarations and rules, so its fresh fixed-point
 evaluation reuses the session's immutable rule plan; rows, indexes, Provider

@@ -36,6 +36,7 @@
 ;; Program declarations are POO values. Their lowered rule plan is immutable
 ;; and can be shared; each evaluation still creates its own relation state.
 (def +program-analysis-cache+ (make-hash-table-eq weak-keys: #t))
+(def +program-schema-cache+ (make-hash-table-eq weak-keys: #t))
 (def +program-analysis-lock+ (make-mutex 'ascent-program-analysis))
 
 (def (with-program-analysis-lock thunk)
@@ -58,7 +59,71 @@
            (hash-put! +program-analysis-cache+ program fresh)))
         fresh))))
 
-(def (gerbil-ascent-make-engine program session? (analysis-override #f))
+(def (gerbil-ascent-program-schema program relations)
+  (let (cached
+        (with-program-analysis-lock
+         (lambda () (hash-get +program-schema-cache+ program))))
+    (if (and cached (eq? relations (vector-ref cached 0)))
+      cached
+      (let* ((count (length relations))
+             (names (make-vector count #f))
+             (arity (make-vector count #f))
+             (field-checkers (make-vector count #f))
+             (positions (make-hash-table-eq))
+             (index-providers (make-vector count #f))
+             (storage-extensions (make-vector count #f))
+             (lattice-joins (make-vector count #f))
+             (kinds (make-vector count #f))
+             (storage-providers (make-vector count #f)))
+        (for-each
+         (lambda (relation index)
+           (let* ((name (.ref relation 'name))
+                  (width (.ref relation 'arity))
+                  (kind (.ref relation 'storage-kind))
+                  (predicates (.ref relation 'field-predicates)))
+             (unless (and (symbol? name) (not (hash-get positions name))
+                          (exact-integer? width) (<= 0 width)
+                          (memq kind '(relation lattice))
+                          (or (eq? kind 'relation) (> width 0))
+                          (list? predicates)
+                          (or (null? predicates)
+                              (= (length predicates) width))
+                          (andmap procedure? predicates))
+               (error "invalid or duplicate ASCENT relation" name))
+             (vector-set! names index name)
+             (vector-set! arity index width)
+             (vector-set! kinds index kind)
+             (hash-put! positions name (+ index 1))
+             (when (pair? predicates)
+               (vector-set! field-checkers index
+                 (lambda (row)
+                   (for-each
+                    (lambda (predicate value)
+                      (unless (predicate value)
+                        (error "ASCENT relation field type mismatch"
+                               name row)))
+                    predicates row))))
+             (vector-set! index-providers index
+               (.ref relation 'index-provider))
+             (if (eq? kind 'lattice)
+               (let (join (.ref relation 'join))
+                 (unless (procedure? join)
+                   (error "invalid ASCENT lattice join" name))
+                 (vector-set! lattice-joins index join))
+               (let (provider (.ref relation 'storage-provider))
+                 (vector-set! storage-providers index provider)
+                 (vector-set! storage-extensions index
+                   (.ref provider '.extend-rows))))))
+         relations (iota count))
+        (let (fresh (vector relations names arity field-checkers positions
+                            index-providers storage-extensions lattice-joins
+                            kinds storage-providers))
+          (with-program-analysis-lock
+           (lambda () (hash-put! +program-schema-cache+ program fresh)))
+          fresh)))))
+
+(def (gerbil-ascent-make-engine program session? (analysis-override #f)
+                                (schema-override #f))
   ;; The declaration constructor validates the full Core contract.
   ;; Evaluation checks mutable rows and clause bindings for this snapshot.
   (unless (object? program)
@@ -74,10 +139,12 @@
                  (exact-integer? output-limit) (> output-limit 0))
       (error "invalid ASCENT program bounds"))
     (let* ((count (length relations))
-           (names (make-vector count #f))
-           (arity (make-vector count #f))
-           (field-checkers (make-vector count #f))
-           (positions (make-hash-table-eq))
+           (schema (or schema-override
+                       (gerbil-ascent-program-schema program relations)))
+           (names (vector-ref schema 1))
+           (arity (vector-ref schema 2))
+           (field-checkers (vector-ref schema 3))
+           (positions (vector-ref schema 4))
            (all (make-vector count []))
            (delta (make-vector count []))
            (all-version (make-vector count 0))
@@ -86,11 +153,13 @@
            (delta-size (make-vector count 0))
            (all-indexes (make-vector count #f))
            (delta-indexes (make-vector count #f))
-           (index-providers (make-vector count #f))
-           (storage-extensions (make-vector count #f))
+           (index-providers (vector-ref schema 5))
+           (storage-extensions (vector-ref schema 6))
            (storage-states (make-vector count #f))
            (seen (make-vector count #f))
-           (lattice-joins (make-vector count #f))
+           (lattice-joins (vector-ref schema 7))
+           (kinds (vector-ref schema 8))
+           (storage-providers (vector-ref schema 9))
            (lattice-rows (make-vector count #f))
            (source-count 0)
            (source-materialized-count 0)
@@ -183,50 +252,19 @@
       (let initialize ((remaining relations) (index 0))
         (unless (null? remaining)
           (let* ((relation (car remaining))
-                 (name (.ref relation 'name))
-                 (width (.ref relation 'arity))
+                 (name (vector-ref names index))
+                 (width (vector-ref arity index))
                  (rows (.ref relation 'rows))
-                 (kind (.ref relation 'storage-kind))
-                 (storage-provider
-                  (and (eq? kind 'relation)
-                       (.ref relation 'storage-provider)))
-                 (predicates
-                  (.ref relation 'field-predicates))
+                 (kind (vector-ref kinds index))
                  (present (make-hash-table)))
-            (unless (and (symbol? name) (not (hash-get positions name))
-                         (exact-integer? width) (<= 0 width) (list? rows)
-                         (memq kind '(relation lattice))
-                         (or (eq? kind 'relation) (> width 0))
-                         (list? predicates)
-                         (or (null? predicates)
-                             (= (length predicates) width))
-                         (andmap procedure? predicates))
-              (error "invalid or duplicate ASCENT relation" name))
-            (vector-set! names index name)
-            (vector-set! arity index width)
-            (when (pair? predicates)
-              (vector-set! field-checkers index
-                (lambda (row)
-                  (for-each
-                   (lambda (predicate value)
-                     (unless (predicate value)
-                       (error "ASCENT relation field type mismatch"
-                              name row)))
-                   predicates row))))
-            (hash-put! positions name (+ index 1))
+            (unless (list? rows)
+              (error "invalid ASCENT relation rows" name rows))
             (when (eq? kind 'lattice)
-              (let (join (.ref relation 'join))
-                (unless (procedure? join)
-                  (error "invalid ASCENT lattice join" name))
-                (vector-set! lattice-joins index join)
-                (vector-set! lattice-rows index (make-hash-table))))
+              (vector-set! lattice-rows index (make-hash-table)))
             (when (eq? kind 'relation)
-              ;; Resolve the POO method slot once per relation. The row loop
-              ;; calls the selected Scheme function without redispatching.
-              (vector-set! storage-extensions index
-                (.ref storage-provider '.extend-rows))
               (vector-set! storage-states index
-                (gerbil-ascent-storage-make-state storage-provider)))
+                (gerbil-ascent-storage-make-state
+                 (vector-ref storage-providers index))))
             (for-each
              (lambda (row)
                (unless (and (list? row) (= (length row) width))
@@ -284,8 +322,6 @@
                     materialized))))
              rows)
             (vector-set! seen index present)
-            (vector-set! index-providers index
-              (.ref relation 'index-provider))
             (vector-set! delta index (vector-ref all index))
             (vector-set! all-size index (length (vector-ref all index)))
             (vector-set! delta-size index
@@ -428,7 +464,7 @@
                       (append (source-rows-at index) (list row)))
                      (candidate (source-program-with index replacement))
                      (result ((gerbil-ascent-make-engine
-                               candidate #f analysis))))
+                               candidate #f analysis schema))))
                 (set! source-count (+ source-count 1))
                 (vector-set! source-overrides index replacement)
                 (vector-set! source-additions index [])
@@ -509,7 +545,7 @@
                 (error "ASCENT session input fact budget exceeded"))
               (let* ((candidate (source-program-with index rows))
                      (result ((gerbil-ascent-make-engine
-                               candidate #f analysis))))
+                               candidate #f analysis schema))))
                 (set! source-count next-count)
                 (vector-set! source-overrides index rows)
                 (vector-set! source-additions index [])

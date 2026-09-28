@@ -10,13 +10,15 @@
                  ascent-index-expression-evaluate
                  ascent-pattern-clauses-evaluate
                  ascent-included-fragment-evaluate
-                 ascent-generated-fragment-evaluate)
+                 ascent-generated-fragment-evaluate
+                 ascent-inline-macro-evaluate
+                 ascent-inline-rule-macro-evaluate)
         (only-in :gerbil-ascent/t/qualification/ascent-fragment-source
                  ascent-reach-fragment)
         (only-in :gerbil-ascent/t/qualification/ascent-index-program-fixture
                  ascent-index-alist-provider)
         (only-in :gerbil-ascent/program/interface
-                 ascent gerbil-ascent-evaluate-program
+                 ascent ascent-fragment gerbil-ascent-evaluate-program
                  gerbil-ascent-expression
                  gerbil-ascent-open-session
                  gerbil-ascent-session-append-source!
@@ -238,4 +240,36 @@
       (check-equal?
        ((.ref (ascent-generated-fragment-evaluate) 'rows-of)
         'macro-seed)
-       '((9))))))
+       '((9))))
+    (poo-flow-test-case "inline hygienic macro expands fragments in declaration order"
+      (let (rows ((.ref (ascent-inline-macro-evaluate) 'rows-of)
+                  'macro-seed))
+        (check-equal? (length rows) 2)
+        (check-equal? (not (not (member '(9) rows))) #t)
+        (check-equal? (not (not (member '(10) rows))) #t)))
+    (poo-flow-test-case "inline macro emits a relation and rule as one fragment"
+      (let (rows ((.ref (ascent-inline-rule-macro-evaluate
+                         '((1 2) (2 3) (1 2))) 'rows-of)
+                  'copied))
+        (check-equal? (length rows) 2)
+        (check-equal? (not (not (member '(1 2) rows))) #t)
+        (check-equal? (not (not (member '(2 3) rows))) #t)))
+    (poo-flow-test-case "included fragment expression is validated once"
+      (let ((calls 0)
+            (result #f))
+        (set! result
+          (gerbil-ascent-evaluate-program
+           (ascent
+            (include
+             (begin
+               (set! calls (+ calls 1))
+               (ascent-fragment
+                (relation seed (value))
+                (fact (seed 9)))))
+            (bounds 4 4 8))))
+        (check-equal? calls 1)
+        (check-equal? ((.ref result 'rows-of) 'seed) '((9)))))
+    (poo-flow-test-case "included value must satisfy the POO fragment contract"
+      (check-exception
+       (ascent (include #f) (bounds 4 4 8))
+       true))))

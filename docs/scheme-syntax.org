@@ -34,19 +34,31 @@ diagnostics before parity can be claimed.
 
 An =ascent-fragment= is a validated POO object containing declarations and
 rules. Import it from a Gerbil module and use =(include fragment-name)= in
-an =ascent= program. The included fragment's relation and rule lists enter at
-the include position. Native =.o= / =.mix= may refine the fragment before
-inclusion. The fragment identifier is evaluated as a lexical Scheme binding,
+an =ascent= program. An include expression is evaluated and validated once;
+the fragment's relation and rule lists enter at the include position. Native
+=.o= / =.mix= may refine the fragment before inclusion. The fragment value
+is evaluated through a lexical Scheme binding,
 so its expressions keep their module origin; Rust =include_source!= instead
 resolves copied tokens in the containing Rust program. This difference is
 intentional and covered by a Rust/Scheme output comparison, not a claim of
 identical macro hygiene.
 
-Gerbil =defsyntax= can generate a fragment in its defining module. The
-caller invokes that macro, binds the resulting fragment, and includes it by
-name. A Rust 0.8.0 fixture with an embedded =macro= definition and invocation
-produces the same rows. The syntax is deliberately Scheme-native; embedding a
-Rust-style macro declaration inside =ascent= remains outside this form.
+Gerbil =defsyntax= can generate a fragment in its defining module. An
+=ascent= program can also define a local hygienic template with
+=(macro name (parameter ...) fragment-clause ...)= and invoke it as
+=(name argument ...)=. The template expands through =ascent-fragment= and
+the same POO contracts. A Rust 0.8.0 fixture with an embedded =macro=
+definition and invocation produces the same fact and copied-rule rows.
+Rust's typed macro parameters, token-copy scope and diagnostics are separate
+from Scheme's hygienic lexical macro rules.
+
+#+begin_src scheme
+(ascent
+ (relation seed (value))
+ (macro emit-seed! (value) (fact (seed (lit value))))
+ (emit-seed! 9)
+ (bounds 4 4 8))
+#+end_src
 
 The left arrow follows the rule direction in Rust Ascent and the A22 paper.
 Scheme syntax adds lexical capture. Source rows and bounds are evaluated at
@@ -89,6 +101,7 @@ program contract.
 | =(bounds input derived output)= | Existing finite program limits |
 | =(ascent-fragment clause ...)= | Exportable POO Relation/Rule fragment without program bounds |
 | =(include fragment-name)= | Include a lexical Gerbil module fragment in declaration order |
+| =(macro name (parameter ...) clause ...)= / =(name argument ...)= | Define and invoke a local hygienic fragment template |
 | =(lattice name (column ...) source join [index])= | POO lattice declaration; source and rule-head values join by key; columns may carry predicates checked on source, derived, and joined rows |
 | =(fact head)= / =(facts head ...)= | Rust rules with an empty body |
 | =(or (and clause ...) ...)= | Finite body disjunction, lowered to ordinary rules |
@@ -142,7 +155,7 @@ disjunction, dynamic head expressions, =if let= and =?pattern= against the
 Scheme forms. Body expressions with named dependencies pass both row-local
 and indexed Provider qualification. Inline positive-atom patterns use native
 Gerbil =match=. Broader atom expressions and pattern contexts,
-embedded rule fragments, typed declarations and
+typed declarations and
 the generated Rust API remain open. Parallel Ascent is an execution-policy
 gap, not a token-level grammar feature.
 
@@ -186,7 +199,7 @@ law evidence; the syntax alone cannot establish it.
 | Body argument expression | =(expr (bound ...) expression)= | Same-atom and prior-atom bound expressions match Rust over four source snapshots; indexed Provider qualification also passes; broader argument types remain open |
 | =?pat= body argument | =(r (pat (output ...) pattern))= | Inline =Some= success/failure Rust differential; native Gerbil pattern semantics |
 | Inline =if= / =let= after atom arguments | Separate following clause | Selected output parity; source position diagnostics open |
-| Embedded macro definition/invocation | Module =defsyntax= produces =ascent-fragment=; =(include name)= consumes it | Selected Rust embedded macro output differential; inline declaration syntax and diagnostics open |
+| Embedded macro definition/invocation | Module =defsyntax= or local =(macro name (parameter ...) clause ...)= produces =ascent-fragment=; direct =(name argument ...)= consumes it | Selected Rust embedded macro fact and rule output differential; Rust typed parameters, token-copy scope and diagnostics open |
 | =include_source!= | Imported =ascent-fragment= plus =(include name)= | Recursive closure Rust differential; Scheme preserves module lexical scope rather than Rust token-copy scope |
 | Struct signature, generics, visibility | Gerbil module export and POO type contract | Generated API/type parity open |
 | Other attributes | Named POO contract or execution option | Attribute-by-attribute inventory open |

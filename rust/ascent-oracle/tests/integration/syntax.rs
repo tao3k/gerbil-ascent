@@ -38,6 +38,7 @@ fn rust_macro_rows() -> Vec<String> {
             macro_seed($value)
         }
         emit_seed!(9);
+        emit_seed!(10);
     }
     let mut program = AscentProgram::default();
     program.run();
@@ -63,6 +64,12 @@ fn rust_rows(edges: &[(u32, u32)]) -> Vec<String> {
         relation consecutive(u32);
         relation anchored_target(u32);
         relation missing_successor(u32);
+        relation copied(u32, u32);
+
+        macro emit_copy($destination: ident) {
+            $destination(x, y)
+        }
+        emit_copy!(copied) <-- edge(x, y);
 
         seed(7), marker(8);
         selected(x) <-- (seed(x) | edge(x, _));
@@ -136,6 +143,12 @@ fn rust_rows(edges: &[(u32, u32)]) -> Vec<String> {
             .anchored_target
             .iter()
             .map(|(value,)| format!("anchored-target\t{value}")),
+    );
+    rows.extend(
+        program
+            .copied
+            .iter()
+            .map(|(from, to)| format!("copied\t{from}\t{to}")),
     );
     rows.extend(
         program

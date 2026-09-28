@@ -16,6 +16,8 @@
         ascent-syntax-parity-evaluate
         ascent-included-fragment-evaluate
         ascent-generated-fragment-evaluate
+        ascent-inline-macro-evaluate
+        ascent-inline-rule-macro-evaluate
         ascent-pattern-clauses-evaluate)
 
 (def (ascent-syntax-program edges anchor)
@@ -125,3 +127,23 @@
      (ascent
       (include generated)
       (bounds 4 4 8)))))
+
+(def (ascent-inline-macro-evaluate)
+  (gerbil-ascent-evaluate-program
+   (ascent
+    (relation macro-seed ((value integer?)))
+    (macro emit-seed! (value)
+      (fact (macro-seed (lit value))))
+    (emit-seed! 9)
+    (emit-seed! 10)
+    (bounds 4 4 8))))
+
+(def (ascent-inline-rule-macro-evaluate edges)
+  (gerbil-ascent-evaluate-program
+   (ascent
+    (relation edge ((from integer?) (to integer?)) edges)
+    (macro emit-copy! (destination)
+      (relation destination ((from integer?) (to integer?)))
+      ((destination from to) <-- (edge from to)))
+    (emit-copy! copied)
+    (bounds 8 8 16))))

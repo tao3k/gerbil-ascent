@@ -5,6 +5,8 @@
 ;;; Hygienic source forms lower to the existing POO contracts and evaluator.
 (import "objects.ss"
         (only-in :clan/poo/object .ref)
+        (only-in :clan/poo/mop validate)
+        (only-in "types.ss" GerbilAscentFragmentContract)
         (only-in :gerbil-ascent/table/provider
                  gerbil-ascent-hash-index-provider)
         (only-in :gerbil-ascent/table/storage
@@ -200,7 +202,15 @@
 
 (defsyntax (ascent-collect stx)
   (syntax-case stx (program fragment relation lattice index storage
-                            fact facts include bounds <--)
+                            macro fact facts include bounds <--)
+    ((_ mode (declared ...) (lowered ...)
+        (macro name (parameter ...) template ...) clause ...)
+     (syntax (let-syntax
+               ((name (syntax-rules ()
+                        ((_ parameter ...)
+                         (ascent-fragment template ...)))))
+               (ascent-collect mode (declared ...) (lowered ...)
+                               clause ...))))
     ((_ mode (declared ...) (lowered ...)
         (lattice name (column ...) source join (index provider)) clause ...)
      (syntax (ascent-collect
@@ -252,12 +262,14 @@
               (lowered ...) clause ...)))
     ((_ mode (declared ...) (lowered ...)
         (include imported-fragment) clause ...)
-     (identifier? (syntax imported-fragment))
-     (syntax (ascent-collect
-              mode
-              (declared ... (.ref imported-fragment 'relations))
-              (lowered ... (.ref imported-fragment 'rules))
-              clause ...)))
+     (syntax (let (fragment-value
+                   (validate GerbilAscentFragmentContract
+                             imported-fragment))
+               (ascent-collect
+                mode
+                (declared ... (.ref fragment-value 'relations))
+                (lowered ... (.ref fragment-value 'rules))
+                clause ...))))
     ((_ mode (declared ...) (lowered ...)
         (head <-- body ...) clause ...)
      (syntax (ascent-collect
@@ -281,6 +293,13 @@
                        (list (gerbil-ascent-rule
                               (list (ascent-atom (name term ...)) ...) [])))
               clause ...)))
+    ((_ mode (declared ...) (lowered ...)
+        (name argument ...) clause ...)
+     (and (identifier? (syntax name))
+          (not (memq (syntax->datum (syntax name))
+                     '(relation lattice macro fact facts include bounds))))
+     (syntax (ascent-collect mode (declared ...) (lowered ...)
+                             (include (name argument ...)) clause ...)))
     ((_ program (declared ...) (lowered ...)
         (bounds input derived output))
      (syntax (gerbil-ascent-program

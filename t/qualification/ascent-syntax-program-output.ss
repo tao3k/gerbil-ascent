@@ -8,7 +8,8 @@
                  ascent-expression-evaluate
                  ascent-pattern-clauses-evaluate
                  ascent-included-fragment-evaluate
-                 ascent-generated-fragment-evaluate))
+                 ascent-inline-macro-evaluate
+                 ascent-inline-rule-macro-evaluate))
 
 (export main)
 
@@ -23,8 +24,10 @@
           (.ref (ascent-pattern-clauses-evaluate edges) 'rows-of))
          (included-rows-of
           (.ref (ascent-included-fragment-evaluate edges) 'rows-of))
+         (inline-rule-rows-of
+          (.ref (ascent-inline-rule-macro-evaluate edges) 'rows-of))
          (generated-rows-of
-          (.ref (ascent-generated-fragment-evaluate) 'rows-of)))
+          (.ref (ascent-inline-macro-evaluate) 'rows-of)))
     (for-each
      (lambda (name)
        (for-each
@@ -65,5 +68,11 @@
        (for-each (lambda (column) (display #\tab) (display column)) row)
        (newline))
      (generated-rows-of 'macro-seed))
+    (for-each
+     (lambda (row)
+       (display "copied")
+       (for-each (lambda (column) (display #\tab) (display column)) row)
+       (newline))
+     (inline-rule-rows-of 'copied))
     (displayln "END")
     (force-output)))

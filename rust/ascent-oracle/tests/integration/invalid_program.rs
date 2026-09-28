@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 // SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-//! Pinned macro rejection classes compared with Scheme admission diagnostics.
+//! Pinned macro admission behavior compared with Scheme diagnostics.
 
 use super::common::scheme_output;
 use std::{
@@ -20,7 +20,7 @@ ascent! {
 }
 "#;
 
-const INVALID: [(&str, &str, &str, &str); 6] = [
+const INVALID: [(&str, &str, &str, &str); 11] = [
     (
         "negative-self",
         "negation-cycle",
@@ -105,6 +105,69 @@ ascent! {
 }
 "#,
     ),
+    (
+        "unbound-head",
+        "unbound-head",
+        "cannot find value `y` in this scope",
+        r#"
+use ascent::ascent;
+ascent! {
+    relation node(u32);
+    relation out(u32);
+    out(y) <-- node(x);
+}
+"#,
+    ),
+    (
+        "unknown-relation",
+        "unknown-relation",
+        "relation `missing` is not defined",
+        r#"
+use ascent::ascent;
+ascent! {
+    relation out(u32);
+    out(x) <-- missing(x);
+}
+"#,
+    ),
+    (
+        "atom-arity",
+        "atom-arity",
+        "wrong arity for relation `node` (expected 1, found 2)",
+        r#"
+use ascent::ascent;
+ascent! {
+    relation node(u32);
+    relation out(u32);
+    out(x) <-- node(x, x);
+}
+"#,
+    ),
+    (
+        "duplicate-relation",
+        "duplicate-relation",
+        "",
+        r#"
+use ascent::ascent;
+ascent! {
+    relation node(u32);
+    relation node(u32);
+}
+"#,
+    ),
+    (
+        "unbound-guard",
+        "unbound-guard",
+        "cannot find value `y` in this scope",
+        r#"
+use ascent::ascent;
+ascent! {
+    relation node(u32);
+    relation out(u32);
+    out(x) <-- node(x), if y > 0;
+}
+"#,
+    ),
 ];
 
 fn compile(source: &str, library: &Path, dependencies: &Path) -> Output {
@@ -157,7 +220,7 @@ fn pinned_ascent_library(dependencies: &Path) -> PathBuf {
 }
 
 #[test]
-fn invalid_dependency_shapes_match_scheme_rejection_classes() {
+fn invalid_program_admission_matches_or_records_rust_differences() {
     let dependencies = env::current_exe()
         .expect("test executable path")
         .parent()
@@ -180,8 +243,14 @@ fn invalid_dependency_shapes_match_scheme_rejection_classes() {
     for (index, (name, category, diagnostic, source)) in INVALID.iter().enumerate() {
         let result = compile(source, &library, &dependencies);
         let stderr = String::from_utf8(result.stderr).expect("Rust diagnostic is UTF-8");
-        assert!(!result.status.success(), "{name} unexpectedly compiled");
-        assert!(stderr.contains(diagnostic), "{name}: {stderr}");
+        if *name == "duplicate-relation" {
+            // Ascent 0.8.0 accepts identical duplicate declarations. Scheme
+            // rejects the ambiguous public schema before evaluation.
+            assert!(result.status.success(), "{name}: {stderr}");
+        } else {
+            assert!(!result.status.success(), "{name} unexpectedly compiled");
+            assert!(stderr.contains(diagnostic), "{name}: {stderr}");
+        }
         assert_eq!(scheme[index], format!("{name}\t{category}"));
     }
 }

@@ -17,7 +17,9 @@
          (check-equal? (category name) expected))
        '(negative-self mutual-negation negative-feedback
                        aggregate-self negative-with-unrelated-aggregate
-                       unsafe-negation)
+                       unsafe-negation unbound-head unknown-relation
+                       atom-arity duplicate-relation unbound-guard)
        '(negation-cycle negation-cycle negation-cycle
                         aggregate-cycle negation-cycle
-                        unsafe-negation)))))
+                        unsafe-negation unbound-head unknown-relation
+                        atom-arity duplicate-relation unbound-guard)))))

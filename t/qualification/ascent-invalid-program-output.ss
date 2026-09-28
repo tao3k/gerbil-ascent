@@ -56,6 +56,34 @@
       (relation out (value))
       ((out x) <-- (node x) (not (block y)))
       (bounds 8 8 16)))
+    ((unbound-head)
+     (ascent
+      (relation node (value) '((1)))
+      (relation out (value))
+      ((out y) <-- (node x))
+      (bounds 8 8 16)))
+    ((unknown-relation)
+     (ascent
+      (relation out (value))
+      ((out x) <-- (missing x))
+      (bounds 8 8 16)))
+    ((atom-arity)
+     (ascent
+      (relation node (value) '((1)))
+      (relation out (value))
+      ((out x) <-- (node x x))
+      (bounds 8 8 16)))
+    ((duplicate-relation)
+     (ascent
+      (relation node (value))
+      (relation node (value))
+      (bounds 8 8 16)))
+    ((unbound-guard)
+     (ascent
+      (relation node (value) '((1)))
+      (relation out (value))
+      ((out x) <-- (node x) (if (y) (> y 0)))
+      (bounds 8 8 16)))
     (else (error "unknown ASCENT invalid-program case" name))))
 
 (def (problem name)
@@ -82,6 +110,22 @@
            (string-contains message
                             "unsafe ASCENT negation variable"))
       'unsafe-negation)
+     ((and (string? message)
+           (or (string-contains message "unbound ASCENT head variable")
+               (string-contains message "unsafe ASCENT head variable")))
+      'unbound-head)
+     ((and (string? message)
+           (string-contains message "unknown ASCENT relation"))
+      'unknown-relation)
+     ((and (string? message)
+           (string-contains message "ASCENT atom arity mismatch"))
+      'atom-arity)
+     ((and (string? message)
+           (string-contains message "invalid or duplicate ASCENT relation"))
+      'duplicate-relation)
+     ((and (string? message)
+           (string-contains message "unbound ASCENT clause variable"))
+      'unbound-guard)
      (else (error "unexpected ASCENT invalid-program diagnostic"
                   name message)))))
 

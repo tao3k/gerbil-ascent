@@ -132,17 +132,20 @@
   (gerbil-ascent-evaluate-program
    (ascent
     (relation macro-seed ((value integer?)))
-    (macro emit-seed! (value)
+    (macro emit-seed! ((value expr))
       (fact (macro-seed (lit value))))
     (emit-seed! 9)
     (emit-seed! 10)
+    (macro emit-named-seed! ((destination ident) (value expr))
+      (fact (destination (lit value))))
+    (emit-named-seed! macro-seed 11)
     (bounds 4 4 8))))
 
 (def (ascent-inline-rule-macro-evaluate edges)
   (gerbil-ascent-evaluate-program
    (ascent
     (relation edge ((from integer?) (to integer?)) edges)
-    (macro emit-copy! (destination)
+    (macro emit-copy! ((destination ident))
       (relation destination ((from integer?) (to integer?)))
       ((destination from to) <-- (edge from to)))
     (emit-copy! copied)

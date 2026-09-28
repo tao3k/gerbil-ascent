@@ -4,6 +4,9 @@
 
 (import (only-in :std/test check-equal? check-exception test-suite)
         (only-in :clan/poo/object .o .ref)
+        (only-in :gerbil/runtime/gambit
+                 call-with-output-string display-exception
+                 with-exception-catcher)
         (only-in :core/observability/testing-case poo-flow-test-case)
         (only-in :gerbil-ascent/t/qualification/ascent-syntax-fixture
                  ascent-syntax-evaluate ascent-expression-evaluate
@@ -26,6 +29,13 @@
         (only-in :gerbil-ascent/program/funs gerbil-ascent-bind-row))
 
 (export ascent-syntax-test)
+
+(def (ascent-syntax-error-message source)
+  (with-exception-catcher
+   (lambda (error)
+     (call-with-output-string
+      (lambda (port) (display-exception error port))))
+   (lambda () (eval source) #f)))
 
 (def ascent-syntax-test
   (test-suite "ASCENT Scheme source syntax"
@@ -244,9 +254,10 @@
     (poo-flow-test-case "inline hygienic macro expands fragments in declaration order"
       (let (rows ((.ref (ascent-inline-macro-evaluate) 'rows-of)
                   'macro-seed))
-        (check-equal? (length rows) 2)
+        (check-equal? (length rows) 3)
         (check-equal? (not (not (member '(9) rows))) #t)
-        (check-equal? (not (not (member '(10) rows))) #t)))
+        (check-equal? (not (not (member '(10) rows))) #t)
+        (check-equal? (not (not (member '(11) rows))) #t)))
     (poo-flow-test-case "inline macro emits a relation and rule as one fragment"
       (let (rows ((.ref (ascent-inline-rule-macro-evaluate
                          '((1 2) (2 3) (1 2))) 'rows-of)
@@ -254,6 +265,38 @@
         (check-equal? (length rows) 2)
         (check-equal? (not (not (member '(1 2) rows))) #t)
         (check-equal? (not (not (member '(2 3) rows))) #t)))
+    (poo-flow-test-case "typed macro ident parameter rejects a literal"
+      (let (message
+            (ascent-syntax-error-message
+             '(begin
+                (import :gerbil-ascent/program/interface)
+                (ascent
+                 (macro emit-copy! ((destination ident))
+                   (relation destination (value)))
+                 (emit-copy! 7)
+                 (bounds 4 4 8)))))
+        (check-equal?
+         (and (string? message)
+              (not (not (string-contains
+                         message
+                         "ASCENT macro ident argument must be an identifier"))))
+         #t)))
+    (poo-flow-test-case "typed macro rejects an unsupported parameter kind"
+      (let (message
+            (ascent-syntax-error-message
+             '(begin
+                (import :gerbil-ascent/program/interface)
+                (ascent
+                 (macro emit-seed! ((value token))
+                   (fact (seed (lit value))))
+                 (relation seed (value))
+                 (bounds 4 4 8)))))
+        (check-equal?
+         (and (string? message)
+              (not (not (string-contains
+                         message
+                         "ASCENT macro parameter kind must be expr or ident"))))
+         #t)))
     (poo-flow-test-case "included fragment expression is validated once"
       (let ((calls 0)
             (result #f))

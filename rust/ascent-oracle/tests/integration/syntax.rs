@@ -39,6 +39,10 @@ fn rust_macro_rows() -> Vec<String> {
         }
         emit_seed!(9);
         emit_seed!(10);
+        macro emit_named_seed($destination: ident, $value: expr) {
+            $destination($value)
+        }
+        emit_named_seed!(macro_seed, 11);
     }
     let mut program = AscentProgram::default();
     program.run();

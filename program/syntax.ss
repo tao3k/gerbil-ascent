@@ -200,9 +200,38 @@
     ((_ head (done ...) ())
      (syntax (list (ascent-rule (head <-- done ...)))))))
 
+(defsyntax (ascent-macro-argument stx)
+  (syntax-case stx ()
+    ((_ kind value)
+     (eq? (syntax->datum (syntax kind)) 'expr)
+     (syntax (void)))
+    ((_ kind value)
+     (eq? (syntax->datum (syntax kind)) 'ident)
+     (if (identifier? (syntax value))
+       (syntax (void))
+       (raise-syntax-error
+        #f "ASCENT macro ident argument must be an identifier"
+        (syntax value))))
+    ((_ kind value)
+     (raise-syntax-error
+      #f "ASCENT macro parameter kind must be expr or ident"
+      (syntax kind)))))
+
 (defsyntax (ascent-collect stx)
   (syntax-case stx (program fragment relation lattice index storage
                             macro fact facts include bounds <--)
+    ((_ mode (declared ...) (lowered ...)
+        (macro name ((parameter kind) ...) template ...) clause ...)
+     (syntax (begin
+               (ascent-macro-argument kind parameter) ...
+               (let-syntax
+                 ((name (syntax-rules ()
+                          ((_ parameter ...)
+                           (begin
+                             (ascent-macro-argument kind parameter) ...
+                             (ascent-fragment template ...))))))
+                 (ascent-collect mode (declared ...) (lowered ...)
+                                 clause ...)))))
     ((_ mode (declared ...) (lowered ...)
         (macro name (parameter ...) template ...) clause ...)
      (syntax (let-syntax

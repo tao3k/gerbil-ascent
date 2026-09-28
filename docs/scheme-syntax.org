@@ -49,13 +49,17 @@ Gerbil =defsyntax= can generate a fragment in its defining module. An
 =(name argument ...)=. The template expands through =ascent-fragment= and
 the same POO contracts. A Rust 0.8.0 fixture with an embedded =macro=
 definition and invocation produces the same fact and copied-rule rows.
-Rust's typed macro parameters, token-copy scope and diagnostics are separate
-from Scheme's hygienic lexical macro rules.
+The pinned Rust parameter kinds =expr= and =ident= are accepted as
+=(parameter expr)= and =(parameter ident)=. Gerbil checks an =ident=
+argument at expansion and rejects an unknown kind when the macro is defined.
+The differential also combines both kinds in one macro invocation. Rust's
+token-copy name resolution remains separate from Scheme's hygienic lexical
+rules.
 
 #+begin_src scheme
 (ascent
  (relation seed (value))
- (macro emit-seed! (value) (fact (seed (lit value))))
+ (macro emit-seed! ((value expr)) (fact (seed (lit value))))
  (emit-seed! 9)
  (bounds 4 4 8))
 #+end_src
@@ -199,7 +203,7 @@ law evidence; the syntax alone cannot establish it.
 | Body argument expression | =(expr (bound ...) expression)= | Same-atom and prior-atom bound expressions match Rust over four source snapshots; indexed Provider qualification also passes; broader argument types remain open |
 | =?pat= body argument | =(r (pat (output ...) pattern))= | Inline =Some= success/failure Rust differential; native Gerbil pattern semantics |
 | Inline =if= / =let= after atom arguments | Separate following clause | Selected output parity; source position diagnostics open |
-| Embedded macro definition/invocation | Module =defsyntax= or local =(macro name (parameter ...) clause ...)= produces =ascent-fragment=; direct =(name argument ...)= consumes it | Selected Rust embedded macro fact and rule output differential; Rust typed parameters, token-copy scope and diagnostics open |
+| Embedded macro definition/invocation | Module =defsyntax= or local =(macro name ((parameter kind) ...) clause ...)= with =kind= in =expr=, =ident= produces =ascent-fragment=; direct =(name argument ...)= consumes it | Pinned Rust embedded macro fact, rule and combined =expr=/=ident= outputs match Scheme; invalid =ident= arguments and unknown kinds reject at expansion. Rust token-copy scope and wider diagnostics remain open |
 | =include_source!= | Imported =ascent-fragment= plus =(include name)= | Recursive closure Rust differential; Scheme preserves module lexical scope rather than Rust token-copy scope |
 | Struct signature, generics, visibility | Gerbil module export and POO type contract | Generated API/type parity open |
 | Other attributes | Named POO contract or execution option | Attribute-by-attribute inventory open |

@@ -206,7 +206,11 @@ law evidence; the syntax alone cannot establish it.
 | Embedded macro definition/invocation | Module =defsyntax= or local =(macro name ((parameter kind) ...) clause ...)= with =kind= in =expr=, =ident= produces =ascent-fragment=; direct =(name argument ...)= consumes it | Pinned Rust embedded macro fact, rule and combined =expr=/=ident= outputs match Scheme; invalid =ident= arguments and unknown kinds reject at expansion. Rust token-copy scope and wider diagnostics remain open |
 | =include_source!= | Imported =ascent-fragment= plus =(include name)= | Recursive closure Rust differential; Scheme preserves module lexical scope rather than Rust token-copy scope |
 | Struct signature, generics, visibility | Gerbil module export and POO type contract | Generated API/type parity open |
-| Other attributes | Named POO contract or execution option | Attribute-by-attribute inventory open |
+| =#![measure_rule_times]= | =measure-rule-times?: #t= on the Scheme evaluator or Session constructor | Per-rule nanoseconds in declaration order; Rust/Scheme rows match for selected inputs, exact durations are not semantic parity |
+| =#![generate_run_timeout]= | No partial-run API yet | Timeout and partial-state semantics open |
+| =#![inter_rule_parallelism]= | No intra-program worker policy yet | Parallel scheduling and failure semantics open |
+| =#![ds(provider)]= | POO index and storage Provider declarations | Selected BYODS cases pass; wider merge and scale remain open |
+| Other attributes | Rust 0.8.0 rejects unrecognized program attributes | Wider rejection diagnostics open |
 | =ascent_par!= and =ascent_run_par!= | Execution policy | Intra-program parallelism open |
 
 * Scientific extension criteria

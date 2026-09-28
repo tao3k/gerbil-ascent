@@ -6,6 +6,45 @@
 use super::common::scheme_output;
 use ascent::ascent;
 
+#[test]
+fn measured_rule_program_keeps_rust_scheme_rows_and_exposes_timing() {
+    for seed in [vec![], vec![1], vec![1, 2, 2]] {
+        ascent! {
+            #![measure_rule_times]
+            relation seed(u32);
+            relation copied(u32);
+            copied(x) <-- seed(x);
+        }
+        let mut program = AscentProgram {
+            seed: seed.iter().copied().map(|value| (value,)).collect(),
+            ..AscentProgram::default()
+        };
+        program.run();
+        let _rust_rule_time = program.rule0_0_duration;
+        let _rust_summary = program.scc_times_summary();
+
+        let request = format!(
+            "({})\n",
+            seed.iter()
+                .map(|value| format!("({value})"))
+                .collect::<Vec<_>>()
+                .join(" ")
+        );
+        let output = scheme_output("timed-rows", &request);
+        let mut actual = output.lines().map(str::to_owned).collect::<Vec<_>>();
+        assert_eq!(actual.pop().as_deref(), Some("END"));
+        assert_eq!(actual.pop().as_deref(), Some("TIMING\t1"));
+        actual.sort_unstable();
+        let mut expected = program
+            .copied
+            .iter()
+            .map(|(value,)| format!("copied\t{value}"))
+            .collect::<Vec<_>>();
+        expected.sort_unstable();
+        assert_eq!(actual, expected);
+    }
+}
+
 mod reusable {
     ascent::ascent_source! { closure_source:
         relation edge(u32, u32);

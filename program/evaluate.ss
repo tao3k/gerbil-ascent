@@ -127,7 +127,8 @@
           fresh)))))
 
 (def (gerbil-ascent-make-engine program session? (analysis-override #f)
-                                (schema-override #f))
+                                (schema-override #f)
+                                (measure-rule-times? #f))
   ;; The declaration constructor validates the full Core contract.
   ;; Evaluation checks mutable rows and clause bindings for this snapshot.
   (unless (object? program)
@@ -140,7 +141,8 @@
     (unless (and (list? relations) (list? rules)
                  (exact-integer? input-limit) (> input-limit 0)
                  (exact-integer? derived-limit) (> derived-limit 0)
-                 (exact-integer? output-limit) (> output-limit 0))
+                 (exact-integer? output-limit) (> output-limit 0)
+                 (boolean? measure-rule-times?))
       (error "invalid ASCENT program bounds"))
     (let* ((count (length relations))
            (schema (or schema-override
@@ -344,7 +346,7 @@
             (vector-set! delta-size index
               (vector-ref all-size index))
             (initialize (cdr remaining) (+ index 1)))))
-      (def (prepare-rule rule)
+      (def (prepare-rule rule rule-index)
         (unless (object? rule)
           (error "invalid ASCENT rule declaration" rule))
         (let* ((body (.ref rule 'body))
@@ -388,7 +390,7 @@
                           (vector-ref plan 1))
                          plan))
                      heads))
-            (vector head-plans (reverse body-plans) atoms))))
+            (vector head-plans (reverse body-plans) atoms rule-index))))
       (let* ((analysis
               ;; Source-only replacement preserves declarations and rules.
               ;; Its session reuses this immutable rule plan while the fresh
@@ -397,7 +399,8 @@
                   (gerbil-ascent-program-analysis
                    program relations rules
                    (lambda ()
-                     (let (plans (map prepare-rule rules))
+                     (let (plans (map prepare-rule rules
+                                     (iota (length rules))))
                        (let* ((strata (gerbil-ascent-rule-strata plans count))
                               (highest (if (= count 0) -1
                                          (apply max (vector->list strata))))
@@ -419,12 +422,15 @@
                                               heads (vector-ref rule 1)
                                               (gerbil-ascent-delta-positions
                                                (vector-ref rule 1) strata
-                                               stratum)))))
+                                               stratum)
+                                              (vector-ref rule 3)))))
                                     plans))
                                (vector-set! active stratum selected)
                                (plan-stratum (+ stratum 1)))))
                          (vector relations rules plans strata active)))))))
              (rule-plans (vector-ref analysis 2))
+             (rule-ticks (and measure-rule-times?
+                              (make-vector (length rules) 0)))
              (strata (vector-ref analysis 3))
              (active-by-stratum (vector-ref analysis 4))
              (highest-stratum (- (vector-length active-by-stratum) 1))
@@ -512,7 +518,8 @@
                       (append (source-rows-at index) (list row)))
                      (candidate (source-program-with index replacement))
                      (result ((gerbil-ascent-make-engine
-                               candidate #f analysis schema))))
+                               candidate #f analysis schema
+                               measure-rule-times?))))
                 (set! source-count (+ source-count 1))
                 (vector-set! source-overrides index replacement)
                 (vector-set! source-additions index [])
@@ -619,7 +626,8 @@
                 (error "ASCENT session input fact budget exceeded"))
               (let* ((candidate (source-program-with index rows))
                      (result ((gerbil-ascent-make-engine
-                               candidate #f analysis schema))))
+                               candidate #f analysis schema
+                               measure-rule-times?))))
                 (set! source-count next-count)
                 (vector-set! source-overrides index rows)
                 (vector-set! source-additions index [])
@@ -875,7 +883,8 @@
                                   consume)))))))
             (for-each
              (lambda (rule)
-               (let ((heads (vector-ref rule 0))
+               (let ((started (and rule-ticks (current-jiffy)))
+                     (heads (vector-ref rule 0))
                      (body (vector-ref rule 1))
                      (positions (vector-ref rule 2)))
                  (if (null? positions)
@@ -892,7 +901,12 @@
                                     (for-each
                                      (lambda (head) (emit! head environment))
                                      heads))))
-                    positions))))
+                    positions))
+                 (when started
+                   (let (index (vector-ref rule 3))
+                     (vector-set! rule-ticks index
+                       (+ (vector-ref rule-ticks index)
+                          (- (current-jiffy) started)))))))
              active-rules)
             (set! active? #f)
             (let commit ((index 0))
@@ -960,6 +974,12 @@
            (set! last-result
              (.o (relation-names (vector->list names))
                  (evaluation-path 'stratified-semi-naive)
+                 (rule-time-nanoseconds
+                  (and rule-ticks
+                       (map (lambda (ticks)
+                              (quotient (* ticks 1000000000)
+                                        (jiffies-per-second)))
+                            (vector->list rule-ticks))))
                  (rows-of (lambda (name)
                             (vector-ref snapshots (position-of name))))))))
          last-result)
@@ -979,7 +999,10 @@
                         (.source-overrides source-overrides)))
           run!)))))
 
-(def (gerbil-ascent-open-session program)
+(def (gerbil-ascent-open-session program
+                                 measure-rule-times?: (measure-rule-times? #f))
+  (unless (boolean? measure-rule-times?)
+    (error "invalid ASCENT rule timing option" measure-rule-times?))
   ;; A Provider may mutate its private state before returning an invalid
   ;; batch or raising. Keep the accepted source snapshot outside the engine
   ;; so a failed operation can rebuild all evaluation-local state from it.
@@ -1007,7 +1030,8 @@
          (initialized? #f)
          (clean? #f)
          (last-result #f)
-         (engine (gerbil-ascent-make-engine program #t))
+         (engine (gerbil-ascent-make-engine program #t #f #f
+                                          measure-rule-times?))
          (engine-append (.ref engine '.append-source!))
          (engine-additions (.ref engine '.source-additions))
          (engine-overrides (.ref engine '.source-overrides)))
@@ -1058,7 +1082,8 @@
     (def (restore! rows)
       (set! engine #f)
       (let* ((candidate (snapshot-program rows))
-             (fresh (gerbil-ascent-make-engine candidate #t)))
+             (fresh (gerbil-ascent-make-engine candidate #t #f #f
+                                              measure-rule-times?)))
         (when initialized? ((.ref fresh '.run)))
         (set! engine fresh)
         (set! engine-append (.ref fresh '.append-source!))
@@ -1146,5 +1171,8 @@
 (def (gerbil-ascent-session-run session)
   ((.ref session '.run)))
 
-(def (gerbil-ascent-evaluate-program program)
-  ((gerbil-ascent-make-engine program #f)))
+(def (gerbil-ascent-evaluate-program program
+                                      measure-rule-times?: (measure-rule-times? #f))
+  (unless (boolean? measure-rule-times?)
+    (error "invalid ASCENT rule timing option" measure-rule-times?))
+  ((gerbil-ascent-make-engine program #f #f #f measure-rule-times?)))

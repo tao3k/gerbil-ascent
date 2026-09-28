@@ -227,6 +227,15 @@ partitions.
 | Parallel execution | =core/=, =table/= | four independent Scheme program evaluations pass a concurrent reentrancy qualification under Core Observability; intra-program evaluation is serial | deterministic intra-program serial/parallel parity, bounded worker failure behavior and contention benchmark |
 | Gerbil module and macro embedding | =program/=, =interface/= | reusable Gerbil module exports a rule-program constructor; =ascent-fragment= exports validated POO declarations/rules for lexical =(include name)=; a recursive closure matches Rust =ascent_source!= / =include_source!= over empty, branching, and duplicate snapshots; module =defsyntax= and local =(macro name ((parameter kind) ...) clause ...)= with =kind= in =expr=, =ident= generate fragments, with direct local invocation; a Rust embedded macro fixture matches fact, copied-rule and combined typed-parameter output over five snapshots; invalid =ident= arguments and unknown parameter kinds reject at expansion; include expressions are validated once | Rust token-copy name resolution and wider diagnostics, fragment scale/performance |
 
+The pinned Rust =#![measure_rule_times]= attribute and Scheme's
+=measure-rule-times?: #t= evaluator option produce the same rows for empty,
+single and duplicate sources. Scheme returns per-rule nanoseconds in
+declaration order; Rust exposes durations by SCC/rule fields. A retained
+Scheme Session keeps timing enabled across positive appends and whole-source
+replacement. Exact clock values are not compared. Rust's
+=generate_run_timeout= and =inter_rule_parallelism= attributes remain open
+execution-policy work.
+
 Derived lattice batches now stage the last value per key in a Scheme hash
 table and materialize pending rows once per round. Commit removes superseded
 accepted rows in one pass. Direct lattice sources also join through the hash

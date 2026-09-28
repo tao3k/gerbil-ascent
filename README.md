@@ -55,6 +55,13 @@ same-key source tuples and different rows after a repeated mixed-source run;
 the Rust oracle records those implementation differences. The one-shot
 `gerbil-ascent-evaluate-program` uses the same evaluator.
 
+For rule-level diagnostics, pass `measure-rule-times?: #t` to either
+`gerbil-ascent-open-session` or `gerbil-ascent-evaluate-program`. Each result
+then carries a `rule-time-nanoseconds` list in declaration order. The default
+result has `#f` in that slot and does not read a clock for each rule. This is
+the Scheme counterpart of Rust Ascent's `#![measure_rule_times]`; timing
+values are platform measurements and are not compared for exact equality.
+
 `t/` contains Scheme qualification; `rust/ascent-oracle/` contains the
 test-only Rust Ascent differential oracle. The [parity matrix](docs/rust-parity.org)
 tracks the unfinished Rust 0.8.0 feature surface and documented fixed-point

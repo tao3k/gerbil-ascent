@@ -155,3 +155,6 @@ mutual-rows:
 
 oracle:
     gerbil env cargo test --locked --manifest-path rust/ascent-oracle/Cargo.toml
+
+timed-rows:
+    @timeout 60s gerbil {{ gerbil_test_runtime_options }} t/qualification/ascent-timing-test.ss

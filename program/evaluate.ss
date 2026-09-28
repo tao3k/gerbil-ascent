@@ -490,7 +490,9 @@
                      (vector-ref delta index) row
                      (- output-limit
                         (+ source-materialized-count derived-count))))
-                   (batch-seen (make-hash-table))
+                   (batch-seen
+                    (and (pair? expanded) (pair? (cdr expanded))
+                         (make-hash-table)))
                    (new-rows []))
               (unless (list? expanded)
                 (error "ASCENT storage provider returned non-list rows"))
@@ -503,8 +505,8 @@
                  (let (check (vector-ref field-checkers index))
                    (when check (check stored)))
                  (unless (or (hash-get (vector-ref seen index) stored)
-                             (hash-get batch-seen stored))
-                   (hash-put! batch-seen stored #t)
+                             (and batch-seen (hash-get batch-seen stored)))
+                   (when batch-seen (hash-put! batch-seen stored #t))
                    (set! new-rows (cons stored new-rows))))
                expanded)
               (set! new-rows (reverse new-rows))
@@ -930,31 +932,33 @@
           (restore! committed)))
       (raise failure))
     (def (append-source! name row)
-      (let (before (snapshot-copy pending))
-        (let (outcome
+      (let* ((index (position-of name))
+             (source-state (vector-ref pending index))
+             (outcome
               (attempt
                (lambda ()
                  ((.ref engine '.append-source!) name row)
-                 (let (index (position-of name))
-                   (let (source-state (vector-ref pending index))
-                     (vector-set! pending index
-                       (cons (car source-state)
-                             (cons row (cdr source-state)))))))))
-          (unless (vector-ref outcome 0)
-            (recover! before (vector-ref outcome 1)))
-          (set! clean? #f)
-          (vector-ref outcome 1))))
+                 (vector-set! pending index
+                   (cons (car source-state)
+                         (cons row (cdr source-state))))))))
+        (unless (vector-ref outcome 0)
+          (vector-set! pending index source-state)
+          (recover! pending (vector-ref outcome 1)))
+        (set! clean? #f)
+        (vector-ref outcome 1)))
     (def (replace-source! name rows)
-      (let (before (snapshot-copy pending))
-        (let (outcome
+      (let* ((index (position-of name))
+             (source-state (vector-ref pending index))
+             (outcome
               (attempt
                (lambda ()
                  ((.ref engine '.replace-source!) name rows)
-                 (vector-set! pending (position-of name) (cons rows [])))))
-          (unless (vector-ref outcome 0)
-            (recover! before (vector-ref outcome 1)))
-          (set! clean? #f)
-          (vector-ref outcome 1))))
+                 (vector-set! pending index (cons rows []))))))
+        (unless (vector-ref outcome 0)
+          (vector-set! pending index source-state)
+          (recover! pending (vector-ref outcome 1)))
+        (set! clean? #f)
+        (vector-ref outcome 1)))
     (def (run!)
       (if clean?
         last-result

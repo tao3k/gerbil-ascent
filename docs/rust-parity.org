@@ -235,6 +235,21 @@ and name their input variables explicitly. These fixtures do
 not close the rows above. =candidate/= and
 =interface/= hold existing experimental projections; their MRR or Agent use
 cannot substitute for Rust feature parity.
+The shortest-source-support candidate projection now derives distance and
+canonical support in one labelled breadth-first traversal per source vertex.
+Its path frontier shares reversed Scheme lists, and the public support list
+is materialized only for each result. Superseded queue states are discarded
+before expansion. A 64-node chain checks all 2,016
+derived pairs and its 63-label longest support; a 32-node chain compares
+all 496 candidates, including support labels, with pinned Rust 0.8.0.
+This removes duplicate
+distance-closure work but is a selected scale receipt, not a general
+performance claim or a replacement for the pinned Rust differential.
+For the same 64-node chain, a local three-run before/after probe evaluated
+the projection 20 times per process and forced every support list. Median
+process wall time fell from 2.62 s to 0.90 s; all runs produced the same
+873,600 total labels. This is a local algorithm comparison, not a standard
+SS receipt or a cross-platform latency bound.
 The syntax differential compares body argument expressions that read an
 earlier column in the same atom or a binding from a preceding atom. It also
 compares a negated atom whose second argument is an expression over its bound

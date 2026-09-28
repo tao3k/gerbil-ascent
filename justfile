@@ -34,23 +34,35 @@ performance:
     #!/usr/bin/env bash
     set -euo pipefail
     export GERBIL_LOADPATH="{{ justfile_directory() }}${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}"
-    timeout 180s gerbil {{ gerbil_test_runtime_options }} t/scenarios/performance/ascent-byods-trrel/scenario.ss
-    timeout 180s gerbil {{ gerbil_test_runtime_options }} t/scenarios/performance/ascent-session-update/scenario.ss
-    timeout 180s gerbil {{ gerbil_test_runtime_options }} t/scenarios/performance/ascent-nonpositive-session-update/scenario.ss
-    timeout 180s gerbil {{ gerbil_test_runtime_options }} t/scenarios/performance/ascent-rule-clauses/scenario.ss
-    timeout 180s gerbil {{ gerbil_test_runtime_options }} t/scenarios/performance/ascent-var-points-to/scenario.ss
-    timeout 180s gerbil {{ gerbil_test_runtime_options }} t/scenarios/performance/ascent-upstream-examples/scenario.ss
-    timeout 180s gerbil {{ gerbil_test_runtime_options }} t/scenarios/performance/ascent-product-session/scenario.ss
-    timeout 180s gerbil {{ gerbil_test_runtime_options }} t/scenarios/performance/ascent-mutual-recursive-heads/scenario.ss
-    timeout 180s gerbil {{ gerbil_test_runtime_options }} t/scenarios/performance/ascent-derived-aggregate/scenario.ss
-    timeout 180s gerbil {{ gerbil_test_runtime_options }} t/scenarios/performance/ascent-indexed-joins/scenario.ss
-    timeout 180s gerbil {{ gerbil_test_runtime_options }} t/scenarios/performance/ascent-byods-eqrel/scenario.ss
-    just test-file t/performance/ascent-binary-program-performance-test.ss
-    timeout 180s gerbil {{ gerbil_test_runtime_options }} t/scenarios/performance/ascent-reachability-closure/scenario.ss
-    timeout 180s gerbil {{ gerbil_test_runtime_options }} t/scenarios/performance/ascent-table-expression/scenario.ss
-    timeout 180s gerbil {{ gerbil_test_runtime_options }} t/scenarios/performance/ascent-table-expression-membership/scenario.ss
-    just test-file t/performance/ascent-shortest-candidates-performance-test.ss
-
+    run_case() {
+        local name="$1"
+        shift
+        printf '[ascent-ss] START %s (1000 samples)\n' "$name"
+        local started=$SECONDS
+        if "$@"; then
+            printf '[ascent-ss] PASS %s (%ss)\n' "$name" "$((SECONDS - started))"
+        else
+            local status=$?
+            printf '[ascent-ss] FAIL %s (%ss, exit=%s)\n' "$name" "$((SECONDS - started))" "$status" >&2
+            return "$status"
+        fi
+    }
+    run_case ascent-byods-trrel timeout 180s gerbil {{ gerbil_test_runtime_options }} t/scenarios/performance/ascent-byods-trrel/scenario.ss
+    run_case ascent-session-update timeout 180s gerbil {{ gerbil_test_runtime_options }} t/scenarios/performance/ascent-session-update/scenario.ss
+    run_case ascent-nonpositive-session-update timeout 180s gerbil {{ gerbil_test_runtime_options }} t/scenarios/performance/ascent-nonpositive-session-update/scenario.ss
+    run_case ascent-rule-clauses timeout 180s gerbil {{ gerbil_test_runtime_options }} t/scenarios/performance/ascent-rule-clauses/scenario.ss
+    run_case ascent-var-points-to timeout 180s gerbil {{ gerbil_test_runtime_options }} t/scenarios/performance/ascent-var-points-to/scenario.ss
+    run_case ascent-upstream-examples timeout 180s gerbil {{ gerbil_test_runtime_options }} t/scenarios/performance/ascent-upstream-examples/scenario.ss
+    run_case ascent-product-session timeout 180s gerbil {{ gerbil_test_runtime_options }} t/scenarios/performance/ascent-product-session/scenario.ss
+    run_case ascent-mutual-recursive-heads timeout 180s gerbil {{ gerbil_test_runtime_options }} t/scenarios/performance/ascent-mutual-recursive-heads/scenario.ss
+    run_case ascent-derived-aggregate timeout 180s gerbil {{ gerbil_test_runtime_options }} t/scenarios/performance/ascent-derived-aggregate/scenario.ss
+    run_case ascent-indexed-joins timeout 180s gerbil {{ gerbil_test_runtime_options }} t/scenarios/performance/ascent-indexed-joins/scenario.ss
+    run_case ascent-byods-eqrel timeout 180s gerbil {{ gerbil_test_runtime_options }} t/scenarios/performance/ascent-byods-eqrel/scenario.ss
+    run_case ascent-binary-program just test-file t/performance/ascent-binary-program-performance-test.ss
+    run_case ascent-reachability-closure timeout 180s gerbil {{ gerbil_test_runtime_options }} t/scenarios/performance/ascent-reachability-closure/scenario.ss
+    run_case ascent-table-expression timeout 180s gerbil {{ gerbil_test_runtime_options }} t/scenarios/performance/ascent-table-expression/scenario.ss
+    run_case ascent-table-expression-membership timeout 180s gerbil {{ gerbil_test_runtime_options }} t/scenarios/performance/ascent-table-expression-membership/scenario.ss
+    run_case ascent-shortest-candidates just test-file t/performance/ascent-shortest-candidates-performance-test.ss
 ascent-pairs:
     @timeout 90s gerbil {{ gerbil_test_runtime_options }} t/qualification/ascent-binary-program-pairs.ss
 

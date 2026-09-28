@@ -351,15 +351,32 @@ recovery, source replacement, and unchanged earlier snapshots. The pinned
 Rust Ascent oracle compares every source and derived copy row after 10,000
 appends. An exploratory 1,000-sample SS trial at =65a08fc= measured 10,000
 appends plus a retained run at 114.565763 ms Linux p95, above its proposed
-50 ms hard ceiling. Further allocation work is required before this shape
-can enter the standard SS admission set; the existing 16 scenarios and
-budgets remain unchanged.
+50 ms hard ceiling. That head did not enter standard SS admission.
 The built-in Set Provider now commits validated source rows directly instead
 of wrapping each row in a single-element Provider batch; custom Providers
 retain the batch preflight. A current local 1,000-sample retry of the same
 10,000-append fixture measured 62.625 ms p95, still above the unchanged
-50 ms ceiling. This is a local result, not a Linux performance claim.
-The 14 scenario SS receipts run as native Gerbil TestCases through Core
+50 ms ceiling. This is a historical local result, not a Linux performance claim.
+The current implementation selects a Scheme append procedure once from the
+immutable relation schema. An all-built-in Session records the accepted source
+log in the engine and captures a recovery snapshot at =run=; custom Providers
+retain per-operation recovery. Set rows are admitted once per fixed-point
+batch, and a unique first batch can share its persistent source spine with
+=all= and =delta=. The 10,000-append phase allocated about 25.8 MiB before
+these changes and 6.4 MiB afterward in a focused local measurement. The first
+1,000-sample local SS run under the unchanged 50 ms ceiling passed at 47.592 ms
+p95, with 17 samples above 50 ms. Repeated runs at 51.751, 50.993 and
+50.122 ms p95 failed the same ceiling before the final schema-specialized
+append and hash-capacity changes. The reviewed implementation then passed
+two consecutive 1,000-sample local runs at 45.825 and 45.561 ms p95, and a
+17-case standard SS suite passed at that candidate. After moving Set batch
+admission into =table/storage=, its focused 1,000-sample run passed at
+47.248 ms p95, while a later full local suite was disrupted by an unrelated
+=derived-aggregate= 1 ms miss under high host load. The final branch still
+requires exact-head Linux admission for every standard SS case.
+This fixture now participates in =just performance= without changing its
+sample count, target, or hard ceiling.
+The 15 scenario SS receipts run as native Gerbil TestCases through Core
 Observability's POO testing Case profile. Core owns the policy constructor,
 validation, and watchdog; ASCENT overrides only the Profile slots: a 768 MiB
 heap ceiling, 256 MiB live-growth ceiling, 25 ms sampling, and a 175-second
@@ -367,8 +384,8 @@ duration ceiling. Gambit's existing 1 GiB process heap cap
 remains the final boundary. The other two SS scenarios use the same Core
 testing Case interface. An integration qualification checks that a POO slot
 override produces Core's typed memory anomaly under a zero-heap policy. The
-10,000-append exploratory fixture remains outside standard admission until
-it meets its unchanged latency bound.
+10,000-append scenario uses the same Core Case profile and the unchanged
+latency bound.
 
 The standard SS scenario =ascent-session-update= prepares 1000 sessions outside
 the timed region, then times one source append and recursive closure per

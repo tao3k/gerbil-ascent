@@ -145,6 +145,47 @@
           (check-equal? (rows second 'item) expected)
           (check-equal? (rows first 'item) []))))
     (poo-flow-test-case/with +positive-case-profile+
+      "staged Set rows share one global output budget"
+      (let* ((program
+              (gerbil-ascent-program
+               (list (gerbil-ascent-relation 'left 1 [])
+                     (gerbil-ascent-relation 'right 1 []))
+               [] 4 4 1))
+             (session (gerbil-ascent-open-session program)))
+        (gerbil-ascent-session-run session)
+        (gerbil-ascent-session-append-source! session 'left '(1))
+        (check-exception
+         (gerbil-ascent-session-append-source! session 'right '(2))
+         true)
+        (let (first (gerbil-ascent-session-run session))
+          (check-equal? (rows first 'left) '((1)))
+          (check-equal? (rows first 'right) [])
+          (gerbil-ascent-session-append-source! session 'left '(1))
+          (check-equal? (eq? first (gerbil-ascent-session-run session))
+                        #t)
+          (check-exception
+           (gerbil-ascent-session-append-source! session 'right '(1))
+           true)
+          (check-equal? (eq? first (gerbil-ascent-session-run session))
+                        #t))))
+    (poo-flow-test-case/with +positive-case-profile+
+      "batched Set duplicates retain first source order"
+      (let* ((program
+              (gerbil-ascent-program
+               (list (gerbil-ascent-relation 'item 1 []))
+               [] 6 6 3))
+             (session (gerbil-ascent-open-session program)))
+        (gerbil-ascent-session-run session)
+        (for-each
+         (lambda (row)
+           (gerbil-ascent-session-append-source! session 'item row))
+         '((1) (2) (1) (3)))
+        (let (first (gerbil-ascent-session-run session))
+          (check-equal? (rows first 'item) '((1) (2) (3)))
+          (gerbil-ascent-session-append-source! session 'item '(2))
+          (check-equal? (eq? first (gerbil-ascent-session-run session))
+                        #t))))
+    (poo-flow-test-case/with +positive-case-profile+
       "session recomputes negation after source updates"
       (let* ((program
               (gerbil-ascent-program

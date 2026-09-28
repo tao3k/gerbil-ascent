@@ -54,6 +54,7 @@ performance:
     }
     run_scenario ascent-byods-trrel
     run_scenario ascent-session-update
+    run_scenario ascent-ten-thousand-appends
     run_scenario ascent-nonpositive-session-update
     run_scenario ascent-rule-clauses
     run_scenario ascent-var-points-to

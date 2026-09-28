@@ -23,6 +23,7 @@
         gerbil-ascent-trrel-storage-provider
         gerbil-ascent-trrel-uf-storage-provider
         gerbil-ascent-storage-make-state
+        gerbil-ascent-set-batch-admit!
         gerbil-ascent-storage-extend)
 
 (def +make-state+
@@ -43,6 +44,42 @@
 
 (def (gerbil-ascent-storage-make-state provider)
   ((.ref provider '.make-state)))
+
+;;; Admit a newest-first source-log prefix against Set membership. On an
+;;; empty Set, a unique whole log is already the correct row spine and can be
+;;; shared without copying. The fallback walks source order, so duplicates
+;;; preserve the first accepted row's position. The returned table owns all
+;;; accepted rows, including when the input table was empty and resized.
+(def (gerbil-ascent-set-batch-admit! source-log count seen share-source?)
+  (def (admit present)
+    (let ((source-order
+           (let collect ((cursor source-log) (left count) (ordered []))
+             (if (= left 0)
+               ordered
+               (collect (cdr cursor) (- left 1)
+                        (cons (car cursor) ordered)))))
+          (accepted []))
+      (for-each
+       (lambda (row)
+         (unless (hash-get present row)
+           (hash-put! present row #t)
+           (set! accepted (cons row accepted))))
+       source-order)
+      (values accepted present)))
+  (if (and share-source? (= (hash-length seen) 0))
+    (let (present (make-hash-table size: count))
+      (let scan ((cursor source-log) (left count) (unique? #t))
+        (if (= left 0)
+          (if (and unique? (null? cursor))
+            (values source-log present)
+            (admit (make-hash-table size: count)))
+          (let (row (car cursor))
+            (if (hash-get present row)
+              (scan (cdr cursor) (- left 1) #f)
+              (begin
+                (hash-put! present row #t)
+                (scan (cdr cursor) (- left 1) unique?)))))))
+    (admit seen)))
 
 (.defgeneric (gerbil-ascent-storage-extend provider state all pending row budget)
   slot: .extend-rows)

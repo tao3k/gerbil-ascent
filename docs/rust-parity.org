@@ -66,6 +66,11 @@ each with 1000 samples and the unchanged 1 ms p95 bound. These cover recursive
 body expressions and higher-arity joins, while the wider matrix remains open.
 All ASCENT standard SS fixtures now use 1000 measured samples in the
 independent package's CI; POO Flow checks only its pinned consumer boundary.
+ASP =6a6d164= preconditions each group of twenty samples with Gambit GC;
+automatic collections during a sample remain timed. It keeps the V1 receipt,
+1000 samples and existing p95 budgets. Its wall-clock suite time and p95 may
+differ from older per-sample-GC receipts, so admission uses the exact pinned
+ASCENT Linux run.
 The 1000-row
 to 10000-row input-scale qualification is separate from repeated timing of
 the small reference examples. Older 20-sample receipts below are historical

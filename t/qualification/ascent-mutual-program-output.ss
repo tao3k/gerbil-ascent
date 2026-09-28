@@ -6,13 +6,14 @@
         (only-in :gerbil-ascent/t/qualification/ascent-mutual-program-fixture
                  ascent-mutual-program ascent-mutual-evaluate)
         (only-in :gerbil-ascent/program/interface
+                 ascent
                  gerbil-ascent-open-session
                  gerbil-ascent-session-append-source!
                  gerbil-ascent-session-run))
 
 (export main)
 
-(def (print-rows result (prefix []))
+(def (print-rows result (prefix []) (names '(path0 path1 witness)))
   (let (rows-of (.ref result 'rows-of))
     (for-each
      (lambda (name)
@@ -26,7 +27,24 @@
           (for-each (lambda (column) (display #\tab) (display column)) row)
           (newline))
         (rows-of name)))
-     '(path0 path1 witness))))
+     names)))
+
+(def (print-append-scale size)
+  (let (session
+        (gerbil-ascent-open-session
+         (ascent
+          (relation item ((value integer?)) [])
+          (relation copy ((value integer?)) [])
+          ((copy value) <-- (item value))
+          (bounds size size (* 2 size)))))
+    (gerbil-ascent-session-run session)
+    (for-each
+     (lambda (value)
+       (gerbil-ascent-session-append-source! session 'item (list value)))
+     (iota size))
+    (print-rows (gerbil-ascent-session-run session) [] '(item copy))
+    (display "END\n")
+    (force-output)))
 
 (def (print-corpus cases)
   (let loop ((remaining cases) (index 0))
@@ -60,6 +78,8 @@
     (cond
      ((and (pair? request) (eq? (car request) 'corpus))
       (print-corpus (cadr request)))
+     ((and (pair? request) (eq? (car request) 'append-scale))
+      (print-append-scale (cadr request)))
      ((and (pair? request) (eq? (car request) 'session))
       (let (session (gerbil-ascent-open-session
                     (ascent-mutual-program (cadr request))))

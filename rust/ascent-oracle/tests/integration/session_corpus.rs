@@ -123,3 +123,28 @@ fn every_three_node_positive_session_matches_rust_ascent() {
     expected.sort_unstable();
     assert_eq!(actual, expected);
 }
+
+#[test]
+fn ten_thousand_positive_appends_match_ascent_complete_output() {
+    ascent! {
+        relation item(u32);
+        relation copy(u32);
+        copy(value) <-- item(value);
+    }
+    let size = 10_000_u32;
+    let mut program = AscentProgram {
+        item: (0..size).map(|value| (value,)).collect(),
+        ..AscentProgram::default()
+    };
+    program.run();
+    let mut expected = Vec::with_capacity(size as usize * 2);
+    expected.extend(program.item.iter().map(|(value,)| format!("item\t{value}")));
+    expected.extend(program.copy.iter().map(|(value,)| format!("copy\t{value}")));
+    expected.sort_unstable();
+
+    let output = scheme_output("mutual-corpus-rows", &format!("(append-scale {size})\n"));
+    let mut actual: Vec<_> = output.lines().map(str::to_owned).collect();
+    assert_eq!(actual.pop().as_deref(), Some("END"));
+    actual.sort_unstable();
+    assert_eq!(actual, expected);
+}

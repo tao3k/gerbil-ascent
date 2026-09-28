@@ -49,6 +49,7 @@ performance:
     }
     run_case ascent-byods-trrel timeout 180s gerbil {{ gerbil_test_runtime_options }} t/scenarios/performance/ascent-byods-trrel/scenario.ss
     run_case ascent-session-update timeout 180s gerbil {{ gerbil_test_runtime_options }} t/scenarios/performance/ascent-session-update/scenario.ss
+    run_case ascent-positive-bulk-append timeout 180s gerbil {{ gerbil_test_runtime_options }} t/scenarios/performance/ascent-positive-bulk-append/scenario.ss
     run_case ascent-nonpositive-session-update timeout 180s gerbil {{ gerbil_test_runtime_options }} t/scenarios/performance/ascent-nonpositive-session-update/scenario.ss
     run_case ascent-rule-clauses timeout 180s gerbil {{ gerbil_test_runtime_options }} t/scenarios/performance/ascent-rule-clauses/scenario.ss
     run_case ascent-var-points-to timeout 180s gerbil {{ gerbil_test_runtime_options }} t/scenarios/performance/ascent-var-points-to/scenario.ss

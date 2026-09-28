@@ -124,6 +124,33 @@
           (check-equal? (length (rows second 'reach)) 3)
           (check-equal? (rows first 'reach) '((1 2))))))
     (poo-flow-test-case/with +positive-case-profile+
+      "ten thousand positive appends retain order and recover state"
+      (let* ((size 10000)
+             (expected (map list (iota size)))
+             (program
+              (gerbil-ascent-program
+               (list (gerbil-ascent-relation 'item 1 [])) []
+               (+ size 2) size size))
+             (session (gerbil-ascent-open-session program))
+             (first (gerbil-ascent-session-run session)))
+        (for-each
+         (lambda (key)
+           (gerbil-ascent-session-append-source! session 'item (list key)))
+         (iota size))
+        (let (second (gerbil-ascent-session-run session))
+          (check-equal? (rows second 'item) expected)
+          (gerbil-ascent-session-append-source! session 'item '(0))
+          (check-exception
+           (gerbil-ascent-session-append-source! session 'item '(0 1))
+           true)
+          (check-equal? (rows (gerbil-ascent-session-run session) 'item)
+                        expected)
+          (gerbil-ascent-session-replace-source! session 'item '((42)))
+          (check-equal? (rows (gerbil-ascent-session-run session) 'item)
+                        '((42)))
+          (check-equal? (rows second 'item) expected)
+          (check-equal? (rows first 'item) []))))
+    (poo-flow-test-case/with +positive-case-profile+
       "session recomputes negation after source updates"
       (let* ((program
               (gerbil-ascent-program

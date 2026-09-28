@@ -1,0 +1,22 @@
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+((benchmarkKind . scenario-e2e)
+ (max_total . 50000us)
+ (target_total . 20000us)
+ (regression_budget . 30000us)
+ (expected_over_input_budget . 0us)
+ (sampleCount . 1000)
+ (targetRationale . "Append 10000 distinct rows to one retained positive session without scanning earlier rows on each append.")
+ (unit . "us")
+ (sourcePath . "t/scenarios/performance/ascent-positive-bulk-append/benchmark.ss")
+ (rule . GERBIL-SCHEME-AGENT-R031)
+ (feature . ascent-positive-bulk-append)
+ (optimizationFocus . "persistent source append log and incremental relation-size accounting")
+ (inputShape . "empty unary relation followed by 10000 distinct appends and one run")
+ (expectedOutcome . "all 10000 rows in source order with a stable earlier snapshot")
+ (expectedRepair . "retain source additions and update relation counts from the new-row batch")
+ (baseline . "copy the source list and recount the complete accepted relation on every append")
+ (candidate . "append with a persistent reverse log and incremental counts")
+ (measurementPhases candidate-update assert-semantic-gate assert-time-gate)
+ (tags poo ascent incremental performance))

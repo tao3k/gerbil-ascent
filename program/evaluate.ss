@@ -508,30 +508,32 @@
                    (set! new-rows (cons stored new-rows))))
                expanded)
               (set! new-rows (reverse new-rows))
-              (when (> (+ source-materialized-count derived-count
-                          (length new-rows)) output-limit)
-                (error "ASCENT session output fact budget exceeded"))
-              (set! source-count (+ source-count 1))
-              (for-each
-               (lambda (stored)
-                 (hash-put! (vector-ref seen index) stored #t)
-                 (set! source-materialized-count
-                   (+ source-materialized-count 1))
-                 (vector-set! all index
-                   (cons stored (vector-ref all index)))
-                 (vector-set! delta index
-                   (cons stored (vector-ref delta index))))
-               new-rows)
-              (when (pair? new-rows)
-                (set! dirty? #t)
-                (advance-all-indexes! index new-rows)
-                (vector-set! all-size index (length (vector-ref all index)))
-                (vector-set! delta-size index
-                  (length (vector-ref delta index)))
-                (vector-set! all-version index
-                  (+ 1 (vector-ref all-version index)))
-                (vector-set! delta-version index
-                  (+ 1 (vector-ref delta-version index)))))))
+              (let (added-count (length new-rows))
+                (when (> (+ source-materialized-count derived-count
+                            added-count) output-limit)
+                  (error "ASCENT session output fact budget exceeded"))
+                (set! source-count (+ source-count 1))
+                (for-each
+                 (lambda (stored)
+                   (hash-put! (vector-ref seen index) stored #t)
+                   (set! source-materialized-count
+                     (+ source-materialized-count 1))
+                   (vector-set! all index
+                     (cons stored (vector-ref all index)))
+                   (vector-set! delta index
+                     (cons stored (vector-ref delta index))))
+                 new-rows)
+                (when (pair? new-rows)
+                  (set! dirty? #t)
+                  (advance-all-indexes! index new-rows)
+                  (vector-set! all-size index
+                    (+ (vector-ref all-size index) added-count))
+                  (vector-set! delta-size index
+                    (+ (vector-ref delta-size index) added-count))
+                  (vector-set! all-version index
+                    (+ 1 (vector-ref all-version index)))
+                  (vector-set! delta-version index
+                    (+ 1 (vector-ref delta-version index))))))))
             (unless (vector-ref source-overrides index)
               (vector-set! source-additions index
                 (cons row (vector-ref source-additions index))))))
@@ -868,7 +870,8 @@
   (let* ((relations (.ref program 'relations))
          (positions (make-hash-table-eq))
          (initial (list->vector
-                   (map (lambda (relation) (.ref relation 'rows))
+                   (map (lambda (relation)
+                          (cons (.ref relation 'rows) []))
                         relations)))
          (pending (list->vector (vector->list initial)))
          (committed (list->vector (vector->list initial)))
@@ -888,11 +891,14 @@
         (- slot 1)))
     (def (snapshot-program rows)
       (gerbil-ascent-program
-       (map (lambda (relation source-rows)
-              (let ((name (.ref relation 'name))
-                    (arity (.ref relation 'arity))
-                    (index (.ref relation 'index-provider))
-                    (types (.ref relation 'field-predicates)))
+       (map (lambda (relation source-state)
+              (let* ((source-rows
+                      (append (car source-state)
+                              (reverse (cdr source-state))))
+                     (name (.ref relation 'name))
+                     (arity (.ref relation 'arity))
+                     (index (.ref relation 'index-provider))
+                     (types (.ref relation 'field-predicates)))
                 (if (eq? (.ref relation 'storage-kind) 'lattice)
                   (gerbil-ascent-lattice name arity source-rows
                                          (.ref relation 'join) index types)
@@ -930,8 +936,10 @@
                (lambda ()
                  ((.ref engine '.append-source!) name row)
                  (let (index (position-of name))
-                   (vector-set! pending index
-                     (append (vector-ref pending index) (list row)))))))
+                   (let (source-state (vector-ref pending index))
+                     (vector-set! pending index
+                       (cons (car source-state)
+                             (cons row (cdr source-state)))))))))
           (unless (vector-ref outcome 0)
             (recover! before (vector-ref outcome 1)))
           (set! clean? #f)
@@ -942,7 +950,7 @@
               (attempt
                (lambda ()
                  ((.ref engine '.replace-source!) name rows)
-                 (vector-set! pending (position-of name) rows))))
+                 (vector-set! pending (position-of name) (cons rows [])))))
           (unless (vector-ref outcome 0)
             (recover! before (vector-ref outcome 1)))
           (set! clean? #f)

@@ -40,6 +40,6 @@ jobs:
           cargo clippy --locked --manifest-path rust/ascent-oracle/Cargo.toml --all-targets -- -D warnings
           cargo test --locked --manifest-path rust/ascent-oracle/Cargo.toml --test asp_rust_gate
       - name: Compare with Rust Ascent
-        run: just oracle
+        run: gerbil env just oracle
       - name: Qualify ASCENT SS scenarios
         run: gerbil env just performance

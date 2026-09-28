@@ -61,11 +61,18 @@ pub(super) fn scheme_output(recipe: &str, request: &str) -> String {
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .stderr(Stdio::piped());
-    let gerbil_path =
-        std::env::var_os("GERBIL_PATH").unwrap_or_else(|| root.join(".gerbil").into());
     let inherited = std::env::var("GERBIL_LOADPATH").unwrap_or_default();
-    command.env("GERBIL_PATH", gerbil_path);
-    command.env("GERBIL_LOADPATH", format!("{}:{inherited}", root.display()));
+    let local_lib = root.join(".gerbil/lib");
+    let mut loadpath = vec![root.display().to_string()];
+    if local_lib.is_dir() {
+        loadpath.push(local_lib.display().to_string());
+    }
+    if !inherited.is_empty() {
+        loadpath.push(inherited);
+    }
+    // Keep the caller's GERBIL_PATH. Gerbil's home package profile owns
+    // installed dependencies; the local build only extends module lookup.
+    command.env("GERBIL_LOADPATH", loadpath.join(":"));
     let mut child = command
         .spawn()
         .expect("launch gerbil-ascent Scheme fixture");

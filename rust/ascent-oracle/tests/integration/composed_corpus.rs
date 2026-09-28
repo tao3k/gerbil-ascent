@@ -9,6 +9,7 @@ use ascent::{aggregators::count, ascent};
 
 type Edge = (u32, u32);
 type Case = (Vec<Edge>, Vec<u32>);
+const SCHEME_CORPUS_CHUNK_SIZE: usize = 256;
 
 fn cases() -> Vec<Case> {
     let mut result = Vec::with_capacity(778);
@@ -150,13 +151,13 @@ fn session_additions(index: usize) -> (Edge, u32) {
     ((from, to), to)
 }
 
-fn scheme_session_request(cases: &[Case]) -> String {
+fn scheme_session_request(cases: &[Case], offset: usize) -> String {
     let rendered = cases
         .iter()
         .enumerate()
         .map(|(index, (edges, blocked))| {
             let initial = render_snapshot(edges, blocked);
-            let ((from, to), added_block) = session_additions(index);
+            let ((from, to), added_block) = session_additions(offset + index);
             format!("({initial} ((({from} {to})) ({added_block})))")
         })
         .collect::<Vec<_>>()
@@ -164,13 +165,31 @@ fn scheme_session_request(cases: &[Case]) -> String {
     format!("(session ({rendered}))\n")
 }
 
+fn scheme_corpus_rows(cases: &[Case], request: impl Fn(&[Case], usize) -> String) -> Vec<String> {
+    let mut rows = Vec::new();
+    for (chunk_index, chunk) in cases.chunks(SCHEME_CORPUS_CHUNK_SIZE).enumerate() {
+        let offset = chunk_index * SCHEME_CORPUS_CHUNK_SIZE;
+        let output = scheme_output("integrated-corpus-rows", &request(chunk, offset));
+        let mut lines = output.lines();
+        while let Some(line) = lines.next() {
+            if line == "END" {
+                assert!(lines.next().is_none(), "fixture output after END");
+                break;
+            }
+            let (local, rest) = line.split_once('\t').expect("indexed Scheme row");
+            let global = offset + local.parse::<usize>().expect("case index");
+            rows.push(format!("{global}\t{rest}"));
+        }
+        assert!(output.ends_with("END\n"), "fixture output missing END");
+    }
+    rows
+}
+
 #[test]
 fn composed_three_and_four_node_corpus_matches_rust_ascent() {
     let cases = cases();
     assert_eq!(cases.len(), 778);
-    let output = scheme_output("integrated-corpus-rows", &scheme_request(&cases));
-    let mut actual: Vec<_> = output.lines().map(str::to_owned).collect();
-    assert_eq!(actual.pop().as_deref(), Some("END"));
+    let mut actual = scheme_corpus_rows(&cases, |chunk, _| scheme_request(chunk));
     actual.sort_unstable();
 
     let mut expected = Vec::new();
@@ -188,9 +207,7 @@ fn composed_three_and_four_node_corpus_matches_rust_ascent() {
 #[test]
 fn composed_nonpositive_sessions_match_fresh_fixed_points() {
     let cases = cases();
-    let output = scheme_output("integrated-corpus-rows", &scheme_session_request(&cases));
-    let mut actual: Vec<_> = output.lines().map(str::to_owned).collect();
-    assert_eq!(actual.pop().as_deref(), Some("END"));
+    let mut actual = scheme_corpus_rows(&cases, scheme_session_request);
     actual.sort_unstable();
 
     let mut expected = Vec::new();

@@ -7,6 +7,7 @@
         (only-in :gerbil-ascent/program/interface
                  ascent gerbil-ascent-open-session
                  gerbil-ascent-session-append-source!
+                 gerbil-ascent-session-replace-source!
                  gerbil-ascent-session-run))
 
 (export main)
@@ -99,12 +100,41 @@
                  index)))
       (loop (cdr remaining) (+ index 1)))))
 
+(def (print-wide-session size)
+  (let* ((keys (iota size))
+         (source (map (lambda (key) (list key (+ key (* 2 size)))) keys))
+         (improvements (map (lambda (key) (list key (+ key size))) keys))
+         (session
+          (gerbil-ascent-open-session
+           (ascent
+            (lattice score ((node integer?) (value integer?)) source min)
+            (relation improve ((node integer?) (value integer?)) improvements)
+            (lattice copy ((node integer?) (value integer?)) [] min)
+            ((score node value) <-- (improve node value))
+            ((copy node value) <-- (score node value))
+            (bounds (+ (* 2 size) 1) (* 3 size) (* 6 size)))))
+         (first (gerbil-ascent-session-run session))
+         (first-rows-of (.ref first 'rows-of))
+         (first-snapshot (map first-rows-of '(score copy))))
+    (emit-direct-rows size 0 first)
+    (gerbil-ascent-session-append-source! session 'score '(0 1))
+    (emit-direct-rows size 1 (gerbil-ascent-session-run session))
+    (gerbil-ascent-session-replace-source!
+     session 'score (map (lambda (key) (list key (+ key 2))) keys))
+    (emit-direct-rows size 2 (gerbil-ascent-session-run session))
+    (unless (equal? first-snapshot (map first-rows-of '(score copy)))
+      (error "ASCENT wide lattice session changed a prior snapshot" size))))
+
 (def (main . args)
   (unless (null? args)
     (error "ASCENT lattice session corpus reads one case list"))
   (let (request (read))
-    (if (and (pair? request) (memq (car request) '(direct mixed)))
-      (print-direct-cases (cadr request) (eq? (car request) 'mixed))
+    (cond
+     ((and (pair? request) (eq? (car request) 'wide-session))
+      (print-wide-session (cadr request)))
+     ((and (pair? request) (memq (car request) '(direct mixed)))
+      (print-direct-cases (cadr request) (eq? (car request) 'mixed)))
+     (else
       (let loop ((cases request) (index 0))
         (unless (null? cases)
           (let* ((case (car cases))
@@ -125,6 +155,6 @@
                             (map first-rows-of '(shortest reach-tag)))
               (error "ASCENT lattice session changed a prior snapshot"
                      index)))
-          (loop (cdr cases) (+ index 1))))))
+          (loop (cdr cases) (+ index 1)))))))
   (display "END\n")
   (force-output))

@@ -245,6 +245,36 @@ fn direct_lattice_source_corpus_matches_canonical_fixed_point() {
 }
 
 #[test]
+fn wide_retained_lattice_append_and_replacement_match_fixed_points() {
+    for size in [1_000_u32, 10_000] {
+        let output = scheme_output(
+            "lattice-session-corpus-rows",
+            &format!("(wide-session {size})\n"),
+        );
+        let mut actual: Vec<_> = output.lines().map(str::to_owned).collect();
+        assert_eq!(actual.pop().as_deref(), Some("END"));
+        actual.sort_unstable();
+
+        let mut expected = Vec::with_capacity(size as usize * 6);
+        for phase in 0..3 {
+            for key in 0..size {
+                let value = match phase {
+                    0 => key + size,
+                    1 if key == 0 => 1,
+                    1 => key + size,
+                    _ => key + 2,
+                };
+                for relation in ["score", "copy"] {
+                    expected.push(format!("{size}\t{phase}\t{relation}\t{key}\t{value}"));
+                }
+            }
+        }
+        expected.sort_unstable();
+        assert_eq!(actual, expected, "retained lattice keys: {size}");
+    }
+}
+
+#[test]
 fn rust_raw_source_and_derived_lattice_join_probe() {
     ascent! {
         lattice score(u32, Dual<u32>);

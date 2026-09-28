@@ -354,6 +354,21 @@ appends plus a retained run at 114.565763 ms Linux p95, above its proposed
 50 ms hard ceiling. Further allocation work is required before this shape
 can enter the standard SS admission set; the existing 16 scenarios and
 budgets remain unchanged.
+The built-in Set Provider now commits validated source rows directly instead
+of wrapping each row in a single-element Provider batch; custom Providers
+retain the batch preflight. A current local 1,000-sample retry of the same
+10,000-append fixture measured 62.625 ms p95, still above the unchanged
+50 ms ceiling. This is a local result, not a Linux performance claim.
+The 14 direct SS scenarios now run through Core Observability's same-thread
+memory Case watchdog. It samples every 25 ms, rejects growth above 256 MiB
+live or a heap above the smaller of 768 MiB and 512 MiB over its starting
+size, and stops after 175 seconds. Gambit's existing 1 GiB process heap cap
+remains the final boundary. The two =test-file= SS scenarios already use
+Core's testing Case profile. An integration qualification checks that the
+watchdog raises Core's typed memory anomaly under a zero-heap policy. A local
+run of all 16 SS scenarios passed with the watchdog; the 10,000-append
+exploratory fixture remains outside standard admission until it meets its
+unchanged latency bound.
 
 The standard SS scenario =ascent-session-update= prepares 1000 sessions outside
 the timed region, then times one source append and recursive closure per

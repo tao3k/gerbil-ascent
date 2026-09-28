@@ -24,7 +24,8 @@
                  gerbil-ascent-index-provider-extend!
                  gerbil-ascent-index-provider-lookup)
         (only-in :gerbil-ascent/table/storage
-                 gerbil-ascent-storage-make-state)
+                 gerbil-ascent-storage-make-state
+                 gerbil-ascent-set-storage-provider)
         (only-in :clan/poo/support/base until))
 
 (export gerbil-ascent-evaluate-program
@@ -483,6 +484,35 @@
                 (set! dirty? #f)
                 (set! last-result result)))
              (else
+              (if (eq? (vector-ref storage-providers index)
+                       gerbil-ascent-set-storage-provider)
+                ;; The built-in Set Provider exposes precisely the input row.
+                ;; Commit it directly after the shared row/type/budget checks;
+                ;; custom Providers still use their complete batch preflight.
+                (let (new? (not (hash-get (vector-ref seen index) row)))
+                  (when (and new?
+                             (> (+ source-materialized-count derived-count 1)
+                                output-limit))
+                    (error "ASCENT session output fact budget exceeded"))
+                  (set! source-count (+ source-count 1))
+                  (when new?
+                    (hash-put! (vector-ref seen index) row #t)
+                    (set! source-materialized-count
+                      (+ source-materialized-count 1))
+                    (vector-set! all index
+                      (cons row (vector-ref all index)))
+                    (vector-set! delta index
+                      (cons row (vector-ref delta index)))
+                    (set! dirty? #t)
+                    (advance-all-indexes! index (list row))
+                    (vector-set! all-size index
+                      (+ (vector-ref all-size index) 1))
+                    (vector-set! delta-size index
+                      (+ (vector-ref delta-size index) 1))
+                    (vector-set! all-version index
+                      (+ 1 (vector-ref all-version index)))
+                    (vector-set! delta-version index
+                      (+ 1 (vector-ref delta-version index)))))
               (let* ((expanded
                     ((vector-ref storage-extensions index)
                      (vector-ref storage-states index)
@@ -535,7 +565,7 @@
                   (vector-set! all-version index
                     (+ 1 (vector-ref all-version index)))
                   (vector-set! delta-version index
-                    (+ 1 (vector-ref delta-version index))))))))
+                    (+ 1 (vector-ref delta-version index)))))))))
             (unless (vector-ref source-overrides index)
               (vector-set! source-additions index
                 (cons row (vector-ref source-additions index))))))

@@ -31,6 +31,9 @@ test:
 
 # ASCENT owns its 1000-sample SS receipts using ASP's benchmark profile.
 performance:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    export GERBIL_LOADPATH="{{ justfile_directory() }}${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}"
     timeout 180s gerbil {{ gerbil_test_runtime_options }} t/scenarios/performance/ascent-byods-trrel/scenario.ss
     timeout 180s gerbil {{ gerbil_test_runtime_options }} t/scenarios/performance/ascent-session-update/scenario.ss
     timeout 180s gerbil {{ gerbil_test_runtime_options }} t/scenarios/performance/ascent-nonpositive-session-update/scenario.ss

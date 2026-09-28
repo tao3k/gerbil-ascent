@@ -160,6 +160,38 @@ fn indexed_two_hop_join_matches_ascent_at_input_scale() {
 }
 
 #[test]
+fn wide_lattice_batch_matches_ascent_at_input_scale() {
+    ascent! {
+        relation seed(u32, u32);
+        lattice best(u32, Dual<u32>);
+        best(key, Dual(*value)) <-- seed(key, value);
+    }
+    for size in [1_000_u32, 10_000] {
+        let mut program = AscentProgram {
+            seed: (0..size)
+                .map(|key| (key, key + size))
+                .chain((0..size).map(|key| (key, key + 1)))
+                .collect(),
+            ..AscentProgram::default()
+        };
+        program.run();
+        let mut expected: Vec<_> = program
+            .best
+            .iter()
+            .map(|(key, Dual(value))| format!("{key}\t{value}"))
+            .collect();
+        expected.sort_unstable();
+        assert_eq!(expected.len(), size as usize);
+
+        let output = scheme_output("lattice-rows", &format!("(wide {size})\n"));
+        let mut actual: Vec<_> = output.lines().map(str::to_owned).collect();
+        assert_eq!(actual.pop().as_deref(), Some("END"));
+        actual.sort_unstable();
+        assert_eq!(actual, expected, "lattice keys: {size}");
+    }
+}
+
+#[test]
 fn indexed_composite_group_and_node_join_matches_ascent() {
     ascent! {
         relation edge(u32, u32, u32);

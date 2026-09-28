@@ -4,16 +4,23 @@
 
 (import (only-in :clan/poo/object .ref)
         (only-in :gerbil-ascent/t/qualification/ascent-lattice-program-fixture
-                 ascent-lattice-fixture-evaluate))
+                 ascent-lattice-fixture-evaluate
+                 ascent-lattice-wide-evaluate))
 
 (export main)
 
 (def (main . _)
-  (for-each
-   (lambda (row)
-     (display (car row))
-     (for-each (lambda (column) (display #\tab) (display column))
-               (cdr row))
-     (newline))
-   ((.ref (ascent-lattice-fixture-evaluate (read)) 'rows-of) 'shortest))
-  (display "END\n"))
+  (let* ((request (read))
+         (wide? (and (pair? request) (eq? (car request) 'wide)))
+         (result (if wide?
+                   (ascent-lattice-wide-evaluate (cadr request))
+                   (ascent-lattice-fixture-evaluate request)))
+         (rows ((.ref result 'rows-of) (if wide? 'best 'shortest))))
+    (for-each
+     (lambda (row)
+       (display (car row))
+       (for-each (lambda (column) (display #\tab) (display column))
+                 (cdr row))
+       (newline))
+     rows)
+    (display "END\n")))

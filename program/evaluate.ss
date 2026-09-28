@@ -579,6 +579,7 @@
           (set! round (+ round 1))
           (let ((pending (make-vector count []))
                 (pending-seen (make-vector count #f))
+                (pending-lattice-keys (make-vector count []))
                 (pending-count 0))
             (def (emit! atom environment)
               (let* ((index (vector-ref atom 0))
@@ -609,12 +610,8 @@
                       (unless staged
                         (set! pending-count (+ pending-count 1)))
                       (hash-put! pending-table key merged)
-                      (vector-set! pending index
-                        (cons merged
-                              (filter (lambda (existing)
-                                        (not (equal? (gerbil-ascent-lattice-key existing)
-                                                     key)))
-                                      (vector-ref pending index))))))
+                      (vector-set! pending-lattice-keys index
+                        (cons key (vector-ref pending-lattice-keys index)))))
                   (let (expanded
                         ((vector-ref storage-extensions index)
                          (vector-ref storage-states index)
@@ -780,21 +777,46 @@
             (set! active? #f)
             (let commit ((index 0))
               (when (< index count)
-                (for-each
-                 (lambda (row)
-                   (when (vector-ref lattice-joins index)
-                     (let (key (gerbil-ascent-lattice-key row))
-                       (hash-put! (vector-ref lattice-rows index) key row)
-                       (vector-set! all index
-                         (filter (lambda (existing)
-                                   (not (equal? (gerbil-ascent-lattice-key existing)
-                                                key)))
-                                 (vector-ref all index)))))
-                   (hash-put! (vector-ref seen index) row #t)
-                   (vector-set! all index (cons row (vector-ref all index)))
-                   (set! derived-count (+ derived-count 1))
-                   (set! active? #t))
-                 (vector-ref pending index))
+                (if (vector-ref lattice-joins index)
+                  (let ((table (vector-ref pending-seen index))
+                        (visited (make-hash-table))
+                        (rows []))
+                    ;; The last update for each key wins this round. Replay
+                    ;; key events in reverse arrival order to retain the
+                    ;; previous deterministic pending-row order.
+                    (for-each
+                     (lambda (key)
+                       (unless (hash-get visited key)
+                         (hash-put! visited key #t)
+                         (set! rows (cons (hash-get table key) rows))))
+                     (vector-ref pending-lattice-keys index))
+                    (let (staged-rows (reverse rows))
+                      (vector-set! pending index staged-rows)
+                      (unless (null? staged-rows)
+                        (vector-set! all index
+                          (append
+                           (reverse staged-rows)
+                           (filter
+                            (lambda (existing)
+                              (not (hash-get
+                                    table
+                                    (gerbil-ascent-lattice-key existing))))
+                            (vector-ref all index))))
+                        (for-each
+                         (lambda (row)
+                           (hash-put! (vector-ref lattice-rows index)
+                                      (gerbil-ascent-lattice-key row) row)
+                           (hash-put! (vector-ref seen index) row #t)
+                           (set! derived-count (+ derived-count 1))
+                           (set! active? #t))
+                         staged-rows))))
+                  (for-each
+                   (lambda (row)
+                     (hash-put! (vector-ref seen index) row #t)
+                     (vector-set! all index (cons row (vector-ref all index)))
+                     (set! derived-count (+ derived-count 1))
+                     (set! active? #t))
+                   (vector-ref pending index)))
                 (unless (null? (vector-ref pending index))
                   (unless (vector-ref lattice-joins index)
                     (advance-all-indexes! index

@@ -192,6 +192,19 @@ fn wide_lattice_batch_matches_ascent_at_input_scale() {
 }
 
 #[test]
+fn wide_direct_lattice_sources_follow_fixed_point_join_at_input_scale() {
+    for size in [1_000_u32, 10_000] {
+        let output = scheme_output("lattice-rows", &format!("(wide-source {size})\n"));
+        let mut actual: Vec<_> = output.lines().map(str::to_owned).collect();
+        assert_eq!(actual.pop().as_deref(), Some("END"));
+        actual.sort_unstable();
+        let mut expected: Vec<_> = (0..size).map(|key| format!("{key}\t{}", key + 1)).collect();
+        expected.sort_unstable();
+        assert_eq!(actual, expected, "direct lattice keys: {size}");
+    }
+}
+
+#[test]
 fn indexed_composite_group_and_node_join_matches_ascent() {
     ascent! {
         relation edge(u32, u32, u32);

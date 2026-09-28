@@ -8,7 +8,9 @@
                  gerbil-ascent-binding gerbil-ascent-rule
                  gerbil-ascent-program gerbil-ascent-evaluate-program))
 
-(export ascent-lattice-fixture-evaluate ascent-lattice-wide-evaluate)
+(export ascent-lattice-fixture-evaluate
+        ascent-lattice-wide-evaluate
+        ascent-lattice-wide-source-evaluate)
 
 (def (v name) (gerbil-ascent-variable name))
 (def (a name . terms) (gerbil-ascent-atom name terms))
@@ -29,11 +31,13 @@
              (gerbil-ascent-binding 'distance '(first second) +)))
     64 256 320)))
 
+(def (wide-source size)
+  (append
+   (map (lambda (key) (list key (+ key size))) (iota size))
+   (map (lambda (key) (list key (+ key 1))) (iota size))))
+
 (def (ascent-lattice-wide-evaluate size)
-  (let (source
-        (append
-         (map (lambda (key) (list key (+ key size))) (iota size))
-         (map (lambda (key) (list key (+ key 1))) (iota size))))
+  (let (source (wide-source size))
     (gerbil-ascent-evaluate-program
      (gerbil-ascent-program
       (list (gerbil-ascent-relation 'seed 2 source)
@@ -41,3 +45,11 @@
       (list (r (a 'best (v 'key) (v 'value))
                (a 'seed (v 'key) (v 'value))))
       (* 2 size) size (* 3 size)))))
+
+(def (ascent-lattice-wide-source-evaluate size)
+  (let (source (wide-source size))
+    (gerbil-ascent-evaluate-program
+     (gerbil-ascent-program
+      (list (gerbil-ascent-lattice 'best 2 source min))
+      []
+      (* 2 size) size (* 2 size)))))

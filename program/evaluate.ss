@@ -258,7 +258,8 @@
                  (width (vector-ref arity index))
                  (rows (.ref relation 'rows))
                  (kind (vector-ref kinds index))
-                 (present (make-hash-table)))
+                 (present (make-hash-table))
+                 (lattice-events []))
             (unless (list? rows)
               (error "invalid ASCENT relation rows" name rows))
             (when (eq? kind 'lattice)
@@ -293,14 +294,7 @@
                    (unless previous
                      (set! source-materialized-count
                        (+ source-materialized-count 1)))
-                   (vector-set! all index
-                     (cons merged
-                           (if previous
-                             (filter (lambda (existing)
-                                       (not (equal? (gerbil-ascent-lattice-key existing)
-                                                    key)))
-                                     (vector-ref all index))
-                             (vector-ref all index)))))
+                   (set! lattice-events (cons key lattice-events)))
                  (let (materialized
                        ((vector-ref storage-extensions index)
                         (vector-ref storage-states index)
@@ -323,6 +317,19 @@
                         (cons stored (vector-ref all index))))
                     materialized))))
              rows)
+            (when (eq? kind 'lattice)
+              (let ((keyed (vector-ref lattice-rows index))
+                    (visited (make-hash-table))
+                    (accepted []))
+                ;; Source rows are already joined by key. Materialize each
+                ;; final row once, in last-source-update order.
+                (for-each
+                 (lambda (key)
+                   (unless (hash-get visited key)
+                     (hash-put! visited key #t)
+                     (set! accepted (cons (hash-get keyed key) accepted))))
+                 lattice-events)
+                (vector-set! all index (reverse accepted))))
             (vector-set! seen index present)
             (vector-set! delta index (vector-ref all index))
             (vector-set! all-size index (length (vector-ref all index)))

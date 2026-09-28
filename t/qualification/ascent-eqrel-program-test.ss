@@ -443,6 +443,59 @@
             ((.ref (gerbil-ascent-session-run session) 'rows-of) 'stored)
             '((1 2) (3 4)))))
        (list (list '(2 3) 'broken) '((2 3) (3 2)))))
+    (poo-flow-test-case "mutating Provider failure leaves retained session reusable"
+      (let* ((provider
+              (.o (:: @ gerbil-ascent-set-storage-provider)
+                  (.make-state (lambda () (vector #f)))
+                  (.extend-rows
+                   (lambda (state _all _pending row _budget)
+                     (when (vector-ref state 0)
+                       (error "ASCENT Provider retained a rejected mutation"))
+                     (if (equal? row '(2 3))
+                       (begin
+                         (vector-set! state 0 #t)
+                         (list 'invalid))
+                       (list row))))))
+             (program
+              (gerbil-ascent-program
+               (list (gerbil-ascent-relation
+                      'stored 2 '((1 2))
+                      gerbil-ascent-hash-index-provider provider))
+               [] 4 8 8))
+             (session (gerbil-ascent-open-session program)))
+        (check-equal?
+         ((.ref (gerbil-ascent-session-run session) 'rows-of) 'stored)
+         '((1 2)))
+        (check-exception
+         (gerbil-ascent-session-append-source! session 'stored '(2 3))
+         true)
+        (gerbil-ascent-session-append-source! session 'stored '(3 4))
+        (check-equal?
+         ((.ref (gerbil-ascent-session-run session) 'rows-of) 'stored)
+         '((1 2) (3 4)))
+        (gerbil-ascent-session-append-source! session 'stored '(4 5))
+        (check-exception
+         (gerbil-ascent-session-append-source! session 'stored '(2 3))
+         true)
+        (check-equal?
+         ((.ref (gerbil-ascent-session-run session) 'rows-of) 'stored)
+         '((1 2) (3 4) (4 5)))))
+    (poo-flow-test-case "failed run restores the last committed source snapshot"
+      (let* ((program
+              (ascent
+               (relation edge ((from integer?) (to integer?)) '((1 2)))
+               (relation copied ((from integer?) (to integer?)))
+               ((copied from to) <-- (edge from to))
+               (bounds 8 1 8)))
+             (session (gerbil-ascent-open-session program))
+             (first (gerbil-ascent-session-run session)))
+        (gerbil-ascent-session-append-source! session 'edge '(2 3))
+        (check-exception (gerbil-ascent-session-run session) true)
+        (check-equal? (eq? first (gerbil-ascent-session-run session)) #t)
+        (gerbil-ascent-session-replace-source! session 'edge '((3 4)))
+        (check-equal?
+         ((.ref (gerbil-ascent-session-run session) 'rows-of) 'copied)
+         '((3 4)))))
     (poo-flow-test-case "eqrel output stays within the program fact budget"
       (check-exception
        (ascent-eqrel-fixture-evaluate

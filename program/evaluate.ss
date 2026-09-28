@@ -7,7 +7,9 @@
 (import (only-in :clan/poo/object .o .ref object?)
         (only-in :clan/poo/mop validate)
         :std/iter
-        (only-in "objects.ss" gerbil-ascent-clause-plan)
+        (only-in "objects.ss" gerbil-ascent-clause-plan
+                 gerbil-ascent-program gerbil-ascent-relation
+                 gerbil-ascent-lattice)
         (only-in "types.ss" GerbilAscentSessionContract)
         (only-in "funs.ss" gerbil-ascent-rule-strata
                  gerbil-ascent-delta-positions
@@ -831,7 +833,107 @@
           run!)))))
 
 (def (gerbil-ascent-open-session program)
-  (gerbil-ascent-make-engine program #t))
+  ;; A Provider may mutate its private state before returning an invalid
+  ;; batch or raising. Keep the accepted source snapshot outside the engine
+  ;; so a failed operation can rebuild all evaluation-local state from it.
+  (let* ((relations (.ref program 'relations))
+         (positions (make-hash-table-eq))
+         (initial (list->vector
+                   (map (lambda (relation) (.ref relation 'rows))
+                        relations)))
+         (pending (list->vector (vector->list initial)))
+         (committed (list->vector (vector->list initial)))
+         (initialized? #f)
+         (clean? #f)
+         (last-result #f)
+         (engine (gerbil-ascent-make-engine program #t)))
+    (for-each
+     (lambda (relation index)
+       (hash-put! positions (.ref relation 'name) (+ index 1)))
+     relations (iota (length relations)))
+    (def (snapshot-copy rows)
+      (list->vector (vector->list rows)))
+    (def (position-of name)
+      (let (slot (hash-get positions name))
+        (unless slot (error "unknown ASCENT relation" name))
+        (- slot 1)))
+    (def (snapshot-program rows)
+      (gerbil-ascent-program
+       (map (lambda (relation source-rows)
+              (let ((name (.ref relation 'name))
+                    (arity (.ref relation 'arity))
+                    (index (.ref relation 'index-provider))
+                    (types (.ref relation 'field-predicates)))
+                (if (eq? (.ref relation 'storage-kind) 'lattice)
+                  (gerbil-ascent-lattice name arity source-rows
+                                         (.ref relation 'join) index types)
+                  (gerbil-ascent-relation name arity source-rows index
+                                          (.ref relation 'storage-provider)
+                                          types))))
+            relations (vector->list rows))
+       (.ref program 'rules)
+       (.ref program 'max-input-facts)
+       (.ref program 'max-derived-facts)
+       (.ref program 'max-output-facts)))
+    (def (restore! rows)
+      (set! engine #f)
+      (let* ((candidate (snapshot-program rows))
+             (fresh (gerbil-ascent-make-engine candidate #t)))
+        (when initialized? ((.ref fresh '.run)))
+        (set! engine fresh)
+        (set! pending (snapshot-copy rows))
+        (set! clean? (and initialized?
+                          (equal? (vector->list rows)
+                                  (vector->list committed))))))
+    (def (attempt thunk)
+      (with-catch
+       (lambda (failure) (vector #f failure))
+       (lambda () (vector #t (thunk)))))
+    (def (recover! rows failure)
+      (let (restored (attempt (lambda () (restore! rows))))
+        (unless (vector-ref restored 0)
+          (restore! committed)))
+      (raise failure))
+    (def (append-source! name row)
+      (let (before (snapshot-copy pending))
+        (let (outcome
+              (attempt
+               (lambda ()
+                 ((.ref engine '.append-source!) name row)
+                 (let (index (position-of name))
+                   (vector-set! pending index
+                     (append (vector-ref pending index) (list row)))))))
+          (unless (vector-ref outcome 0)
+            (recover! before (vector-ref outcome 1)))
+          (set! clean? #f)
+          (vector-ref outcome 1))))
+    (def (replace-source! name rows)
+      (let (before (snapshot-copy pending))
+        (let (outcome
+              (attempt
+               (lambda ()
+                 ((.ref engine '.replace-source!) name rows)
+                 (vector-set! pending (position-of name) rows))))
+          (unless (vector-ref outcome 0)
+            (recover! before (vector-ref outcome 1)))
+          (set! clean? #f)
+          (vector-ref outcome 1))))
+    (def (run!)
+      (if clean?
+        last-result
+        (let (outcome (attempt (lambda () ((.ref engine '.run)))))
+          (unless (vector-ref outcome 0)
+            (recover! committed (vector-ref outcome 1)))
+          (set! initialized? #t)
+          (set! committed (snapshot-copy pending))
+          (set! last-result (vector-ref outcome 1))
+          (set! clean? #t)
+          last-result)))
+    (validate GerbilAscentSessionContract
+              (.o (:: @ Session.)
+                  (.append-source! append-source!)
+                  (.replace-source! replace-source!)
+                  (.run run!)))))
 
 (def (gerbil-ascent-session-append-source! session name row)
   ((.ref session '.append-source!) name row))

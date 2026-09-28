@@ -4,8 +4,6 @@
 
 (import (only-in :std/test check-equal? check-exception test-suite)
         (only-in :clan/poo/object .o .ref)
-        (only-in :core/observability/debug
-                 poo-flow-debug-memory-policy)
         (only-in :core/observability/testing-case
                  poo-flow-default-testing-case-profile
                  poo-flow-test-case/with)
@@ -37,12 +35,8 @@
 (def +positive-case-profile+
   (.o (:: @ poo-flow-default-testing-case-profile)
       (identity 'ascent/positive-case)
-      (memory-policy
-       (poo-flow-debug-memory-policy
-        'ascent/positive-case heap-limit-bytes: 1073741824
-        live-growth-limit-bytes: 16777216
-        sample-interval-milliseconds: 10
-        collect-before-sample?: #t))
+      (live-growth-limit-bytes 16777216)
+      (collect-before-sample? #t)
       (max-duration-milliseconds 2000)))
 
 ;;; This case constructs and evaluates two separately admitted POO programs.

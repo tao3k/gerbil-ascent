@@ -360,9 +360,10 @@ retain the batch preflight. A current local 1,000-sample retry of the same
 10,000-append fixture measured 62.625 ms p95, still above the unchanged
 50 ms ceiling. This is a local result, not a Linux performance claim.
 The 14 scenario SS receipts run as native Gerbil TestCases through Core
-Observability's POO testing Case profile. ASCENT declares only the Profile
-slots: a 768 MiB heap ceiling, 256 MiB live-growth ceiling, 25 ms sampling,
-and a 175-second duration ceiling. Gambit's existing 1 GiB process heap cap
+Observability's POO testing Case profile. Core owns the policy constructor,
+validation, and watchdog; ASCENT overrides only the Profile slots: a 768 MiB
+heap ceiling, 256 MiB live-growth ceiling, 25 ms sampling, and a 175-second
+duration ceiling. Gambit's existing 1 GiB process heap cap
 remains the final boundary. The other two SS scenarios use the same Core
 testing Case interface. An integration qualification checks that a POO slot
 override produces Core's typed memory anomaly under a zero-heap policy. The

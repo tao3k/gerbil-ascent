@@ -4,8 +4,6 @@
 
 (import (only-in :std/test check-equal? test-suite)
         (only-in :clan/poo/object .o .ref)
-        (only-in :core/observability/debug
-                 poo-flow-debug-memory-policy)
         (only-in :core/observability/testing-case
                  poo-flow-test-case poo-flow-test-case/with
                  poo-flow-default-testing-case-profile)
@@ -25,12 +23,8 @@
 (def +concurrent-case-profile+
   (.o (:: @ poo-flow-default-testing-case-profile)
       (identity 'ascent/concurrent-snapshots)
-      (memory-policy
-       (poo-flow-debug-memory-policy
-        'ascent/concurrent-snapshots heap-limit-bytes: 1073741824
-        live-growth-limit-bytes: 67108864
-        sample-interval-milliseconds: 10
-        collect-before-sample?: #t))
+      (live-growth-limit-bytes 67108864)
+      (collect-before-sample? #t)
       (max-duration-milliseconds 15000)))
 
 (def ascent-mutual-program-test

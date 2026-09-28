@@ -4,9 +4,10 @@
 # gerbil-ascent
 
 Scheme-native ASCENT implementation built on Gerbil POO and POO Flow Core.
-`gerbil.pkg` declares Core as its sole direct package dependency;
-Core supplies the shared POO contracts used by the Scheme modules. The separate
-SS benchmark qualification uses ASP from the development test environment.
+`gerbil.pkg` declares POO Flow Core for shared POO contracts and ASP for the
+Building API and standard SS benchmark profile. The ASCENT package owns its
+Gerbil build and 1000-sample SS qualification; POO Flow checks only pinned
+consumer integration.
 Each top-level directory is a Gerbil module namespace:
 
 | Namespace | Current responsibility |
@@ -74,6 +75,7 @@ gerbil deps --install
 gerbil build
 just test
 just oracle
+gerbil env just performance
 ```
 
 The Rust oracle is a qualification dependency, not part of the Scheme runtime.

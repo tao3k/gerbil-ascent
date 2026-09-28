@@ -2,9 +2,12 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(import (only-in :std/build-script defbuild-script))
+(import (only-in :std/build-script defbuild-script)
+        (only-in :asp-gerbil-scheme/building-api
+                 asp-gerbil-scheme-package-spec!
+                 asp-gerbil-scheme-library-package-prototype))
 
-(defbuild-script
+(def gerbil-ascent-library-modules
   '("table/expression"
     "table/funs"
     "table/eqrel"
@@ -22,3 +25,11 @@
     "core/binary-program"
     "candidate/closure"
     "interface/request"))
+
+(asp-gerbil-scheme-package-spec!
+ (gerbil-ascent-library-package-spec
+  @ asp-gerbil-scheme-library-package-prototype)
+ (spec gerbil-ascent-build-spec)
+ (modules gerbil-ascent-library-modules))
+
+(defbuild-script (gerbil-ascent-build-spec))

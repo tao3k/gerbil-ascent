@@ -32,7 +32,7 @@ interaction lacks executable evidence.
 | Source and API | Scheme macro/module forms cover each pinned Rust syntax family; POO contracts reject malformed declarations before evaluation; exported session/program API is documented | generated API equivalents, complete invalid-program diagnostics, remaining attribute semantics |
 | Fixed point | Same-input Rust/Scheme differential covers recursive SCCs, strata, negation, aggregation, lattice joins, and their combinations; independent finite-model checks cover bounded graphs and adjudicate pinned Rust lattice-source divergences | product/other partial-order lattices, additional invalid dependency shapes, larger-scale behavior |
 | State and storage | All pinned BYODS Provider families and repeated-run modes have differential and failure-atomic receipts; independent and intra-program concurrency are bounded | wider producer partitions, mixed direct-source/derived lattice performance, source replacement scale, intra-program parallel execution |
-| Admission | Full Scheme and Rust policy gates plus exact pinned POO Flow Linux integration and unchanged SS budgets pass at one final head | rerun after every new pin; no earlier green run substitutes for final-head evidence |
+| Admission | The ASCENT head passes its full Scheme/Rust policy and 1000-sample SS gates; the exact pinned POO Flow head passes consumer integration on Linux | rerun after every new pin; no earlier green run substitutes for final-head evidence |
 
 The integrated corpus in =rust/ascent-oracle/tests/integration/composed_corpus.rs=
 uses one program with multi-head rules, recursive closure, stratified
@@ -64,11 +64,13 @@ cross-context and duplicate-edge sources. The standard SS
 Fibonacci input and the two isolated three-edge contexts independently,
 each with 1000 samples and the unchanged 1 ms p95 bound. These cover recursive
 body expressions and higher-arity joins, while the wider matrix remains open.
-All ASCENT standard SS fixtures now use 1000 measured samples; the 1000-row
+All ASCENT standard SS fixtures now use 1000 measured samples in the
+independent package's CI; POO Flow checks only its pinned consumer boundary.
+The 1000-row
 to 10000-row input-scale qualification is separate from repeated timing of
 the small reference examples. Older 20-sample receipts below are historical
 measurements and do not admit the new fixture heads.
-The local 1000-sample sweep passed all 16 fixtures. Indexed joins measured
+An earlier local 1000-sample sweep passed all 16 then-present fixtures. Indexed joins measured
 964us locally, but 1.693ms on exact-head Linux, missing its 1000us target
 while passing its unchanged 2000us hard gate. Table expression and shortest
 candidates measured 1.624ms and 1.499ms on Linux under their existing 2000us
@@ -243,7 +245,7 @@ The standard =ascent-derived-aggregate= SS scenario evaluates the declared
 three-edge cycle and isolated root for 1000 samples under the unchanged 1 ms
 budget used by the other small recursive scenarios. It checks all nine path
 facts and four counts outside the timed region. Its Linux performance receipt
-must be read from the exact pinned POO Flow CI head.
+must be read from the exact ASCENT CI head.
 The positive binary differential now includes an empty source, a self-loop,
 duplicate edges, disconnected cycles and overlapping paths. Both the binary
 fast path and generic rule path compare their complete sorted closure with

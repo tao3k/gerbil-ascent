@@ -28,6 +28,7 @@ jobs:
           mkdir -p "$HOME/.gerbil/pkg"
           gerbil pkg dir --add git.cons.io/mighty-gerbils/gerbil-directory
           gerbil deps --install
+          gerbil env gerbil interactive -e '(begin (import :asp-gerbil-scheme/building-api :asp-gerbil-scheme/benchmark-api) (displayln "ascent-dependencies-ready"))'
       - name: Build Scheme package
         run: gerbil build
       - name: Install Just
@@ -40,3 +41,5 @@ jobs:
           cargo test --locked --manifest-path rust/ascent-oracle/Cargo.toml --test asp_rust_gate
       - name: Compare with Rust Ascent
         run: just oracle
+      - name: Qualify ASCENT SS scenarios
+        run: gerbil env just performance

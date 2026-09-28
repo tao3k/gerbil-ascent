@@ -4,4 +4,5 @@
 (package:
  gerbil-ascent
  depend:
- ("github.com/tao3k/poo-flow-core@aed9fe6086324424fb3993647363a6c3bd7c559e"))
+ ("github.com/tao3k/poo-flow-core@aed9fe6086324424fb3993647363a6c3bd7c559e"
+  "github.com/tao3k/asp-gerbil-scheme@19bf659450f619a410cef46b093ccaa6bb203c03"))

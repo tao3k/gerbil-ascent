@@ -114,6 +114,9 @@ lattice-session-corpus-rows:
 lattice-negation-rows:
     @timeout 120s gerbil {{ gerbil_test_runtime_options }} t/qualification/ascent-lattice-negation-output.ss
 
+invalid-program-rows:
+    @timeout 60s gerbil {{ gerbil_test_runtime_options }} t/qualification/ascent-invalid-program-output.ss
+
 product-session-rows:
     @timeout 120s gerbil {{ gerbil_test_runtime_options }} t/qualification/ascent-product-session-output.ss
 

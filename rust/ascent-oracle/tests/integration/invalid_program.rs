@@ -1,0 +1,187 @@
+// SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+// SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+//! Pinned macro rejection classes compared with Scheme admission diagnostics.
+
+use super::common::scheme_output;
+use std::{
+    env, fs,
+    io::Write,
+    path::{Path, PathBuf},
+    process::{Command, Output, Stdio},
+};
+
+const VALID: &str = r#"
+use ascent::ascent;
+ascent! {
+    relation node(u32);
+    relation out(u32);
+    out(x) <-- node(x);
+}
+"#;
+
+const INVALID: [(&str, &str, &str, &str); 6] = [
+    (
+        "negative-self",
+        "negation-cycle",
+        "use of aggregated relation `looped` cannot be stratified",
+        r#"
+use ascent::ascent;
+ascent! {
+    relation node(u32);
+    relation looped(u32);
+    looped(x) <-- node(x), !looped(x);
+}
+"#,
+    ),
+    (
+        "mutual-negation",
+        "negation-cycle",
+        "cannot be stratified",
+        r#"
+use ascent::ascent;
+ascent! {
+    relation node(u32);
+    relation left(u32);
+    relation right(u32);
+    left(x) <-- node(x), !right(x);
+    right(x) <-- node(x), !left(x);
+}
+"#,
+    ),
+    (
+        "negative-feedback",
+        "negation-cycle",
+        "use of aggregated relation `right` cannot be stratified",
+        r#"
+use ascent::ascent;
+ascent! {
+    relation node(u32);
+    relation left(u32);
+    relation right(u32);
+    left(x) <-- node(x), !right(x);
+    right(x) <-- left(x);
+}
+"#,
+    ),
+    (
+        "aggregate-self",
+        "aggregate-cycle",
+        "use of aggregated relation `number` cannot be stratified",
+        r#"
+use ascent::ascent;
+ascent! {
+    relation number(u32);
+    number(total) <-- agg total = count() in number(_);
+}
+"#,
+    ),
+    (
+        "negative-with-unrelated-aggregate",
+        "negation-cycle",
+        "use of aggregated relation `left` cannot be stratified",
+        r#"
+use ascent::ascent;
+ascent! {
+    relation node(u32);
+    relation left(u32);
+    relation total(usize);
+    left(x) <-- node(x), !left(x);
+    total(n) <-- agg n = count() in node(_);
+}
+"#,
+    ),
+    (
+        "unsafe-negation",
+        "unsafe-negation",
+        "cannot find value `y` in this scope",
+        r#"
+use ascent::ascent;
+ascent! {
+    relation node(u32);
+    relation block(u32);
+    relation out(u32);
+    out(x) <-- node(x), !block(y);
+}
+"#,
+    ),
+];
+
+fn compile(source: &str, library: &Path, dependencies: &Path) -> Output {
+    let output_path = env::temp_dir().join(format!(
+        "ascent-invalid-program-{}.rmeta",
+        std::process::id()
+    ));
+    let mut child = Command::new(env::var_os("RUSTC").unwrap_or_else(|| "rustc".into()))
+        .args(["--edition=2024", "--crate-type=lib", "--emit=metadata"])
+        .args(["--crate-name", "ascent_invalid_program_probe"])
+        .arg("--extern")
+        .arg(format!("ascent={}", library.display()))
+        .arg("-L")
+        .arg(format!("dependency={}", dependencies.display()))
+        .arg("-o")
+        .arg(&output_path)
+        .arg("-")
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .expect("launch Rust compiler for Ascent macro probe");
+    child
+        .stdin
+        .take()
+        .expect("probe stdin")
+        .write_all(source.as_bytes())
+        .expect("write Ascent macro probe");
+    let output = child.wait_with_output().expect("collect Rust diagnostic");
+    let _ = fs::remove_file(output_path);
+    output
+}
+
+fn pinned_ascent_library(dependencies: &Path) -> PathBuf {
+    let mut candidates: Vec<_> = fs::read_dir(dependencies)
+        .expect("read Cargo dependency artifacts")
+        .filter_map(Result::ok)
+        .map(|entry| entry.path())
+        .filter(|path| {
+            path.file_name()
+                .and_then(|name| name.to_str())
+                .is_some_and(|name| name.starts_with("libascent-") && name.ends_with(".rlib"))
+        })
+        .collect();
+    candidates.sort();
+    candidates
+        .into_iter()
+        .find(|library| compile(VALID, library, dependencies).status.success())
+        .expect("a valid pinned Ascent macro must compile before rejection probes")
+}
+
+#[test]
+fn invalid_dependency_shapes_match_scheme_rejection_classes() {
+    let dependencies = env::current_exe()
+        .expect("test executable path")
+        .parent()
+        .expect("Cargo dependency directory")
+        .to_path_buf();
+    let library = pinned_ascent_library(&dependencies);
+    let request = format!(
+        "({})\n",
+        INVALID
+            .iter()
+            .map(|(name, _, _, _)| *name)
+            .collect::<Vec<_>>()
+            .join(" ")
+    );
+    let output = scheme_output("invalid-program-rows", &request);
+    let mut scheme: Vec<_> = output.lines().collect();
+    assert_eq!(scheme.pop(), Some("END"));
+    assert_eq!(scheme.len(), INVALID.len());
+
+    for (index, (name, category, diagnostic, source)) in INVALID.iter().enumerate() {
+        let result = compile(source, &library, &dependencies);
+        let stderr = String::from_utf8(result.stderr).expect("Rust diagnostic is UTF-8");
+        assert!(!result.status.success(), "{name} unexpectedly compiled");
+        assert!(stderr.contains(diagnostic), "{name}: {stderr}");
+        assert_eq!(scheme[index], format!("{name}\t{category}"));
+    }
+}

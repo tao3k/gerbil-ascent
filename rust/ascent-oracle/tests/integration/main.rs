@@ -7,6 +7,7 @@ mod aggregation;
 mod byods;
 mod common;
 mod composed_corpus;
+mod invalid_program;
 mod lattice_index;
 mod lattice_negation;
 mod lattice_session;

@@ -86,6 +86,32 @@
               (cdr binding)))))
        terms))
 
+(def (gerbil-ascent-dependency-reaches? dependencies from target seen)
+  (cond
+   ((= from target) #t)
+   ((vector-ref seen from) #f)
+   (else
+    (vector-set! seen from #t)
+    (ormap
+     (lambda (dependency)
+       (and (= (vector-ref dependency 0) from)
+            (gerbil-ascent-dependency-reaches?
+             dependencies (vector-ref dependency 1) target seen)))
+     dependencies))))
+
+(def (gerbil-ascent-cycle-kind dependencies relation-count)
+  (let loop ((remaining dependencies))
+    (if (null? remaining)
+      #f
+      (let (dependency (car remaining))
+        (if (and (= (vector-ref dependency 2) 1)
+                 (gerbil-ascent-dependency-reaches?
+                  dependencies (vector-ref dependency 1)
+                  (vector-ref dependency 0)
+                  (make-vector relation-count #f)))
+          (vector-ref dependency 3)
+          (loop (cdr remaining)))))))
+
 (def (gerbil-ascent-rule-strata rule-plans relation-count)
   (let ((strata (make-vector relation-count 0))
         (dependencies []))
@@ -97,13 +123,13 @@
            (lambda (clause)
              (when (memq (vector-ref clause 0)
                          '(atom negation aggregate))
-               (let (body-atom (vector-ref clause 1))
+               (let ((body-atom (vector-ref clause 1))
+                     (kind (vector-ref clause 0)))
                  (set! dependencies
                    (cons (vector (vector-ref head 0)
                                  (vector-ref body-atom 0)
-                                 (if (memq (vector-ref clause 0)
-                                           '(negation aggregate))
-                                   1 0))
+                                 (if (eq? kind 'atom) 0 1)
+                                 kind)
                          dependencies)))))
            (vector-ref rule 1)))
         (vector-ref rule 0)))
@@ -122,7 +148,13 @@
          dependencies)
         (when changed?
           (when (>= pass (- relation-count 1))
-            (error "unstratifiable ASCENT negation cycle"))
+            (case (gerbil-ascent-cycle-kind dependencies relation-count)
+              ((aggregate)
+               (error "unstratifiable ASCENT aggregate cycle"))
+              ((negation)
+               (error "unstratifiable ASCENT negation cycle"))
+              (else
+               (error "unstratifiable ASCENT dependency cycle"))))
           (relax (+ pass 1)))))
     strata))
 

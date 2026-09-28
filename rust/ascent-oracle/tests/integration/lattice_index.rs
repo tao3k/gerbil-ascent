@@ -131,6 +131,35 @@ fn indexed_two_hop_join_matches_ascent() {
 }
 
 #[test]
+fn indexed_two_hop_join_matches_ascent_at_input_scale() {
+    ascent! {
+        relation edge(u32, u32);
+        relation two_hop(u32, u32);
+        two_hop(from, to) <-- edge(from, via), edge(via, to);
+    }
+    for edge_count in [1_000_u32, 10_000] {
+        let mut program = AscentProgram {
+            edge: (0..edge_count).map(|from| (from, from + 1)).collect(),
+            ..AscentProgram::default()
+        };
+        program.run();
+        let mut expected: Vec<_> = program
+            .two_hop
+            .iter()
+            .map(|(from, to)| format!("{from}\t{to}"))
+            .collect();
+        expected.sort_unstable();
+        assert_eq!(expected.len(), (edge_count - 1) as usize);
+
+        let output = scheme_output("index-rows", &format!("{edge_count}\n"));
+        let mut actual: Vec<_> = output.lines().map(str::to_owned).collect();
+        assert_eq!(actual.pop().as_deref(), Some("END"));
+        actual.sort_unstable();
+        assert_eq!(actual, expected, "source rows: {edge_count}");
+    }
+}
+
+#[test]
 fn indexed_composite_group_and_node_join_matches_ascent() {
     ascent! {
         relation edge(u32, u32, u32);

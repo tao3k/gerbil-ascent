@@ -8,6 +8,8 @@
                  poo-flow-test-case)
         (only-in :gerbil-ascent/t/qualification/ascent-lattice-program-fixture
                  ascent-lattice-fixture-evaluate)
+        (only-in :gerbil-ascent/t/qualification/ascent-lattice-negation-fixture
+                 ascent-lattice-negation-program)
         (only-in :gerbil-ascent/program/interface
                  ascent
                  gerbil-ascent-lattice gerbil-ascent-relation
@@ -156,4 +158,27 @@
             (check-equal? ((.ref third 'rows-of) 'copy) '((0 4)))
             (check-equal? ((.ref first 'rows-of) 'score) '((0 1)))
             (check-equal? ((.ref second 'rows-of) 'score)
-                          '((0 2)))))))))
+                          '((0 2)))))))
+    (poo-flow-test-case
+      "lattice refinement updates a later negative stratum"
+      (let* ((edges '((0 1 4) (2 1 1)))
+             (session
+              (gerbil-ascent-open-session
+               (ascent-lattice-negation-program edges)))
+             (first (gerbil-ascent-session-run session))
+             (first-rows (.ref first 'rows-of)))
+        (check-equal? (not (not (member '(1) (first-rows 'not-cheap)))) #t)
+        (gerbil-ascent-session-append-source! session 'edge '(0 2 1))
+        (let* ((second (gerbil-ascent-session-run session))
+               (second-rows (.ref second 'rows-of)))
+          (check-equal? (not (not (member '(1 2) (second-rows 'score)))) #t)
+          (check-equal? (not (not (member '(1) (second-rows 'cheap)))) #t)
+          (check-equal? (second-rows 'not-cheap) '((3)))
+          (gerbil-ascent-session-replace-source! session 'edge edges)
+          (let ((third-rows
+                 (.ref (gerbil-ascent-session-run session) 'rows-of)))
+            (for-each
+             (lambda (name)
+               (check-equal? (third-rows name) (first-rows name)))
+             '(score cheap not-cheap))
+            (check-equal? (second-rows 'not-cheap) '((3)))))))))

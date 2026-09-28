@@ -8,6 +8,7 @@ mod byods;
 mod common;
 mod composed_corpus;
 mod lattice_index;
+mod lattice_negation;
 mod lattice_session;
 mod module_session;
 mod positive_closure;

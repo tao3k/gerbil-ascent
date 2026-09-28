@@ -111,6 +111,9 @@ mutual-corpus-rows:
 lattice-session-corpus-rows:
     @timeout 120s gerbil {{ gerbil_test_runtime_options }} t/qualification/ascent-lattice-session-output.ss
 
+lattice-negation-rows:
+    @timeout 120s gerbil {{ gerbil_test_runtime_options }} t/qualification/ascent-lattice-negation-output.ss
+
 product-session-rows:
     @timeout 120s gerbil {{ gerbil_test_runtime_options }} t/qualification/ascent-product-session-output.ss
 

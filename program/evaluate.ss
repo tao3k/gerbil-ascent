@@ -894,14 +894,24 @@
                                    (for-each
                                     (lambda (head) (emit! head environment))
                                     heads))))
-                   (for-each
-                    (lambda (delta-at)
-                      (visit-body body delta-at 0 []
-                                  (lambda (environment)
-                                    (for-each
-                                     (lambda (head) (emit! head environment))
-                                     heads))))
-                    positions))
+                   (if (and (= round 1)
+                            (or first-run? (> stratum 0)))
+                     ;; At the first round every relation in this stratum has
+                     ;; delta = all. One full evaluation covers every delta
+                     ;; position without emitting the same join repeatedly.
+                     (visit-body body -1 0 []
+                                 (lambda (environment)
+                                   (for-each
+                                    (lambda (head) (emit! head environment))
+                                    heads)))
+                     (for-each
+                      (lambda (delta-at)
+                        (visit-body body delta-at 0 []
+                                    (lambda (environment)
+                                      (for-each
+                                       (lambda (head) (emit! head environment))
+                                       heads))))
+                      positions)))
                  (when started
                    (let (index (vector-ref rule 3))
                      (vector-set! rule-ticks index

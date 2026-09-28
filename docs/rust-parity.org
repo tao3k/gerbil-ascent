@@ -186,6 +186,10 @@ execution state. Validated relation schema and immutable lowered rules and
 strata are cached by the identity of the declared POO program with weak keys;
 cache access is serialized, while every evaluation checks its current source
 rows and builds separate fact buffers, indexes, BYODS state and budgets.
+When the first round of a stratum starts with =delta= equal to =all=, one full rule
+evaluation covers every atom position. Later rounds still use each selected
+delta position. This removes duplicate first-round joins without changing
+the semi-naive fixed point; the full Rust/Scheme corpus exercises this path.
 POO refinement creates a new program identity and
 therefore receives its own analysis. A retained session's source-only
 replacement preserves declarations and rules, so its fresh fixed-point

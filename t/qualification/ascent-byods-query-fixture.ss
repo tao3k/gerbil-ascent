@@ -2,7 +2,8 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(import (only-in :gerbil-ascent/table/interface
+(import (only-in :clan/poo/object .o)
+        (only-in :gerbil-ascent/table/interface
                  gerbil-ascent-hash-index-provider
                  gerbil-ascent-eqrel-storage-provider
                  gerbil-ascent-trrel-storage-provider
@@ -60,15 +61,23 @@
    (gerbil-ascent-relation 'tr-match 3 [])
    (gerbil-ascent-relation 'uf-match 3 [])))
 
-(def (ascent-byods-query-program seed wanted (seed-extra []))
+(def +byods-query-template+
   (gerbil-ascent-program
-    (append
-     (list (gerbil-ascent-relation 'seed 3 seed)
-           (gerbil-ascent-relation 'seed-extra 3 seed-extra)
-           (gerbil-ascent-relation 'wanted 2 wanted))
-     +byods-query-result-relations+)
-    +byods-query-rules+
-    64 256 320))
+   (append (list (gerbil-ascent-relation 'seed 3 [])
+                 (gerbil-ascent-relation 'seed-extra 3 [])
+                 (gerbil-ascent-relation 'wanted 2 []))
+           +byods-query-result-relations+)
+   +byods-query-rules+ 64 256 320))
+
+(def (ascent-byods-query-program seed wanted (seed-extra []))
+  ;; Validated source declarations replace only the template's source slots;
+  ;; every execution still creates fresh Provider storage and row indexes.
+  (.o (:: @ +byods-query-template+)
+      relations:
+      (append (list (gerbil-ascent-relation 'seed 3 seed)
+                    (gerbil-ascent-relation 'seed-extra 3 seed-extra)
+                    (gerbil-ascent-relation 'wanted 2 wanted))
+              +byods-query-result-relations+)))
 
 (def (ascent-byods-query-evaluate seed wanted (seed-extra []))
   (gerbil-ascent-evaluate-program

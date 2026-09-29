@@ -4,27 +4,10 @@
 
 ;;; Static rule dependency SCCs. This is declaration metadata, independent of
 ;;; source rows and of the evaluator's (possibly coarser) strata.
-(import (only-in :clan/poo/object .o .ref))
+(import (only-in :clan/poo/object .o .ref)
+        (only-in :std/list/list append-map delete-duplicates/hash))
 
 (export gerbil-ascent-program-summary)
-
-;; cons-unique
-;;   : (forall (a) (-> a (List a) (List a)))
-;;   : (-> RelationName RelationNames RelationNames)
-;;   | doc m%
-;;       Add a relation name once to the declaration-only SCC accumulator.
-;;
-;;       # Examples
-;;
-;;       ```scheme
-;;       (cons-unique 'edge '(edge))
-;;       ;; => (edge)
-;;       ```
-;;     %
-;; The declaration path is cold; preserve first-use order without sorting
-;; names in the evaluator's hot row loop.
-(def (cons-unique name names)
-  (if (memq name names) names (cons name names)))
 
 ;; gerbil-ascent-program-summary
 ;;   : (forall (row) (-> (Program row) (ProgramSummary row)))
@@ -55,8 +38,8 @@
        (for-each
         (lambda (head)
           (let (name (.ref head 'relation))
-            (hash-put! producers name
-                       (cons index (or (hash-get producers name) [])))))
+            (hash-update! producers name
+                          (lambda (prior) (cons index prior)) [])))
         (.ref rule 'heads)))
      rules (iota count))
     (for-each
@@ -67,13 +50,17 @@
                       '(atom negation aggregate))
             (for-each
              (lambda (producer)
-               (unless (memv consumer (vector-ref successors producer))
-                 (vector-set! successors producer
-                              (cons consumer
-                                    (vector-ref successors producer)))))
+               (vector-set! successors producer
+                            (cons consumer
+                                  (vector-ref successors producer))))
              (or (hash-get producers (.ref clause 'relation)) []))))
         (.ref rule 'body)))
      rules (iota count))
+    (set! successors
+      (vector-map (lambda (neighbors)
+                    (delete-duplicates/hash neighbors))
+                  successors))
+    ;; std/struct/dag rejects cyclic graphs, so it cannot find these SCCs.
     ;; Tarjan visits each rule and dependency once. The reversed list of
     ;; completed components is in producer-before-consumer order.
     (let ((next-index 0)
@@ -119,23 +106,18 @@
        (sccs
         (map
          (lambda (members)
-           (let* ((ordered members)
+           (let* ((ordered (list-sort < members))
                   (names
-                   (reverse
-                    (let collect-rules ((remaining ordered) (found []))
-                      (if (null? remaining)
-                        found
-                        (collect-rules
-                         (cdr remaining)
-                         (let collect-heads
-                             ((heads (.ref (vector-ref rule-vector
-                                                        (car remaining)) 'heads))
-                              (acc found))
-                           (if (null? heads) acc
-                               (collect-heads
-                                (cdr heads)
-                                (cons-unique (.ref (car heads) 'relation)
-                                             acc)))))))))
+                   (list-sort
+                    (lambda (left right)
+                      (string<? (symbol->string left)
+                                (symbol->string right)))
+                    (delete-duplicates/hash
+                     (append-map
+                      (lambda (index)
+                        (map (lambda (head) (.ref head 'relation))
+                             (.ref (vector-ref rule-vector index) 'heads)))
+                      ordered))))
                   (looping?
                    (or (> (length ordered) 1)
                        (memv (car ordered)

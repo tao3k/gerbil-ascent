@@ -189,6 +189,9 @@ scc-order-rows:
 arity-repetition-rows:
     @timeout 90s gerbil {{ gerbil_test_runtime_options }} t/qualification/ascent-arity-repetition-output.ss
 
+clause-composition-rows:
+    @timeout 90s gerbil {{ gerbil_test_runtime_options }} t/qualification/ascent-clause-composition-output.ss
+
 multi-source-session-rows:
     @timeout 90s gerbil {{ gerbil_test_runtime_options }} t/qualification/ascent-multi-source-session-output.ss
 

@@ -7,6 +7,7 @@ mod aggregation;
 mod arity_repetition;
 mod byods;
 mod byods_session;
+mod clause_composition;
 mod common;
 mod composed_corpus;
 mod grouped_eqrel_session;

@@ -25,7 +25,32 @@ fn four_node_edges() -> [(u32, u32); 8] {
     ]
 }
 
-fn four_node_reference(edges: &[(u32, u32)], symmetric: bool, strict_trrel: bool) -> Vec<String> {
+fn eight_node_edges() -> [(u32, u32); 12] {
+    [
+        (0, 1),
+        (1, 2),
+        (2, 3),
+        (3, 4),
+        (4, 5),
+        (5, 6),
+        (6, 7),
+        (7, 0),
+        (0, 4),
+        (2, 6),
+        (4, 0),
+        (6, 2),
+    ]
+}
+
+fn eight_node_subset(mask: u16) -> BinaryRows {
+    eight_node_edges()
+        .into_iter()
+        .enumerate()
+        .filter_map(|(bit, edge)| (mask & (1 << bit) != 0).then_some(edge))
+        .collect()
+}
+
+fn closure_reference(edges: &[(u32, u32)], symmetric: bool, strict_trrel: bool) -> Vec<String> {
     let nodes: BTreeSet<_> = edges.iter().flat_map(|&(from, to)| [from, to]).collect();
     let mut expected = Vec::new();
     for &from in &nodes {
@@ -64,19 +89,67 @@ fn four_node_byods_subsets_match_independent_closure() {
             .collect();
         assert_eq!(
             ascent_eqrel_rows(&edges, &[]),
-            four_node_reference(&edges, true, false),
+            closure_reference(&edges, true, false),
             "eqrel mask={mask}"
         );
         assert_eq!(
             ascent_trrel_rows(&edges, &[]),
-            four_node_reference(&edges, false, true),
+            closure_reference(&edges, false, true),
             "trrel mask={mask}"
         );
         assert_eq!(
             ascent_trrel_uf_rows(&edges, &[]),
-            four_node_reference(&edges, false, false),
+            closure_reference(&edges, false, false),
             "trrel_uf mask={mask}"
         );
+    }
+}
+
+#[test]
+fn eight_node_byods_subsets_match_model_and_selected_scheme_snapshots() {
+    let masks = (0..256u32)
+        .map(|sample| ((sample * 263) & 0x0fff) as u16)
+        .chain([0x0001, 0x0555, 0x0f0f, 0x0fff]);
+    for mask in masks {
+        let edges = eight_node_subset(mask);
+        let expected_eq = closure_reference(&edges, true, false);
+        let expected_tr = closure_reference(&edges, false, true);
+        let expected_uf = closure_reference(&edges, false, false);
+        assert_eq!(
+            ascent_eqrel_rows(&edges, &[]),
+            expected_eq,
+            "eqrel mask={mask}"
+        );
+        assert_eq!(
+            ascent_trrel_rows(&edges, &[]),
+            expected_tr,
+            "trrel mask={mask}"
+        );
+        assert_eq!(
+            ascent_trrel_uf_rows(&edges, &[]),
+            expected_uf,
+            "trrel_uf mask={mask}"
+        );
+
+        if [0, 1, 0x0555, 0x0f0f, 0x0fff].contains(&mask) {
+            let rows = edges
+                .iter()
+                .map(|(from, to)| format!("({from} {to})"))
+                .collect::<Vec<_>>()
+                .join(" ");
+            let request = format!("(({rows}) ())\n");
+            for (recipe, expected) in [
+                ("eqrel-rows", &expected_eq),
+                ("trrel-rows", &expected_tr),
+                ("trrel-uf-rows", &expected_uf),
+            ] {
+                let output = scheme_output(recipe, &request);
+                let mut actual = output.lines().map(str::to_owned).collect::<Vec<_>>();
+                assert_eq!(actual.pop().as_deref(), Some("END"));
+                actual.sort_unstable();
+                assert_eq!(&actual, expected, "{recipe} mask={mask}");
+            }
+        }
     }
 }
 
@@ -355,6 +428,24 @@ fn grouped_byods_join_with_string_keys_matches_ascent() {
         tr_match(g, x, y) <-- tr(g, x, y), wanted(g, y);
         uf_match(g, x, y) <-- uf(g, x, y), wanted(g, y);
     }
+    let eight_node_cases = [0u16, 1, 0x0555, 0x0fff].map(|mask| {
+        let first = eight_node_subset(mask);
+        let second = eight_node_edges()
+            .into_iter()
+            .filter(|edge| !first.contains(edge))
+            .collect::<Vec<_>>();
+        let grouped = |edges: Vec<(u32, u32)>| {
+            edges
+                .into_iter()
+                .map(|(from, to)| ("alpha".to_owned(), from, to))
+                .collect::<Vec<_>>()
+        };
+        (
+            grouped(first),
+            grouped(second),
+            vec![("alpha".to_owned(), 0)],
+        )
+    });
     for (seed, seed_extra, wanted) in [
         (vec![], vec![], vec![]),
         (
@@ -376,7 +467,10 @@ fn grouped_byods_join_with_string_keys_matches_ascent() {
             vec![("alpha".to_owned(), 2, 3), ("beta".to_owned(), 2, 1)],
             vec![("alpha".to_owned(), 3), ("beta".to_owned(), 1)],
         ),
-    ] {
+    ]
+    .into_iter()
+    .chain(eight_node_cases)
+    {
         let mut program = AscentProgram {
             seed: seed.clone(),
             seed_extra: seed_extra.clone(),

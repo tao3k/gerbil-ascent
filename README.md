@@ -61,6 +61,10 @@ then carries a `rule-time-nanoseconds` list in declaration order. The default
 result has `#f` in that slot and does not read a clock for each rule. This is
 the Scheme counterpart of Rust Ascent's `#![measure_rule_times]`; timing
 values are platform measurements and are not compared for exact equality.
+Each result also exposes a lazy POO `relation-sizes` slot. It counts that
+result's immutable relation snapshots when called; the selected empty,
+single and duplicate-source sizes match Rust Ascent's generated
+`relation_sizes_summary()` API.
 
 `t/` contains Scheme qualification; `rust/ascent-oracle/` contains the
 test-only Rust Ascent differential oracle. The [parity matrix](docs/rust-parity.org)

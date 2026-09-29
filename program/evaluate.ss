@@ -919,6 +919,11 @@
                               (quotient (* ticks 1000000000)
                                         (jiffies-per-second)))
                             (vector->list rule-ticks))))
+                 (relation-sizes
+                  (lambda ()
+                    (map (lambda (name rows)
+                           (cons name (length rows)))
+                         (vector->list names) (vector->list snapshots))))
                  (rows-of (lambda (name)
                             (vector-ref snapshots (position-of name))))))))
          last-result))

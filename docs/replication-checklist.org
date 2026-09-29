@@ -29,7 +29,7 @@ The current executable map is:
 
 | Rust form | Scheme boundary | Evidence and remaining gap |
 |-----------+-----------------+----------------------------|
-| =ascent!= | =ascent= declaration plus =gerbil-ascent-open-session= | Selected declarations, runs and retained updates pass; generated public API remains open |
+| =ascent!= | =ascent= declaration plus =gerbil-ascent-open-session= | Selected declarations, runs and retained updates pass; result =relation-sizes= matches the generated Rust summary on selected inputs; SCC diagnostics remain open |
 | =ascent_run!= | lexical =ascent= plus =gerbil-ascent-evaluate-program= | =module_session.rs= compares local input and closure; broader local capture diagnostics open |
 | =ascent_source!= / =include_source!= | Gerbil module =ascent-fragment= / =(include name)= | =syntax.rs= compares recursive closure; Rust token-copy resolution and wider invalid cases open |
 | =ascent_par!= / =ascent_run_par!= | Same program/result boundary | =module_session.rs= compares selected output sets; Scheme intra-program parallel scheduling and failure semantics open |

@@ -22,6 +22,11 @@ fn measured_rule_program_keeps_rust_scheme_rows_and_exposes_timing() {
         program.run();
         let _rust_rule_time = program.rule0_0_duration;
         let _rust_summary = program.scc_times_summary();
+        let mut rust_sizes = program
+            .relation_sizes_summary()
+            .lines()
+            .map(str::to_owned)
+            .collect::<Vec<_>>();
 
         let request = format!(
             "({})\n",
@@ -34,6 +39,19 @@ fn measured_rule_program_keeps_rust_scheme_rows_and_exposes_timing() {
         let mut actual = output.lines().map(str::to_owned).collect::<Vec<_>>();
         assert_eq!(actual.pop().as_deref(), Some("END"));
         assert_eq!(actual.pop().as_deref(), Some("TIMING\t1"));
+        let mut scheme_sizes = Vec::new();
+        actual.retain(|line| {
+            if let Some(size) = line.strip_prefix("SIZE\t") {
+                let (name, count) = size.split_once('\t').expect("relation size row");
+                scheme_sizes.push(format!("{name} size: {count}"));
+                false
+            } else {
+                true
+            }
+        });
+        scheme_sizes.sort_unstable();
+        rust_sizes.sort_unstable();
+        assert_eq!(scheme_sizes, rust_sizes);
         actual.sort_unstable();
         let mut expected = program
             .copied

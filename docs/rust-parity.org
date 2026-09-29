@@ -29,7 +29,7 @@ interaction lacks executable evidence.
 
 | Gate | Required evidence | Current open work |
 |------+-------------------+-------------------|
-| Source and API | Scheme macro/module forms cover each pinned Rust syntax family; POO contracts reject malformed declarations before evaluation; exported session/program API is documented | generated API equivalents, wider invalid-program diagnostics, remaining attribute semantics |
+| Source and API | Scheme macro/module forms cover each pinned Rust syntax family; POO contracts reject malformed declarations before evaluation; exported session/program API is documented | remaining generated SCC diagnostic API, wider invalid-program diagnostics, remaining attribute semantics |
 | Fixed point | Same-input Rust/Scheme differential covers recursive SCCs, strata, negation, aggregation, lattice joins, and their combinations; independent finite-model checks cover bounded graphs and adjudicate pinned Rust lattice-source divergences | product/other partial-order lattices, wider invalid dependency shapes, larger-scale behavior |
 | State and storage | All pinned BYODS Provider families and repeated-run modes have differential and failure-atomic receipts; independent and intra-program concurrency are bounded | wider producer partitions, mixed direct-source/derived lattice performance, source replacement and timeout scale, intra-program parallel execution |
 | Admission | The ASCENT head passes its full Scheme/Rust policy and 1000-sample SS gates; the exact pinned POO Flow head passes consumer integration on Linux | rerun after every new pin; no earlier green run substitutes for final-head evidence |
@@ -259,7 +259,12 @@ The pinned Rust =#![measure_rule_times]= attribute and Scheme's
 single and duplicate sources. Scheme returns per-rule nanoseconds in
 declaration order; Rust exposes durations by SCC/rule fields. A retained
 Scheme Session keeps timing enabled across positive appends and whole-source
-replacement. Exact clock values are not compared. Rust's
+replacement. Exact clock values are not compared. Result POO
+=relation-sizes= counts the immutable rows of each relation on demand; its
+empty, single and duplicate-source counts match Rust's generated
+=relation_sizes_summary()=, and earlier Session snapshots retain their own
+sizes after updates. Rust's generated SCC iteration and duration fields
+remain a separate diagnostics gap. Rust's
 =generate_run_timeout= has a selected recursive-chain partial and final
 receipt. A second zero-budget call exposes a Rust 0.8.0 restart behavior;
 Scheme advances its retained round cursor to preserve fixed-point progress.

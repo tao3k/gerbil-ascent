@@ -18,8 +18,12 @@
        '(negative-self mutual-negation negative-feedback
                        aggregate-self negative-with-unrelated-aggregate
                        unsafe-negation unbound-head unknown-relation
-                       atom-arity duplicate-relation unbound-guard)
+                       atom-arity duplicate-relation unbound-guard
+                       head-arity unbound-let-input unbound-for-input
+                       unknown-aggregate-relation negation-before-binding)
        '(negation-cycle negation-cycle negation-cycle
                         aggregate-cycle negation-cycle
                         unsafe-negation unbound-head unknown-relation
-                        atom-arity duplicate-relation unbound-guard)))))
+                        atom-arity duplicate-relation unbound-guard
+                        atom-arity unbound-clause unbound-clause
+                        unknown-relation unsafe-negation)))))

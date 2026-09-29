@@ -20,7 +20,7 @@ ascent! {
 }
 "#;
 
-const INVALID: [(&str, &str, &str, &str); 11] = [
+const INVALID: [(&str, &str, &str, &str); 16] = [
     (
         "negative-self",
         "negation-cycle",
@@ -165,6 +165,71 @@ ascent! {
     relation node(u32);
     relation out(u32);
     out(x) <-- node(x), if y > 0;
+}
+"#,
+    ),
+    (
+        "head-arity",
+        "atom-arity",
+        "wrong arity for relation `out` (expected 1, found 2)",
+        r#"
+use ascent::ascent;
+ascent! {
+    relation node(u32);
+    relation out(u32);
+    out(x, x) <-- node(x);
+}
+"#,
+    ),
+    (
+        "unbound-let-input",
+        "unbound-clause",
+        "cannot find value `missing` in this scope",
+        r#"
+use ascent::ascent;
+ascent! {
+    relation node(u32);
+    relation out(u32);
+    out(y) <-- node(x), let y = missing;
+}
+"#,
+    ),
+    (
+        "unbound-for-input",
+        "unbound-clause",
+        "cannot find value `missing` in this scope",
+        r#"
+use ascent::ascent;
+ascent! {
+    relation node(u32);
+    relation out(u32);
+    out(y) <-- node(x), for y in missing;
+}
+"#,
+    ),
+    (
+        "unknown-aggregate-relation",
+        "unknown-relation",
+        "relation `missing` is not defined",
+        r#"
+use ascent::ascent;
+ascent! {
+    relation out(usize);
+    out(n) <-- agg n = count() in missing(_);
+}
+"#,
+    ),
+    (
+        "negation-before-binding",
+        "unsafe-negation",
+        "cannot find value `x` in this scope",
+        r#"
+use ascent::ascent;
+ascent! {
+    relation node(u32);
+    relation block(u32);
+    relation out(u32);
+    out(x) <-- !block(x), node(x);
 }
 "#,
     ),

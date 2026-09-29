@@ -84,6 +84,37 @@
       (relation out (value))
       ((out x) <-- (node x) (if (y) (> y 0)))
       (bounds 8 8 16)))
+    ((head-arity)
+     (ascent
+      (relation node (value) '((1)))
+      (relation out (value))
+      ((out x x) <-- (node x))
+      (bounds 8 8 16)))
+    ((unbound-let-input)
+     (ascent
+      (relation node (value) '((1)))
+      (relation out (value))
+      ((out y) <-- (node x) (let y (missing) missing))
+      (bounds 8 8 16)))
+    ((unbound-for-input)
+     (ascent
+      (relation node (value) '((1)))
+      (relation out (value))
+      ((out y) <-- (node x) (for y (missing) (list missing)))
+      (bounds 8 8 16)))
+    ((unknown-aggregate-relation)
+     (ascent
+      (relation out (value))
+      ((out n) <--
+       (aggregate n gerbil-ascent-count () (missing _)))
+      (bounds 8 8 16)))
+    ((negation-before-binding)
+     (ascent
+      (relation node (value) '((1)))
+      (relation block (value))
+      (relation out (value))
+      ((out x) <-- (not (block x)) (node x))
+      (bounds 8 8 16)))
     (else (error "unknown ASCENT invalid-program case" name))))
 
 (def (problem name)
@@ -125,7 +156,7 @@
       'duplicate-relation)
      ((and (string? message)
            (string-contains message "unbound ASCENT clause variable"))
-      'unbound-guard)
+      (if (eq? name 'unbound-guard) 'unbound-guard 'unbound-clause))
      (else (error "unexpected ASCENT invalid-program diagnostic"
                   name message)))))
 

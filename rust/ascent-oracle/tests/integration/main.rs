@@ -10,6 +10,7 @@ mod byods_session;
 mod clause_composition;
 mod common;
 mod composed_corpus;
+mod divisibility_lattice;
 mod grouped_eqrel_session;
 mod invalid_program;
 mod lattice_index;

@@ -7,6 +7,46 @@ use super::common::scheme_output;
 use ascent::ascent;
 
 #[test]
+fn generated_static_scc_summary_matches_scheme_rule_dependencies() {
+    ascent! {
+        relation seed(u32);
+        relation copied(u32);
+        relation left(u32);
+        relation right(u32);
+        relation final_rel(u32);
+        copied(x) <-- seed(x);
+        left(x) <-- right(x);
+        right(x) <-- left(x);
+        final_rel(x) <-- left(x);
+    }
+    let mut rust_signatures = Vec::new();
+    let mut looping = false;
+    for line in AscentProgram::summary().lines() {
+        if line.starts_with("scc ") {
+            looping = line.contains("is_looping: true");
+        } else if let Some(names) = line.trim().strip_prefix("dynamic relations: ") {
+            let mut names = names.split(", ").map(str::to_owned).collect::<Vec<_>>();
+            names.sort_unstable();
+            rust_signatures.push(format!("{looping}:{}", names.join(",")));
+        }
+    }
+    let mut scheme_signatures = scheme_output("scc-summary", "")
+        .lines()
+        .map(|line| {
+            let mut fields = line.split('\t');
+            assert_eq!(fields.next(), Some("SCC"));
+            let looping = fields.next().expect("SCC loop marker");
+            let mut names = fields.map(str::to_owned).collect::<Vec<_>>();
+            names.sort_unstable();
+            format!("{looping}:{}", names.join(","))
+        })
+        .collect::<Vec<_>>();
+    rust_signatures.sort_unstable();
+    scheme_signatures.sort_unstable();
+    assert_eq!(rust_signatures, scheme_signatures);
+}
+
+#[test]
 fn measured_rule_program_keeps_rust_scheme_rows_and_exposes_timing() {
     for seed in [vec![], vec![1], vec![1, 2, 2]] {
         ascent! {

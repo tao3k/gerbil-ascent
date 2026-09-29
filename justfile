@@ -108,6 +108,9 @@ derived-aggregate-rows:
 syntax-rows:
     @timeout 60s gerbil {{ gerbil_test_runtime_options }} t/qualification/ascent-syntax-program-output.ss
 
+scc-summary:
+    @timeout 60s gerbil {{ gerbil_test_runtime_options }} t/qualification/ascent-scc-summary-test.ss
+
 var-points-to-rows:
     @timeout 60s gerbil {{ gerbil_test_runtime_options }} t/qualification/ascent-var-points-to-output.ss
 

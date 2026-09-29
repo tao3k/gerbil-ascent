@@ -208,7 +208,7 @@ law evidence; the syntax alone cannot establish it.
 | =include_source!= | Imported =ascent-fragment= plus =(include name)= | Recursive closure Rust differential; Scheme preserves module lexical scope rather than Rust token-copy scope |
 | Struct signature, generics, visibility | Gerbil module export and POO type contract | Generated API/type parity open |
 | Generated =relation_sizes_summary()= | Result POO =relation-sizes= slot, called on demand | Complete public relation sizes match pinned Rust for empty, single and duplicate sources; retained result snapshots keep their earlier sizes |
-| Generated =summary()= | Program declaration and rule metadata | Rust returns a static rule-program summary; Scheme has no equivalent public summary slot or same-input receipt yet |
+| Generated =summary()= | =gerbil-ascent-program-summary= returns static rule SCC descriptors | A same-declaration Rust/Scheme probe checks recursive flags and dynamic relation sets; Rust's lowered rule text and exact SCC order remain open |
 | Generated =scc_times_summary()= | Result timing metadata | Rust reports SCC iterations and durations; Scheme currently exposes optional per-rule nanoseconds but no SCC timing or iteration summary. No parity claim |
 | Deprecated generated =update_indices()= | Provider index maintenance inside evaluation | Rust marks explicit calls deprecated; Scheme indexes are maintained through Provider admission, so exposing a second public update step would change the contract |
 | =#![measure_rule_times]= | =measure-rule-times?: #t= on the Scheme evaluator or Session constructor | Per-rule nanoseconds in declaration order; Rust/Scheme rows match for selected inputs, exact durations are not semantic parity |

@@ -264,7 +264,12 @@ replacement. Exact clock values are not compared. Result POO
 empty, single and duplicate-source counts match Rust's generated
 =relation_sizes_summary()=, and earlier Session snapshots retain their own
 sizes after updates. Rust's generated SCC iteration and duration fields
-remain a separate diagnostics gap. Rust's
+remain a separate diagnostics gap. The Scheme
+=gerbil-ascent-program-summary= analyzes the declaration's rule dependency
+SCCs; =syntax.rs= compares its recursive flags and dynamic relation sets
+with Rust's static =summary()= on one recursive-pair program. Rust's lowered
+rule text, SCC ordering and runtime SCC timing are not covered by that probe.
+Rust's
 =generate_run_timeout= has a selected recursive-chain partial and final
 receipt. A second zero-budget call exposes a Rust 0.8.0 restart behavior;
 Scheme advances its retained round cursor to preserve fixed-point progress.

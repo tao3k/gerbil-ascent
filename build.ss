@@ -21,6 +21,7 @@
     "program/syntax"
     "program/funs"
     "program/analysis"
+    "program/summary"
     "program/evaluate"
     "program/session"
     "program/interface"

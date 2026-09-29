@@ -424,6 +424,16 @@ compares complete Rust and Scheme output sets under two rule declaration and
 body-clause orders, and checks that the two Rust orders have the same fixed
 point. This bounded corpus tests order independence for that SCC topology; it
 does not establish order independence for arbitrary rule programs.
+
+The =multi_source_session.rs= differential retains one Scheme session through
+nine updates to =edge= and =blocked=. Source replacement withdraws prior
+reachability and blocked facts; negation and a downstream count aggregate
+then recompute. A malformed replacement must fail without changing the
+committed snapshot, duplicate input must preserve set semantics, and every
+earlier result must stay stable. Each phase is checked against a fresh Rust
+0.8.0 program and an independent finite reachability/blocked-set/count model.
+The Rust comparison intentionally uses fresh programs because pinned Rust
+repeated-run behavior for nonmonotone changes is documented separately.
 Positive retained source appends now keep a persistent reverse addition log
 outside the evaluator and update accepted/delta row counts from each new
 batch. Neither operation scans all earlier rows on each append. A selected

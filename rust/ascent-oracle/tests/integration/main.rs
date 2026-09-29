@@ -12,6 +12,7 @@ mod lattice_index;
 mod lattice_negation;
 mod lattice_session;
 mod module_session;
+mod multi_source_session;
 mod positive_closure;
 mod product_session;
 mod scc_order;

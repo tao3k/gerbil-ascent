@@ -4,6 +4,7 @@
 //! Rust Ascent to Scheme differential suite.
 
 mod aggregation;
+mod arity_repetition;
 mod byods;
 mod byods_session;
 mod common;

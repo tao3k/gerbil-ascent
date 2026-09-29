@@ -454,6 +454,12 @@ matches an independent per-group undirected-component model and a fresh Rust
 single-producer program over the same accepted source union. Rust's known
 grouped split-producer merge gap remains covered by its separate minimized
 counterexample; this retained receipt does not claim two-producer Rust parity.
+The Scheme =ascent-byods-index-test.ss= crosses grouped =eqrel= storage with
+the downstream alist index Provider: a bound =(group, node)= lookup confirms
+the composite index is built, matches the default hash output, and preserves
+the expected rows after source append and replacement while prior snapshots
+remain stable. This is a selected physical-plan invariant; the custom alist
+index itself is not a pinned Rust BYODS data structure.
 Positive retained source appends now keep a persistent reverse addition log
 outside the evaluator and update accepted/delta row counts from each new
 batch. Neither operation scans all earlier rows on each append. A selected

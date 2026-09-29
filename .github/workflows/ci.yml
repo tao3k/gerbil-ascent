@@ -42,4 +42,4 @@ jobs:
       - name: Compare with Rust Ascent
         run: just oracle
       - name: Qualify ASCENT SS scenarios
-        run: gerbil env just performance
+        run: just performance

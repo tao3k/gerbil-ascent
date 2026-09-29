@@ -6,7 +6,7 @@
 ;;; session; public declarations and returned snapshots are POO values.
 (import (only-in :clan/poo/object .o .ref object?)
         (only-in :clan/poo/mop validate)
-        :std/iter
+        (only-in :std/iter for iter Iterator &Iterator-next!)
         (only-in "objects.ss" gerbil-ascent-clause-plan)
         (only-in "types.ss" GerbilAscentSessionContract)
         (only-in "analysis.ss" gerbil-ascent-program-analysis

@@ -417,6 +417,13 @@ These checks cover one wider positive update shape. Source replacement and
 nonpositive updates have separate fresh fixed-point receipts above. The Rust oracle package runs the ASP Rust
 package policy as a dedicated test. Its differential cases live in
 responsibility-specific integration modules mounted by a thin Cargo target.
+
+The =scc_order.rs= differential adds a three-relation recursive SCC with a
+multi-head rule. For all 64 loop-free directed graphs on three nodes it
+compares complete Rust and Scheme output sets under two rule declaration and
+body-clause orders, and checks that the two Rust orders have the same fixed
+point. This bounded corpus tests order independence for that SCC topology; it
+does not establish order independence for arbitrary rule programs.
 Positive retained source appends now keep a persistent reverse addition log
 outside the evaluator and update accepted/delta row counts from each new
 batch. Neither operation scans all earlier rows on each append. A selected

@@ -180,6 +180,9 @@ module-rows:
 mutual-rows:
     @timeout 60s gerbil {{ gerbil_test_runtime_options }} t/qualification/ascent-mutual-program-output.ss
 
+scc-order-rows:
+    @timeout 90s gerbil {{ gerbil_test_runtime_options }} t/qualification/ascent-scc-order-output.ss
+
 oracle:
     #!/usr/bin/env bash
     set -euo pipefail

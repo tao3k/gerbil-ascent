@@ -43,7 +43,7 @@ The current executable map is:
 * P1: Fixed-point semantics
 
 - [X] Establish a composed differential baseline: 778 fresh Rust/Scheme programs with multi-head recursion, negation, aggregation, disjunction and product lattice, plus three-phase Scheme retained sessions. Evidence: =composed_corpus.rs=.
-- [ ] Cover arbitrary relation arity, repeated variables, rule/head order, recursive SCC topology, and body-clause order with same-input differential and invalid cases. Extend beyond the selected positive and mutual-recursion fixtures.
+- [ ] Cover arbitrary relation arity, repeated variables, rule/head order, recursive SCC topology, and body-clause order with same-input differential and invalid cases. The three-relation SCC corpus now compares complete Rust/Scheme outputs under two rule and body-clause orders for all 64 loop-free three-node graphs; additional arities, SCC shapes, head orders and invalid cases remain.
 - [ ] Close guards, bindings, iterable generators, negation and aggregation across empty, duplicate, recursive, grouped and invalid inputs. Compare complete output sets and failures, including custom aggregators and derived aggregates.
 - [ ] Close lattice laws and interactions: minimum, set union, product and another nontrivial partial order; source plus derived values; recursive joins; negation and aggregation downstream; cycles that require strict strata. Check an independent finite fixed-point model where Rust 0.8.0 differs.
 - [ ] Close finite-model checks for termination, stratification and rule ordering on bounded graph families; document the boundary of each enumeration. Evidence belongs in =rust/ascent-oracle/tests/integration/= and =t/qualification/=.

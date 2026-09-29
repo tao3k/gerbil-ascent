@@ -14,6 +14,7 @@ mod lattice_session;
 mod module_session;
 mod positive_closure;
 mod product_session;
+mod scc_order;
 mod session_corpus;
 mod syntax;
 mod timeout;

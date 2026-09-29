@@ -434,6 +434,15 @@ earlier result must stay stable. Each phase is checked against a fresh Rust
 0.8.0 program and an independent finite reachability/blocked-set/count model.
 The Rust comparison intentionally uses fresh programs because pinned Rust
 repeated-run behavior for nonmonotone changes is documented separately.
+The =byods_session.rs= differential retains one Scheme session with two
+ordinary source relations feeding both =trrel= and =trrel_uf= Providers.
+Nine appends, replacements, withdrawals, a duplicate and a malformed
+replacement compare both public closure relations at every phase with fresh
+Rust 0.8.0 programs and an independent directed-closure model. The Scheme
+fixture uses =ascent-session-qualification=, a hygienic test macro shared
+with the ordinary multi-source session fixture: each caller supplies its
+Session constructor and projected relation names, while the macro binds the
+shared input, snapshot and output runner.
 Positive retained source appends now keep a persistent reverse addition log
 outside the evaluator and update accepted/delta row counts from each new
 batch. Neither operation scans all earlier rows on each append. A selected

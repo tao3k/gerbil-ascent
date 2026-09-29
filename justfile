@@ -186,6 +186,9 @@ scc-order-rows:
 multi-source-session-rows:
     @timeout 90s gerbil {{ gerbil_test_runtime_options }} t/qualification/ascent-multi-source-session-output.ss
 
+byods-session-rows:
+    @timeout 90s gerbil {{ gerbil_test_runtime_options }} t/qualification/ascent-byods-session-output.ss
+
 oracle:
     #!/usr/bin/env bash
     set -euo pipefail

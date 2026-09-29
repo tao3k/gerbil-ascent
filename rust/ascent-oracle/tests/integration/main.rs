@@ -5,6 +5,7 @@
 
 mod aggregation;
 mod byods;
+mod byods_session;
 mod common;
 mod composed_corpus;
 mod invalid_program;

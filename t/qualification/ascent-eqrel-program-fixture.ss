@@ -5,14 +5,17 @@
 (import (only-in :clan/poo/object .ref)
         (only-in :gerbil-ascent/table/interface
                  gerbil-ascent-hash-index-provider
-                 gerbil-ascent-eqrel-storage-provider)
+                 gerbil-ascent-eqrel-storage-provider
+                 gerbil-ascent-set-storage-provider)
         (only-in :gerbil-ascent/program/interface
+                 ascent
                  gerbil-ascent-relation gerbil-ascent-variable
                  gerbil-ascent-atom gerbil-ascent-rule
                  gerbil-ascent-program gerbil-ascent-evaluate-program))
 
 (export ascent-eqrel-fixture-evaluate
-        ascent-storage-fixture-evaluate)
+        ascent-storage-fixture-evaluate
+        ascent-default-storage-evaluate)
 
 (def (v name) (gerbil-ascent-variable name))
 (def (a name . terms) (gerbil-ascent-atom name terms))
@@ -49,3 +52,27 @@
 (def (ascent-eqrel-fixture-evaluate binary-seed grouped-seed)
   (ascent-storage-fixture-evaluate
    binary-seed grouped-seed gerbil-ascent-eqrel-storage-provider))
+
+(def (ascent-default-storage-evaluate binary-seed grouped-seed)
+  (gerbil-ascent-evaluate-program
+   (ascent
+    (default-storage gerbil-ascent-eqrel-storage-provider)
+    (relation binary-seed (from to) binary-seed
+              (index gerbil-ascent-hash-index-provider)
+              (storage gerbil-ascent-set-storage-provider))
+    (relation grouped-seed (group from to) grouped-seed
+              (index gerbil-ascent-hash-index-provider)
+              (storage gerbil-ascent-set-storage-provider))
+    (relation binary-eq (from to))
+    (relation grouped-eq (group from to))
+    (relation binary-output (from to) []
+              (index gerbil-ascent-hash-index-provider)
+              (storage gerbil-ascent-set-storage-provider))
+    (relation grouped-output (group from to) []
+              (index gerbil-ascent-hash-index-provider)
+              (storage gerbil-ascent-set-storage-provider))
+    ((binary-eq x y) <-- (binary-seed x y))
+    ((grouped-eq g x y) <-- (grouped-seed g x y))
+    ((binary-output x y) <-- (binary-eq x y))
+    ((grouped-output g x y) <-- (grouped-eq g x y))
+    (bounds 64 2048 2048))))

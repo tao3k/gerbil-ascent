@@ -15,7 +15,8 @@
                  ascent-included-fragment-evaluate
                  ascent-generated-fragment-evaluate
                  ascent-inline-macro-evaluate
-                 ascent-inline-rule-macro-evaluate)
+                 ascent-inline-rule-macro-evaluate
+                 ascent-default-storage-macro-evaluate)
         (only-in :gerbil-ascent/t/qualification/ascent-fragment-source
                  ascent-reach-fragment)
         (only-in :gerbil-ascent/t/qualification/ascent-index-program-fixture
@@ -51,6 +52,12 @@
         (check-equal? (rows-of 'tripled) '((21)))
         (check-equal? (rows-of 'even-packed) '((2)))
         (check-equal? (length (rows-of 'cross)) 6)))
+    (poo-flow-test-case "program default storage reaches local macro relations"
+      (let (rows ((.ref (ascent-default-storage-macro-evaluate)
+                        'rows-of) 'component))
+        (check-equal? (length rows) 9)
+        (check-equal? (not (not (member '(1 3) rows))) #t)
+        (check-equal? (not (not (member '(3 1) rows))) #t)))
     (poo-flow-test-case "nested disjunction composes finite rule bodies"
       (let* ((result (ascent-syntax-evaluate '((1 2) (2 3) (1 4)) 7))
              (rows-of (.ref result 'rows-of))

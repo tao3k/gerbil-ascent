@@ -16,6 +16,7 @@ mod positive_closure;
 mod product_session;
 mod session_corpus;
 mod syntax;
+mod timeout;
 mod typed_rules;
 mod upstream_examples;
 mod var_points_to;

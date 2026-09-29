@@ -33,7 +33,8 @@
         gerbil-ascent-open-session
         gerbil-ascent-session-append-source!
         gerbil-ascent-session-replace-source!
-        gerbil-ascent-session-run)
+        gerbil-ascent-session-run
+        gerbil-ascent-session-run-timeout)
 
 (def Session. (.ref GerbilAscentSessionContract 'proto))
 
@@ -457,6 +458,8 @@
              (staged-total 0)
              (source-overrides (and session? (make-vector count #f)))
              (recompute-from-source? #f)
+             (resume-stratum #f)
+             (resume-round 0)
              (materialized-dirty? #f)
              (first-run? #t)
              (dirty? #t)
@@ -683,13 +686,17 @@
                         (not materialized-dirty?)
                         (not accepted-any?))
                (set! dirty? #f)))))
-        (def (run-retained!)
+        (def (run-retained! (deadline #f))
          (when dirty? (flush-staged-set-rows!))
+         (let (complete? #t)
          (when dirty?
-         (let evaluate-stratum ((stratum 0))
+         (call/cc
+          (lambda (return)
+         (let evaluate-stratum ((stratum (or resume-stratum 0)))
           (when (<= stratum highest-stratum)
             (let ((active-rules (vector-ref active-by-stratum stratum))
-                  (active? #t) (round 0))
+                  (active? #t) (round (if resume-stratum resume-round 0)))
+              (unless resume-stratum
               (let reset-delta ((index 0))
                 (when (< index count)
                   (vector-set! delta index
@@ -702,7 +709,7 @@
                     (length (vector-ref delta index)))
                   (vector-set! delta-version index
                     (+ 1 (vector-ref delta-version index)))
-                  (reset-delta (+ index 1))))
+                  (reset-delta (+ index 1)))))
           (until (not active?)
           (set! round (+ round 1))
           (let ((pending (make-vector count []))
@@ -974,15 +981,24 @@
                   (length (vector-ref pending index)))
                 (vector-set! delta-version index
                   (+ 1 (vector-ref delta-version index)))
-                (commit (+ index 1))))))
-            (evaluate-stratum (+ stratum 1)))))
-         (set! first-run? #f)
-         (set! dirty? #f)
-         (set! materialized-dirty? #f)
+                (commit (+ index 1))))
+            (when (and active? deadline (>= (current-jiffy) deadline))
+              (set! resume-stratum stratum)
+              (set! resume-round round)
+              (set! complete? #f)
+              (return #f))))
+            (set! resume-stratum #f)
+            (set! resume-round 0)
+            (evaluate-stratum (+ stratum 1)))))))
+         (when complete?
+           (set! first-run? #f)
+           (set! dirty? #f)
+           (set! materialized-dirty? #f))
          (let (snapshots
                (vector-map (lambda (rows) (reverse rows)) all))
            (set! last-result
              (.o (relation-names (vector->list names))
+                 (finished complete?)
                  (evaluation-path 'stratified-semi-naive)
                  (rule-time-nanoseconds
                   (and rule-ticks
@@ -992,11 +1008,23 @@
                             (vector->list rule-ticks))))
                  (rows-of (lambda (name)
                             (vector-ref snapshots (position-of name))))))))
-         last-result)
+         last-result))
         (def (run!)
           (if recompute-from-source?
             last-result
             (run-retained!)))
+        (def (run-timeout! duration-nanoseconds)
+
+          (unless (and (exact-integer? duration-nanoseconds)
+                       (>= duration-nanoseconds 0))
+            (error "invalid ASCENT timeout in nanoseconds"
+                   duration-nanoseconds))
+          (if recompute-from-source?
+            last-result
+            (run-retained!
+             (+ (current-jiffy)
+                (quotient (* duration-nanoseconds (jiffies-per-second))
+                          1000000000)))))
         (if session?
           (validate GerbilAscentSessionContract
                     (.o (:: @ Session.)
@@ -1005,6 +1033,7 @@
                            append-single-set-source! append-source!))
                         (.replace-source! replace-source!)
                         (.run run!)
+                        (.run-timeout run-timeout!)
                         (.source-additions source-additions)
                         (.source-overrides source-overrides)))
           run!)))))
@@ -1039,6 +1068,7 @@
          (committed (list->vector (vector->list initial)))
          (initialized? #f)
          (clean? #f)
+         (partial? #f)
          (last-result #f)
          (engine (gerbil-ascent-make-engine program #t #f #f
                                           measure-rule-times?))
@@ -1100,6 +1130,7 @@
         (set! engine-additions (.ref fresh '.source-additions))
         (set! engine-overrides (.ref fresh '.source-overrides))
         (set! pending (snapshot-copy rows))
+        (set! partial? #f)
         (set! clean? (and initialized?
                           (equal? (vector->list rows)
                                   (vector->list committed))))))
@@ -1122,6 +1153,8 @@
             (vector-ref engine-additions index))))
       (set! clean? #f))
     (def (append-source! name row)
+      (when partial?
+        (error "finish ASCENT partial run before changing sources"))
       (let* ((index (position-of name))
              (source-state (vector-ref pending index)))
         (if (vector-ref atomic-appends index)
@@ -1135,9 +1168,13 @@
              (engine-append name row)
              (record-append! index source-state))))))
     (def (direct-append-source! name row)
+      (when partial?
+        (error "finish ASCENT partial run before changing sources"))
       (engine-append name row)
       (set! clean? #f))
     (def (replace-source! name rows)
+      (when partial?
+        (error "finish ASCENT partial run before changing sources"))
       (let* ((index (position-of name))
              (source-state (vector-ref pending index))
              (outcome
@@ -1163,14 +1200,44 @@
           (set! committed (snapshot-copy next-pending))
           (set! last-result (vector-ref outcome 1))
           (set! clean? #t)
+          (set! partial? #f)
           last-result)))
+    (def (run-timeout! duration-nanoseconds)
+
+      (unless (and (exact-integer? duration-nanoseconds)
+                   (>= duration-nanoseconds 0))
+        (error "invalid ASCENT timeout in nanoseconds"
+               duration-nanoseconds))
+      (if clean?
+        last-result
+        (let* ((next-pending
+                (if direct-appends? (engine-source-snapshot) pending))
+               (outcome
+                (attempt
+                 (lambda ()
+                   ((.ref engine '.run-timeout) duration-nanoseconds)))))
+          (unless (vector-ref outcome 0)
+            (recover! committed (vector-ref outcome 1)))
+
+          (let (result (vector-ref outcome 1))
+            (set! last-result result)
+            (set! pending next-pending)
+            (if (.ref result 'finished)
+              (begin
+                (set! initialized? #t)
+                (set! committed (snapshot-copy next-pending))
+                (set! clean? #t)
+                (set! partial? #f))
+              (set! partial? #t))
+            result))))
     (validate GerbilAscentSessionContract
               (.o (:: @ Session.)
                   (.append-source!
                    (if direct-appends? direct-append-source!
                        append-source!))
                   (.replace-source! replace-source!)
-                  (.run run!)))))
+                  (.run run!)
+                  (.run-timeout run-timeout!)))))
 
 (def (gerbil-ascent-session-append-source! session name row)
   ((.ref session '.append-source!) name row))
@@ -1180,6 +1247,9 @@
 
 (def (gerbil-ascent-session-run session)
   ((.ref session '.run)))
+
+(def (gerbil-ascent-session-run-timeout session duration-nanoseconds)
+  ((.ref session '.run-timeout) duration-nanoseconds))
 
 (def (gerbil-ascent-evaluate-program program
                                       measure-rule-times?: (measure-rule-times? #f))

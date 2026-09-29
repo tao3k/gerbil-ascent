@@ -12,6 +12,7 @@
                  gerbil-ascent-hash-index-provider
                  gerbil-ascent-eqrel-storage-provider)
         (only-in :gerbil-ascent/program/interface
+                 ascent
                  gerbil-ascent-relation
                  gerbil-ascent-program
                  gerbil-ascent-evaluate-program))
@@ -28,6 +29,17 @@
           gerbil-ascent-hash-index-provider
           gerbil-ascent-eqrel-storage-provider))
    [] 32 500 500))
+(def default-program
+  (ascent
+   (default-storage gerbil-ascent-eqrel-storage-provider)
+   (relation eq (from to)
+             (map (lambda (from) (list from (+ from 1))) (iota 20)))
+   (bounds 32 500 500)))
+
+(unless (eq? (.ref (car (.ref default-program 'relations))
+                   'storage-provider)
+             gerbil-ascent-eqrel-storage-provider)
+  (error "ASCENT program default changed the benchmark storage Provider"))
 
 (unless (benchmark-fixture-contract-pass? fixture)
   (error "invalid ASCENT BYODS benchmark" fixture))

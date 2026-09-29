@@ -91,7 +91,8 @@ program contract.
 
 | Form | Meaning |
 |------+---------|
-| =(relation name (column ...) [source] [(index provider)] [(storage provider)])= | Set relation; each column is a name or =(name predicate)=; omitted source is empty |
+| =(default-storage provider)= | Optional first program or fragment form; sets the storage Provider for relations without an explicit storage slot |
+| =(relation name (column ...) [source] [(index provider)] [(storage provider)])= | Relation; each column is a name or =(name predicate)=; omitted source is empty, explicit storage overrides the program default |
 | =((head ...) <-- clause ...)= | One rule head |
 | =(((head ...) ...) <-- clause ...)= | Multiple heads sharing one body |
 | =(name term ...)= | Positive relation atom |
@@ -207,9 +208,9 @@ law evidence; the syntax alone cannot establish it.
 | =include_source!= | Imported =ascent-fragment= plus =(include name)= | Recursive closure Rust differential; Scheme preserves module lexical scope rather than Rust token-copy scope |
 | Struct signature, generics, visibility | Gerbil module export and POO type contract | Generated API/type parity open |
 | =#![measure_rule_times]= | =measure-rule-times?: #t= on the Scheme evaluator or Session constructor | Per-rule nanoseconds in declaration order; Rust/Scheme rows match for selected inputs, exact durations are not semantic parity |
-| =#![generate_run_timeout]= | No partial-run API yet | Timeout and partial-state semantics open |
+| =#![generate_run_timeout]= | =gerbil-ascent-session-run-timeout= with a nonnegative nanosecond budget; result =finished= slot | Same-input first partial and completed rows match Rust. Scheme resumes committed rounds across repeated zero budgets; Rust 0.8.0 repeats the same partial rows, recorded in [[file:rust-parity.org][parity matrix]]. Other strata, lattices, and Provider interactions remain open |
 | =#![inter_rule_parallelism]= | No intra-program worker policy yet | Parallel scheduling and failure semantics open |
-| =#![ds(provider)]= | POO index and storage Provider declarations | Selected BYODS cases pass; wider merge and scale remain open |
+| =#![ds(provider)]= | First =(default-storage provider)= form with per-relation =(storage provider)= override | Rust global =eqrel= default and explicit =rel= overrides match Scheme over selected binary and grouped sources. Local macro relations inherit the default; imported fragments retain their own lexical Provider. Wider include behavior, merge and scale remain open |
 | Other attributes | Rust 0.8.0 rejects unrecognized program attributes | Wider rejection diagnostics open |
 | =ascent_par!= and =ascent_run_par!= | Execution policy | Intra-program parallelism open |
 

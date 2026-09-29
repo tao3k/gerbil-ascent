@@ -338,12 +338,81 @@
      (syntax (gerbil-ascent-fragment
               (append declared ...) (append lowered ...))))))
 
+(defsyntax (ascent-with-default-storage stx)
+  (syntax-case stx (relation index storage macro)
+    ((_ mode provider (collected ...)
+        (macro name ((parameter kind) ...) template ...) clause ...)
+     (syntax (ascent-with-default-storage
+              mode provider
+              (collected ...
+                         (macro name ((parameter kind) ...)
+                           (default-storage provider) template ...))
+              clause ...)))
+    ((_ mode provider (collected ...)
+        (macro name (parameter ...) template ...) clause ...)
+     (syntax (ascent-with-default-storage
+              mode provider
+              (collected ...
+                         (macro name (parameter ...)
+                           (default-storage provider) template ...))
+              clause ...)))
+    ((_ mode provider (collected ...)
+        (relation name (column ...) source (index index-provider)
+                  (storage storage-provider)) clause ...)
+     (syntax (ascent-with-default-storage
+              mode provider
+              (collected ...
+                         (relation name (column ...) source
+                                   (index index-provider)
+                                   (storage storage-provider)))
+              clause ...)))
+    ((_ mode provider (collected ...)
+        (relation name (column ...) source (index index-provider)) clause ...)
+     (syntax (ascent-with-default-storage
+              mode provider
+              (collected ...
+                         (relation name (column ...) source
+                                   (index index-provider)
+                                   (storage provider)))
+              clause ...)))
+    ((_ mode provider (collected ...)
+        (relation name (column ...) source) clause ...)
+     (syntax (ascent-with-default-storage
+              mode provider
+              (collected ...
+                         (relation name (column ...) source
+                                   (index gerbil-ascent-hash-index-provider)
+                                   (storage provider)))
+              clause ...)))
+    ((_ mode provider (collected ...)
+        (relation name (column ...)) clause ...)
+     (syntax (ascent-with-default-storage
+              mode provider
+              (collected ...
+                         (relation name (column ...) []
+                                   (index gerbil-ascent-hash-index-provider)
+                                   (storage provider)))
+              clause ...)))
+    ((_ mode provider (collected ...) clause rest ...)
+     (syntax (ascent-with-default-storage
+              mode provider (collected ... clause) rest ...)))
+    ((_ mode provider (collected ...))
+     (syntax (ascent-collect mode () () collected ...)))))
+
 (defsyntax (ascent stx)
-  (syntax-case stx ()
+  (syntax-case stx (default-storage)
+    ((_ (default-storage provider) clause ...)
+     (syntax (ascent-with-default-storage
+              program provider () clause ...)))
     ((_ clause ...)
-     (syntax (ascent-collect program () () clause ...)))))
+     (syntax (ascent-with-default-storage
+              program gerbil-ascent-set-storage-provider () clause ...)))))
 
 (defsyntax (ascent-fragment stx)
-  (syntax-case stx ()
+  (syntax-case stx (default-storage)
+    ((_ (default-storage provider) clause ...)
+     (syntax (ascent-with-default-storage
+              fragment provider () clause ...)))
     ((_ clause ...)
-     (syntax (ascent-collect fragment () () clause ...)))))
+     (syntax (ascent-with-default-storage
+              fragment gerbil-ascent-set-storage-provider () clause ...)))))

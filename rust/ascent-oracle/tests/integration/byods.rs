@@ -189,6 +189,74 @@ fn ascent_eqrel_rows(binary: &[(u32, u32)], grouped: &[(u32, u32, u32)]) -> Vec<
     rows
 }
 
+fn ascent_default_eqrel_rows(binary: &[(u32, u32)], grouped: &[(u32, u32, u32)]) -> Vec<String> {
+    ascent! {
+        #![ds(eqrel)]
+        #[ds(::ascent::rel)]
+        relation binary_seed(u32, u32);
+        #[ds(::ascent::rel)]
+        relation grouped_seed(u32, u32, u32);
+        relation binary_eq(u32, u32);
+        relation grouped_eq(u32, u32, u32);
+        #[ds(::ascent::rel)]
+        relation binary_output(u32, u32);
+        #[ds(::ascent::rel)]
+        relation grouped_output(u32, u32, u32);
+        binary_eq(x, y) <-- binary_seed(x, y);
+        grouped_eq(g, x, y) <-- grouped_seed(g, x, y);
+        binary_output(x, y) <-- binary_eq(x, y);
+        grouped_output(g, x, y) <-- grouped_eq(g, x, y);
+    }
+    let mut program = AscentProgram {
+        binary_seed: binary.to_vec(),
+        grouped_seed: grouped.to_vec(),
+        ..AscentProgram::default()
+    };
+    program.run();
+    let mut rows = program
+        .binary_output
+        .iter()
+        .map(|(from, to)| format!("binary-output\t{from}\t{to}"))
+        .chain(
+            program
+                .grouped_output
+                .iter()
+                .map(|(group, from, to)| format!("grouped-output\t{group}\t{from}\t{to}")),
+        )
+        .collect::<Vec<_>>();
+    rows.sort_unstable();
+    rows
+}
+
+#[test]
+fn program_default_storage_and_relation_overrides_match_scheme() {
+    for (binary, grouped) in [
+        (vec![], vec![]),
+        (vec![(1, 2)], vec![(0, 3, 4)]),
+        (vec![(1, 2), (2, 3)], vec![(0, 1, 2), (1, 2, 3)]),
+        (vec![(1, 2), (2, 3), (3, 1)], vec![(0, 1, 2), (1, 4, 5)]),
+    ] {
+        let expected = ascent_default_eqrel_rows(&binary, &grouped);
+        assert_eq!(expected, ascent_eqrel_rows(&binary, &grouped));
+        let binary_request = binary
+            .iter()
+            .map(|(from, to)| format!("({from} {to})"))
+            .collect::<Vec<_>>()
+            .join(" ");
+        let grouped_request = grouped
+            .iter()
+            .map(|(group, from, to)| format!("({group} {from} {to})"))
+            .collect::<Vec<_>>()
+            .join(" ");
+        let request = format!("(({binary_request}) ({grouped_request}))\n");
+        let output = scheme_output("eqrel-default-rows", &request);
+        let mut actual = output.lines().map(str::to_owned).collect::<Vec<_>>();
+        assert_eq!(actual.pop().as_deref(), Some("END"));
+        actual.sort_unstable();
+        assert_eq!(actual, expected);
+    }
+}
+
 #[test]
 fn binary_and_grouped_eqrel_match_ascent_byods() {
     let snapshots: &[ByodsSnapshot] = &[

@@ -7,7 +7,9 @@
         (only-in :gerbil-ascent/t/qualification/ascent-fragment-source
                  ascent-reach-fragment ascent-generated-seed-fragment)
         (only-in :gerbil-ascent/table/interface
-                 gerbil-ascent-hash-index-provider)
+                 gerbil-ascent-hash-index-provider
+                 gerbil-ascent-eqrel-storage-provider
+                 gerbil-ascent-set-storage-provider)
         (only-in :gerbil-ascent/table/storage
                  gerbil-ascent-set-storage-provider))
 
@@ -18,6 +20,7 @@
         ascent-generated-fragment-evaluate
         ascent-inline-macro-evaluate
         ascent-inline-rule-macro-evaluate
+        ascent-default-storage-macro-evaluate
         ascent-pattern-clauses-evaluate)
 
 (def (ascent-syntax-program edges anchor)
@@ -150,3 +153,16 @@
       ((destination from to) <-- (edge from to)))
     (emit-copy! copied)
     (bounds 8 8 16))))
+
+(def (ascent-default-storage-macro-evaluate)
+  (gerbil-ascent-evaluate-program
+   (ascent
+    (default-storage gerbil-ascent-eqrel-storage-provider)
+    (relation seed (from to) '((1 2) (2 3))
+              (index gerbil-ascent-hash-index-provider)
+              (storage gerbil-ascent-set-storage-provider))
+    (macro emit-component! ((destination ident))
+      (relation destination (from to))
+      ((destination from to) <-- (seed from to)))
+    (emit-component! component)
+    (bounds 4 16 16))))

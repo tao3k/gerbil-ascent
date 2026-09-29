@@ -78,6 +78,9 @@ ascent-guarded:
 ascent-candidates:
     @timeout 90s gerbil {{ gerbil_test_runtime_options }} t/qualification/ascent-closure-candidates-output.ss
 
+timeout-rows:
+    @timeout 60s gerbil {{ gerbil_test_runtime_options }} t/qualification/ascent-timeout-output.ss
+
 rule-rows:
     @timeout 60s gerbil {{ gerbil_test_runtime_options }} t/qualification/ascent-rule-program-output.ss
 
@@ -134,6 +137,9 @@ index-composite-rows-alist:
 
 eqrel-rows:
     @timeout 60s gerbil {{ gerbil_test_runtime_options }} t/qualification/ascent-eqrel-program-output.ss
+
+eqrel-default-rows:
+    @timeout 60s gerbil {{ gerbil_test_runtime_options }} t/qualification/ascent-eqrel-program-output.ss default
 
 trrel-rows:
     @timeout 60s gerbil {{ gerbil_test_runtime_options }} t/qualification/ascent-eqrel-program-output.ss trrel

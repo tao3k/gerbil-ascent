@@ -37,6 +37,24 @@ fn parallel_one_shot_rows(edges: &[(u32, u32)]) -> Vec<(u32, u32)> {
     rows
 }
 
+fn parallel_inter_rule_rows(edges: &[(u32, u32)]) -> Vec<(u32, u32)> {
+    ascent_par! {
+        #![inter_rule_parallelism]
+        relation edge(u32, u32);
+        relation reach(u32, u32);
+        reach(x, y) <-- edge(x, y);
+        reach(x, z) <-- reach(x, y), edge(y, z);
+    }
+    let mut program = AscentProgram {
+        edge: edges.iter().copied().collect(),
+        ..AscentProgram::default()
+    };
+    program.run();
+    let mut rows: Vec<_> = program.reach.iter().copied().collect();
+    rows.sort_unstable();
+    rows
+}
+
 #[test]
 fn parallel_macro_output_matches_scheme_on_selected_graphs() {
     let pools: Vec<_> = [1, 4]
@@ -59,6 +77,7 @@ fn parallel_macro_output_matches_scheme_on_selected_graphs() {
             pool.install(|| {
                 assert_eq!(parallel_program_rows(edges), expected);
                 assert_eq!(parallel_one_shot_rows(edges), expected);
+                assert_eq!(parallel_inter_rule_rows(edges), expected);
             });
         }
     }

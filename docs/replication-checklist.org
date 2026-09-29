@@ -32,7 +32,7 @@ The current executable map is:
 | =ascent!= | =ascent= declaration plus =gerbil-ascent-open-session= | Selected declarations, runs and retained updates pass; result =relation-sizes= matches the generated Rust summary on selected inputs; SCC diagnostics remain open |
 | =ascent_run!= | lexical =ascent= plus =gerbil-ascent-evaluate-program= | =module_session.rs= compares local input and closure; broader local capture diagnostics open |
 | =ascent_source!= / =include_source!= | Gerbil module =ascent-fragment= / =(include name)= | =syntax.rs= compares recursive closure; Rust token-copy resolution and wider invalid cases open |
-| =ascent_par!= / =ascent_run_par!= | Same program/result boundary | =module_session.rs= compares selected output sets; Scheme intra-program parallel scheduling and failure semantics open |
+| =ascent_par!= / =ascent_run_par!= | Same program/result boundary | =module_session.rs= compares selected output sets at one and four workers, including Rust =#![inter_rule_parallelism]=; Scheme intra-program scheduling and failure semantics open |
 
 - [X] Pin =ascent= and =ascent-byods-rels= 0.8.0 in =rust/ascent-oracle/Cargo.toml= and keep the oracle under =rust/=.
 - [X] Put Scheme implementation in module namespaces and Scheme qualification under =t/=; expose the =ascent= form and POO program/session APIs. See =program/=, =interface/= and =docs/scheme-syntax.org=.

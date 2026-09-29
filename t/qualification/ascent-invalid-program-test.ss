@@ -15,22 +15,26 @@
       (for-each
        (lambda (name expected)
          (check-equal? (category name) expected))
-       '(source-field-type derived-field-type
+       '(source-row-arity source-field-type derived-field-type
                            lattice-projection-feedback negative-self
                            mutual-negation negative-feedback
                        aggregate-self negative-with-unrelated-aggregate
                        unsafe-negation unbound-head unknown-relation
+                       unknown-negated-relation
                        atom-arity duplicate-relation unbound-guard
                        head-arity unbound-let-input unbound-for-input
+                       unbound-aggregate-input aggregate-two-relation-cycle
                        unknown-aggregate-relation negation-before-binding
                        unknown-head-relation negation-arity aggregate-arity
                        unbound-head-expression unbound-atom-expression)
-       '(field-type field-type
+       '(source-row-arity field-type field-type
                     lattice-projection-cycle negation-cycle negation-cycle negation-cycle
                         aggregate-cycle negation-cycle
                         unsafe-negation unbound-head unknown-relation
+                        unknown-relation
                         atom-arity duplicate-relation unbound-guard
                         atom-arity unbound-clause unbound-clause
+                        unbound-clause aggregate-cycle
                         unknown-relation unsafe-negation
                         unknown-relation atom-arity atom-arity
                         unbound-head unbound-clause)))))

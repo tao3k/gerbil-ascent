@@ -20,7 +20,24 @@ ascent! {
 }
 "#;
 
-const INVALID: [(&str, &str, &str, &str); 24] = [
+const INVALID: [(&str, &str, &str, &str); 28] = [
+    (
+        "source-row-arity",
+        "source-row-arity",
+        "mismatched types",
+        r#"
+use ascent::ascent;
+ascent! {
+    relation seed(u32, u32);
+}
+fn bad_source() {
+    let _program = AscentProgram {
+        seed: vec![(1,)],
+        ..AscentProgram::default()
+    };
+}
+"#,
+    ),
     (
         "source-field-type",
         "field-type",
@@ -175,6 +192,19 @@ ascent! {
 "#,
     ),
     (
+        "unknown-negated-relation",
+        "unknown-relation",
+        "relation `missing` is not defined",
+        r#"
+use ascent::ascent;
+ascent! {
+    relation node(u32);
+    relation out(u32);
+    out(x) <-- node(x), !missing(x);
+}
+"#,
+    ),
+    (
         "atom-arity",
         "atom-arity",
         "wrong arity for relation `node` (expected 1, found 2)",
@@ -248,6 +278,35 @@ ascent! {
     relation node(u32);
     relation out(u32);
     out(y) <-- node(x), for y in missing;
+}
+"#,
+    ),
+    (
+        "unbound-aggregate-input",
+        "unbound-clause",
+        // Pinned Ascent panics while expanding this malformed aggregate;
+        // Scheme rejects the missing dependency during admission.
+        "proc macro panicked",
+        r#"
+use ascent::ascent;
+ascent! {
+    relation node(u32);
+    relation out(u32);
+    out(total) <-- agg total = sum(missing) in node(x);
+}
+"#,
+    ),
+    (
+        "aggregate-two-relation-cycle",
+        "aggregate-cycle",
+        "cannot be stratified",
+        r#"
+use ascent::ascent;
+ascent! {
+    relation left(usize);
+    relation right(usize);
+    left(total) <-- agg total = count() in right(_);
+    right(value) <-- left(value);
 }
 "#,
     ),

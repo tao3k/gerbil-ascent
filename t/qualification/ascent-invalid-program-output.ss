@@ -6,12 +6,17 @@
                  call-with-output-string display-exception
                  with-exception-catcher)
         (only-in :gerbil-ascent/program/interface
-                 ascent gerbil-ascent-count gerbil-ascent-evaluate-program))
+                 ascent gerbil-ascent-count gerbil-ascent-sum
+                 gerbil-ascent-evaluate-program))
 
 (export main category)
 
 (def (invalid-program name)
   (case name
+    ((source-row-arity)
+     (ascent
+      (relation seed (from to) '((1)))
+      (bounds 8 8 16)))
     ((source-field-type)
      (ascent
       (relation seed ((value number?)) '(("bad")))
@@ -84,6 +89,12 @@
       (relation out (value))
       ((out x) <-- (missing x))
       (bounds 8 8 16)))
+    ((unknown-negated-relation)
+     (ascent
+      (relation node (value) '((1)))
+      (relation out (value))
+      ((out x) <-- (node x) (not (missing x)))
+      (bounds 8 8 16)))
     ((atom-arity)
      (ascent
       (relation node (value) '((1)))
@@ -118,6 +129,21 @@
       (relation node (value) '((1)))
       (relation out (value))
       ((out y) <-- (node x) (for y (missing) (list missing)))
+      (bounds 8 8 16)))
+    ((unbound-aggregate-input)
+     (ascent
+      (relation node (value) '((1)))
+      (relation out (value))
+      ((out total) <--
+       (aggregate total gerbil-ascent-sum (missing) (node x)))
+      (bounds 8 8 16)))
+    ((aggregate-two-relation-cycle)
+     (ascent
+      (relation left (value))
+      (relation right (value))
+      ((left total) <--
+       (aggregate total gerbil-ascent-count () (right _)))
+      ((right x) <-- (left x))
       (bounds 8 8 16)))
     ((unknown-aggregate-relation)
      (ascent
@@ -197,6 +223,9 @@
                                 "ASCENT relation field type mismatch")))
       'field-type)
      ((and (string? message)
+           (string-contains message "invalid ASCENT relation row"))
+      'source-row-arity)
+     ((and (string? message)
            (string-contains message
                             "unsafe ASCENT negation variable"))
       'unsafe-negation)
@@ -220,6 +249,9 @@
       (if (eq? name 'unbound-guard) 'unbound-guard 'unbound-clause))
      ((and (string? message)
            (string-contains message "unbound ASCENT expression variable"))
+      'unbound-clause)
+     ((and (string? message)
+           (string-contains message "ASCENT aggregate input absent from atom"))
       'unbound-clause)
      (else (error "unexpected ASCENT invalid-program diagnostic"
                   name message)))))

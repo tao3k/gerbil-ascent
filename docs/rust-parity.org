@@ -250,6 +250,9 @@ source refinement keeps the previous ordinary row; the Scheme session
 recomputes from its accepted source snapshot and matches the fresh fixed
 point. The 50-key indexed session checks this with both hash and alist index
 Providers, while the fresh index differential checks 50 and 1,000 keys.
+Repeated zero-budget timeout calls across the recursive lattice and ordinary
+projection strata publish no obsolete value, then finish with the same
+fixed-point rows and preserve the first partial snapshot.
 
 The pinned Rust =#![measure_rule_times]= attribute and Scheme's
 =measure-rule-times?: #t= evaluator option produce the same rows for empty,

@@ -18,6 +18,7 @@
                  gerbil-ascent-program gerbil-ascent-evaluate-program
                  gerbil-ascent-open-session
                  gerbil-ascent-session-run
+                 gerbil-ascent-session-run-timeout
                  gerbil-ascent-session-append-source!
                  gerbil-ascent-session-replace-source!))
 
@@ -51,6 +52,27 @@
              (rows-of (.ref result 'rows-of)))
         (check-equal? (rows-of 'best) '((0 1)))
         (check-equal? (rows-of 'found) '((0 1)))))
+    (poo-flow-test-case "timeout resumes across the lattice projection stratum"
+      (let* ((session
+              (gerbil-ascent-open-session
+               (ascent-recursive-lattice-projection-program)))
+             (first (gerbil-ascent-session-run-timeout session 0)))
+        (check-equal? (.ref first 'finished) #f)
+        (check-equal? ((.ref first 'rows-of) 'found) [])
+        (let resume ((remaining 12) (result first))
+          (if (.ref result 'finished)
+            (begin
+              (check-equal? ((.ref result 'rows-of) 'best) '((0 1)))
+              (check-equal? ((.ref result 'rows-of) 'found) '((0 1))))
+            (begin
+              (check-equal? (> remaining 0) #t)
+              (check-equal?
+               (let (rows ((.ref result 'rows-of) 'found))
+                 (or (null? rows) (equal? rows '((0 1)))))
+               #t)
+              (resume (- remaining 1)
+                      (gerbil-ascent-session-run-timeout session 0)))))
+        (check-equal? ((.ref first 'rows-of) 'found) [])))
     (poo-flow-test-case "lattice projection feedback rejects a strict cycle"
       (check-exception
        (gerbil-ascent-evaluate-program

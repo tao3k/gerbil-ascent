@@ -236,3 +236,102 @@ fn indexed_composite_group_and_node_join_matches_ascent() {
         assert_eq!(actual, expected, "provider recipe: {recipe}");
     }
 }
+
+#[test]
+fn indexed_lattice_composite_key_matches_ascent_after_join() {
+    ascent! {
+        relation request(u32, u32);
+        relation candidate(u32, u32, u32);
+        lattice best(u32, u32, Dual<u32>);
+        relation found(u32, u32, u32);
+        best(group, node, Dual(*value)) <-- candidate(group, node, value);
+        found(group, node, *value) <--
+            request(group, node), best(group, node, ?Dual(value));
+    }
+    for size in [50_u32, 1_000] {
+        let mut program = AscentProgram {
+            request: (0..size).map(|node| (node % 2, node)).collect(),
+            candidate: (0..size)
+                .map(|node| (node % 2, node, node + size))
+                .chain((0..size).map(|node| (node % 2, node, node + 1)))
+                .collect(),
+            ..AscentProgram::default()
+        };
+        program.run();
+        let mut expected: Vec<_> = program
+            .found
+            .iter()
+            .map(|(group, node, value)| format!("{group}\t{node}\t{value}"))
+            .collect();
+        expected.sort_unstable();
+        assert_eq!(expected.len(), size as usize);
+        for recipe in ["index-lattice-rows", "index-lattice-rows-alist"] {
+            let output = scheme_output(recipe, &format!("{size}\n"));
+            let mut actual: Vec<_> = output.lines().map(str::to_owned).collect();
+            assert_eq!(actual.pop().as_deref(), Some("END"));
+            actual.sort_unstable();
+            assert_eq!(actual, expected, "lattice index: {recipe}, size: {size}");
+        }
+        if size == 50 {
+            program.candidate.push((0, 0, 0));
+            program.run();
+            let mut retained: Vec<_> = program
+                .found
+                .iter()
+                .map(|(group, node, value)| format!("{group}\t{node}\t{value}"))
+                .collect();
+            retained.sort_unstable();
+            let mut fresh = AscentProgram {
+                request: program.request.clone(),
+                candidate: program.candidate.clone(),
+                ..AscentProgram::default()
+            };
+            fresh.run();
+            let mut fresh_rows: Vec<_> = fresh
+                .found
+                .iter()
+                .map(|(group, node, value)| format!("{group}\t{node}\t{value}"))
+                .collect();
+            fresh_rows.sort_unstable();
+            // Rust 0.8.0 retains the previous ordinary relation row after a
+            // lattice refinement. The fresh fixed point contains only the
+            // refined value; Scheme follows that fixed point.
+            assert_eq!(retained.len(), 51);
+            assert_eq!(fresh_rows.len(), 50);
+            assert!(retained.contains(&"0\t0\t1".to_owned()));
+            assert!(!fresh_rows.contains(&"0\t0\t1".to_owned()));
+            assert!(fresh_rows.contains(&"0\t0\t0".to_owned()));
+        }
+    }
+}
+
+#[test]
+fn recursive_lattice_projection_matches_ascent_fixed_point() {
+    ascent! {
+        relation seed(u32, u32);
+        lattice best(u32, Dual<u32>);
+        relation found(u32, u32);
+        best(key, Dual(*value)) <-- seed(key, value);
+        best(key, Dual(*value / 2)) <--
+            best(key, ?Dual(value)), if *value > 1;
+        found(key, *value) <-- best(key, ?Dual(value));
+    }
+    let mut program = AscentProgram {
+        seed: vec![(0, 8)],
+        ..AscentProgram::default()
+    };
+    program.run();
+    let mut rust_found: Vec<_> = program
+        .found
+        .iter()
+        .map(|(key, value)| format!("{key}\t{value}"))
+        .collect();
+    rust_found.sort_unstable();
+    assert_eq!(rust_found, ["0\t1"]);
+    let mut scheme_found: Vec<_> = scheme_output("lattice-rows", "(recursive-projection)\n")
+        .lines()
+        .map(str::to_owned)
+        .collect();
+    assert_eq!(scheme_found.pop().as_deref(), Some("END"));
+    assert_eq!(scheme_found, rust_found);
+}

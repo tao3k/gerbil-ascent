@@ -4,7 +4,8 @@
 
 (import (only-in :clan/poo/object .o)
         (only-in :gerbil-ascent/program/interface
-                 gerbil-ascent-relation gerbil-ascent-variable
+                 gerbil-ascent-relation gerbil-ascent-lattice
+                 gerbil-ascent-variable
                  gerbil-ascent-atom gerbil-ascent-rule
                  gerbil-ascent-program)
         (only-in :gerbil-ascent/table/interface
@@ -14,6 +15,7 @@
 
 (export ascent-index-fixture-program
         ascent-composite-index-fixture-program
+        ascent-lattice-index-fixture-program
         ascent-index-alist-provider)
 
 (def (v name) (gerbil-ascent-variable name))
@@ -88,3 +90,28 @@
                   (a 'edge (v 'g) (v 'y) (v 'z)))))
      (+ (* 2 edge-count) 14) (+ (* 2 edge-count) 14)
      (* 6 edge-count))))
+
+(def (ascent-lattice-index-fixture-program size (index-provider #f))
+  (let* ((requests
+          (map (lambda (node) (list (modulo node 2) node)) (iota size)))
+         (candidates
+          (append
+           (map (lambda (row)
+                  (append row (list (+ (cadr row) size)))) requests)
+           (map (lambda (row)
+                  (append row (list (+ (cadr row) 1)))) requests))))
+    (gerbil-ascent-program
+     (list (gerbil-ascent-relation 'request 2 requests)
+           (gerbil-ascent-relation 'candidate 3 candidates)
+           (if index-provider
+             (gerbil-ascent-lattice 'best 3 [] min index-provider)
+             (gerbil-ascent-lattice 'best 3 [] min))
+           (gerbil-ascent-relation 'found 3 []))
+     (list (gerbil-ascent-rule
+            (list (a 'best (v 'group) (v 'node) (v 'value)))
+            (list (a 'candidate (v 'group) (v 'node) (v 'value))))
+           (gerbil-ascent-rule
+            (list (a 'found (v 'group) (v 'node) (v 'value)))
+            (list (a 'request (v 'group) (v 'node))
+                  (a 'best (v 'group) (v 'node) (v 'value)))))
+     (* 3 size) (* 2 size) (* 5 size))))

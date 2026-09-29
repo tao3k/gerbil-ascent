@@ -3,6 +3,7 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 (import (only-in :gerbil-ascent/program/interface
+                 ascent
                  gerbil-ascent-relation gerbil-ascent-lattice
                  gerbil-ascent-variable gerbil-ascent-atom
                  gerbil-ascent-binding gerbil-ascent-rule
@@ -10,7 +11,8 @@
 
 (export ascent-lattice-fixture-evaluate
         ascent-lattice-wide-evaluate
-        ascent-lattice-wide-source-evaluate)
+        ascent-lattice-wide-source-evaluate
+        ascent-recursive-lattice-projection-program)
 
 (def (v name) (gerbil-ascent-variable name))
 (def (a name . terms) (gerbil-ascent-atom name terms))
@@ -53,3 +55,15 @@
       (list (gerbil-ascent-lattice 'best 2 source min))
       []
       (* 2 size) size (* 2 size)))))
+
+(def (ascent-recursive-lattice-projection-program)
+  (ascent
+   (relation seed ((key integer?) (value integer?)) '((0 8)))
+   (lattice best ((key integer?) (value integer?)) [] min)
+   (relation found ((key integer?) (value integer?)) [])
+   ((best key value) <-- (seed key value))
+   ((best key (expr (value) (quotient value 2))) <--
+    (best key value)
+    (guard (value) (lambda (value) (> value 1))))
+   ((found key value) <-- (best key value))
+   (bounds 2 16 20)))

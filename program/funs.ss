@@ -5,6 +5,7 @@
 ;;; Pure planning over private lowered rule vectors. These functions do not
 ;;; retain relation state and are shared by the serial execution path.
 (export gerbil-ascent-rule-strata
+        gerbil-ascent-lattice-feeds-relation?
         gerbil-ascent-delta-positions
         gerbil-ascent-lattice-key
         gerbil-ascent-lattice-value
@@ -86,6 +87,23 @@
               (cdr binding)))))
        terms))
 
+(def (gerbil-ascent-lattice-feeds-relation? rule-plans kinds)
+  ;; A lattice refinement can invalidate rows already emitted by an ordinary
+  ;; relation that reads its value. Retained source updates must recompute that
+  ;; relation from the accepted source snapshot.
+  (ormap
+   (lambda (rule)
+     (and (ormap (lambda (head)
+                   (eq? (vector-ref kinds (vector-ref head 0)) 'relation))
+                 (vector-ref rule 0))
+          (ormap (lambda (clause)
+                   (and (eq? (vector-ref clause 0) 'atom)
+                        (eq? (vector-ref kinds
+                                         (vector-ref (vector-ref clause 1) 0))
+                             'lattice)))
+                 (vector-ref rule 1))))
+   rule-plans))
+
 (def (gerbil-ascent-dependency-reaches? dependencies from target seen)
   (cond
    ((= from target) #t)
@@ -112,7 +130,7 @@
           (vector-ref dependency 3)
           (loop (cdr remaining)))))))
 
-(def (gerbil-ascent-rule-strata rule-plans relation-count)
+(def (gerbil-ascent-rule-strata rule-plans relation-count kinds)
   (let ((strata (make-vector relation-count 0))
         (dependencies []))
     (for-each
@@ -123,13 +141,21 @@
            (lambda (clause)
              (when (memq (vector-ref clause 0)
                          '(atom negation aggregate))
-               (let ((body-atom (vector-ref clause 1))
-                     (kind (vector-ref clause 0)))
+               (let* ((body-atom (vector-ref clause 1))
+                      (kind (vector-ref clause 0))
+                      (head-index (vector-ref head 0))
+                      (body-index (vector-ref body-atom 0))
+                      (lattice-projection?
+                       (and (eq? kind 'atom)
+                            (eq? (vector-ref kinds body-index) 'lattice)
+                            (eq? (vector-ref kinds head-index) 'relation))))
                  (set! dependencies
-                   (cons (vector (vector-ref head 0)
-                                 (vector-ref body-atom 0)
-                                 (if (eq? kind 'atom) 0 1)
-                                 kind)
+                   (cons (vector head-index body-index
+                                 (if (and (eq? kind 'atom)
+                                          (not lattice-projection?))
+                                   0 1)
+                                 (if lattice-projection?
+                                   'lattice-projection kind))
                          dependencies)))))
            (vector-ref rule 1)))
         (vector-ref rule 0)))
@@ -153,6 +179,8 @@
                (error "unstratifiable ASCENT aggregate cycle"))
               ((negation)
                (error "unstratifiable ASCENT negation cycle"))
+              ((lattice-projection)
+               (error "unstratifiable ASCENT lattice projection cycle"))
               (else
                (error "unstratifiable ASCENT dependency cycle"))))
           (relax (+ pass 1)))))

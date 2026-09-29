@@ -6,7 +6,10 @@
         (only-in :gerbil-ascent/t/qualification/ascent-lattice-program-fixture
                  ascent-lattice-fixture-evaluate
                  ascent-lattice-wide-evaluate
-                 ascent-lattice-wide-source-evaluate))
+                 ascent-lattice-wide-source-evaluate
+                 ascent-recursive-lattice-projection-program)
+        (only-in :gerbil-ascent/program/interface
+                 gerbil-ascent-evaluate-program))
 
 (export main)
 
@@ -17,9 +20,15 @@
                    ((wide) (ascent-lattice-wide-evaluate (cadr request)))
                    ((wide-source)
                     (ascent-lattice-wide-source-evaluate (cadr request)))
+                   ((recursive-projection)
+                    (gerbil-ascent-evaluate-program
+                     (ascent-recursive-lattice-projection-program)))
                    (else (ascent-lattice-fixture-evaluate request))))
          (rows ((.ref result 'rows-of)
-                (if (memq mode '(wide wide-source)) 'best 'shortest))))
+                (case mode
+                  ((wide wide-source) 'best)
+                  ((recursive-projection) 'found)
+                  (else 'shortest)))))
     (for-each
      (lambda (row)
        (display (car row))

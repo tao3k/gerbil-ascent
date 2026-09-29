@@ -12,6 +12,7 @@
         (only-in "analysis.ss" gerbil-ascent-program-analysis
                  gerbil-ascent-program-schema)
         (only-in "funs.ss" gerbil-ascent-rule-strata
+                 gerbil-ascent-lattice-feeds-relation?
                  gerbil-ascent-delta-positions
                  gerbil-ascent-lattice-key
                  gerbil-ascent-lattice-value
@@ -308,7 +309,8 @@
                    (lambda ()
                      (let (plans (map prepare-rule rules
                                      (iota (length rules))))
-                       (let* ((strata (gerbil-ascent-rule-strata plans count))
+                       (let* ((strata (gerbil-ascent-rule-strata
+                                       plans count kinds))
                               (highest (if (= count 0) -1
                                          (apply max (vector->list strata))))
                               (active (make-vector (+ highest 1) [])))
@@ -341,6 +343,10 @@
              (strata (vector-ref analysis 3))
              (active-by-stratum (vector-ref analysis 4))
              (highest-stratum (- (vector-length active-by-stratum) 1))
+             (lattice-feeds-relation?
+              (and session?
+                   (gerbil-ascent-lattice-feeds-relation?
+                    rule-plans kinds)))
              (positive-rules?
               (and session?
                    (andmap
@@ -418,10 +424,11 @@
               (error "ASCENT session input fact budget exceeded"))
             (cond
              ((or (not positive-rules?)
+                  lattice-feeds-relation?
                   recompute-from-source?
                   (vector-ref lattice-joins index))
-              ;; Negation, aggregation, or a lattice refinement can invalidate
-              ;; previously consumed rows. Re-evaluate the accepted source
+              ;; Negation, aggregation, and lattice-to-relation projections
+              ;; can invalidate prior rows. Re-evaluate the accepted source
               ;; snapshot before publishing a changed fixed point.
               (let* ((replacement
                       (append (source-rows-at index) (list row)))

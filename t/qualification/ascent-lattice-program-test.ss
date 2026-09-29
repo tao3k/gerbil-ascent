@@ -7,7 +7,8 @@
         (only-in :core/observability/testing-case
                  poo-flow-test-case)
         (only-in :gerbil-ascent/t/qualification/ascent-lattice-program-fixture
-                 ascent-lattice-fixture-evaluate)
+                 ascent-lattice-fixture-evaluate
+                 ascent-recursive-lattice-projection-program)
         (only-in :gerbil-ascent/t/qualification/ascent-lattice-negation-fixture
                  ascent-lattice-negation-program)
         (only-in :gerbil-ascent/program/interface
@@ -43,6 +44,23 @@
         (check-equal? (not (not (member '(1 2 2) rows))) #t)
         (check-equal? (not (not (member '(1 4 3) rows))) #t)
         (check-equal? (member '(1 4 6) rows) #f)))
+    (poo-flow-test-case "ordinary projection waits for lattice fixed point"
+      (let* ((result
+              (gerbil-ascent-evaluate-program
+               (ascent-recursive-lattice-projection-program)))
+             (rows-of (.ref result 'rows-of)))
+        (check-equal? (rows-of 'best) '((0 1)))
+        (check-equal? (rows-of 'found) '((0 1)))))
+    (poo-flow-test-case "lattice projection feedback rejects a strict cycle"
+      (check-exception
+       (gerbil-ascent-evaluate-program
+        (ascent
+         (lattice best ((key integer?) (value integer?)) [] min)
+         (relation found ((key integer?) (value integer?)) [])
+         ((best key value) <-- (found key value))
+         ((found key value) <-- (best key value))
+         (bounds 2 4 6)))
+       true))
     (poo-flow-test-case "empty and invalid lattice declarations"
       (check-equal? (shortest []) [])
       (check-exception (gerbil-ascent-lattice 'bad 0 [] min) true)

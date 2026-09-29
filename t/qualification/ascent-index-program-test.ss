@@ -9,6 +9,7 @@
         (only-in :gerbil-ascent/t/qualification/ascent-index-program-fixture
                  ascent-index-fixture-program
                  ascent-composite-index-fixture-program
+                 ascent-lattice-index-fixture-program
                  ascent-index-alist-provider)
         (only-in :gerbil-ascent/table/interface
                  gerbil-ascent-hash-index-provider)
@@ -83,6 +84,47 @@
                  #t)
                 (check-equal? builds before))
               (append (+ from 1)))))))
+    (poo-flow-test-case "bound composite key reads a merged lattice through its index"
+      (let* ((built-columns [])
+             (provider
+              (ascent-index-alist-provider
+               (lambda (columns)
+                 (set! built-columns (cons columns built-columns)))))
+             (rows
+              ((.ref (gerbil-ascent-evaluate-program
+                      (ascent-lattice-index-fixture-program 50 provider))
+                     'rows-of)
+               'found)))
+        (check-equal? (not (not (member '(0 1) built-columns))) #t)
+        (check-equal? (length rows) 50)
+        (for-each
+         (lambda (node)
+           (check-equal?
+            (not (not (member (list (modulo node 2) node (+ node 1))
+                              rows)))
+            #t))
+         (iota 50))))
+    (poo-flow-test-case "lattice refinement removes obsolete indexed relation rows"
+      (for-each
+       (lambda (provider)
+         (let* ((program
+                 (.o (:: @ (ascent-lattice-index-fixture-program
+                            50 provider))
+                     max-input-facts: 151
+                     max-derived-facts: 102
+                     max-output-facts: 255))
+                (session (gerbil-ascent-open-session program))
+                (first (gerbil-ascent-session-run session)))
+           (check-equal? (length ((.ref first 'rows-of) 'found)) 50)
+           (gerbil-ascent-session-append-source!
+            session 'candidate '(0 0 0))
+           (let (rows ((.ref (gerbil-ascent-session-run session) 'rows-of)
+                       'found))
+             (check-equal? (length rows) 50)
+             (check-equal? (not (not (member '(0 0 0) rows))) #t)
+             (check-equal? (member '(0 0 1) rows) #f)
+             (check-equal? (length ((.ref first 'rows-of) 'found)) 50))))
+       (list #f (ascent-index-alist-provider))))
     (poo-flow-test-case "malformed Provider values fail at the boundary"
       (check-exception
        (gerbil-ascent-relation

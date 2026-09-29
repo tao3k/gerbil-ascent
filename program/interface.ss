@@ -4,9 +4,10 @@
 
 ;;; Public rule declaration and evaluation boundary.
 (import "types.ss" "objects.ss" "aggregators.ss" "evaluate.ss"
-        "syntax.ss")
+        "session.ss" "syntax.ss")
 (export (import: "types.ss")
         (import: "objects.ss")
         (import: "aggregators.ss")
-        (import: "evaluate.ss")
+        gerbil-ascent-evaluate-program
+        (import: "session.ss")
         (import: "syntax.ss"))

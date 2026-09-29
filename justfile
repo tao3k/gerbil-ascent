@@ -15,12 +15,13 @@ test-file path:
     #!/usr/bin/env bash
     set -euo pipefail
     test -f "{{ path }}"
-    output="$(GERBIL_LOADPATH="{{ justfile_directory() }}${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" timeout "${ASCENT_GXTEST_TIMEOUT:-120s}" gerbil {{ gerbil_test_runtime_options }} env gxtest "{{ path }}" 2>&1)" || { status=$?; printf '%s\n' "$output"; exit "$status"; }
-    printf '%s\n' "$output"
-    if grep -E 'ERROR (CHECK|CASE|HARNESS)|Heap overflow|Stack overflow' <<< "$output" >/dev/null; then exit 1; fi
-    grep -F 'MODULE-OK {{ path }}' <<< "$output" >/dev/null
-    grep -F 'HARNESS-OK' <<< "$output" >/dev/null
-    grep -x 'OK' <<< "$output" >/dev/null
+    output_file="$(mktemp)"
+    trap 'rm -f "$output_file"' EXIT
+    GERBIL_LOADPATH="{{ justfile_directory() }}${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" timeout "${ASCENT_GXTEST_TIMEOUT:-120s}" gerbil {{ gerbil_test_runtime_options }} env gxtest "{{ path }}" 2>&1 | tee "$output_file"
+    if grep -E 'ERROR (CHECK|CASE|HARNESS)|Heap overflow|Stack overflow' "$output_file" >/dev/null; then exit 1; fi
+    grep -F 'MODULE-OK {{ path }}' "$output_file" >/dev/null
+    grep -F 'HARNESS-OK' "$output_file" >/dev/null
+    grep -x 'OK' "$output_file" >/dev/null
 
 test:
     #!/usr/bin/env bash
@@ -39,10 +40,16 @@ performance:
         shift
         printf '[ascent-ss] START %s (1000 samples)\n' "$name"
         local started=$SECONDS
+        (while sleep 10; do printf '[ascent-ss] RUNNING %s (%ss)\n' "$name" "$((SECONDS - started))"; done) &
+        local heartbeat=$!
         if "$@"; then
+            kill "$heartbeat" 2>/dev/null || true
+            wait "$heartbeat" 2>/dev/null || true
             printf '[ascent-ss] PASS %s (%ss)\n' "$name" "$((SECONDS - started))"
         else
             local status=$?
+            kill "$heartbeat" 2>/dev/null || true
+            wait "$heartbeat" 2>/dev/null || true
             printf '[ascent-ss] FAIL %s (%ss, exit=%s)\n' "$name" "$((SECONDS - started))" "$status" >&2
             return "$status"
         fi
@@ -160,7 +167,15 @@ mutual-rows:
     @timeout 60s gerbil {{ gerbil_test_runtime_options }} t/qualification/ascent-mutual-program-output.ss
 
 oracle:
-    gerbil env cargo test --locked --manifest-path rust/ascent-oracle/Cargo.toml
+    #!/usr/bin/env bash
+    set -euo pipefail
+    export PATH="${CARGO_HOME:-$HOME/.cargo}/bin:$PATH"
+    if [[ "$(uname -s)" == Darwin ]]; then
+        export SDKROOT="$(xcrun --sdk macosx --show-sdk-path)"
+        export CC=/usr/bin/clang
+        export RUSTFLAGS="${RUSTFLAGS:+$RUSTFLAGS }-C linker=/usr/bin/clang -C link-arg=-isysroot -C link-arg=$SDKROOT"
+    fi
+    gerbil env env PATH="$PATH" cargo test --locked --manifest-path rust/ascent-oracle/Cargo.toml
 
 timed-rows:
     @timeout 60s gerbil {{ gerbil_test_runtime_options }} t/qualification/ascent-timing-test.ss

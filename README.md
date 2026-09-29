@@ -82,7 +82,7 @@ gerbil deps --install
 gerbil build
 just test
 just oracle
-gerbil env just performance
+just performance
 ```
 
 The Rust oracle is a qualification dependency, not part of the Scheme runtime.

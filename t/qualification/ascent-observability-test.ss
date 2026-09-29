@@ -5,7 +5,8 @@
 (import (only-in :std/test check-equal? test-case test-suite)
         (only-in :clan/poo/object .o .call)
         (only-in :core/observability/debug
-                 PooFlowDebugMemoryAnomaly?)
+                 PooFlowDebugMemoryAnomaly?
+                 PooFlowDebugDurationAnomaly?)
         (only-in :core/observability/testing-case
                  poo-flow-testing-case-profile?)
         (only-in :gerbil-ascent/t/performance/ascent-ss-profile
@@ -33,4 +34,20 @@
                       "over-budget ASCENT SS Case"
                       (lambda () 'unexpected-admission)))
              (lambda (value _receipt) value))))
+         #t)))
+    (test-case "a POO Case slot interrupts a stalled operation"
+      (let (bounded-profile
+            (.o (:: @ ascent-ss-profile)
+                (identity 'ascent/stalled-case-probe)
+                (sample-interval-milliseconds 1)
+                (max-duration-milliseconds 25)))
+        (check-equal?
+         (with-catch
+          PooFlowDebugDurationAnomaly?
+          (lambda ()
+            (.call bounded-profile .run bounded-profile
+                   "stalled ASCENT operation"
+                   (lambda ()
+                     (thread-sleep! 0.1)
+                     'unexpected-admission))))
          #t)))))

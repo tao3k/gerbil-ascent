@@ -5,6 +5,9 @@
 (import (only-in :std/test check-equal? check-exception test-suite)
         (only-in :clan/poo/object .ref)
         (only-in :core/observability/testing-case poo-flow-test-case)
+        (only-in :gerbil-ascent/table/interface
+                 gerbil-ascent-eqrel-storage-provider
+                 gerbil-ascent-hash-index-provider)
         (only-in :gerbil-ascent/program/interface
                  ascent gerbil-ascent-evaluate-program
                  gerbil-ascent-open-session
@@ -100,6 +103,95 @@
         (check-equal?
          (not (not (member '(0 2 8) ((.ref full 'rows-of) 'shortest))))
          #t)))
+    (poo-flow-test-case "BYODS closure and downstream copy resume together"
+      (let* ((program
+              (ascent
+               (relation seed (from to) '((1 2) (2 3)))
+               (relation eq (from to) []
+                         (index gerbil-ascent-hash-index-provider)
+                         (storage gerbil-ascent-eqrel-storage-provider))
+               (relation output (from to))
+               ((eq x y) <-- (seed x y))
+               ((output x y) <-- (eq x y))
+               (bounds 8 64 72)))
+             (session (gerbil-ascent-open-session program))
+             (partial (gerbil-ascent-session-run-timeout session 0))
+             (complete (gerbil-ascent-session-run session))
+             (fresh (gerbil-ascent-evaluate-program program)))
+        (check-equal? (.ref partial 'finished) #f)
+        (check-equal? (length ((.ref partial 'rows-of) 'eq)) 9)
+        (check-equal? ((.ref complete 'rows-of) 'output)
+                      ((.ref fresh 'rows-of) 'output))))
+    (poo-flow-test-case "replacement runs honor a zero timeout"
+      (let* ((program
+              (ascent
+               (relation edge (from to) '((0 1)))
+               (relation blocked (node))
+               (relation path (from to))
+               (relation safe (from to))
+               ((path x y) <-- (edge x y))
+               ((path x z) <-- (path x y) (edge y z))
+               ((safe x y) <-- (path x y) (not (blocked y)))
+               (bounds 8 64 72)))
+             (session (gerbil-ascent-open-session program)))
+        (gerbil-ascent-session-run session)
+        (gerbil-ascent-session-replace-source!
+         session 'edge '((0 1) (1 2) (2 3) (3 4)))
+        (let* ((partial (gerbil-ascent-session-run-timeout session 0))
+               (resumed (gerbil-ascent-session-run-timeout session 0))
+               (complete (gerbil-ascent-session-run session)))
+          (check-equal? (.ref partial 'finished) #f)
+          (check-equal? (length ((.ref partial 'rows-of) 'path)) 4)
+          (check-equal? (.ref resumed 'finished) #f)
+          (check-equal? (length ((.ref resumed 'rows-of) 'path)) 7)
+          (check-equal? (.ref complete 'finished) #t)
+          (check-equal? (length ((.ref complete 'rows-of) 'path)) 10)
+          (check-equal? ((.ref partial 'rows-of) 'path)
+                        '((0 1) (1 2) (2 3) (3 4)))
+          (gerbil-ascent-session-append-source! session 'edge '(4 5))
+          (let (extended (gerbil-ascent-session-run session))
+            (check-equal? (length ((.ref extended 'rows-of) 'path)) 15)
+            (check-equal? (length ((.ref complete 'rows-of) 'path)) 10)))))
+    (poo-flow-test-case "negated source appends honor a zero timeout"
+      (let* ((program
+              (ascent
+               (relation edge (from to) '((0 1) (1 2)))
+               (relation blocked (node))
+               (relation path (from to))
+               (relation safe (from to))
+               ((path x y) <-- (edge x y))
+               ((path x z) <-- (path x y) (edge y z))
+               ((safe x y) <-- (path x y) (not (blocked y)))
+               (bounds 4 16 20)))
+             (session (gerbil-ascent-open-session program)))
+        (gerbil-ascent-session-run session)
+        (gerbil-ascent-session-append-source! session 'blocked '(2))
+        (let* ((partial (gerbil-ascent-session-run-timeout session 0))
+               (complete (gerbil-ascent-session-run session)))
+          (check-equal? (.ref partial 'finished) #f)
+          (check-equal? ((.ref partial 'rows-of) 'safe) [])
+          (check-equal? ((.ref complete 'rows-of) 'safe) '((0 1))))))
+    (poo-flow-test-case "lattice source appends honor a zero timeout"
+      (let* ((program
+              (ascent
+               (relation edge (from to weight) '((0 1 4) (1 2 6)))
+               (lattice shortest (from to distance) [] min)
+               ((shortest x y weight) <-- (edge x y weight))
+               ((shortest x z distance) <--
+                (shortest x y first) (edge y z second)
+                (let distance (first second) (+ first second)))
+               (bounds 4 16 20)))
+             (session (gerbil-ascent-open-session program)))
+        (gerbil-ascent-session-run session)
+        (gerbil-ascent-session-append-source! session 'shortest '(0 2 3))
+        (let* ((partial (gerbil-ascent-session-run-timeout session 0))
+               (complete (gerbil-ascent-session-run session)))
+          (check-equal? (.ref partial 'finished) #f)
+          (check-equal? (.ref complete 'finished) #t)
+          (check-equal?
+           (not (not (member '(0 2 3)
+                             ((.ref complete 'rows-of) 'shortest))))
+           #t))))
     (poo-flow-test-case "timeout duration validation leaves session usable"
       (let (session (gerbil-ascent-open-session (path-program)))
         (check-exception (gerbil-ascent-session-run-timeout session -1) true)

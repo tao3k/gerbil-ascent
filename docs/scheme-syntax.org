@@ -212,7 +212,7 @@ law evidence; the syntax alone cannot establish it.
 | =#![inter_rule_parallelism]= | No intra-program worker policy yet | Parallel scheduling and failure semantics open |
 | =#![ds(provider)]= | First =(default-storage provider)= form with per-relation =(storage provider)= override | Rust global =eqrel= default and explicit =rel= overrides match Scheme over selected binary and grouped sources. Local macro relations inherit the default; imported fragments retain their own lexical Provider. Wider include behavior, merge and scale remain open |
 | Other attributes | Rust 0.8.0 rejects unrecognized program attributes | Wider rejection diagnostics open |
-| =ascent_par!= and =ascent_run_par!= | Execution policy | Intra-program parallelism open |
+| =ascent_par!= and =ascent_run_par!= | Execution policy | Selected output sets match Scheme with one and four Rust Rayon workers; Scheme intra-program parallelism remains open |
 
 * Scientific extension criteria
 

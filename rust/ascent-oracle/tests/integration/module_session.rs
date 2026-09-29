@@ -6,7 +6,63 @@
 use super::common::scheme_output;
 use super::positive_closure::scheme_pairs;
 use ascent::aggregators::sum;
-use ascent::{ascent, ascent_run};
+use ascent::{ascent, ascent_par, ascent_run, ascent_run_par, rayon::ThreadPoolBuilder};
+
+fn parallel_program_rows(edges: &[(u32, u32)]) -> Vec<(u32, u32)> {
+    ascent_par! {
+        relation edge(u32, u32);
+        relation reach(u32, u32);
+        reach(x, y) <-- edge(x, y);
+        reach(x, z) <-- reach(x, y), edge(y, z);
+    }
+    let mut program = AscentProgram {
+        edge: edges.iter().copied().collect(),
+        ..AscentProgram::default()
+    };
+    program.run();
+    let mut rows: Vec<_> = program.reach.iter().copied().collect();
+    rows.sort_unstable();
+    rows
+}
+
+fn parallel_one_shot_rows(edges: &[(u32, u32)]) -> Vec<(u32, u32)> {
+    let program = ascent_run_par! {
+        relation edge(u32, u32) = edges.iter().copied().collect();
+        relation reach(u32, u32);
+        reach(x, y) <-- edge(x, y);
+        reach(x, z) <-- reach(x, y), edge(y, z);
+    };
+    let mut rows: Vec<_> = program.reach.iter().copied().collect();
+    rows.sort_unstable();
+    rows
+}
+
+#[test]
+fn parallel_macro_output_matches_scheme_on_selected_graphs() {
+    let pools: Vec<_> = [1, 4]
+        .into_iter()
+        .map(|workers| {
+            ThreadPoolBuilder::new()
+                .num_threads(workers)
+                .build()
+                .expect("create pinned Ascent parallel oracle pool")
+        })
+        .collect();
+    for edges in [
+        &[][..],
+        &[(1, 2), (2, 3)][..],
+        &[(1, 2), (1, 2), (2, 3), (3, 1)][..],
+        &[(1, 2), (1, 4), (2, 3), (4, 3)][..],
+    ] {
+        let expected = scheme_pairs(edges, true);
+        for pool in &pools {
+            pool.install(|| {
+                assert_eq!(parallel_program_rows(edges), expected);
+                assert_eq!(parallel_one_shot_rows(edges), expected);
+            });
+        }
+    }
+}
 
 #[test]
 #[allow(unused_variables)] // Ascent 0.8.0 emits an unused tuple binding for nullary relations.

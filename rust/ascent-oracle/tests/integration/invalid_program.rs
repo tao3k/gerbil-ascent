@@ -20,7 +20,37 @@ ascent! {
 }
 "#;
 
-const INVALID: [(&str, &str, &str, &str); 17] = [
+const INVALID: [(&str, &str, &str, &str); 19] = [
+    (
+        "source-field-type",
+        "field-type",
+        "mismatched types",
+        r#"
+use ascent::ascent;
+ascent! {
+    relation seed(u32);
+}
+fn bad_source() {
+    let _program = AscentProgram {
+        seed: vec![("bad",)],
+        ..AscentProgram::default()
+    };
+}
+"#,
+    ),
+    (
+        "derived-field-type",
+        "field-type",
+        "mismatched types",
+        r#"
+use ascent::ascent;
+ascent! {
+    relation seed(u32);
+    relation out(u32);
+    out("bad") <-- seed(_);
+}
+"#,
+    ),
     (
         "lattice-projection-feedback",
         "lattice-projection-cycle",

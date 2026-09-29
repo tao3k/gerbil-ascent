@@ -22,10 +22,22 @@ research and broader POO Flow integration outside the replication claim.
 
 * P0: Inventory and language surface
 
+The pinned =ascent= crate exports five macros with its default =par= feature:
+=ascent!=, =ascent_run!=, =ascent_source!=, =ascent_par!= and
+=ascent_run_par!=. =include_source!= is a form inside the program macros.
+The current executable map is:
+
+| Rust form | Scheme boundary | Evidence and remaining gap |
+|-----------+-----------------+----------------------------|
+| =ascent!= | =ascent= declaration plus =gerbil-ascent-open-session= | Selected declarations, runs and retained updates pass; generated public API remains open |
+| =ascent_run!= | lexical =ascent= plus =gerbil-ascent-evaluate-program= | =module_session.rs= compares local input and closure; broader local capture diagnostics open |
+| =ascent_source!= / =include_source!= | Gerbil module =ascent-fragment= / =(include name)= | =syntax.rs= compares recursive closure; Rust token-copy resolution and wider invalid cases open |
+| =ascent_par!= / =ascent_run_par!= | Same program/result boundary | =module_session.rs= compares selected output sets; Scheme intra-program parallel scheduling and failure semantics open |
+
 - [X] Pin =ascent= and =ascent-byods-rels= 0.8.0 in =rust/ascent-oracle/Cargo.toml= and keep the oracle under =rust/=.
 - [X] Put Scheme implementation in module namespaces and Scheme qualification under =t/=; expose the =ascent= form and POO program/session APIs. See =program/=, =interface/= and =docs/scheme-syntax.org=.
 - [ ] Inventory every pinned Rust macro family (=ascent!=, =ascent_run!=, =ascent_source!=, =include_source!=, =ascent_par!=, =ascent_run_par!=), declaration, rule clause, attribute and generated public API. Map each to a Scheme form or a justified language-specific difference, then execute at least one same-input probe per family. Evidence: =rust/ascent-oracle/tests/integration/= and =t/qualification/=.
-- [ ] Cover malformed declarations, variable scope, arity, unknown relations, dependency cycles, and type errors with pinned Rust compile probes and Scheme admission diagnostics. The existing 17-case corpus in =invalid_program.rs= and =ascent-invalid-program-test.ss= is the starting receipt, not exhaustive coverage.
+- [ ] Cover malformed declarations, variable scope, arity, unknown relations, dependency cycles, and type errors with pinned Rust compile probes and Scheme admission diagnostics. The existing 19-case corpus in =invalid_program.rs= and =ascent-invalid-program-test.ss= includes source and derived field type failures; it remains a starting receipt, not exhaustive coverage.
 - [ ] Close module and macro embedding: local parameters, source inclusion, generated API behavior, hygiene/name resolution, and repeated use from a separate Gerbil module. Evidence: =module_session.rs=, =syntax.rs= and matching Scheme tests.
 
 * P1: Fixed-point semantics

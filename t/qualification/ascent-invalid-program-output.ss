@@ -12,6 +12,16 @@
 
 (def (invalid-program name)
   (case name
+    ((source-field-type)
+     (ascent
+      (relation seed ((value number?)) '(("bad")))
+      (bounds 8 8 16)))
+    ((derived-field-type)
+     (ascent
+      (relation seed ((value number?)) '((1)))
+      (relation out ((value number?)))
+      ((out (lit "bad")) <-- (seed _))
+      (bounds 8 8 16)))
     ((lattice-projection-feedback)
      (ascent
       (relation out (value) '((1)))
@@ -148,6 +158,12 @@
            (string-contains message
                             "unstratifiable ASCENT lattice projection cycle"))
       'lattice-projection-cycle)
+     ((and (string? message)
+           (or (string-contains message
+                                "ASCENT relation source field type mismatch")
+               (string-contains message
+                                "ASCENT relation field type mismatch")))
+      'field-type)
      ((and (string? message)
            (string-contains message
                             "unsafe ASCENT negation variable"))

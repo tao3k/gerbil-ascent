@@ -5,7 +5,7 @@
 
 use super::common::scheme_output;
 use ascent::ascent;
-use ascent_byods_rels::{trrel, trrel_uf};
+use ascent_byods_rels::{eqrel, trrel, trrel_uf};
 use std::collections::BTreeSet;
 
 type Edge = (u32, u32);
@@ -49,18 +49,24 @@ fn rows_from_rust(phase: usize, left: &[Edge], right: &[Edge]) -> Vec<String> {
     ascent! {
         relation left(u32, u32);
         relation right(u32, u32);
+        #[ds(eqrel)]
+        relation equivalent(u32, u32);
         #[ds(trrel)]
         relation strict(u32, u32);
         #[ds(trrel_uf)]
         relation reflexive(u32, u32);
         relation strict_output(u32, u32);
         relation reflexive_output(u32, u32);
+        relation equivalent_output(u32, u32);
+        equivalent(x, y) <-- left(x, y);
+        equivalent(x, y) <-- right(x, y);
         strict(x, y) <-- left(x, y);
         strict(x, y) <-- right(x, y);
         reflexive(x, y) <-- left(x, y);
         reflexive(x, y) <-- right(x, y);
         strict_output(x, y) <-- strict(x, y);
         reflexive_output(x, y) <-- reflexive(x, y);
+        equivalent_output(x, y) <-- equivalent(x, y);
     }
     let mut program = AscentProgram {
         left: left.to_vec(),
@@ -80,6 +86,12 @@ fn rows_from_rust(phase: usize, left: &[Edge], right: &[Edge]) -> Vec<String> {
             .reflexive_output
             .iter()
             .map(|(from, to)| format!("{phase}\treflexive-output\t{from}\t{to}")),
+    );
+    rows.extend(
+        program
+            .equivalent_output
+            .iter()
+            .map(|(from, to)| format!("{phase}\tequivalent-output\t{from}\t{to}")),
     );
     rows.sort_unstable();
     rows
@@ -107,6 +119,26 @@ fn rows_from_model(phase: usize, left: &[Edge], right: &[Edge]) -> Vec<String> {
             }
             rows.push(format!("{phase}\treflexive-output\t{from}\t{to}"));
         }
+        let mut connected = BTreeSet::new();
+        let mut pending = vec![from];
+        while let Some(node) = pending.pop() {
+            if connected.insert(node) {
+                pending.extend(source.iter().filter_map(|&(left, right)| {
+                    if left == node {
+                        Some(right)
+                    } else if right == node {
+                        Some(left)
+                    } else {
+                        None
+                    }
+                }));
+            }
+        }
+        rows.extend(
+            connected
+                .into_iter()
+                .map(|to| format!("{phase}\tequivalent-output\t{from}\t{to}")),
+        );
     }
     rows.sort_unstable();
     rows

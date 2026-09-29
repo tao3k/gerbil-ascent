@@ -189,6 +189,9 @@ multi-source-session-rows:
 byods-session-rows:
     @timeout 90s gerbil {{ gerbil_test_runtime_options }} t/qualification/ascent-byods-session-output.ss
 
+grouped-eqrel-session-rows:
+    @timeout 90s gerbil {{ gerbil_test_runtime_options }} t/qualification/ascent-grouped-eqrel-session-output.ss
+
 oracle:
     #!/usr/bin/env bash
     set -euo pipefail

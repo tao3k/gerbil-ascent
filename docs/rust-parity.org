@@ -435,14 +435,25 @@ earlier result must stay stable. Each phase is checked against a fresh Rust
 The Rust comparison intentionally uses fresh programs because pinned Rust
 repeated-run behavior for nonmonotone changes is documented separately.
 The =byods_session.rs= differential retains one Scheme session with two
-ordinary source relations feeding both =trrel= and =trrel_uf= Providers.
+ordinary source relations feeding binary =eqrel=, =trrel= and =trrel_uf=
+Providers.
 Nine appends, replacements, withdrawals, a duplicate and a malformed
-replacement compare both public closure relations at every phase with fresh
-Rust 0.8.0 programs and an independent directed-closure model. The Scheme
+replacement compare all three public relations at every phase with fresh
+Rust 0.8.0 programs, an independent undirected-component model for =eqrel=,
+and a directed-closure model for the transitive Providers. This binary
+receipt does not extend the separate grouped =eqrel= split-producer Rust
+counterexample to a general Rust parity claim. The Scheme
 fixture uses =ascent-session-qualification=, a hygienic test macro shared
 with the ordinary multi-source session fixture: each caller supplies its
 Session constructor and projected relation names, while the macro binds the
 shared input, snapshot and output runner.
+The =grouped_eqrel_session.rs= corpus retains two grouped sources across
+=alpha= and =beta= components and nine mixed updates, including a failed
+replacement, duplicate, withdrawal and later restoration. Each Scheme phase
+matches an independent per-group undirected-component model and a fresh Rust
+single-producer program over the same accepted source union. Rust's known
+grouped split-producer merge gap remains covered by its separate minimized
+counterexample; this retained receipt does not claim two-producer Rust parity.
 Positive retained source appends now keep a persistent reverse addition log
 outside the evaluator and update accepted/delta row counts from each new
 batch. Neither operation scans all earlier rows on each append. A selected

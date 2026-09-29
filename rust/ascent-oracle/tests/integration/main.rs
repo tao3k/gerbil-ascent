@@ -8,6 +8,7 @@ mod byods;
 mod byods_session;
 mod common;
 mod composed_corpus;
+mod grouped_eqrel_session;
 mod invalid_program;
 mod lattice_index;
 mod lattice_negation;

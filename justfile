@@ -26,9 +26,17 @@ test-file path:
 test:
     #!/usr/bin/env bash
     set -euo pipefail
-    for file in t/qualification/*-test.ss; do
-        just test-file "$file"
+    files=(t/qualification/*-test.ss)
+    output_file="$(mktemp)"
+    trap 'rm -f "$output_file"' EXIT
+    export GERBIL_LOADPATH="{{ justfile_directory() }}${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}"
+    timeout "${ASCENT_GXTEST_TIMEOUT:-120s}" gerbil {{ gerbil_test_runtime_options }} env gxtest "${files[@]}" 2>&1 | tee "$output_file"
+    if grep -E 'ERROR (CHECK|CASE|HARNESS|MODULE)|Heap overflow|Stack overflow' "$output_file" >/dev/null; then exit 1; fi
+    for file in "${files[@]}"; do
+        grep -Fx "MODULE-OK $file" "$output_file" >/dev/null
     done
+    grep -F 'HARNESS-OK' "$output_file" >/dev/null
+    grep -x 'OK' "$output_file" >/dev/null
 
 # ASCENT owns its 1000-sample SS receipts using ASP's benchmark profile.
 performance:

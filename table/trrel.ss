@@ -9,9 +9,13 @@
         gerbil-ascent-trrel-extension
         gerbil-ascent-trrel-uf-extension)
 
+;; : (-> TransitiveClosureState)
 (def (gerbil-ascent-trrel-state)
   (vector (make-hash-table) (make-hash-table) (make-hash-table)))
 
+;;; A loose product bound admits the common path without a planning table.
+;;; The uncertain path preflights all rows before mutating retained indexes.
+;; : (-> TransitiveClosureState Row Nat Boolean Rows)
 (def (gerbil-ascent-trrel-extend state row budget reflexive?)
   (let* ((width (length row))
          (_ (unless (memq width '(2 3))
@@ -91,8 +95,10 @@
       (for-each commit-fact! added))
     (reverse added)))
 
+;; : (-> TransitiveClosureState Rows Rows Row Nat Rows)
 (def (gerbil-ascent-trrel-extension state _all _pending row budget)
   (gerbil-ascent-trrel-extend state row budget #f))
 
+;; : (-> TransitiveClosureState Rows Rows Row Nat Rows)
 (def (gerbil-ascent-trrel-uf-extension state _all _pending row budget)
   (gerbil-ascent-trrel-extend state row budget #t))

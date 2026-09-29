@@ -8,13 +8,16 @@
 (export gerbil-ascent-index-build gerbil-ascent-index-extend!
         gerbil-ascent-index-key)
 
+;; : (-> Row (List ColumnIndex) Key)
 (def (gerbil-ascent-index-key row columns)
   (map (lambda (column) (list-ref row column)) columns))
 
+;; : (-> (List Row) (List ColumnIndex) Index)
 (def (gerbil-ascent-index-build rows columns)
   (let (index (make-hash-table))
     (gerbil-ascent-index-extend! index (reverse rows) columns)))
 
+;; : (-> Index (List Row) (List ColumnIndex) Index)
 (def (gerbil-ascent-index-extend! index new-rows columns)
   ;; Rows are prepended to the relation. Process the new batch in insertion
   ;; order so each bucket has the same order as the current relation snapshot.

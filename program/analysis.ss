@@ -14,12 +14,15 @@
 (def +program-schema-cache+ (make-hash-table-eq weak-keys: #t))
 (def +program-analysis-lock+ (make-mutex 'ascent-program-analysis))
 
+;; : (forall (a) (-> (-> a) a))
+;; : (-> Thunk Result)
 (def (with-program-analysis-lock thunk)
   (dynamic-wind
    (lambda () (mutex-lock! +program-analysis-lock+))
    thunk
    (lambda () (mutex-unlock! +program-analysis-lock+))))
 
+;; : (-> Program Relations Rules (-> Analysis) Analysis)
 (def (gerbil-ascent-program-analysis program relations rules build)
   (let (cached
         (with-program-analysis-lock
@@ -34,6 +37,9 @@
            (hash-put! +program-analysis-cache+ program fresh)))
         fresh))))
 
+;;; Schema cache keys include declaration identity, so replacing relations
+;;; cannot reuse old names, arities, or provider dispatch slots.
+;; : (-> Program Relations ProgramSchema)
 (def (gerbil-ascent-program-schema program relations)
   (let (cached
         (with-program-analysis-lock

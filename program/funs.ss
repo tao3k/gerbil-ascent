@@ -32,6 +32,20 @@
                   (cdr binding)))
               (vector-ref payload 0))))
 
+;;; Bind one candidate row without mutating the caller's environment. A
+;;; repeated variable or failed pattern rejects this candidate with #f.
+;; gerbil-ascent-bind-row
+;;   : (-> Terms Row Environment (Maybe Environment))
+;;   | doc m%
+;;       Match ordered terms against one row and return extended bindings.
+;;
+;;       # Examples
+;;
+;;       ```scheme
+;;       (gerbil-ascent-bind-row '((variable . x)) '(3) '())
+;;       ;; => an environment binding x to 3
+;;       ```
+;;     %
 (def (gerbil-ascent-bind-row terms row environment)
   (let loop ((patterns terms) (values row) (bindings environment))
     (if (null? patterns)
@@ -118,18 +132,30 @@
      dependencies))))
 
 (def (gerbil-ascent-cycle-kind dependencies relation-count)
-  (let loop ((remaining dependencies))
-    (if (null? remaining)
-      #f
-      (let (dependency (car remaining))
-        (if (and (= (vector-ref dependency 2) 1)
-                 (gerbil-ascent-dependency-reaches?
-                  dependencies (vector-ref dependency 1)
-                  (vector-ref dependency 0)
-                  (make-vector relation-count #f)))
-          (vector-ref dependency 3)
-          (loop (cdr remaining)))))))
+  (ormap
+   (lambda (dependency)
+     (and (= (vector-ref dependency 2) 1)
+          (gerbil-ascent-dependency-reaches?
+           dependencies (vector-ref dependency 1)
+           (vector-ref dependency 0)
+           (make-vector relation-count #f))
+          (vector-ref dependency 3)))
+   dependencies))
 
+;;; Negative, aggregate, and lattice-to-relation edges require a later
+;;; stratum. Relaxation rejects cycles that violate that ordering.
+;; gerbil-ascent-rule-strata
+;;   : (-> RulePlans Nat RelationKinds Strata)
+;;   | doc m%
+;;       Assign the minimum valid stratum to each declared relation.
+;;
+;;       # Examples
+;;
+;;       ```scheme
+;;       (gerbil-ascent-rule-strata '() 1 '#(relation))
+;;       ;; => a vector containing stratum 0
+;;       ```
+;;     %
 (def (gerbil-ascent-rule-strata rule-plans relation-count kinds)
   (let ((strata (make-vector relation-count 0))
         (dependencies []))
@@ -186,6 +212,20 @@
           (relax (+ pass 1)))))
     strata))
 
+;;; Delta positions count only positive atom scans; guards and generators do
+;;; not introduce a relation index into the semi-naive rule plan.
+;; gerbil-ascent-delta-positions
+;;   : (-> Clauses Strata Nat (List Nat))
+;;   | doc m%
+;;       Select body atom positions that read the current stratum's delta.
+;;
+;;       # Examples
+;;
+;;       ```scheme
+;;       (gerbil-ascent-delta-positions '() '#(0) 0)
+;;       ;; => an empty position list
+;;       ```
+;;     %
 (def (gerbil-ascent-delta-positions body strata stratum)
   (let loop ((remaining body) (depth 0) (selected []))
     (if (null? remaining)

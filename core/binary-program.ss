@@ -59,6 +59,21 @@
                      (.o (source-index (position-of source-name))
                          (head-index (position-of head-name)))))))))
 
+;;; Dense arrays handle bounded small domains; sparse hash indexes avoid
+;;; allocating a quadratic domain when radix is large. Both paths publish
+;;; the same canonical relation rows and POO result interface.
+;; gerbil-ascent-evaluate-binary-program
+;;   : (-> BinaryProgram BinaryResult)
+;;   | doc m%
+;;       Evaluate finite copy, filter, and join rules to their fixed point.
+;;
+;;       # Examples
+;;
+;;       ```scheme
+;;       (gerbil-ascent-evaluate-binary-program program)
+;;       ;; => a result exposing relation names and pair snapshots
+;;       ```
+;;     %
 (def (gerbil-ascent-evaluate-binary-program program)
   (let* ((width (.ref program 'radix))
          (sources (.ref program 'relations))
@@ -90,6 +105,8 @@
            (source-count 0)
            (derived-count 0)
            (position-counter 0))
+      ;;; Intentional raw data record: the adjacency index is evaluation-local
+      ;;; mutable storage, while public relations remain validated POO values.
       (def (new-index)
         (if dense? (make-vector width []) (make-hash-table)))
       (def (index-targets index node)
@@ -99,6 +116,8 @@
           (if dense?
             (vector-set! index from (cons to (vector-ref index from)))
             (hash-put! index from (cons to (index-targets index from))))))
+      ;;; Intentional raw data record: one membership bit per possible pair
+      ;;; avoids object allocation in the semi-naive inner loop.
       (def (new-seen)
         (if dense? (make-u8vector (* width width) 0) (make-hash-table)))
       (def (seen? storage pair)
@@ -107,6 +126,8 @@
       (def (mark-seen! storage pair)
         (if dense? (u8vector-set! storage pair 1)
             (hash-put! storage pair #t)))
+      ;;; Intentional raw data record: epochs deduplicate pending pairs without
+      ;;; clearing a full dense table between fixed-point rounds.
       (def (new-pending-epochs)
         (if dense? (make-vector (* width width) 0) (make-hash-table)))
       (def (pending-epoch storage pair)

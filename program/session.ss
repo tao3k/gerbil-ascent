@@ -20,6 +20,8 @@
 
 (def Session. (.ref GerbilAscentSessionContract 'proto))
 
+;;; A retained session owns accepted source snapshots outside the mutable
+;;; engine, allowing failed provider updates to rebuild from committed input.
 (def (gerbil-ascent-open-session program
                                  measure-rule-times?: (measure-rule-times? #f))
   (unless (boolean? measure-rule-times?)

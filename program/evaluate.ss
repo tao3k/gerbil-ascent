@@ -34,6 +34,21 @@
 
 (def Session. (.ref GerbilAscentSessionContract 'proto))
 
+;;; One engine owns all mutable row buffers and indexes. Reused immutable
+;;; analysis/schema values never share evaluation-local relation state.
+;; gerbil-ascent-make-engine
+;;   : (-> Program Boolean (Maybe Analysis) (Maybe Schema) Boolean Engine)
+;;   | doc m%
+;;       Construct a stratified evaluator for a program and an optional
+;;       retained session. Timing observes rules without changing their rows.
+;;
+;;       # Examples
+;;
+;;       ```scheme
+;;       (gerbil-ascent-make-engine program #f)
+;;       ;; => an engine with one fresh evaluation state
+;;       ```
+;;     %
 (def (gerbil-ascent-make-engine program session? (analysis-override #f)
                                 (schema-override #f)
                                 (measure-rule-times? #f))
@@ -959,6 +974,7 @@
                         (.source-overrides source-overrides)))
           run!)))))
 
+;; : (-> Program EvaluationResult)
 (def (gerbil-ascent-evaluate-program program
                                       measure-rule-times?: (measure-rule-times? #f))
   (unless (boolean? measure-rule-times?)

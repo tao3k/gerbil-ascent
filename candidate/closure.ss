@@ -7,7 +7,8 @@
 ;;; source support. Fact labels here are caller-owned integers; MRR retains
 ;;; semantic FactId, rule-pack, generation, and admission authority.
 
-(import (only-in :clan/poo/object .o))
+(import (only-in :gerbil/runtime/gambit fx+)
+        (only-in :clan/poo/object .o))
 
 (export gerbil-ascent-closure-candidates)
 
@@ -34,7 +35,7 @@
     (def (mark-node! node)
       (when (= (u8vector-ref nodes node) 0)
         (u8vector-set! nodes node 1)
-        (set! node-count (+ node-count 1))))
+        (set! node-count (fx+ node-count 1))))
     (for-each
      (lambda (fact)
        (let ((pair (car fact)) (id (cdr fact)))
@@ -107,19 +108,19 @@
                                   (shortest-supports index origin radix))))
                   (let target-loop ((target 0) (result result))
                     (if (= target radix)
-                      (origin-loop (+ origin 1) result)
+                      (origin-loop (fx+ origin 1) result)
                       (let (path (and paths (vector-ref paths target)))
                         (if path
                           (let (depth (car path))
                             (target-loop
-                             (+ target 1)
+                             (fx+ target 1)
                              (cons (.o (pair (+ (* origin radix) target))
                                        (distance depth)
                                        (support (reverse (cdr path)))
                                        (rule (if (= depth 1)
                                                'base 'transitive)))
                                    result)))
-                          (target-loop (+ target 1) result)))))))))
+                          (target-loop (fx+ target 1) result)))))))))
            (truncated? (> (length all) max-results)))
       (.o (status (if truncated? 'output-truncated 'complete))
           (input-count (length facts))

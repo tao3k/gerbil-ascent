@@ -74,7 +74,7 @@
     (for-each
      (lambda (entry)
        (let ((mask (car entry)) (edges (cadr entry)))
-         (unless (and (exact-integer? mask) (<= 0 mask) (< mask 64)
+         (unless (and (exact-integer? mask) (<= 0 mask) (< mask 512)
                       (list? edges))
            (error "invalid ASCENT arity corpus case" entry))
          (for-each

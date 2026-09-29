@@ -8,7 +8,17 @@ use ascent::ascent;
 use std::collections::BTreeSet;
 
 type Edge = (u32, u32);
-const EDGES: [Edge; 6] = [(0, 0), (0, 1), (1, 1), (1, 2), (2, 0), (2, 2)];
+const EDGES: [Edge; 9] = [
+    (0, 0),
+    (0, 1),
+    (0, 2),
+    (1, 0),
+    (1, 1),
+    (1, 2),
+    (2, 0),
+    (2, 1),
+    (2, 2),
+];
 
 fn edges_for(mask: u32) -> Vec<Edge> {
     EDGES
@@ -154,9 +164,11 @@ fn model_rows(edges: &[Edge], enabled: bool) -> BTreeSet<String> {
 
 #[test]
 fn arities_repeated_variables_and_self_loops_match_model_in_both_rule_orders() {
+    // Four retained Scheme plans process the full family in one Gerbil
+    // process, avoiding repeated startup within the original 90-second gate.
     let request = format!(
         "({})\n",
-        (0..64)
+        (0..512)
             .map(|mask| {
                 let edges = edges_for(mask)
                     .into_iter()
@@ -173,7 +185,7 @@ fn arities_repeated_variables_and_self_loops_match_model_in_both_rule_orders() {
     assert_eq!(scheme.pop().as_deref(), Some("END"));
     let scheme = scheme.into_iter().collect::<BTreeSet<_>>();
     let mut expected = BTreeSet::new();
-    for mask in 0..64 {
+    for mask in 0..512 {
         let edges = edges_for(mask);
         for enabled in [false, true] {
             let model = model_rows(&edges, enabled);

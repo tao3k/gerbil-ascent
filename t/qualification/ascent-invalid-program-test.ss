@@ -22,11 +22,15 @@
                        unsafe-negation unbound-head unknown-relation
                        atom-arity duplicate-relation unbound-guard
                        head-arity unbound-let-input unbound-for-input
-                       unknown-aggregate-relation negation-before-binding)
+                       unknown-aggregate-relation negation-before-binding
+                       unknown-head-relation negation-arity aggregate-arity
+                       unbound-head-expression unbound-atom-expression)
        '(field-type field-type
                     lattice-projection-cycle negation-cycle negation-cycle negation-cycle
                         aggregate-cycle negation-cycle
                         unsafe-negation unbound-head unknown-relation
                         atom-arity duplicate-relation unbound-guard
                         atom-arity unbound-clause unbound-clause
-                        unknown-relation unsafe-negation)))))
+                        unknown-relation unsafe-negation
+                        unknown-relation atom-arity atom-arity
+                        unbound-head unbound-clause)))))

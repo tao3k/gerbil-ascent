@@ -20,7 +20,7 @@ ascent! {
 }
 "#;
 
-const INVALID: [(&str, &str, &str, &str); 19] = [
+const INVALID: [(&str, &str, &str, &str); 24] = [
     (
         "source-field-type",
         "field-type",
@@ -274,6 +274,71 @@ ascent! {
     relation block(u32);
     relation out(u32);
     out(x) <-- !block(x), node(x);
+}
+"#,
+    ),
+    (
+        "unknown-head-relation",
+        "unknown-relation",
+        "relation `missing` is not defined",
+        r#"
+use ascent::ascent;
+ascent! {
+    relation node(u32);
+    missing(x) <-- node(x);
+}
+"#,
+    ),
+    (
+        "negation-arity",
+        "atom-arity",
+        "wrong arity for relation `block` (expected 1, found 2)",
+        r#"
+use ascent::ascent;
+ascent! {
+    relation node(u32);
+    relation block(u32);
+    relation out(u32);
+    out(x) <-- node(x), !block(x, x);
+}
+"#,
+    ),
+    (
+        "aggregate-arity",
+        "atom-arity",
+        "wrong arity for relation `node` (expected 1, found 2)",
+        r#"
+use ascent::ascent;
+ascent! {
+    relation node(u32);
+    relation out(usize);
+    out(n) <-- agg n = count() in node(_, _);
+}
+"#,
+    ),
+    (
+        "unbound-head-expression",
+        "unbound-head",
+        "cannot find value `missing` in this scope",
+        r#"
+use ascent::ascent;
+ascent! {
+    relation node(u32);
+    relation out(u32);
+    out(missing + 1) <-- node(x);
+}
+"#,
+    ),
+    (
+        "unbound-atom-expression",
+        "unbound-clause",
+        "cannot find value `missing` in this scope",
+        r#"
+use ascent::ascent;
+ascent! {
+    relation node(u32);
+    relation out(u32);
+    out(x) <-- node(x), node(missing + 1);
 }
 "#,
     ),

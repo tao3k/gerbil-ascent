@@ -132,6 +132,38 @@
       (relation out (value))
       ((out x) <-- (not (block x)) (node x))
       (bounds 8 8 16)))
+    ((unknown-head-relation)
+     (ascent
+      (relation node (value) '((1)))
+      ((missing x) <-- (node x))
+      (bounds 8 8 16)))
+    ((negation-arity)
+     (ascent
+      (relation node (value) '((1)))
+      (relation block (value))
+      (relation out (value))
+      ((out x) <-- (node x) (not (block x x)))
+      (bounds 8 8 16)))
+    ((aggregate-arity)
+     (ascent
+      (relation node (value) '((1)))
+      (relation out (value))
+      ((out n) <--
+       (aggregate n gerbil-ascent-count () (node _ _)))
+      (bounds 8 8 16)))
+    ((unbound-head-expression)
+     (ascent
+      (relation node (value) '((1)))
+      (relation out (value))
+      ((out (expr (missing) (+ missing 1))) <-- (node x))
+      (bounds 8 8 16)))
+    ((unbound-atom-expression)
+     (ascent
+      (relation node (value) '((1)))
+      (relation out (value))
+      ((out x) <-- (node x)
+                   (node (expr (missing) (+ missing 1))))
+      (bounds 8 8 16)))
     (else (error "unknown ASCENT invalid-program case" name))))
 
 (def (problem name)
@@ -170,7 +202,9 @@
       'unsafe-negation)
      ((and (string? message)
            (or (string-contains message "unbound ASCENT head variable")
-               (string-contains message "unsafe ASCENT head variable")))
+               (string-contains message "unsafe ASCENT head variable")
+               (string-contains message
+                                "unsafe ASCENT head expression variable")))
       'unbound-head)
      ((and (string? message)
            (string-contains message "unknown ASCENT relation"))
@@ -184,6 +218,9 @@
      ((and (string? message)
            (string-contains message "unbound ASCENT clause variable"))
       (if (eq? name 'unbound-guard) 'unbound-guard 'unbound-clause))
+     ((and (string? message)
+           (string-contains message "unbound ASCENT expression variable"))
+      'unbound-clause)
      (else (error "unexpected ASCENT invalid-program diagnostic"
                   name message)))))
 

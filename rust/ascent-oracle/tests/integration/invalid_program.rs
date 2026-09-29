@@ -20,7 +20,21 @@ ascent! {
 }
 "#;
 
-const INVALID: [(&str, &str, &str, &str); 16] = [
+const INVALID: [(&str, &str, &str, &str); 17] = [
+    (
+        "lattice-projection-feedback",
+        "lattice-projection-cycle",
+        "",
+        r#"
+use ascent::{ascent, lattice::Dual};
+ascent! {
+    relation out(u32);
+    lattice best(u32, Dual<u32>);
+    best(x, Dual(*x)) <-- out(x);
+    out(x) <-- best(x, _);
+}
+"#,
+    ),
     (
         "negative-self",
         "negation-cycle",
@@ -308,9 +322,11 @@ fn invalid_program_admission_matches_or_records_rust_differences() {
     for (index, (name, category, diagnostic, source)) in INVALID.iter().enumerate() {
         let result = compile(source, &library, &dependencies);
         let stderr = String::from_utf8(result.stderr).expect("Rust diagnostic is UTF-8");
-        if *name == "duplicate-relation" {
-            // Ascent 0.8.0 accepts identical duplicate declarations. Scheme
-            // rejects the ambiguous public schema before evaluation.
+        if matches!(*name, "duplicate-relation" | "lattice-projection-feedback") {
+            // Ascent 0.8.0 accepts duplicate declarations and feedback from
+            // a lattice value through an ordinary relation. Scheme rejects
+            // both before evaluation: the former has ambiguous public schema;
+            // the latter needs a strict stratum to preserve joined values.
             assert!(result.status.success(), "{name}: {stderr}");
         } else {
             assert!(!result.status.success(), "{name} unexpectedly compiled");

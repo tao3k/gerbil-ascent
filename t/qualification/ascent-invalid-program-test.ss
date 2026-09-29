@@ -15,13 +15,13 @@
       (for-each
        (lambda (name expected)
          (check-equal? (category name) expected))
-       '(negative-self mutual-negation negative-feedback
+       '(lattice-projection-feedback negative-self mutual-negation negative-feedback
                        aggregate-self negative-with-unrelated-aggregate
                        unsafe-negation unbound-head unknown-relation
                        atom-arity duplicate-relation unbound-guard
                        head-arity unbound-let-input unbound-for-input
                        unknown-aggregate-relation negation-before-binding)
-       '(negation-cycle negation-cycle negation-cycle
+       '(lattice-projection-cycle negation-cycle negation-cycle negation-cycle
                         aggregate-cycle negation-cycle
                         unsafe-negation unbound-head unknown-relation
                         atom-arity duplicate-relation unbound-guard

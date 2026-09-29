@@ -65,7 +65,9 @@ values are platform measurements and are not compared for exact equality.
 `t/` contains Scheme qualification; `rust/ascent-oracle/` contains the
 test-only Rust Ascent differential oracle. The [parity matrix](docs/rust-parity.org)
 tracks the unfinished Rust 0.8.0 feature surface and documented fixed-point
-divergences. Complete Scheme semantic coverage is
+divergences. The [replication checklist](docs/replication-checklist.org)
+tracks the remaining executable closure gates and the final-head admission.
+Complete Scheme semantic coverage is
 the gate before new Agent-specific extensions. POO Flow consumes this package
 as a pinned submodule. MRR owns the semantic adapter and admission of its
 own evidence.

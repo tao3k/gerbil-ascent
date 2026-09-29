@@ -12,6 +12,13 @@
 
 (def (invalid-program name)
   (case name
+    ((lattice-projection-feedback)
+     (ascent
+      (relation out (value) '((1)))
+      (lattice best (key value) '() (lambda (a b) (min a b)))
+      ((best x x) <-- (out x))
+      ((out x) <-- (best x _))
+      (bounds 8 8 16)))
     ((negative-self)
      (ascent
       (relation node (value) '((1)))
@@ -137,6 +144,10 @@
            (string-contains message
                             "unstratifiable ASCENT aggregate cycle"))
       'aggregate-cycle)
+     ((and (string? message)
+           (string-contains message
+                            "unstratifiable ASCENT lattice projection cycle"))
+      'lattice-projection-cycle)
      ((and (string? message)
            (string-contains message
                             "unsafe ASCENT negation variable"))

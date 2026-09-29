@@ -1,0 +1,62 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+#+TITLE: ASCENT 0.8.0 complete replication checklist
+#+STATUS: open
+
+* Completion contract
+
+Target the pinned Rust =ascent= and =ascent-byods-rels= 0.8.0 implementations,
+the [[https://s-arash.github.io/ascent/cc22main-p95-seamless-deductive-inference-via-macros.pdf][CC 2022 paper]], and the [[https://kmicinski.com/assets/byods.pdf][BYODS paper]].
+Implement the corresponding behavior through Gerbil modules, Scheme macros,
+POO contracts and Foundation Providers. Rust token spelling and Rust ownership
+rules are not Scheme requirements. Where pinned Rust contradicts the paper's
+fixed-point semantics, retain a pinned Rust probe, an independent model and a
+documented difference. The [[file:rust-parity.org][parity matrix]] gives the detailed current evidence.
+
+An item is checked only when its named evidence runs on the same source head.
+An example or finite corpus is evidence for its stated domain; it does not
+close a whole feature family. All required items below must be checked before
+calling the replication complete or the PR safe to squash. Keep new Agent
+research and broader POO Flow integration outside the replication claim.
+
+* P0: Inventory and language surface
+
+- [X] Pin =ascent= and =ascent-byods-rels= 0.8.0 in =rust/ascent-oracle/Cargo.toml= and keep the oracle under =rust/=.
+- [X] Put Scheme implementation in module namespaces and Scheme qualification under =t/=; expose the =ascent= form and POO program/session APIs. See =program/=, =interface/= and =docs/scheme-syntax.org=.
+- [ ] Inventory every pinned Rust macro family (=ascent!=, =ascent_run!=, =ascent_source!=, =include_source!=, =ascent_par!=, =ascent_run_par!=), declaration, rule clause, attribute and generated public API. Map each to a Scheme form or a justified language-specific difference, then execute at least one same-input probe per family. Evidence: =rust/ascent-oracle/tests/integration/= and =t/qualification/=.
+- [ ] Cover malformed declarations, variable scope, arity, unknown relations, dependency cycles, and type errors with pinned Rust compile probes and Scheme admission diagnostics. The existing 16-case corpus in =invalid_program.rs= and =ascent-invalid-program-test.ss= is the starting receipt, not exhaustive coverage.
+- [ ] Close module and macro embedding: local parameters, source inclusion, generated API behavior, hygiene/name resolution, and repeated use from a separate Gerbil module. Evidence: =module_session.rs=, =syntax.rs= and matching Scheme tests.
+
+* P1: Fixed-point semantics
+
+- [X] Establish a composed differential baseline: 778 fresh Rust/Scheme programs with multi-head recursion, negation, aggregation, disjunction and product lattice, plus three-phase Scheme retained sessions. Evidence: =composed_corpus.rs=.
+- [ ] Cover arbitrary relation arity, repeated variables, rule/head order, recursive SCC topology, and body-clause order with same-input differential and invalid cases. Extend beyond the selected positive and mutual-recursion fixtures.
+- [ ] Close guards, bindings, iterable generators, negation and aggregation across empty, duplicate, recursive, grouped and invalid inputs. Compare complete output sets and failures, including custom aggregators and derived aggregates.
+- [ ] Close lattice laws and interactions: minimum, set union, product and another nontrivial partial order; source plus derived values; recursive joins; negation and aggregation downstream; cycles that require strict strata. Check an independent finite fixed-point model where Rust 0.8.0 differs.
+- [ ] Close finite-model checks for termination, stratification and rule ordering on bounded graph families; document the boundary of each enumeration. Evidence belongs in =rust/ascent-oracle/tests/integration/= and =t/qualification/=.
+
+* P2: State, storage and execution
+
+- [X] Compare selected repeated-run append/replace, timeout/resume, BYODS =eqrel=/=trrel=/=trrel_uf=, and indexed relation cases. Evidence: =session_corpus.rs=, =timeout.rs=, =byods.rs= and =lattice_index.rs=.
+- [ ] Close retained state for all supported source changes: ordinary and lattice append, replacement and withdrawal, duplicate input, failed update rollback, prior snapshot stability, multi-relation producers, and interaction with later strata.
+- [ ] Close generated timeout behavior across recursion, lattice, BYODS, replacement and resumed strata, with a documented unit/API mapping for Scheme. Prove bounded cancellation and failure atomicity.
+- [ ] Close BYODS Provider contract: default hash, custom index, =eqrel=, =trrel= and =trrel_uf= across multiple producer partitions, update sequences, error paths and larger relation sizes. Exercise POO Provider slots rather than introducing parallel storage abstractions.
+- [ ] Implement and qualify the pinned parallel macro execution semantics or document precisely which intra-program behavior Scheme exposes. Compare serial/parallel results, worker failures and contention; independent program reentrancy alone does not close this item.
+
+* P3: Scale and admission
+
+- [X] Use ASP's standard SS profile with 1000 samples and Foundation Observability memory/duration guards; retain the existing budgets. Evidence: =just performance= and =t/scenarios/performance/=.
+- [ ] Measure each completed feature family at representative 1000- and 10000-row/key scales where applicable. Diagnose algorithmic gaps using Standard Library and Provider/index choices; record time and memory on exact source heads without changing budgets to hide regressions.
+- [ ] On the final ASCENT head, run =just build=, =just test=, =just oracle=, =just performance= and the repository policy gates; require the exact-head Ubuntu CI to pass. A prior green head is insufficient.
+- [ ] Pin that final ASCENT commit in the POO Flow consumer, run its exact pinned Linux integration, resolve review threads, then record both immutable heads and CI receipts before squash. macOS is not a release gate for this work.
+
+* Next execution order
+
+1. Finish the P0 source/API inventory and the missing invalid/dependency probes.
+2. Close P1 semantic interactions, using differential plus independent models.
+3. Close P2 retained state, Providers and intra-program parallel execution.
+4. Run P3 scale gates, fix algorithmic regressions, and admit the final heads.
+
+Update boxes in the same PR as the executable evidence. A green selected
+fixture does not authorize checking a broader box.

@@ -32,6 +32,7 @@
  (gerbil-ascent-library-package-spec
   @ asp-gerbil-scheme-library-package-prototype)
  (spec gerbil-ascent-build-spec)
- (modules gerbil-ascent-library-modules))
+ (modules gerbil-ascent-library-modules)
+ (policy-witnesses '("t/qualification/ascent-syntax-test.ss")))
 
 (defbuild-script (gerbil-ascent-build-spec))

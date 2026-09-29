@@ -75,6 +75,7 @@
     ;; These mutable arrays are private to one evaluation. The public boundary
     ;; remains immutable UIntTrieSet snapshots and POO relation objects.
     (let* ((count (length sources))
+           (source-vector (list->vector sources))
            (names (make-vector count #f))
            (positions (make-hash-table))
            (all (make-vector count []))
@@ -192,7 +193,7 @@
           (let* ((source-position (.ref pattern 'source-index))
                  (head-position (.ref pattern 'head-index))
                  (source-set
-                  (.ref (list-ref sources source-position) 'pairs))
+                  (.ref (vector-ref source-vector source-position) 'pairs))
                  (allowance (min limit (- output-limit source-count)))
                  (closure-pairs
                   (.ref (gerbil-ascent-relation-closure-bounded
@@ -202,7 +203,7 @@
               (when (< i count)
                 (vector-set! results i
                              (.call UIntTrieSet .list<-
-                                    (.ref (list-ref sources i) 'pairs)))
+                                    (.ref (vector-ref source-vector i) 'pairs)))
                 (publish-sources (+ i 1))))
             (vector-set! results head-position closure-pairs)
             (publish-result results 'transitive-closure))

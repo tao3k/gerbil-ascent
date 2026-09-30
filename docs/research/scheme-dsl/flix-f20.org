@@ -18,6 +18,8 @@ Magnus Madsen and Ondřej Lhoták, [[https://plg.uwaterloo.ca/~olhotak/pubs/oops
 with First-Class Datalog Constraints]], OOPSLA 2020.  The [[https://doc.flix.dev/fixpoints.html][Flix fixpoints
 documentation]] is a current implementation reference.  The paper PDF
 is the primary research source; its page numbers below count from one.
+The [[file:flix-l25.org][2025 systems paper]] adds later design decisions
+about private predicate identities, injection, queries, and effects.
 
 * Evidence ledger
 

@@ -29,7 +29,7 @@ from one.  The URL and locators are the saved research source.
 | §3.4.1, PDF p. 4 | An explicit upper bound makes the state space finite-height | Explore an admitted finite domain | Datafun's clamping need not be our behavior |
 | §4.1, Fig. 5, PDF pp. 6–7 | Discrete application clears the monotone context | Keep changing relations out of opaque Scheme calls | Captured state is not statically visible |
 | §4.3–4.4, PDF p. 7 | Conditional and singleton introduction restrict changing inputs | Projection and filtering have distinct obligations | Generic procedures bypass these checks |
-| §9, PDF p. 12 | Higher-order optimization remains future work | Preserve our first-order join plan | No speed claim transfers |
+| §9, PDF p. 12 | Higher-order optimization was future work in 2016 | Preserve our first-order join plan now | [[file:datafun-s20.org][The 2020 follow-up]] later addresses this question |
 
 * Core semantic distinction
 :PROPERTIES:
@@ -131,9 +131,12 @@ PDF p. 12).  Gerbil closures do not acquire Datafun's type proof by
 being placed behind =relation-view=.  A restricted declaration with
 executable admission checks is a plausible first step.  A Datafun-like
 monotonicity checker would be a separate, larger language project.
-The paper also treats higher-order fixed-point optimization as
-research, so it offers no matched speed evidence for our semi-naive
-planner.
+This 2016 paper treats higher-order fixed-point optimization as
+research.  The [[file:datafun-s20.org][2020 follow-up]] later develops a
+semi-naive transformation for typed higher-order Datafun, so the
+historical observation must not be read as a permanent impossibility.
+Neither paper supplies matched performance evidence for this Gerbil
+planner or a proof for arbitrary Scheme procedures.
 
 * Experiment and falsifier
 

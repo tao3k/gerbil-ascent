@@ -23,6 +23,8 @@ analysis so future design work can resume from a precise location.
 | F16 | [[https://www.cl.cam.ac.uk/~nk480/datafun.pdf][Datafun paper]] | [[file:datafun-f16.org][Datafun]] | State monotonicity assumptions explicitly |
 | H13 | [[https://www.schemeworkshop.org/2013/papers/HemannMuKanren2013.pdf][µKanren paper]] | [[file:microkanren-h13.org][µKanren]] | Distinguish search from bottom-up evaluation |
 | F20 | [[https://plg.uwaterloo.ca/~olhotak/pubs/oopsla20c.pdf][Flix paper]] / [[https://doi.org/10.1145/3428193][DOI]] | [[file:flix-f20.org][Flix]] | Validate composition and stratification |
+| S20 | [[https://www.rntz.net/files/seminaive-datafun.pdf][Datafun semi-naive paper]] / [[https://doi.org/10.1145/3371090][DOI]] | [[file:datafun-s20.org][Datafun S20]] | Higher-order deltas need typed transformation |
+| L25 | [[https://plg.uwaterloo.ca/~olhotak/pubs/oopsla25b.pdf][Flix design paper]] / [[https://doi.org/10.1145/3763126][DOI]] | [[file:flix-l25.org][Flix L25]] | Program values, private names and solve/query boundary |
 
 * Cross-paper synthesis
 :PROPERTIES:
@@ -58,6 +60,17 @@ repo does not implement; [[file:microkanren-h13.org::#microkanren-kernel-boundar
 supports a small Scheme kernel with user-level syntax while retaining
 its distinct stream-search semantics.
 
+The long-term [[file:../../scheme-relational-dsl-design.org::#scheme-dsl-architecture][architecture decision]]
+now separates Scheme functions that *construct* program values from
+functions evaluated *inside* a fixed point.  The former can remain
+ordinary higher-order Scheme.  The latter need declared bindings,
+effects, dependencies, stable captures, and a finite-height or explicit
+resource-failure story.  A =relation-view= is a possible pointwise
+adapter; it is not the whole language design.  [[file:datafun-s20.org][S20]]
+provides a research route to higher-order delta evaluation after a
+typed operator IR exists, while [[file:flix-l25.org][L25]] adds
+hygienic private predicates and explicit program/solve/query stages.
+
 #+NAME: paper-transfer-decision
 | Source | Adopt as design constraint | Do not infer |
 |--------+----------------------------+--------------|
@@ -65,6 +78,8 @@ its distinct stream-search semantics.
 | F16 | Require stable monotone dependence and finite-height closure evidence | Arbitrary Scheme calls are statically proven |
 | F20 | Check combined schema and negative cycles after composition | Gerbil fragments have row-polymorphic static safety |
 | H13 | Keep a small semantic kernel beneath Scheme abstractions | Stream-search fairness equals bottom-up completion |
+| S20 | Explore typed higher-order change semantics | Existing opaque closures receive a semi-naive theorem |
+| L25 | Design program values, private handles and explicit solve/query | Flix syntax or static effect/type system already exists here |
 
 * Next evidence gate
 

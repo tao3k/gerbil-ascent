@@ -2,13 +2,15 @@
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 #+TITLE: Scheme-native relational DSL design
-#+STATUS: design proposal; examples below are not implemented syntax
+#+STATUS: long-term language design proposal; examples below are not implemented syntax
 
 * Question and boundary
 
-The implementation must reproduce the selected semantics of Rust Ascent
-0.8.0, but Rust's =if=, =let=, =for=, and =if let= tokens do not define the
-Scheme language.  The relational rule remains the central form:
+The implementation currently reproduces selected Rust Ascent 0.8.0
+semantics.  That oracle constrains *behavior for matching cases*; it
+does not set the long-term Scheme grammar or abstraction boundary.
+Rust's =if=, =let=, =for=, and =if let= tokens are not Scheme design
+requirements.  The relational rule remains a useful semantic form:
 
 #+begin_src scheme
 ((path source target) <-- (edge source target))
@@ -21,11 +23,11 @@ programs and fragments, compute row-local values, and implement explicitly
 declared finite relation views.  Rust is an output oracle for matching cases,
 not the syntax authority.
 
-The proposed rule grammar has relation atoms as its only positive body
-operation.  Negation and aggregation remain explicit because they change
-dependency strata.  Computation, filtering, generation, and pattern
-decomposition enter through term functions or declared relation views;
-they are not separate control-flow clauses.
+The near-term rule grammar may retain relation atoms as its only positive
+body operation.  Negation and aggregation remain explicit because they
+change dependency strata.  Term functions and declared relation views are
+one way to bridge Scheme computation into that grammar.  They are not
+the whole higher-order language design.
 
 * Paper constraints
 
@@ -58,7 +60,174 @@ design-level summary.
   conservative static stratification analysis do not transfer to those
   values; the assembled Gerbil program must be checked at admission.
 
-* Proposed surface
+Two later papers change the long-term picture.  [[file:research/scheme-dsl/datafun-s20.org][Datafun S20]]
+gives a typed higher-order semi-naive transformation, so higher-order
+fixed-point operators need not permanently forfeit delta evaluation.
+[[file:research/scheme-dsl/flix-l25.org][Flix L25]] shows an integrated
+program-value lifecycle, private predicate identities, explicit
+data injection/solve/query, functional predicates, and the trade-off
+between public row types and exposing internal dependencies.
+
+* Long-term architecture decision
+:PROPERTIES:
+:CUSTOM_ID: scheme-dsl-architecture
+:END:
+
+The earlier =relation-view= proposal unifies several row-local
+operations, but it is too narrow as a complete language architecture.
+It says little about program values, private relation identities,
+captured effects, explicit solve/query, or higher-order change
+semantics.  Keep it as one candidate adapter while these boundaries
+define the long-term language.
+
+The language should be higher-order in two *different* places.  At
+construction time, Scheme functions can accept, return, specialize,
+and compose first-class rule fragments.  This can reuse ordinary
+Gerbil functions, modules, and POO declarations.  During fixed-point
+execution, a function called by a rule is part of the logical
+operator.  It requires visible bindings and dependencies, a stable
+snapshot contract, effect control, and a termination story.  The
+first kind of higher-order programming is available as a natural
+direction now; the second requires a typed or otherwise analyzable
+operator language before it can make Datafun-level guarantees.
+
+#+NAME: scheme-language-layers
+| Boundary | Semantic object | Needed invariant | Present basis |
+|----------+-----------------+------------------+---------------|
+| Scheme construction | Fragment/program values, parameterized by relation handles | Hygienic private names and explicit public imports/exports | Gerbil modules, =ascent-fragment=, POO values |
+| Admission | Immutable logical program IR and schema | Arity, field contracts, binding modes, dependency graph, strata | =program/objects.ss=, =program/analysis.ss=, =program/funs.ss= |
+| Fixed-point execution | Relation sets and keyed lattice state | Monotone growth or lawful joins, finite-height evidence or explicit resource failure | =program/evaluate.ss= and storage Providers |
+| Session boundary | Accepted source snapshot and solved result | Failure atomicity, replacement invalidation, completed versus partial result | =program/session.ss= |
+| Query | Immutable result projection | Multiple reads do not rerun or mutate the solved program | Current POO result snapshots; explicit query API remains design work |
+
+Fragments should carry *relation identities*, not rely only on
+human-readable symbols.  A fragment constructor invoked twice must
+create fresh identities for its private relations, while deliberately
+shared imports and exports retain their identities.  This is the
+Scheme counterpart of Flix's rho abstraction.  Public signatures
+should expose relation shapes and exported names; the internal
+dependency graph stays available to admission and planning without
+making every private rule change a public type change.  POO/C4
+composition remains the owner of declaration configuration, while
+relational rule union and evaluation have their own semantics.
+
+Construction, admission, solving, and querying should be explicit.
+Assembling a fragment must not evaluate it: a later fragment may add
+facts or rules that alter a negated result.  A conceptual use sequence
+is shown below.  The function and constructor names are explanatory
+only, not committed API syntax.
+
+#+begin_src scheme
+;; Schematic long-term API, not implemented.
+(def (reachability edge-handle)
+  (with-private-relations ((path (vertex vertex)))
+    (fragment (import edge-handle) (export path)
+      ((path x y) <-- (edge-handle x y))
+      ((path x z) <-- (path x y) (edge-handle y z)))))
+(def reach (reachability edge-handle))
+(def program (compose (inject edge-handle edge-rows) reach))
+(def checked (admit program))
+(def solved (solve checked))
+(query solved (exported-relation reach 'path))
+#+end_src
+
+The logical IR after =admit= needs explicit nodes for relation atoms,
+term projection, finite functional predicates, negation, aggregation,
+and lattice joins.  Each node carries its bound inputs, produced
+outputs, positive/strict relation dependencies, and an effect/totality
+classification.  A source macro may make the authoring syntax concise,
+but it must lower to these inspectable nodes before index selection,
+SCC analysis, and delta planning.  Scheme hygienic binding must
+distinguish logic variables, relation handles, and captured host values;
+the current explicit =(expr (bound ...) ...)= is a useful partial
+boundary, not a complete scope system.
+
+* Function admission and assurance
+:PROPERTIES:
+:CUSTOM_ID: scheme-function-assurance
+:END:
+
+Three function classes should be treated differently:
+
+#+NAME: scheme-function-classes
+| Class | Position | Assurance and effect | Planner consequence |
+|-------+----------+----------------------+---------------------|
+| Constructor function | Before admission; builds fragments from values | Normal Scheme semantics; effects are outside fixed-point execution | Final fragment is validated as a whole |
+| Trusted pointwise adapter | Inside a rule; consumes declared bound values and emits finite rows | User-supplied purity, stability, totality and finite-domain laws; runtime checks can falsify but not prove them | Treat as a visible mode-bearing operator with no hidden relation reads |
+| Verified monotone operator | Inside recursion; takes relation/lattice values | Future restricted IR with checked monotonicity, domain/order and change semantics | Eligible for higher-order incrementalization after equivalence proof |
+
+A declaration accepting =procedure?= cannot establish purity,
+termination, or monotonicity.  A restricted expression/operator IR
+could admit known primitives by construction; external Scheme
+procedures would remain trusted adapters with bounded claims.  Side
+effects or hidden reads of changing relations expose evaluation order
+and break delta planning.  The 2025 Flix paper has an effect system
+for pure expressions but explicitly leaves termination to the
+programmer; Gerbil currently has neither static guarantee.  Domain
+checks, fact budgets, timeouts, and rollback are operational controls,
+not substitutes for the semantic laws.
+
+The semantic commitments for an admitted positive rule are: its
+visible body dependencies grow monotonically within a stratum; the
+rule contributes rows or lawful lattice joins; a pure pointwise
+adapter returns the same rows for the same bound inputs throughout
+one source snapshot; and all derived values fit an admitted
+finite-height domain if total termination is claimed.  Negation and
+general aggregation read completed lower strata.  A source withdrawal
+changes the snapshot and can invalidate old facts, so it needs
+recomputation or a separately proven deletion algorithm.  Datafun
+S20's change transform addresses *increasing* changes and cannot be
+applied to withdrawal without another argument.
+
+#+NAME: scheme-design-decisions
+| Question | Design decision | Evidence needed before implementation claim |
+|----------+-----------------+----------------------------------------------|
+| Logic variable versus Scheme capture | Distinct hygienic binders; host capture explicit in admitted IR | Nested macro/module scope and accidental-capture regressions |
+| Private relation sharing | Fresh handle on each fragment-constructor invocation | Compose two differently instantiated private relations |
+| Public signature | Imports/exports and relation shape public; dependency graph retained internally | Composition diagnostics without leaking private names |
+| Rule-time Scheme call | Trusted pointwise adapter or verified operator, never an unclassified call | Mutable capture, hidden read, divergence and finite-domain cases |
+| Lattice value | Explicit order/join contract, distinct from a set relation | Law checks on finite examples and independent fixed-point model |
+| Solve timing | Assemble and admit before explicit solve; query solved snapshot | Negation-sensitive late composition and repeated query |
+| Source withdrawal | Recompute accepted snapshot until deletion semantics are qualified | Full output and failure-atomic replacement receipts |
+
+Higher-order delta evaluation belongs to a later compiler research
+slice.  Datafun S20 derives changes for function values as well as
+sets, with a semantics-preserving translation for its typed calculus.
+Our first implementation can specialize first-class Scheme fragment
+combinators to a first-order IR and use the existing semi-naive engine.
+Only when a typed monotone operator IR exists should we attempt a
+change transform for functions.  That transform needs a naive
+reference evaluator, finite-model equivalence checks, and matched
+scale measurements; copying the paper's algorithm into opaque Gerbil
+closures would not establish its theorem here.
+
+* Migration and integrated gate
+:PROPERTIES:
+:CUSTOM_ID: scheme-dsl-migration
+:END:
+
+The migration should be direct when a replacement is qualified:
+remove the Rust-shaped Scheme body forms and update examples and
+callers together, while retaining Rust source only as an oracle in
+the parity matrix.  Do not add a compatibility grammar that makes
+two public rule languages.  The first acceptance gate is one
+integrated program that exercises fragment reuse with private names,
+source injection and replacement, a pure pointwise adapter, recursive
+closure, lattice refinement, negation, explicit solve and multiple
+queries.  It must check complete facts against an independent finite
+model and pinned Rust cases where semantics overlap, admission
+diagnostics, selected plan and delta positions, failure atomicity,
+and scale.  This is a proposed gate; none of these new capabilities
+is claimed implemented.
+
+The next research gate, after a restricted monotone operator IR is
+defined, checks higher-order recursion with a naive interpreter and
+a delta-transformed interpreter.  Full output and termination status
+must match before a performance claim is made.  This keeps the
+long-term target visible without pretending that a general Scheme
+closure already satisfies it.
+
+* Near-term surface candidate
 
 ** Scalar computation stays in a term
 
@@ -76,10 +245,12 @@ quoting and macro expansion make such a scan unsound.  A later hygienic
 binding analysis could shorten this spelling only with executable scope
 tests.
 
-** Zero, one, or many rows use one relation interface
+** Trusted pointwise adapter for zero, one, or many rows
 
 A host procedure can define a finite relation view with declared input and
-output modes.  The following =relation-view= notation is provisional:
+output modes.  This is a candidate for the *trusted pointwise adapter*
+class above, not the general higher-order operator language.  The
+following =relation-view= notation is provisional:
 
 #+begin_src scheme
 (def (successors x) (list (list (+ x 1)) (list (+ x 2))))
@@ -273,3 +444,5 @@ and in the parity ledger as the source-language side of each comparison.
 - [[file:research/scheme-dsl/datafun-f16.org][F16: Datafun reading note]]
 - [[file:research/scheme-dsl/microkanren-h13.org][H13: µKanren reading note]]
 - [[file:research/scheme-dsl/flix-f20.org][F20: Flix reading note]]
+- [[file:research/scheme-dsl/datafun-s20.org][S20: higher-order Datafun semi-naive reading note]]
+- [[file:research/scheme-dsl/flix-l25.org][L25: Flix language design reading note]]

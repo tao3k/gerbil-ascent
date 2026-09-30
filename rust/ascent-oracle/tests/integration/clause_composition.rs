@@ -10,6 +10,10 @@ use std::collections::BTreeSet;
 
 type Edge = (u32, u32);
 
+fn max_target<'a>(input: impl Iterator<Item = (&'a u32,)>) -> impl Iterator<Item = u32> {
+    input.map(|(target,)| *target).max().into_iter()
+}
+
 fn edges_for(mask: u32) -> Vec<Edge> {
     (0..3)
         .flat_map(|from| (0..3).map(move |to| (from, to)))
@@ -27,6 +31,7 @@ fn rust_rows(edges: &[Edge]) -> BTreeSet<String> {
         relation allowed(u32, u32);
         relation reach(u32, u32);
         relation reach_count(u32, usize);
+        relation reach_max(u32, u32);
 
         blocked(x, y) <-- edge(x, y), if (*x + *y) % 2 == 0;
         candidate(x, z, score) <-- edge(x, y),
@@ -36,6 +41,7 @@ fn rust_rows(edges: &[Edge]) -> BTreeSet<String> {
         reach(x, z) <-- allowed(x, z);
         reach(x, z) <-- reach(x, y), allowed(y, z);
         reach_count(x, total) <-- root(x), agg total = count() in reach(x, _);
+        reach_max(x, target) <-- root(x), agg target = max_target(z) in reach(x, z);
     }
     let mut program = AscentProgram {
         edge: edges.to_vec(),
@@ -70,6 +76,12 @@ fn rust_rows(edges: &[Edge]) -> BTreeSet<String> {
                 .reach_count
                 .iter()
                 .map(|(x, total)| format!("reach-count\t{x}\t{total}")),
+        )
+        .chain(
+            program
+                .reach_max
+                .iter()
+                .map(|(x, target)| format!("reach-max\t{x}\t{target}")),
         )
         .collect()
 }
@@ -121,6 +133,9 @@ fn model_rows(edges: &[Edge]) -> BTreeSet<String> {
             "reach-count\t{x}\t{}",
             targets.iter().filter(|present| **present).count()
         ));
+        if let Some(target) = targets.iter().rposition(|present| *present) {
+            rows.insert(format!("reach-max\t{x}\t{target}"));
+        }
     }
     rows
 }

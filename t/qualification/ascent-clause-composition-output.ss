@@ -20,6 +20,7 @@
    (relation allowed (from to))
    (relation reach (from to))
    (relation reach-count (node total))
+   (relation reach-max (node target))
    ((blocked x y) <-- (edge x y)
     (if (x y) (even? (+ x y))))
    ((candidate x z score) <-- (edge x y)
@@ -32,6 +33,13 @@
    ((reach x z) <-- (reach x y) (allowed y z))
    ((reach-count x total) <-- (root x)
     (aggregate total gerbil-ascent-count () (reach x z)))
+   ((reach-max x target) <-- (root x)
+    (aggregate target
+               (lambda (tuples)
+                 (if (null? tuples)
+                   []
+                   (list (apply max (map car tuples)))))
+               (z) (reach x z)))
    (bounds 16 80 128)))
 
 (def (emit mask session edges)
@@ -45,7 +53,7 @@
           (for-each (lambda (column) (display #\tab) (display column)) row)
           (newline))
         (rows-of name)))
-     '(blocked candidate allowed reach reach-count))))
+     '(blocked candidate allowed reach reach-count reach-max))))
 
 (def (main . args)
   (unless (null? args)

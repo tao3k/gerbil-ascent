@@ -58,6 +58,25 @@
     (rule (path ?x ?z) (path ?x ?y) (edge ?y ?z))
     (limits 32 derived-limit 64))))
 
+(def (evaluate-scalar edges)
+  (gerbil-ascent-evaluate-program
+   (relational-program
+    (relation edge (from to) edges)
+    (relation even-edge (from to))
+    (relation ordered-sum (value))
+    (relation copied-left (value))
+    (rule (even-edge ?x ?y)
+      (edge ?x ?y)
+      (where (even? ?x)))
+    (rule (ordered-sum ?z)
+      (edge ?x ?y)
+      (where (< ?x ?y))
+      (compute ?z (+ ?x ?y)))
+    (rule (copied-left ?z)
+      (edge ?x ?y)
+      (compute ?z (identity ?x)))
+    (limits 32 32 64))))
+
 (def (rows result name)
   ((.ref result 'rows-of) name))
 
@@ -265,6 +284,7 @@
               (relational-solve
                (relational-admit
                 (relational-compose (list source scalar) 32 32 64))))
+             (direct (evaluate-scalar input))
              (expected-even
               (filter (lambda (row) (even? (car row))) input))
              (expected-sum
@@ -272,13 +292,22 @@
                (map (lambda (row)
                       (list (+ (car row) (cadr row))))
                     (filter (lambda (row) (< (car row) (cadr row)))
-                            input)))))
+                            input))))
+             (expected-copied
+              (delete-duplicates/hash
+               (map (lambda (row) (list (car row))) input))))
         (check-equal?
          (same-set? (relational-query solution scalar 'even-edge)
                     expected-even) #t)
         (check-equal?
          (same-set? (relational-query solution scalar 'ordered-sum)
-                    expected-sum) #t)))
+                    expected-sum) #t)
+        (check-equal? (same-set? (rows direct 'even-edge)
+                                 expected-even) #t)
+        (check-equal? (same-set? (rows direct 'ordered-sum)
+                                 expected-sum) #t)
+        (check-equal? (same-set? (rows direct 'copied-left)
+                                 expected-copied) #t)))
     (poo-flow-test-case "checked operator modes reject invalid uses"
       (check-exception
        (relational-fragment

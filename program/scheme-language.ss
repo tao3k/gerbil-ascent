@@ -4,7 +4,7 @@
 
 ;;; First executable gate for the proposed Scheme relational language.
 ;;; This module is intentionally separate from the old Ascent surface: it
-;;; accepts only finite positive rules, with no host callbacks in recursion.
+;;; accepts positive scalar rules, with no host callbacks in recursion.
 (import "objects.ss"
         (only-in "types.ss" GerbilAscentFragmentContract
                  GerbilAscentProgramContract)
@@ -141,9 +141,10 @@
      (relational-operator-procedure 'compute operation (length inputs))
      (vector 'compute operation (map identity inputs) output))))
 
-;;; Only ?identifiers may name a rule binding. The body distinguishes
-;;; relation scans from fixed scalar filters and projections at expansion.
-(defsyntax (relational-clause/lexical stx)
+;;; Both public forms share this rule-body grammar. The supplied atom
+;;; lowering chooses quoted program names or lexical fragment handles;
+;;; scalar operators keep one validation and descriptor path.
+(defsyntax (relational-checked-clause stx)
   (def (logic-variable? input)
     (and (identifier? input)
          (let* ((datum (syntax->datum input))
@@ -152,20 +153,21 @@
                 (> (string-length spelling) 1)
                 (char=? (string-ref spelling 0) #\?)))))
   (syntax-case stx (where compute)
-    ((_ (where (operation input ...)))
+    ((_ atom-lowering (where (operation input ...)))
      (and (identifier? (syntax operation))
           (andmap logic-variable? (syntax->list (syntax (input ...)))))
      (syntax (relational-where 'operation '(input ...))))
-    ((_ (compute output (operation input ...)))
+    ((_ atom-lowering (compute output (operation input ...)))
      (and (logic-variable? (syntax output))
           (identifier? (syntax operation))
           (andmap logic-variable? (syntax->list (syntax (input ...)))))
      (syntax (relational-compute 'output 'operation '(input ...))))
-    ((_ (name term ...))
-     (and (identifier? (syntax name))
+    ((_ atom-lowering (name term ...))
+     (and (identifier? (syntax atom-lowering))
+          (identifier? (syntax name))
           (not (memq (syntax->datum (syntax name)) '(where compute))))
-     (syntax (relational-atom/lexical (name term ...))))
-    ((_ bad)
+     (syntax (atom-lowering (name term ...))))
+    ((_ atom-lowering bad)
      (raise-syntax-error #f "expected atom, where, or compute clause"
                          (syntax bad)))))
 
@@ -197,7 +199,8 @@
               (lowered ...
                        (gerbil-ascent-rule
                         (list (relational-atom head))
-                        (list (relational-atom body) ...)))
+                        (list (relational-checked-clause
+                               relational-atom body) ...)))
               rest ...)))
     ((_ (declared ...) (lowered ...) (limits input derived output))
      (syntax (gerbil-ascent-program
@@ -212,11 +215,11 @@
       #f "relational-program requires a final limits clause" stx))))
 
 ;; relational-program
-;;   : (-> Syntax FinitePositiveProgramExpression)
+;;   : (-> Syntax CheckedPositiveProgramExpression)
 ;;   | doc m%
-;;       Build a finite, function-free positive program.  Source values and
-;;       derived values are immutable scalar atoms; syntax rejects host
-;;       computation and plain Scheme identifiers inside a rule.  The final
+;;       Build a checked positive program. Source and derived values are
+;;       immutable scalar atoms. Rules admit only fixed checked scalar
+;;       operators, not host closures or plain Scheme identifiers. The final
 ;;       limits clause supplies resource-failure bounds.
 ;;
 ;;       # Examples
@@ -280,8 +283,8 @@
       (list
        (gerbil-ascent-rule
         (list (relational-atom/lexical (head head-term ...)))
-        (list (relational-clause/lexical
-               (body body-term ...)) ...)) ...)
+        (list (relational-checked-clause
+               relational-atom/lexical (body body-term ...)) ...)) ...)
       (list (cons 'public-name exported-name) ...)))))
 
 ;;; A public label is scoped to its fragment instance, rather than to the
@@ -313,7 +316,7 @@
    (append-map (lambda (fragment) (.ref fragment 'rules)) fragments)
    input-limit derived-limit output-limit))
 
-;;; Admission rebuilds only the finite positive grammar. This removes
+;;; Admission rebuilds only the checked positive grammar. This removes
 ;;; caller-owned row/rule lists before planning and rejects old host callbacks.
 (def (relational-copy-term term)
   (case (.ref term 'kind)

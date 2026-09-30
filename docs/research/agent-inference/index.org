@@ -23,6 +23,10 @@ The sources below use different logics and workloads.  Their results
 are design evidence, not proof that our Library already has the API.
 The first concrete checker is =gerbil-ascent=; POO Flow owns workflow
 composition, tool selection and runtime handoff.
+The implementation priority is the direct Library contract for Agent
+candidate reasoning alongside the internal Datalog core.  Serving
+adapters such as [[file:serving-sglang-vllm.org][SGLang/vLLM]] follow that
+contract; they are lower priority than its executable Scheme fixture.
 
 #+NAME: agent-source-ledger
 | Key | Primary source | Our note | Applicable question |

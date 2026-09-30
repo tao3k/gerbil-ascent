@@ -3,7 +3,7 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 (import (only-in :gerbil-ascent/program/interface
-                 ascent gerbil-ascent-evaluate-program)
+                 ascent gerbil-ascent-count gerbil-ascent-evaluate-program)
         (only-in :gerbil-ascent/t/qualification/ascent-fragment-source
                  ascent-reach-fragment ascent-generated-seed-fragment)
         (only-in :gerbil-ascent/table/interface
@@ -21,7 +21,23 @@
         ascent-inline-macro-evaluate
         ascent-inline-rule-macro-evaluate
         ascent-default-storage-macro-evaluate
-        ascent-pattern-clauses-evaluate)
+        ascent-pattern-clauses-evaluate
+        ascent-alternate-spellings-evaluate)
+
+(def (ascent-alternate-spellings-evaluate edges)
+  (gerbil-ascent-evaluate-program
+   (ascent
+    (relation edge (from to) edges)
+    (relation alternate-a (value))
+    (relation alternate-b (value))
+    (relation alternate-selected (value))
+    (relation alternate-count (total))
+    (facts (alternate-a (lit 7)) (alternate-b (lit 11)))
+    ((alternate-selected x) <--
+     (or (and (edge x ignored)) (and (alternate-a x))))
+    ((alternate-count total) <--
+     (aggregate total gerbil-ascent-count () (alternate-selected value)))
+    (bounds 16 16 32))))
 
 (def (ascent-syntax-program edges anchor)
   (ascent

@@ -60,8 +60,14 @@ fn measured_rule_program_keeps_rust_scheme_rows_and_exposes_timing() {
             ..AscentProgram::default()
         };
         program.run();
-        let _rust_rule_time = program.rule0_0_duration;
-        let _rust_summary = program.scc_times_summary();
+        let rust_rule_time = program.rule0_0_duration;
+        let rust_summary = program.scc_times_summary();
+        assert!(rust_summary.contains("scc 0: iterations: 1, time:"));
+        assert_eq!(rust_summary.matches("scc 0: iterations:").count(), 1);
+        assert_eq!(rust_summary.matches("  sum of rule times:").count(), 1);
+        assert_eq!(rust_summary.matches("  rule copied <--").count(), 1);
+        assert!(rust_summary.contains("update_indices time:"));
+        assert!(rust_summary.contains(&format!("    time: {rust_rule_time:?}")));
         let mut rust_sizes = program
             .relation_sizes_summary()
             .lines()
@@ -148,6 +154,52 @@ fn rust_macro_rows() -> Vec<String> {
         .iter()
         .map(|(value,)| format!("macro-seed\t{value}"))
         .collect()
+}
+
+fn rust_alternate_spelling_rows(edges: &[(u32, u32)]) -> Vec<String> {
+    ascent! {
+        relation edge(u32, u32);
+        relation alternate_a(u32);
+        relation alternate_b(u32);
+        relation alternate_selected(u32);
+        relation alternate_count(usize);
+
+        {alternate_a(7), alternate_b(11)};
+        alternate_selected(x) <-- (edge(x, _) || alternate_a(x));
+        alternate_count(total) <--
+            agg total = (ascent::aggregators::count)() in alternate_selected(_);
+    }
+    let mut program = AscentProgram {
+        edge: edges.to_vec(),
+        ..AscentProgram::default()
+    };
+    program.run();
+    let mut rows = Vec::new();
+    rows.extend(
+        program
+            .alternate_a
+            .iter()
+            .map(|(value,)| format!("alternate-a\t{value}")),
+    );
+    rows.extend(
+        program
+            .alternate_b
+            .iter()
+            .map(|(value,)| format!("alternate-b\t{value}")),
+    );
+    rows.extend(
+        program
+            .alternate_selected
+            .iter()
+            .map(|(value,)| format!("alternate-selected\t{value}")),
+    );
+    rows.extend(
+        program
+            .alternate_count
+            .iter()
+            .map(|(total,)| format!("alternate-count\t{total}")),
+    );
+    rows
 }
 
 fn rust_rows(edges: &[(u32, u32)]) -> Vec<String> {
@@ -259,6 +311,7 @@ fn rust_rows(edges: &[(u32, u32)]) -> Vec<String> {
     );
     rows.extend(rust_closure_rows(edges));
     rows.extend(rust_macro_rows());
+    rows.extend(rust_alternate_spelling_rows(edges));
     rows.sort_unstable();
     rows
 }

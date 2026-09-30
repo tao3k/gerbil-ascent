@@ -9,7 +9,8 @@
                  ascent-pattern-clauses-evaluate
                  ascent-included-fragment-evaluate
                  ascent-inline-macro-evaluate
-                 ascent-inline-rule-macro-evaluate))
+                 ascent-inline-rule-macro-evaluate
+                 ascent-alternate-spellings-evaluate))
 
 (export main)
 
@@ -27,7 +28,9 @@
          (inline-rule-rows-of
           (.ref (ascent-inline-rule-macro-evaluate edges) 'rows-of))
          (generated-rows-of
-          (.ref (ascent-inline-macro-evaluate) 'rows-of)))
+          (.ref (ascent-inline-macro-evaluate) 'rows-of))
+         (alternate-rows-of
+          (.ref (ascent-alternate-spellings-evaluate edges) 'rows-of)))
     (for-each
      (lambda (name)
        (for-each
@@ -74,5 +77,15 @@
        (for-each (lambda (column) (display #\tab) (display column)) row)
        (newline))
      (inline-rule-rows-of 'copied))
+    (for-each
+     (lambda (name)
+       (for-each
+        (lambda (row)
+          (display name)
+          (for-each (lambda (column) (display #\tab) (display column))
+                    row)
+          (newline))
+        (alternate-rows-of name)))
+     '(alternate-a alternate-b alternate-selected alternate-count))
     (displayln "END")
     (force-output)))

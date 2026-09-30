@@ -189,7 +189,7 @@ law evidence; the syntax alone cannot establish it.
 | =relation r(T,...) [= source];= | =(relation r ((column predicate) ...) [source])= | Runtime Scheme field predicates check source, update and derived rows; Rust compile-time type and diagnostics parity open |
 | =#[ds(provider)] relation ...= | =(relation ... source (index provider) (storage provider))= | POO Provider slot executes; wider BYODS parity in [[file:rust-parity.org][matrix]] |
 | =lattice r(T,...);= | =(lattice r ((column predicate) ...) source join [index])= | Runtime column checks plus recursive shortest-path and Set-union Rust oracles; Rust compile-time type diagnostics open |
-| =head;= and comma-separated heads | =(fact head)= / =(facts head ...)= | Rust differential for two fact heads |
+| =head;=, comma-separated heads, and braced ={head,...};= | =(fact head)= / =(facts head ...)= | Rust differential for two fact heads; braced form checked across five input snapshots |
 | =head,... <-- body,...;= | =((head ...) <-- clause ...)= | Mutual recursion and multi-head oracle |
 | Positive atom with repeated variable | =(r x x ...)= | Existing rule oracle |
 | Independent =_= wildcards | =(r _ _ ...)= | Full upstream =var_points_to= rule shape compared with Rust on empty, reference, and branching source snapshots; wildcard heads reject |
@@ -198,8 +198,8 @@ law evidence; the syntax alone cannot establish it.
 | =let pat=expr= | =(let (output ...) (bound ...) expr pattern)= | Scalar and destructured binding; Rust tuple differential |
 | =for pat in expr= | =(for (output ...) (bound ...) expr pattern)= | Iterable scalar and destructured tuple Rust differential |
 | =if let pat=expr= | =(if-let (output ...) (bound ...) expr pattern)= | =Some= success/failure Rust differential |
-| =agg pat=f(args) in r(args)= | =(aggregate (output ...) f (input ...) (r args ...) pattern)= | Grouped/derived/custom aggregate oracle; tuple output pattern Rust differential |
-| Parenthesized =|= disjunction | =(or (and clause ...) ...)= | Two disjunction points qualified, one Rust differential |
+| =agg pat=f(args) in r(args)=, with =f= a path or parenthesized expression | =(aggregate (output ...) f (input ...) (r args ...) pattern)= | Grouped/derived/custom aggregate oracle; tuple output pattern and parenthesized aggregator expression Rust differentials |
+| Parenthesized =|= or =||= disjunction | =(or (and clause ...) ...)= | Two disjunction points qualified; pinned Rust accepts =||= with a warning to use =|=, and both forms have Rust/Scheme output differentials |
 | Head expression | =(expr (bound ...) expression)= | Rust differential over four source snapshots |
 | Body argument expression | =(expr (bound ...) expression)= | Same-atom and prior-atom bound expressions match Rust over four source snapshots; indexed Provider qualification also passes; broader argument types remain open |
 | =?pat= body argument | =(r (pat (output ...) pattern))= | Inline =Some= success/failure Rust differential; native Gerbil pattern semantics |
@@ -209,7 +209,7 @@ law evidence; the syntax alone cannot establish it.
 | Struct signature, generics, visibility | Gerbil module export and POO type contract | Generated API/type parity open |
 | Generated =relation_sizes_summary()= | Result POO =relation-sizes= slot, called on demand | Complete public relation sizes match pinned Rust for empty, single and duplicate sources; retained result snapshots keep their earlier sizes |
 | Generated =summary()= | =gerbil-ascent-program-summary= returns static rule SCC descriptors | A same-declaration Rust/Scheme probe checks recursive flags and dynamic relation sets; Rust's lowered rule text and exact SCC order remain open |
-| Generated =scc_times_summary()= | Result timing metadata | Rust reports SCC iterations and durations; Scheme currently exposes optional per-rule nanoseconds but no SCC timing or iteration summary. No parity claim |
+| Generated =scc_times_summary()= | Result timing metadata | A one-rule probe checks Rust's SCC count, one acyclic iteration, rule entry and public rule-duration field against the generated text; Scheme reports one optional per-rule nanosecond value. Scheme has no SCC timing or iteration summary, and exact clocks are not compared |
 | Deprecated generated =update_indices()= | Provider index maintenance inside evaluation | Rust marks explicit calls deprecated; Scheme indexes are maintained through Provider admission, so exposing a second public update step would change the contract |
 | =#![measure_rule_times]= | =measure-rule-times?: #t= on the Scheme evaluator or Session constructor | Per-rule nanoseconds in declaration order; Rust/Scheme rows match for selected inputs, exact durations are not semantic parity |
 | =#![generate_run_timeout]= | =gerbil-ascent-session-run-timeout= with a nonnegative nanosecond budget; result =finished= slot | Same-input first partial and completed rows match Rust. Scheme resumes committed rounds across repeated zero budgets; Rust 0.8.0 repeats the same partial rows, recorded in [[file:rust-parity.org][parity matrix]]. Selected negation, lattice, BYODS, and source-replacement interactions have regression cases; broader interactions and time-budget scale remain open |

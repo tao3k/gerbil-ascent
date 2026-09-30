@@ -19,6 +19,7 @@
     "program/objects"
     "program/aggregators"
     "program/syntax"
+    "program/scheme-language"
     "program/funs"
     "program/analysis"
     "program/summary"

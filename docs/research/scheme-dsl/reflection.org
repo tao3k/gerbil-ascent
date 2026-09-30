@@ -100,6 +100,13 @@ pinned implementations and matched tasks.  Otherwise report only our
 measurements and the published context.  Preserve inconclusive and
 negative results and revise the hypothesis.
 
+The first [[file:../../scheme-relational-language-design.org::#scheme-language-first-code][code slice]]
+now exercises part of E1: finite positive reachability against an
+independent graph algorithm and explicit rejection cases.  E1 remains
+open for fragment composition, finite lattice domains, nonpositive
+rules, and generated programs beyond this subset.  E2-E6 have no
+measured result.
+
 * Decision gate
 :PROPERTIES:
 :CUSTOM_ID: scheme-dsl-reflection-gate

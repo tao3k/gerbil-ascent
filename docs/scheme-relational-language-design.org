@@ -130,6 +130,32 @@ counts and scale.  A fact budget may stop a run with =partial= or
 answer.  For unrestricted Gerbil procedures, a declared “pure” flag
 is a trust assertion, not a mechanical proof.
 
+* First executable research gate
+:PROPERTIES:
+:CUSTOM_ID: scheme-language-first-code
+:END:
+
+[[file:../program/scheme-language.ss][The experimental Scheme module]]
+implements =(relational-program ...)= with relations, positive =rule=
+forms and a final =limits= clause.  Rule terms are =?variables=,
+anonymous =?_=, or exact-integer/Boolean/character literals.  Source
+rows may also contain symbols.  Construction uses
+ordinary Scheme expressions for source rows; recursive rule evaluation
+cannot call an opaque host procedure.  The existing evaluator still
+performs admission and execution.  This module is a finite positive
+semantic slice, not the fragment/higher-order language described
+below and not a performance result.
+
+The [[file:../t/qualification/scheme-relational-test.ss][qualification
+case]] compares recursive closure with an independent Floyd-Warshall
+model for 64 directed graphs on three nodes, plus cycles, repeated
+source rows, source withdrawal, literals, unsafe heads and budget
+failure.  These checks establish a local bounded conformance receipt.
+They do not prove syntax ergonomics, general higher-order monotonicity,
+Flix-like static composition, or performance superiority.  The next
+implementation gate is first-class fragment identity and whole-program
+admission, followed by matched measurement before optimizer changes.
+
 * Proposed public shape
 :PROPERTIES:
 :CUSTOM_ID: scheme-language-shape

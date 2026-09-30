@@ -1,0 +1,202 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+#+TITLE: Scheme-native relational DSL design
+#+STATUS: design proposal; examples below are not implemented syntax
+
+* Question and boundary
+
+The implementation must reproduce the selected semantics of Rust Ascent
+0.8.0, but Rust's =if=, =let=, =for=, and =if let= tokens do not define the
+Scheme language.  The relational rule remains the central form:
+
+#+begin_src scheme
+((path source target) <-- (edge source target))
+((path source target) <-- (path source middle) (edge middle target))
+#+end_src
+
+The arrow expresses a fact derivation.  Body relation atoms express joins;
+the same named logic variable means equality.  Scheme functions construct
+programs and fragments, compute row-local values, and implement explicitly
+declared finite relation views.  Rust is an output oracle for matching cases,
+not the syntax authority.
+
+The proposed rule grammar has relation atoms as its only positive body
+operation.  Negation and aggregation remain explicit because they change
+dependency strata.  Computation, filtering, generation, and pattern
+decomposition enter through term functions or declared relation views;
+they are not separate control-flow clauses.
+
+* Paper constraints
+
+- A22 retains small Datalog-style rules as the explanation of recursive
+  closure, while embedding host expressions and patterns.  Its extra =for=
+  syntax is one Rust embedding choice, not a semantic obligation for Scheme.
+- F16 Datafun permits higher-order functional programming by tracking
+  monotonicity.  Scheme does not infer that property for arbitrary captured
+  procedures.  A function called during a fixed-point run therefore needs
+  an explicit stability and dependency boundary; a new keyword cannot prove
+  it monotone.
+- Scheme miniKanren demonstrates a small relational core with functional
+  combinators and macros layered over it.  Its search/unification semantics
+  differ from this bottom-up fixed-point engine, so its operators are design
+  guidance rather than direct replacements.
+- Flix demonstrates first-class rule/constraint values composed by ordinary
+  host functions.  Existing =ascent-fragment= and POO declarations offer a
+  Scheme-owned place for this kind of composition.
+
+* Proposed surface
+
+** Scalar computation stays in a term
+
+The current =expr= term already permits a reusable lexical Scheme function
+without adding a body =let= clause:
+
+#+begin_src scheme
+(def (successor x) (+ x 1))
+((out (expr (x) (successor x))) <-- (node x))
+#+end_src
+
+The explicit input list identifies logic variables for admission.  It must
+not be replaced by a textual free-variable scan: Scheme =lambda=, =let=,
+quoting and macro expansion make such a scan unsound.  A later hygienic
+binding analysis could shorten this spelling only with executable scope
+tests.
+
+** Zero, one, or many rows use one relation interface
+
+A host procedure can define a finite relation view with declared input and
+output modes.  The following =relation-view= notation is provisional:
+
+#+begin_src scheme
+(def (successors x) (list (list (+ x 1)) (list (+ x 2))))
+(ascent
+  (relation node (value) nodes)
+  (relation out (value))
+  (relation-view next (from) (to) successors)
+  ((out y) <-- (node x) (next x y)))
+#+end_src
+
+=next= is used like an ordinary body relation.  Its declared =from= input
+must be bound before the call; =to= is fresh output.  A procedure returns a
+finite iterable of output rows.  Returning no rows is a failed predicate or
+pattern; returning one row is a scalar binding; returning several rows is a
+generator.  A Boolean predicate and a Scheme =match= procedure can be lifted
+into views by normal Scheme functions, without separate =guard=, =if let=,
+=for=, or body =match= syntax.  Rule heads and body atoms keep the same
+relational reading.
+
+For example, a predicate view has no output columns and returns one empty
+row when it succeeds:
+
+#+begin_src scheme
+(def (even-rows x) (if (even? x) '(()) '()))
+(relation-view even (value) () even-rows)
+((out x) <-- (node x) (even x))
+#+end_src
+
+The view is a POO declaration value.  A first implementation may lower it
+to the existing guard, binding, or generator execution plan, but that is an
+implementation choice and does not define three public rule languages.
+
+| Current Scheme body spelling | Proposed semantic expression |
+|------------------------------+------------------------------|
+| =if= / =guard= | A view with zero output columns emits one empty row or none |
+| =let= / =bind= | Put a scalar expression in the head, or use a view that emits exactly one row when a later body atom needs the value |
+| =for= | A view emits zero to many rows |
+| =if-let= / body =match= | A Scheme matcher implements a view that emits zero or one row |
+
+Inline =pat= also needs review during migration: retaining a separate
+pattern mini-language in atom arguments would recreate the same split at a
+smaller scale.  Native Scheme matchers in relation views are the baseline;
+any retained inline pattern must earn its place through a concrete join or
+indexing advantage and matching scope diagnostics.
+
+** Relation fragments are values
+
+Gerbil modules and =ascent-fragment= already provide lexical reuse.  A
+Scheme function can select, parameterize, and combine fragments before
+evaluation.  Provider and C4 composition remain on POO declarations.  This
+keeps whole-program composition in Scheme while the arrow continues to
+describe derivation inside each fragment.
+
+* Relational meaning of a function view
+
+For a fixed procedure =f : I -> finite-set(O)=, a view is the relation
+={(i, o) | o in f(i)}=.  Given a growing set of admitted input tuples =R=,
+the view contributes =union { f(i) | i in R }=.  Therefore =R subset R'=
+implies the contributed rows for =R= are a subset of those for =R'=.
+This pointwise lifting is monotone in the *input relation* even when =f=
+does not preserve a numeric order on individual values.  It is not
+monotone in an arbitrary changing =f=: a mutable closure may return a
+different answer for the same =i= later in one run.  This is why the view
+procedure and its captured dependencies must be stable for a source
+snapshot.  Datafun's stronger type-based monotonicity analysis is a
+research direction, not a property this Scheme API may claim today.
+
+A view may inspect only its declared input values and immutable lexical
+configuration.  If it reads facts from another relation, that dependency
+must be represented in the rule graph; otherwise an apparent pointwise
+function can bypass delta and stratification planning.  Pure pointwise views
+can be replayed after source replacement.  Effectful procedures require a
+separate contract and are outside the first design slice.
+
+* Admission and fixed-point obligations
+
+1. A view declares input columns, output columns, and row predicates.  Its
+   emissions obey the program fact budget.  Admission rejects unbound inputs,
+   duplicate output bindings, arity mismatches, and use of an output before
+   it is bound.
+2. For one accepted source snapshot, a view's result for the same inputs must
+   remain stable.  Captured mutable state and side effects cannot be assumed
+   safe merely because the procedure is a Scheme value.  The first slice
+   should qualify deterministic procedures; stronger law evidence is needed
+   before admitting stateful ones.
+3. A view that depends only on its input values adds no recursive relation
+   dependency.  A procedure that reads a changing relation must instead
+   declare that relation as a rule dependency.  Otherwise stratification,
+   semi-naive delta planning, and retained-session invalidation are unsound.
+4. Negation and aggregation still require explicit relation dependencies and
+   strict strata.  They do not become arbitrary Scheme predicates or folds
+   hidden inside a view.
+5. The evaluator must preserve set semantics and budgets for every emitted
+   row.  Failed view calls must not commit a partial session update.  An
+   arbitrary Scheme procedure's termination cannot be proved by this API;
+   bounded emission and timeout behavior need separate qualification.
+
+* Design discriminator
+
+Implement one integrated fixture with a recursive rule, a scalar projection,
+a predicate view, a zero/one pattern view, and a multi-row view.  Exercise
+empty and duplicate source rows, a source replacement, a failed procedure,
+and an unbound/duplicate variable rejection.  Compare complete output to
+fresh pinned Rust 0.8.0 and an independent finite model, then measure the
+Scheme plan against the existing SS profile.  This checks semantic parity
+without equating Scheme tokens to Rust tokens.
+
+* Alternatives to test against this proposal
+
+- Keep Rust's body control-flow spellings: they give each Scheme computation
+  a second, special-case rule syntax and make lexical procedures harder to
+  reuse.  They remain valid Rust oracle inputs, not a Scheme design target.
+- Treat every unknown body form =(f x ...)= as a Scheme call: it becomes
+  ambiguous with a relation atom and cannot reliably expose binding modes or
+  recursive dependencies.  A declaration makes that boundary inspectable.
+- Replace the rule body with a =map/filter/flat-map= pipeline: it gives an
+  evaluation order and hides the join graph that the arrow currently states
+  plainly.  Scheme may use those functions to build fragments or view
+  procedures without making them the relational rule grammar.
+- Use miniKanren's goal constructors directly: their backward search and
+  unification semantics differ from this engine's bottom-up fixed point.
+  Shared Scheme embedding ideas do not establish execution equivalence.
+
+If that fixture demonstrates the interface, migrate the public Scheme forms
+and examples together.  Keep Rust-style spellings only in Rust oracle source
+and in the parity ledger as the source-language side of each comparison.
+
+* Sources
+
+- [[https://thomas.gilray.org/pdf/seamless-deductive.pdf][A22: Seamless Deductive Inference via Macros]]
+- [[https://www.cl.cam.ac.uk/~nk480/datafun.pdf][F16: Datafun: a Functional Datalog]]
+- [[https://www.schemeworkshop.org/2013/papers/HemannMuKanren2013.pdf][H13: µKanren: A Minimal Functional Core for Relational Programming]]
+- [[https://doc.flix.dev/fixpoints.html][Flix: Fixpoints and first-class constraints]]

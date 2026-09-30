@@ -9,7 +9,7 @@ default:
     @just --list
 
 build:
-    gerbil build
+    GERBIL_BUILD_CORES="${GERBIL_BUILD_CORES:-$(getconf NPROCESSORS_ONLN)}" gerbil build
 
 test-file path:
     #!/usr/bin/env bash

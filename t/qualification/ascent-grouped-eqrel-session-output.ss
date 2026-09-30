@@ -8,7 +8,8 @@
                  gerbil-ascent-hash-index-provider
                  gerbil-ascent-eqrel-storage-provider)
         (only-in :gerbil-ascent/program/interface
-                 ascent gerbil-ascent-open-session))
+                 gerbil-ascent-open-session)
+        (only-in :gerbil-ascent/program/syntax ascent))
 
 (def (make-session left right)
   (gerbil-ascent-open-session

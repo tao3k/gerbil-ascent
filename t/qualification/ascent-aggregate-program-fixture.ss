@@ -3,13 +3,14 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 (import (only-in :gerbil-ascent/program/interface
-                 ascent gerbil-ascent-relation gerbil-ascent-variable
+                 gerbil-ascent-relation gerbil-ascent-variable
                  gerbil-ascent-atom gerbil-ascent-rule
                  gerbil-ascent-aggregate gerbil-ascent-program
                  gerbil-ascent-evaluate-program
                  gerbil-ascent-count gerbil-ascent-sum
                  gerbil-ascent-min gerbil-ascent-max
-                 gerbil-ascent-mean))
+                 gerbil-ascent-mean)
+        (only-in :gerbil-ascent/program/syntax ascent))
 
 (export ascent-aggregate-fixture-evaluate
         ascent-aggregate-pattern-evaluate

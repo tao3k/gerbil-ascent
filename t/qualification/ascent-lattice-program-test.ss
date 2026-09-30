@@ -12,7 +12,6 @@
         (only-in :gerbil-ascent/t/qualification/ascent-lattice-negation-fixture
                  ascent-lattice-negation-program)
         (only-in :gerbil-ascent/program/interface
-                 ascent
                  gerbil-ascent-lattice gerbil-ascent-relation
                  gerbil-ascent-atom gerbil-ascent-variable gerbil-ascent-rule
                  gerbil-ascent-program gerbil-ascent-evaluate-program
@@ -20,7 +19,8 @@
                  gerbil-ascent-session-run
                  gerbil-ascent-session-run-timeout
                  gerbil-ascent-session-append-source!
-                 gerbil-ascent-session-replace-source!))
+                 gerbil-ascent-session-replace-source!)
+        (only-in :gerbil-ascent/program/syntax ascent))
 
 (export ascent-lattice-program-test)
 

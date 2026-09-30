@@ -5,7 +5,8 @@
 (import (only-in :gerbil-ascent/t/qualification/ascent-session-corpus
                  ascent-session-qualification)
         (only-in :gerbil-ascent/program/interface
-                 ascent gerbil-ascent-count gerbil-ascent-open-session))
+                 gerbil-ascent-count gerbil-ascent-open-session)
+        (only-in :gerbil-ascent/program/syntax ascent))
 
 (def (make-session edges blocked)
   (gerbil-ascent-open-session

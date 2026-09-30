@@ -6,7 +6,8 @@
         (only-in :core/observability/testing-case poo-flow-test-case)
         (only-in :clan/poo/object .ref)
         (only-in :gerbil-ascent/program/interface
-                 ascent gerbil-ascent-program-summary))
+                 gerbil-ascent-program-summary)
+        (only-in :gerbil-ascent/program/syntax ascent))
 
 (export ascent-scc-summary-test main)
 

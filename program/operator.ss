@@ -9,6 +9,9 @@
                  gerbil-ascent-relation gerbil-ascent-program
                  gerbil-ascent-rule gerbil-ascent-atom
                  gerbil-ascent-variable)
+        (only-in "scheme-checked.ss"
+                 relational-scalar? relational-copy-rows
+                 relational-finite-rows)
         (only-in :std/list/list append-map))
 
 (export relational-op-source relational-op-union relational-op-join
@@ -17,18 +20,6 @@
         relational-op? relational-op-arity)
 
 (defstruct relational-op (kind arity inputs data))
-
-(def (scalar? value)
-  (or (exact-integer? value) (boolean? value) (symbol? value) (char? value)))
-
-(def (checked-rows rows arity)
-  (unless (and (list? rows) (andmap (lambda (row)
-                                     (and (list? row)
-                                          (= (length row) arity)
-                                          (andmap scalar? row)))
-                                   rows))
-    (error "operator rows need finite scalar lists of declared arity" arity))
-  (map (lambda (row) (map identity row)) rows))
 
 (def (require-op value)
   (unless (relational-op? value)
@@ -57,7 +48,7 @@
   (unless (and (symbol? name) (exact-integer? arity) (<= 0 arity))
     (error "invalid relational operator source signature" name arity))
   (make-relational-op 'source arity []
-                      (vector name (checked-rows rows arity))))
+                      (vector name (relational-copy-rows rows arity))))
 
 (def (relational-op-union left right)
   (require-op left)
@@ -84,7 +75,7 @@
 (def (relational-op-select-eq input column value)
   (require-op input)
   (unless (and (valid-column? column (relational-op-arity input))
-               (scalar? value))
+               (relational-scalar? value))
     (error "invalid operator equality selection" column value))
   (make-relational-op 'select-eq (relational-op-arity input)
                       (list input) (vector column value)))
@@ -108,15 +99,7 @@
                (list? entries))
     (error "invalid operator finite mapping signature" output-arity))
   (let* ((input-arity (relational-op-arity input))
-         (table
-          (map (lambda (entry)
-                 (unless (and (list? entry) (= (length entry) 2))
-                   (error "finite mapping entry needs input and output rows"
-                          entry))
-                 (let ((in (checked-rows (list (car entry)) input-arity))
-                       (out (checked-rows (list (cadr entry)) output-arity)))
-                   (append (car in) (car out))))
-               entries)))
+         (table (relational-finite-rows input-arity output-arity entries)))
     (make-relational-op 'flatmap output-arity (list input)
                         (vector input-arity table))))
 

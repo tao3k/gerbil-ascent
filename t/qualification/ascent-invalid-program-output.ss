@@ -6,8 +6,9 @@
                  call-with-output-string display-exception
                  with-exception-catcher)
         (only-in :gerbil-ascent/program/interface
-                 ascent gerbil-ascent-count gerbil-ascent-sum
-                 gerbil-ascent-evaluate-program))
+                 gerbil-ascent-count gerbil-ascent-sum
+                 gerbil-ascent-evaluate-program)
+        (only-in :gerbil-ascent/program/syntax ascent))
 
 (export main category)
 

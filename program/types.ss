@@ -84,6 +84,10 @@
                       field-predicates: +field-predicates+
                       storage-kind: (clause-kind-contract 'lattice)
                       join: (slot-contract 'ascent/lattice-join procedure?)
+                      checked-operator:
+                      (slot-contract 'ascent/lattice-checked-operator
+                                     (lambda (value)
+                                       (or (not value) (vector? value))))
                       index-provider: +provider+))
 
 ;;; Terms retain tagged source intent until planning can resolve variables and
@@ -184,6 +188,7 @@
                       variable: +generator-output+ relation: +symbol+
                       terms: +terms+ variables: +variables+
                       aggregate: +procedure+
+                      checked-operator: +checked-operator+
                       output-pattern: +optional-procedure+
                       .plan: +plan+))
 

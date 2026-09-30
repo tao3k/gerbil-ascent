@@ -8,10 +8,10 @@
                  gerbil-ascent-eqrel-storage-provider
                  gerbil-ascent-set-storage-provider)
         (only-in :gerbil-ascent/program/interface
-                 ascent
                  gerbil-ascent-relation gerbil-ascent-variable
                  gerbil-ascent-atom gerbil-ascent-rule
-                 gerbil-ascent-program gerbil-ascent-evaluate-program))
+                 gerbil-ascent-program gerbil-ascent-evaluate-program)
+        (only-in :gerbil-ascent/program/syntax ascent))
 
 (export ascent-eqrel-fixture-evaluate
         ascent-storage-fixture-evaluate

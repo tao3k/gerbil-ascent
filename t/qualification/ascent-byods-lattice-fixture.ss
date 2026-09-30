@@ -6,7 +6,8 @@
                  gerbil-ascent-hash-index-provider
                  gerbil-ascent-eqrel-storage-provider)
         (only-in :gerbil-ascent/program/interface
-                 ascent gerbil-ascent-count))
+                 gerbil-ascent-count)
+        (only-in :gerbil-ascent/program/syntax ascent))
 
 (export ascent-byods-lattice-program)
 

@@ -214,7 +214,8 @@
 (def (gerbil-ascent-lattice relation-name column-count source-rows
                             join-procedure
                             (provider-value gerbil-ascent-hash-index-provider)
-                            (field-predicates-value []))
+                            (field-predicates-value [])
+                            (operator-descriptor #f))
   (unless (and (symbol? relation-name)
                (exact-integer? column-count) (> column-count 0)
                (list? source-rows) (procedure? join-procedure)
@@ -240,6 +241,7 @@
                 name: relation-name arity: column-count rows: source-rows
                 field-predicates: field-predicates-value
                 storage-kind: 'lattice join: join-procedure
+                checked-operator: operator-descriptor
                 index-provider: provider-value)))
 
 (def (gerbil-ascent-variable name)
@@ -323,7 +325,7 @@
 
 (def (gerbil-ascent-aggregate output-variable relation-name atom-terms
                               value-variables aggregate-procedure
-                              (matcher #f))
+                              (matcher #f) (operator-descriptor #f))
   (unless (or (and (symbol? output-variable) (not matcher))
               (and (pair? output-variable) (list? output-variable)
                    (andmap symbol? output-variable)
@@ -334,6 +336,7 @@
                 variable: output-variable relation: relation-name
                 terms: atom-terms variables: value-variables
                 aggregate: aggregate-procedure output-pattern: matcher
+                checked-operator: operator-descriptor
                 (.plan (lambda (atom-plan bound)
                          (aggregate-clause-plan self atom-plan bound))))))
 

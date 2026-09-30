@@ -4,7 +4,8 @@
 
 (import (only-in :clan/poo/object .ref)
         (only-in :gerbil-ascent/program/interface
-                 ascent gerbil-ascent-evaluate-program))
+                 gerbil-ascent-evaluate-program)
+        (only-in :gerbil-ascent/program/syntax ascent))
 
 (export main)
 

@@ -22,11 +22,12 @@
         (only-in :gerbil-ascent/t/qualification/ascent-index-program-fixture
                  ascent-index-alist-provider)
         (only-in :gerbil-ascent/program/interface
-                 ascent ascent-fragment gerbil-ascent-evaluate-program
+                 gerbil-ascent-evaluate-program
                  gerbil-ascent-expression
                  gerbil-ascent-open-session
                  gerbil-ascent-session-append-source!
                  gerbil-ascent-session-run)
+        (only-in :gerbil-ascent/program/syntax ascent ascent-fragment)
         (only-in :gerbil-ascent/program/funs gerbil-ascent-bind-row))
 
 (export ascent-syntax-test)
@@ -276,7 +277,7 @@
       (let (message
             (ascent-syntax-error-message
              '(begin
-                (import :gerbil-ascent/program/interface)
+                (import :gerbil-ascent/program/syntax)
                 (ascent
                  (macro emit-copy! ((destination ident))
                    (relation destination (value)))
@@ -292,7 +293,7 @@
       (let (message
             (ascent-syntax-error-message
              '(begin
-                (import :gerbil-ascent/program/interface)
+                (import :gerbil-ascent/program/syntax)
                 (ascent
                  (macro emit-seed! ((value token))
                    (fact (seed (lit value))))

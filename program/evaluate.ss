@@ -7,7 +7,7 @@
 (import (only-in :clan/poo/object .o .ref object?)
         (only-in :clan/poo/mop validate)
         (only-in :std/iter for iter Iterator &Iterator-next!)
-        (only-in "objects.ss" gerbil-ascent-clause-plan)
+        (only-in "planning.ss" gerbil-ascent-prepare-rule)
         (only-in "types.ss" GerbilAscentSessionContract)
         (only-in "analysis.ss" gerbil-ascent-program-analysis
                  gerbil-ascent-program-schema)
@@ -51,7 +51,8 @@
 ;;     %
 (def (gerbil-ascent-make-engine program session? (analysis-override #f)
                                 (schema-override #f)
-                                (measure-rule-times? #f))
+                                (measure-rule-times? #f)
+                                (plan-error #f))
   ;; The declaration constructor validates the full Core contract.
   ;; Evaluation checks mutable rows and clause bindings for this snapshot.
   (unless (object? program)
@@ -269,51 +270,6 @@
             (vector-set! delta-size index
               (vector-ref all-size index))
             (initialize (cdr remaining) (+ index 1)))))
-      (def (prepare-rule rule rule-index)
-        (unless (object? rule)
-          (error "invalid ASCENT rule declaration" rule))
-        (let* ((body (.ref rule 'body))
-               (heads (.ref rule 'heads))
-               (bound []) (atoms 0) (body-plans []))
-          (unless (and (list? body) (pair? heads) (list? heads))
-            (error "invalid ASCENT rule declaration" rule))
-          (for-each
-           (lambda (clause)
-             (unless (object? clause)
-               (error "invalid ASCENT rule clause" clause))
-             (let (result (gerbil-ascent-clause-plan clause atom-plan bound))
-               (set! body-plans (cons (vector-ref result 0) body-plans))
-               (set! bound (vector-ref result 1))
-               (set! atoms (+ atoms (vector-ref result 2)))))
-           body)
-          (let (head-plans
-                (map (lambda (head)
-                       (unless (and (object? head)
-                                    (eq? (.ref head 'ascent-clause-kind) 'atom))
-                         (error "invalid ASCENT rule head" head))
-                       (let (plan (atom-plan head))
-                         (for-each
-                          (lambda (term)
-                            (case (car term)
-                              ((variable)
-                               (unless (memq (cdr term) bound)
-                                 (error "unsafe ASCENT head variable"
-                                        (cdr term))))
-                              ((expression)
-                               (for-each
-                                (lambda (name)
-                                  (unless (memq name bound)
-                                    (error "unsafe ASCENT head expression variable"
-                                           name)))
-                                (vector-ref (cdr term) 0)))
-                              ((pattern)
-                               (error "ASCENT pattern is invalid in a rule head"))
-                              ((wildcard)
-                               (error "ASCENT wildcard is invalid in a rule head"))))
-                          (vector-ref plan 1))
-                         plan))
-                     heads))
-            (vector head-plans (reverse body-plans) atoms rule-index))))
       (let* ((analysis
               ;; Source-only replacement preserves declarations and rules.
               ;; Its session reuses this immutable rule plan while the fresh
@@ -322,10 +278,22 @@
                   (gerbil-ascent-program-analysis
                    program relations rules
                    (lambda ()
-                     (let (plans (map prepare-rule rules
-                                     (iota (length rules))))
-                       (let* ((strata (gerbil-ascent-rule-strata
-                                       plans count kinds))
+                     (let (plans
+                           (map
+                            (lambda (rule index)
+                              (gerbil-ascent-prepare-rule
+                               rule index atom-plan plan-error))
+                            rules (iota (length rules))))
+                       (let* ((strata
+                               (with-catch
+                                (lambda (failure)
+                                  (when plan-error
+                                    (plan-error '(program dependencies)
+                                                failure))
+                                  (raise failure))
+                                (lambda ()
+                                  (gerbil-ascent-rule-strata
+                                   plans count kinds))))
                               (highest (if (= count 0) -1
                                          (apply max (vector->list strata))))
                               (active (make-vector (+ highest 1) [])))

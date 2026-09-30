@@ -6,10 +6,10 @@
         (only-in :gerbil-ascent/t/qualification/ascent-mutual-program-fixture
                  ascent-mutual-program ascent-mutual-evaluate)
         (only-in :gerbil-ascent/program/interface
-                 ascent
                  gerbil-ascent-open-session
                  gerbil-ascent-session-append-source!
-                 gerbil-ascent-session-run))
+                 gerbil-ascent-session-run)
+        (only-in :gerbil-ascent/program/syntax ascent))
 
 (export main)
 

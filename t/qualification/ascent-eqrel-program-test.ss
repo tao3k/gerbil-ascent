@@ -15,7 +15,7 @@
                  gerbil-ascent-storage-make-state
                  gerbil-ascent-storage-extend)
         (only-in :gerbil-ascent/program/interface
-                 ascent gerbil-ascent-relation gerbil-ascent-program
+                 gerbil-ascent-relation gerbil-ascent-program
                  gerbil-ascent-evaluate-program
                  gerbil-ascent-open-session
                  gerbil-ascent-session-append-source!
@@ -23,6 +23,7 @@
                  gerbil-ascent-session-run
                  gerbil-ascent-variable gerbil-ascent-atom
                  gerbil-ascent-rule)
+        (only-in :gerbil-ascent/program/syntax ascent)
         (only-in :gerbil-ascent/t/qualification/ascent-eqrel-program-fixture
                  ascent-eqrel-fixture-evaluate
                  ascent-storage-fixture-evaluate)

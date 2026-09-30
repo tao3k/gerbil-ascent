@@ -9,12 +9,13 @@
                  gerbil-ascent-eqrel-storage-provider
                  gerbil-ascent-hash-index-provider)
         (only-in :gerbil-ascent/program/interface
-                 ascent gerbil-ascent-evaluate-program
+                 gerbil-ascent-evaluate-program
                  gerbil-ascent-open-session
                  gerbil-ascent-session-run
                  gerbil-ascent-session-run-timeout
                  gerbil-ascent-session-append-source!
-                 gerbil-ascent-session-replace-source!))
+                 gerbil-ascent-session-replace-source!)
+        (only-in :gerbil-ascent/program/syntax ascent))
 
 (export ascent-timeout-test)
 

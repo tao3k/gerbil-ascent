@@ -3,7 +3,8 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 (import (only-in :gerbil-ascent/program/interface
-                 ascent gerbil-ascent-count gerbil-ascent-evaluate-program)
+                 gerbil-ascent-count gerbil-ascent-evaluate-program)
+        (only-in :gerbil-ascent/program/syntax ascent)
         (only-in :gerbil-ascent/t/qualification/ascent-fragment-source
                  ascent-reach-fragment ascent-generated-seed-fragment)
         (only-in :gerbil-ascent/table/interface

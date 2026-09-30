@@ -3,11 +3,11 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 (import (only-in :gerbil-ascent/program/interface
-                 ascent
                  gerbil-ascent-relation gerbil-ascent-lattice
                  gerbil-ascent-variable gerbil-ascent-atom
                  gerbil-ascent-binding gerbil-ascent-rule
-                 gerbil-ascent-program gerbil-ascent-evaluate-program))
+                 gerbil-ascent-program gerbil-ascent-evaluate-program)
+        (only-in :gerbil-ascent/program/syntax ascent))
 
 (export ascent-lattice-fixture-evaluate
         ascent-lattice-wide-evaluate

@@ -4,9 +4,10 @@
 
 (import (only-in :clan/poo/object .ref)
         (only-in :gerbil-ascent/program/interface
-                 ascent gerbil-ascent-open-session
+                 gerbil-ascent-open-session
                  gerbil-ascent-session-replace-source!
-                 gerbil-ascent-session-run))
+                 gerbil-ascent-session-run)
+        (only-in :gerbil-ascent/program/syntax ascent))
 
 (export main)
 

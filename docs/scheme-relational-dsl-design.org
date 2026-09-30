@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 #+TITLE: Scheme relational DSL: design overview
-#+STATUS: discussion proposal; examples are not implemented syntax
+#+STATUS: design overview; checked native subset implemented, wider higher-order semantics proposed
 #+DATE: 2026-09-30
 #+FILETAGS: :design:scheme-dsl:
 
@@ -23,9 +23,11 @@ discriminating experiments.  Its
 [[file:scheme-relational-language-design.org::#scheme-language-finite-operator-graph][finite positive operator subset]] now has executable lowering and
 qualification.
 The [[file:research/agent-inference/index.org][LLM reasoning research index]] studies the deployment-time interface.
-The current =ascent= implementation recorded selected Rust behavior.
+The historical =ascent= implementation recorded selected Rust behavior.
 The new Gerbil Scheme language has no Rust compatibility requirement;
 its grammar, semantic IR and tests must be designed on their own terms.
+The native subset is available through =program/interface.ss=; the old
+=ascent= form lives in =program/syntax.ss= for the parity corpus.
 
 One small relational form remains legible:
 
@@ -42,7 +44,9 @@ rule, so a lexical Scheme binding cannot be mistaken for a logic
 variable.  Body atoms state joins and equality of repeated variables.
 Scheme functions can build program values around these rules; admitted
 operators may compute local values inside rules.  Those phases need
-different guarantees.  The spelling is a proposal, not implemented.
+different guarantees.  This =rule= spelling is implemented within the
+checked =relational-program= and =relational-fragment= forms; the broader
+higher-order language described below remains a proposal.
 
 * Two implementation priorities
 :PROPERTIES:
@@ -73,10 +77,11 @@ any LLM or serving framework.  Only then compare actual model turns and
 answer quality.  The historical
 [[file:replication-checklist.org][Rust comparison checklist]] is not a
 gate for this language.
-The current Scheme implementation has checked scalar clauses and retained
-source-replacement Sessions for composed fragments and direct named programs;
-its errors are still
-exceptions rather than the proposed located diagnostic values.
+The current Scheme implementation has checked scalar clauses, stratified
+negation, checked reductions and lattices, finite views, and retained
+source-replacement Sessions.  =relational-admit/report= returns a typed
+diagnostic with a zero-based planner path for invalid rule bodies, heads
+and dependency cycles; direct =relational-admit= still raises.
 The [[file:llm-reasoning-library-plan.org][implementation plan]] maps the
 research to code seams, interface claims and falsifiable experiments.
 

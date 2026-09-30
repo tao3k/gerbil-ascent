@@ -11,10 +11,11 @@
                  ascent-aggregate-pattern-evaluate
                  ascent-derived-aggregate-fixture-evaluate)
         (only-in :gerbil-ascent/program/interface
-                 ascent gerbil-ascent-relation gerbil-ascent-variable
+                 gerbil-ascent-relation gerbil-ascent-variable
                  gerbil-ascent-atom gerbil-ascent-rule
                  gerbil-ascent-aggregate gerbil-ascent-program
-                 gerbil-ascent-evaluate-program gerbil-ascent-count))
+                 gerbil-ascent-evaluate-program gerbil-ascent-count)
+        (only-in :gerbil-ascent/program/syntax ascent))
 
 (export ascent-aggregate-program-test)
 

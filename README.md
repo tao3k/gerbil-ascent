@@ -18,9 +18,14 @@ Each top-level directory is a Gerbil module namespace:
 | `:gerbil-ascent/candidate/*` | Bounded inert candidate evaluation and selected support projection |
 | `:gerbil-ascent/interface/*` | Inert request projection |
 
-`program/` exposes the hygienic [`ascent` rule form](docs/scheme-syntax.org),
-which lowers Scheme declarations to the same POO contracts. It also exposes
-POO `relation`, `lattice`, `atom`, `negation`, `guard`, `binding`, `aggregate`,
+`program/interface.ss` exports the native
+[`relational-program` and `relational-fragment` forms](docs/scheme-relational-language-design.org)
+with checked scalar capture, negation, reductions, lattice declarations,
+finite views, admission, Sessions, and relation operators. The historical
+[`ascent` form](docs/scheme-syntax.org) remains in `program/syntax.ss` for
+the Rust parity qualification corpus; it is no longer re-exported by the
+public interface. The lower-level POO API still exposes
+`relation`, `lattice`, `atom`, `negation`, `guard`, `binding`, `aggregate`,
 and Standard Library iterable `generator` clauses with scalar or tuple outputs. A slot Generic lowers each clause to a
 private execution plan; count, sum, min, max, mean, and custom aggregate
 procedures run over matched tuples. Lattice declarations join the last column
@@ -74,13 +79,19 @@ tracks the remaining executable closure gates and the final-head admission.
 The Rust comparison documents the current implementation; it is not a
 compatibility target for the proposed
 [Scheme relational language](docs/scheme-relational-language-design.org).
-The Scheme-native positive rule surface in `program/scheme-language.ss`,
+The Scheme-native rule surface in `program/scheme-language.ss`,
 finite relation operator descriptors in `program/operator.ss`, and
 bounded inert candidate boundary in `candidate/reasoning.ss` share the
 POO rule evaluator. The operator compiler supports source, union,
 equijoin, fixed equality selection, projection, finite mapping and
-positive fixed points. Its 64-graph finite-model corpus tests complete
-reachability; richer higher-order change semantics remain in the
+positive fixed points. The rule surface also supports explicit scalar
+capture, stratified negation, checked count/sum/min/max reductions and
+checked min/max lattices. `relational-admit/report` returns a typed
+diagnostic with the planner's rule and clause position on rejection.
+The integrated qualification exercises views, negation, reduction,
+lattices, source withdrawal and prior-result stability. The 64-graph
+finite-model corpus tests complete reachability; richer higher-order
+change semantics remain in the
 [language design](docs/scheme-relational-language-design.org). The
 [LLM reasoning Library plan](docs/llm-reasoning-library-plan.org) records
 the candidate grammar and the narrow graph witness/cut evidence contract.

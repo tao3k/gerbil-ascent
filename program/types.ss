@@ -235,6 +235,10 @@
 ;;; The constructor copies and checks labels before closing over them.
 (def +fragment-exports+
   (slot-contract 'ascent/fragment-exports procedure?))
+(def +source-handles+
+  (slot-contract 'ascent/source-handles
+                 (lambda (value)
+                   (and (list? value) (andmap symbol? value)))))
 
 ;;; A fragment carries declarations, rules and instance-local public handles.
 ;;; It has no execution limits until composition into a bounded program.
@@ -242,7 +246,8 @@
   identity: 'ascent/fragment
   proto: (.o)
   responsibilities:
-  (.o relations: +relations+ rules: +rules+ exports: +fragment-exports+))
+  (.o relations: +relations+ rules: +rules+ exports: +fragment-exports+
+      source-handles: +source-handles+))
 
 ;;; Program budgets bound accepted input, derived facts, and public output
 ;;; separately; source admission checks them before mutating a session.
@@ -252,6 +257,7 @@
   responsibilities:
   (.o relations: +relations+
       rules: +rules+
+      source-handles: +source-handles+
       max-input-facts: +fact-budget+
       max-derived-facts: +fact-budget+
       max-output-facts: +fact-budget+))

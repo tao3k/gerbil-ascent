@@ -16,7 +16,10 @@
         (only-in :gerbil-ascent/program/scheme-language
                  relational-program relational-fragment
                  relational-compose relational-export relational-admit
-                 relational-solve relational-query)
+                 relational-solve relational-query
+                 relational-open-session
+                 relational-session-replace-source!
+                 relational-session-run)
         (only-in :gerbil-ascent/program/interface
                  gerbil-ascent-evaluate-program
                  gerbil-ascent-open-session
@@ -202,6 +205,9 @@
              (fragment (gerbil-ascent-fragment [] [] exports)))
         (set-cdr! entry 'changed)
         (check-equal? (relational-export fragment 'answer) 'original)))
+    (poo-flow-test-case "source handles must name local declarations"
+      (check-exception
+       (gerbil-ascent-fragment [] [] [] (list 'missing)) true))
     (poo-flow-test-case "admission and query isolate source and result rows"
       (let* ((row (list 1 2))
              (source (source-fragment (list row)))
@@ -218,6 +224,52 @@
           (check-equal? (relational-query
                          (relational-solve admission) source 'edge)
                         '((1 2))))))
+    (poo-flow-test-case "session replaces exported sources with snapshots"
+      (let* ((source (source-fragment '((1 2) (2 3))))
+             (reach (reach-fragment (relational-export source 'edge)))
+             (session
+              (relational-open-session
+               (relational-compose (list source reach) 8 16 32)))
+             (first (relational-session-run session))
+             (replacement (list (list 7 8))))
+        (relational-session-replace-source!
+         session source 'edge replacement)
+        (set-car! (car replacement) 99)
+        (let (second (relational-session-run session))
+          (check-equal?
+           (same-set? (relational-query first reach 'reach)
+                      '((1 2) (2 3) (1 3))) #t)
+          (check-equal? (relational-query second reach 'reach)
+                        '((7 8)))
+          (check-exception
+           (relational-session-replace-source!
+            session reach 'reach '((4 5))) true)
+          (check-exception
+           (relational-session-replace-source!
+            session source 'edge '((4 "bad"))) true)
+          (check-equal?
+           (relational-query (relational-session-run session)
+                             reach 'reach)
+           '((7 8))))))
+    (poo-flow-test-case "session restores last completed solve on budget failure"
+      (let* ((source (source-fragment '((1 2))))
+             (foreign (source-fragment '((9 10))))
+             (reach (reach-fragment (relational-export source 'edge)))
+             (session
+              (relational-open-session
+               (relational-compose (list source reach) 8 1 16)))
+             (first (relational-session-run session)))
+        (check-exception
+         (relational-session-replace-source!
+          session foreign 'edge '((3 4))) true)
+        (check-exception
+         (relational-session-replace-source!
+          session source 'edge '((1 2) (2 3))) true)
+        (check-equal? (relational-query first reach 'reach)
+                      '((1 2)))
+        (check-equal? (relational-query
+                       (relational-session-run session) reach 'reach)
+                      '((1 2)))))
     (poo-flow-test-case "admission rejects opaque host callbacks"
       (let* ((source (source-fragment '((1 2))))
              (edge (relational-export source 'edge))

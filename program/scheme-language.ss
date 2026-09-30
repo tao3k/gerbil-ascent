@@ -9,9 +9,12 @@
         (only-in "types.ss" GerbilAscentFragmentContract
                  GerbilAscentProgramContract)
         (only-in "evaluate.ss" gerbil-ascent-make-engine)
+        (only-in "session.ss" gerbil-ascent-open-session
+                 gerbil-ascent-session-replace-source!
+                 gerbil-ascent-session-run)
         (only-in :clan/poo/object .ref)
         (only-in :clan/poo/mop validate)
-        (only-in :std/list/list append-map)
+        (only-in :std/list/list append-map find)
         (only-in :gerbil-ascent/table/provider
                  gerbil-ascent-hash-index-provider)
         (only-in :gerbil-ascent/table/storage
@@ -19,12 +22,14 @@
 
 (export relational-program relational-fragment relational-compose
         relational-export relational-admit relational-solve
-        relational-query)
+        relational-query relational-open-session
+        relational-session-replace-source! relational-session-run)
 
 ;;; The native Gerbil values keep an admitted engine and completed result
 ;;; opaque to clients. Only the functions below cross each lifecycle edge.
 (defstruct relational-admission (run))
 (defstruct relational-solution (result))
+(defstruct relational-session (engine source-arities))
 
 ;;; Restrict sources and results to immutable scalar atoms. Computed exact
 ;;; integers can grow beyond the source domain; budgets stop such a solve as
@@ -285,7 +290,8 @@
         (list (relational-atom/lexical (head head-term ...)))
         (list (relational-checked-clause
                relational-atom/lexical (body body-term ...)) ...)) ...)
-      (list (cons 'public-name exported-name) ...)))))
+      (list (cons 'public-name exported-name) ...)
+      (list source-name ...)))))
 
 ;;; A public label is scoped to its fragment instance, rather than to the
 ;;; process or composed program. Only declared labels can reveal a handle.
@@ -314,7 +320,9 @@
   (gerbil-ascent-program
    (append-map (lambda (fragment) (.ref fragment 'relations)) fragments)
    (append-map (lambda (fragment) (.ref fragment 'rules)) fragments)
-   input-limit derived-limit output-limit))
+   input-limit derived-limit output-limit
+   (append-map (lambda (fragment) (.ref fragment 'source-handles))
+               fragments)))
 
 ;;; Admission rebuilds only the checked positive grammar. This removes
 ;;; caller-owned row/rule lists before planning and rejects old host callbacks.
@@ -374,23 +382,26 @@
 
 ;;; The engine constructor checks relation names, arities, rule bindings,
 ;;; dependencies and budgets before the admission value becomes observable.
-(def (relational-admit program)
+(def (relational-snapshot-program program)
   (validate GerbilAscentProgramContract program)
-  (let (snapshot
-        (gerbil-ascent-program
-         (map (lambda (relation)
-                (unless (eq? (.ref relation 'storage-kind) 'relation)
-                  (error "unsupported relational storage kind"))
-                (relational-source
-                 (.ref relation 'name)
-                 (.ref relation 'arity)
-                 (map (lambda (row) (map identity row))
-                      (.ref relation 'rows))))
-              (.ref program 'relations))
-         (map relational-copy-rule (.ref program 'rules))
-         (.ref program 'max-input-facts)
-         (.ref program 'max-derived-facts)
-         (.ref program 'max-output-facts)))
+  (gerbil-ascent-program
+   (map (lambda (relation)
+          (unless (eq? (.ref relation 'storage-kind) 'relation)
+            (error "unsupported relational storage kind"))
+          (relational-source
+           (.ref relation 'name)
+           (.ref relation 'arity)
+           (map (lambda (row) (map identity row))
+                (.ref relation 'rows))))
+        (.ref program 'relations))
+   (map relational-copy-rule (.ref program 'rules))
+   (.ref program 'max-input-facts)
+   (.ref program 'max-derived-facts)
+   (.ref program 'max-output-facts)
+   (.ref program 'source-handles)))
+
+(def (relational-admit program)
+  (let (snapshot (relational-snapshot-program program))
     (let ((run (gerbil-ascent-make-engine snapshot #f))
           (status 'ready)
           (complete-result #f))
@@ -421,3 +432,46 @@
     (error "relational solve requires admission" admission))
   (make-relational-solution
    ((relational-admission-run admission))))
+
+;;; Retained sessions accept replacements only through exported source
+;;; handles. The old session owns rollback after an update or solve fails.
+(def (relational-open-session program)
+  (let* ((snapshot (relational-snapshot-program program))
+         (sources (.ref snapshot 'source-handles))
+         (arities
+          (map (lambda (name)
+                 (let (relation
+                       (find (lambda (candidate)
+                               (eq? (.ref candidate 'name) name))
+                             (.ref snapshot 'relations)))
+                   (unless relation
+                     (error "relational source has no declaration" name))
+                   (cons name (.ref relation 'arity))))
+               sources)))
+    (make-relational-session
+     (gerbil-ascent-open-session snapshot)
+     arities)))
+
+(def (relational-session-replace-source! session fragment label rows)
+  (unless (relational-session? session)
+    (error "relational source replacement requires a session" session))
+  (validate GerbilAscentFragmentContract fragment)
+  (let* ((name (relational-export fragment label))
+         (arity (assq name (relational-session-source-arities session))))
+    (unless (and (memq name (.ref fragment 'source-handles)) arity)
+      (error "relational export is not a source in this session" label))
+    (let (copied
+          (map (lambda (row) (map identity row)) rows))
+      (relational-source name (cdr arity) copied)
+      (gerbil-ascent-session-replace-source!
+       (relational-session-engine session) name copied)
+      (void))))
+
+(def (relational-session-run session)
+  (unless (relational-session? session)
+    (error "relational run requires a session" session))
+  (let (result (gerbil-ascent-session-run
+               (relational-session-engine session)))
+    (unless (.ref result 'finished)
+      (error "relational session did not complete"))
+    (make-relational-solution result)))

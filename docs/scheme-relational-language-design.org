@@ -178,8 +178,9 @@ Floyd-Warshall model on all 64 simple directed graphs over three nodes.
               (source (edge (from to) '((1 2) (2 3))))
               (private)
               (export (edge edge))))
+(def edge-handle (relational-export source 'edge))
 (def reach (relational-fragment
-             (import (edge (relational-export source 'edge)))
+             (import (edge edge-handle))
              (source)
              (private (path (from to)))
              (export (reach path))
@@ -190,7 +191,25 @@ Floyd-Warshall model on all 64 simple directed graphs over three nodes.
 (def solution (relational-solve admission))
 (relational-query solution reach 'reach)
 ;; => ((1 2) (2 3) (1 3)), as a set; row order is unspecified
+
+(def session (relational-open-session program))
+(def first (relational-session-run session))
+(relational-session-replace-source! session source 'edge '((7 8)))
+(def second (relational-session-run session))
+(relational-query second reach 'reach) ;; => ((7 8))
+;; Querying first still yields the original closure.
 #+end_src
+
+The retained Session path accepts replacement only through a fragment
+label exported from one of its =source= declarations.  The fragment
+and composed program carry those source handles separately from private
+relations.  Replacement validates scalar rows and copies their list
+structure before handing them to the existing Session.  A failed
+replacement preserves the last completed result; a successful run
+returns a new solution snapshot, leaving earlier solutions queryable.
+The engine may recompute during replacement, so an invalid or
+over-budget update can fail at that call.  This does not yet add a
+source update interface for the direct =relational-program= form.
 
 Gerbil *v0.19* is the language and standard-library reference for
 this slice.  The installed =2591dcd= source has =defrules= and
@@ -243,8 +262,8 @@ it cannot certify termination or convert a partial run to a complete
 answer.  The finite-model test covers nonrecursive =where/compute=
 behavior only.
 
-The remaining gates are typed admission diagnostics, source injection
-and replacement, a restricted higher-order operator IR, and matched
+The remaining gates are typed admission diagnostics, a restricted
+higher-order operator IR, and matched
 measurements before optimizer changes.  The current =relational-admit=
 is an exception-based checked positive boundary; it does not claim a
 general static proof or a typed diagnostic result.  The v0.19 source

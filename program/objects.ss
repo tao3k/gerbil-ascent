@@ -364,18 +364,41 @@
               (cons (car entry) seen)
               (cons (cons (car entry) (cdr entry)) copied))))))
 
-(def (gerbil-ascent-fragment relation-values rule-values (export-values []))
+(def (checked-source-handles relations source-handle-values)
+  (unless (list? source-handle-values)
+    (error "invalid ASCENT source handles" source-handle-values))
+  (let loop ((remaining source-handle-values) (seen []))
+    (if (null? remaining)
+      (reverse seen)
+      (let (name (car remaining))
+        (unless (and (symbol? name)
+                     (not (memq name seen))
+                     (ormap (lambda (relation)
+                              (eq? (.ref relation 'name) name))
+                            relations))
+          (error "invalid or duplicate ASCENT source handle" name))
+        (loop (cdr remaining) (cons name seen))))))
+
+(def (gerbil-ascent-fragment relation-values rule-values
+                             (export-values []) (source-handle-values []))
   (validate GerbilAscentFragmentContract
             (.o (:: @ Fragment.)
                 relations: relation-values rules: rule-values
-                exports: (fragment-export-resolver export-values))))
+                exports: (fragment-export-resolver export-values)
+                source-handles:
+                (checked-source-handles relation-values
+                                        source-handle-values))))
 
 (def (gerbil-ascent-program declared-relations declared-rules
                                      input-fact-limit derived-fact-limit
-                                     output-fact-limit)
+                                     output-fact-limit
+                                     (source-handle-values []))
   (validate GerbilAscentProgramContract
             (.o (:: @ Program.)
                 relations: declared-relations rules: declared-rules
+                source-handles:
+                (checked-source-handles declared-relations
+                                        source-handle-values)
                 max-input-facts: input-fact-limit
                 max-derived-facts: derived-fact-limit
                 max-output-facts: output-fact-limit)))

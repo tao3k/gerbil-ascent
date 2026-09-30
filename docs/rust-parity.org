@@ -270,9 +270,14 @@ SCCs; =syntax.rs= compares its recursive flags and dynamic relation sets
 with Rust's static =summary()= on one recursive-pair program. Rust's lowered
 rule text, SCC ordering and runtime SCC timing are not covered by that probe.
 Rust's
-=generate_run_timeout= has a selected recursive-chain partial and final
-receipt. A second zero-budget call exposes a Rust 0.8.0 restart behavior;
-Scheme advances its retained round cursor to preserve fixed-point progress.
+=generate_run_timeout= has selected recursive-chain partial and final
+receipts, including a chain feeding a later negated stratum. Its first
+zero-budget rows and completed rows compare with Scheme and an explicit
+finite expected set; Scheme checks that no negative-stratum rows appear in
+the first partial snapshot. A second zero-budget call exposes a Rust 0.8.0
+restart behavior; Scheme advances its retained round cursor to preserve
+fixed-point progress. The Scheme deadline is checked after each committed
+round, so cancellation inside a large round has not been established.
 =run-timeout= after a nonpositive source update currently starts a fresh
 resumable engine after eager update validation. A local 1000-sample probe
 that added zero-budget timeout and completion to the existing source-update

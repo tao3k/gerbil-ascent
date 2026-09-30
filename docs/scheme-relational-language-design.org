@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 #+TITLE: Scheme relational language: first design gate
-#+STATUS: checked positive scalar lifecycle implemented; higher-order forms remain review proposals
+#+STATUS: positive scalar lifecycle and finite operator graph implemented; richer higher-order forms remain proposals
 #+DATE: 2026-09-30
 #+FILETAGS: :design:scheme-dsl:higher-order:
 
@@ -55,7 +55,7 @@ inside recursion can read hidden mutable state, diverge, or change its
 output while the same source snapshot is being solved.  A
 =procedure?= check does not establish the required laws.
 
-The first implementation should support the construction level and a
+The current implementation supports the construction level and a
 small, inspectable set of rule-time scalar operations.  A declared
 pointwise view is a later, narrowly trusted extension.  A typed
 higher-order relation operator with its own change semantics is a
@@ -121,14 +121,68 @@ withdrawal has a separate recompute path until deletion changes are
 specified.  Datafun S20 establishes a typed higher-order change
 calculus for its own language, not a theorem about this proposed IR.
 
-The first executable version may evaluate an admitted operator by full
-recomputation and fixed-point iteration.  Before a semi-naive transform,
+The implemented finite subset lowers operators to positive rules and
+uses the existing fixed-point evaluator.  Before any specialized
+higher-order semi-naive transform,
 compare full results from a naive reference interpreter with the
 optimized path for generated finite programs, then measure operation
 counts and scale.  A fact budget may stop a run with =partial= or
 =unknown=; it must not turn a nonterminating domain into a complete
 answer.  For unrestricted Gerbil procedures, a declared “pure” flag
 is a trust assertion, not a mechanical proof.
+
+** Implemented finite operator graph
+:PROPERTIES:
+:CUSTOM_ID: scheme-language-finite-operator-graph
+:END:
+
+=program/operator.ss= implements the checkable subset of this IR as
+first-class descriptor values.  Ordinary Scheme functions may accept
+and return these values during construction.  =relational-op-compile=
+lowers one closed descriptor graph into the existing POO positive-rule
+program; =relational-admit=, =relational-solve= and
+=relational-query-name= provide the same admission and observation
+lifecycle as the rule DSL.  No descriptor executes a caller procedure
+during fixed-point evaluation.
+
+#+NAME: scheme-implemented-operator-subset
+| Node | Current checked form | Boundary |
+|------+----------------------+----------|
+| =source= | Copied finite scalar rows, name and arity | Duplicate source names reject |
+| =union= | Equal-arity set union | Positive rule lowering |
+| =join= | Two declared key columns, concatenated output rows | Equality through shared rule variable |
+| =select= | Equality to one fixed scalar at a declared column | Singleton relation, no predicate callback |
+| =project= | Declared column indexes | Repetition and empty projection are allowed |
+| =flatmap= | Finite input/output row mapping supplied at construction | Mapping is frozen as a source table; no runtime function |
+| =fix= | Scheme builder receives a lexically scoped descriptor parameter | Builder runs once before admission; positive recursive rules form the least fixed point |
+
+#+begin_src scheme
+(def (reachability edge)
+  (relational-op-fix
+   2 (lambda (path)
+       (relational-op-union
+        edge
+        (relational-op-project
+         (relational-op-join path edge 1 0) '(0 3))))))
+
+(let-values (((program output)
+              (relational-op-compile
+               (reachability
+                (relational-op-source 'edge 2 '((1 2) (2 3))))
+               16 256 512)))
+  (relational-query-name
+   (relational-solve (relational-admit program)) output))
+;; => the complete set (1 2), (2 3), (1 3)
+#+end_src
+
+The [[file:../t/qualification/scheme-operator-test.ss][qualification corpus]] compares all 64 directed
+three-node graph instances to an independent finite closure and to the
+inert =candidate/reasoning.ss= boundary on the same source rows.  It also
+checks finite mapping, shape rejection, lexical parameter escape,
+fresh compiler handles, source copying/withdrawal, and budget failure.
+This establishes the stated finite positive subset, not the general
+typed =Rel[A] -> Rel[B]= calculus, arbitrary Scheme views, deletion
+deltas, optimizer speed, or general proof of user-supplied procedures.
 
 * First executable research gate
 :PROPERTIES:
@@ -281,9 +335,9 @@ it cannot certify termination or convert a partial run to a complete
 answer.  The finite-model test covers nonrecursive =where/compute=
 behavior only.
 
-The remaining gates are typed admission diagnostics, a restricted
-higher-order operator IR, and matched
-measurements before optimizer changes.  The current =relational-admit=
+The remaining gates are typed admission diagnostics, richer typed
+higher-order change semantics, and matched measurements before
+optimizer changes.  The current =relational-admit=
 is an exception-based checked positive boundary; it does not claim a
 general static proof or a typed diagnostic result.  The v0.19 source
 paths above refer to Gerbil itself, as

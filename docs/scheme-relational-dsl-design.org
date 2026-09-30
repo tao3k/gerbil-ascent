@@ -17,9 +17,11 @@ language.  [[file:research/scheme-dsl/language-history.org][Language history]] e
 The [[file:research/scheme-dsl/reflection.org][reflection and comparison plan]]
 separates paper results from our hypotheses and defines the evidence
 needed before claiming an improvement.
-The [[file:scheme-relational-language-design.org][first language design gate]] defines the proposed high-order layers,
+The [[file:scheme-relational-language-design.org][first language design gate]] defines the high-order layers,
 rule-time operator boundary, native Scheme grammar and
-discriminating experiments before implementation.
+discriminating experiments.  Its
+[[file:scheme-relational-language-design.org::#scheme-language-finite-operator-graph][finite positive operator subset]] now has executable lowering and
+qualification.
 The [[file:research/agent-inference/index.org][LLM reasoning research index]] studies the deployment-time interface.
 The current =ascent= implementation recorded selected Rust behavior.
 The new Gerbil Scheme language has no Rust compatibility requirement;

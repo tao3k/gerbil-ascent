@@ -15,7 +15,7 @@ Each top-level directory is a Gerbil module namespace:
 | `:gerbil-ascent/program/*` | Typed POO rule declarations and stratified evaluation |
 | `:gerbil-ascent/core/*` | Indexed binary evaluation path |
 | `:gerbil-ascent/table/*` | Binary relation indexes and projections |
-| `:gerbil-ascent/candidate/*` | Experimental candidate and support projection |
+| `:gerbil-ascent/candidate/*` | Bounded inert candidate evaluation and selected support projection |
 | `:gerbil-ascent/interface/*` | Inert request projection |
 
 `program/` exposes the hygienic [`ascent` rule form](docs/scheme-syntax.org),
@@ -74,8 +74,17 @@ tracks the remaining executable closure gates and the final-head admission.
 The Rust comparison documents the current implementation; it is not a
 compatibility target for the proposed
 [Scheme relational language](docs/scheme-relational-language-design.org).
-The new Gerbil Scheme grammar, semantic IR and independent finite-model
-tests are the first design gate before the LLM reasoning Library. POO Flow
+The Scheme-native positive rule surface in `program/scheme-language.ss`,
+finite relation operator descriptors in `program/operator.ss`, and
+bounded inert candidate boundary in `candidate/reasoning.ss` share the
+POO rule evaluator. The operator compiler supports source, union,
+equijoin, fixed equality selection, projection, finite mapping and
+positive fixed points. Its 64-graph finite-model corpus tests complete
+reachability; richer higher-order change semantics remain in the
+[language design](docs/scheme-relational-language-design.org). The
+[LLM reasoning Library plan](docs/llm-reasoning-library-plan.org) records
+the candidate grammar and the narrow graph witness/cut evidence contract.
+POO Flow
 consumes this package as a pinned submodule. MRR owns the semantic adapter
 and admission of its own evidence.
 

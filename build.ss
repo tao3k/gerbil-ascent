@@ -28,6 +28,7 @@
     "program/interface"
     "core/binary-program"
     "candidate/closure"
+    "candidate/reasoning"
     "interface/request"))
 
 (asp-gerbil-scheme-package-spec!

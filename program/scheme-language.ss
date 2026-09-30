@@ -22,7 +22,7 @@
 
 (export relational-program relational-fragment relational-compose
         relational-export relational-admit relational-solve
-        relational-query relational-open-session
+        relational-query relational-query-name relational-open-session
         relational-session-replace-source! relational-session-run
         relational-open-program-session
         relational-program-replace-source!
@@ -316,6 +316,18 @@
       (error "relational query requires a completed result"))
     (map (lambda (row) (map identity row))
          ((.ref result 'rows-of) (relational-export fragment label)))))
+
+;;; Named one-shot programs may contain private derived relations, so they
+;;; cannot use the retained session API, which requires every relation to be
+;;; source-capable. Query the completed admitted result directly.
+(def (relational-query-name solution name)
+  (unless (and (relational-solution? solution) (symbol? name))
+    (error "relational named query requires a solved value" name))
+  (let (result (relational-solution-result solution))
+    (unless (.ref result 'finished)
+      (error "relational named query requires a completed result"))
+    (map (lambda (row) (map identity row))
+         ((.ref result 'rows-of) name))))
 
 (def (relational-program-query solution name)
   (unless (and (relational-program-solution? solution) (symbol? name))

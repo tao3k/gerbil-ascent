@@ -130,14 +130,14 @@ into the fixed point.
 | Ask why or why-not | Rule/source witness or bounded missing-premise explanation with status | One witness is not complete provenance |
 | Receive evidence and revise | New attempt against named source generation | Search hit remains a candidate until source binding |
 
-The first executable case is a graph/search transcript containing a
-correct recursive rule, an undeclared helper relation, and a wrong
-recursive join that compiles.  The Library must diagnose the first,
-distinguish full outputs for the latter, and return a grounded why or
-why-not result before the caller retries.  See the
-[[file:research/agent-inference/index.org::#agent-inference-gate][research gate]].  The present evaluator returns rows and candidate
-supports in limited paths; a general LLM proposal/diagnosis and
-provenance API is *not yet implemented*.  MRR remains the later
+The first graph transcript is implemented in =candidate/reasoning.ss=:
+it accepts an inert two-rule reachability proposal against a copied
+source snapshot, diagnoses an undeclared helper, observes the complete
+result of a compiling wrong join, and returns a row-labelled path
+witness or reachable cut for the exact canonical graph program.  The
+[[file:llm-reasoning-library-plan.org::#llm-library-first-transcript][implemented contract and limits]] and
+[[file:research/agent-inference/index.org::#agent-inference-gate][research gate]] distinguish this case from a general explanation or
+model-control API.  MRR remains the later
 semantic admission owner, while POO Flow owns caller context and
 effect handoff.
 

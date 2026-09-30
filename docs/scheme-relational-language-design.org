@@ -31,6 +31,9 @@ constraints from [[file:research/scheme-dsl/ascent-a22.org][Ascent A22]],
 [[file:research/scheme-dsl/index.org][source ledger]] records precise
 PDF locators and transfer limits.  None proves arbitrary Gerbil
 procedures pure, terminating, monotone or incrementally maintainable.
+The [[file:research/scheme-dsl/reflection.org][research reflection]]
+records each proposed departure, its cost, and a comparison that
+could falsify its claimed benefit.
 
 * Two meanings of higher order
 :PROPERTIES:

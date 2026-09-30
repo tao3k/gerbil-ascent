@@ -14,6 +14,9 @@
 This is the short overview for discussing the next Scheme relational
 language.  [[file:research/scheme-dsl/language-history.org][Language history]] explains how the ideas developed;
 [[file:research/scheme-dsl/index.org][the research index]] links individual paper readings with PDF locators.
+The [[file:research/scheme-dsl/reflection.org][reflection and comparison plan]]
+separates paper results from our hypotheses and defines the evidence
+needed before claiming an improvement.
 The [[file:scheme-relational-language-design.org][first language design gate]] defines the proposed high-order layers,
 rule-time operator boundary, native Scheme grammar and
 discriminating experiments before implementation.

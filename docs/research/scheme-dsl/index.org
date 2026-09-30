@@ -20,6 +20,9 @@ the papers before the overview states our current choices.
 The [[file:../../scheme-relational-language-design.org][first language design gate]]
 turns these constraints into a proposed Scheme surface and semantic
 qualification plan before implementation changes.
+The [[file:reflection.org][research reflection and A/B protocol]]
+separates established results, our departures, and evidence needed
+before any claim of improvement.
 
 #+NAME: source-ledger
 | Key | Source and durable link | Local note | Main design constraint |

@@ -45,6 +45,12 @@ fn rust_rows(edges: &[Edge], enabled: bool, variant: u32) -> BTreeSet<String> {
             );
             rows.extend(
                 program
+                    .loop_twin
+                    .iter()
+                    .map(|(x,)| format!("loop_twin\t{x}")),
+            );
+            rows.extend(
+                program
                     .wedge
                     .iter()
                     .map(|(x, y, z)| format!("wedge\t{x}\t{y}\t{z}")),
@@ -54,6 +60,12 @@ fn rust_rows(edges: &[Edge], enabled: bool, variant: u32) -> BTreeSet<String> {
                     .quad
                     .iter()
                     .map(|(x, y, z, w)| format!("quad\t{x}\t{y}\t{z}\t{w}")),
+            );
+            rows.extend(
+                program
+                    .quint
+                    .iter()
+                    .map(|(x, y, z, w, v)| format!("quint\t{x}\t{y}\t{z}\t{w}\t{v}")),
             );
             rows.extend(
                 program
@@ -72,13 +84,16 @@ fn rust_rows(edges: &[Edge], enabled: bool, variant: u32) -> BTreeSet<String> {
             relation enabled();
             relation edge(u32, u32);
             relation loop_node(u32);
+            relation loop_twin(u32);
             relation wedge(u32, u32, u32);
             relation quad(u32, u32, u32, u32);
+            relation quint(u32, u32, u32, u32, u32);
             relation reach(u32, u32);
             relation cycle0();
-            loop_node(x) <-- edge(x, x);
+            loop_node(x), loop_twin(x) <-- edge(x, x);
             wedge(x, y, z) <-- enabled(), edge(x, y), edge(y, z);
             quad(x, y, z, w) <-- wedge(x, y, z), edge(z, w);
+            quint(x, y, z, w, v) <-- quad(x, y, z, w), edge(w, v);
             reach(x, y) <-- edge(x, y);
             reach(x, z) <-- reach(x, y), edge(y, z);
             cycle0() <-- reach(x, x);
@@ -95,16 +110,19 @@ fn rust_rows(edges: &[Edge], enabled: bool, variant: u32) -> BTreeSet<String> {
             relation enabled();
             relation edge(u32, u32);
             relation loop_node(u32);
+            relation loop_twin(u32);
             relation wedge(u32, u32, u32);
             relation quad(u32, u32, u32, u32);
+            relation quint(u32, u32, u32, u32, u32);
             relation reach(u32, u32);
             relation cycle0();
             cycle0() <-- reach(x, x);
             reach(x, z) <-- edge(y, z), reach(x, y);
             reach(x, y) <-- edge(x, y);
+            quint(x, y, z, w, v) <-- edge(w, v), quad(x, y, z, w);
             quad(x, y, z, w) <-- edge(z, w), wedge(x, y, z);
             wedge(x, y, z) <-- edge(y, z), edge(x, y), enabled();
-            loop_node(x) <-- edge(x, x);
+            loop_twin(x), loop_node(x) <-- edge(x, x);
         }
         let mut program = AscentProgram {
             enabled: if enabled { vec![()] } else { vec![] },
@@ -121,6 +139,7 @@ fn model_rows(edges: &[Edge], enabled: bool) -> BTreeSet<String> {
     for &(from, to) in edges {
         if from == to {
             rows.insert(format!("loop_node\t{from}"));
+            rows.insert(format!("loop_twin\t{from}"));
         }
     }
     if enabled {
@@ -131,6 +150,13 @@ fn model_rows(edges: &[Edge], enabled: bool) -> BTreeSet<String> {
                     for &(next, last) in edges {
                         if to == next {
                             rows.insert(format!("quad\t{from}\t{via}\t{to}\t{last}"));
+                            for &(tail, endpoint) in edges {
+                                if last == tail {
+                                    rows.insert(format!(
+                                        "quint\t{from}\t{via}\t{to}\t{last}\t{endpoint}"
+                                    ));
+                                }
+                            }
                         }
                     }
                 }

@@ -1,0 +1,62 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+#+TITLE: F20 reading: Flix first-class Datalog constraints
+#+STATUS: research note; Scheme composition remains a proposal
+#+DATE: 2026-09-30
+#+FILETAGS: :research:flix:scheme-dsl:
+
+* Bibliography
+:PROPERTIES:
+:CUSTOM_ID: flix-f20
+:SOURCE_PDF: https://plg.uwaterloo.ca/~olhotak/pubs/oopsla20c.pdf
+:DOI: 10.1145/3428193
+:ACCESSED: 2026-09-30
+:END:
+
+Magnus Madsen and Ondřej Lhoták, [[https://plg.uwaterloo.ca/~olhotak/pubs/oopsla20c.pdf][Fixpoints for the Masses: Programming
+with First-Class Datalog Constraints]], OOPSLA 2020.  The [[https://doc.flix.dev/fixpoints.html][Flix fixpoints
+documentation]] is a current implementation reference.  The paper PDF
+is the primary research source; its page numbers below count from one.
+
+* Evidence ledger
+
+#+NAME: flix-evidence
+| Locator | Paper claim | Scheme interpretation | Limit |
+|---------+-------------+-----------------------+-------|
+| §2, PDF pp. 3–5 | Constraints can be passed through functions and solved | Compose reusable =ascent-fragment= values in Scheme | Current Gerbil API still needs admission tests |
+| §3.2–3.3, PDF pp. 8–10 | Composition is set union, with algebraic laws under pure total expressions | Define fragment combination independent of source order | Stateful Scheme procedures can violate assumptions |
+| §4, PDF pp. 11–19 | Row-polymorphic types track predicate symbols and types | Check relation names, arities, and modes at composition | No inferred Flix row type exists here |
+| §4.7, PDF pp. 18–20 | Negation requires stratification across possible compositions | Check the assembled dependency graph | A local fragment check alone is insufficient |
+
+* Interpretation
+
+The first-class object in the paper is a constraint set: functions may
+construct and combine it, then =solve= computes its model.  This supports
+placing whole-program composition in ordinary Scheme values while keeping
+the rule arrow and relation atoms as the relational core.  It does not
+justify hiding a changing relation read inside a host procedure.  Flix's
+type and stratification checks are part of why its composition is safe;
+our Scheme declaration path must offer an explicit substitute.
+
+* Composition experiment
+
+Construct two fragments with shared relation names and a recursive rule;
+compose them in both orders and with one repeated fragment.  After
+admission, their complete fact sets should agree.  Repeat with a negated
+edge that creates a negative cycle only after composition: the assembled
+program must be rejected.  If order or duplication changes accepted
+facts for pure total fragments, the proposed set-like composition fails.
+
+#+begin_src scheme
+;; Pseudocode for the experiment; not a new API commitment.
+(compose-fragments base reachability)
+(compose-fragments reachability base)
+#+end_src
+
+Check relation arity and value predicates before evaluating either
+composition.  Record the admission error separately from run output.
+
+* Related notes
+
+[[file:index.org][Research index]]; [[file:../../scheme-relational-dsl-design.org][Scheme DSL proposal]].

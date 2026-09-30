@@ -29,6 +29,11 @@ they are not separate control-flow clauses.
 
 * Paper constraints
 
+The [[file:research/scheme-dsl/index.org][structured source ledger]] has an
+individual Org note for each paper, with PDF locators, author claims,
+transfer limits, and falsifiable experiments.  This section is the
+design-level summary.
+
 - A22 retains small Datalog-style rules as the explanation of recursive
   closure, while embedding host expressions and patterns.  Its extra =for=
   syntax is one Rust embedding choice, not a semantic obligation for Scheme.
@@ -196,7 +201,7 @@ and in the parity ledger as the source-language side of each comparison.
 
 * Sources
 
-- [[https://thomas.gilray.org/pdf/seamless-deductive.pdf][A22: Seamless Deductive Inference via Macros]]
-- [[https://www.cl.cam.ac.uk/~nk480/datafun.pdf][F16: Datafun: a Functional Datalog]]
-- [[https://www.schemeworkshop.org/2013/papers/HemannMuKanren2013.pdf][H13: µKanren: A Minimal Functional Core for Relational Programming]]
-- [[https://doc.flix.dev/fixpoints.html][Flix: Fixpoints and first-class constraints]]
+- [[file:research/scheme-dsl/ascent-a22.org][A22: Ascent reading note]]
+- [[file:research/scheme-dsl/datafun-f16.org][F16: Datafun reading note]]
+- [[file:research/scheme-dsl/microkanren-h13.org][H13: µKanren reading note]]
+- [[file:research/scheme-dsl/flix-f20.org][F20: Flix reading note]]

@@ -1,0 +1,53 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+#+TITLE: Scheme relational DSL research index
+#+STATUS: source ledger and design questions; not implementation evidence
+#+DATE: 2026-09-30
+#+FILETAGS: :research:scheme-dsl:
+
+* Scope
+:PROPERTIES:
+:CUSTOM_ID: scheme-dsl-research
+:END:
+
+These notes preserve stable source links, page and section locators,
+bounded readings, and experiments for the [[file:../../scheme-relational-dsl-design.org][Scheme relational DSL proposal]].
+The linked PDFs remain the primary sources; this repository records our
+analysis so future design work can resume from a precise location.
+
+#+NAME: source-ledger
+| Key | Source and durable link | Local note | Main design constraint |
+|-----+-------------------------+------------+------------------------|
+| A22 | [[https://thomas.gilray.org/pdf/seamless-deductive.pdf][Ascent paper]] | [[file:ascent-a22.org][Ascent]] | Preserve rule and planner information |
+| F16 | [[https://www.cl.cam.ac.uk/~nk480/datafun.pdf][Datafun paper]] | [[file:datafun-f16.org][Datafun]] | State monotonicity assumptions explicitly |
+| H13 | [[https://www.schemeworkshop.org/2013/papers/HemannMuKanren2013.pdf][µKanren paper]] | [[file:microkanren-h13.org][µKanren]] | Distinguish search from bottom-up evaluation |
+| F20 | [[https://plg.uwaterloo.ca/~olhotak/pubs/oopsla20c.pdf][Flix paper]] / [[https://doi.org/10.1145/3428193][DOI]] | [[file:flix-f20.org][Flix]] | Validate composition and stratification |
+
+* Cross-paper synthesis
+:PROPERTIES:
+:CUSTOM_ID: scheme-dsl-synthesis
+:END:
+
+A22 makes the arrow, relation atoms, dependencies, and join planning
+central, while its host forms are Rust embedding choices.  F16 supplies
+a formal example of functional fixed points guarded by monotonicity and
+finite-height structure.  H13 shows how a small Scheme relational core
+can gain a user interface through ordinary functions and macros, but its
+stream search is a different evaluator.  F20 makes whole Datalog
+fragments first-class values and checks the composition they form.
+
+Our proposed =relation-view= is an inference across those sources: a
+fixed, finite, pointwise Scheme function contributes rows monotonically
+as *input tuples* grow.  No cited paper proves arbitrary Gerbil
+procedures stable, pure, terminating, or visible to the planner.  Those
+are explicit admission and test obligations in the proposal.
+
+* Next evidence gate
+
+Build one fixture combining recursion, a scalar projection, zero/one
+and multi-row views, fragment composition, and source replacement.
+Record complete fact sets against the pinned Rust oracle and an
+independent finite model.  Exercise rejection of unbound modes, arity
+errors, mutable captures, and negative cycles after composition.  Then
+measure the plan and SS profile against the current Scheme surface.

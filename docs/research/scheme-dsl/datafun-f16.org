@@ -1,0 +1,70 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+#+TITLE: F16 reading: Datafun and the boundary of functional fixed points
+#+STATUS: research note; no Scheme monotonicity proof
+#+DATE: 2026-09-30
+#+FILETAGS: :research:datafun:scheme-dsl:
+
+* Bibliography
+:PROPERTIES:
+:CUSTOM_ID: datafun-f16
+:SOURCE_PDF: https://www.cl.cam.ac.uk/~nk480/datafun.pdf
+:ACCESSED: 2026-09-30
+:END:
+
+Michael Arntzenius and Neelakantan R. Krishnaswami, [[https://www.cl.cam.ac.uk/~nk480/datafun.pdf][Datafun:
+a Functional Datalog]], ICFP 2016.  Page numbers below count PDF pages
+from one.  The URL and locators are the saved research source.
+
+* Evidence ledger
+
+#+NAME: datafun-evidence
+| Locator | Paper claim | Scheme implication | Limit |
+|---------+-------------+--------------------+-------|
+| §2, Fig. 1, PDF pp. 2–3 | Finite sets and semilattice joins extend a typed lambda calculus | Functional syntax can describe relational growth | Syntax alone does not establish monotonicity |
+| §2, PDF pp. 2–3 | Ordinary and monotone function types differ | Mark the relation-changing boundary | Gerbil has no equivalent inferred type proof |
+| §4–5, PDF pp. 7–9 | Discrete and monotone contexts separate dependencies | Track which values can change during fixed-point evaluation | A declared input mode is weaker than a type system |
+| §5.3, PDF p. 9 | Finite-height monotone iteration reaches a least fixed point | Require finite, stable row emission for a view | Termination of arbitrary Scheme procedures is unproved |
+
+* Reading for the proposed relation view
+
+Datafun's monotone function is monotone with respect to the order on its
+argument.  Our candidate view =f : I -> finite-set(O)= has a narrower
+claim: when =f= is fixed for a source snapshot, mapping a growing input
+relation =R= to the union of =f(i)= for =i in R= is monotone under set
+inclusion.  It does not require =f= to be monotone in the individual
+value =i=.  This is our derivation, not a theorem supplied by the paper
+for Scheme procedures.
+
+A closure that reads a mutable table, clock, or evolving relation can
+produce different rows for the same =i=.  Then the apparent pointwise
+view may hide a dependency or break replay after source replacement.
+Datafun's separate contexts and monotone typing illustrate why an
+unrestricted host call inside recursion needs an admission boundary.
+
+* Experiment and falsifier
+
+#+begin_src scheme
+;; Proposed interface only; this is not implemented syntax.
+(relation-view next (from) (to) successors)
+((out y) <-- (node x) (next x y))
+#+end_src
+
+Admit one deterministic finite =successors= implementation, then attempt a
+closure that mutates its output for the same =x= in one run.  The latter
+must be rejected by a documented contract or isolated from fixed-point
+evaluation.  Replacing the source must invalidate any retained output.
+If the engine can silently reuse stale output, the proposed interface
+fails its stated snapshot semantics.
+
+* Open proof obligation
+
+Specify how Gerbil declarations establish stability, finite emission,
+and visible dependencies.  Runtime examples cannot prove these laws for
+arbitrary closures.  Budget enforcement is an operational bound, not a
+Datafun-style monotonicity proof.
+
+* Related notes
+
+[[file:index.org][Research index]]; [[file:../../scheme-relational-dsl-design.org][Scheme DSL proposal]].

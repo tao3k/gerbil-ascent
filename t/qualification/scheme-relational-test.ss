@@ -5,9 +5,13 @@
 (import (only-in :std/test check-equal? check-exception test-suite)
         (only-in :std/list/list append-map delete-duplicates/hash)
         (only-in :clan/poo/object .ref)
+        (only-in :clan/poo/mop element?)
         (only-in :core/observability/testing-case poo-flow-test-case)
+        (only-in :gerbil-ascent/program/types
+                 GerbilAscentFragmentContract)
         (only-in :gerbil-ascent/program/scheme-language
-                 relational-program)
+                 relational-program relational-fragment
+                 relational-compose)
         (only-in :gerbil-ascent/program/interface
                  gerbil-ascent-evaluate-program
                  gerbil-ascent-open-session
@@ -52,8 +56,58 @@
 (def (rows result name)
   ((.ref result 'rows-of) name))
 
+(def (source-fragment edges)
+  (relational-fragment
+   (import)
+   (source (edge (from to) edges))
+   (private)
+   (export edge)))
+
+(def (reach-fragment edge-handle)
+  (relational-fragment
+   (import (edge edge-handle))
+   (source)
+   (private (path (from to)))
+   (export path)
+   (rule (path ?x ?y) (edge ?x ?y))
+   (rule (path ?x ?z) (path ?x ?y) (edge ?y ?z))))
+
 (def scheme-relational-test
   (test-suite "Scheme relational finite positive gate"
+    (poo-flow-test-case "two fragment instances retain private identities"
+      (let-values (((source-a edge-a)
+                    (source-fragment '((1 2) (2 3))))
+                   ((source-b edge-b)
+                    (source-fragment '((7 8)))))
+        (let-values (((reach-a path-a) (reach-fragment edge-a))
+                     ((reach-b path-b) (reach-fragment edge-b)))
+          (let ((result
+                 (gerbil-ascent-evaluate-program
+                  (relational-compose
+                   (list source-a source-b reach-a reach-b)
+                   16 16 32)))
+                (reordered
+                 (gerbil-ascent-evaluate-program
+                  (relational-compose
+                   (list reach-b source-b reach-a source-a)
+                   16 16 32))))
+            (check-equal? (element? GerbilAscentFragmentContract reach-a)
+                          #t)
+            (check-equal? (eq? edge-a edge-b) #f)
+            (check-equal? (eq? path-a path-b) #f)
+            (check-equal? (same-set? (rows result path-a)
+                                     '((1 2) (2 3) (1 3))) #t)
+            (check-equal? (rows result path-b) '((7 8)))
+            (check-equal? (same-set? (rows result path-a)
+                                     (rows reordered path-a)) #t)
+            (check-equal? (same-set? (rows result path-b)
+                                     (rows reordered path-b)) #t)))))
+    (poo-flow-test-case "assembled program rejects duplicate instance"
+      (let-values (((source edge) (source-fragment '((1 2)))))
+        (check-exception
+         (gerbil-ascent-evaluate-program
+          (relational-compose (list source source) 8 8 16))
+         true)))
     (poo-flow-test-case "recursive closure equals independent graph model"
       (for-each
        (lambda (edges)

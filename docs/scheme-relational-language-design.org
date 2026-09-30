@@ -143,8 +143,8 @@ rows may also contain symbols.  Construction uses
 ordinary Scheme expressions for source rows; recursive rule evaluation
 cannot call an opaque host procedure.  The existing evaluator still
 performs admission and execution.  This module is a finite positive
-semantic slice, not the fragment/higher-order language described
-below and not a performance result.
+semantic slice, not the full higher-order language described below
+and not a performance result.
 
 The [[file:../t/qualification/scheme-relational-test.ss][qualification
 case]] compares recursive closure with an independent Floyd-Warshall
@@ -152,9 +152,49 @@ model for 64 directed graphs on three nodes, plus cycles, repeated
 source rows, source withdrawal, literals, unsafe heads and budget
 failure.  These checks establish a local bounded conformance receipt.
 They do not prove syntax ergonomics, general higher-order monotonicity,
-Flix-like static composition, or performance superiority.  The next
-implementation gate is first-class fragment identity and whole-program
-admission, followed by matched measurement before optimizer changes.
+Flix-like static composition, or performance superiority.
+
+The second local slice instantiates first-class positive fragments through
+ordinary Scheme functions.  The structural =relational-fragment= form
+uses =defrules=, returns the existing typed POO Fragment and exported
+handles as Scheme multiple values, and creates fresh source/private
+names on *each* call.  =relational-compose= is a pure assembly function
+over those POO values.  The focused case checks two independent
+instances, both composition orders, and duplicate-instance rejection.
+It does not yet supply a separate =admit= stage or a general fragment
+signature.  The current evaluator checks the assembled program when
+it is opened or solved.
+
+Gerbil-POO v19 is the first-party abstraction reference here.  Its
+=doc/poo.md= separates composable prototypes from instantiated values;
+=proto.ss= implements higher-order prototype composition with a small
+functional core; =object.ss= supplies =.o=, =.mix= and lazy slot lookup.
+The lesson for this slice is to compose *values* at the appropriate
+semantic boundary, then validate the result.  The existing
+[[file:../program/types.ss][Type descriptors]] define the Relation, Rule,
+Fragment and Program contracts, and the existing
+[[file:../program/objects.ss][constructors]] instantiate those POO values.
+The Scheme DSL lowers to them.  It uses =defrules= for a fixed
+declaration frame and =defsyntax= where term errors need a precise
+syntax location.  Ordinary Scheme functions and multiple values
+provide reusable fragment builders without a new object layer.
+
+The v19 prototype =.mix= combines slot computations with precedence
+and override.  Here every relation/rule contributes to one logical
+graph, and a duplicate relation name must fail admission.  Therefore
+=relational-compose= concatenates fragment contents without override;
+it does not call =.mix=.  Similarly, the existing
+=gerbil-ascent-clause-plan= generic owns open clause dispatch; pure
+fragment assembly does not need another generic.  The shared design
+principle is composability, while POO prototype fixed points and
+Datalog least fixed points remain different operations.
+
+The remaining gates are a public signature and explicit admission
+result, cross-fragment negative-cycle diagnostics, a restricted
+higher-order operator IR, and matched measurements before optimizer
+changes.  This mapping uses the v19 source and documentation in the
+local Gerbil-POO checkout as its reference; it does not require a
+sibling repository link to interpret the language contract.
 
 * Proposed public shape
 :PROPERTIES:

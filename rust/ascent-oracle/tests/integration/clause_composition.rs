@@ -6,7 +6,7 @@
 use super::common::scheme_output;
 use ascent::aggregators::count;
 use ascent::ascent;
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 
 type Edge = (u32, u32);
 
@@ -22,7 +22,7 @@ fn edges_for(mask: u32) -> Vec<Edge> {
         .collect()
 }
 
-fn rust_rows(edges: &[Edge]) -> BTreeSet<String> {
+fn rust_rows(edges: &[Edge], roots: &[u32]) -> BTreeSet<String> {
     ascent! {
         relation edge(u32, u32);
         relation blocked(u32, u32);
@@ -45,7 +45,7 @@ fn rust_rows(edges: &[Edge]) -> BTreeSet<String> {
     }
     let mut program = AscentProgram {
         edge: edges.to_vec(),
-        root: vec![(0,), (1,), (2,)],
+        root: roots.iter().copied().map(|root| (root,)).collect(),
         ..AscentProgram::default()
     };
     program.run();
@@ -171,10 +171,86 @@ fn clause_composition_matches_rust_scheme_and_independent_model() {
     let scheme = scheme.into_iter().collect::<BTreeSet<_>>();
     let mut expected = BTreeSet::new();
     for (case_id, edges) in cases {
-        let rust = rust_rows(&edges);
+        let rust = rust_rows(&edges, &[0, 1, 2]);
         let model = model_rows(&edges);
         assert_eq!(rust, model, "Rust case={case_id}");
         expected.extend(rust.into_iter().map(|row| format!("{case_id}\t{row}")));
     }
     assert_eq!(scheme, expected);
+}
+
+fn scale_edges(size: u32) -> Vec<Edge> {
+    (0..size)
+        .map(|index| {
+            let from = 4 * index;
+            (from, if index % 2 == 0 { from } else { from + 1 })
+        })
+        .collect()
+}
+
+fn scale_model_rows(edges: &[Edge], roots: &[u32]) -> BTreeSet<String> {
+    let mut rows = BTreeSet::new();
+    let blocked = edges
+        .iter()
+        .copied()
+        .filter(|(from, to)| (from + to) % 2 == 0)
+        .collect::<BTreeSet<_>>();
+    for &(from, to) in &blocked {
+        rows.insert(format!("blocked\t{from}\t{to}"));
+    }
+    let mut allowed = BTreeMap::<u32, BTreeSet<u32>>::new();
+    for &(from, to) in edges {
+        for target in [to, (to + 1) % 3] {
+            if from != target {
+                rows.insert(format!("candidate\t{from}\t{target}\t{}", from + target));
+                if !blocked.contains(&(from, target)) {
+                    allowed.entry(from).or_default().insert(target);
+                    rows.insert(format!("allowed\t{from}\t{target}"));
+                }
+            }
+        }
+    }
+    for &root in roots {
+        let mut visited = BTreeSet::new();
+        let mut pending = allowed
+            .get(&root)
+            .into_iter()
+            .flat_map(|targets| targets.iter().copied())
+            .collect::<Vec<_>>();
+        while let Some(target) = pending.pop() {
+            if visited.insert(target) {
+                rows.insert(format!("reach\t{root}\t{target}"));
+                if let Some(next) = allowed.get(&target) {
+                    pending.extend(next.iter().copied());
+                }
+            }
+        }
+        rows.insert(format!("reach-count\t{root}\t{}", visited.len()));
+        if let Some(maximum) = visited.last() {
+            rows.insert(format!("reach-max\t{root}\t{maximum}"));
+        }
+    }
+    rows
+}
+
+fn compare_scale(size: u32) {
+    let edges = scale_edges(size);
+    let roots = (0..size).map(|index| 4 * index).collect::<Vec<_>>();
+    let rust = rust_rows(&edges, &roots);
+    let model = scale_model_rows(&edges, &roots);
+    assert_eq!(rust, model, "Rust source rows={size}");
+    let output = scheme_output("clause-scale-rows", &format!("{size}\n"));
+    let mut scheme = output.lines().map(str::to_owned).collect::<Vec<_>>();
+    assert_eq!(scheme.pop().as_deref(), Some("END"));
+    assert_eq!(scheme.into_iter().collect::<BTreeSet<_>>(), model);
+}
+
+#[test]
+fn composed_clauses_match_model_at_1000_source_rows() {
+    compare_scale(1000);
+}
+
+#[test]
+fn composed_clauses_match_model_at_10000_source_rows() {
+    compare_scale(10000);
 }

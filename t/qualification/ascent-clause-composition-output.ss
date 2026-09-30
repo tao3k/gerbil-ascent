@@ -4,43 +4,19 @@
 
 (import (only-in :clan/poo/object .ref)
         (only-in :gerbil-ascent/program/interface
-                 ascent gerbil-ascent-open-session
+                 gerbil-ascent-open-session
                  gerbil-ascent-session-replace-source!
-                 gerbil-ascent-session-run
-                 gerbil-ascent-count))
+                 gerbil-ascent-session-run)
+        (only-in :gerbil-ascent/t/qualification/ascent-clause-composition-fixture
+                 ascent-clause-composition-program))
 
 (export main)
 
 (def (case-program edges)
-  (ascent
-   (relation edge (from to) edges)
-   (relation blocked (from to))
-   (relation root (node) '((0) (1) (2)))
-   (relation candidate (from to score))
-   (relation allowed (from to))
-   (relation reach (from to))
-   (relation reach-count (node total))
-   (relation reach-max (node target))
-   ((blocked x y) <-- (edge x y)
-    (if (x y) (even? (+ x y))))
-   ((candidate x z score) <-- (edge x y)
-    (for z (y) (list y (modulo (+ y 1) 3)))
-    (if (x z) (not (= x z)))
-    (let score (x z) (+ x z)))
-   ((allowed x z) <-- (candidate x z score)
-    (not (blocked x z)))
-   ((reach x z) <-- (allowed x z))
-   ((reach x z) <-- (reach x y) (allowed y z))
-   ((reach-count x total) <-- (root x)
-    (aggregate total gerbil-ascent-count () (reach x z)))
-   ((reach-max x target) <-- (root x)
-    (aggregate target
-               (lambda (tuples)
-                 (if (null? tuples)
-                   []
-                   (list (apply max (map car tuples)))))
-               (z) (reach x z)))
-   (bounds 16 80 128)))
+  (ascent-clause-composition-program
+   edges '((0) (1) (2))
+   (lambda (y) (modulo (+ y 1) 3))
+   16 80 128))
 
 (def (emit mask session edges)
   (gerbil-ascent-session-replace-source! session 'edge edges)

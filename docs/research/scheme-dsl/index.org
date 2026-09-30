@@ -43,6 +43,13 @@ as *input tuples* grow.  No cited paper proves arbitrary Gerbil
 procedures stable, pure, terminating, or visible to the planner.  Those
 are explicit admission and test obligations in the proposal.
 
+The deeper [[file:datafun-f16.org::#datafun-termination][Datafun reading]] separates
+monotonicity from termination: one emitted row per call can generate
+an infinite recursive chain.  An explicit finite-height fact domain
+could support a closure claim; the current fact budget only bounds
+execution through failure.  This changes the proposed view's
+acceptance gate, not the current implementation's evidence status.
+
 * Next evidence gate
 
 Build one fixture combining recursion, a scalar projection, zero/one

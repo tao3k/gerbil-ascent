@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 #+TITLE: F16 reading: Datafun and the boundary of functional fixed points
-#+STATUS: research note; no Scheme monotonicity proof
+#+STATUS: deep research note; no Scheme monotonicity or termination proof
 #+DATE: 2026-09-30
 #+FILETAGS: :research:datafun:scheme-dsl:
 
@@ -25,9 +25,16 @@ from one.  The URL and locators are the saved research source.
 | §2, Fig. 1, PDF pp. 2–3 | Finite sets and semilattice joins extend a typed lambda calculus | Functional syntax can describe relational growth | Syntax alone does not establish monotonicity |
 | §2, PDF pp. 2–3 | Ordinary and monotone function types differ | Mark the relation-changing boundary | Gerbil has no equivalent inferred type proof |
 | §4–5, PDF pp. 7–9 | Discrete and monotone contexts separate dependencies | Track which values can change during fixed-point evaluation | A declared input mode is weaker than a type system |
-| §5.3, PDF p. 9 | Finite-height monotone iteration reaches a least fixed point | Require finite, stable row emission for a view | Termination of arbitrary Scheme procedures is unproved |
+| §5.3, PDF p. 9 | Finite-height monotone iteration reaches a least fixed point | Bound the entire recursive state space | Finite output per call is insufficient |
+| §3.4.1, PDF p. 4 | An explicit upper bound makes the state space finite-height | Explore an admitted finite domain | Datafun's clamping need not be our behavior |
+| §4.1, Fig. 5, PDF pp. 6–7 | Discrete application clears the monotone context | Keep changing relations out of opaque Scheme calls | Captured state is not statically visible |
+| §4.3–4.4, PDF p. 7 | Conditional and singleton introduction restrict changing inputs | Projection and filtering have distinct obligations | Generic procedures bypass these checks |
+| §9, PDF p. 12 | Higher-order optimization remains future work | Preserve our first-order join plan | No speed claim transfers |
 
-* Reading for the proposed relation view
+* Core semantic distinction
+:PROPERTIES:
+:CUSTOM_ID: datafun-semantic-distinction
+:END:
 
 Datafun's monotone function is monotone with respect to the order on its
 argument.  Our candidate view =f : I -> finite-set(O)= has a narrower
@@ -42,6 +49,91 @@ produce different rows for the same =i=.  Then the apparent pointwise
 view may hide a dependency or break replay after source replacement.
 Datafun's separate contexts and monotone typing illustrate why an
 unrestricted host call inside recursion needs an admission boundary.
+
+Datafun's =map= is monotone in its input set, but not generally in its
+function argument; its =filter= can be monotone in a Boolean-valued
+function argument under Datafun's ordering (§3.1, PDF p. 3).  A fixed
+Scheme view has the first property only.  An arbitrary procedure
+changing during evaluation has neither property guaranteed.  A
+singleton whose value changes with recursive state also need not
+preserve set inclusion: ={2}= is not a subset of ={3}= merely because
+=2 <= 3=.
+
+Let =X= denote the current fact set and =Q(X)= the input tuples found
+through visible positive atoms.  For a stable pointwise view =f=, one
+rule contributes =V_f(X) = union { f(i) | i in Q(X) }=.  If =Q= is
+monotone, then =X subset X'= implies =V_f(X) subset V_f(X')=.  This is
+our inference from set inclusion, not a Datafun typing derivation.  If
+=f= reads =X= through a closure, depends on mutable state, or emits a
+row based on an aggregate in the same stratum, the premise fails.
+
+* Termination is a separate obligation
+:PROPERTIES:
+:CUSTOM_ID: datafun-termination
+:END:
+
+Finite, stable output from each call is too weak as a termination
+criterion.  Consider a proposed view =succ(x)= emitting exactly one
+row, =x+1=, and the recursive rule below:
+
+#+begin_src scheme
+;; Illustrative proposed interface, not implemented syntax.
+(relation-view next (from) (to) succ)
+((node y) <-- (node x) (next x y))
+;; With source (node 0), the closure is 0, 1, 2, ...
+#+end_src
+
+Each call is finite and deterministic, and the consequence operator
+is monotone.  Yet the reachable set has infinite height.  Datafun
+restricts unbounded =fix= to finite semilattice equality types and
+offers =fix x <= bound is ...= for an explicit finite-height bound
+(§2 and §3.4.1, PDF pp. 2, 4).  The paper defines clamping when a
+candidate exceeds that bound.  For gerbil-ascent, silently clamping
+would turn an unexpected derivation into a plausible but incomplete
+answer.  Our research recommendation is to reject out-of-domain
+emission if a finite domain is declared, and keep the existing fact
+budget as an explicit resource failure.  These choices need separate
+specification and tests.
+
+#+NAME: datafun-domain-options
+| Candidate | What it establishes | Required evidence |
+|-----------+---------------------+-------------------|
+| Stable pointwise view with fact budget | Bound admitted fact growth through explicit failure, with no general termination theorem | Failure atomicity, complete rows below budget, repeated-run stability |
+| Stable, total view with admitted finite output domain | Finite-height fact space if every derived tuple is in-domain | Domain admission, out-of-domain rejection, finite-model closure |
+
+An upper bound must cover *all derived relation tuples*, not merely
+each call's output count.  A finite product domain gives a finite-height
+powerset lattice.  Negative and aggregate dependencies still require
+stratification.  Lattice columns need their own finite-height order
+and valid join laws; a finite fact count alone does not prove their
+convergence.  A fact budget also cannot interrupt a host procedure
+that never returns or an iterator stalled before its next emission.
+Timeout and host-call cancellation need separate evidence before any
+wall-time bound is claimed.
+
+* Assessment for gerbil-ascent
+:PROPERTIES:
+:CUSTOM_ID: datafun-assessment
+:END:
+
+Datafun is a strong reference for the *semantic boundary*: its two
+contexts separate discrete values from monotone ones; ordinary
+function application cannot consume a changing monotone argument,
+while monotone functions can (§4.1, PDF pp. 6–7).  Its conditional and
+set introduction rules show that familiar functional operations are
+not automatically monotone (§4.3–4.4, PDF p. 7).  Finite height then
+supplies a termination argument distinct from monotonicity.  These
+constraints are more useful here than copying Datafun's syntax.
+
+The authors deliberately define a small typed language instead of
+embedding its context discipline into an existing host language (§9,
+PDF p. 12).  Gerbil closures do not acquire Datafun's type proof by
+being placed behind =relation-view=.  A restricted declaration with
+executable admission checks is a plausible first step.  A Datafun-like
+monotonicity checker would be a separate, larger language project.
+The paper also treats higher-order fixed-point optimization as
+research, so it offers no matched speed evidence for our semi-naive
+planner.
 
 * Experiment and falsifier
 
@@ -58,12 +150,24 @@ evaluation.  Replacing the source must invalidate any retained output.
 If the engine can silently reuse stale output, the proposed interface
 fails its stated snapshot semantics.
 
+Add the =succ= recursion above.  It must hit explicit budget failure
+or be rejected against a declared finite domain; it must never be
+reported as a completed least fixed point.  Add a stable view over
+=D = {0,1,2}= that saturates at =2=, and compare all rows with an
+independent finite-set model.  Add a closure reading a changing
+relation without a declared dependency.  If that cannot be rejected
+mechanically, document a narrower user-supplied law rather than
+claiming static proof.
+
 * Open proof obligation
 
-Specify how Gerbil declarations establish stability, finite emission,
-and visible dependencies.  Runtime examples cannot prove these laws for
-arbitrary closures.  Budget enforcement is an operational bound, not a
-Datafun-style monotonicity proof.
+Specify how Gerbil declarations establish stability, finite-height
+domains, and visible dependencies.  Runtime examples cannot prove
+these laws for arbitrary closures.  Budget enforcement is an
+operational bound, not a Datafun-style monotonicity or termination
+proof.  Test whether the existing POO relation and lattice contracts
+can express the needed domain and order evidence before adding a new
+surface form.
 
 * Related notes
 

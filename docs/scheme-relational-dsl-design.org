@@ -41,7 +41,9 @@ design-level summary.
   monotonicity.  Scheme does not infer that property for arbitrary captured
   procedures.  A function called during a fixed-point run therefore needs
   an explicit stability and dependency boundary; a new keyword cannot prove
-  it monotone.
+  it monotone.  Finite-height state adds a separate termination obligation:
+  finite output per call does not bound a recursive closure.  See the
+  [[file:research/scheme-dsl/datafun-f16.org::#datafun-assessment][deeper Datafun assessment]].
 - Scheme miniKanren demonstrates a small relational core with functional
   combinators and macros layered over it.  Its search/unification semantics
   differ from this bottom-up fixed-point engine, so its operators are design
@@ -139,6 +141,15 @@ procedure and its captured dependencies must be stable for a source
 snapshot.  Datafun's stronger type-based monotonicity analysis is a
 research direction, not a property this Scheme API may claim today.
 
+Monotonicity and termination are distinct.  A fixed view emitting only
+=x+1= for input =x= is monotone when lifted over input *sets*, yet a
+recursive =node= rule starting at =0= derives every natural number.
+Datafun requires a finite-height fixed-point state or an explicit
+bound.  The proposed per-call "finite iterable" contract does not
+itself establish a completed fixed point.  The current
+=max-derived-facts= limit is an operational failure bound, not a
+semantic proof of termination.
+
 A view may inspect only its declared input values and immutable lexical
 configuration.  If it reads facts from another relation, that dependency
 must be represented in the rule graph; otherwise an apparent pointwise
@@ -147,6 +158,30 @@ can be replayed after source replacement.  Effectful procedures require a
 separate contract and are outside the first design slice.
 
 * Admission and fixed-point obligations
+
+The first design slice should distinguish two assurance levels:
+
+#+NAME: scheme-view-assurance
+| Level | Accepted claim | Required check |
+|-------+----------------+----------------|
+| Fact-budgeted | A stable declared view reaches closure or fails after admitting too many facts | Exhaustion is observable and failure-atomic; no completed answer is reported |
+| Finite-domain closure | Total, stable calls derive only tuples inside an admitted finite domain | Reject out-of-domain rows; compare full closure to an independent finite model |
+
+Do not silently clamp to a domain bound merely because Datafun defines
+that behavior for its own bounded =fix=.  An out-of-domain derived row
+should be an explicit error in this proposal.  A declaration cannot
+prove an arbitrary captured closure stable; until a mechanically
+checkable restricted expression language exists, stability is a
+documented user-supplied law.
+
+The current implementation has useful but narrower mechanisms:
+=program/funs.ss= builds strict strata for negation, aggregation, and
+lattice-to-relation projection and selects delta positions from visible
+positive atoms.  =program/evaluate.ss= enforces fact limits and
+evaluates host expressions and generators.  =program/session.ss=
+rebuilds evaluation state from accepted source snapshots after failure
+or replacement.  These are not a Datafun type proof for arbitrary
+procedures or user-supplied lattice joins.
 
 1. A view declares input columns, output columns, and row predicates.  Its
    emissions obey the program fact budget.  Admission rejects unbound inputs,
@@ -168,6 +203,11 @@ separate contract and are outside the first design slice.
    row.  Failed view calls must not commit a partial session update.  An
    arbitrary Scheme procedure's termination cannot be proved by this API;
    bounded emission and timeout behavior need separate qualification.
+6. Per-call finite generation is insufficient to prove recursive
+   termination.  A total-closure claim requires a finite-height domain
+   for every derived relation or lattice state and explicit rejection of
+   emissions outside it.  Budget exhaustion and timeout results remain
+   distinct from a completed least fixed point.
 
 * Design discriminator
 
@@ -178,6 +218,12 @@ and an unbound/duplicate variable rejection.  Compare complete output to
 fresh pinned Rust 0.8.0 and an independent finite model, then measure the
 Scheme plan against the existing SS profile.  This checks semantic parity
 without equating Scheme tokens to Rust tokens.
+
+Add an infinite-growth discriminator: =node(0)= and a pointwise
+=successor= view deriving =node(x+1)=.  It must fail at an explicit
+budget or finite-domain boundary, never return a finished closure.
+Then use a finite saturating successor over ={0,1,2}= and check complete
+closure and source-replacement behavior.
 
 * Alternatives to test against this proposal
 

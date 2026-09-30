@@ -99,6 +99,15 @@ timeout-rows:
 timeout-strata-rows:
     @timeout 60s gerbil {{ gerbil_test_runtime_options }} t/qualification/ascent-timeout-strata-output.ss
 
+byods-lattice-rows:
+    @timeout 90s gerbil {{ gerbil_test_runtime_options }} t/qualification/ascent-byods-lattice-output.ss
+
+byods-lattice-session-rows:
+    @timeout 90s gerbil {{ gerbil_test_runtime_options }} t/qualification/ascent-byods-lattice-session-output.ss
+
+byods-lattice-scale-rows:
+    @timeout 90s gerbil {{ gerbil_test_runtime_options }} t/qualification/ascent-byods-lattice-scale-output.ss
+
 rule-rows:
     @timeout 60s gerbil {{ gerbil_test_runtime_options }} t/qualification/ascent-rule-program-output.ss
 

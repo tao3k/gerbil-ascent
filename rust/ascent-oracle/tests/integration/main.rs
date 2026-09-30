@@ -6,6 +6,7 @@
 mod aggregation;
 mod arity_repetition;
 mod byods;
+mod byods_lattice_timeout;
 mod byods_session;
 mod clause_composition;
 mod common;

@@ -77,6 +77,50 @@
    (rule (path ?x ?y) (edge ?x ?y))
    (rule (path ?x ?z) (path ?x ?y) (edge ?y ?z))))
 
+(def (scalar-fragment edge-handle)
+  (relational-fragment
+   (import (edge edge-handle))
+   (source)
+   (private (even-edge (from to))
+            (ordered-sum (value)))
+   (export (even-edge even-edge) (ordered-sum ordered-sum))
+   (rule (even-edge ?x ?y)
+     (edge ?x ?y)
+     (where (even? ?x)))
+   (rule (ordered-sum ?z)
+     (edge ?x ?y)
+     (where (< ?x ?y))
+     (compute ?z (+ ?x ?y)))))
+
+(def (unbound-scalar-fragment edge-handle)
+  (relational-fragment
+   (import (edge edge-handle))
+   (source)
+   (private (selected (from to)))
+   (export (selected selected))
+   (rule (selected ?x ?y)
+     (edge ?x ?y)
+     (where (even? ?missing)))))
+
+(def (selected-fragment)
+  (relational-fragment
+   (import)
+   (source)
+   (private (selected (from to)))
+   (export (selected selected))))
+
+(def (unbounded-count-fragment)
+  (relational-fragment
+   (import)
+   (source (seed (value) '((1))))
+   (private (count (value)))
+   (export (count count))
+   (rule (count ?x) (seed ?x))
+   (rule (count ?next)
+     (count ?current)
+     (seed ?one)
+     (compute ?next (+ ?current ?one)))))
+
 (def scheme-relational-test
   (test-suite "Scheme relational finite positive gate"
     (poo-flow-test-case "two fragment instances retain private identities"
@@ -168,8 +212,33 @@
              (fragment (gerbil-ascent-fragment [] (list callback-rule))))
         (check-exception
          (relational-admit
-          (relational-compose (list source fragment) 8 8 16))
+         (relational-compose (list source fragment) 8 8 16))
          true)))
+    (poo-flow-test-case "admission rebuilds a claimed checked operator"
+      (let* ((called #f)
+             (source (source-fragment '((1 2) (2 3))))
+             (output (selected-fragment))
+             (edge (relational-export source 'edge))
+             (selected (relational-export output 'selected))
+             (x (gerbil-ascent-variable '?x))
+             (y (gerbil-ascent-variable '?y))
+             (rule
+              (gerbil-ascent-rule
+               (list (gerbil-ascent-atom selected (list x y)))
+               (list (gerbil-ascent-atom edge (list x y))
+                     (gerbil-ascent-guard
+                      '(?x)
+                      (lambda (_value) (set! called #t) #t)
+                      (vector 'where 'even? '(?x))))))
+             (injected (gerbil-ascent-fragment [] (list rule)))
+             (solution
+              (relational-solve
+               (relational-admit
+                (relational-compose
+                 (list source output injected) 8 8 16)))))
+        (check-equal? called #f)
+        (check-equal? (relational-query solution output 'selected)
+                      '((2 3)))))
     (poo-flow-test-case "whole-program admission rejects an absent import"
       (let (reach (reach-fragment (gensym 'missing-edge)))
         (check-exception
@@ -181,6 +250,64 @@
              (admission
               (relational-admit
                (relational-compose (list source reach) 8 1 16))))
+        (check-exception (relational-solve admission) true)
+        (check-exception (relational-solve admission) true)))
+    (poo-flow-test-case "checked where and compute match finite Scheme model"
+      (let* ((input
+              (append-map
+               (lambda (left)
+                 (map (lambda (right) (list left right)) '(0 1 2 3)))
+               '(0 1 2 3)))
+             (source (source-fragment input))
+             (scalar (scalar-fragment
+                      (relational-export source 'edge)))
+             (solution
+              (relational-solve
+               (relational-admit
+                (relational-compose (list source scalar) 32 32 64))))
+             (expected-even
+              (filter (lambda (row) (even? (car row))) input))
+             (expected-sum
+              (delete-duplicates/hash
+               (map (lambda (row)
+                      (list (+ (car row) (cadr row))))
+                    (filter (lambda (row) (< (car row) (cadr row)))
+                            input)))))
+        (check-equal?
+         (same-set? (relational-query solution scalar 'even-edge)
+                    expected-even) #t)
+        (check-equal?
+         (same-set? (relational-query solution scalar 'ordered-sum)
+                    expected-sum) #t)))
+    (poo-flow-test-case "checked operator modes reject invalid uses"
+      (check-exception
+       (relational-fragment
+        (import)
+        (source (edge (from to) '((1 2))))
+        (private (selected (from to)))
+        (export (selected selected))
+        (rule (selected ?x ?y)
+          (edge ?x ?y)
+          (where (odd? ?x))))
+       true)
+      (let* ((source (source-fragment '((1 2))))
+             (edge-handle (relational-export source 'edge))
+             (bad (unbound-scalar-fragment edge-handle)))
+        (check-exception
+         (relational-admit (relational-compose (list source bad) 8 8 16))
+         true))
+      (let* ((source (source-fragment '((bad 2))))
+             (scalar (scalar-fragment
+                      (relational-export source 'edge)))
+             (admission
+              (relational-admit
+               (relational-compose (list source scalar) 8 8 16))))
+        (check-exception (relational-solve admission) true)))
+    (poo-flow-test-case "recursive compute budget fails without a result"
+      (let* ((fragment (unbounded-count-fragment))
+             (admission
+              (relational-admit
+               (relational-compose (list fragment) 1 8 16))))
         (check-exception (relational-solve admission) true)
         (check-exception (relational-solve admission) true)))
     (poo-flow-test-case "recursive closure equals independent graph model"

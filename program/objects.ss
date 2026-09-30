@@ -280,11 +280,13 @@
                 (.plan (lambda (atom-plan bound)
                          (atom-clause-plan self atom-plan bound))))))
 
-(def (gerbil-ascent-guard input-variables guard-procedure)
+(def (gerbil-ascent-guard input-variables guard-procedure
+                          (operator-descriptor #f))
   (validate GerbilAscentGuardContract
             (.o (:: self Guard.) ascent-clause-kind: 'guard
                 variables: input-variables
                 predicate: guard-procedure
+                checked-operator: operator-descriptor
                 (.plan (lambda (_atom-plan bound)
                          (require-bound (.ref self 'variables) bound)
                          (vector (vector 'guard (.ref self 'variables)
@@ -302,11 +304,12 @@
                                                'generate bound))))))
 
 (def (gerbil-ascent-binding output-variable input-variables
-                            binding-procedure)
+                            binding-procedure (operator-descriptor #f))
   (validate GerbilAscentBindingContract
             (.o (:: self Binding.) ascent-clause-kind: 'binding
                 variable: output-variable variables: input-variables
                 compute: binding-procedure
+                checked-operator: operator-descriptor
                 (.plan (lambda (_atom-plan bound)
                          (computed-clause-plan self 'binding
                                                'compute bound))))))

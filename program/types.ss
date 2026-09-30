@@ -130,6 +130,9 @@
 (def +optional-procedure+
   (slot-contract 'ascent/optional-procedure
                  (lambda (value) (or (not value) (procedure? value)))))
+(def +checked-operator+
+  (slot-contract 'ascent/checked-operator
+                 (lambda (value) (or (not value) (vector? value)))))
 
 ;;; Guards can inspect only previously bound variables, which the planner
 ;;; checks before the predicate reaches execution.
@@ -138,6 +141,7 @@
   proto: (.o)
   responsibilities: (.o ascent-clause-kind: (clause-kind-contract 'guard)
                       variables: +variables+ predicate: +procedure+
+                      checked-operator: +checked-operator+
                       .plan: +plan+))
 
 ;;; Generators may publish one variable or a tuple; the output descriptor
@@ -158,6 +162,7 @@
   responsibilities: (.o ascent-clause-kind:
                       (clause-kind-contract 'binding)
                       variable: +symbol+ variables: +variables+
+                      checked-operator: +checked-operator+
                       compute: +procedure+ .plan: +plan+))
 
 ;;; Negation is a read of a relation with no new binding; stratification

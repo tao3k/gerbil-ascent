@@ -214,6 +214,32 @@ remain the value boundary, and the existing
 Gerbil v0.19 supplies the language tools; these repository contracts
 still determine relational admission.
 
+The current =relational-fragment= rule slice also accepts =where= with
+=even?= or =<=, and =compute= with =+= or =identity=.  The direct
+=relational-program= form remains function-free.  These are fixed operator names
+with checked arity and exact-integer inputs where required.  The rule
+IR retains a descriptor, and admission constructs a fresh procedure
+from that descriptor rather than trusting a procedure on the input
+graph.  A missing input binding, unknown operator, or wrong scalar
+type fails.  This is a small executable grammar, not arbitrary Scheme
+expression evaluation or the proposed higher-order relation IR.
+
+#+begin_src scheme
+(rule (selected ?x ?y)
+  (edge ?x ?y)
+  (where (even? ?x)))
+(rule (sum ?z)
+  (edge ?x ?y)
+  (where (< ?x ?y))
+  (compute ?z (+ ?x ?y)))
+#+end_src
+
+Unlike the preceding function-free gate, =compute += can generate
+integers beyond the source domain.  The solve budget then fails the run;
+it cannot certify termination or convert a partial run to a complete
+answer.  The finite-model test covers nonrecursive =where/compute=
+behavior only.
+
 The remaining gates are typed admission diagnostics, source injection
 and replacement, a restricted higher-order operator IR, and matched
 measurements before optimizer changes.  The current =relational-admit=

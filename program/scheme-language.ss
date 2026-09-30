@@ -26,9 +26,9 @@
 (defstruct relational-admission (run))
 (defstruct relational-solution (result))
 
-;;; Restrict the first gate to immutable scalar atoms.  A finite source and
-;;; function-free rules then have a finite active domain; the budgets below
-;;; remain failure limits, never evidence of completion by truncation.
+;;; Restrict sources and results to immutable scalar atoms. Computed exact
+;;; integers can grow beyond the source domain; budgets stop such a solve as
+;;; failure and must never be read as evidence of completed closure.
 (def (relational-atom-value? value)
   (or (exact-integer? value) (boolean? value) (symbol? value) (char? value)))
 
@@ -89,6 +89,85 @@
                                (list (relational-term term) ...))))
     ((_ bad)
      (raise-syntax-error #f "expected a relational atom" (syntax bad)))))
+
+;;; Fixed scalar operators are declared by name, arity and input mode.
+;;; Their procedures are built locally; a rule cannot supply a host closure.
+(def (relational-operator-procedure mode operation arity)
+  (case mode
+    ((where)
+     (case operation
+       ((even?)
+        (unless (= arity 1)
+          (error "even? expects one relational input"))
+        (lambda (value)
+          (unless (exact-integer? value)
+            (error "even? expects an exact integer" value))
+          (even? value)))
+       ((<)
+        (unless (= arity 2)
+          (error "< expects two relational inputs"))
+        (lambda (left right)
+          (unless (and (exact-integer? left) (exact-integer? right))
+            (error "< expects exact integers" left right))
+          (< left right)))
+       (else (error "unknown relational filter operator" operation))))
+    ((compute)
+     (case operation
+       ((+)
+        (unless (= arity 2)
+          (error "+ expects two relational inputs"))
+        (lambda (left right)
+          (unless (and (exact-integer? left) (exact-integer? right))
+            (error "+ expects exact integers" left right))
+          (+ left right)))
+       ((identity)
+        (unless (= arity 1)
+          (error "identity expects one relational input"))
+        (lambda (value) value))
+       (else (error "unknown relational projection operator" operation))))
+    (else (error "unknown relational operator mode" mode))))
+
+(def (relational-where operation variables)
+  (let (inputs (map identity variables))
+    (gerbil-ascent-guard
+     inputs
+     (relational-operator-procedure 'where operation (length inputs))
+     (vector 'where operation (map identity inputs)))))
+
+(def (relational-compute output operation variables)
+  (let (inputs (map identity variables))
+    (gerbil-ascent-binding
+     output inputs
+     (relational-operator-procedure 'compute operation (length inputs))
+     (vector 'compute operation (map identity inputs) output))))
+
+;;; Only ?identifiers may name a rule binding. The body distinguishes
+;;; relation scans from fixed scalar filters and projections at expansion.
+(defsyntax (relational-clause/lexical stx)
+  (def (logic-variable? input)
+    (and (identifier? input)
+         (let* ((datum (syntax->datum input))
+                (spelling (symbol->string datum)))
+           (and (not (eq? datum '?_))
+                (> (string-length spelling) 1)
+                (char=? (string-ref spelling 0) #\?)))))
+  (syntax-case stx (where compute)
+    ((_ (where (operation input ...)))
+     (and (identifier? (syntax operation))
+          (andmap logic-variable? (syntax->list (syntax (input ...)))))
+     (syntax (relational-where 'operation '(input ...))))
+    ((_ (compute output (operation input ...)))
+     (and (logic-variable? (syntax output))
+          (identifier? (syntax operation))
+          (andmap logic-variable? (syntax->list (syntax (input ...)))))
+     (syntax (relational-compute 'output 'operation '(input ...))))
+    ((_ (name term ...))
+     (and (identifier? (syntax name))
+          (not (memq (syntax->datum (syntax name)) '(where compute))))
+     (syntax (relational-atom/lexical (name term ...))))
+    ((_ bad)
+     (raise-syntax-error #f "expected atom, where, or compute clause"
+                         (syntax bad)))))
 
 ;;; Boundary: This collector fixes clause order and requires a final budget.
 ;;; Invariant: Declarations and rules remain inspectable before evaluation.
@@ -201,7 +280,7 @@
       (list
        (gerbil-ascent-rule
         (list (relational-atom/lexical (head head-term ...)))
-        (list (relational-atom/lexical
+        (list (relational-clause/lexical
                (body body-term ...)) ...)) ...)
       (list (cons 'public-name exported-name) ...)))))
 
@@ -254,10 +333,41 @@
    (.ref atom 'relation)
    (map relational-copy-term (.ref atom 'terms))))
 
+;;; Rebuild from the descriptor, never from the callback stored for the old
+;;; evaluator. An unmarked guard or binding cannot cross admission.
+(def (relational-copy-clause clause)
+  (case (.ref clause 'ascent-clause-kind)
+    ((atom) (relational-copy-atom clause))
+    ((guard)
+     (let (descriptor (.ref clause 'checked-operator))
+       (unless (and (vector? descriptor)
+                    (= (vector-length descriptor) 3)
+                    (eq? (vector-ref descriptor 0) 'where)
+                    (equal? (vector-ref descriptor 2)
+                            (.ref clause 'variables)))
+         (error "untrusted relational filter"))
+       (relational-where (vector-ref descriptor 1)
+                         (vector-ref descriptor 2))))
+    ((binding)
+     (let (descriptor (.ref clause 'checked-operator))
+       (unless (and (vector? descriptor)
+                    (= (vector-length descriptor) 4)
+                    (eq? (vector-ref descriptor 0) 'compute)
+                    (equal? (vector-ref descriptor 2)
+                            (.ref clause 'variables))
+                    (eq? (vector-ref descriptor 3)
+                         (.ref clause 'variable)))
+         (error "untrusted relational projection"))
+       (relational-compute (vector-ref descriptor 3)
+                            (vector-ref descriptor 1)
+                            (vector-ref descriptor 2))))
+    (else (error "unsupported relational clause"
+                 (.ref clause 'ascent-clause-kind)))))
+
 (def (relational-copy-rule rule)
   (gerbil-ascent-rule
    (map relational-copy-atom (.ref rule 'heads))
-   (map relational-copy-atom (.ref rule 'body))))
+   (map relational-copy-clause (.ref rule 'body))))
 
 ;;; The engine constructor checks relation names, arities, rule bindings,
 ;;; dependencies and budgets before the admission value becomes observable.

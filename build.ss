@@ -24,6 +24,7 @@
     "program/scheme-admission"
     "program/scheme-language"
     "program/operator"
+    "program/operator-change"
     "program/funs"
     "program/analysis"
     "program/summary"

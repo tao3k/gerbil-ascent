@@ -128,8 +128,9 @@ The implemented finite subset lowers operators to positive rules and
 uses the existing fixed-point evaluator. A separate structural change
 interpreter propagates insertions through each operator and advances
 the =fix= frontier. It is checked against the complete reference
-interpreter and independent finite closure. Operation counts and scale
-measurements remain necessary before claiming a performance gain. A
+interpreter and independent finite closure. The [[file:research/scheme-dsl/e4-positive-change.org][paired E4 receipt]]
+records operation counts and exploratory local timing; broader scale
+and allocation evidence remain necessary for a performance claim. A
 fact budget may stop a run with =partial= or
 =unknown=; it must not turn a nonterminating domain into a complete
 answer.  For unrestricted Gerbil procedures, a declared “pure” flag
@@ -141,7 +142,9 @@ is a trust assertion, not a mechanical proof.
 :END:
 
 =program/operator.ss= implements the checkable subset of this IR as
-first-class descriptor values. Ordinary Scheme functions may accept
+first-class descriptor values and a complete finite reference meaning.
+=program/operator-change.ss= owns insertion-change interpretation.
+Ordinary Scheme functions may accept
 and return these values during construction. =relational-op-function=
 builds a first-class transformer with one explicit relation parameter;
 =relational-op-apply= checks its input arity and records an application.
@@ -158,7 +161,9 @@ of a transformer. =relational-op-delta-change= instead propagates an
 input insertion through union, join (old/new, new/old and new/new),
 selection, projection, finite mapping and application. For =fix= it
 starts from the completed old fixed point, applies external changes,
-then advances newly derived rows until the frontier is empty. Both
+then advances newly derived rows until the frontier is empty. It skips
+old joins when their relevant change is empty; nested changing fixed
+points use a complete local change fallback. Both
 return old, grown and added row sets; both reject an exceeded row bound.
 They apply to the checked finite positive graph only.
 
@@ -212,8 +217,10 @@ interpreter and the inert =candidate/reasoning.ss= boundary. Another
 64 source-growth cases compare both change interpreters with the
 independent closure set difference. A shared transformer is applied
 to two distinct inputs to guard against incorrect compiler memo reuse.
-The delta prediction is also checked against the native fragment session
-after replacing its source, while the earlier solved result stays stable.
+The delta prediction is also checked against a retained native fragment
+session after a checked source-row append, followed by source withdrawal;
+earlier solved results stay stable. Eight finite nested-fixed-point cases
+check an inner fixed point depending on an outer changing parameter.
 The combined native test composes a recursive operator fragment with
 finite views, negation, grouped count and a max lattice, then withdraws
 its source while preserving prior results. These are bounded semantic
@@ -293,16 +300,20 @@ arbitrary Scheme purity or of a lattice law.
 
 (def session (relational-open-session program))
 (def first (relational-session-run session))
+(relational-session-append-source! session source 'edge '(3 4))
+(def inserted (relational-session-run session))
+(relational-query inserted reach 'reach) ;; includes (1 4), (2 4), (3 4)
 (relational-session-replace-source! session source 'edge '((7 8)))
 (def second (relational-session-run session))
 (relational-query second reach 'reach) ;; => ((7 8))
 ;; Querying first still yields the original closure.
 #+end_src
 
-The retained Session path accepts replacement only through a fragment
-label exported from one of its =source= declarations.  The fragment
-and composed program carry those source handles separately from private
-relations.  Replacement validates scalar rows and copies their list
+The retained Session path accepts checked single-row appends and full
+replacement through a fragment label exported from one of its =source=
+declarations. The fragment and composed program carry those source
+handles separately from private relations. Both operations validate
+scalar rows and copy their list
 structure before handing them to the existing Session.  A failed
 replacement preserves the last completed result; a successful run
 returns a new solution snapshot, leaving earlier solutions queryable.

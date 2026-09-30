@@ -110,10 +110,12 @@ before/after set difference. The combined
 fixture includes recursion, finite view, negation, grouped count, max
 lattice and source withdrawal. E1 remains open for generated programs
 beyond this grammar, finite lattice law evidence and larger domains.
-E4 now has a structural positive-change interpreter checked on those
-bounded cases; operation counts, scale and a performance result remain
-open. E2, E3, E5 and E6 have no measured A/B
-result.
+E4 now has a [[file:e4-positive-change.org][bounded paired local receipt]]: exact sets match
+an independent model; join probes and fixed-point body evaluations
+favor structural change on chain and star cases. One small chain case
+has worse median wall time, and larger timings contain outliers. A
+general or asymptotic performance result remains open. E2, E3, E5 and
+E6 have no measured A/B result.
 
 * Decision gate
 :PROPERTIES:

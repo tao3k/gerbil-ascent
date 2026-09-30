@@ -7,6 +7,7 @@
                  GerbilAscentProgramContract)
         (only-in "evaluate.ss" gerbil-ascent-make-engine)
         (only-in "session.ss" gerbil-ascent-open-session
+                 gerbil-ascent-session-append-source!
                  gerbil-ascent-session-replace-source!
                  gerbil-ascent-session-run)
         (only-in :clan/poo/object .ref)
@@ -21,8 +22,10 @@
         relational-diagnostic? relational-diagnostic-code
         relational-diagnostic-path relational-diagnostic-detail
         relational-solve relational-query relational-query-name
-        relational-open-session relational-session-replace-source!
+        relational-open-session relational-session-append-source!
+        relational-session-replace-source!
         relational-session-run relational-open-program-session
+        relational-program-append-source!
         relational-program-replace-source!
         relational-program-session-run relational-program-query)
 
@@ -298,6 +301,30 @@
       (gerbil-ascent-session-replace-source! engine name copied)
       (void))))
 
+;;; Insert one checked source row into the retained positive session. The
+;;; underlying session decides whether its admitted plan can reuse deltas;
+;;; a caller still observes results only after a completed run.
+(def (relational-append-source/checked! engine arities name row)
+  (let (arity (and (symbol? name) (assq name arities)))
+    (unless arity
+      (error "relation is not a source in this session" name))
+    (let (copied (car (relational-copy-rows (list row) (cdr arity))))
+      (relational-source name (cdr arity) (list copied))
+      (gerbil-ascent-session-append-source! engine name copied)
+      (void))))
+
+(def (relational-session-append-source! session fragment label row)
+  (unless (relational-session? session)
+    (error "relational source append requires a session" session))
+  (validate GerbilAscentFragmentContract fragment)
+  (let* ((name (relational-export fragment label))
+         (arity (assq name (relational-session-source-arities session))))
+    (unless (and (memq name (.ref fragment 'source-handles)) arity)
+      (error "relational export is not a source in this session" label))
+    (relational-append-source/checked!
+     (relational-session-engine session)
+     (relational-session-source-arities session) name row)))
+
 (def (relational-session-replace-source! session fragment label rows)
   (unless (relational-session? session)
     (error "relational source replacement requires a session" session))
@@ -316,6 +343,13 @@
   (relational-replace-source/checked!
    (relational-program-session-engine session)
    (relational-program-session-source-arities session) name rows))
+
+(def (relational-program-append-source! session name row)
+  (unless (relational-program-session? session)
+    (error "named source append requires a program session" session))
+  (relational-append-source/checked!
+   (relational-program-session-engine session)
+   (relational-program-session-source-arities session) name row))
 
 (def (relational-session-result engine)
   (let (result (gerbil-ascent-session-run engine))

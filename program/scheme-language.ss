@@ -14,8 +14,10 @@
         relational-diagnostic? relational-diagnostic-code
         relational-diagnostic-path relational-diagnostic-detail
         relational-solve relational-query relational-query-name
-        relational-open-session relational-session-replace-source!
+        relational-open-session relational-session-append-source!
+        relational-session-replace-source!
         relational-session-run relational-open-program-session
+        relational-program-append-source!
         relational-program-replace-source!
         relational-program-session-run relational-program-query)
 

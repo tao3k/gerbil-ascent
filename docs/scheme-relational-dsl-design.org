@@ -183,8 +183,9 @@ That restricted operator IR now has an executable reference meaning,
 explicit transformer application, positive-rule lowering and fragment
 composition. Its source-growth change has both a two-complete-result
 reference and a structural positive-change interpreter with a recursive
-frontier. General typed change and a performance benefit are not
-established.
+frontier. A [[file:research/scheme-dsl/e4-positive-change.org][paired local E4 probe]] records exact-set checks, join probes and
+exploratory timing, including an adverse small case. General typed
+change and a broad performance benefit are not established.
 The LLM candidate/observation contract follows the admitted Scheme
 core; it cannot claim stronger semantics than that core provides.
 Flix and Datafun inform semantic questions;

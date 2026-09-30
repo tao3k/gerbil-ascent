@@ -11,12 +11,16 @@
                  relational-op-function relational-op-apply
                  relational-op-fragment relational-op-reference
                  relational-op-reference-change
-                 relational-op-delta-change)
+                 relational-op-measure
+                 relational-op-measurement-join-probes
+                 relational-op-measurement-fix-body-evaluations)
         (only-in :gerbil-ascent/program/interface
                  relational-admit relational-solve relational-query-name
                  relational-compose relational-export
                  relational-open-session relational-session-run
-                 relational-session-replace-source! relational-query)
+                 relational-session-append-source!
+                 relational-session-replace-source! relational-query
+                 relational-op-delta-change)
         (only-in :gerbil-ascent/candidate/reasoning
                  reasoning-source-snapshot reasoning-attempt
                  reasoning-receipt-status reasoning-receipt-rows))
@@ -35,6 +39,20 @@
      (lambda (path)
        (relational-op-union edge
                             (relational-op-apply step path))))))
+
+;;; An inner fixed point depends on the outer parameter. This is a bounded
+;;; operational check; it does not assert a higher-order change theorem.
+(def (nested-reachability edge)
+  (relational-op-fix
+   2 (lambda (outer)
+       (relational-op-fix
+        2 (lambda (inner)
+            (relational-op-union
+             edge
+             (relational-op-union
+              outer
+              (relational-op-project
+               (relational-op-join inner edge 1 0) '(0 3)))))))))
 
 (def (solve-op operator (input-limit 32) (derived-limit 256))
   (let-values (((program output)
@@ -191,6 +209,52 @@
           (check-equal? base '())
           (check-equal? grown '((a c)))
           (check-equal? delta '((a c))))))
+    (test-case "nested fixed points with an outer changing parameter"
+      (let ((possible '((0 1) (0 2) (1 0) (1 2) (2 0) (2 1)))
+            (transformer
+             (relational-op-function
+              2 (lambda (edge) (nested-reachability edge)))))
+        (for-each
+         (lambda (mask)
+           (let* ((before (mask-edges mask possible))
+                  (after (cons '(0 1) before))
+                  (expected-base (reference-closure before))
+                  (expected-grown (reference-closure after)))
+             (let-values (((base grown delta)
+                           (relational-op-delta-change
+                            transformer before '((0 1)))))
+               (check-equal? (same-rows? base expected-base) #t)
+               (check-equal? (same-rows? grown expected-grown) #t)
+               (check-equal?
+                (same-rows? delta
+                            (filter
+                             (lambda (row)
+                               (not (member row expected-base)))
+                             expected-grown)) #t))))
+         '(0 1 3 7 17 31 42 63))))
+    (test-case "zero-change propagation avoids old recursive joins"
+      (let* ((closure
+              (relational-op-function
+               2 (lambda (edge) (reachability edge))))
+             (before '((0 1) (1 2) (2 3) (3 4) (4 5)))
+             (added '((5 6)))
+             (reference
+              (relational-op-measure
+               (lambda ()
+                 (relational-op-reference-change
+                  closure before added))))
+             (delta
+              (relational-op-measure
+               (lambda ()
+                 (relational-op-delta-change
+                  closure before added)))))
+        (check-equal?
+         (< (relational-op-measurement-join-probes delta)
+            (relational-op-measurement-join-probes reference)) #t)
+        (check-equal?
+         (< (relational-op-measurement-fix-body-evaluations delta)
+            (relational-op-measurement-fix-body-evaluations reference))
+         #t)))
     (test-case "select, project, finite flatmap and union share one solve"
       (let* ((pairs
               (relational-op-source 'pair 2
@@ -317,7 +381,7 @@
           (check-equal? (relational-query second right 'reach) '((4 5)))
           (check-equal? (same-rows? (relational-query first left 'reach)
                                     '((1 2) (2 3) (1 3))) #t))))
-    (test-case "delta prediction matches a replaced native source"
+    (test-case "delta prediction matches retained append and withdrawal"
       (let* ((before '((1 2) (2 3)))
              (added '((3 4)))
              (closure
@@ -337,8 +401,11 @@
                        closure before added)))
           (check-equal?
            (same-rows? (relational-query first fragment 'path) base) #t)
-          (relational-session-replace-source!
-           session fragment 'edge (append before added))
+          (check-exception
+           (relational-session-append-source!
+            session fragment 'edge '(bad)) true)
+          (relational-session-append-source!
+           session fragment 'edge (car added))
           (let (second (relational-session-run session))
             (check-equal?
              (same-rows? (relational-query second fragment 'path)
@@ -347,7 +414,16 @@
              (same-rows? delta '((1 4) (2 4) (3 4))) #t)
             (check-equal?
              (same-rows? (relational-query first fragment 'path)
-                         base) #t)))))
+                         base) #t)
+            (relational-session-replace-source!
+             session fragment 'edge before)
+            (let (third (relational-session-run session))
+              (check-equal?
+               (same-rows? (relational-query third fragment 'path)
+                           base) #t)
+              (check-equal?
+               (same-rows? (relational-query second fragment 'path)
+                           grown) #t))))))
     (test-case "construction rejects hidden code and invalid shapes"
       (let ((edge (relational-op-source 'edge 2 '((1 2)))))
         (check-exception (relational-op-union edge

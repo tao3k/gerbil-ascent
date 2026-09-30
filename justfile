@@ -38,6 +38,19 @@ test:
     grep -F 'HARNESS-OK' "$output_file" >/dev/null
     grep -x 'OK' "$output_file" >/dev/null
 
+# Matched finite-operator research probe; every sample checks independent
+# closure before reporting cost. This is separate from the SS suite.
+operator-change-probe:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    output_file="$(mktemp)"
+    trap 'rm -f "$output_file"' EXIT
+    export GERBIL_LOADPATH="{{ justfile_directory() }}${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}"
+    timeout 90s gerbil {{ gerbil_test_runtime_options }} env gxi t/performance/scheme-operator-change-probe.ss 2>&1 | tee "$output_file"
+    test "$(grep -c '^CASE ' "$output_file")" -eq 6
+    test "$(grep -c '^SAMPLE ' "$output_file")" -eq 60
+    if grep -E 'ERROR|Heap overflow|Stack overflow' "$output_file" >/dev/null; then exit 1; fi
+
 # ASCENT owns its 1000-sample SS receipts using ASP's benchmark profile.
 performance:
     #!/usr/bin/env bash

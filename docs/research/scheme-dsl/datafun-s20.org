@@ -42,14 +42,14 @@ higher-order operators *inside* fixed-point computations without
 permanently giving up semi-naive evaluation.  It is not evidence that
 the current planner already handles an opaque Scheme procedure.
 
-A conservative first stage can keep functions higher-order at program
-construction time and lower admitted programs to first-order named
-relations and visible positive atoms.  A later stage would require an
-operator IR with typed monotonicity, stable captures, and a change
-interpretation.  It should compare a naive evaluator and a transformed
-delta evaluator over the same finite semantic model.  The result type
-and optimization theorem in the paper have their own scope; they do
-not validate an arbitrary host-language FFI boundary.
+A conservative first stage keeps functions higher-order at program
+construction time and lowers admitted programs to first-order named
+relations and visible positive atoms. That finite stage now has a
+structural insertion-change interpreter and a [[file:e4-positive-change.org][local E4 receipt]]. It
+does not supply Datafun's typed monotonicity proof or general function
+changes. The result type and optimization theorem in the paper have
+their own scope; they do not validate an arbitrary host-language FFI
+boundary.
 
 The paper's change structures here describe increasing changes.
 Removing or replacing source facts is not covered by that argument.
@@ -59,14 +59,14 @@ requires a separate semantic equivalence and rollback receipt.
 
 * Discriminator
 
-Construct one relation-transforming combinator parameterized by a
-monotone function, then use it recursively over a finite domain.
-Compare full results from a simple fixed-point interpreter and the
-candidate delta transform.  Measure operation counts as input size
-grows, then wall time on matched machines.  A transform that matches
-rows but recomputes the full input every round has not delivered the
-paper's algorithmic advantage.  A transform that skips a delta without
-an equivalence argument is not admitted.
+The first discriminator now has a recursive first-class transformer,
+independent finite-model equality, and paired join-probe/fix-iteration
+counts over chain and star families. Its zero-change propagation
+avoids old joins during a recursive frontier step. The old fixed point
+is still rebuilt for each API call. The next discriminator is a
+retained interpretation across calls and a matched larger-scale test.
+A transform that skips a delta without an equivalence argument is not
+admitted.
 
 * Related notes
 

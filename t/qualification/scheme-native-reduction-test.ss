@@ -9,6 +9,7 @@
                  relational-admit relational-solve relational-query
                  relational-query-name relational-open-program-session
                  relational-program-session-run
+                 relational-program-append-source!
                  relational-program-replace-source!
                  relational-program-query))
 
@@ -81,6 +82,12 @@
               (relational-open-program-session
                (lattice-program '((1 2) (1 5)))))
              (first (relational-program-session-run session)))
+        (relational-program-append-source! session 'input '(1 7))
+        (let (after-insert (relational-program-session-run session))
+          (check-equal? (relational-program-query after-insert 'best)
+                        '((1 7)))
+          (check-equal? (relational-program-query first 'best)
+                        '((1 5))))
         (relational-program-replace-source!
          session 'input '((1 3)))
         (let (second (relational-program-session-run session))

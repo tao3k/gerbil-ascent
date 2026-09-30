@@ -20,11 +20,44 @@
         relational-op-function relational-op-apply
         relational-op-compile relational-op-fragment
         relational-op-reference relational-op-reference-change
-        relational-op-delta-change
+        relational-op-kind relational-op-inputs relational-op-data
+        relational-transform? relational-transform-parameter
+        relational-transform-body relational-transform-input-arity
+        relational-op-measure relational-op-measurement?
+        relational-op-measurement-result-values
+        relational-op-measurement-join-probes
+        relational-op-measurement-fix-body-evaluations
+        relational-op-count-join! relational-op-count-fix!
         relational-op? relational-op-arity)
 
 (defstruct relational-op (kind arity inputs data))
 (defstruct relational-transform (parameter body input-arity output-arity))
+(defstruct relational-op-measurement
+  (result-values join-probes fix-body-evaluations))
+
+(def current-relational-op-meter (make-parameter #f))
+
+;;; A measured run keeps counters local to its dynamic extent. Join probes
+;;; count candidate row pairs before equality; fix counts body evaluations.
+;;; These counts are not a cost model for index lookups or native rule plans.
+(def (relational-op-measure thunk)
+  (unless (procedure? thunk)
+    (error "operator measurement requires a thunk" thunk))
+  (let (meter (vector 0 0))
+    (parameterize ((current-relational-op-meter meter))
+      (call-with-values
+       thunk
+       (lambda results
+         (make-relational-op-measurement
+          results (vector-ref meter 0) (vector-ref meter 1)))))))
+
+(def (relational-op-count-join!)
+  (let (meter (current-relational-op-meter))
+    (when meter (vector-set! meter 0 (+ 1 (vector-ref meter 0))))))
+
+(def (relational-op-count-fix!)
+  (let (meter (current-relational-op-meter))
+    (when meter (vector-set! meter 1 (+ 1 (vector-ref meter 1))))))
 
 (def (require-op value)
   (unless (relational-op? value)
@@ -456,6 +489,7 @@
                 (lambda (right-row) (append left-row right-row))
                 (filter
                  (lambda (right-row)
+                   (relational-op-count-join!)
                    (equal? (list-ref left-row left-key)
                            (list-ref right-row right-key)))
                  right)))
@@ -498,9 +532,11 @@
              (let (next
                    (normalize
                     (append current
-                            (evaluate body
-                                      (cons (cons parameter current)
-                                            environment)))))
+                            (begin
+                              (relational-op-count-fix!)
+                              (evaluate body
+                                        (cons (cons parameter current)
+                                              environment))))))
                (if (same-set? next current)
                  current
                  (loop next))))))
@@ -533,190 +569,3 @@
      base)
     (values base grown
             (filter (lambda (row) (not (member row base))) grown))))
-
-;; relational-op-delta-change
-;;   : (-> RelationalTransform Rows Rows Nat (Values Rows Rows Rows))
-;;   | doc m%
-;;       Propagate a positive input insertion through the finite operator
-;;       graph. Joins use both cross terms and the new/new term. A fixed
-;;       point starts at its completed old value, then propagates only its
-;;       newly discovered rows until no frontier remains. Every intermediate
-;;       relation is bounded; failure never returns a partial closure.
-;;
-;;       # Examples
-;;
-;;       ```scheme
-;;       (relational-op-delta-change transformer '((1 2)) '((2 3)))
-;;       ;; => values: old rows, grown rows, newly derived rows
-;;       ```
-;;     %
-(def (relational-op-delta-change transformer before added
-                                 (row-limit 4096))
-  (unless (relational-transform? transformer)
-    (error "expected a relation transformer" transformer))
-  (unless (and (exact-integer? row-limit) (> row-limit 0))
-    (error "delta row limit must be positive" row-limit))
-  (let* ((arity (relational-transform-input-arity transformer))
-         (old-input (relational-copy-rows before arity))
-         (new-input (relational-copy-rows added arity)))
-    (def (normalize rows)
-      (let (unique (delete-duplicates/hash rows))
-        (when (> (length unique) row-limit)
-          (error "operator delta row limit exceeded" row-limit))
-        unique))
-    (def (difference rows old)
-      (normalize (filter (lambda (row) (not (member row old))) rows)))
-    (def (union left right)
-      (normalize (append left right)))
-    (def (join left right left-key right-key)
-      (normalize
-       (append-map
-        (lambda (left-row)
-          (map (lambda (right-row) (append left-row right-row))
-               (filter
-                (lambda (right-row)
-                  (equal? (list-ref left-row left-key)
-                          (list-ref right-row right-key)))
-                right)))
-        left)))
-    (def (select rows column value)
-      (normalize
-       (filter (lambda (row) (equal? (list-ref row column) value)) rows)))
-    (def (project rows columns)
-      (normalize
-       (map (lambda (row)
-              (map (lambda (column) (list-ref row column)) columns))
-            rows)))
-    (def (flatmap rows width table)
-      (normalize
-       (append-map
-        (lambda (row)
-          (map (lambda (entry) (list-tail entry width))
-               (filter (lambda (entry)
-                         (equal? row (take entry width)))
-                       table)))
-        rows)))
-    ;;; Bindings contain (before . added) sets. Replacing every binding by
-    ;;; its grown set and an empty delta makes external changes stable while
-    ;;; a recursive frontier advances through its fixed-point body.
-    (def (grown-environment environment)
-      (map (lambda (binding)
-             (cons (car binding)
-                   (cons (union (cadr binding) (cddr binding)) [])))
-           environment))
-    (def (change node environment)
-      (let ((kind (relational-op-kind node))
-            (inputs (relational-op-inputs node))
-            (data (relational-op-data node)))
-        (case kind
-          ((source) (values (normalize (vector-ref data 1)) []))
-          ((parameter)
-           (let (binding (assq node environment))
-             (unless binding
-               (error "operator delta parameter escaped its body"))
-             (values (cadr binding) (cddr binding))))
-          ((union)
-           (let-values (((left left-delta)
-                         (change (car inputs) environment))
-                        ((right right-delta)
-                         (change (cadr inputs) environment)))
-             (let (base (union left right))
-               (values base
-                       (difference (union left-delta right-delta)
-                                   base)))))
-          ((join)
-           (let-values (((left left-delta)
-                         (change (car inputs) environment))
-                        ((right right-delta)
-                         (change (cadr inputs) environment)))
-             (let* ((left-key (vector-ref data 0))
-                    (right-key (vector-ref data 1))
-                    (base (join left right left-key right-key))
-                    (candidate
-                     (union
-                      (join left-delta right left-key right-key)
-                      (union
-                       (join left right-delta left-key right-key)
-                       (join left-delta right-delta
-                             left-key right-key)))))
-               (values base (difference candidate base)))))
-          ((select-eq)
-           (let-values (((base delta)
-                         (change (car inputs) environment)))
-             (values (select base (vector-ref data 0)
-                             (vector-ref data 1))
-                     (select delta (vector-ref data 0)
-                             (vector-ref data 1)))))
-          ((project)
-           (let-values (((base delta)
-                         (change (car inputs) environment)))
-             (let (result (project base data))
-               (values result
-                       (difference (project delta data) result)))))
-          ((flatmap)
-           (let-values (((base delta)
-                         (change (car inputs) environment)))
-             (let (result (flatmap base (vector-ref data 0)
-                                   (vector-ref data 1)))
-               (values result
-                       (difference
-                        (flatmap delta (vector-ref data 0)
-                                 (vector-ref data 1))
-                        result)))))
-          ((apply)
-           (let-values (((base delta)
-                         (change (car inputs) environment)))
-             (change
-              (relational-transform-body data)
-              (cons (cons (relational-transform-parameter data)
-                          (cons base delta))
-                    environment))))
-          ((fix)
-           (let* ((body (car inputs))
-                  (parameter data))
-             ;;; These recursions are the least-fixed-point closure and its
-             ;;; delta frontier, rather than list-accumulator transforms.
-             (letrec
-               ((close
-                 (lambda (current)
-                   (let-values (((body-base _body-delta)
-                                 (change
-                                  body
-                                  (cons (cons parameter (cons current []))
-                                        environment))))
-                     (let (next (union current body-base))
-                       (if (= (length next) (length current))
-                         current
-                         (close next))))))
-                (advance
-                 (lambda (base current frontier)
-                   (if (null? frontier)
-                     (values base (difference current base))
-                     (let* ((grown (union current frontier))
-                            (steady (grown-environment environment)))
-                       (let-values (((_old next-delta)
-                                     (change
-                                      body
-                                      (cons (cons parameter
-                                                  (cons current frontier))
-                                            steady))))
-                         (advance base grown
-                                  (difference next-delta grown))))))))
-               (let (base (close []))
-                 (let-values (((_body-base initial-delta)
-                               (change
-                                body
-                                (cons (cons parameter (cons base []))
-                                      environment))))
-                   (advance base base
-                            (difference initial-delta base)))))))
-          (else (error "unsupported delta operator node" kind)))))
-    (let* ((base-input (normalize old-input))
-           (delta-input (difference (normalize new-input) base-input)))
-      (let-values (((base delta)
-                    (change
-                     (relational-transform-body transformer)
-                     (list
-                      (cons (relational-transform-parameter transformer)
-                            (cons base-input delta-input))))))
-        (values base (union base delta) delta)))))

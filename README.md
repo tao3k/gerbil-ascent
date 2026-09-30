@@ -90,14 +90,17 @@ explicit application node and a complete finite reference interpreter.
 `relational-op-reference-change` compares two completed reference results.
 `relational-op-delta-change` propagates positive input insertions through
 the finite operator graph and advances recursive results by a frontier.
-The two paths are checked against an independent finite graph model;
-no speed advantage has been measured.
+The two paths are checked against an independent finite graph model.
+The [paired E4 probe](docs/research/scheme-dsl/e4-positive-change.org)
+records join counts and exploratory timing for chain and star cases;
+it does not establish a general speed advantage.
 The rule surface also supports explicit scalar
 capture, stratified negation, checked count/sum/min/max reductions and
 checked min/max lattices. `relational-admit/report` returns a typed
 diagnostic with the planner's rule and clause position on rejection.
 The integrated qualification exercises a recursive operator fragment,
-views, negation, reduction, lattices, source withdrawal and prior-result
+views, negation, reduction, lattices, retained source insertion and
+withdrawal, and prior-result
 stability. The 64-graph finite-model corpus checks reference meaning,
 direct compilation, fragment composition and source-growth change.
 General typed higher-order change, deletion deltas and arbitrary host

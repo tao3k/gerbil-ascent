@@ -23,13 +23,18 @@
 (export relational-program relational-fragment relational-compose
         relational-export relational-admit relational-solve
         relational-query relational-open-session
-        relational-session-replace-source! relational-session-run)
+        relational-session-replace-source! relational-session-run
+        relational-open-program-session
+        relational-program-replace-source!
+        relational-program-session-run relational-program-query)
 
 ;;; The native Gerbil values keep an admitted engine and completed result
 ;;; opaque to clients. Only the functions below cross each lifecycle edge.
 (defstruct relational-admission (run))
 (defstruct relational-solution (result))
 (defstruct relational-session (engine source-arities))
+(defstruct relational-program-session (engine source-arities))
+(defstruct relational-program-solution (result))
 
 ;;; Restrict sources and results to immutable scalar atoms. Computed exact
 ;;; integers can grow beyond the source domain; budgets stop such a solve as
@@ -208,9 +213,11 @@
                                relational-atom body) ...)))
               rest ...)))
     ((_ (declared ...) (lowered ...) (limits input derived output))
-     (syntax (gerbil-ascent-program
-              (list declared ...) (list lowered ...)
-              input derived output)))
+     (syntax (let (relations (list declared ...))
+               (gerbil-ascent-program
+                relations (list lowered ...) input derived output
+                (map (lambda (relation) (.ref relation 'name))
+                     relations)))))
     ((_ (declared ...) (lowered ...) bad rest ...)
      (raise-syntax-error
       #f "expected relation, rule, or final limits clause"
@@ -309,6 +316,15 @@
       (error "relational query requires a completed result"))
     (map (lambda (row) (map identity row))
          ((.ref result 'rows-of) (relational-export fragment label)))))
+
+(def (relational-program-query solution name)
+  (unless (and (relational-program-solution? solution) (symbol? name))
+    (error "relational program query requires a named solution" name))
+  (let (result (relational-program-solution-result solution))
+    (unless (.ref result 'finished)
+      (error "relational program query requires a completed result"))
+    (map (lambda (row) (map identity row))
+         ((.ref result 'rows-of) name))))
 
 ;;; Composition is inert. Admission checks the assembled schema and rules
 ;;; later, after every fragment has contributed to the whole program.
@@ -435,22 +451,43 @@
 
 ;;; Retained sessions accept replacements only through exported source
 ;;; handles. The old session owns rollback after an update or solve fails.
+(def (relational-source-arities snapshot)
+  (let (sources (.ref snapshot 'source-handles))
+    (map (lambda (name)
+           (let (relation
+                 (find (lambda (candidate)
+                         (eq? (.ref candidate 'name) name))
+                       (.ref snapshot 'relations)))
+             (unless relation
+               (error "relational source has no declaration" name))
+             (cons name (.ref relation 'arity))))
+         sources)))
+
 (def (relational-open-session program)
   (let* ((snapshot (relational-snapshot-program program))
-         (sources (.ref snapshot 'source-handles))
-         (arities
-          (map (lambda (name)
-                 (let (relation
-                       (find (lambda (candidate)
-                               (eq? (.ref candidate 'name) name))
-                             (.ref snapshot 'relations)))
-                   (unless relation
-                     (error "relational source has no declaration" name))
-                   (cons name (.ref relation 'arity))))
-               sources)))
+         (arities (relational-source-arities snapshot)))
     (make-relational-session
      (gerbil-ascent-open-session snapshot)
      arities)))
+
+(def (relational-open-program-session program)
+  (let* ((snapshot (relational-snapshot-program program))
+         (relations (.ref snapshot 'relations))
+         (arities (relational-source-arities snapshot)))
+    (unless (= (length relations) (length arities))
+      (error "named program session requires source-capable relations"))
+    (make-relational-program-session
+     (gerbil-ascent-open-session snapshot)
+     arities)))
+
+(def (relational-replace-source/checked! engine arities name rows)
+  (let (arity (and (symbol? name) (assq name arities)))
+    (unless arity
+      (error "relation is not a source in this session" name))
+    (let (copied (map (lambda (row) (map identity row)) rows))
+      (relational-source name (cdr arity) copied)
+      (gerbil-ascent-session-replace-source! engine name copied)
+      (void))))
 
 (def (relational-session-replace-source! session fragment label rows)
   (unless (relational-session? session)
@@ -460,18 +497,32 @@
          (arity (assq name (relational-session-source-arities session))))
     (unless (and (memq name (.ref fragment 'source-handles)) arity)
       (error "relational export is not a source in this session" label))
-    (let (copied
-          (map (lambda (row) (map identity row)) rows))
-      (relational-source name (cdr arity) copied)
-      (gerbil-ascent-session-replace-source!
-       (relational-session-engine session) name copied)
-      (void))))
+    (relational-replace-source/checked!
+     (relational-session-engine session)
+     (relational-session-source-arities session) name rows)))
+
+(def (relational-program-replace-source! session name rows)
+  (unless (relational-program-session? session)
+    (error "named source replacement requires a program session" session))
+  (relational-replace-source/checked!
+   (relational-program-session-engine session)
+   (relational-program-session-source-arities session) name rows))
+
+(def (relational-session-result engine)
+  (let (result (gerbil-ascent-session-run engine))
+    (unless (.ref result 'finished)
+      (error "relational session did not complete"))
+    result))
 
 (def (relational-session-run session)
   (unless (relational-session? session)
     (error "relational run requires a session" session))
-  (let (result (gerbil-ascent-session-run
-               (relational-session-engine session)))
-    (unless (.ref result 'finished)
-      (error "relational session did not complete"))
-    (make-relational-solution result)))
+  (make-relational-solution
+   (relational-session-result (relational-session-engine session))))
+
+(def (relational-program-session-run session)
+  (unless (relational-program-session? session)
+    (error "named run requires a program session" session))
+  (make-relational-program-solution
+   (relational-session-result
+    (relational-program-session-engine session))))

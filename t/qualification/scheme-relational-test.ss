@@ -19,7 +19,10 @@
                  relational-solve relational-query
                  relational-open-session
                  relational-session-replace-source!
-                 relational-session-run)
+                 relational-session-run
+                 relational-open-program-session
+                 relational-program-replace-source!
+                 relational-program-session-run relational-program-query)
         (only-in :gerbil-ascent/program/interface
                  gerbil-ascent-evaluate-program
                  gerbil-ascent-open-session
@@ -60,6 +63,21 @@
     (rule (path ?x ?y) (edge ?x ?y))
     (rule (path ?x ?z) (path ?x ?y) (edge ?y ?z))
     (limits 32 derived-limit 64))))
+
+(def (direct-reach-program edges)
+  (relational-program
+   (relation edge (from to) edges)
+   (relation path (from to))
+   (rule (path ?x ?y) (edge ?x ?y))
+   (rule (path ?x ?z) (path ?x ?y) (edge ?y ?z))
+   (limits 16 32 64)))
+
+(def (counted-direct-program source-rows)
+  (relational-program
+   (relation edge (from to) (source-rows))
+   (relation path (from to))
+   (rule (path ?x ?y) (edge ?x ?y))
+   (limits 8 8 16)))
 
 (def (evaluate-scalar edges)
   (gerbil-ascent-evaluate-program
@@ -270,6 +288,46 @@
         (check-equal? (relational-query
                        (relational-session-run session) reach 'reach)
                       '((1 2)))))
+    (poo-flow-test-case "named program session replaces declared input"
+      (let* ((session
+              (relational-open-program-session
+               (direct-reach-program '((1 2) (2 3)))))
+             (first (relational-program-session-run session))
+             (replacement (list (list 4 5))))
+        (relational-program-replace-source! session 'edge replacement)
+        (set-car! (car replacement) 99)
+        (let (second (relational-program-session-run session))
+          (check-equal?
+           (same-set? (relational-program-query first 'path)
+                      '((1 2) (2 3) (1 3))) #t)
+          (check-equal? (relational-program-query second 'path)
+                        '((4 5)))
+          (check-exception
+           (relational-program-replace-source!
+            session 'absent '((1 2))) true)
+          (check-exception
+           (relational-program-replace-source!
+            session 'edge '((1 "bad"))) true)
+          (check-equal?
+           (relational-program-query
+            (relational-program-session-run session) 'path)
+           '((4 5))))))
+    (poo-flow-test-case "named program evaluates a source expression once"
+      (let ((calls 0)
+            (program #f))
+        (set! program
+          (counted-direct-program
+           (lambda ()
+             (set! calls (+ calls 1))
+             '((1 2)))))
+        (check-equal? calls 1)
+        (check-equal?
+         (relational-program-query
+          (relational-program-session-run
+           (relational-open-program-session program))
+          'path)
+         '((1 2)))
+        (check-equal? calls 1)))
     (poo-flow-test-case "admission rejects opaque host callbacks"
       (let* ((source (source-fragment '((1 2))))
              (edge (relational-export source 'edge))

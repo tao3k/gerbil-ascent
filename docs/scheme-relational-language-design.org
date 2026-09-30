@@ -208,8 +208,27 @@ structure before handing them to the existing Session.  A failed
 replacement preserves the last completed result; a successful run
 returns a new solution snapshot, leaving earlier solutions queryable.
 The engine may recompute during replacement, so an invalid or
-over-budget update can fail at that call.  This does not yet add a
-source update interface for the direct =relational-program= form.
+over-budget update can fail at that call.
+
+The direct =relational-program= form has a separate named Session path.
+Every declared relation is source-capable; its rows are evaluated once
+when the program value is built.  =relational-open-program-session=,
+=relational-program-replace-source!=, =relational-program-session-run=
+and =relational-program-query= accept relation names.  The resulting
+program solution has a distinct type from the fragment solution, so
+the name-based query API cannot observe a private fragment relation.
+
+#+begin_src scheme
+(def direct (relational-program
+              (relation edge (from to) '((1 2)))
+              (relation path (from to))
+              (rule (path ?x ?y) (edge ?x ?y))
+              (limits 8 8 16)))
+(def named-session (relational-open-program-session direct))
+(relational-program-replace-source! named-session 'edge '((7 8)))
+(def named-result (relational-program-session-run named-session))
+(relational-program-query named-result 'path) ;; => ((7 8))
+#+end_src
 
 Gerbil *v0.19* is the language and standard-library reference for
 this slice.  The installed =2591dcd= source has =defrules= and
@@ -270,6 +289,14 @@ general static proof or a typed diagnostic result.  The v0.19 source
 paths above refer to Gerbil itself, as
 installed for this workspace; the public Gerbil guide provides the
 portable language reference.
+
+For located admission diagnostics, the next code slice must carry a
+rule's source origin through lowering and give planner failures stable
+codes plus the relevant rule, relation or variable.  The current
+planner throws ordinary exceptions without that origin.  Converting
+their display strings to diagnostic codes would not establish a
+reliable location contract; this Session slice leaves those exceptions
+unchanged.
 
 * Proposed public shape
 :PROPERTIES:

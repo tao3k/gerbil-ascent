@@ -71,8 +71,9 @@ any LLM or serving framework.  Only then compare actual model turns and
 answer quality.  The historical
 [[file:replication-checklist.org][Rust comparison checklist]] is not a
 gate for this language.
-The current Scheme implementation has checked scalar clauses and a retained
-source-replacement Session for composed fragments; its errors are still
+The current Scheme implementation has checked scalar clauses and retained
+source-replacement Sessions for composed fragments and direct named programs;
+its errors are still
 exceptions rather than the proposed located diagnostic values.
 The [[file:llm-reasoning-library-plan.org][implementation plan]] maps the
 research to code seams, interface claims and falsifiable experiments.

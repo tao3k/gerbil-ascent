@@ -77,32 +77,49 @@ fn generated_timeout_partial_and_final_match_fixed_point() {
 }
 
 #[test]
+// Ascent 0.8.0's generated timeout branch emits a unit expression for negation.
+#[allow(clippy::unused_unit)]
 fn generated_timeout_resumes_recursion_before_negation() {
     ascent! {
         #![generate_run_timeout]
-        relation edge(u32, u32);
-        relation blocked(u32);
-        relation path(u32, u32);
-        relation allowed(u32, u32);
+        relation edge(Node, Node);
+        relation blocked(Node);
+        relation path(Node, Node);
+        relation allowed(Node, Node);
         path(x, y) <-- edge(x, y);
         path(x, z) <-- path(x, y), edge(y, z);
         allowed(x, y) <-- path(x, y), !blocked(y);
     }
     let mut program = AscentProgram {
-        edge: vec![(0, 1), (1, 2), (2, 3)],
-        blocked: vec![(2,)],
+        edge: vec![(Node(0), Node(1)), (Node(1), Node(2)), (Node(2), Node(3))],
+        blocked: vec![(Node(2),)],
         ..AscentProgram::default()
     };
     assert!(!program.run_timeout(Duration::ZERO));
-    let first_path = program.path.iter().copied().collect::<BTreeSet<_>>();
-    assert_eq!(first_path, BTreeSet::from([(0, 1), (1, 2), (2, 3)]));
+    let first_path = program.path.iter().cloned().collect::<BTreeSet<_>>();
+    assert_eq!(
+        first_path,
+        BTreeSet::from([(Node(0), Node(1)), (Node(1), Node(2)), (Node(2), Node(3)),])
+    );
     assert!(program.allowed.is_empty());
     assert!(program.run_timeout(Duration::MAX));
 
-    let final_path = program.path.iter().copied().collect::<BTreeSet<_>>();
-    let final_allowed = program.allowed.iter().copied().collect::<BTreeSet<_>>();
-    let expected_path = BTreeSet::from([(0, 1), (1, 2), (2, 3), (0, 2), (1, 3), (0, 3)]);
-    let expected_allowed = BTreeSet::from([(0, 1), (0, 3), (1, 3), (2, 3)]);
+    let final_path = program.path.iter().cloned().collect::<BTreeSet<_>>();
+    let final_allowed = program.allowed.iter().cloned().collect::<BTreeSet<_>>();
+    let expected_path = BTreeSet::from([
+        (Node(0), Node(1)),
+        (Node(1), Node(2)),
+        (Node(2), Node(3)),
+        (Node(0), Node(2)),
+        (Node(1), Node(3)),
+        (Node(0), Node(3)),
+    ]);
+    let expected_allowed = BTreeSet::from([
+        (Node(0), Node(1)),
+        (Node(0), Node(3)),
+        (Node(1), Node(3)),
+        (Node(2), Node(3)),
+    ]);
     assert_eq!(final_path, expected_path);
     assert_eq!(final_allowed, expected_allowed);
 
@@ -127,7 +144,7 @@ fn generated_timeout_resumes_recursion_before_negation() {
             .collect::<BTreeSet<_>>();
         let expected = expected
             .iter()
-            .map(|(from, to)| format!("{from}\t{to}"))
+            .map(|(from, to)| format!("{}\t{}", from.0, to.0))
             .collect::<BTreeSet<_>>();
         assert_eq!(actual, expected, "{phase} {relation}");
     }

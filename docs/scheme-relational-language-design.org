@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 #+TITLE: Scheme relational language: first design gate
-#+STATUS: native rule lifecycle and finite first-class operator graph implemented; typed higher-order delta optimization remains proposed
+#+STATUS: native rule lifecycle and finite first-class operator graph with positive change implemented; general typed higher-order change remains proposed
 #+DATE: 2026-09-30
 #+FILETAGS: :design:scheme-dsl:higher-order:
 
@@ -59,9 +59,11 @@ The current implementation supports the construction level, a small
 set of checked scalar rule operations, finite pointwise views and
 first-class relation transformers whose bodies are inspectable positive
 operator graphs. A transformer application is explicit in that graph.
-The reference change meaning compares two complete interpretations;
-there is no optimized typed change translation. Datafun S20 motivates
-that future path but does not validate our implementation. Reuse of
+The reference change meaning compares two complete interpretations.
+The finite positive graph also has a structural insertion-change
+interpreter, including a recursive frontier. This is not a general
+typed change calculus or a measured speedup. Datafun S20 motivates
+the broader path but does not validate our implementation. Reuse of
 the existing evaluator remains an engineering choice to justify
 against the new semantics.
 
@@ -115,19 +117,20 @@ read an evolving relation directly is rejected by construction or
 admission; no evaluator callback can hide that dependency.
 
 For positive source growth, define the reference change of operator
-=F= by =Delta_F(R, dR) = F(R union dR) minus F(R)=.  This equation is a
-*reference meaning*, not an efficient implementation.  An optimized
-delta rule must match that reference on finite models; source
+=F= by =Delta_F(R, dR) = F(R union dR) minus F(R)=. This equation is
+the reference meaning. The finite graph has a structural delta rule
+that must match it on finite models; source
 withdrawal has a separate recompute path until deletion changes are
 specified.  Datafun S20 establishes a typed higher-order change
 calculus for its own language, not a theorem about this proposed IR.
 
 The implemented finite subset lowers operators to positive rules and
-uses the existing fixed-point evaluator.  Before any specialized
-higher-order semi-naive transform,
-compare full results from a naive reference interpreter with the
-optimized path for generated finite programs, then measure operation
-counts and scale.  A fact budget may stop a run with =partial= or
+uses the existing fixed-point evaluator. A separate structural change
+interpreter propagates insertions through each operator and advances
+the =fix= frontier. It is checked against the complete reference
+interpreter and independent finite closure. Operation counts and scale
+measurements remain necessary before claiming a performance gain. A
+fact budget may stop a run with =partial= or
 =unknown=; it must not turn a nonterminating domain into a complete
 answer.  For unrestricted Gerbil procedures, a declared “pure” flag
 is a trust assertion, not a mechanical proof.
@@ -149,6 +152,15 @@ fresh private handle so the graph can compose with native fragments.
 =relational-query-name= provide the same admission and observation
 lifecycle as the rule DSL.  No descriptor executes a caller procedure
 during fixed-point evaluation.
+
+=relational-op-reference-change= compares two complete interpretations
+of a transformer. =relational-op-delta-change= instead propagates an
+input insertion through union, join (old/new, new/old and new/new),
+selection, projection, finite mapping and application. For =fix= it
+starts from the completed old fixed point, applies external changes,
+then advances newly derived rows until the frontier is empty. Both
+return old, grown and added row sets; both reject an exceeded row bound.
+They apply to the checked finite positive graph only.
 
 #+NAME: scheme-implemented-operator-subset
 | Node | Current checked form | Boundary |
@@ -197,9 +209,11 @@ The [[file:../t/qualification/scheme-operator-test.ss][qualification corpus]] co
 three-node graph instances to an independent finite closure, direct
 compilation, composed operator fragments, a separate reference
 interpreter and the inert =candidate/reasoning.ss= boundary. Another
-64 source-growth cases compare the reference change result with the
+64 source-growth cases compare both change interpreters with the
 independent closure set difference. A shared transformer is applied
 to two distinct inputs to guard against incorrect compiler memo reuse.
+The delta prediction is also checked against the native fragment session
+after replacing its source, while the earlier solved result stays stable.
 The combined native test composes a recursive operator fragment with
 finite views, negation, grouped count and a max lattice, then withdraws
 its source while preserving prior results. These are bounded semantic

@@ -105,12 +105,14 @@ exercises E1 across 64 finite reachability graphs: independent graph
 closure, a separate operator reference interpreter, direct rule
 lowering, composed operator fragments and the inert candidate path
 produce equal complete sets. Another 64 growth cases compare reference
-change with the independent before/after set difference. The combined
+change and structural delta propagation with the independent
+before/after set difference. The combined
 fixture includes recursion, finite view, negation, grouped count, max
 lattice and source withdrawal. E1 remains open for generated programs
 beyond this grammar, finite lattice law evidence and larger domains.
-E4 has only its naive reference meaning; no transformed evaluator or
-performance result exists. E2, E3, E5 and E6 have no measured A/B
+E4 now has a structural positive-change interpreter checked on those
+bounded cases; operation counts, scale and a performance result remain
+open. E2, E3, E5 and E6 have no measured A/B
 result.
 
 * Decision gate

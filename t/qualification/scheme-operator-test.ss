@@ -10,7 +10,8 @@
                  relational-op-fix relational-op-compile
                  relational-op-function relational-op-apply
                  relational-op-fragment relational-op-reference
-                 relational-op-reference-change)
+                 relational-op-reference-change
+                 relational-op-delta-change)
         (only-in :gerbil-ascent/program/interface
                  relational-admit relational-solve relational-query-name
                  relational-compose relational-export
@@ -142,8 +143,54 @@
                             closure before '((0 1)))))
                (check-equal? (same-rows? base expected-base) #t)
                (check-equal? (same-rows? grown expected-grown) #t)
+               (check-equal? (same-rows? delta expected-delta) #t))
+             (let-values (((base grown delta)
+                           (relational-op-delta-change
+                            closure before '((0 1)))))
+               (check-equal? (same-rows? base expected-base) #t)
+               (check-equal? (same-rows? grown expected-grown) #t)
                (check-equal? (same-rows? delta expected-delta) #t))))
          (iota 64))))
+    (test-case "both changing join sides and a finite map propagate inserts"
+      (let* ((transformer
+              (relational-op-function
+               2 (lambda (input)
+                   (relational-op-flatmap
+                    (relational-op-project
+                     (relational-op-join input input 0 0) '(1 3))
+                    1 '(((a a) (same))
+                        ((a b) (mixed))
+                        ((b a) (mixed))
+                        ((b b) (same)))))))
+             (before '((k a)))
+             (added '((k b))))
+        (let-values (((base grown delta)
+                      (relational-op-delta-change
+                       transformer before added)))
+          (check-equal? base '((same)))
+          (check-equal? (same-rows? grown '((same) (mixed))) #t)
+          (check-equal? delta '((mixed)))
+          (let-values (((reference-base reference-grown
+                         reference-delta)
+                        (relational-op-reference-change
+                         transformer before added)))
+            (check-equal? (same-rows? base reference-base) #t)
+            (check-equal? (same-rows? grown reference-grown) #t)
+            (check-equal? (same-rows? delta reference-delta) #t)))))
+    (test-case "selection after join sees only new paths"
+      (let (transformer
+            (relational-op-function
+             2 (lambda (edge)
+                 (relational-op-select-eq
+                  (relational-op-project
+                   (relational-op-join edge edge 1 0) '(0 3))
+                  0 'a))))
+        (let-values (((base grown delta)
+                      (relational-op-delta-change
+                       transformer '((a b)) '((b c)))))
+          (check-equal? base '())
+          (check-equal? grown '((a c)))
+          (check-equal? delta '((a c))))))
     (test-case "select, project, finite flatmap and union share one solve"
       (let* ((pairs
               (relational-op-source 'pair 2
@@ -188,6 +235,12 @@
          (same-rows? (relational-op-reference graph) '((10) (20))) #t)
         (let-values (((base grown delta)
                       (relational-op-reference-change
+                       transformer '((1)) '((2)))))
+          (check-equal? base '((10)))
+          (check-equal? (same-rows? grown '((10) (20))) #t)
+          (check-equal? delta '((20))))
+        (let-values (((base grown delta)
+                      (relational-op-delta-change
                        transformer '((1)) '((2)))))
           (check-equal? base '((10)))
           (check-equal? (same-rows? grown '((10) (20))) #t)
@@ -264,6 +317,37 @@
           (check-equal? (relational-query second right 'reach) '((4 5)))
           (check-equal? (same-rows? (relational-query first left 'reach)
                                     '((1 2) (2 3) (1 3))) #t))))
+    (test-case "delta prediction matches a replaced native source"
+      (let* ((before '((1 2) (2 3)))
+             (added '((3 4)))
+             (closure
+              (relational-op-function
+               2 (lambda (edge) (reachability edge))))
+             (fragment
+              (relational-op-fragment
+               (relational-op-apply
+                closure (relational-op-source 'edge 2 before))
+               'path))
+             (session
+              (relational-open-session
+               (relational-compose (list fragment) 16 64 128)))
+             (first (relational-session-run session)))
+        (let-values (((base grown delta)
+                      (relational-op-delta-change
+                       closure before added)))
+          (check-equal?
+           (same-rows? (relational-query first fragment 'path) base) #t)
+          (relational-session-replace-source!
+           session fragment 'edge (append before added))
+          (let (second (relational-session-run session))
+            (check-equal?
+             (same-rows? (relational-query second fragment 'path)
+                         grown) #t)
+            (check-equal?
+             (same-rows? delta '((1 4) (2 4) (3 4))) #t)
+            (check-equal?
+             (same-rows? (relational-query first fragment 'path)
+                         base) #t)))))
     (test-case "construction rejects hidden code and invalid shapes"
       (let ((edge (relational-op-source 'edge 2 '((1 2)))))
         (check-exception (relational-op-union edge
@@ -272,6 +356,11 @@
         (check-exception
          (relational-op-apply
           (relational-op-function 1 (lambda (input) input)) edge)
+         true)
+        (check-exception
+         (relational-op-delta-change
+          (relational-op-function 2 (lambda (input) input))
+          '((1 2)) '((2 3)) 1)
          true)
         (check-exception (relational-op-project edge '(0 2)) true)
         (check-exception

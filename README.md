@@ -87,8 +87,11 @@ equijoin, fixed equality selection, projection, finite mapping and
 positive fixed points. An operator graph can now become a fresh fragment
 and compose with native rules; a first-class relation transformer has an
 explicit application node and a complete finite reference interpreter.
-`relational-op-reference-change` defines source-growth change by comparing
-two completed reference results; it is not an optimized delta engine.
+`relational-op-reference-change` compares two completed reference results.
+`relational-op-delta-change` propagates positive input insertions through
+the finite operator graph and advances recursive results by a frontier.
+The two paths are checked against an independent finite graph model;
+no speed advantage has been measured.
 The rule surface also supports explicit scalar
 capture, stratified negation, checked count/sum/min/max reductions and
 checked min/max lattices. `relational-admit/report` returns a typed
@@ -97,7 +100,8 @@ The integrated qualification exercises a recursive operator fragment,
 views, negation, reduction, lattices, source withdrawal and prior-result
 stability. The 64-graph finite-model corpus checks reference meaning,
 direct compilation, fragment composition and source-growth change.
-Typed higher-order delta optimization and arbitrary host callbacks remain in the
+General typed higher-order change, deletion deltas and arbitrary host
+callbacks remain in the
 [language design](docs/scheme-relational-language-design.org). The
 [LLM reasoning Library plan](docs/llm-reasoning-library-plan.org) records
 the candidate grammar and the narrow graph witness/cut evidence contract.

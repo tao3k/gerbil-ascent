@@ -5,4 +5,4 @@
  gerbil-ascent
  depend:
  ("github.com/tao3k/poo-flow-core@e85fd45303b208b23e5957fd316e7004994109a4"
-  "github.com/tao3k/asp-gerbil-scheme@11aabb4cef76c369d8e52ef39ae02d113c7d6dfe"))
+  "github.com/tao3k/asp-gerbil-scheme@v0.1.2"))

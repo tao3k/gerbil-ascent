@@ -37,6 +37,9 @@ design-level summary.
 - A22 retains small Datalog-style rules as the explanation of recursive
   closure, while embedding host expressions and patterns.  Its extra =for=
   syntax is one Rust embedding choice, not a semantic obligation for Scheme.
+  Its compiler still needs binding modes, join columns, and positive-atom
+  dependencies to plan indexes and delta work; clause order can matter to
+  grounding.
 - F16 Datafun permits higher-order functional programming by tracking
   monotonicity.  Scheme does not infer that property for arbitrary captured
   procedures.  A function called during a fixed-point run therefore needs
@@ -47,10 +50,13 @@ design-level summary.
 - Scheme miniKanren demonstrates a small relational core with functional
   combinators and macros layered over it.  Its search/unification semantics
   differ from this bottom-up fixed-point engine, so its operators are design
-  guidance rather than direct replacements.
+  guidance rather than direct replacements.  Its delayed goals and stream
+  interleaving also make answer availability an explicit execution property.
 - Flix demonstrates first-class rule/constraint values composed by ordinary
   host functions.  Existing =ascent-fragment= and POO declarations offer a
-  Scheme-owned place for this kind of composition.
+  Scheme-owned place for this kind of composition.  Flix's row types and
+  conservative static stratification analysis do not transfer to those
+  values; the assembled Gerbil program must be checked at admission.
 
 * Proposed surface
 
@@ -126,6 +132,14 @@ Scheme function can select, parameterize, and combine fragments before
 evaluation.  Provider and C4 composition remain on POO declarations.  This
 keeps whole-program composition in Scheme while the arrow continues to
 describe derivation inside each fragment.
+
+The Flix paper models pure, total constraint sets as a union with
+commutative and idempotent laws.  Gerbil fragments may also carry
+relation declarations, source rows, procedures, and providers.  A
+repeated fragment can duplicate a relation name and fail admission.
+Only complete fact sets from compatible pure rule compositions are
+candidates for order-independent comparison; source order, effects,
+resource use, and timeout snapshots need separate claims.
 
 * Relational meaning of a function view
 
@@ -224,6 +238,14 @@ Add an infinite-growth discriminator: =node(0)= and a pointwise
 budget or finite-domain boundary, never return a finished closure.
 Then use a finite saturating successor over ={0,1,2}= and check complete
 closure and source-replacement behavior.
+
+The multi-paper gate additionally inspects the selected index and delta
+positions for a view feeding a later atom; rejects combined fragments
+with conflicting arity or a negative cycle; and compares complete facts
+for two orders of compatible pure rule fragments.  A µKanren comparison
+records answer-set equality separately from order and partial-answer
+availability.  None of these local comparisons establishes static
+assurance for every possible runtime fragment choice.
 
 * Alternatives to test against this proposal
 

@@ -24,6 +24,9 @@ does not require a new search.
 | Fig. 1, PDF p. 3 | Body grammar has atoms and host forms | Grammar is Rust embedding, not Scheme authority |
 | §3, PDF pp. 4–6 | =for= connects to Rust iterators | Preserve zero-to-many behavior, not spelling |
 | §4, PDF pp. 6–8 | Compiler desugars and plans joins | Expose bindings and dependencies to planner |
+| §3.1, PDF pp. 5–6 | Lattice state is a partial map from keys to joined values | Keep lattice join distinct from set insertion | A relation view does not supply a lattice order |
+| §4, PDF pp. 6–7 | Dependency SCCs guide delta/total rule variants | Preserve positive-atom dependency visibility | Opaque relation reads defeat this analysis |
+| §4, PDF p. 7 | Clause order is significant where grounding requires it | Specify view input/output modes | Do not assume arbitrary body reordering |
 
 * Source and question
 
@@ -77,6 +80,59 @@ Rust-shaped =if=, =let=, =for=, and =if-let= body forms.  Each maps to an
 existing POO guard, binding, or generator plan.  This is evidence that a
 surface migration can be attempted without replacing fixed-point evaluation;
 it is not evidence that one new syntax will preserve all cases automatically.
+
+* Deeper result: retain the analyzable rule boundary
+:PROPERTIES:
+:CUSTOM_ID: ascent-rule-boundary
+:END:
+
+Ascent's compiler parses and desugars, chooses indexes from columns used
+in joins, computes dependency SCCs, and generates delta/total rule
+variants (§4, PDF pp. 6–7).  Its generated loops may reorder clauses
+only where they do not introduce ungrounded variables.  Therefore the
+proposed =relation-view= cannot be an opaque call with no declared
+inputs or outputs.  The useful Scheme analogue is a planned atom whose
+bound input columns and newly bound output columns are available *before*
+evaluation.  This is our design inference, not a feature claimed by the
+paper for Gerbil.
+
+The current =program/objects.ss= already performs a left-to-right
+binding check for computed clauses.  =program/funs.ss= selects delta
+positions from positive relation atoms and builds strict strata for
+negation, aggregation, and lattice-to-relation projection.
+=program/summary.ss= exposes rule dependency SCCs.  A future view must
+either participate in these analyses or be restricted to a stable,
+pointwise operation that does not read changing relations.  Merely
+lowering a new surface form to a generator is insufficient if that
+lowering hides a recursive dependency or disables a useful join index.
+
+#+NAME: ascent-view-planning-gate
+| Case | Required visible information | Failure if hidden |
+|------+------------------------------+-------------------|
+| View after =edge(x,y)= | =x= bound input, =z= new output | Unbound input or accidental capture |
+| Later =path(z,w)= atom | =z= usable as indexed join key | Full scan or wrong binding |
+| View reads a changing relation | Dependency edge to that relation | Stale delta or wrong stratum |
+| Source replacement | Inputs and cached view output tied to snapshot | Reuse of withdrawn result |
+
+Ascent's lattice is a partial map from ordinary key columns to a value
+joined at each key (§3.1, PDF p. 5).  Its finite-height abstraction of
+numbers is another answer to the unbounded-growth problem identified
+in the [[file:datafun-f16.org::#datafun-termination][Datafun note]] (§3.1,
+PDF p. 6).  This does not mean an arbitrary Scheme =join= procedure
+has the required order laws or finite height.  The current POO lattice
+declaration checks that a join is a procedure, while semantic laws
+remain a qualification obligation.
+
+* Decision and falsifier
+
+Retain the rule arrow, named relations, explicit negation and
+aggregation, and planner-visible binding modes.  Consider replacing
+Rust-shaped body computation forms only after an integrated fixture
+shows equal complete rows, admission errors, dependency strata, and
+selected joins for both the old and proposed Scheme surfaces.  Include
+a lattice refinement feeding an ordinary relation and a later negated
+stratum.  A view that gives correct small rows but hides an index or
+dependency does not pass this gate.
 
 * What does not transfer
 

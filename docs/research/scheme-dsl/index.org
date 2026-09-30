@@ -50,6 +50,22 @@ could support a closure claim; the current fact budget only bounds
 execution through failure.  This changes the proposed view's
 acceptance gate, not the current implementation's evidence status.
 
+The other sources constrain separate boundaries: [[file:ascent-a22.org::#ascent-rule-boundary][Ascent]]
+requires planner-visible bindings and dependencies;
+[[file:flix-f20.org::#flix-composition-boundary][Flix]] requires checks after
+fragments are assembled and has a stronger static assurance that this
+repo does not implement; [[file:microkanren-h13.org::#microkanren-kernel-boundary][µKanren]]
+supports a small Scheme kernel with user-level syntax while retaining
+its distinct stream-search semantics.
+
+#+NAME: paper-transfer-decision
+| Source | Adopt as design constraint | Do not infer |
+|--------+----------------------------+--------------|
+| A22 | Preserve arrow, atoms, SCC/delta and join visibility | Rust syntax or Rust performance transfers |
+| F16 | Require stable monotone dependence and finite-height closure evidence | Arbitrary Scheme calls are statically proven |
+| F20 | Check combined schema and negative cycles after composition | Gerbil fragments have row-polymorphic static safety |
+| H13 | Keep a small semantic kernel beneath Scheme abstractions | Stream-search fairness equals bottom-up completion |
+
 * Next evidence gate
 
 Build one fixture combining recursion, a scalar projection, zero/one

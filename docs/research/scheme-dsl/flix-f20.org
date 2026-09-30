@@ -28,6 +28,8 @@ is the primary research source; its page numbers below count from one.
 | §3.2–3.3, PDF pp. 8–10 | Composition is set union, with algebraic laws under pure total expressions | Define fragment combination independent of source order | Stateful Scheme procedures can violate assumptions |
 | §4, PDF pp. 11–19 | Row-polymorphic types track predicate symbols and types | Check relation names, arities, and modes at composition | No inferred Flix row type exists here |
 | §4.7, PDF pp. 18–20 | Negation requires stratification across possible compositions | Check the assembled dependency graph | A local fragment check alone is insufficient |
+| §2.3, PDF p. 5 | Composed fragments can disagree on predicate arity or value type | Check the combined schema before evaluation | A local fragment may be valid alone |
+| §4.7, PDF pp. 18–20 | The paper analyzes possible run-time compositions conservatively at compile time | Distinguish assembly-time checking from whole-program static assurance | Our runtime fragments do not inherit that theorem |
 
 * Interpretation
 
@@ -39,19 +41,85 @@ justify hiding a changing relation read inside a host procedure.  Flix's
 type and stratification checks are part of why its composition is safe;
 our Scheme declaration path must offer an explicit substitute.
 
+* Deeper result: composition carries a proof boundary
+:PROPERTIES:
+:CUSTOM_ID: flix-composition-boundary
+:END:
+
+The paper's examples pass constraint sets through functions and compose
+them before =solve= (§2, PDF pp. 3–5).  Row-polymorphic types record
+predicate names and tuple types, so the paper can reject a composed
+program whose =Edge= facts are ternary but whose rules use binary
+=Edge= (§2.3, PDF p. 5).  The exact Gerbil analogue would need a
+combined schema check over included relations, rule arities, and field
+contracts before evaluation.  A successful check of each fragment
+alone is not enough.
+
+For negation, Flix's §4.7 does more than inspect one chosen result.
+Its proposed algorithm gathers constraints from the whole program,
+uses a row type to restrict the possible dependency graph for an
+expression, and checks that graph before runtime composition (PDF
+pp. 18–20).  It is sound but conservative: it can reject programs
+whose actual branches never combine into a negative cycle.  Our
+=ascent-fragment= values and =(include ...)= expansion do not carry
+Flix row types or this whole-program theorem.  The narrower Gerbil
+claim available today is validation of the *assembled* program at
+the composition boundary, followed by its dependency-strata check.
+If a requirement demands assurance for every possible runtime choice
+of fragments, that needs a separate static summary and proof.
+
+The paper's composition law (union, commutativity, associativity,
+idempotence) assumes pure, total constraint expressions (§3.2, PDF
+p. 8).  Gerbil fragments can contain ordered source rows, user
+procedures, storage providers, and resource budgets.  Equality of
+mathematical rule sets therefore does not imply equal execution
+order, effects, diagnostics, or partial timeout snapshots.  A
+commutativity claim here must be scoped to complete *fact sets* for
+compatible, pure, total fragments after successful admission.
+
+#+NAME: flix-composition-assurance
+| Boundary | Required evidence | Claim allowed |
+|----------+-------------------+---------------|
+| Single fragment | Local declarations and rules validate | Fragment is internally well-formed |
+| Assembled program | Combined names, arities, field contracts, and strata validate | This concrete composition is admitted |
+| All possible runtime compositions | Sound summaries for dynamic choices, including negative edges | Static universal assurance, not currently implemented |
+
+The present =program/syntax.ss= validates included fragment values and
+collects declarations and rules.  =program/analysis.ss= rejects duplicate
+relation names, mismatched widths, and invalid field predicates in the
+assembled schema.  =program/funs.ss= computes strata and rejects cycles
+with strict edges.  These checks are relevant evidence for the second
+row, but do not implement Flix's row-polymorphic type inference or its
+all-compositions theorem.
+
+* Expanded experiment
+
+Test three compositions: two compatible fragments in both orders;
+individually valid fragments with conflicting relation arities; and
+two fragments whose combined rules create a negative cycle.  Record
+assembly/admission results before running.  For pure accepted
+programs, compare complete fact *sets* and then separately record
+order, timeout snapshots, and resource use.  A future static summary
+could be tested with a conditional choice between fragments that
+cannot occur together: rejecting it may be sound but conservative,
+matching the trade-off described by Flix.
+
 * Composition experiment
 
-Construct two fragments with shared relation names and a recursive rule;
-compose them in both orders and with one repeated fragment.  After
-admission, their complete fact sets should agree.  Repeat with a negated
-edge that creates a negative cycle only after composition: the assembled
-program must be rejected.  If order or duplication changes accepted
-facts for pure total fragments, the proposed set-like composition fails.
+Construct two pure rule fragments whose relation declarations are owned
+once by the assembled program.  Compose their rules in both orders;
+after admission, their complete fact sets should agree.  Repeating a
+fragment with relation declarations currently creates duplicate names
+and should be an admission test, not an assumed idempotence law.
+Repeat with a negated edge that creates a negative cycle only after
+composition: the assembled program must be rejected.  If rule order
+changes complete accepted fact sets for pure total fragments, the
+proposed set-like composition fails.
 
 #+begin_src scheme
 ;; Pseudocode for the experiment; not a new API commitment.
-(compose-fragments base reachability)
-(compose-fragments reachability base)
+(compose-fragments declarations rule-a rule-b)
+(compose-fragments declarations rule-b rule-a)
 #+end_src
 
 Check relation arity and value predicates before evaluating either

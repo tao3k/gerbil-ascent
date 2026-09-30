@@ -165,36 +165,34 @@ It does not yet supply a separate =admit= stage or a general fragment
 signature.  The current evaluator checks the assembled program when
 it is opened or solved.
 
-Gerbil-POO v19 is the first-party abstraction reference here.  Its
-=doc/poo.md= separates composable prototypes from instantiated values;
-=proto.ss= implements higher-order prototype composition with a small
-functional core; =object.ss= supplies =.o=, =.mix= and lazy slot lookup.
-The lesson for this slice is to compose *values* at the appropriate
-semantic boundary, then validate the result.  The existing
-[[file:../program/types.ss][Type descriptors]] define the Relation, Rule,
-Fragment and Program contracts, and the existing
-[[file:../program/objects.ss][constructors]] instantiate those POO values.
-The Scheme DSL lowers to them.  It uses =defrules= for a fixed
-declaration frame and =defsyntax= where term errors need a precise
-syntax location.  Ordinary Scheme functions and multiple values
-provide reusable fragment builders without a new object layer.
+Gerbil *v0.19* is the language and standard-library reference for
+this slice.  The installed =2591dcd= source has =defrules= and
+=defsyntax= in =src/gerbil/core/sugar.ss=, multiple-value helpers in
+=src/std/values.ss=, and =append-map= in =src/std/list/list.ss=.
+The [[https://gerbil.scheme.org/guide/intro.html][Gerbil guide]] distinguishes short declarative macros from
+=syntax-case= macros and demonstrates ordinary Scheme functions,
+multiple values and collection forms.  These sources guide the DSL
+syntax and composition.
 
-The v19 prototype =.mix= combines slot computations with precedence
-and override.  Here every relation/rule contributes to one logical
-graph, and a duplicate relation name must fail admission.  Therefore
-=relational-compose= concatenates fragment contents without override;
-it does not call =.mix=.  Similarly, the existing
-=gerbil-ascent-clause-plan= generic owns open clause dispatch; pure
-fragment assembly does not need another generic.  The shared design
-principle is composability, while POO prototype fixed points and
-Datalog least fixed points remain different operations.
+The fixed =relational-fragment= frame uses Gerbil =defrules=; term
+recognition and located syntax errors use =defsyntax= with
+=syntax-case=.  Ordinary Scheme functions instantiate and compose
+fragments.  Exported relation handles use Gerbil's multiple values.
+The standard =append-map= composes their declarations and rules while
+preserving order.  This avoids a custom list builder in the first
+gate, without claiming a measured performance gain.  The existing
+[[file:../program/types.ss][Relation, Rule, Fragment and Program contracts]]
+remain the value boundary, and the existing
+[[file:../program/objects.ss][constructors]] instantiate those values.
+Gerbil v0.19 supplies the language tools; these repository contracts
+still determine relational admission.
 
 The remaining gates are a public signature and explicit admission
 result, cross-fragment negative-cycle diagnostics, a restricted
 higher-order operator IR, and matched measurements before optimizer
-changes.  This mapping uses the v19 source and documentation in the
-local Gerbil-POO checkout as its reference; it does not require a
-sibling repository link to interpret the language contract.
+changes.  The v0.19 source paths above refer to Gerbil itself, as
+installed for this workspace; the public Gerbil guide provides the
+portable language reference.
 
 * Proposed public shape
 :PROPERTIES:

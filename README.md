@@ -82,6 +82,9 @@ and admission of its own evidence.
 The [related-work matrix](docs/related-work-matrix.org) maps the Ascent papers
 and adjacent research on incremental updates, monotonicity, equality,
 constraints, and provenance to concrete parity and Agent research questions.
+The [temporal-causality design gate](docs/temporal-causality-module-design.org)
+defines a proposed snapshot-bound Scheme module and its executable research
+gate; it does not describe an implemented API.
 
 Scheme qualification extends Core's Observability Case profile with
 ASCENT-specific memory and duration budgets; it does not own a test runner.

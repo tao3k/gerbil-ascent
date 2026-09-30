@@ -4,7 +4,7 @@
 #+TITLE: SGLang and vLLM: serving-time reasoning Library integration
 #+STATUS: interface research; no integration implemented
 #+DATE: 2026-09-30
-#+FILETAGS: :research:agent:inference:serving:
+#+FILETAGS: :research:llm:inference:serving:
 
 * Question and source scope
 :PROPERTIES:
@@ -59,10 +59,10 @@ whose arguments select a named task/snapshot, candidate facts or rules,
 query, and budget class.  The endpoint resolves only authorized source
 handles and validates the program before execution.  It returns an
 attempt ID, snapshot/program identities, typed status, diagnostics,
-rows or bounded witness/gap, and completion/bound flags.  The Agent
+rows or bounded witness/gap, and completion/bound flags.  The LLM caller
 receives that result as a =tool= message and may revise its candidate.
 The name and JSON schema are provisional; their semantics come from the
-[[file:index.org::#agent-inference-synthesis][Agent Library contract]], not either serving framework.
+[[file:index.org::#agent-inference-synthesis][LLM reasoning Library contract]], not either serving framework.
 
 #+NAME: serving-owner-boundaries
 | Owner | Responsibility |
@@ -71,7 +71,7 @@ The name and JSON schema are provisional; their semantics come from the
 | POO Flow/application adapter | Advertise capability; route call/result; maintain attempt IDs, source binding and budgets |
 | Gerbil Ascent Library | Inspect candidate declarations; execute finite relational fixpoint; return typed bounded evidence |
 | MRR/source owner | Decide semantic admission and canonical evidence lineage |
-| Agent/model | Choose a next reasoning step or answer using observations; no automatic admission |
+| LLM/model caller | Choose a next reasoning step or answer using observations; no automatic admission |
 
 Other checkers can use the same attempt/result envelope for arithmetic,
 code or planning, with their own semantics.  The relational backend
@@ -94,14 +94,14 @@ compiling wrong recursive join, and a source-withdrawal turn.  Compare:
 |-------+----------------------|
 | Tool parser | Call detection, argument shape, invalid/truncated/parallel-call handling |
 | Library | Exact schema diagnostics, complete rows versus independent finite model, explicit partial/unknown status |
-| Agent loop | Repair turns, answer correctness, citation to exact source snapshot, abstention on unsupported result |
+| Model/tool loop | Repair turns, answer correctness, citation to exact source snapshot, abstention on unsupported result |
 | Serving | Latency and token/cost metrics, separated from semantic correctness |
 
 The initial pass may use a scripted model-call fixture to test the
 adapter before any GPU/model experiment.  A model experiment is needed
-before claiming that one server or parser helps Agent reasoning more.
+before claiming that one server or parser helps LLM reasoning more.
 Service-side tool execution or a custom parser is a later choice only
 if the external adapter has a measured limitation.  Their existence
 does not shift source authority or proof obligations into the server.
 
-[[file:index.org][Agent inference research index]].
+[[file:index.org][LLM reasoning research index]].

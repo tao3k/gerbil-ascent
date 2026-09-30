@@ -1,0 +1,145 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+#+TITLE: From Scheme Datalog to an LLM reasoning Library
+#+STATUS: implementation discussion; API names and examples are provisional
+#+DATE: 2026-09-30
+#+FILETAGS: :design:scheme-dsl:llm:research:
+
+* Aim and terminology
+:PROPERTIES:
+:CUSTOM_ID: llm-library-aim
+:END:
+
+Build two related capabilities: a Scheme-native Datalog Library for
+trusted application code, and an LLM reasoning Library that accepts
+bounded candidate programs and returns checkable observations.  An LLM
+is a caller, not a rule engine.  Use /Agent/ only for a separately
+defined multi-step controller or when discussing a paper's own term.
+Serving products such as SGLang/vLLM are later adapters, not the Library
+semantics.  See the [[file:scheme-relational-dsl-design.org][language overview]]
+and [[file:research/agent-inference/index.org][research ledger]].
+
+The first operational case is finite graph reachability with two named
+source snapshots.  It tests recursion, source withdrawal, mistaken rule
+proposals, positive support and a complete negative answer.  It does
+not stand for all model reasoning.
+
+* Code map and intended seam
+:PROPERTIES:
+:CUSTOM_ID: llm-library-code-map
+:END:
+
+#+NAME: llm-library-code-map
+| Current module | Existing behavior | Next responsibility |
+|----------------+-------------------+---------------------|
+| =program/objects.ss=, =program/syntax.ss= | POO declarations and Scheme =ascent= lowering | Preserve the trusted Scheme authoring path; make its admitted program shape inspectable |
+| =program/analysis.ss=, =program/summary.ss= | Cached schema/plan metadata and dependency SCCs | Return stable admission diagnostics with relation/rule/clause location |
+| =program/evaluate.ss=, =program/session.ss= | Fixed-point results, immutable result snapshots and retained source replacement | Run an isolated candidate against an exact source snapshot and explicit budgets |
+| =candidate/closure.ss= | Bounded binary-closure candidates and one shortest source support | Reuse as a selected positive-witness experiment, not generic provenance |
+| =interface/request.ss= | Inert identity/bound projection for MRR handoff | Keep MRR identity authority separate from the LLM candidate contract |
+
+The public Library boundary should wrap these modules, not replicate
+their relation store or evaluator.  Its first candidate format is inert
+data: declared relation names and arities, finite source rows, positive
+rule heads/bodies, a query, and budget values.  It must not deserialize
+an arbitrary Scheme closure from LLM output.  The trusted Scheme API can
+later construct richer fragments with explicitly declared operators;
+the untrusted LLM surface admits only constructs it can inspect.
+
+* Proposed flow and statuses
+:PROPERTIES:
+:CUSTOM_ID: llm-library-flow
+:END:
+
+#+begin_example
+source snapshot + candidate data
+    -> parse -> inspect -> admit -> solve -> query -> explain
+          rejected       |       complete / partial / unknown
+                         +-> immutable attempt receipt
+#+end_example
+
+#+NAME: llm-library-contract
+| Operation | Required input | Required output | Claim boundary |
+|-----------+----------------+-----------------+----------------|
+| =inspect= | Inert candidate, schema and finite domain declaration | Located syntax/schema/binding/dependency diagnostics | Acceptance is not semantic correctness |
+| =solve= | Accepted program, exact source snapshot and budget | Immutable result or explicit partial/failure status | Budget exhaustion cannot be reported as a complete fixed point |
+| =query= | Completed result identity and relation/tuple pattern | Rows plus completion and snapshot identity | No hidden rerun or source mutation |
+| =explain-present= | Completed result and derived tuple | Bounded source/rule witness where supported | One witness is not exhaustive provenance |
+| =explain-absent= | Completed result, finite declared domain and target tuple | Verified absence plus reachable-set/cut evidence for the graph case | General recursive Why-Not remains a separate research problem |
+
+Use explicit statuses =rejected=, =complete=, =partial=, =unknown= and
+=unsupported=.  A result carries source generation, program identity,
+query, limits and whether the answer is complete.  An absent pair can
+only be called absent after the finite fixed point completes.  A graph
+cut can show that no edge crosses the reachable/unreachable partition
+in the named snapshot; it does not identify which hypothetical missing
+edge a user intended.
+
+* Research-to-implementation decisions
+:PROPERTIES:
+:CUSTOM_ID: llm-library-evidence-map
+:END:
+
+#+NAME: llm-library-paper-decisions
+| Research | Useful result | Implementation decision | Falsifier |
+|----------+---------------+-------------------------+-----------|
+| [[file:research/scheme-dsl/ascent-a22.org][Ascent A22]] | Declarative rules with indexed, semi-naive fixed-point evaluation | Keep the relational rule graph and visible dependencies | A composed rule cannot be inspected or matches the finite model incorrectly |
+| [[file:research/scheme-dsl/datafun-f16.org][Datafun F16]] and [[file:research/scheme-dsl/datafun-s20.org][S20]] | Monotonicity and higher-order delta need a typed semantic account | Treat pointwise Scheme functions as declared adapters; defer verified higher-order change semantics | A hidden mutable read changes closure under the same admitted program |
+| [[file:research/scheme-dsl/flix-f20.org][Flix F20]] and [[file:research/scheme-dsl/flix-l25.org][L25]] | First-class constraints and composition make library reuse plausible | Try Scheme-built fragment values with fresh private relation handles | Two fragment instances capture each other's private relations |
+| [[file:research/agent-inference/datalogbench-db26.org][DatalogBench DB26]] | Recursive programs can compile yet be semantically wrong | Test complete outputs and near-miss joins, not compile rate alone | Wrong recursive join passes the independent model corpus |
+| [[file:research/agent-inference/logic-lm-ll23.org][Logic-LM LL23]] and [[file:research/agent-inference/linc-li23.org][LINC LI23]] | Formalization and solver feedback are distinct | Separate =inspect= diagnostics from =solve= observations | A valid but wrong formalization is reported as verified intent |
+| [[file:research/agent-inference/pug-p18.org][PUG P18]] | Why/Why-Not needs explicit provenance semantics | Start with positive path witness and finite graph absence; defer general provenance | One support is presented as a complete explanation |
+| [[file:research/agent-inference/ircot-i23.org][IRCoT I23]] and [[file:research/agent-inference/react-a23.org][ReAct A23]] | External observations can drive another model step | Return concise typed evidence for a caller-controlled retry | Library silently schedules or authorizes a model action |
+
+The table maps papers to hypotheses; it does not transfer their proofs
+or benchmark scores to this implementation.
+
+* Execution order and scientific gate
+:PROPERTIES:
+:CUSTOM_ID: llm-library-gates
+:END:
+
+1. Freeze a finite graph corpus and an independent reference closure.
+   Include duplicate edges, cycles, a source withdrawal, an undeclared
+   relation, an unsafe binding, and a compiling wrong recursive join.
+2. Make internal program construction/admission/solve/query return
+   complete facts and located failures for that corpus.  Compare fresh
+   and retained sessions; preserve older immutable result snapshots.
+3. Add the inert candidate adapter and typed attempt receipt.  Feed the
+   *same* corpus as data through this boundary.  Reject executable Scheme
+   procedures and out-of-domain terms before evaluation.
+4. Add bounded positive witness and finite graph absence evidence.  Test
+   witness soundness by replaying its source labels, and test absence
+   only when closure is complete.  Negative cases must return =unknown=
+   on budget exhaustion.
+5. Compare a scripted LLM-like transcript before a live model study.
+   Then freeze model, task set, sources, tool budget and prompts; compare
+   model-only, search+model and search+Library+model.  Score exact
+   answers, unsupported claims, repair turns, abstention, latency and
+   explanation fidelity separately.  Predeclare the scoring rule and
+   task split; use paired tasks and repeated model runs with recorded
+   sampling parameters.  Report per-case failures and uncertainty, not
+   only an aggregate win rate.  Keep the reference answers independent
+   of the candidate evaluator.
+
+Keep semantic conformance, Library protocol conformance and model
+helpfulness as three different claims.  The first gate needs no model;
+the final gate cannot be inferred from a green unit test.
+
+* Decisions for discussion
+:PROPERTIES:
+:CUSTOM_ID: llm-library-open-decisions
+:END:
+
+#+NAME: llm-library-decisions
+| Decision | Recommended first choice | Evidence that could change it |
+|----------+--------------------------+-------------------------------|
+| LLM candidate syntax | Small inert positive-rule data grammar | A task requires an operator that can be safely inspected and bounded |
+| Program identity | Content-derived identity plus named source generation in each attempt | Collision/canonicalization or source-revision test fails |
+| Explanation | One replayable positive witness; finite graph absence/cut | A use case demands complete provenance or a general Why-Not meaning |
+| Feedback size | Typed error code, precise location and bounded supporting rows | Model study shows needed detail without increased unsupported claims |
+| Adapter location | Scheme Library first; external serving adapter later | Measured protocol or latency bottleneck at the plain boundary |
+
+These are proposed choices for implementation discussion, not an
+implemented API or a claim of general reasoning verification.

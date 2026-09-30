@@ -14,6 +14,7 @@
 This is the short overview for discussing the next Scheme relational
 language.  [[file:research/scheme-dsl/language-history.org][Language history]] explains how the ideas developed;
 [[file:research/scheme-dsl/index.org][the research index]] links individual paper readings with PDF locators.
+The [[file:research/agent-inference/index.org][Agent inference research index]] studies the deployment-time interface.
 The current implementation has selected Rust Ascent 0.8.0 behavior and a
 Scheme/POO program model.  That oracle constrains matching results, not
 our future Scheme spelling or abstraction boundary.
@@ -57,6 +58,42 @@ and dependencies; it cannot be an opaque call disguised as a relation.
 =relation-view= is one provisional adapter for row-local functions, not
 the entire higher-order language.  Arbitrary Scheme closures are not
 proved pure, total, stable, or monotone by accepting =procedure?=.
+
+* Agent-facing Library is a first-class design case
+:PROPERTIES:
+:CUSTOM_ID: scheme-agent-library
+:END:
+
+The internal rule core and the external Agent interface are both
+Library requirements.  Deployment-time inference is the main use:
+an Agent may search for current evidence, propose candidate
+facts/rules/queries, inspect diagnostics, execute a bounded program,
+ask why or why-not, and revise.  Search is one input path, not the
+definition of all reasoning.  Nonrelational arithmetic, code, planning
+or hypothesis checks need their own semantics behind a shared attempt
+and feedback envelope.  The Library returns observations for the
+model's next turn; it does not change the model's trained weights or
+learned reward model.  A search hit is not an unverified fact insertion
+into the fixed point.
+
+#+NAME: scheme-agent-loop
+| Agent action | Library response | Required boundary |
+|--------------+------------------+-------------------|
+| Propose a fact or rule | Inspectable candidate with syntax/schema/mode diagnostics | No source authority or MRR admission |
+| Execute a query | Complete rows or explicit partial/failure under exact program, snapshot and limits | No completed-answer claim on budget failure |
+| Ask why or why-not | Rule/source witness or bounded missing-premise explanation with status | One witness is not complete provenance |
+| Search and revise | New attempt against named source generation | Search hit remains a candidate until source binding |
+
+The first executable case is a graph/search transcript containing a
+correct recursive rule, an undeclared helper relation, and a wrong
+recursive join that compiles.  The Library must diagnose the first,
+distinguish full outputs for the latter, and return a grounded why or
+why-not result before the Agent retries.  See the
+[[file:research/agent-inference/index.org::#agent-inference-gate][research gate]].  The present evaluator returns rows and candidate
+supports in limited paths; a general Agent proposal/diagnosis and
+provenance API is *not yet implemented*.  MRR remains the later
+semantic admission owner, while POO Flow owns Agent context and
+effect handoff.
 
 * Current design choices for discussion
 :PROPERTIES:
@@ -168,3 +205,4 @@ procedures are trusted adapters with bounded claims.
 
 - [[file:research/scheme-dsl/language-history.org][Language history and design lineage]]
 - [[file:research/scheme-dsl/index.org][Structured research index and individual paper notes]]
+- [[file:research/agent-inference/index.org][Deployment-time Agent reasoning research index]]

@@ -1,0 +1,149 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+#+TITLE: Deployment-time Agent reasoning Library research index
+#+STATUS: research synthesis; no Agent API implemented by this document
+#+DATE: 2026-09-30
+#+FILETAGS: :research:agent:inference:
+
+* Question and scope
+:PROPERTIES:
+:CUSTOM_ID: agent-inference-research
+:END:
+
+How should a reusable *deployment-time* Library improve an Agent's
+reasoning without changing model weights?  Search can supply current
+evidence; Datalog can check relational consequences; other checkers
+may test arithmetic, code, plans or hypotheses.  The common path is
+an attempt with a named input, candidate proposal, checker observation,
+bounded explanation, and possible revision.  The
+[[file:../../scheme-relational-dsl-design.org][Scheme DSL overview]] describes the internal relational language;
+this ledger studies the *interaction protocol* around the Library.
+The sources below use different logics and workloads.  Their results
+are design evidence, not proof that our Library already has the API.
+The first concrete checker is =gerbil-ascent=; POO Flow owns workflow
+composition, tool selection and runtime handoff.
+
+#+NAME: agent-source-ledger
+| Key | Primary source | Our note | Applicable question |
+|-----+----------------+----------+---------------------|
+| DB26 | [[https://arxiv.org/abs/2609.37233][DatalogBench, arXiv v1]] | [[file:datalogbench-db26.org][reading]] | Can Agent-written recursive rules pass execution tests, not just parsing? |
+| LL23 | [[https://aclanthology.org/2023.findings-emnlp.248/][Logic-LM, EMNLP Findings]] | [[file:logic-lm-ll23.org][reading]] | Which solver diagnostics make a bounded repair loop useful? |
+| LI23 | [[https://aclanthology.org/2023.emnlp-main.313/][LINC, EMNLP]] | [[file:linc-li23.org][reading]] | Does valid formalization preserve the intended source meaning? |
+| R24 | [[https://aclanthology.org/2024.findings-acl.254/][Readi, ACL Findings]] | [[file:readi-r24.org][reading]] | Can a stuck graph path get compact, local feedback? |
+| P18 | [[https://arxiv.org/abs/1808.05752][PUG extended paper]] | [[file:pug-p18.org][reading]] | What is a bounded why/why-not explanation? |
+| I23 | [[https://aclanthology.org/2023.acl-long.557/][IRCoT, ACL]] | [[file:ircot-i23.org][reading]] | When should a missing premise trigger more search? |
+| A23 | [[https://arxiv.org/abs/2210.03629][ReAct, ICLR]] | [[file:react-a23.org][reading]] | How does an Agent use tool observations in its next turn? |
+| T23 | [[https://papers.nips.cc/paper_files/paper/2023/hash/271db9922b8d1f4dd7aaef84ed5ac703-Abstract-Conference.html][Tree of Thoughts, NeurIPS]] | [[file:tot-t23.org][reading]] | How can test-time search explore non-Datalog reasoning branches? |
+| S23 | [[https://doi.org/10.1145/3591280][Scallop, PLDI]] | [[file:scallop-s23.org][reading]] | What extra semantics would a differentiable training integration require? |
+
+* Cross-source inference
+:PROPERTIES:
+:CUSTOM_ID: agent-inference-synthesis
+:END:
+
+The first relational case should be =propose -> inspect -> execute ->
+explain -> revise=.  The general workflow is =observe -> propose ->
+check -> explain -> choose another step or stop=.  This is our synthesis,
+not an API these papers
+jointly prescribe.  LL23 and LI23 support separating language
+formalization from symbolic execution; DB26 shows that repair of syntax
+and declarations can still leave recursive semantic errors.  R24
+motivates local feedback at the point where a graph plan gets stuck.
+P18 shows why explanations are a separate query over provenance rather
+than a natural-language retelling of the returned row.
+I23 and A23 place that feedback in an external Agent loop: a gap can
+lead to another source-bound search, then a revised proposal.  No
+model retraining or modification to its learned reward mechanism is
+claimed.  T23 adds bounded exploration of multiple hypotheses beyond
+relational deduction.  The Library supplies evidence and checks at
+inference time; model judgment remains distinct from a checker result.
+
+#+NAME: agent-library-contract-draft
+| Stage | Library input | Library output | Limit of the claim |
+|-------+---------------+----------------+--------------------|
+| Inspect | Candidate declarations plus named source snapshot | Structured syntax, schema, mode, dependency and bound diagnostics | A valid program can still express the wrong intent |
+| Execute | Accepted candidate program, exact snapshot and budget | Complete rows or typed partial/failure status | Completion proves the declared program's result only |
+| Explain | Result/goal, snapshot, rule program and bounds | Supporting witness or bounded why-not gap with status | One witness is not all provenance; recursive cases need explicit semantics |
+| Revise | New candidate against same or explicitly changed snapshot | New diagnostics and result, linked to attempt | No automatic promotion to source authority |
+
+Other reasoning modes use the same attempt/result envelope, but each
+checker declares its own semantics, supported goal types, bounds and
+explanation limits.  Datalog is the first backend, not a claim that
+every model thought has a Datalog encoding.
+
+The response must distinguish =rejected=, =completed=, =partial=,
+=unknown=, and =unsupported=.  Every returned answer or explanation
+names its input snapshot, program identity, limits, and whether its
+support is complete.  In =gerbil-ascent= these are *candidate* facts
+and explanations.  MRR retains semantic admission and canonical lineage;
+POO Flow owns Agent context and effect handoff.  The Library does not
+ask a model to mutate the fixed-point state during one solve.
+
+* First executable discriminator
+:PROPERTIES:
+:CUSTOM_ID: agent-inference-gate
+:END:
+
+Use one graph/search task with two source generations and an Agent-like
+proposal transcript: (1) a valid base + recursive reachability rule,
+(2) an invented undeclared helper relation, (3) a wrong recursive join
+that compiles, (4) a query for present and absent pairs, and (5) a
+source edge withdrawal.  Check field-specific diagnostics; exact
+complete rows against an independent finite graph model; one
+supporting path and a bounded missing-path explanation; unchanged
+old snapshots; and no candidate-to-admitted promotion.  Record
+repair turns, token-sized feedback, wall time and model-independent
+semantic outcomes separately.  Only a later model experiment can
+claim that the interface is friendly to LLMs.
+
+For that later experiment, freeze the same model, task corpus, search
+index, source revisions and tool budget.  Compare =search + model=
+against =search + Library inspect/execute/explain + model=.  Score
+answer correctness, cited-source coverage, unsupported conclusions,
+why/why-not fidelity, abstention, repair turns, latency and cost.
+Do not infer a change to the model's learned reward function from an
+improved deployed answer: the intervention is external evidence and
+feedback at inference time.
+
+* POO Flow workflow and optional framework connection
+:PROPERTIES:
+:CUSTOM_ID: agent-inference-workflow
+:END:
+
+POO Flow already separates workflow declarations and strategy/runner
+execution through POO objects.  Its tutorial includes a composed
+TensorFlow train/infer *external task descriptor*, which shows a
+workflow can carry training tasks without making Scheme the trainer.
+For our deployment-time case, a proposed POO Flow workflow would:
+
+#+NAME: agent-reasoning-workflow
+| Step | Owner | Output |
+|------+-------+--------|
+| Select task, capability, budget and sources | POO Flow | Scoped request |
+| Search or observe | Source/tool owner | Versioned candidate evidence |
+| Propose a reasoning step | Agent/model | Candidate facts, rules, query, plan or hypothesis |
+| Inspect and execute | Gerbil Ascent for relational case; other named checkers otherwise | Typed diagnostic, bounded result, completion status |
+| Explain and decide next step | Checker returns witness/gap; Agent judges; POO Flow routes | Revised attempt, abstention or bounded answer |
+| Admit or hand off | MRR/source owner and separate runtime policy where needed | Admitted evidence or authorized effect receipt |
+
+This is a workflow *proposal*, not an implemented cross-repository
+integration.  It does not turn the Library into the Agent scheduler or
+the training framework.  If a training/inference framework is chosen,
+first test a discrete adapter that consumes complete, bounded candidate
+outputs and explanations under exact source/program identities.  A
+differentiable layer is a separate research path: [[file:scallop-s23.org][Scallop]] shows
+why weighted provenance and gradient semantics would be required.
+An FFI or tensor conversion alone does not supply those semantics.
+
+* Reading order
+
+Start with [[file:ircot-i23.org][I23]], [[file:react-a23.org][A23]] and
+[[file:tot-t23.org][T23]] for the deployment-time loop, then
+[[file:datalogbench-db26.org][DB26]] for the
+rule-generation failure taxonomy.  Read
+[[file:logic-lm-ll23.org][LL23]] and [[file:linc-li23.org][LI23]] for
+formalization/solver feedback and its limits.  Read
+[[file:readi-r24.org][R24]] for graph interaction and
+[[file:pug-p18.org][P18]] for explanation semantics.  [[file:scallop-s23.org][S23]]
+frames the optional training-framework question.

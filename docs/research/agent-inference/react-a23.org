@@ -1,0 +1,45 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+#+TITLE: A23: Agent reasoning and external action in a turn loop
+#+STATUS: paper reading; prompting trace is not semantic provenance
+#+DATE: 2026-09-30
+#+FILETAGS: :research:agent:interaction:
+
+* Source
+:PROPERTIES:
+:CUSTOM_ID: agent-a23
+:SOURCE_PDF: https://arxiv.org/pdf/2210.03629
+:SOURCE_SITE: https://react-lm.github.io/
+:END:
+
+Shunyu Yao et al., /ReAct: Synergizing Reasoning and Acting in
+Language Models/, ICLR 2023.
+
+* Evidence ledger
+
+#+NAME: a23-evidence
+| Locator | Author result | Transfer hypothesis | Limit |
+|---------+---------------+---------------------+-------|
+| Abstract; §1 | Interleaved model reasoning and actions access external knowledge/environment | Expose inspect, run and explain as Library operations in a caller-owned loop | ReAct action traces are not Datalog derivation proofs |
+| §2 | Observations can update the model's next plan and handle exceptions | Return structured outcomes, not only a final answer | Caller controls tool use, policy and effects |
+| Experiments §§3–4 | Evaluates knowledge and interactive tasks | Measure end-to-end Agent outcome | Paper's prompts and tools do not specify our contract |
+
+* Design assessment
+
+The model can choose another tool call after a Library observation, but
+=gerbil-ascent= should not own the Agent loop.  The Library offers a
+stable result for an exact program/snapshot and a typed diagnostic or
+bounded explanation.  The caller decides whether to search, revise a
+rule, or ask a user.  ReAct helps justify the deployment-time loop;
+it does not make a natural-language reasoning trace a verified witness.
+
+* Discriminator
+
+Freeze a question, source revisions and candidate-rule proposals.
+Compare a one-call answer with a bounded inspect/execute/explain loop.
+Track complete facts, source support, unsupported conclusions, tool
+calls, token cost and latency.  Keep the model's narrative separate
+from the Library's rule witness.
+
+[[file:index.org][Research index]].

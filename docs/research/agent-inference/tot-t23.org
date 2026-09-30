@@ -1,0 +1,47 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+#+TITLE: T23: Test-time deliberation beyond relational deduction
+#+STATUS: paper reading; model-scored paths are not verified derivations
+#+DATE: 2026-09-30
+#+FILETAGS: :research:agent:inference:
+
+* Source
+:PROPERTIES:
+:CUSTOM_ID: agent-t23
+:SOURCE_PDF: https://proceedings.neurips.cc/paper_files/paper/2023/file/271db9922b8d1f4dd7aaef84ed5ac703-Paper-Conference.pdf
+:DOI: 10.52202/075280-0517
+:END:
+
+Shunyu Yao et al., /Tree of Thoughts: Deliberate Problem Solving with
+Large Language Models/, NeurIPS 2023.
+
+* Evidence ledger
+
+#+NAME: t23-evidence
+| Locator | Author result | Transfer hypothesis | Limit |
+|---------+---------------+---------------------+-------|
+| Abstract; §1 | At inference time, explore multiple intermediate reasoning paths and backtrack | A workflow may branch over candidate plans and preserve each attempt | A model preference or score is not a proof |
+| §§2–3 | Generate, evaluate and search over candidate thoughts | Keep alternative candidate hypotheses distinct, with a bounded search budget | The thought representation is task-dependent |
+| Experiments §§4–5 | Evaluates Game of 24, creative writing and crosswords | Test non-Datalog reasoning cases, including arithmetic and planning | Paper benchmarks do not establish universal reasoning coverage |
+
+* Assessment for the Library
+
+The deployment-time layer must support more than Datalog.  A caller can
+compare multiple model proposals; =gerbil-ascent= checks a relational
+candidate where applicable, while another checker may execute code,
+validate arithmetic or inspect a plan.  The common object is a bounded
+attempt with inputs, observations, checker status and a next-step
+choice.  A generated thought remains a model proposal.  It is never
+promoted to a source fact or formal derivation by having a high score.
+POO Flow, not the Ascent kernel, owns branching, scheduling and policy.
+
+* Discriminator
+
+Pair a graph reachability task, a small arithmetic task, and an open
+planning task.  Each uses the same attempt/feedback envelope but a
+different checker.  Compare outcomes, failed branches, budget use and
+unsupported claims.  Do not infer that passing one checker certifies
+all other reasoning domains.
+
+[[file:index.org][Research index]].

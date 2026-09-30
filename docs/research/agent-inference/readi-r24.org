@@ -1,0 +1,47 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+#+TITLE: R24: Edit a stuck graph reasoning path locally
+#+STATUS: paper reading; graph QA results are not rule-synthesis evidence
+#+DATE: 2026-09-30
+#+FILETAGS: :research:agent:graph:
+
+* Source
+:PROPERTIES:
+:CUSTOM_ID: agent-r24
+:SOURCE_PDF: https://arxiv.org/pdf/2403.08593
+:DOI: 10.18653/v1/2024.findings-acl.254
+:END:
+
+Sitao Cheng et al., /Call Me When Necessary: LLMs can Efficiently and
+Faithfully Reason over Structured Environments/, Findings of ACL 2024.
+The ACL version is [[https://aclanthology.org/2024.findings-acl.254/][here]]; PDF locators below refer to the arXiv PDF.
+
+* Evidence ledger
+
+#+NAME: r24-evidence
+| PDF locator | Author result | Transfer hypothesis | Boundary |
+|-------------+---------------+---------------------+----------|
+| Fig. 1; §1, PDF pp. 1–2 | Generate a path, instantiate it on graph/table, edit only when stuck | Return the failed hop and nearby available relation names | Path QA is not recursive Datalog rule synthesis |
+| §1, PDF p. 2 | Feedback log records stuck position, relations and partial instances | Use a compact diagnostic with grounded prefix and failure point | Logging a path does not prove a derived rule result |
+| Experiments, §§4–5 | Tests three KGQA and two TableQA workloads | Measure Agent calls and grounded answer quality | Dataset metrics do not transfer to our graph/search workload |
+
+* Assessment for the Library
+
+A graph Agent need not receive the entire relation store each turn.
+For a proposed query or path, the Library can return the longest
+validated prefix, the unsatisfied atom, and a bounded list of schema
+choices or rows that explain the blockage.  That is diagnostic data;
+the Agent decides how to revise.  If a candidate rule is recursive,
+we also need fixed-point counterexamples from [[file:datalogbench-db26.org][DB26]], which Readi
+itself does not supply.
+
+* Experiment
+
+Ask for a three-hop path with a wrong middle relation.  Compare a
+bare =no result= response to one that identifies the failing hop and
+valid neighboring relations under the same source snapshot and
+budget.  Count repair turns; check final paths against the complete
+graph.  Treat a source-generation change as a new attempt.
+
+[[file:index.org][Research index]].

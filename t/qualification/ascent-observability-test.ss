@@ -39,6 +39,9 @@
       (let (bounded-profile
             (.o (:: @ ascent-ss-profile)
                 (identity 'ascent/stalled-case-probe)
+                ;; Earlier modules may have grown the shared harness heap.
+                (heap-limit-bytes 4294967296)
+                (live-growth-limit-bytes 4294967296)
                 (sample-interval-milliseconds 1)
                 (max-duration-milliseconds 25)))
         (check-equal?

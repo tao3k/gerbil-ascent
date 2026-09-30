@@ -8,16 +8,35 @@
                  relational-lattice-fragment relational-compose
                  relational-export relational-open-session
                  relational-session-run relational-session-replace-source!
-                 relational-query))
+                 relational-query
+                 relational-op-source relational-op-union
+                 relational-op-join relational-op-project
+                 relational-op-fix relational-op-fragment
+                 relational-op-function relational-op-apply))
 
 (export scheme-native-integration-test)
 
+(def (same-rows? actual expected)
+  (and (= (length actual) (length expected))
+       (andmap (lambda (row) (if (member row expected) #t #f))
+               actual)))
+
 (def (edge-source)
-  (relational-fragment
-   (import)
-   (source (edge (from to) '((1 2) (1 3) (2 3) (3 4))))
-   (private)
-   (export (edge edge))))
+  (let (raw-edge
+        (relational-op-source 'raw-edge 2
+                              '((1 2) (1 3) (2 3) (3 4))))
+    (let (step
+          (relational-op-function
+           2
+           (lambda (path)
+             (relational-op-project
+              (relational-op-join path raw-edge 1 0) '(0 3)))))
+      (relational-op-fragment
+       (relational-op-fix
+        2 (lambda (path)
+            (relational-op-union
+             raw-edge (relational-op-apply step path))))
+       'edge))))
 
 (def (blocked-source)
   (relational-fragment
@@ -106,18 +125,34 @@
                       counts best best-rule)
                 32 64 128)))
              (first (relational-session-run session)))
-        (check-equal? (relational-query first counts 'cardinality)
-                      '((1 1) (2 2) (3 0)))
-        (check-equal? (relational-query first best 'best)
-                      '((1 5) (2 11)))
+        (check-equal?
+         (same-rows? (relational-query first counts 'cardinality)
+                     '((1 1) (2 2) (3 0))) #t)
+        (check-equal?
+         (same-rows? (relational-query first best 'best)
+                     '((1 5) (2 11))) #t)
         (relational-session-replace-source!
          session blocked 'blocked '((1 2)))
         (let (second (relational-session-run session))
-          (check-equal? (relational-query second counts 'cardinality)
-                        '((1 2) (2 2) (3 0)))
-          (check-equal? (relational-query second best 'best)
-                        '((1 11) (2 11)))
-          (check-equal? (relational-query first counts 'cardinality)
-                        '((1 1) (2 2) (3 0)))
-          (check-equal? (relational-query first best 'best)
-                        '((1 5) (2 11))))))))
+          (check-equal?
+           (same-rows? (relational-query second counts 'cardinality)
+                       '((1 2) (2 2) (3 0))) #t)
+          (check-equal?
+           (same-rows? (relational-query second best 'best)
+                       '((1 11) (2 11))) #t)
+          (check-equal?
+           (same-rows? (relational-query first counts 'cardinality)
+                       '((1 1) (2 2) (3 0))) #t)
+          (check-equal?
+           (same-rows? (relational-query first best 'best)
+                       '((1 5) (2 11))) #t)
+          (relational-session-replace-source!
+           session edges 'raw-edge '((1 2)))
+          (let (third (relational-session-run session))
+            (check-equal?
+             (same-rows? (relational-query third counts 'cardinality)
+                         '((1 0) (2 0) (3 0))) #t)
+            (check-equal? (relational-query third best 'best) '())
+            (check-equal?
+             (same-rows? (relational-query second best 'best)
+                         '((1 11) (2 11))) #t)))))))

@@ -29,7 +29,7 @@ transfer numerically to ours.
 |--------+---------------------------+-------------------------+-------------------|
 | [[https://thomas.gilray.org/pdf/seamless-deductive.pdf][Ascent A22]], [[file:ascent-a22.org][note]] | Rust macro embedding with relational planning, indexes, semi-naive evaluation and lattice examples; selected workload measurements | Retain inspectable rules, dependencies and delta planning while designing Scheme syntax independently | We have not matched its scale, diagnostics, or expressivity; Rust spelling is no design baseline |
 | [[https://www.cl.cam.ac.uk/~nk480/datafun.pdf][Datafun F16]], [[file:datafun-f16.org][note]] | A typed calculus distinguishes discrete and monotone dependencies and reasons about fixed points over finite-height structure | Distinguish fixed parameters from changing relations; require a termination argument separate from monotonicity | A declared Gerbil descriptor has no Datafun typing proof |
-| [[https://www.rntz.net/files/seminaive-datafun.pdf][Datafun S20]], [[file:datafun-s20.org][note]] | A typed higher-order change translation, proof and evaluation | Specify an inspectable relation operator IR and reference change semantics before optimizing | Our delta equation is only a specification; no transform is implemented |
+| [[https://www.rntz.net/files/seminaive-datafun.pdf][Datafun S20]], [[file:datafun-s20.org][note]] | A typed higher-order change translation, proof and evaluation | Specify an inspectable relation operator IR and reference change semantics before optimizing | Our reference change interpreter is executable, but no optimized transform or transferred proof is implemented |
 | [[https://plg.uwaterloo.ca/~olhotak/pubs/oopsla20c.pdf][Flix F20]], [[file:flix-f20.org][note]] | First-class constraint values and row-polymorphic composition checks, including stratification | Construct first-class fragments and check the assembled program | Runtime admission is weaker than Flix's static assurance over possible compositions |
 | [[https://plg.uwaterloo.ca/~olhotak/pubs/oopsla25b.pdf][Flix L25]], [[file:flix-l25.org][note]] | Program values, private predicates, inject/query, functional predicates and effects in the implemented language | Give each fragment invocation fresh private handles and separate lifecycle stages | We have not matched its type/effect guarantees, examples or ergonomics |
 | [[https://www.schemeworkshop.org/2013/papers/HemannMuKanren2013.pdf][µKanren H13]], [[file:microkanren-h13.org][note]] | A small Scheme relational kernel with user-level forms and interleaved stream search | Keep a small semantic kernel beneath Scheme abstractions | Stream fairness, answer order and partial answers differ from bottom-up completion |
@@ -100,12 +100,18 @@ pinned implementations and matched tasks.  Otherwise report only our
 measurements and the published context.  Preserve inconclusive and
 negative results and revise the hypothesis.
 
-The first [[file:../../scheme-relational-language-design.org::#scheme-language-first-code][code slice]]
-now exercises part of E1: finite positive reachability against an
-independent graph algorithm and explicit rejection cases.  E1 remains
-open for fragment composition, finite lattice domains, nonpositive
-rules, and generated programs beyond this subset.  E2-E6 have no
-measured result.
+The [[file:../../scheme-relational-language-design.org::#scheme-language-first-code][native code gate]]
+exercises E1 across 64 finite reachability graphs: independent graph
+closure, a separate operator reference interpreter, direct rule
+lowering, composed operator fragments and the inert candidate path
+produce equal complete sets. Another 64 growth cases compare reference
+change with the independent before/after set difference. The combined
+fixture includes recursion, finite view, negation, grouped count, max
+lattice and source withdrawal. E1 remains open for generated programs
+beyond this grammar, finite lattice law evidence and larger domains.
+E4 has only its naive reference meaning; no transformed evaluator or
+performance result exists. E2, E3, E5 and E6 have no measured A/B
+result.
 
 * Decision gate
 :PROPERTIES:

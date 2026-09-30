@@ -153,8 +153,12 @@ effect handoff.
 :CUSTOM_ID: scheme-dsl-decisions
 :END:
 
-The table makes our present direction explicit.  "Working choice" means
-a proposal awaiting the listed discriminator, not an implemented API.
+The table makes our present direction explicit. Several working choices
+now have a bounded implementation and qualification: native rules,
+first-class fragments, fresh handles, checked scalar operators, finite
+views, stratified negation, reductions, lattices, source replacement,
+and first-class positive relation transformers. The discriminator
+column still describes evidence needed for broader claims.
 
 #+NAME: scheme-design-decisions
 | Decision | Working choice | Reason | Discriminator before commitment |
@@ -175,6 +179,11 @@ a proposal awaiting the listed discriminator, not an implemented API.
 Within the internal priority, design the native grammar, semantic IR
 and admission boundary; rewrite the implementation against their
 qualification, then research a restricted higher-order operator IR.
+That restricted operator IR now has an executable reference meaning,
+explicit transformer application, positive-rule lowering and fragment
+composition. Its source-growth change is defined by two complete
+reference evaluations; an optimized higher-order delta translation
+is not implemented or measured.
 The LLM candidate/observation contract follows the admitted Scheme
 core; it cannot claim stronger semantics than that core provides.
 Flix and Datafun inform semantic questions;

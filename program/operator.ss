@@ -8,18 +8,22 @@
 (import (only-in "objects.ss"
                  gerbil-ascent-relation gerbil-ascent-program
                  gerbil-ascent-rule gerbil-ascent-atom
-                 gerbil-ascent-variable)
+                 gerbil-ascent-variable gerbil-ascent-fragment)
         (only-in "scheme-checked.ss"
                  relational-scalar? relational-copy-rows
                  relational-finite-rows)
-        (only-in :std/list/list append-map))
+        (only-in :std/list/list append-map delete-duplicates/hash take))
 
 (export relational-op-source relational-op-union relational-op-join
         relational-op-select-eq relational-op-project
-        relational-op-flatmap relational-op-fix relational-op-compile
+        relational-op-flatmap relational-op-fix
+        relational-op-function relational-op-apply
+        relational-op-compile relational-op-fragment
+        relational-op-reference relational-op-reference-change
         relational-op? relational-op-arity)
 
 (defstruct relational-op (kind arity inputs data))
+(defstruct relational-transform (parameter body input-arity output-arity))
 
 (def (require-op value)
   (unless (relational-op? value)
@@ -129,6 +133,30 @@
       (error "operator fixed-point body arity mismatch"))
     (make-relational-op 'fix arity (list body) parameter)))
 
+;;; The Scheme builder runs once and leaves a first-class, inspectable
+;;; relation transformer. Its parameter can only reach evaluation through
+;;; an explicit apply node with an arity-checked relation input.
+(def (relational-op-function input-arity builder)
+  (unless (and (exact-integer? input-arity) (<= 0 input-arity)
+               (procedure? builder))
+    (error "invalid relation transformer signature"))
+  (let* ((parameter (make-relational-op 'parameter input-arity [] #f))
+         (body (builder parameter)))
+    (require-op body)
+    (make-relational-transform
+     parameter body input-arity (relational-op-arity body))))
+
+(def (relational-op-apply transformer input)
+  (unless (relational-transform? transformer)
+    (error "expected a relation transformer" transformer))
+  (require-op input)
+  (unless (= (relational-transform-input-arity transformer)
+             (relational-op-arity input))
+    (error "relation transformer input arity mismatch"))
+  (make-relational-op
+   'apply (relational-transform-output-arity transformer)
+   (list input) transformer))
+
 (def (fresh-variables arity)
   (map (lambda (_column) (gensym '?column)) (iota arity)))
 
@@ -144,29 +172,35 @@
 ;;; Compute lexical dependencies before consulting the shared compiler memo.
 ;;; Otherwise a child cached while its fix parameter is bound could be
 ;;; silently reused outside that fix and capture its private relation.
-(def (free-parameters node)
-  (let (cache [])
-    (letrec
-      ((visit
-        (lambda (current)
-          (let (cached (assq current cache))
-            (if cached
-              (cdr cached)
-              (let (free
-                    (case (relational-op-kind current)
-                      ((parameter) (list current))
-                      ((fix)
-                       (filter
-                        (lambda (parameter)
-                          (not (eq? parameter
-                                    (relational-op-data current))))
-                        (visit (car (relational-op-inputs current)))))
-                      (else
-                       (append-map visit
-                                   (relational-op-inputs current)))))
-                (set! cache (cons (cons current free) cache))
-                free))))))
-      (visit node))))
+(def (free-parameters node cache)
+  (let (cached (hash-get cache node))
+    (if cached
+      cached
+      (let* ((inputs (relational-op-inputs node))
+             (free
+              (case (relational-op-kind node)
+                ((parameter) (list node))
+                ((fix)
+                 (filter
+                  (lambda (parameter)
+                    (not (eq? parameter (relational-op-data node))))
+                  (free-parameters (car inputs) cache)))
+                ((apply)
+                 (let (transform (relational-op-data node))
+                   (append
+                    (free-parameters (car inputs) cache)
+                    (filter
+                     (lambda (parameter)
+                       (not (eq? parameter
+                                 (relational-transform-parameter transform))))
+                     (free-parameters
+                      (relational-transform-body transform) cache)))))
+                (else
+                 (append-map (lambda (input)
+                               (free-parameters input cache))
+                             inputs)))))
+        (hash-put! cache node free)
+        free))))
 
 ;; relational-op-compile
 ;;   : (-> RelationalOp Nat Nat Nat (Values Program Symbol))
@@ -185,13 +219,13 @@
 ;;; Compilation is finite and instance-local. A placeholder may be read
 ;;; only inside its own fix body; distinct source nodes cannot silently
 ;;; alias the same public name, even when their rows happen to match.
-(def (relational-op-compile root input-limit derived-limit output-limit)
+(def (lower-operator-graph root fresh-sources?)
   (require-op root)
-  (unless (and (exact-integer? input-limit) (> input-limit 0)
-               (exact-integer? derived-limit) (> derived-limit 0)
-               (exact-integer? output-limit) (> output-limit 0))
-    (error "operator program budgets must be positive exact integers"))
-  (let ((relations []) (rules []) (sources []) (memo []) (names []))
+  (let ((relations []) (rules []) (sources [])
+        (memo (make-hash-table-eq))
+        (free-cache (make-hash-table-eq))
+        (names (make-hash-table-eq))
+        (source-labels []))
     (letrec
       ((add-derived
         (lambda (arity)
@@ -201,52 +235,70 @@
             name)))
        (add-rule
         (lambda (rule) (set! rules (cons rule rules))))
+       (remember
+        (lambda (node name free)
+          (when (null? free) (hash-put! memo node name))
+          name))
        (emit
         (lambda (node active)
-          (for-each
-           (lambda (parameter)
-             (unless (assq parameter active)
-               (error "operator fixed-point parameter escaped its body")))
-           (free-parameters node))
+          (let (free (free-parameters node free-cache))
+            (for-each
+             (lambda (parameter)
+               (unless (assq parameter active)
+                 (error "operator fixed-point parameter escaped its body")))
+             free)
           (let ((kind (relational-op-kind node))
-                (cached (assq node memo)))
+                (cached (and (null? free) (hash-get memo node))))
             (cond
              ((eq? kind 'parameter)
               (let (binding (assq node active))
                 (unless binding
                   (error "operator fixed-point parameter escaped its body"))
                 (cdr binding)))
-             (cached (cdr cached))
+             (cached cached)
              ((eq? kind 'source)
               (let* ((data (relational-op-data node))
-                     (name (vector-ref data 0)))
-                (when (memq name names)
-                  (error "duplicate operator source name" name))
-                (set! names (cons name names))
+                     (label (vector-ref data 0))
+                     (name (if fresh-sources? (gensym label) label)))
+                (when (hash-get names label)
+                  (error "duplicate operator source name" label))
+                (hash-put! names label #t)
+                (set! source-labels
+                  (cons (cons label name) source-labels))
                 (set! sources (cons name sources))
                 (set! relations
                   (cons (gerbil-ascent-relation
                          name (relational-op-arity node)
                          (vector-ref data 1))
                         relations))
-                (set! memo (cons (cons node name) memo))
-                name))
+                (remember node name free)))
              ((eq? kind 'fix)
               (let* ((name (add-derived (relational-op-arity node)))
                      (body (car (relational-op-inputs node)))
                      (parameter (relational-op-data node)))
-                (set! memo (cons (cons node name) memo))
+                (remember node name free)
                 (let (body-name
                       (emit body (cons (cons parameter name) active)))
                   (add-rule
                    (copy-rule name body-name (relational-op-arity node))))
                 name))
+             ((eq? kind 'apply)
+              (let* ((transform (relational-op-data node))
+                     (input-name
+                      (emit (car (relational-op-inputs node)) active))
+                     (result
+                      (emit (relational-transform-body transform)
+                            (cons
+                             (cons (relational-transform-parameter transform)
+                                   input-name)
+                             active))))
+                (remember node result free)))
              (else
               (let* ((inputs (relational-op-inputs node))
                      (input-names (map (lambda (input) (emit input active))
                                        inputs))
                      (name (add-derived (relational-op-arity node))))
-                (set! memo (cons (cons node name) memo))
+                (remember node name free)
                 (case kind
                   ((union)
                    (for-each
@@ -328,11 +380,155 @@
                              (variable-atom mapping-name
                                             (append in out)))))))
                   (else (error "unsupported operator node" kind)))
-                name)))))))
+                name))))))))
       (let (output (emit root []))
         (values
-         (gerbil-ascent-program
-          (reverse relations) (reverse rules)
-          input-limit derived-limit output-limit
-          (reverse sources))
-         output)))))
+         (reverse relations) (reverse rules) (reverse sources)
+         output (reverse source-labels))))))
+
+;;; The standalone compiler keeps explicit source names for named queries.
+;;; Its budget belongs to the resulting program, not to graph construction.
+(def (relational-op-compile root input-limit derived-limit output-limit)
+  (unless (and (exact-integer? input-limit) (> input-limit 0)
+               (exact-integer? derived-limit) (> derived-limit 0)
+               (exact-integer? output-limit) (> output-limit 0))
+    (error "operator program budgets must be positive exact integers"))
+  (let-values (((relations rules sources output _labels)
+                (lower-operator-graph root #f)))
+    (values
+     (gerbil-ascent-program relations rules
+                            input-limit derived-limit output-limit
+                            sources)
+     output)))
+
+;;; A builder graph can participate in the same fragment lifecycle as native
+;;; rules. Every named source gets a fresh handle per call; output and source
+;;; labels are the only public entry points. Composition supplies budgets.
+(def (relational-op-fragment root output-label)
+  (unless (symbol? output-label)
+    (error "operator fragment output label must be a symbol" output-label))
+  (let-values (((relations rules sources output source-labels)
+                (lower-operator-graph root #t)))
+    (gerbil-ascent-fragment
+     relations rules (cons (cons output-label output) source-labels)
+     sources)))
+
+;;; This deliberately simple set interpreter is the executable meaning of
+;;; the finite operator graph. It shares descriptors with compilation but
+;;; never calls the rule planner, index provider, or semi-naive evaluator.
+;;; Exceeding a bound raises; it never returns a partial set as closure.
+(def (relational-op-reference root (row-limit 4096))
+  (require-op root)
+  (unless (and (exact-integer? row-limit) (> row-limit 0))
+    (error "reference row limit must be positive" row-limit))
+  (def (normalize rows)
+    (let (unique (delete-duplicates/hash rows))
+      (when (> (length unique) row-limit)
+        (error "operator reference row limit exceeded" row-limit))
+      unique))
+  (def (same-set? left right)
+    (and (= (length left) (length right))
+         (andmap (lambda (row) (member row right)) left)))
+  (def (evaluate node environment)
+    (let ((kind (relational-op-kind node))
+          (inputs (relational-op-inputs node))
+          (data (relational-op-data node)))
+      (case kind
+        ((source) (normalize (vector-ref data 1)))
+        ((parameter)
+         (let (binding (assq node environment))
+           (unless binding
+             (error "operator reference parameter escaped its fixed point"))
+           (cdr binding)))
+        ((union)
+         (normalize (append (evaluate (car inputs) environment)
+                            (evaluate (cadr inputs) environment))))
+        ((join)
+         (let ((left (evaluate (car inputs) environment))
+               (right (evaluate (cadr inputs) environment))
+               (left-key (vector-ref data 0))
+               (right-key (vector-ref data 1)))
+           (normalize
+            (append-map
+             (lambda (left-row)
+               (map
+                (lambda (right-row) (append left-row right-row))
+                (filter
+                 (lambda (right-row)
+                   (equal? (list-ref left-row left-key)
+                           (list-ref right-row right-key)))
+                 right)))
+             left))))
+        ((select-eq)
+         (normalize
+          (filter (lambda (row)
+                    (equal? (list-ref row (vector-ref data 0))
+                            (vector-ref data 1)))
+                  (evaluate (car inputs) environment))))
+        ((project)
+         (normalize
+          (map (lambda (row)
+                 (map (lambda (column) (list-ref row column)) data))
+               (evaluate (car inputs) environment))))
+        ((flatmap)
+         (let ((width (vector-ref data 0))
+               (table (vector-ref data 1)))
+           (normalize
+            (append-map
+             (lambda (row)
+               (map (lambda (entry) (list-tail entry width))
+                    (filter
+                     (lambda (entry)
+                       (equal? row (take entry width)))
+                     table)))
+             (evaluate (car inputs) environment)))))
+        ((apply)
+         (let ((transform data)
+               (argument (evaluate (car inputs) environment)))
+           (evaluate
+            (relational-transform-body transform)
+            (cons (cons (relational-transform-parameter transform)
+                        argument)
+                  environment))))
+        ((fix)
+         (let ((body (car inputs))
+               (parameter data))
+           (let loop ((current []))
+             (let (next
+                   (normalize
+                    (append current
+                            (evaluate body
+                                      (cons (cons parameter current)
+                                            environment)))))
+               (if (same-set? next current)
+                 current
+                 (loop next))))))
+        (else (error "unsupported reference operator node" kind)))))
+  (evaluate root []))
+
+;;; Reference change is defined by two complete interpretations. It is not
+;;; an optimized delta evaluator: the before and grown result sets are
+;;; compared only after each fixed point has completed within its bound.
+(def (relational-op-reference-change transformer before added
+                                      (row-limit 4096))
+  (unless (relational-transform? transformer)
+    (error "expected a relation transformer" transformer))
+  (let* ((arity (relational-transform-input-arity transformer))
+         (base (relational-op-reference
+                (relational-op-apply
+                 transformer (relational-op-source
+                              (gensym 'before) arity before))
+                row-limit))
+         (grown (relational-op-reference
+                 (relational-op-apply
+                  transformer (relational-op-source
+                               (gensym 'grown) arity
+                               (append before added)))
+                 row-limit)))
+    (for-each
+     (lambda (row)
+       (unless (member row grown)
+         (error "relation transformer violated positive change" row)))
+     base)
+    (values base grown
+            (filter (lambda (row) (not (member row base))) grown))))

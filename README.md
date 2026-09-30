@@ -84,14 +84,20 @@ finite relation operator descriptors in `program/operator.ss`, and
 bounded inert candidate boundary in `candidate/reasoning.ss` share the
 POO rule evaluator. The operator compiler supports source, union,
 equijoin, fixed equality selection, projection, finite mapping and
-positive fixed points. The rule surface also supports explicit scalar
+positive fixed points. An operator graph can now become a fresh fragment
+and compose with native rules; a first-class relation transformer has an
+explicit application node and a complete finite reference interpreter.
+`relational-op-reference-change` defines source-growth change by comparing
+two completed reference results; it is not an optimized delta engine.
+The rule surface also supports explicit scalar
 capture, stratified negation, checked count/sum/min/max reductions and
 checked min/max lattices. `relational-admit/report` returns a typed
 diagnostic with the planner's rule and clause position on rejection.
-The integrated qualification exercises views, negation, reduction,
-lattices, source withdrawal and prior-result stability. The 64-graph
-finite-model corpus tests complete reachability; richer higher-order
-change semantics remain in the
+The integrated qualification exercises a recursive operator fragment,
+views, negation, reduction, lattices, source withdrawal and prior-result
+stability. The 64-graph finite-model corpus checks reference meaning,
+direct compilation, fragment composition and source-growth change.
+Typed higher-order delta optimization and arbitrary host callbacks remain in the
 [language design](docs/scheme-relational-language-design.org). The
 [LLM reasoning Library plan](docs/llm-reasoning-library-plan.org) records
 the candidate grammar and the narrow graph witness/cut evidence contract.

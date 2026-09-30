@@ -1,124 +1,102 @@
 # SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-#+TITLE: Scheme-native relational DSL design
-#+STATUS: long-term language design proposal; examples below are not implemented syntax
+#+TITLE: Scheme relational DSL: design overview
+#+STATUS: discussion proposal; examples are not implemented syntax
+#+DATE: 2026-09-30
+#+FILETAGS: :design:scheme-dsl:
 
-* Question and boundary
+* Purpose and boundary
+:PROPERTIES:
+:CUSTOM_ID: scheme-dsl-overview
+:END:
 
-The implementation currently reproduces selected Rust Ascent 0.8.0
-semantics.  That oracle constrains *behavior for matching cases*; it
-does not set the long-term Scheme grammar or abstraction boundary.
-Rust's =if=, =let=, =for=, and =if let= tokens are not Scheme design
-requirements.  The relational rule remains a useful semantic form:
+This is the short overview for discussing the next Scheme relational
+language.  [[file:research/scheme-dsl/language-history.org][Language history]] explains how the ideas developed;
+[[file:research/scheme-dsl/index.org][the research index]] links individual paper readings with PDF locators.
+The current implementation has selected Rust Ascent 0.8.0 behavior and a
+Scheme/POO program model.  That oracle constrains matching results, not
+our future Scheme spelling or abstraction boundary.
+
+One small relational form remains legible:
 
 #+begin_src scheme
 ((path source target) <-- (edge source target))
 ((path source target) <-- (path source middle) (edge middle target))
 #+end_src
 
-The arrow expresses a fact derivation.  Body relation atoms express joins;
-the same named logic variable means equality.  Scheme functions construct
-programs and fragments, compute row-local values, and implement explicitly
-declared finite relation views.  Rust is an output oracle for matching cases,
-not the syntax authority.
+The arrow derives facts.  Body atoms state joins and equality of repeated
+logic variables.  Scheme functions can build program values around these
+rules; admitted functions can compute local values inside rules.  These
+are different language phases and need different guarantees.
 
-The near-term rule grammar may retain relation atoms as its only positive
-body operation.  Negation and aggregation remain explicit because they
-change dependency strata.  Term functions and declared relation views are
-one way to bridge Scheme computation into that grammar.  They are not
-the whole higher-order language design.
+* Design feel: a small relational core within Scheme
+:PROPERTIES:
+:CUSTOM_ID: scheme-dsl-design-feel
+:END:
 
-* Paper constraints
+The public authoring surface should read as Scheme composition of
+relational programs, with a small visible rule core.  It should not
+recreate Rust's =if=, =let=, =for=, and =if let= body tokens as a second
+Scheme control language.  Program fragments are ordinary values that
+Scheme functions can parameterize and combine.  Their relation handles,
+imports, exports, and rules become an inspectable logical program before
+execution.  A rule-time function has declared binding modes, effects,
+and dependencies; it cannot be an opaque call disguised as a relation.
 
-The [[file:research/scheme-dsl/index.org][structured source ledger]] has an
-individual Org note for each paper, with PDF locators, author claims,
-transfer limits, and falsifiable experiments.  This section is the
-design-level summary.
+#+NAME: scheme-design-shape
+| Surface | Proposed role | Semantics visible to admission |
+|---------+---------------+--------------------------------|
+| Scheme function | Constructs or specializes fragment values | Resulting fragment and public signature |
+| Rule arrow and atoms | Derivation, joins, logic-variable equality | Binding modes and dependency edges |
+| Term expression | Row-local scalar computation | Explicit bound inputs and output term |
+| Pointwise relation adapter | Zero, one, or many output rows per fixed input tuple | Input/output modes and declared stability contract |
+| Negation, aggregation, lattice join | Explicit nonpositive or ordered operations | Strata, order/join laws, finite-height obligations |
+| Solve and query | Complete one admitted snapshot, then read it | Completion/failure status and immutable result |
 
-- A22 retains small Datalog-style rules as the explanation of recursive
-  closure, while embedding host expressions and patterns.  Its extra =for=
-  syntax is one Rust embedding choice, not a semantic obligation for Scheme.
-  Its compiler still needs binding modes, join columns, and positive-atom
-  dependencies to plan indexes and delta work; clause order can matter to
-  grounding.
-- F16 Datafun permits higher-order functional programming by tracking
-  monotonicity.  Scheme does not infer that property for arbitrary captured
-  procedures.  A function called during a fixed-point run therefore needs
-  an explicit stability and dependency boundary; a new keyword cannot prove
-  it monotone.  Finite-height state adds a separate termination obligation:
-  finite output per call does not bound a recursive closure.  See the
-  [[file:research/scheme-dsl/datafun-f16.org::#datafun-assessment][deeper Datafun assessment]].
-- Scheme miniKanren demonstrates a small relational core with functional
-  combinators and macros layered over it.  Its search/unification semantics
-  differ from this bottom-up fixed-point engine, so its operators are design
-  guidance rather than direct replacements.  Its delayed goals and stream
-  interleaving also make answer availability an explicit execution property.
-- Flix demonstrates first-class rule/constraint values composed by ordinary
-  host functions.  Existing =ascent-fragment= and POO declarations offer a
-  Scheme-owned place for this kind of composition.  Flix's row types and
-  conservative static stratification analysis do not transfer to those
-  values; the assembled Gerbil program must be checked at admission.
+=relation-view= is one provisional adapter for row-local functions, not
+the entire higher-order language.  Arbitrary Scheme closures are not
+proved pure, total, stable, or monotone by accepting =procedure?=.
 
-Two later papers change the long-term picture.  [[file:research/scheme-dsl/datafun-s20.org][Datafun S20]]
-gives a typed higher-order semi-naive transformation, so higher-order
-fixed-point operators need not permanently forfeit delta evaluation.
-[[file:research/scheme-dsl/flix-l25.org][Flix L25]] shows an integrated
-program-value lifecycle, private predicate identities, explicit
-data injection/solve/query, functional predicates, and the trade-off
-between public row types and exposing internal dependencies.
+* Current design choices for discussion
+:PROPERTIES:
+:CUSTOM_ID: scheme-dsl-decisions
+:END:
 
-* Long-term architecture decision
+The table makes our present direction explicit.  "Working choice" means
+a proposal awaiting the listed discriminator, not an implemented API.
+
+#+NAME: scheme-design-decisions
+| Decision | Working choice | Reason | Discriminator before commitment |
+|----------+----------------+--------+---------------------------------|
+| Core rule | Keep arrow, relation atoms, repeated-variable equality | Preserves an analyzable join graph and recursive meaning | Complete facts and plan visibility against pinned oracle |
+| Host syntax | Replace Rust-shaped body control forms in one direct migration | Scheme already supplies functions and lexical composition | One fixture spanning scalar, filter, pattern, generator, recursion |
+| Higher-order construction | Scheme functions return first-class fragment/program values | Reuse the host language without executing at construction | Two parameterized instantiations with private relations |
+| Private names | Fresh relation handles per fragment instantiation; explicit shared imports/exports | Avoid accidental capture through equal printed symbols | Compose two instances with same private label |
+| Public contract | Export relation shapes and handles; keep internal graph for admission | Permit refactoring private rules while retaining planner evidence | Interface and combined-program diagnostics |
+| Rule-time calls | Only declared pointwise adapters or later checked operators | Hidden relation reads and mutable captures break planning | Reject unbound mode, mutation, hidden dependency, divergence |
+| Recursion domain | Require finite-height evidence for closure claim; otherwise bounded failure is explicit | Finite output per call does not imply finite closure | Infinite successor fails; finite successor completes |
+| Nonpositive operations | Negation and general aggregation read completed lower strata | Combined fragments can introduce negative cycles | Late-composition cycle rejection |
+| Lattice state | Explicit order and join contract, separate from set relations | A user join needs law and height evidence | Finite-model law checks and closure comparison |
+| Lifecycle | Construct/inject, admit, solve, query as distinct stages | Late composition and source replacement change answers | Negation-sensitive late composition and repeated query |
+| Source withdrawal | Recompute the accepted snapshot until deletion semantics are proved | Increasing-delta theory does not justify deletion | Failure-atomic replacement with full output comparison |
+| Higher-order delta | First specialize fragments to inspectable IR; research typed operator changes later | Datafun S20's proof concerns a typed calculus | Naive versus transformed full-result equivalence and scale |
+
+The intended order is: establish the integrated semantics and admission
+boundary; directly migrate the Scheme surface after qualification; then
+research a restricted higher-order operator IR.  This does not require
+copying Flix types or Ascent's Rust grammar into Gerbil.
+
+* Semantic and lifecycle sketch
 :PROPERTIES:
 :CUSTOM_ID: scheme-dsl-architecture
 :END:
 
-The earlier =relation-view= proposal unifies several row-local
-operations, but it is too narrow as a complete language architecture.
-It says little about program values, private relation identities,
-captured effects, explicit solve/query, or higher-order change
-semantics.  Keep it as one candidate adapter while these boundaries
-define the long-term language.
-
-The language should be higher-order in two *different* places.  At
-construction time, Scheme functions can accept, return, specialize,
-and compose first-class rule fragments.  This can reuse ordinary
-Gerbil functions, modules, and POO declarations.  During fixed-point
-execution, a function called by a rule is part of the logical
-operator.  It requires visible bindings and dependencies, a stable
-snapshot contract, effect control, and a termination story.  The
-first kind of higher-order programming is available as a natural
-direction now; the second requires a typed or otherwise analyzable
-operator language before it can make Datafun-level guarantees.
-
-#+NAME: scheme-language-layers
-| Boundary | Semantic object | Needed invariant | Present basis |
-|----------+-----------------+------------------+---------------|
-| Scheme construction | Fragment/program values, parameterized by relation handles | Hygienic private names and explicit public imports/exports | Gerbil modules, =ascent-fragment=, POO values |
-| Admission | Immutable logical program IR and schema | Arity, field contracts, binding modes, dependency graph, strata | =program/objects.ss=, =program/analysis.ss=, =program/funs.ss= |
-| Fixed-point execution | Relation sets and keyed lattice state | Monotone growth or lawful joins, finite-height evidence or explicit resource failure | =program/evaluate.ss= and storage Providers |
-| Session boundary | Accepted source snapshot and solved result | Failure atomicity, replacement invalidation, completed versus partial result | =program/session.ss= |
-| Query | Immutable result projection | Multiple reads do not rerun or mutate the solved program | Current POO result snapshots; explicit query API remains design work |
-
-Fragments should carry *relation identities*, not rely only on
-human-readable symbols.  A fragment constructor invoked twice must
-create fresh identities for its private relations, while deliberately
-shared imports and exports retain their identities.  This is the
-Scheme counterpart of Flix's rho abstraction.  Public signatures
-should expose relation shapes and exported names; the internal
-dependency graph stays available to admission and planning without
-making every private rule change a public type change.  POO/C4
-composition remains the owner of declaration configuration, while
-relational rule union and evaluation have their own semantics.
-
-Construction, admission, solving, and querying should be explicit.
-Assembling a fragment must not evaluate it: a later fragment may add
-facts or rules that alter a negated result.  A conceptual use sequence
-is shown below.  The function and constructor names are explanatory
-only, not committed API syntax.
+A conceptual program flow is below.  Names and syntax are explanatory,
+not promised API spelling.
 
 #+begin_src scheme
-;; Schematic long-term API, not implemented.
+;; Schematic, not implemented.
 (def (reachability edge-handle)
   (with-private-relations ((path (vertex vertex)))
     (fragment (import edge-handle) (export path)
@@ -131,318 +109,62 @@ only, not committed API syntax.
 (query solved (exported-relation reach 'path))
 #+end_src
 
-The logical IR after =admit= needs explicit nodes for relation atoms,
-term projection, finite functional predicates, negation, aggregation,
-and lattice joins.  Each node carries its bound inputs, produced
-outputs, positive/strict relation dependencies, and an effect/totality
-classification.  A source macro may make the authoring syntax concise,
-but it must lower to these inspectable nodes before index selection,
-SCC analysis, and delta planning.  Scheme hygienic binding must
-distinguish logic variables, relation handles, and captured host values;
-the current explicit =(expr (bound ...) ...)= is a useful partial
-boundary, not a complete scope system.
+Construction can use normal Scheme functions and POO declarations.
+Admission validates the assembled program: relation identity and arity,
+lexical captures, bound inputs, dependencies, negative cycles, and
+operator effects.  Fixed-point execution uses visible positive atoms
+for join and delta planning.  Solving produces either a completed
+snapshot or explicit failure; querying does not rerun a program.
 
-* Function admission and assurance
-:PROPERTIES:
-:CUSTOM_ID: scheme-function-assurance
-:END:
+#+NAME: scheme-language-layers
+| Phase | Object | Obligation |
+|-------+--------+------------|
+| Construct | Fragment/program values | Fresh private handles; explicit imports/exports |
+| Admit | Immutable logical IR | Modes, schema, effects, dependency graph, strata |
+| Evaluate | Sets and ordered state | Stable monotone contribution; closure or failure |
+| Session | Accepted source snapshot | Replacement invalidation and failure atomicity |
+| Query | Solved immutable result | Repeatable projection without mutation |
 
-Three function classes should be treated differently:
+A fixed point may call a pointwise function =f : I -> finite-set(O)=.
+For a growing input relation =R= it contributes the union of =f(i)=
+for =i in R=.  This contribution grows with =R= only when =f= remains
+stable for that snapshot and reads no hidden changing relations.
+Even then, a recursive successor can generate unbounded facts.  A
+fact budget is an explicit failure bound, never evidence of completed
+least-fixed-point termination.  A finite-domain claim requires domain
+checks and rejection of out-of-domain rows.
 
-#+NAME: scheme-function-classes
-| Class | Position | Assurance and effect | Planner consequence |
-|-------+----------+----------------------+---------------------|
-| Constructor function | Before admission; builds fragments from values | Normal Scheme semantics; effects are outside fixed-point execution | Final fragment is validated as a whole |
-| Trusted pointwise adapter | Inside a rule; consumes declared bound values and emits finite rows | User-supplied purity, stability, totality and finite-domain laws; runtime checks can falsify but not prove them | Treat as a visible mode-bearing operator with no hidden relation reads |
-| Verified monotone operator | Inside recursion; takes relation/lattice values | Future restricted IR with checked monotonicity, domain/order and change semantics | Eligible for higher-order incrementalization after equivalence proof |
-
-A declaration accepting =procedure?= cannot establish purity,
-termination, or monotonicity.  A restricted expression/operator IR
-could admit known primitives by construction; external Scheme
-procedures would remain trusted adapters with bounded claims.  Side
-effects or hidden reads of changing relations expose evaluation order
-and break delta planning.  The 2025 Flix paper has an effect system
-for pure expressions but explicitly leaves termination to the
-programmer; Gerbil currently has neither static guarantee.  Domain
-checks, fact budgets, timeouts, and rollback are operational controls,
-not substitutes for the semantic laws.
-
-The semantic commitments for an admitted positive rule are: its
-visible body dependencies grow monotonically within a stratum; the
-rule contributes rows or lawful lattice joins; a pure pointwise
-adapter returns the same rows for the same bound inputs throughout
-one source snapshot; and all derived values fit an admitted
-finite-height domain if total termination is claimed.  Negation and
-general aggregation read completed lower strata.  A source withdrawal
-changes the snapshot and can invalidate old facts, so it needs
-recomputation or a separately proven deletion algorithm.  Datafun
-S20's change transform addresses *increasing* changes and cannot be
-applied to withdrawal without another argument.
-
-#+NAME: scheme-design-decisions
-| Question | Design decision | Evidence needed before implementation claim |
-|----------+-----------------+----------------------------------------------|
-| Logic variable versus Scheme capture | Distinct hygienic binders; host capture explicit in admitted IR | Nested macro/module scope and accidental-capture regressions |
-| Private relation sharing | Fresh handle on each fragment-constructor invocation | Compose two differently instantiated private relations |
-| Public signature | Imports/exports and relation shape public; dependency graph retained internally | Composition diagnostics without leaking private names |
-| Rule-time Scheme call | Trusted pointwise adapter or verified operator, never an unclassified call | Mutable capture, hidden read, divergence and finite-domain cases |
-| Lattice value | Explicit order/join contract, distinct from a set relation | Law checks on finite examples and independent fixed-point model |
-| Solve timing | Assemble and admit before explicit solve; query solved snapshot | Negation-sensitive late composition and repeated query |
-| Source withdrawal | Recompute accepted snapshot until deletion semantics are qualified | Full output and failure-atomic replacement receipts |
-
-Higher-order delta evaluation belongs to a later compiler research
-slice.  Datafun S20 derives changes for function values as well as
-sets, with a semantics-preserving translation for its typed calculus.
-Our first implementation can specialize first-class Scheme fragment
-combinators to a first-order IR and use the existing semi-naive engine.
-Only when a typed monotone operator IR exists should we attempt a
-change transform for functions.  That transform needs a naive
-reference evaluator, finite-model equivalence checks, and matched
-scale measurements; copying the paper's algorithm into opaque Gerbil
-closures would not establish its theorem here.
-
-* Migration and integrated gate
+* Acceptance and open questions
 :PROPERTIES:
 :CUSTOM_ID: scheme-dsl-migration
 :END:
 
-The migration should be direct when a replacement is qualified:
-remove the Rust-shaped Scheme body forms and update examples and
-callers together, while retaining Rust source only as an oracle in
-the parity matrix.  Do not add a compatibility grammar that makes
-two public rule languages.  The first acceptance gate is one
-integrated program that exercises fragment reuse with private names,
-source injection and replacement, a pure pointwise adapter, recursive
-closure, lattice refinement, negation, explicit solve and multiple
-queries.  It must check complete facts against an independent finite
-model and pinned Rust cases where semantics overlap, admission
-diagnostics, selected plan and delta positions, failure atomicity,
-and scale.  This is a proposed gate; none of these new capabilities
-is claimed implemented.
+The first integrated fixture should combine fragment reuse with private
+handles, source injection/replacement, scalar projection, zero/one/many
+row adapters, recursion, lattice refinement, negation, explicit solve,
+and repeated queries.  Compare complete facts with an independent
+finite model and pinned Rust cases where their semantics overlap.
+Inspect admitted dependency edges, selected indexes and delta positions;
+exercise admission failures, failure atomicity, and matched scale.
+Only then should a replacement surface remove the old Rust-shaped
+Scheme forms and update callers and examples together.
 
-The next research gate, after a restricted monotone operator IR is
-defined, checks higher-order recursion with a naive interpreter and
-a delta-transformed interpreter.  Full output and termination status
-must match before a performance claim is made.  This keeps the
-long-term target visible without pretending that a general Scheme
-closure already satisfies it.
+#+NAME: scheme-discussion-questions
+| Question for us | Why it changes the design | Next evidence |
+|-----------------+---------------------------+---------------|
+| Should private relation handles be first-class values or exist only in a fragment scope? | Controls hygiene and how fragments share relations | Two-instantiation and cross-module fixture |
+| Should the pointwise adapter be one =relation-view= declaration or several typed operators? | Controls ergonomics and planner precision | Compare integrated fixture and diagnostic quality |
+| Which restricted Scheme expressions can be mechanically certified pure and stable? | Sets the boundary between trusted and verified rule-time code | Scope, capture, effect, and divergence counterexamples |
+| Which finite domains and lattice orders can be admitted without hidden truncation? | Determines when completion can be claimed | Independent finite fixed-point model |
+| What is the smallest public program signature that supports safe composition? | Balances abstraction against combined-program admission | Late cycle and schema-change fixtures |
+| When is typed higher-order delta worth the compiler cost? | Controls the transition beyond first-order specialization | Reference evaluator, transformed evaluator, scale profile |
 
-* Near-term surface candidate
+These are design questions, not deferred proof by terminology.  A
+restricted operator IR may eventually support checked monotonicity and
+higher-order change semantics.  Until then, rule-time arbitrary Scheme
+procedures are trusted adapters with bounded claims.
 
-** Scalar computation stays in a term
+* Reading path
 
-The current =expr= term already permits a reusable lexical Scheme function
-without adding a body =let= clause:
-
-#+begin_src scheme
-(def (successor x) (+ x 1))
-((out (expr (x) (successor x))) <-- (node x))
-#+end_src
-
-The explicit input list identifies logic variables for admission.  It must
-not be replaced by a textual free-variable scan: Scheme =lambda=, =let=,
-quoting and macro expansion make such a scan unsound.  A later hygienic
-binding analysis could shorten this spelling only with executable scope
-tests.
-
-** Trusted pointwise adapter for zero, one, or many rows
-
-A host procedure can define a finite relation view with declared input and
-output modes.  This is a candidate for the *trusted pointwise adapter*
-class above, not the general higher-order operator language.  The
-following =relation-view= notation is provisional:
-
-#+begin_src scheme
-(def (successors x) (list (list (+ x 1)) (list (+ x 2))))
-(ascent
-  (relation node (value) nodes)
-  (relation out (value))
-  (relation-view next (from) (to) successors)
-  ((out y) <-- (node x) (next x y)))
-#+end_src
-
-=next= is used like an ordinary body relation.  Its declared =from= input
-must be bound before the call; =to= is fresh output.  A procedure returns a
-finite iterable of output rows.  Returning no rows is a failed predicate or
-pattern; returning one row is a scalar binding; returning several rows is a
-generator.  A Boolean predicate and a Scheme =match= procedure can be lifted
-into views by normal Scheme functions, without separate =guard=, =if let=,
-=for=, or body =match= syntax.  Rule heads and body atoms keep the same
-relational reading.
-
-For example, a predicate view has no output columns and returns one empty
-row when it succeeds:
-
-#+begin_src scheme
-(def (even-rows x) (if (even? x) '(()) '()))
-(relation-view even (value) () even-rows)
-((out x) <-- (node x) (even x))
-#+end_src
-
-The view is a POO declaration value.  A first implementation may lower it
-to the existing guard, binding, or generator execution plan, but that is an
-implementation choice and does not define three public rule languages.
-
-| Current Scheme body spelling | Proposed semantic expression |
-|------------------------------+------------------------------|
-| =if= / =guard= | A view with zero output columns emits one empty row or none |
-| =let= / =bind= | Put a scalar expression in the head, or use a view that emits exactly one row when a later body atom needs the value |
-| =for= | A view emits zero to many rows |
-| =if-let= / body =match= | A Scheme matcher implements a view that emits zero or one row |
-
-Inline =pat= also needs review during migration: retaining a separate
-pattern mini-language in atom arguments would recreate the same split at a
-smaller scale.  Native Scheme matchers in relation views are the baseline;
-any retained inline pattern must earn its place through a concrete join or
-indexing advantage and matching scope diagnostics.
-
-** Relation fragments are values
-
-Gerbil modules and =ascent-fragment= already provide lexical reuse.  A
-Scheme function can select, parameterize, and combine fragments before
-evaluation.  Provider and C4 composition remain on POO declarations.  This
-keeps whole-program composition in Scheme while the arrow continues to
-describe derivation inside each fragment.
-
-The Flix paper models pure, total constraint sets as a union with
-commutative and idempotent laws.  Gerbil fragments may also carry
-relation declarations, source rows, procedures, and providers.  A
-repeated fragment can duplicate a relation name and fail admission.
-Only complete fact sets from compatible pure rule compositions are
-candidates for order-independent comparison; source order, effects,
-resource use, and timeout snapshots need separate claims.
-
-* Relational meaning of a function view
-
-For a fixed procedure =f : I -> finite-set(O)=, a view is the relation
-={(i, o) | o in f(i)}=.  Given a growing set of admitted input tuples =R=,
-the view contributes =union { f(i) | i in R }=.  Therefore =R subset R'=
-implies the contributed rows for =R= are a subset of those for =R'=.
-This pointwise lifting is monotone in the *input relation* even when =f=
-does not preserve a numeric order on individual values.  It is not
-monotone in an arbitrary changing =f=: a mutable closure may return a
-different answer for the same =i= later in one run.  This is why the view
-procedure and its captured dependencies must be stable for a source
-snapshot.  Datafun's stronger type-based monotonicity analysis is a
-research direction, not a property this Scheme API may claim today.
-
-Monotonicity and termination are distinct.  A fixed view emitting only
-=x+1= for input =x= is monotone when lifted over input *sets*, yet a
-recursive =node= rule starting at =0= derives every natural number.
-Datafun requires a finite-height fixed-point state or an explicit
-bound.  The proposed per-call "finite iterable" contract does not
-itself establish a completed fixed point.  The current
-=max-derived-facts= limit is an operational failure bound, not a
-semantic proof of termination.
-
-A view may inspect only its declared input values and immutable lexical
-configuration.  If it reads facts from another relation, that dependency
-must be represented in the rule graph; otherwise an apparent pointwise
-function can bypass delta and stratification planning.  Pure pointwise views
-can be replayed after source replacement.  Effectful procedures require a
-separate contract and are outside the first design slice.
-
-* Admission and fixed-point obligations
-
-The first design slice should distinguish two assurance levels:
-
-#+NAME: scheme-view-assurance
-| Level | Accepted claim | Required check |
-|-------+----------------+----------------|
-| Fact-budgeted | A stable declared view reaches closure or fails after admitting too many facts | Exhaustion is observable and failure-atomic; no completed answer is reported |
-| Finite-domain closure | Total, stable calls derive only tuples inside an admitted finite domain | Reject out-of-domain rows; compare full closure to an independent finite model |
-
-Do not silently clamp to a domain bound merely because Datafun defines
-that behavior for its own bounded =fix=.  An out-of-domain derived row
-should be an explicit error in this proposal.  A declaration cannot
-prove an arbitrary captured closure stable; until a mechanically
-checkable restricted expression language exists, stability is a
-documented user-supplied law.
-
-The current implementation has useful but narrower mechanisms:
-=program/funs.ss= builds strict strata for negation, aggregation, and
-lattice-to-relation projection and selects delta positions from visible
-positive atoms.  =program/evaluate.ss= enforces fact limits and
-evaluates host expressions and generators.  =program/session.ss=
-rebuilds evaluation state from accepted source snapshots after failure
-or replacement.  These are not a Datafun type proof for arbitrary
-procedures or user-supplied lattice joins.
-
-1. A view declares input columns, output columns, and row predicates.  Its
-   emissions obey the program fact budget.  Admission rejects unbound inputs,
-   duplicate output bindings, arity mismatches, and use of an output before
-   it is bound.
-2. For one accepted source snapshot, a view's result for the same inputs must
-   remain stable.  Captured mutable state and side effects cannot be assumed
-   safe merely because the procedure is a Scheme value.  The first slice
-   should qualify deterministic procedures; stronger law evidence is needed
-   before admitting stateful ones.
-3. A view that depends only on its input values adds no recursive relation
-   dependency.  A procedure that reads a changing relation must instead
-   declare that relation as a rule dependency.  Otherwise stratification,
-   semi-naive delta planning, and retained-session invalidation are unsound.
-4. Negation and aggregation still require explicit relation dependencies and
-   strict strata.  They do not become arbitrary Scheme predicates or folds
-   hidden inside a view.
-5. The evaluator must preserve set semantics and budgets for every emitted
-   row.  Failed view calls must not commit a partial session update.  An
-   arbitrary Scheme procedure's termination cannot be proved by this API;
-   bounded emission and timeout behavior need separate qualification.
-6. Per-call finite generation is insufficient to prove recursive
-   termination.  A total-closure claim requires a finite-height domain
-   for every derived relation or lattice state and explicit rejection of
-   emissions outside it.  Budget exhaustion and timeout results remain
-   distinct from a completed least fixed point.
-
-* Design discriminator
-
-Implement one integrated fixture with a recursive rule, a scalar projection,
-a predicate view, a zero/one pattern view, and a multi-row view.  Exercise
-empty and duplicate source rows, a source replacement, a failed procedure,
-and an unbound/duplicate variable rejection.  Compare complete output to
-fresh pinned Rust 0.8.0 and an independent finite model, then measure the
-Scheme plan against the existing SS profile.  This checks semantic parity
-without equating Scheme tokens to Rust tokens.
-
-Add an infinite-growth discriminator: =node(0)= and a pointwise
-=successor= view deriving =node(x+1)=.  It must fail at an explicit
-budget or finite-domain boundary, never return a finished closure.
-Then use a finite saturating successor over ={0,1,2}= and check complete
-closure and source-replacement behavior.
-
-The multi-paper gate additionally inspects the selected index and delta
-positions for a view feeding a later atom; rejects combined fragments
-with conflicting arity or a negative cycle; and compares complete facts
-for two orders of compatible pure rule fragments.  A µKanren comparison
-records answer-set equality separately from order and partial-answer
-availability.  None of these local comparisons establishes static
-assurance for every possible runtime fragment choice.
-
-* Alternatives to test against this proposal
-
-- Keep Rust's body control-flow spellings: they give each Scheme computation
-  a second, special-case rule syntax and make lexical procedures harder to
-  reuse.  They remain valid Rust oracle inputs, not a Scheme design target.
-- Treat every unknown body form =(f x ...)= as a Scheme call: it becomes
-  ambiguous with a relation atom and cannot reliably expose binding modes or
-  recursive dependencies.  A declaration makes that boundary inspectable.
-- Replace the rule body with a =map/filter/flat-map= pipeline: it gives an
-  evaluation order and hides the join graph that the arrow currently states
-  plainly.  Scheme may use those functions to build fragments or view
-  procedures without making them the relational rule grammar.
-- Use miniKanren's goal constructors directly: their backward search and
-  unification semantics differ from this engine's bottom-up fixed point.
-  Shared Scheme embedding ideas do not establish execution equivalence.
-
-If that fixture demonstrates the interface, migrate the public Scheme forms
-and examples together.  Keep Rust-style spellings only in Rust oracle source
-and in the parity ledger as the source-language side of each comparison.
-
-* Sources
-
-- [[file:research/scheme-dsl/ascent-a22.org][A22: Ascent reading note]]
-- [[file:research/scheme-dsl/datafun-f16.org][F16: Datafun reading note]]
-- [[file:research/scheme-dsl/microkanren-h13.org][H13: µKanren reading note]]
-- [[file:research/scheme-dsl/flix-f20.org][F20: Flix reading note]]
-- [[file:research/scheme-dsl/datafun-s20.org][S20: higher-order Datafun semi-naive reading note]]
-- [[file:research/scheme-dsl/flix-l25.org][L25: Flix language design reading note]]
+- [[file:research/scheme-dsl/language-history.org][Language history and design lineage]]
+- [[file:research/scheme-dsl/index.org][Structured research index and individual paper notes]]

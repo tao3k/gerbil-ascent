@@ -12,9 +12,11 @@
 :END:
 
 These notes preserve stable source links, page and section locators,
-bounded readings, and experiments for the [[file:../../scheme-relational-dsl-design.org][Scheme relational DSL proposal]].
+bounded readings, and experiments for the [[file:../../scheme-relational-dsl-design.org][Scheme relational DSL overview]].
 The linked PDFs remain the primary sources; this repository records our
 analysis so future design work can resume from a precise location.
+The [[file:language-history.org][language history]] traces the design lineage across
+the papers before the overview states our current choices.
 
 #+NAME: source-ledger
 | Key | Source and durable link | Local note | Main design constraint |

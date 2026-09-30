@@ -20,7 +20,9 @@
 (def (v name) (gerbil-ascent-variable name))
 (def (a name . terms) (gerbil-ascent-atom name terms))
 
-(def (ascent-storage-fixture-evaluate binary-seed grouped-seed storage-value)
+(def (ascent-storage-fixture-evaluate binary-seed grouped-seed storage-value
+                                     (input-budget 64) (derived-budget 2048)
+                                     (output-budget 2048))
   (gerbil-ascent-evaluate-program
    (gerbil-ascent-program
     (list
@@ -47,7 +49,7 @@
      (gerbil-ascent-rule
       (list (a 'grouped-output (v 'g) (v 'x) (v 'y)))
       (list (a 'grouped-eq (v 'g) (v 'x) (v 'y)))))
-    64 2048 2048)))
+    input-budget derived-budget output-budget)))
 
 (def (ascent-eqrel-fixture-evaluate binary-seed grouped-seed)
   (ascent-storage-fixture-evaluate

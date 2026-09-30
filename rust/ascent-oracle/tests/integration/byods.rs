@@ -153,6 +153,67 @@ fn eight_node_byods_subsets_match_model_and_selected_scheme_snapshots() {
     }
 }
 
+#[test]
+fn byods_chain_components_match_model_and_scheme_at_input_scale() {
+    for edge_count in [1_000_u32, 10_000] {
+        // Four edges connect five nodes per component. Keeping components
+        // separate bounds output size while exercising multi-step closure.
+        let edges: BinaryRows = (0..edge_count)
+            .map(|edge| {
+                let base = (edge / 4) * 5;
+                (base + edge % 4, base + edge % 4 + 1)
+            })
+            .collect();
+        let request = format!(
+            "(({}) ())\n",
+            edges
+                .iter()
+                .map(|(from, to)| format!("({from} {to})"))
+                .collect::<Vec<_>>()
+                .join(" ")
+        );
+        for (recipe, symmetric, reflexive, rust_rows) in [
+            (
+                "eqrel-scale-rows",
+                true,
+                true,
+                ascent_eqrel_rows(&edges, &[]),
+            ),
+            (
+                "trrel-scale-rows",
+                false,
+                false,
+                ascent_trrel_rows(&edges, &[]),
+            ),
+            (
+                "trrel-uf-scale-rows",
+                false,
+                true,
+                ascent_trrel_uf_rows(&edges, &[]),
+            ),
+        ] {
+            let mut expected = Vec::new();
+            for component in 0..edge_count / 4 {
+                let base = component * 5;
+                for from in 0..5 {
+                    for to in 0..5 {
+                        if symmetric || from < to || (reflexive && from == to) {
+                            expected.push(format!("binary-output\t{}\t{}", base + from, base + to));
+                        }
+                    }
+                }
+            }
+            expected.sort_unstable();
+            assert_eq!(rust_rows, expected, "Rust {recipe} edges={edge_count}");
+            let output = scheme_output(recipe, &request);
+            let mut actual = output.lines().map(str::to_owned).collect::<Vec<_>>();
+            assert_eq!(actual.pop().as_deref(), Some("END"));
+            actual.sort_unstable();
+            assert_eq!(actual, expected, "Scheme {recipe} edges={edge_count}");
+        }
+    }
+}
+
 fn ascent_eqrel_rows(binary: &[(u32, u32)], grouped: &[(u32, u32, u32)]) -> Vec<String> {
     ascent! {
         relation binary_seed(u32, u32);

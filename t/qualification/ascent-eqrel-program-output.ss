@@ -24,8 +24,11 @@
          (result (if (member "default" args)
                    (ascent-default-storage-evaluate
                     (car request) (cadr request))
-                   (ascent-storage-fixture-evaluate
-                    (car request) (cadr request) provider)))
+                   (if (member "scale" args)
+                     (ascent-storage-fixture-evaluate
+                      (car request) (cadr request) provider 10000 200000 200000)
+                     (ascent-storage-fixture-evaluate
+                      (car request) (cadr request) provider))))
          (rows-of (.ref result 'rows-of)))
     (for-each
      (lambda (name)

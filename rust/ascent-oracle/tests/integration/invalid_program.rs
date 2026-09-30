@@ -20,7 +20,7 @@ ascent! {
 }
 "#;
 
-const INVALID: [(&str, &str, &str, &str); 28] = [
+const INVALID: [(&str, &str, &str, &str); 31] = [
     (
         "source-row-arity",
         "source-row-arity",
@@ -398,6 +398,45 @@ ascent! {
     relation node(u32);
     relation out(u32);
     out(x) <-- node(x), node(missing + 1);
+}
+"#,
+    ),
+    (
+        "let-shadows-atom",
+        "variable-shadowing",
+        "shadows another variable with the same name",
+        r#"
+use ascent::ascent;
+ascent! {
+    relation node(u32);
+    relation out(u32);
+    out(x) <-- node(x), let x = *x + 1;
+}
+"#,
+    ),
+    (
+        "for-shadows-atom",
+        "variable-shadowing",
+        "shadows another variable with the same name",
+        r#"
+use ascent::ascent;
+ascent! {
+    relation node(u32);
+    relation out(u32);
+    out(x) <-- node(x), for x in [*x + 1];
+}
+"#,
+    ),
+    (
+        "aggregate-shadows-atom",
+        "variable-shadowing",
+        "shadows another variable with the same name",
+        r#"
+use ascent::ascent;
+ascent! {
+    relation node(usize);
+    relation out(usize);
+    out(x) <-- node(x), agg x = ascent::aggregators::count() in node(_);
 }
 "#,
     ),

@@ -26,7 +26,9 @@
                        unbound-aggregate-input aggregate-two-relation-cycle
                        unknown-aggregate-relation negation-before-binding
                        unknown-head-relation negation-arity aggregate-arity
-                       unbound-head-expression unbound-atom-expression)
+                       unbound-head-expression unbound-atom-expression
+                       let-shadows-atom for-shadows-atom
+                       aggregate-shadows-atom)
        '(source-row-arity field-type field-type
                     lattice-projection-cycle negation-cycle negation-cycle negation-cycle
                         aggregate-cycle negation-cycle
@@ -37,4 +39,6 @@
                         unbound-clause aggregate-cycle
                         unknown-relation unsafe-negation
                         unknown-relation atom-arity atom-arity
-                        unbound-head unbound-clause)))))
+                        unbound-head unbound-clause
+                        variable-shadowing variable-shadowing
+                        variable-shadowing)))))

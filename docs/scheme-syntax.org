@@ -195,10 +195,10 @@ law evidence; the syntax alone cannot establish it.
 | Independent =_= wildcards | =(r _ _ ...)= | Full upstream =var_points_to= rule shape compared with Rust on empty, reference, and branching source snapshots; wildcard heads reject |
 | =!r(args)= | =(not (r args ...))= | Three-level stratification oracle |
 | =if expr= | =(if (bound ...) expression)= | Scheme expression and existing guard oracle |
-| =let pat=expr= | =(let (output ...) (bound ...) expr pattern)= | Scalar and destructured binding; Rust tuple differential |
-| =for pat in expr= | =(for (output ...) (bound ...) expr pattern)= | Iterable scalar and destructured tuple Rust differential |
+| =let pat=expr= | =(let (output ...) (bound ...) expr pattern)= | Scalar and destructured binding; Rust tuple differential; rebinding an atom variable rejects in both languages |
+| =for pat in expr= | =(for (output ...) (bound ...) expr pattern)= | Iterable scalar and destructured tuple Rust differential; rebinding an atom variable rejects in both languages |
 | =if let pat=expr= | =(if-let (output ...) (bound ...) expr pattern)= | =Some= success/failure Rust differential |
-| =agg pat=f(args) in r(args)=, with =f= a path or parenthesized expression | =(aggregate (output ...) f (input ...) (r args ...) pattern)= | Grouped/derived/custom aggregate oracle; tuple output pattern and parenthesized aggregator expression Rust differentials |
+| =agg pat=f(args) in r(args)=, with =f= a path or parenthesized expression | =(aggregate (output ...) f (input ...) (r args ...) pattern)= | Grouped/derived/custom aggregate oracle; tuple output pattern and parenthesized aggregator expression Rust differentials; output rebinding an atom variable rejects in both languages |
 | Parenthesized =|= or =||= disjunction | =(or (and clause ...) ...)= | Two disjunction points qualified; pinned Rust accepts =||= with a warning to use =|=, and both forms have Rust/Scheme output differentials |
 | Head expression | =(expr (bound ...) expression)= | Rust differential over four source snapshots |
 | Body argument expression | =(expr (bound ...) expression)= | Same-atom and prior-atom bound expressions match Rust over four source snapshots; indexed Provider qualification also passes; broader argument types remain open |

@@ -190,6 +190,25 @@
       ((out x) <-- (node x)
                    (node (expr (missing) (+ missing 1))))
       (bounds 8 8 16)))
+    ((let-shadows-atom)
+     (ascent
+      (relation node (value) '((1)))
+      (relation out (value))
+      ((out x) <-- (node x) (let x (x) (+ x 1)))
+      (bounds 8 8 16)))
+    ((for-shadows-atom)
+     (ascent
+      (relation node (value) '((1)))
+      (relation out (value))
+      ((out x) <-- (node x) (for x (x) (list (+ x 1))))
+      (bounds 8 8 16)))
+    ((aggregate-shadows-atom)
+     (ascent
+      (relation node (value) '((1)))
+      (relation out (value))
+      ((out x) <-- (node x)
+       (aggregate x gerbil-ascent-count () (node _)))
+      (bounds 8 8 16)))
     (else (error "unknown ASCENT invalid-program case" name))))
 
 (def (problem name)
@@ -253,6 +272,10 @@
      ((and (string? message)
            (string-contains message "ASCENT aggregate input absent from atom"))
       'unbound-clause)
+     ((and (string? message)
+           (or (string-contains message "ASCENT computed variable already bound")
+               (string-contains message "ASCENT aggregate variable already bound")))
+      'variable-shadowing)
      (else (error "unexpected ASCENT invalid-program diagnostic"
                   name message)))))
 

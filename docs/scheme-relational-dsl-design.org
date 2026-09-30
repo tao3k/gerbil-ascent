@@ -14,29 +14,39 @@
 This is the short overview for discussing the next Scheme relational
 language.  [[file:research/scheme-dsl/language-history.org][Language history]] explains how the ideas developed;
 [[file:research/scheme-dsl/index.org][the research index]] links individual paper readings with PDF locators.
+The [[file:scheme-relational-language-design.org][first language design gate]] defines the proposed high-order layers,
+rule-time operator boundary, native Scheme grammar and
+discriminating experiments before implementation.
 The [[file:research/agent-inference/index.org][LLM reasoning research index]] studies the deployment-time interface.
-The current implementation has selected Rust Ascent 0.8.0 behavior and a
-Scheme/POO program model.  That oracle constrains matching results, not
-our future Scheme spelling or abstraction boundary.
+The current =ascent= implementation recorded selected Rust behavior.
+The new Gerbil Scheme language has no Rust compatibility requirement;
+its grammar, semantic IR and tests must be designed on their own terms.
 
 One small relational form remains legible:
 
 #+begin_src scheme
-((path source target) <-- (edge source target))
-((path source target) <-- (path source middle) (edge middle target))
+(rule (path ?source ?target)
+  (edge ?source ?target))
+(rule (path ?source ?target)
+  (path ?source ?middle)
+  (edge ?middle ?target))
 #+end_src
 
-The arrow derives facts.  Body atoms state joins and equality of repeated
-logic variables.  Scheme functions can build program values around these
-rules; admitted functions can compute local values inside rules.  These
-are different language phases and need different guarantees.
+The =rule= form derives facts.  Variables prefixed by =?= belong to the
+rule, so a lexical Scheme binding cannot be mistaken for a logic
+variable.  Body atoms state joins and equality of repeated variables.
+Scheme functions can build program values around these rules; admitted
+operators may compute local values inside rules.  Those phases need
+different guarantees.  The spelling is a proposal, not implemented.
 
 * Two implementation priorities
 :PROPERTIES:
 :CUSTOM_ID: scheme-dsl-priorities
 :END:
 
-The two near-term products are (1) a reliable internal Datalog Library
+The first gate is the Scheme relational language design.  Once that
+gate has a concrete semantics and native qualification fixture, the two near-term
+products are (1) a reliable internal Datalog Library
 in Scheme and (2) an LLM reasoning Library built on the same
 program, snapshot and result semantics.  Both need executable evidence.
 The [[file:research/agent-inference/serving-sglang-vllm.org][SGLang/vLLM adapter]]
@@ -55,8 +65,9 @@ source withdrawal.  The internal path determines the exact result and
 failure behavior; the LLM path exposes that behavior as structured,
 bounded observations.  The same transcript should be callable without
 any LLM or serving framework.  Only then compare actual model turns and
-answer quality.  Broader Rust replication and new language constructs
-retain their separate gates in [[file:replication-checklist.org][the checklist]].
+answer quality.  The historical
+[[file:replication-checklist.org][Rust comparison checklist]] is not a
+gate for this language.
 The [[file:llm-reasoning-library-plan.org][implementation plan]] maps the
 research to code seams, interface claims and falsifiable experiments.
 
@@ -66,9 +77,8 @@ research to code seams, interface claims and falsifiable experiments.
 :END:
 
 The public authoring surface should read as Scheme composition of
-relational programs, with a small visible rule core.  It should not
-recreate Rust's =if=, =let=, =for=, and =if let= body tokens as a second
-Scheme control language.  Program fragments are ordinary values that
+relational programs, with a small visible =rule= core.  Program
+fragments are ordinary values that
 Scheme functions can parameterize and combine.  Their relation handles,
 imports, exports, and rules become an inspectable logical program before
 execution.  A rule-time function has declared binding modes, effects,
@@ -78,7 +88,7 @@ and dependencies; it cannot be an opaque call disguised as a relation.
 | Surface | Proposed role | Semantics visible to admission |
 |---------+---------------+--------------------------------|
 | Scheme function | Constructs or specializes fragment values | Resulting fragment and public signature |
-| Rule arrow and atoms | Derivation, joins, logic-variable equality | Binding modes and dependency edges |
+| =rule= and atoms | Derivation, joins, logic-variable equality | Binding modes and dependency edges |
 | Term expression | Row-local scalar computation | Explicit bound inputs and output term |
 | Pointwise relation adapter | Zero, one, or many output rows per fixed input tuple | Input/output modes and declared stability contract |
 | Negation, aggregation, lattice join | Explicit nonpositive or ordered operations | Strata, order/join laws, finite-height obligations |
@@ -135,8 +145,8 @@ a proposal awaiting the listed discriminator, not an implemented API.
 #+NAME: scheme-design-decisions
 | Decision | Working choice | Reason | Discriminator before commitment |
 |----------+----------------+--------+---------------------------------|
-| Core rule | Keep arrow, relation atoms, repeated-variable equality | Preserves an analyzable join graph and recursive meaning | Complete facts and plan visibility against pinned oracle |
-| Host syntax | Replace Rust-shaped body control forms in one direct migration | Scheme already supplies functions and lexical composition | One fixture spanning scalar, filter, pattern, generator, recursion |
+| Core rule | Use a Scheme =rule= form, positive atoms and =?= variables | Preserves an analyzable join graph without Rust spelling | Complete facts and plan visibility against an independent finite model |
+| Host syntax | One new Scheme grammar and semantic IR | Scheme supplies functions and lexical composition | Native fixture spanning scalar, filter, pattern, finite view and recursion |
 | Higher-order construction | Scheme functions return first-class fragment/program values | Reuse the host language without executing at construction | Two parameterized instantiations with private relations |
 | Private names | Fresh relation handles per fragment instantiation; explicit shared imports/exports | Avoid accidental capture through equal printed symbols | Compose two instances with same private label |
 | Public contract | Export relation shapes and handles; keep internal graph for admission | Permit refactoring private rules while retaining planner evidence | Interface and combined-program diagnostics |
@@ -148,13 +158,13 @@ a proposal awaiting the listed discriminator, not an implemented API.
 | Source withdrawal | Recompute the accepted snapshot until deletion semantics are proved | Increasing-delta theory does not justify deletion | Failure-atomic replacement with full output comparison |
 | Higher-order delta | First specialize fragments to inspectable IR; research typed operator changes later | Datafun S20's proof concerns a typed calculus | Naive versus transformed full-result equivalence and scale |
 
-Within the internal priority, establish integrated semantics and the
-admission boundary, directly migrate the Scheme surface after
+Within the internal priority, design the native grammar, semantic IR
+and admission boundary; rewrite the implementation against their
 qualification, then research a restricted higher-order operator IR.
-The LLM priority can develop its candidate/observation contract against
-the admitted core at the same time; it cannot claim stronger semantics
-than the core provides.  This does not require copying Flix types or
-Ascent's Rust grammar into Gerbil.
+The LLM candidate/observation contract follows the admitted Scheme
+core; it cannot claim stronger semantics than that core provides.
+Flix and Datafun inform semantic questions;
+neither language's surface is a target for copying.
 
 * Semantic and lifecycle sketch
 :PROPERTIES:
@@ -167,15 +177,17 @@ not promised API spelling.
 #+begin_src scheme
 ;; Schematic, not implemented.
 (def (reachability edge-handle)
-  (with-private-relations ((path (vertex vertex)))
-    (fragment (import edge-handle) (export path)
-      ((path x y) <-- (edge-handle x y))
-      ((path x z) <-- (path x y) (edge-handle y z)))))
+  (fragment
+    (import (edge edge-handle))
+    (private (path (vertex vertex)))
+    (export (reach path))
+    (rule (path ?x ?y) (edge ?x ?y))
+    (rule (path ?x ?z) (path ?x ?y) (edge ?y ?z))))
 (def reach (reachability edge-handle))
 (def program (compose (inject edge-handle edge-rows) reach))
 (def checked (admit program))
 (def solved (solve checked))
-(query solved (exported-relation reach 'path))
+(query solved (export-of reach 'reach))
 #+end_src
 
 Construction can use normal Scheme functions and POO declarations.
@@ -208,15 +220,15 @@ checks and rejection of out-of-domain rows.
 :CUSTOM_ID: scheme-dsl-migration
 :END:
 
-The first integrated fixture should combine fragment reuse with private
+The first native fixture should combine fragment reuse with private
 handles, source injection/replacement, scalar projection, zero/one/many
 row adapters, recursion, lattice refinement, negation, explicit solve,
 and repeated queries.  Compare complete facts with an independent
-finite model and pinned Rust cases where their semantics overlap.
-Inspect admitted dependency edges, selected indexes and delta positions;
-exercise admission failures, failure atomicity, and matched scale.
-Only then should a replacement surface remove the old Rust-shaped
-Scheme forms and update callers and examples together.
+finite model.  Inspect admitted dependency edges, selected indexes and
+delta positions; exercise admission failures, failure atomicity and
+matched scale.  Rewrite the current syntax and tests directly once the
+Scheme contract is settled; old Rust-shaped forms are not retained as
+public aliases or release gates.
 
 #+NAME: scheme-discussion-questions
 | Question for us | Why it changes the design | Next evidence |
@@ -237,5 +249,6 @@ procedures are trusted adapters with bounded claims.
 
 - [[file:research/scheme-dsl/language-history.org][Language history and design lineage]]
 - [[file:research/scheme-dsl/index.org][Structured research index and individual paper notes]]
+- [[file:scheme-relational-language-design.org][First Scheme language design gate]]
 - [[file:research/agent-inference/index.org][Deployment-time LLM reasoning research index]]
 - [[file:llm-reasoning-library-plan.org][LLM reasoning Library implementation discussion]]

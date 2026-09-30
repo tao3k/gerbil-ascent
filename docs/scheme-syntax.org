@@ -11,6 +11,11 @@ to =gerbil-ascent-relation=, =gerbil-ascent-rule= and
 =gerbil-ascent-program=. The existing POO contracts, planner and evaluator
 validate and execute the result. No second evaluator or independent
 fixed-point implementation is introduced.
+This file records the *implemented historical Rust-comparison
+surface*.  The [[file:scheme-relational-language-design.org][new
+Scheme design]] has no Rust compatibility requirement.  Its native
+grammar and semantic tests will determine the rewrite; this file does
+not constrain them.
 
 * POO/C4 program composition
 
@@ -239,5 +244,6 @@ For recursive user functions or lattice joins, monotonicity and join laws
 need an admitted contract and falsifiable qualification cases. The Datafun
 paper supplies a useful model for tracking monotonicity; it is a research
 direction here, not a property inferred from arbitrary Scheme procedures.
-Every extension needs the same Rust baseline fixture where applicable,
-invalid-program behavior, and an SS cost receipt before parity is claimed.
+For this historical parity effort only, a new comparison claim needs a
+Rust baseline fixture where applicable, invalid-program behavior and an
+SS cost receipt.  The new Scheme language has its own independent gate.

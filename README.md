@@ -71,10 +71,13 @@ test-only Rust Ascent differential oracle. The [parity matrix](docs/rust-parity.
 tracks the unfinished Rust 0.8.0 feature surface and documented fixed-point
 divergences. The [replication checklist](docs/replication-checklist.org)
 tracks the remaining executable closure gates and the final-head admission.
-Complete Scheme semantic coverage is
-the gate before new Agent-specific extensions. POO Flow consumes this package
-as a pinned submodule. MRR owns the semantic adapter and admission of its
-own evidence.
+The Rust comparison documents the current implementation; it is not a
+compatibility target for the proposed
+[Scheme relational language](docs/scheme-relational-language-design.org).
+The new Gerbil Scheme grammar, semantic IR and independent finite-model
+tests are the first design gate before the LLM reasoning Library. POO Flow
+consumes this package as a pinned submodule. MRR owns the semantic adapter
+and admission of its own evidence.
 
 The [related-work matrix](docs/related-work-matrix.org) maps the Ascent papers
 and adjacent research on incremental updates, monotonicity, equality,

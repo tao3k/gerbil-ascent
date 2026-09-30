@@ -17,6 +17,9 @@ The linked PDFs remain the primary sources; this repository records our
 analysis so future design work can resume from a precise location.
 The [[file:language-history.org][language history]] traces the design lineage across
 the papers before the overview states our current choices.
+The [[file:../../scheme-relational-language-design.org][first language design gate]]
+turns these constraints into a proposed Scheme surface and semantic
+qualification plan before implementation changes.
 
 #+NAME: source-ledger
 | Key | Source and durable link | Local note | Main design constraint |
@@ -33,8 +36,9 @@ the papers before the overview states our current choices.
 :CUSTOM_ID: scheme-dsl-synthesis
 :END:
 
-A22 makes the arrow, relation atoms, dependencies, and join planning
-central, while its host forms are Rust embedding choices.  F16 supplies
+A22 makes relation atoms, dependencies, and join planning central,
+while its arrow and host forms are embedding choices rather than a
+syntax requirement for our Scheme language.  F16 supplies
 a formal example of functional fixed points guarded by monotonicity and
 finite-height structure.  H13 shows how a small Scheme relational core
 can gain a user interface through ordinary functions and macros, but its
@@ -76,7 +80,7 @@ hygienic private predicates and explicit program/solve/query stages.
 #+NAME: paper-transfer-decision
 | Source | Adopt as design constraint | Do not infer |
 |--------+----------------------------+--------------|
-| A22 | Preserve arrow, atoms, SCC/delta and join visibility | Rust syntax or Rust performance transfers |
+| A22 | Preserve inspectable atoms, SCC/delta and join visibility | Rust arrow syntax or Rust performance transfers |
 | F16 | Require stable monotone dependence and finite-height closure evidence | Arbitrary Scheme calls are statically proven |
 | F20 | Check combined schema and negative cycles after composition | Gerbil fragments have row-polymorphic static safety |
 | H13 | Keep a small semantic kernel beneath Scheme abstractions | Stream-search fairness equals bottom-up completion |
@@ -85,9 +89,11 @@ hygienic private predicates and explicit program/solve/query stages.
 
 * Next evidence gate
 
-Build one fixture combining recursion, a scalar projection, zero/one
-and multi-row views, fragment composition, and source replacement.
-Record complete fact sets against the pinned Rust oracle and an
-independent finite model.  Exercise rejection of unbound modes, arity
+Design the new Scheme grammar and semantic IR first.  Build one native
+fixture combining recursion, a scalar projection, zero/one and
+multi-row views, fragment composition, and source replacement.
+Record complete fact sets against an independent finite model.  Rust
+comparisons are historical research, not a new-language gate.
+Exercise rejection of unbound modes, arity
 errors, mutable captures, and negative cycles after composition.  Then
 measure the plan and SS profile against the current Scheme surface.

@@ -19,6 +19,9 @@ defined multi-step controller or when discussing a paper's own term.
 Serving products such as SGLang/vLLM are later adapters, not the Library
 semantics.  See the [[file:scheme-relational-dsl-design.org][language overview]]
 and [[file:research/agent-inference/index.org][research ledger]].
+The [[file:scheme-relational-language-design.org][first Scheme language
+design gate]] precedes this LLM interface work: it must decide the
+program IR, higher-order composition and rule-time operator semantics.
 
 The first operational case is finite graph reachability with two named
 source snapshots.  It tests recursion, source withdrawal, mistaken rule
@@ -100,20 +103,23 @@ or benchmark scores to this implementation.
 :CUSTOM_ID: llm-library-gates
 :END:
 
-1. Freeze a finite graph corpus and an independent reference closure.
+1. Settle the first Scheme language design gate and its lowering IR.
+   Write the new grammar, binding/mode rules, operator tiers and native
+   finite-model corpus before rewriting the current syntax module.
+2. Freeze a finite graph corpus and an independent reference closure.
    Include duplicate edges, cycles, a source withdrawal, an undeclared
    relation, an unsafe binding, and a compiling wrong recursive join.
-2. Make internal program construction/admission/solve/query return
+3. Make internal program construction/admission/solve/query return
    complete facts and located failures for that corpus.  Compare fresh
    and retained sessions; preserve older immutable result snapshots.
-3. Add the inert candidate adapter and typed attempt receipt.  Feed the
+4. Add the inert candidate adapter and typed attempt receipt.  Feed the
    *same* corpus as data through this boundary.  Reject executable Scheme
    procedures and out-of-domain terms before evaluation.
-4. Add bounded positive witness and finite graph absence evidence.  Test
+5. Add bounded positive witness and finite graph absence evidence.  Test
    witness soundness by replaying its source labels, and test absence
    only when closure is complete.  Negative cases must return =unknown=
    on budget exhaustion.
-5. Compare a scripted LLM-like transcript before a live model study.
+6. Compare a scripted LLM-like transcript before a live model study.
    Then freeze model, task set, sources, tool budget and prompts; compare
    model-only, search+model and search+Library+model.  Score exact
    answers, unsupported claims, repair turns, abstention, latency and

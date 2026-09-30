@@ -1,0 +1,347 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+#+TITLE: Scheme relational language: first design gate
+#+STATUS: review proposal; examples are design notation, not implemented syntax
+#+DATE: 2026-09-30
+#+FILETAGS: :design:scheme-dsl:higher-order:
+
+* Why this gate comes first
+:PROPERTIES:
+:CUSTOM_ID: scheme-language-gate
+:END:
+
+The current =ascent= syntax and qualification corpus record selected
+Rust Ascent 0.8.0 behavior.  Their rule-body =if=, =let=, =for=,
+=if-let=, =expr= and =pat= forms are artifacts of that embedding.
+The new language has *no Rust syntax or behavior compatibility goal*.
+Design its Scheme grammar and semantic IR first, then rewrite the
+public syntax, implementation tests and examples around that contract.
+Existing Rust-oriented fixtures can remain as historical research
+receipts; they are not admission tests for the new language.  No
+compatibility aliases or second parser belong in the target.
+
+This document proposes a first gate for review.  It draws conceptual
+constraints from [[file:research/scheme-dsl/ascent-a22.org][Ascent A22]],
+[[file:research/scheme-dsl/datafun-f16.org][Datafun F16]],
+[[file:research/scheme-dsl/datafun-s20.org][Datafun S20]],
+[[file:research/scheme-dsl/flix-f20.org][Flix F20]],
+[[file:research/scheme-dsl/flix-l25.org][Flix L25]] and
+[[file:research/scheme-dsl/microkanren-h13.org][µKanren H13]].  Their
+[[file:research/scheme-dsl/index.org][source ledger]] records precise
+PDF locators and transfer limits.  None proves arbitrary Gerbil
+procedures pure, terminating, monotone or incrementally maintainable.
+
+* Two meanings of higher order
+:PROPERTIES:
+:CUSTOM_ID: scheme-language-two-levels
+:END:
+
+#+NAME: scheme-higher-order-levels
+| Level | Value passed to a Scheme function | When it runs | Guarantee sought |
+|-------+-----------------------------------+--------------+------------------|
+| Construction | Relation handle, fragment, signature, operator descriptor | Before program admission | The assembled logical graph is inspectable, hygienic and type/mode checked |
+| Fixed-point operation | Function/operator over tuples or relations | During one admitted solve | Stable dependence, visible inputs, bounded output and valid delta semantics |
+
+The first level uses ordinary Scheme functions to build and reuse
+*program values*.  It is genuinely higher order: a function can accept
+and return fragments, specialize rules and compose them.  Its result is
+lowered to a finite declarative IR before any fixed-point work.  The
+second level is a separate language problem.  A Scheme closure called
+inside recursion can read hidden mutable state, diverge, or change its
+output while the same source snapshot is being solved.  A
+=procedure?= check does not establish the required laws.
+
+The first implementation should support the construction level and a
+small, inspectable set of rule-time scalar operations.  A declared
+pointwise view is a later, narrowly trusted extension.  A typed
+higher-order relation operator with its own change semantics is a
+further stage; Datafun S20 motivates that path but does not validate
+our current closure API.  Reuse of an existing evaluator module is an
+engineering choice to justify against the new semantics, not a design
+constraint.
+
+* Higher-order relation operator IR
+:PROPERTIES:
+:CUSTOM_ID: scheme-language-operator-ir
+:END:
+
+The *design* should account for this second level now, even if its
+optimizer arrives later.  Let =Rel[A]= be a finite set of rows over a
+declared finite domain =A=.  An operator descriptor has a signature
+=Op[D; Rel[A1], ..., Rel[An] -> Rel[B]]=, where =D= is discrete
+configuration fixed for one solve.  Only the named =Rel= parameters
+may vary during its fixed point.  A lexical Scheme function can build
+this descriptor, but its body lowers to inspectable operator nodes;
+the evaluator never calls an opaque Scheme closure on an evolving
+relation.
+
+#+NAME: scheme-operator-ir
+| Node | Relation semantics | Monotonicity condition | Planning information |
+|------+--------------------+------------------------+----------------------|
+| =source= / =parameter= | Named input set | Positive parameter | Handle, shape, source generation |
+| =union= | Set union of children | Each child monotone | Dependency union |
+| =join= | Equijoin of children | Both relation inputs positive | Keys, bound columns, index candidates |
+| =select= | Retain rows satisfying one fixed predicate | Predicate is stable across the solve | Required columns and admitted scalar descriptor |
+| =project= | Map rows through one fixed scalar expression | Expression is stable; output is a set | Input columns and output shape |
+| =flatmap= | Union finite outputs of a fixed pointwise descriptor | Fixed descriptor, finite outputs and visible domain | Input/output mode, operator identity, cost bound |
+| =fix= | Least fixed point of an admitted operator | Operator monotone over a finite-height domain | Recursive SCC and completion condition |
+
+This algebra is a semantic IR, not a second public syntax to implement
+alongside =rule=.  The proposed =rule= form lowers to these relation
+operations and dependency edges.  A Scheme function may accept an
+operator descriptor or fragment as a parameter and return another
+descriptor or fragment.  A value that reads a changing relation
+through an unlisted closure capture cannot lower to this IR.
+
+#+begin_src scheme
+;; Schematic builder, not a callable relation closure at solve time.
+(def (closure-with step-operator)
+  (lambda (seed-relation)
+    (fix-operator
+     (lambda (current-relation)
+       (union-operator seed-relation
+                       (step-operator current-relation))))))
+#+end_src
+
+The Scheme lambdas above execute during construction and produce IR
+nodes.  =fix-operator= admits the resulting graph only if the operator
+is monotone over its declared domain.  Passing a lambda that tries to
+read an evolving relation directly is rejected by construction or
+admission; no evaluator callback can hide that dependency.
+
+For positive source growth, define the reference change of operator
+=F= by =Delta_F(R, dR) = F(R union dR) minus F(R)=.  This equation is a
+*reference meaning*, not an efficient implementation.  An optimized
+delta rule must match that reference on finite models; source
+withdrawal has a separate recompute path until deletion changes are
+specified.  Datafun S20 establishes a typed higher-order change
+calculus for its own language, not a theorem about this proposed IR.
+
+The first executable version may evaluate an admitted operator by full
+recomputation and fixed-point iteration.  Before a semi-naive transform,
+compare full results from a naive reference interpreter with the
+optimized path for generated finite programs, then measure operation
+counts and scale.  A fact budget may stop a run with =partial= or
+=unknown=; it must not turn a nonterminating domain into a complete
+answer.  For unrestricted Gerbil procedures, a declared “pure” flag
+is a trust assertion, not a mechanical proof.
+
+* Proposed public shape
+:PROPERTIES:
+:CUSTOM_ID: scheme-language-shape
+:END:
+
+The following spelling is provisional.  It illustrates the binding
+and lifecycle contract rather than asserting a macro implementation.
+
+#+begin_src scheme
+;; edge is a relation handle supplied by the caller.
+(def (reachability edge)
+  (fragment
+    (import (input-edge edge))
+    (private (path (from to)))
+    (export (reach path))
+    (rule (path ?x ?y)
+      (input-edge ?x ?y))
+    (rule (path ?x ?z)
+      (path ?x ?y)
+      (input-edge ?y ?z))))
+
+(def reach-a (reachability edge-a))
+(def reach-b (reachability edge-b))
+(def program
+  (compose (inject edge-a rows-a)
+           (inject edge-b rows-b)
+           reach-a reach-b))
+(def admitted (admit program))
+(def solved (solve admitted))
+(query solved (export-of reach-a 'reach))
+(query solved (export-of reach-b 'reach))
+#+end_src
+
+Each call to =reachability= creates a fresh identity for its private
+=path=.  The public =reach= label is resolved through the particular
+fragment value, not a process-wide predicate name.  The two instances
+cannot accidentally share recursive state.  =compose= is inert;
+=admit= validates the *whole* assembled program; =solve= publishes a
+completed immutable snapshot or a typed failure; repeated =query=
+reads that snapshot without rerunning it.  =inject= names a source
+generation and cannot silently mutate a solved result.
+
+The =rule= constructor, positive atoms, repeated-variable equality and
+explicit =not= form the visible relational core.  Ordinary Scheme
+controls how fragments are constructed, not how a rule's row loop is
+scheduled.  Disjunction is multiple =rule= forms with the same head,
+not an embedded general control form.  A fragment is a value with
+explicit imports, exports, private handles and a logical dependency
+graph.  This =rule= form is an S-expression, not Rust's arrow form.
+Identifiers prefixed with =?= are logic variables; a repeated =?x=
+means equality.  Lexical Scheme bindings are not implicitly captured as
+logic variables.  A host value enters through an explicit construction
+form such as =(value expression)=; a computed row value uses an
+admitted operator.  Literal and pattern syntax still need a focused
+Gerbil macro prototype before this spelling is final.
+
+#+NAME: scheme-rule-grammar-sketch
+| Position | Proposed syntax | Scope and lowering |
+|----------+-----------------+--------------------|
+| Rule declaration | =(rule (head term ...) clause ...)= | One lexical rule scope; head and clauses lower to immutable IR |
+| Relation position | =head= or body atom identifier | Resolve a lexical import/private handle at construction |
+| Logic term | =?name= | Bind on first positive use; repeated use checks equality; must be bound before head/negative use |
+| Literal term | Self-evaluating number/string/Boolean or =(value expression)= | =value= evaluates once when the fragment is constructed |
+| Anonymous term | =?_= as a notation candidate | Each occurrence is independent; no output binding |
+| Scalar clause | =where= or =compute= with declared input variables | Lower to one operator descriptor after inputs are bound |
+| Negative clause | =(not (relation term ...))= | All variables already bound; lower-stratum dependency |
+
+The =?_= spelling and symbol-literal rules are still open lexical
+details.  A plain symbol in a term should never silently mean a host
+variable: an explicit =value= is required for symbolic data or a
+captured Scheme value.  Admission must freeze or reject mutable
+captured values so a solved program cannot change under the same
+identity.  The source order establishes binding safety;
+after admission, the planner may reorder positive atoms only while
+preserving their required input modes.  The new grammar is qualified
+against this rule, not against existing =ascent= expansion.
+
+* Semantic kernel and admission
+:PROPERTIES:
+:CUSTOM_ID: scheme-language-semantics
+:END:
+
+Let an admitted program have relation state =X=, finite source =S= and
+positive rule consequence operator =T_P=.  A positive stratum computes
+the least fixed point of =X -> S union T_P(X)= over set relations;
+lattice relations use their declared order and join instead.  A
+negative or general aggregate dependency reads only a *completed*
+lower stratum.  Later composition can add a dependency edge, so
+stratification belongs to =admit= on the assembled program.
+
+#+NAME: scheme-admission-obligations
+| Object | Required check | Rejection example |
+|--------+----------------+-------------------|
+| Relation handle | Identity, arity, column contracts and private/public scope | Two private instances collide or one import changes arity |
+| Captured value | Immutable admitted representation and stable equality/hash | Caller mutates a captured vector after admission |
+| Rule | Head/body shapes, bound variables, repeated-variable equality and declared dependencies | Head uses an unbound variable |
+| Operator use | Input binding mode, output shape, visible dependencies and declared effect tier | Operator reads an undeclared evolving relation |
+| Whole program | Negative/aggregate cycles, lattice laws and domain/budget policy | Two valid fragments form a negative cycle |
+| Solve | Complete closure or explicit partial/resource failure | Infinite successor is reported as complete after a fact cap |
+
+Facts and complete *sets* should be independent of the order in which
+compatible pure fragments are composed.  Diagnostic order, row order,
+resource use and partial timeout snapshots need separate contracts;
+Flix's set-union laws cannot be copied onto those observations.
+
+* Rule-time computation without Rust-shaped clauses
+:PROPERTIES:
+:CUSTOM_ID: scheme-language-operators
+:END:
+
+The proposed first surface has three distinct classes.  Names here
+are candidates; their semantic categories are the design decision.
+
+#+NAME: scheme-operator-tiers
+| Class | Proposed form | Meaning | Initial admission |
+|-------+---------------+---------+-------------------|
+| Pure expression IR | =(where (?x) (op even? ?x))=, =(compute ?y (?x) (op add ?x 1))= | Fixed built-in test or scalar projection over already bound values | Checkable operator descriptor and types; no arbitrary closure |
+| Pointwise finite view | =(view successors (input ?x) (output ?y))= followed by =(successors ?x ?y)= | A fixed =x -> finite-set(y)= adapter, with visible input/output mode | Deferred until stability, finite-domain and failure tests exist; trusted only unless operator body is analyzable |
+| Relation transformer | A value of shape =Rel[A] -> Rel[B]= used inside a fixed point | Higher-order changing relation/operator semantics | Research stage: typed IR and delta interpretation required |
+
+The first class has two semantic operations: =where= filters a
+candidate and =compute= introduces one scalar binding.  Multiple
+output rows need a visible view relation.  Optional destructuring is
+a typed pattern or view with zero or one row.  Head computation is
+lowered to an explicit bound scalar operation before the head is
+published.  A pattern in an atom column is lowered to a visible match
+after the atom.  Host Scheme =let=, =for= and =if= retain their
+ordinary meaning outside the rule DSL.
+
+For a *fixed* stable pointwise view =f : I -> Pfin(O)=, its contribution
+from an input relation =R= is =V_f(R) = union { f(i) | i in R }=.  If
+=R subset R'=, then =V_f(R) subset V_f(R')=.  This proves monotonicity
+in the *input relation* under the stated premise; it does not prove
+the arbitrary Scheme function monotone in its argument, stable across
+time, total, or terminating.  A one-row successor can still generate
+infinitely many recursive facts.  Completion requires a finite-height
+state argument or an explicit failure when an operational budget is
+reached.  A declared finite output domain should reject out-of-domain
+rows, not silently clamp them.
+
+* Native language inventory
+:PROPERTIES:
+:CUSTOM_ID: scheme-language-inventory
+:END:
+
+Specify every first-class construct from the Scheme semantics, not by
+translating a Rust token.  The grammar should be small enough that each
+form has one lowering and one admission rule.
+
+#+NAME: scheme-native-constructs
+| Construct | Proposed Scheme form | Semantic role |
+|-----------+----------------------+---------------|
+| Relation signature | =(relation name (column ...))= with a fresh handle | Named finite set or declared lattice |
+| Rule | =(rule (head ?x ...) (atom ?x ...) ...)= | Derive one or more facts from visible relational dependencies |
+| Logic variable | =?x= inside a rule | Lexically scoped rule variable; repeated occurrence tests equality |
+| Host capture | =(value expression)= in a term or source injection | Evaluate at fragment construction; never an implicit logic variable |
+| Scalar filter/project | =where= and =compute= over admitted operator descriptors | Checkable local transformation of bound row values |
+| Finite expansion | Named pointwise =view= with explicit input/output mode | Zero, one or many rows from one bound input tuple |
+| Negative read | =(not (relation ?x ...))= | Read only a completed lower stratum |
+| Group reduction | Declared group/reducer operator | Read a completed lower stratum; explicit output shape |
+| Fragment | =fragment= with import/private/export/rule declarations | First-class inert program value with fresh private handles |
+| Program lifecycle | =compose=, =inject=, =admit=, =solve=, =query= | Separate construction, source binding, validation, evaluation and observation |
+
+This inventory is the target of a direct Gerbil Scheme rewrite.  The
+existing =ascent= parser, Rust-oriented examples and tests may be
+removed or archived after new native tests establish the Scheme
+contract.  Their acceptance is not required for the new DSL.
+
+* Scientific design and implementation gate
+:PROPERTIES:
+:CUSTOM_ID: scheme-language-experiments
+:END:
+
+Before rewriting the implementation, specify precise construction and
+finite-model rule semantics.  Freeze a new Scheme-native
+reference corpus with source rows, complete expected fact *sets*,
+rejection categories and workloads.  Compute expected results with an
+independent finite model, not the Rust implementation.  Every semantic
+claim gets both a positive case and a discriminator that would falsify
+it.  Existing code may be reused only where it satisfies this contract.
+
+#+NAME: scheme-language-discriminators
+| Claim | Minimal experiment | Evidence required |
+|-------+--------------------+-------------------|
+| Private generativity | Instantiate one fragment constructor twice; compose both | Distinct private handles and independent complete outputs |
+| Composition | Reverse two compatible pure fragments; then create an arity conflict and a late negative cycle | Equal complete sets in accepted orders; located rejection of both conflicts |
+| Rule-time stability | Try a pure built-in, mutable capture and hidden relation read | Pure case runs; others cannot enter the checked tier |
+| Termination honesty | Recursive =succ(x)= and finite saturating successor | Infinite case fails explicitly; finite case equals independent model |
+| Lifecycle | Inject, admit, solve, query twice, replace source and solve again | Old solved snapshot unchanged; new full result correct |
+| Lowering | Cover filter, scalar value, finite view, optional match, recursion and lower-stratum aggregation | IR exposes bound inputs, dependencies, strata and selected index/delta paths |
+| Scale | Run native programs at 10, 1000 and 10000 row/key scales | Exact complete sets, operation counts, duration and memory on one head; diagnose algorithmic regressions |
+
+For higher-order relation operators *inside* recursion, first write a
+small typed reference evaluator and a change/delta interpretation.
+Compare naive fixed-point results with transformed evaluation across
+finite generated programs before adding compiler optimization.  That
+is a separate gate from simply passing fragments through Scheme
+functions.  The historical [[file:replication-checklist.org][Rust
+replication checklist]] describes the earlier comparison effort and
+does not gate this language.
+
+* Design decisions to settle in review
+:PROPERTIES:
+:CUSTOM_ID: scheme-language-decisions
+:END:
+
+#+NAME: scheme-language-review-choices
+| Decision | Proposed choice | Why it matters |
+|----------+-----------------+----------------|
+| Higher-order first step | First-class fragment functions before rule-time function values | Gives reusable programs while preserving analyzable rules |
+| Private identity | Fresh handle per fragment invocation | Prevents accidental capture between instances |
+| Trusted host computation | Separate, visibly named tier after checkable built-ins | Does not present =procedure?= as a static proof |
+| General view | Pointwise adapter only with explicit modes, finite domain or failure policy | Keeps recursive monotonicity and completion claims bounded |
+| Public query | Export handle from a *particular* fragment instance | Avoids global printed-name ambiguity |
+| Rewrite | One Scheme grammar and one semantic IR; retire the old parser without aliases | Avoids two overlapping public languages and Rust compatibility obligations |
+
+[[file:scheme-relational-dsl-design.org][Overview]];
+[[file:research/scheme-dsl/index.org][source ledger]].

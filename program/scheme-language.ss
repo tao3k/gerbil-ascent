@@ -6,7 +6,9 @@
 ;;; This module is intentionally separate from the old Ascent surface: it
 ;;; accepts only finite positive rules, with no host callbacks in recursion.
 (import "objects.ss"
-        (only-in "types.ss" GerbilAscentFragmentContract)
+        (only-in "types.ss" GerbilAscentFragmentContract
+                 GerbilAscentProgramContract)
+        (only-in "evaluate.ss" gerbil-ascent-make-engine)
         (only-in :clan/poo/object .ref)
         (only-in :clan/poo/mop validate)
         (only-in :std/list/list append-map)
@@ -15,7 +17,14 @@
         (only-in :gerbil-ascent/table/storage
                  gerbil-ascent-set-storage-provider))
 
-(export relational-program relational-fragment relational-compose)
+(export relational-program relational-fragment relational-compose
+        relational-export relational-admit relational-solve
+        relational-query)
+
+;;; The native Gerbil values keep an admitted engine and completed result
+;;; opaque to clients. Only the functions below cross each lifecycle edge.
+(defstruct relational-admission (run))
+(defstruct relational-solution (result))
 
 ;;; Restrict the first gate to immutable scalar atoms.  A finite source and
 ;;; function-free rules then have a finite active domain; the budgets below
@@ -154,9 +163,8 @@
 ;;   : (-> Syntax FirstClassFragmentExpression)
 ;;   | doc m%
 ;;       Instantiate a positive fragment with fresh source and private
-;;       predicate names. Imports are existing relation handles. The first
-;;       result is the existing typed POO fragment; subsequent results are
-;;       the selected handles, using ordinary Scheme multiple values.
+;;       predicate names. Imports are existing relation handles. Named
+;;       exports are recorded on the existing typed POO fragment value.
 ;;
 ;;       # Examples
 ;;
@@ -165,9 +173,9 @@
 ;;         (import)
 ;;         (source (edge (from to) '((1 2))))
 ;;         (private (path (from to)))
-;;         (export path)
+;;         (export (reach path))
 ;;         (rule (path ?x ?y) (edge ?x ?y)))
-;;       ;; => two values: a fragment and its path handle
+;;       ;; => a fragment with a reach export
 ;;       ```
 ;;     %
 ;;; Boundary: Imports preserve caller handles while declarations get fresh names.
@@ -177,29 +185,45 @@
   ((_ (import (import-name imported-handle) ...)
       (source (source-name (source-column ...) source-rows) ...)
       (private (private-name (private-column ...)) ...)
-      (export exported-name ...)
+      (export (public-name exported-name) ...)
       (rule (head head-term ...)
             (body body-term ...) ...) ...)
    (let ((import-name imported-handle) ...
          (source-name (gensym 'source-name)) ...
          (private-name (gensym 'private-name)) ...)
-     (values
-      (gerbil-ascent-fragment
-       (list (relational-source source-name
-                                (length '(source-column ...))
-                                source-rows) ...
-             (relational-source private-name
-                                (length '(private-column ...))
-                                []) ...)
-       (list
-        (gerbil-ascent-rule
-         (list (relational-atom/lexical (head head-term ...)))
-         (list (relational-atom/lexical
-                (body body-term ...)) ...)) ...))
-      exported-name ...))))
+     (gerbil-ascent-fragment
+      (list (relational-source source-name
+                               (length '(source-column ...))
+                               source-rows) ...
+            (relational-source private-name
+                               (length '(private-column ...))
+                               []) ...)
+      (list
+       (gerbil-ascent-rule
+        (list (relational-atom/lexical (head head-term ...)))
+        (list (relational-atom/lexical
+               (body body-term ...)) ...)) ...)
+      (list (cons 'public-name exported-name) ...)))))
 
-;;; Composition is inert.  The existing evaluator admits the assembled
-;;; schema and dependency graph when the caller opens or solves the program.
+;;; A public label is scoped to its fragment instance, rather than to the
+;;; process or composed program. Only declared labels can reveal a handle.
+(def (relational-export fragment label)
+  (validate GerbilAscentFragmentContract fragment)
+  ((.ref fragment 'exports) label))
+
+;;; A query observes only a completed result and a handle exported by the
+;;; supplied fragment. Copy returned rows so callers cannot edit the snapshot.
+(def (relational-query solution fragment label)
+  (unless (relational-solution? solution)
+    (error "relational query requires a solved value" solution))
+  (let (result (relational-solution-result solution))
+    (unless (.ref result 'finished)
+      (error "relational query requires a completed result"))
+    (map (lambda (row) (map identity row))
+         ((.ref result 'rows-of) (relational-export fragment label)))))
+
+;;; Composition is inert. Admission checks the assembled schema and rules
+;;; later, after every fragment has contributed to the whole program.
 (def (relational-compose fragments input-limit derived-limit output-limit)
   (for-each
    (lambda (fragment)
@@ -209,3 +233,78 @@
    (append-map (lambda (fragment) (.ref fragment 'relations)) fragments)
    (append-map (lambda (fragment) (.ref fragment 'rules)) fragments)
    input-limit derived-limit output-limit))
+
+;;; Admission rebuilds only the finite positive grammar. This removes
+;;; caller-owned row/rule lists before planning and rejects old host callbacks.
+(def (relational-copy-term term)
+  (case (.ref term 'kind)
+    ((variable) (gerbil-ascent-variable (.ref term 'value)))
+    ((wildcard) (gerbil-ascent-wildcard))
+    ((literal)
+     (let (value (.ref term 'value))
+       (unless (relational-atom-value? value)
+         (error "non-scalar relational literal" value))
+       (gerbil-ascent-literal value)))
+    (else (error "unsupported relational term" (.ref term 'kind)))))
+
+(def (relational-copy-atom atom)
+  (unless (eq? (.ref atom 'ascent-clause-kind) 'atom)
+    (error "unsupported relational clause"))
+  (gerbil-ascent-atom
+   (.ref atom 'relation)
+   (map relational-copy-term (.ref atom 'terms))))
+
+(def (relational-copy-rule rule)
+  (gerbil-ascent-rule
+   (map relational-copy-atom (.ref rule 'heads))
+   (map relational-copy-atom (.ref rule 'body))))
+
+;;; The engine constructor checks relation names, arities, rule bindings,
+;;; dependencies and budgets before the admission value becomes observable.
+(def (relational-admit program)
+  (validate GerbilAscentProgramContract program)
+  (let (snapshot
+        (gerbil-ascent-program
+         (map (lambda (relation)
+                (unless (eq? (.ref relation 'storage-kind) 'relation)
+                  (error "unsupported relational storage kind"))
+                (relational-source
+                 (.ref relation 'name)
+                 (.ref relation 'arity)
+                 (map (lambda (row) (map identity row))
+                      (.ref relation 'rows))))
+              (.ref program 'relations))
+         (map relational-copy-rule (.ref program 'rules))
+         (.ref program 'max-input-facts)
+         (.ref program 'max-derived-facts)
+         (.ref program 'max-output-facts)))
+    (let ((run (gerbil-ascent-make-engine snapshot #f))
+          (status 'ready)
+          (complete-result #f))
+      (make-relational-admission
+       (lambda ()
+         (case status
+           ((complete) complete-result)
+           ((failed) (error "relational solve previously failed"))
+           ((running) (error "reentrant relational solve"))
+           (else
+            (set! status 'running)
+            (with-catch
+             (lambda (failure)
+               (set! status 'failed)
+               (raise failure))
+             (lambda ()
+               (let (result (run))
+                 (unless (.ref result 'finished)
+                   (error "relational solve did not complete"))
+                 (set! complete-result result)
+                 (set! status 'complete)
+                 result))))))))))
+
+;;; The prepared engine runs once. Successful repeats reuse its completed
+;;; result; a failed run cannot expose or retry partially changed state.
+(def (relational-solve admission)
+  (unless (relational-admission? admission)
+    (error "relational solve requires admission" admission))
+  (make-relational-solution
+   ((relational-admission-run admission))))

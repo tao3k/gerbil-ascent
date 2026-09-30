@@ -338,10 +338,34 @@
   (validate GerbilAscentRuleContract
             (.o (:: @ Rule.) heads: head-atoms body: body-atoms)))
 
-(def (gerbil-ascent-fragment relation-values rule-values)
+;;; Copy the signature before closure capture so a caller cannot rewrite an
+;;; exported handle through the alist passed to this constructor.
+(def (fragment-export-resolver export-values)
+  (unless (list? export-values)
+    (error "invalid ASCENT fragment exports" export-values))
+  (let loop ((remaining export-values) (seen []) (copied []))
+    (if (null? remaining)
+      (let (entries (reverse copied))
+        (lambda (label)
+          (let (entry (assq label entries))
+            (unless entry
+              (error "unknown relational fragment export" label))
+            (cdr entry))))
+      (let (entry (car remaining))
+        (unless (and (pair? entry)
+                     (symbol? (car entry))
+                     (symbol? (cdr entry))
+                     (not (memq (car entry) seen)))
+          (error "invalid or duplicate ASCENT fragment export" entry))
+        (loop (cdr remaining)
+              (cons (car entry) seen)
+              (cons (cons (car entry) (cdr entry)) copied))))))
+
+(def (gerbil-ascent-fragment relation-values rule-values (export-values []))
   (validate GerbilAscentFragmentContract
             (.o (:: @ Fragment.)
-                relations: relation-values rules: rule-values)))
+                relations: relation-values rules: rule-values
+                exports: (fragment-export-resolver export-values))))
 
 (def (gerbil-ascent-program declared-relations declared-rules
                                      input-fact-limit derived-fact-limit

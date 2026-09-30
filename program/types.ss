@@ -226,12 +226,18 @@
                                   (element? GerbilAscentRuleContract rule))
                                 value)))))
 
-;;; A fragment carries declarations and rules without execution limits so it
-;;; can be validated and composed into a bounded program later.
+;;; A fragment publishes an export resolver rather than a mutable mapping.
+;;; The constructor copies and checks labels before closing over them.
+(def +fragment-exports+
+  (slot-contract 'ascent/fragment-exports procedure?))
+
+;;; A fragment carries declarations, rules and instance-local public handles.
+;;; It has no execution limits until composition into a bounded program.
 (define-type (GerbilAscentFragmentContract @ PooFlowNativeObjectContract.)
   identity: 'ascent/fragment
   proto: (.o)
-  responsibilities: (.o relations: +relations+ rules: +rules+))
+  responsibilities:
+  (.o relations: +relations+ rules: +rules+ exports: +fragment-exports+))
 
 ;;; Program budgets bound accepted input, derived facts, and public output
 ;;; separately; source admission checks them before mutating a session.

@@ -9,9 +9,14 @@
         (only-in :core/observability/testing-case poo-flow-test-case)
         (only-in :gerbil-ascent/program/types
                  GerbilAscentFragmentContract)
+        (only-in :gerbil-ascent/program/objects
+                 gerbil-ascent-fragment gerbil-ascent-rule
+                 gerbil-ascent-atom gerbil-ascent-guard
+                 gerbil-ascent-variable)
         (only-in :gerbil-ascent/program/scheme-language
                  relational-program relational-fragment
-                 relational-compose)
+                 relational-compose relational-export relational-admit
+                 relational-solve relational-query)
         (only-in :gerbil-ascent/program/interface
                  gerbil-ascent-evaluate-program
                  gerbil-ascent-open-session
@@ -61,53 +66,123 @@
    (import)
    (source (edge (from to) edges))
    (private)
-   (export edge)))
+   (export (edge edge))))
 
 (def (reach-fragment edge-handle)
   (relational-fragment
    (import (edge edge-handle))
    (source)
    (private (path (from to)))
-   (export path)
+   (export (reach path))
    (rule (path ?x ?y) (edge ?x ?y))
    (rule (path ?x ?z) (path ?x ?y) (edge ?y ?z))))
 
 (def scheme-relational-test
   (test-suite "Scheme relational finite positive gate"
     (poo-flow-test-case "two fragment instances retain private identities"
-      (let-values (((source-a edge-a)
-                    (source-fragment '((1 2) (2 3))))
-                   ((source-b edge-b)
-                    (source-fragment '((7 8)))))
-        (let-values (((reach-a path-a) (reach-fragment edge-a))
-                     ((reach-b path-b) (reach-fragment edge-b)))
+      (let* ((source-a (source-fragment '((1 2) (2 3))))
+             (source-b (source-fragment '((7 8))))
+             (edge-a (relational-export source-a 'edge))
+             (edge-b (relational-export source-b 'edge))
+             (reach-a (reach-fragment edge-a))
+             (reach-b (reach-fragment edge-b))
+             (path-a (relational-export reach-a 'reach))
+             (path-b (relational-export reach-b 'reach)))
           (let ((result
-                 (gerbil-ascent-evaluate-program
-                  (relational-compose
-                   (list source-a source-b reach-a reach-b)
-                   16 16 32)))
+                 (relational-solve
+                  (relational-admit
+                   (relational-compose
+                    (list source-a source-b reach-a reach-b)
+                    16 16 32))))
                 (reordered
-                 (gerbil-ascent-evaluate-program
-                  (relational-compose
-                   (list reach-b source-b reach-a source-a)
-                   16 16 32))))
+                 (relational-solve
+                  (relational-admit
+                   (relational-compose
+                    (list reach-b source-b reach-a source-a)
+                    16 16 32)))))
             (check-equal? (element? GerbilAscentFragmentContract reach-a)
                           #t)
             (check-equal? (eq? edge-a edge-b) #f)
             (check-equal? (eq? path-a path-b) #f)
-            (check-equal? (same-set? (rows result path-a)
+            (check-equal? (same-set? (relational-query result reach-a 'reach)
                                      '((1 2) (2 3) (1 3))) #t)
-            (check-equal? (rows result path-b) '((7 8)))
-            (check-equal? (same-set? (rows result path-a)
-                                     (rows reordered path-a)) #t)
-            (check-equal? (same-set? (rows result path-b)
-                                     (rows reordered path-b)) #t)))))
+            (check-equal? (relational-query result reach-b 'reach) '((7 8)))
+            (check-equal? (same-set? (relational-query result reach-a 'reach)
+                                     (relational-query reordered reach-a 'reach)) #t)
+            (check-equal? (same-set? (relational-query result reach-b 'reach)
+                                     (relational-query reordered reach-b 'reach)) #t)
+            (check-exception (relational-export reach-a 'missing) true)
+            (check-exception
+             (relational-query result source-a 'reach) true))))
     (poo-flow-test-case "assembled program rejects duplicate instance"
-      (let-values (((source edge) (source-fragment '((1 2)))))
+      (let (source (source-fragment '((1 2))))
         (check-exception
-         (gerbil-ascent-evaluate-program
+         (relational-admit
           (relational-compose (list source source) 8 8 16))
          true)))
+    (poo-flow-test-case "fragment export names are unique and instance scoped"
+      (let* ((first (source-fragment '((1 2))))
+             (second (source-fragment '((3 4)))))
+        (check-equal? (eq? (relational-export first 'edge)
+                          (relational-export second 'edge)) #f)
+        (check-exception (relational-export first 'reach) true)
+        (check-exception
+         (relational-fragment
+          (import)
+          (source (edge (from to) '((1 2))))
+          (private)
+          (export (same edge) (same edge)))
+         true)))
+    (poo-flow-test-case "fragment constructor freezes supplied export list"
+      (let* ((entry (cons 'answer 'original))
+             (exports (list entry))
+             (fragment (gerbil-ascent-fragment [] [] exports)))
+        (set-cdr! entry 'changed)
+        (check-equal? (relational-export fragment 'answer) 'original)))
+    (poo-flow-test-case "admission and query isolate source and result rows"
+      (let* ((row (list 1 2))
+             (source (source-fragment (list row)))
+             (admission
+              (relational-admit
+               (relational-compose (list source) 8 8 16))))
+        (set-car! row 9)
+        (let* ((solution (relational-solve admission))
+               (observed (relational-query solution source 'edge)))
+          (check-equal? observed '((1 2)))
+          (set-car! (car observed) 7)
+          (check-equal? (relational-query solution source 'edge)
+                        '((1 2)))
+          (check-equal? (relational-query
+                         (relational-solve admission) source 'edge)
+                        '((1 2))))))
+    (poo-flow-test-case "admission rejects opaque host callbacks"
+      (let* ((source (source-fragment '((1 2))))
+             (edge (relational-export source 'edge))
+             (callback-rule
+              (gerbil-ascent-rule
+               (list (gerbil-ascent-atom
+                      edge (list (gerbil-ascent-variable '?x)
+                                 (gerbil-ascent-variable '?y))))
+               (list (gerbil-ascent-guard
+                      '(?x) (lambda (_value) #t)))))
+             (fragment (gerbil-ascent-fragment [] (list callback-rule))))
+        (check-exception
+         (relational-admit
+          (relational-compose (list source fragment) 8 8 16))
+         true)))
+    (poo-flow-test-case "whole-program admission rejects an absent import"
+      (let (reach (reach-fragment (gensym 'missing-edge)))
+        (check-exception
+         (relational-admit (relational-compose (list reach) 8 8 16))
+         true)))
+    (poo-flow-test-case "solve fails when closure exceeds its fact budget"
+      (let* ((source (source-fragment '((1 2) (2 3))))
+             (reach (reach-fragment (relational-export source 'edge)))
+             (admission
+              (relational-admit
+               (relational-compose (list source reach) 8 1 16))))
+        (check-exception (relational-solve admission) true)
+        (check-exception (relational-solve admission) true)))
     (poo-flow-test-case "recursive closure equals independent graph model"
       (for-each
        (lambda (edges)
@@ -128,10 +203,20 @@
         (check-equal? (length graphs) 64)
         (for-each
          (lambda (edges)
-           (check-equal?
-            (same-set? (rows (evaluate edges) 'path)
-                       (reference-closure edges))
-            #t))
+           (let* ((source (source-fragment edges))
+                  (reach (reach-fragment
+                          (relational-export source 'edge)))
+                  (solution
+                   (relational-solve
+                    (relational-admit
+                     (relational-compose (list source reach)
+                                         32 32 64))))
+                  (expected (reference-closure edges)))
+             (check-equal?
+              (same-set? (rows (evaluate edges) 'path) expected) #t)
+             (check-equal?
+              (same-set? (relational-query solution reach 'reach)
+                         expected) #t)))
          graphs)))
     (poo-flow-test-case "new source snapshot does not mutate old result"
       (let* ((before (evaluate '((1 2) (2 3))))

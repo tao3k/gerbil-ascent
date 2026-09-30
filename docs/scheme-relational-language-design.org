@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 #+TITLE: Scheme relational language: first design gate
-#+STATUS: review proposal; examples are design notation, not implemented syntax
+#+STATUS: finite positive lifecycle implemented; higher-order forms remain review proposals
 #+DATE: 2026-09-30
 #+FILETAGS: :design:scheme-dsl:higher-order:
 
@@ -156,14 +156,40 @@ Flix-like static composition, or performance superiority.
 
 The second local slice instantiates first-class positive fragments through
 ordinary Scheme functions.  The structural =relational-fragment= form
-uses =defrules=, returns the existing typed POO Fragment and exported
-handles as Scheme multiple values, and creates fresh source/private
-names on *each* call.  =relational-compose= is a pure assembly function
-over those POO values.  The focused case checks two independent
-instances, both composition orders, and duplicate-instance rejection.
-It does not yet supply a separate =admit= stage or a general fragment
-signature.  The current evaluator checks the assembled program when
-it is opened or solved.
+uses =defrules= and creates fresh source/private names on *each* call.
+Its typed Fragment value carries a public label-to-handle signature;
+=relational-export= resolves a label through that instance.
+=relational-compose= is a pure assembly function over the fragments.
+=relational-admit= copies the finite positive graph, rejects host
+callbacks and builds the existing engine's whole-program plan before
+returning an opaque admission.  =relational-solve= runs that plan;
+=relational-query= accepts its completed solution, a particular
+fragment and one of its public labels, returning copied rows.  The
+focused cases check two independent instances, both composition
+orders, duplicate-instance rejection, unknown/repeated public labels,
+source mutation after admission and query-result mutation.  Both the
+direct finite form and the fragment lifecycle match the independent
+Floyd-Warshall model on all 64 simple directed graphs over three nodes.
+
+#+begin_src scheme
+(def source (relational-fragment
+              (import)
+              (source (edge (from to) '((1 2) (2 3))))
+              (private)
+              (export (edge edge))))
+(def reach (relational-fragment
+             (import (edge (relational-export source 'edge)))
+             (source)
+             (private (path (from to)))
+             (export (reach path))
+             (rule (path ?x ?y) (edge ?x ?y))
+             (rule (path ?x ?z) (path ?x ?y) (edge ?y ?z))))
+(def program (relational-compose (list source reach) 8 8 16))
+(def admission (relational-admit program))
+(def solution (relational-solve admission))
+(relational-query solution reach 'reach)
+;; => ((1 2) (2 3) (1 3)), as a set; row order is unspecified
+#+end_src
 
 Gerbil *v0.19* is the language and standard-library reference for
 this slice.  The installed =2591dcd= source has =defrules= and
@@ -177,7 +203,8 @@ syntax and composition.
 The fixed =relational-fragment= frame uses Gerbil =defrules=; term
 recognition and located syntax errors use =defsyntax= with
 =syntax-case=.  Ordinary Scheme functions instantiate and compose
-fragments.  Exported relation handles use Gerbil's multiple values.
+fragments.  The public signature is a named field on the fragment
+value, so a function can return that one first-class value.
 The standard =append-map= composes their declarations and rules while
 preserving order.  This avoids a custom list builder in the first
 gate, without claiming a measured performance gain.  The existing
@@ -187,10 +214,12 @@ remain the value boundary, and the existing
 Gerbil v0.19 supplies the language tools; these repository contracts
 still determine relational admission.
 
-The remaining gates are a public signature and explicit admission
-result, cross-fragment negative-cycle diagnostics, a restricted
-higher-order operator IR, and matched measurements before optimizer
-changes.  The v0.19 source paths above refer to Gerbil itself, as
+The remaining gates are typed admission diagnostics, source injection
+and replacement, a restricted higher-order operator IR, and matched
+measurements before optimizer changes.  The current =relational-admit=
+is an exception-based finite positive boundary; it does not claim a
+general static proof or a typed diagnostic result.  The v0.19 source
+paths above refer to Gerbil itself, as
 installed for this workspace; the public Gerbil guide provides the
 portable language reference.
 
@@ -199,8 +228,9 @@ portable language reference.
 :CUSTOM_ID: scheme-language-shape
 :END:
 
-The following spelling is provisional.  It illustrates the binding
-and lifecycle contract rather than asserting a macro implementation.
+The following short spelling is provisional.  It illustrates the
+target binding and lifecycle contract; the concrete implemented
+=relational-*= forms appear in the executable example above.
 
 #+begin_src scheme
 ;; edge is a relation handle supplied by the caller.

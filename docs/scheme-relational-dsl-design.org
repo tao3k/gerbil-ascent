@@ -186,6 +186,11 @@ reference and a structural positive-change interpreter with a recursive
 frontier. A [[file:research/scheme-dsl/e4-positive-change.org][paired local E4 probe]] records exact-set checks, join probes and
 exploratory timing, including an adverse small case. General typed
 change and a broad performance benefit are not established.
+The [[file:research/scheme-dsl/e4-retained-session.org][retained Session gate]] now admits one transformer into the native
+indexed evaluator and checks appends, duplicate rows, withdrawals and
+old snapshots against a finite graph model. Its matched local probe
+compares update latency after initialization with fresh materialization;
+it does not establish lifecycle-wide or general performance superiority.
 The LLM candidate/observation contract follows the admitted Scheme
 core; it cannot claim stronger semantics than that core provides.
 Flix and Datafun inform semantic questions;

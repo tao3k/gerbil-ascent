@@ -98,9 +98,10 @@ Flix, Ascent or the native indexed rule engine.
 :CUSTOM_ID: scheme-e4-next
 :END:
 
-- Persist the old result and intermediate values if changes should avoid
-  recomputing the old fixed point on every call. The current function
-  receives old input rows, not a retained interpretation state.
+- The finite =relational-op-delta-change= function still receives old
+  input rows and rebuilds the old fixed point on every call. The
+  [[file:e4-retained-session.org][native Session gate]] now retains the lowered rule state across calls;
+  these are separate algorithms with separate cost receipts.
 - Compare larger sparse and dense families with controlled allocation
   and GC receipts before a performance claim. Counted row-pair probes
   are only one component of cost.

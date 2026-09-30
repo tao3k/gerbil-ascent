@@ -1,0 +1,142 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+#+TITLE: E4: retaining a first-class operator in the native Session
+#+STATUS: local semantic and exploratory cost receipt
+#+DATE: 2026-10-01
+#+FILETAGS: :research:scheme-dsl:incremental:session:
+
+* Question and source lesson
+:PROPERTIES:
+:CUSTOM_ID: scheme-e4-retained-question
+:END:
+
+The [[file:e4-positive-change.org][prior E4 probe]] propagates positive changes through a finite set
+interpreter, but it rebuilds the old fixed point for every API call.
+Does admitting a first-class transformer once into the existing native
+Session retain the useful rule and relation state across calls while
+preserving its finite set meaning?
+
+[[https://www.cl.cam.ac.uk/~nk480/seminaive-datafun.pdf][Datafun S20]] studies a typed higher-order seminaive transformation for
+its language (§§5–9). [[file:dbsp-b22.org][DBSP B22]] frames view maintenance as a stream of
+snapshots and changes (§§1–3); its introduction notes that simply
+reconstructing the full dataset from each change does not itself yield
+an efficient incremental query. These papers motivate a *stateful
+execution* discriminator. Their formal results do not prove this
+Gerbil compiler, Session, or arbitrary Scheme procedure correct.
+
+The local architectural finding is that =program/session.ss= and
+=program/evaluate.ss= already own a retained, semi-naive engine. Adding
+a second persistent store in =operator-change.ss= would duplicate that
+owner. The new [[file:../../../program/operator-session.ss][operator Session facade]] instead lowers the inspectable positive
+graph through the existing fragment/admission path. Its generated input
+label is private to one instance; captured finite sources stay fixed.
+
+* Operational contract
+:PROPERTIES:
+:CUSTOM_ID: scheme-e4-retained-contract
+:END:
+
+#+NAME: scheme-e4-retained-operations
+| Operation | Returned observation | Execution boundary |
+|-----------+----------------------+--------------------|
+| =relational-op-open-retained= | Completed first result | Compile, admit and solve once with explicit input/derived/output budgets |
+| =relational-op-retained-append!= | Before, after, newly added output rows | Checked source row; positive native Session may reuse retained relation state |
+| =relational-op-retained-replace!= | Before, after, added and removed output rows | Checked full source replacement; native Session recomputes for withdrawal |
+| =relational-op-retained-rows= | Copied rows of last completed solution | Caller mutation does not rewrite the retained result |
+
+The Session owns recovery after a failed update. The facade publishes a
+new =latest= solution only after =relational-session-run= completes. It
+does not admit caller procedures into rule evaluation. Its source is
+one explicit transformer parameter; additional captured finite
+sources cannot be changed through this facade. A duplicate input row
+can consume the input-fact budget while adding no output row.
+
+The [[file:../../../t/qualification/scheme-operator-retained-test.ss][qualification test]] covers every mask of six directed three-node edges.
+For each of the 64 initial graphs it compares the old result, insertion,
+duplicate insertion, and withdrawal with an independent
+Floyd–Warshall closure and set difference. Other cases exercise fixed
+captured input, finite mapping and selection, invalid row/replacement,
+an exceeded output budget, prior snapshot stability, and mutation of
+a returned row copy. This is bounded evidence for the implemented
+grammar, not a proof of general higher-order incrementalization.
+
+* Matched local experiment
+:PROPERTIES:
+:CUSTOM_ID: scheme-e4-retained-probe
+:END:
+
+The [[file:../../../t/performance/scheme-operator-retained-probe.ss][probe]] compares two executions of the *same* transformer and grown
+graph. =retained= opens the old graph outside the timed region, then
+times one checked append and result query. =fresh= times opening and
+solving the grown graph from scratch. Both results are checked against
+an independent finite closure outside the timed region. Each case
+warms both paths and alternates their order for five paired samples.
+The intended comparison is update latency after a materialization
+exists versus new materialization; it does not compare two equally
+initialized engines or include the retained path's initial open cost.
+
+A second chain-24 sequence includes initial materialization and eleven
+successive insertions. The retained path opens once and appends; the
+fresh path opens the same grown graph at each revision. All twelve
+snapshots per path are checked against independent closure sets outside
+the timed region. After warmup it alternates three paired lifecycle
+samples. This includes startup for both methods, but does not measure
+resident memory or isolate rule execution from compiler startup.
+
+#+begin_src sh
+just build
+just operator-retained-probe
+#+end_src
+
+Two local runs on 2026-10-01 used Darwin 25.6.0 arm64, the same Gerbil
+v0.19/Gambit toolchain as [[file:e4-positive-change.org][the prior E4 probe]], and branch head =0a88412=
+plus the uncommitted change under test. Single-update =us= numbers are
+the medians of five paired in-process samples *after* warmup. Both
+unaggregated receipts retain every sample and warning:
+[[file:e4-retained-session-2026-10-01.txt][first run]] and [[file:e4-retained-session-2026-10-01-repeat.txt][repeat]].
+
+#+NAME: scheme-e4-retained-local-cost
+| Shape | Vertices before addition | Grown rows | First retained us | First fresh us | Repeat retained us | Repeat fresh us |
+|-------+--------------------------+------------+-------------------+----------------+--------------------+-----------------|
+| chain | 12 | 78 | 71205 | 67818 | 45586 | 65891 |
+| chain | 24 | 300 | 20887 | 116636 | 21593 | 137466 |
+| chain | 36 | 666 | 36435 | 431870 | 37132 | 260126 |
+| star | 12 | 13 | 25711 | 63742 | 43457 | 64530 |
+| star | 24 | 25 | 22908 | 85049 | 88477 | 90996 |
+| star | 36 | 37 | 45833 | 81552 | 45727 | 62540 |
+
+The chain-12 first-run median favors fresh materialization; the repeat
+favors retained. Other medians favor retained, but single samples vary
+widely and repeated star cases show discrete timing bands.
+
+#+NAME: scheme-e4-retained-lifecycle-cost
+| Chain-24 lifecycle | Retained median us | Fresh median us | Samples per method after warmup |
+|--------------------+--------------------+-----------------+---------------------------------|
+| First run | 540454 | 1059038 | 3 |
+| Repeat | 903332 | 1113837 | 3 |
+
+The lifecycle medians favor retained in these two runs, while sample
+distributions overlap and the repeat retained median shifts greatly.
+The result supports a local update-latency hypothesis, not an
+asymptotic, allocation, or cross-language performance claim. The fresh
+path pays compilation/admission/startup costs that the retained path
+already paid before timing in the *single-update* cases; both paths pay
+their initialization cost in the lifecycle case.
+
+* Remaining discriminators
+:PROPERTIES:
+:CUSTOM_ID: scheme-e4-retained-next
+:END:
+
+- Repeat lifecycle measurements under controlled load and record
+  allocation/resident memory, which the current probe does not measure.
+- Separate native indexed rule work from compilation and admission with
+  reproducible phase receipts before attributing a speed difference.
+- Give source deletions and changing nested fixed points their own
+  semantic and cost arguments. The current replacement path recomputes.
+- Keep the finite interpreter as a semantic check for operator rules;
+  avoid claiming it shares the native Session's internal algorithm.
+
+[[file:reflection.org][Research reflection]]; [[file:datafun-s20.org][Datafun S20 note]];
+[[file:../../scheme-relational-language-design.org][Scheme language design]].

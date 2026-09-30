@@ -5,7 +5,7 @@
 ;;; Public Scheme relational language and lower-level POO declarations.
 (import "types.ss" "objects.ss" "aggregators.ss" "summary.ss" "evaluate.ss"
         "session.ss" "scheme-language.ss" "operator.ss"
-        "operator-change.ss")
+        "operator-change.ss" "operator-session.ss")
 (export (import: "types.ss")
         (import: "objects.ss")
         (import: "aggregators.ss")
@@ -24,4 +24,5 @@
         relational-op-measurement-join-probes
         relational-op-measurement-fix-body-evaluations
         relational-op? relational-op-arity
-        relational-op-delta-change)
+        relational-op-delta-change
+        (import: "operator-session.ss"))

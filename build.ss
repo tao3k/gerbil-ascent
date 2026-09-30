@@ -25,6 +25,7 @@
     "program/scheme-language"
     "program/operator"
     "program/operator-change"
+    "program/operator-session"
     "program/funs"
     "program/analysis"
     "program/summary"

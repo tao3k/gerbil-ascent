@@ -144,6 +144,9 @@ is a trust assertion, not a mechanical proof.
 =program/operator.ss= implements the checkable subset of this IR as
 first-class descriptor values and a complete finite reference meaning.
 =program/operator-change.ss= owns insertion-change interpretation.
+=program/operator-session.ss= admits one transformer into the existing
+retained native Session; its checked input updates publish only completed
+results and preserve earlier row snapshots.
 Ordinary Scheme functions may accept
 and return these values during construction. =relational-op-function=
 builds a first-class transformer with one explicit relation parameter;
@@ -166,6 +169,14 @@ old joins when their relevant change is empty; nested changing fixed
 points use a complete local change fallback. Both
 return old, grown and added row sets; both reject an exceeded row bound.
 They apply to the checked finite positive graph only.
+
+The [[file:research/scheme-dsl/e4-retained-session.org][retained Session receipt]] uses the same first-class transformer as a
+native rule fragment. The Session keeps the positive evaluator's state
+across appends; source replacement remains a recomputation path for
+withdrawal. This reuses the semantic owner rather than adding another
+persistent store to the finite reference interpreter. Two local runs
+compare update latency with fresh materialization, while keeping
+initialization cost and noisy timing explicit.
 
 #+NAME: scheme-implemented-operator-subset
 | Node | Current checked form | Boundary |
@@ -221,6 +232,9 @@ The delta prediction is also checked against a retained native fragment
 session after a checked source-row append, followed by source withdrawal;
 earlier solved results stay stable. Eight finite nested-fixed-point cases
 check an inner fixed point depending on an outer changing parameter.
+The retained operator facade checks 64 graphs across append, duplicate
+append and withdrawal, plus captured finite sources, invalid and
+over-budget updates, and copied query rows.
 The combined native test composes a recursive operator fragment with
 finite views, negation, grouped count and a max lattice, then withdraws
 its source while preserving prior results. These are bounded semantic

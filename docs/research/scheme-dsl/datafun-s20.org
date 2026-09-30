@@ -62,9 +62,11 @@ requires a separate semantic equivalence and rollback receipt.
 The first discriminator now has a recursive first-class transformer,
 independent finite-model equality, and paired join-probe/fix-iteration
 counts over chain and star families. Its zero-change propagation
-avoids old joins during a recursive frontier step. The old fixed point
-is still rebuilt for each API call. The next discriminator is a
-retained interpretation across calls and a matched larger-scale test.
+avoids old joins during a recursive frontier step. The finite interpreter
+still rebuilds the old fixed point for each call. The
+[[file:e4-retained-session.org][native Session gate]] instead retains the lowered rule state across
+calls and checks append/withdrawal semantics. A matched larger-scale
+and lifecycle-cost test remains open.
 A transform that skips a delta without an equivalence argument is not
 admitted.
 

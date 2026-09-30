@@ -51,6 +51,20 @@ operator-change-probe:
     test "$(grep -c '^SAMPLE ' "$output_file")" -eq 60
     if grep -E 'ERROR|Heap overflow|Stack overflow' "$output_file" >/dev/null; then exit 1; fi
 
+# Exact-set gate and matched exploratory timing for native retained updates.
+operator-retained-probe:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    output_file="$(mktemp)"
+    trap 'rm -f "$output_file"' EXIT
+    export GERBIL_LOADPATH="{{ justfile_directory() }}${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}"
+    timeout 120s gerbil {{ gerbil_test_runtime_options }} env gxi t/performance/scheme-operator-retained-probe.ss 2>&1 | tee "$output_file"
+    test "$(grep -c '^CASE ' "$output_file")" -eq 6
+    test "$(grep -c '^SAMPLE ' "$output_file")" -eq 72
+    test "$(grep -c '^SEQUENCE ' "$output_file")" -eq 1
+    test "$(grep -c '^LIFECYCLE SAMPLE ' "$output_file")" -eq 8
+    if grep -E 'ERROR|Heap overflow|Stack overflow' "$output_file" >/dev/null; then exit 1; fi
+
 # ASCENT owns its 1000-sample SS receipts using ASP's benchmark profile.
 performance:
     #!/usr/bin/env bash

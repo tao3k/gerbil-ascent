@@ -3,7 +3,7 @@
 
 #+TITLE: A language history for the Scheme relational DSL
 #+STATUS: research synthesis; interpretations are design proposals
-#+DATE: 2026-09-30
+#+DATE: 2026-10-01
 #+FILETAGS: :research:language-history:scheme-dsl:
 
 * Scope and reading convention
@@ -12,7 +12,7 @@
 :END:
 
 This is a selective language history, not a claim of direct descent
-between every cited system.  It follows six primary sources that
+between every cited system.  It follows seven primary sources that
 expose distinct answers to one question: how can functional language
 abstraction coexist with relational fixed points?  The linked
 [[file:index.org][research index]] keeps the PDF URLs, section/page locators, and
@@ -27,6 +27,7 @@ source contributes from our proposed transfer into Gerbil.
 | 2020 | [[file:flix-f20.org][F20 Flix]] | First-class Datalog constraint sets and composition | Check the assembled program, including stratification |
 | 2020 | [[file:datafun-s20.org][S20 Datafun]] | Seminaive evaluation extended to typed higher-order changes | A typed change transform is required |
 | 2022 | [[file:ascent-a22.org][A22 Ascent]] | Datalog-like rules embedded in Rust with compiler planning | Keep visible joins/dependencies, not Rust spelling |
+| 2022 | [[file:dbsp-b22.org][B22 DBSP]] | Stream calculus for incremental view maintenance, including recursion | Retained update state and complete snapshots are distinct from one-shot differences |
 | 2025 | [[file:flix-l25.org][L25 Flix]] | Integrated program values, private names, inject/solve/query | Design explicit phases and relation identities |
 
 * 2013: µKanren makes the host-language boundary small
@@ -108,11 +109,26 @@ can see relation atoms, binding patterns, dependencies, and join
 structure, enabling indexing and seminaive work.  Host expression,
 pattern, guard, and generator spellings solve a Rust embedding problem.
 They are not part of the relational theorem that our Scheme interface
-must preserve.  A Scheme rule with an arrow and relation atoms is a
-compact way to retain the planner-visible core; explicit term
+must preserve. A native Scheme rule with visible relation atoms retains
+the planner-visible core; explicit term
 projections and admitted relation views can handle local computation.
 The [[file:ascent-a22.org::#ascent-rule-boundary][Ascent note]] records what cannot be inferred
 from Rust performance or syntax.
+
+* 2022: DBSP distinguishes snapshots from changes
+:PROPERTIES:
+:CUSTOM_ID: history-dbsp-b22
+:END:
+
+[[file:dbsp-b22.org][DBSP]] develops a stream account of incremental view maintenance,
+including recursive queries. Its setup separates a database snapshot,
+an update, and the change to a view; its recursive construction keeps
+state across input updates. For our Scheme Library this sharpens the
+question left by a one-shot set-difference interpreter: which state
+does the execution engine retain between calls? The existing native
+Session is the relevant owner. Its positive append behavior and
+replacement recomputation have their own bounded qualification, not a
+DBSP stream-circuit proof.
 
 * 2025: Flix exposes the program lifecycle
 :PROPERTIES:

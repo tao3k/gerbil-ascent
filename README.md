@@ -94,6 +94,12 @@ The two paths are checked against an independent finite graph model.
 The [paired E4 probe](docs/research/scheme-dsl/e4-positive-change.org)
 records join counts and exploratory timing for chain and star cases;
 it does not establish a general speed advantage.
+`relational-op-open-retained` also admits a first-class transformer
+once into the native Session. Checked append and replacement return
+before/after output differences while preserving completed snapshots.
+The [retained Session receipt](docs/research/scheme-dsl/e4-retained-session.org)
+checks all 64 three-node graph masks through append, duplicate append
+and withdrawal, and records a matched local update-latency probe.
 The rule surface also supports explicit scalar
 capture, stratified negation, checked count/sum/min/max reductions and
 checked min/max lattices. `relational-admit/report` returns a typed

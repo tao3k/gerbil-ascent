@@ -2,8 +2,8 @@
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 #+TITLE: Scheme relational DSL research index
-#+STATUS: source ledger and design questions; not implementation evidence
-#+DATE: 2026-09-30
+#+STATUS: source ledger, design questions and bounded local receipts
+#+DATE: 2026-10-01
 #+FILETAGS: :research:scheme-dsl:
 
 * Scope
@@ -26,6 +26,9 @@ before any claim of improvement.
 The [[file:e4-positive-change.org][E4 local receipt]] records the finite positive-change
 implementation, exact-set checks, paired operation counts, raw timing
 samples and its scope limit.
+The [[file:e4-retained-session.org][retained Session receipt]] follows the same operator graph into the
+native indexed evaluator, checks update/withdrawal semantics and
+compares update latency with fresh materialization.
 
 #+NAME: source-ledger
 | Key | Source and durable link | Local note | Main design constraint |
@@ -35,6 +38,7 @@ samples and its scope limit.
 | H13 | [[https://www.schemeworkshop.org/2013/papers/HemannMuKanren2013.pdf][µKanren paper]] | [[file:microkanren-h13.org][µKanren]] | Distinguish search from bottom-up evaluation |
 | F20 | [[https://plg.uwaterloo.ca/~olhotak/pubs/oopsla20c.pdf][Flix paper]] / [[https://doi.org/10.1145/3428193][DOI]] | [[file:flix-f20.org][Flix]] | Validate composition and stratification |
 | S20 | [[https://www.rntz.net/files/seminaive-datafun.pdf][Datafun semi-naive paper]] / [[https://doi.org/10.1145/3371090][DOI]] | [[file:datafun-s20.org][Datafun S20]] | Higher-order deltas need typed transformation |
+| B22 | [[https://arxiv.org/pdf/2203.16684][DBSP paper]] / [[https://doi.org/10.48550/arXiv.2203.16684][DOI]] | [[file:dbsp-b22.org][DBSP]] | Separate retained update work from full reconstruction |
 | L25 | [[https://plg.uwaterloo.ca/~olhotak/pubs/oopsla25b.pdf][Flix design paper]] / [[https://doi.org/10.1145/3763126][DOI]] | [[file:flix-l25.org][Flix L25]] | Program values, private names and solve/query boundary |
 
 * Cross-paper synthesis
@@ -91,6 +95,7 @@ hygienic private predicates and explicit program/solve/query stages.
 | F20 | Check combined schema and negative cycles after composition | Gerbil fragments have row-polymorphic static safety |
 | H13 | Keep a small semantic kernel beneath Scheme abstractions | Stream-search fairness equals bottom-up completion |
 | S20 | Explore typed higher-order change semantics | Existing opaque closures receive a semi-naive theorem |
+| B22 | Compare retained update to fresh materialization with explicit lifecycle scope | Our native Session implements DBSP stream semantics or its complexity bounds |
 | L25 | Design program values, private handles and explicit solve/query | Flix syntax or static effect/type system already exists here |
 
 * Current evidence and next gate
@@ -102,8 +107,9 @@ compares complete results with an independent graph model. The E4
 probe measures positive insertion change within the finite set
 interpreters; it is not an indexed-engine or cross-language result.
 
-Next, retain old operator interpretations across calls if the semantic
-owner should avoid rebuilding the old fixed point for each insertion.
-Deletion-aware change and a general typed higher-order calculus remain
-separate research obligations. Match larger scale and allocation
-receipts before any performance conclusion.
+The native retained Session now owns cross-call state for first-class
+operator fragments. The separate finite interpreter remains a semantic
+check and does not gain a persistent cache. Deletion-aware change and a
+general typed higher-order calculus remain separate research
+obligations. Match lifecycle cost, larger scale and allocation receipts
+before any broad performance conclusion.

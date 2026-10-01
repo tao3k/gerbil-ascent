@@ -95,6 +95,13 @@ Negation and reduction still have no derivation-proof claim; the
 ground nonmembership certificate supports the same fixed clauses when
 their finite closure fits its bounds.
 
+A separate [[file:finite-stratified-evidence.org][finite stratified replay]]
+now checks exact relation sets for inspected candidates containing checked
+negation and count/sum/min/max reduction. It independently recomputes the
+finite model and binds a supplied closure to the snapshot, program and
+native answer. This is a full bounded replay, not a general derivation DAG
+or an explanation of why a real-world fact is absent.
+
 Candidate and source inputs now pass an iterative scalar/pair-tree
 preflight before list traversal or digest. It rejects cycles,
 executable leaves, excessive nesting and node-budget exhaustion while
@@ -132,6 +139,7 @@ establishes this Library's model usefulness or source authority.
 | =program/evaluate.ss=, =program/session.ss= | Fixed-point results, immutable result snapshots and retained source replacement | The first candidate boundary uses one-shot admission/solve against a copied source snapshot |
 | =candidate/closure.ss= | Bounded binary-closure candidates and one shortest source support | The first candidate boundary implements its own row-labelled graph witness/cut; these remain distinct APIs |
 | =candidate/types.ss=, =candidate/program.ss=, =candidate/reasoning.ss= | Shared bounded data, inert inspection/lowering, snapshot execution and receipts | Keep source authority and general provenance outside the attempt boundary |
+| =candidate/finite-evidence.ss= | Separate exact finite replay and verifier for checked strata | Keep this optional bounded evidence distinct from native completion and general provenance |
 | =interface/request.ss= | Inert identity/bound projection for MRR handoff | Keep MRR identity authority separate from the LLM candidate contract |
 
 The public Library boundary should wrap these modules, not replicate

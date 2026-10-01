@@ -38,6 +38,7 @@
     "candidate/program"
     "candidate/provenance"
     "candidate/nonmembership"
+    "candidate/finite-evidence"
     "candidate/reasoning"
     "interface/request"))
 

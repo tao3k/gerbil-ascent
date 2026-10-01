@@ -1,0 +1,95 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+#+TITLE: Finite stratified evidence for inspected candidates
+#+STATUS: bounded Scheme replay implemented; general provenance open
+#+DATE: 2026-10-01
+#+FILETAGS: :ascent:scheme:evidence:verification:
+
+* Claim
+:PROPERTIES:
+:CUSTOM_ID: finite-stratified-evidence-claim
+:END:
+
+For one valid copied source snapshot, one already inspected inert candidate,
+and a completed native query, =candidate-finite-evidence= computes the exact
+finite relation sets using a separate interpreter. It accepts the native
+answer only when its query rows equal this replay. The returned closure
+contains all source and derived relations, including relations read by
+negation and reduction. =candidate-verify-finite-evidence= checks snapshot
+identity, generation and digest, program fingerprint, candidate digest,
+query, closure shape and the native answer, then independently recomputes
+the finite model. A changed closure, source, program or answer fails.
+
+The semantic claim is *relative*: within the supplied finite snapshot and
+inspected rule program, a verified closure is exactly the stratum-by-stratum
+least fixed point. It can justify the presence or absence of a *ground*
+tuple in that model and exact values for the checked =count=, =sum=, =min=
+and =max= reductions. It does not prove that the caller supplied all
+real-world facts, that the candidate expresses the user's intent, or that
+one missing tuple has a unique Why-Not cause. It contains no complete
+derivation provenance or causal counterfactual proof.
+
+* Replay rules
+:PROPERTIES:
+:CUSTOM_ID: finite-stratified-evidence-rules
+:END:
+
+1. Candidate facts are a hypothetical source overlay. Duplicate rows form
+   one set tuple. The source snapshot remains immutable.
+2. Positive dependencies may read their own stratum; a negative or reduce
+   dependency must read a strictly lower completed stratum. A strict cycle
+   is unsupported.
+3. Each stratum starts with its admitted input rows and adds rule heads
+   until no new row appears. Fixed =where= and =compute= operations are
+   recomputed from prior bindings. A negated atom succeeds only when no
+   matching lower-stratum tuple exists; wildcards mean existential match.
+4. A reduction matches every distinct source tuple under the current
+   bindings. =count= and =sum= emit zero for an empty group; =min= and =max=
+   emit no value. The verifier enforces the candidate's finite derived-row
+   limit and a separate work budget before claiming completion.
+5. =complete= means replay and native query agree and the closure fits
+   hard certificate caps; =mismatch= means they disagree; =bounded= means
+   a work, derived-row or certificate cap prevented completion;
+   =unsupported= means native completion or a valid stratification is absent.
+   Verification returns =valid=, =invalid= or =bounded=.
+
+This is deliberately a full finite replay, not a compact proof DAG. A
+general recursive Why/Why-Not representation, reduction lineage, open-world
+negation and larger-scale performance require separate semantics and tests.
+The older [[file:research/scheme-dsl/positive-provenance.org][positive proof]] and
+[[file:llm-reasoning-library-plan.org][LLM Library plan]] retain their own
+narrower statuses.
+
+* Executable checks
+:PROPERTIES:
+:CUSTOM_ID: finite-stratified-evidence-checks
+:END:
+
+=t/qualification/ascent-finite-evidence-test.ss= checks negation combined
+with recursive path closure, fixed arithmetic and reduction; all four
+reducers including empty groups; a negated wildcard; source correction;
+changed certificate rows; a stale generation; replay/native disagreement;
+and all 64 directed three-node graph subsets against a separate
+reachability count model. The last corpus is finite evidence for those
+programs only. Neither that corpus nor the replay is a model-benefit test.
+
+#+begin_src sh
+ASCENT_GXTEST_STARTUP_SECONDS=30 ASCENT_GXTEST_IDLE_SECONDS=20 \
+  ASCENT_GXTEST_TIMEOUT=180s \
+  just test-file t/qualification/ascent-finite-evidence-test.ss
+#+end_src
+
+* Next gate
+:PROPERTIES:
+:CUSTOM_ID: finite-stratified-evidence-next
+:END:
+
+Before using this evidence in a live model comparison, freeze task cases,
+independent expected answers, source generations, model/configuration,
+prompt variants, token/tool/time budgets and scoring. Compare model-only
+against model plus the same typed Library observation on paired tasks.
+Report per-case mistakes and abstentions, not just aggregate accuracy.
+Temporal-causality cases must separately identify valid time, knowledge
+time, causal cut and open frontier; this finite relation replay alone does
+not certify those domain semantics.

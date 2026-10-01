@@ -40,8 +40,13 @@ jobs:
   oracle:
     runs-on: ubuntu-latest
     timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [byods, other]
     env:
       GERBIL_RELEASE_ROOT: ${{ github.workspace }}/.ci/gerbil-release/v19
+      ORACLE_SHARD: ${{ matrix.shard }}
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
       - name: Install system dependencies
@@ -61,11 +66,21 @@ jobs:
       - name: Install Just
         run: cargo install just --version 1.56.0 --locked
       - name: Enforce Rust warnings and ASP policy
+        if: matrix.shard == 'other'
         run: |
           cargo clippy --locked --manifest-path rust/ascent-oracle/Cargo.toml --all-targets -- -D warnings
           cargo test --locked --manifest-path rust/ascent-oracle/Cargo.toml --test asp_rust_gate
       - name: Compare with Rust Ascent
-        run: just oracle
+        run: |
+          case "$ORACLE_SHARD" in
+            byods)
+              gerbil env env PATH="$PATH" cargo test --locked --manifest-path rust/ascent-oracle/Cargo.toml --test scheme_parity -- byods::
+              ;;
+            other)
+              gerbil env env PATH="$PATH" cargo test --locked --manifest-path rust/ascent-oracle/Cargo.toml --test scheme_parity -- --skip byods::
+              ;;
+            *) exit 2 ;;
+          esac
   native-and-oracle:
     if: ${{ always() }}
     needs: [scheme, oracle]

@@ -82,6 +82,9 @@ negation, checked reductions and lattices, finite views, and retained
 source-replacement Sessions.  =relational-admit/report= returns a typed
 diagnostic with a zero-based planner path for invalid rule bodies, heads
 and dependency cycles; direct =relational-admit= still raises.
+Rule-local =where= and =compute= inputs can use scalar literals and
+explicit =(value expression)= captures as well as bound variables;
+admission rebuilds the fixed descriptor before a solve.
 The [[file:llm-reasoning-library-plan.org][implementation plan]] maps the
 research to code seams, interface claims and falsifiable experiments.
 

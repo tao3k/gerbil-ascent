@@ -17,6 +17,7 @@
         relational-checked-lattice relational-lattice-fragment
         relational-finite-view relational-captured-value
         relational-term-fingerprint relational-reducer
+        relational-operator-literal relational-operand-variables
         relational-where relational-compute)
 
 ;;; The checked language admits only scalar atoms with stable equality and
@@ -129,6 +130,56 @@
     (error "relational value capture requires an immutable scalar" value))
   (gerbil-ascent-literal value))
 
+;;; A rule-local literal is fixed when its program or fragment is built.
+;;; The descriptor is copied again at admission, so later caller mutation
+;;; cannot alter an executing rule. Symbols in the input list denote logic
+;;; variables; vectors distinguish explicitly captured literal values.
+(def (relational-operator-literal value)
+  (unless (relational-scalar? value)
+    (error "relational operator literal requires a scalar" value))
+  (vector 'literal value))
+
+(def (relational-copy-operand operand)
+  (cond
+   ((symbol? operand) (vector 'variable operand))
+   ((and (vector? operand) (= (vector-length operand) 2))
+    (case (vector-ref operand 0)
+      ((variable)
+       (unless (symbol? (vector-ref operand 1))
+         (error "invalid relational operator variable" operand))
+       (vector 'variable (vector-ref operand 1)))
+      ((literal) (relational-operator-literal (vector-ref operand 1)))
+      (else (error "invalid relational operator operand" operand))))
+   (else (error "invalid relational operator operand" operand))))
+
+(def (relational-operand-variables operands)
+  (unless (list? operands)
+    (error "relational operator operands must be a list" operands))
+  (filter-map
+   (lambda (operand)
+     (and (vector? operand)
+          (= (vector-length operand) 2)
+          (eq? (vector-ref operand 0) 'variable)
+          (vector-ref operand 1)))
+   operands))
+
+(def (relational-operator-call operation-procedure operands)
+  (lambda values
+    (let loop ((remaining operands) (bound values) (arguments []))
+      (if (null? remaining)
+        (begin
+          (unless (null? bound)
+            (error "relational operator argument mismatch"))
+          (apply operation-procedure (reverse arguments)))
+        (let (operand (car remaining))
+          (if (eq? (vector-ref operand 0) 'variable)
+            (if (pair? bound)
+              (loop (cdr remaining) (cdr bound)
+                    (cons (car bound) arguments))
+              (error "relational operator argument mismatch"))
+            (loop (cdr remaining) bound
+                  (cons (vector-ref operand 1) arguments))))))))
+
 (def (relational-term-fingerprint terms)
   (map (lambda (term)
          (cons (.ref term 'kind) (.ref term 'value)))
@@ -205,15 +256,21 @@
     (else (error "unknown relational operator mode" mode))))
 
 (def (relational-where operation variables)
-  (let (inputs (map identity variables))
+  (let* ((operands (map relational-copy-operand variables))
+         (inputs (relational-operand-variables operands)))
     (gerbil-ascent-guard
      inputs
-     (relational-operator-procedure 'where operation (length inputs))
-     (vector 'where operation (map identity inputs)))))
+     (relational-operator-call
+      (relational-operator-procedure 'where operation (length operands))
+      operands)
+     (vector 'where operation operands))))
 
 (def (relational-compute output operation variables)
-  (let (inputs (map identity variables))
+  (let* ((operands (map relational-copy-operand variables))
+         (inputs (relational-operand-variables operands)))
     (gerbil-ascent-binding
      output inputs
-     (relational-operator-procedure 'compute operation (length inputs))
-     (vector 'compute operation (map identity inputs) output))))
+     (relational-operator-call
+      (relational-operator-procedure 'compute operation (length operands))
+      operands)
+     (vector 'compute operation operands output))))

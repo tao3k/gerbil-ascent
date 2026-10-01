@@ -21,8 +21,11 @@ Each top-level directory is a Gerbil module namespace:
 `program/interface.ss` exports the native
 [`relational-program` and `relational-fragment` forms](docs/scheme-relational-language-design.org)
 with checked scalar capture, negation, reductions, lattice declarations,
-finite views, admission, Sessions, and relation operators. The historical
-[`ascent` form](docs/scheme-syntax.org) remains in `program/syntax.ss` for
+finite views, admission, Sessions, and relation operators. Native
+`where` and `compute` clauses accept bound `?variables`, scalar
+literals, and explicit `(value expression)` captures. Captures are fixed
+when the program or fragment is constructed and checked again at admission.
+The historical [`ascent` form](docs/scheme-syntax.org) remains in `program/syntax.ss` for
 the Rust parity qualification corpus; it is no longer re-exported by the
 public interface. The lower-level POO API still exposes
 `relation`, `lattice`, `atom`, `negation`, `guard`, `binding`, `aggregate`,
@@ -104,12 +107,6 @@ covers a rejected proposal, a valid wrong join, its correction, source
 withdrawal and an isolated hypothetical edge against an independent
 finite graph model. This binding check does not authenticate the source
 or prove that the proposal captures a caller's intended meaning.
-
-`candidate/wire.ss` exposes this boundary as bounded version-one JSON.
-The model supplies an inert candidate envelope; the application passes
-the source snapshot and proof work budget separately. Its receipt carries
-typed status, source and candidate digests, diagnostics and explicit row
-projection completeness. See the [wire contract](docs/llm-reasoning-library-plan.org#llm-library-json-wire).
 
 The operator compiler supports source, union,
 equijoin, fixed equality selection, projection, finite mapping and

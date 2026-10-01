@@ -92,7 +92,7 @@
    (append-map (lambda (fragment) (.ref fragment 'source-handles))
                fragments)))
 
-;;; Admission rebuilds only the checked positive grammar. This removes
+;;; Admission rebuilds only the checked relational grammar. This removes
 ;;; caller-owned row/rule lists before planning and rejects old host callbacks.
 (def (relational-copy-term term)
   (case (.ref term 'kind)
@@ -146,7 +146,8 @@
        (unless (and (vector? descriptor)
                     (= (vector-length descriptor) 3)
                     (eq? (vector-ref descriptor 0) 'where)
-                    (equal? (vector-ref descriptor 2)
+                    (equal? (relational-operand-variables
+                             (vector-ref descriptor 2))
                             (.ref clause 'variables)))
          (error "untrusted relational filter"))
        (relational-where (vector-ref descriptor 1)
@@ -156,7 +157,8 @@
        (unless (and (vector? descriptor)
                     (= (vector-length descriptor) 4)
                     (eq? (vector-ref descriptor 0) 'compute)
-                    (equal? (vector-ref descriptor 2)
+                    (equal? (relational-operand-variables
+                             (vector-ref descriptor 2))
                             (.ref clause 'variables))
                     (eq? (vector-ref descriptor 3)
                          (.ref clause 'variable)))

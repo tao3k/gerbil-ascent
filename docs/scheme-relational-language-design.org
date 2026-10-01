@@ -35,6 +35,27 @@ The [[file:research/scheme-dsl/reflection.org][research reflection]]
 records each proposed departure, its cost, and a comparison that
 could falsify its claimed benefit.
 
+* Native program boundary
+:PROPERTIES:
+:CUSTOM_ID: scheme-language-native-boundary
+:END:
+
+The public Library surface is the native Scheme =relational-program= and
+=relational-fragment= DSL. Its clauses lower once to checked program
+values; admission inspects that graph, and sessions and queries exchange
+typed relation/result values. Candidate inspection likewise accepts inert
+Scheme clauses directly. An internal JSON candidate format would duplicate
+the grammar, scalar conversion, and validation without improving the
+fixed-point semantics, so it is outside this architecture.
+
+This repository currently runs the Scheme evaluator; the Rust Ascent
+crate is a test-only comparison oracle. If another native Rust owner needs
+these results, an AOT or FFI boundary should expose admitted operations,
+source updates, completed relation snapshots and explicit failure status.
+The ABI, ownership and lifetime contract must be specified against those
+native values before adding a bridge. A model-serving protocol is deferred
+and does not define the Datalog language or the internal calling boundary.
+
 * Two meanings of higher order
 :PROPERTIES:
 :CUSTOM_ID: scheme-language-two-levels
@@ -262,6 +283,37 @@ performs admission and execution. The initial function-free slice had
 a finite active domain. Checked scalar operators, stratified negation,
 reductions and lattices now extend it. They do not implement the full
 higher-order language or establish a performance result.
+
+Native =where= and =compute= clauses accept bound =?variables=,
+exact-integer/Boolean/character literals, and explicit =(value
+expression)= inputs. The expression is evaluated once when its program
+or fragment is constructed, must yield an immutable scalar, and is copied
+into the checked operator descriptor. Admission reconstructs the
+operator from that descriptor; rule execution never calls the captured
+expression. The input variable list stays visible to the planner, so an
+unbound variable rejects before solving.
+
+#+begin_src scheme
+(def offset 1)
+(relational-program
+  (relation edge (from to) '((1 2) (2 3)))
+  (relation selected (from to))
+  (rule (selected ?x ?y)
+    (edge ?x ?y)
+    (where (< ?x 3))
+    (compute ?next (+ ?x (value offset)))
+    (where (even? ?next)))
+  (limits 8 16 32))
+#+end_src
+
+Here =offset= is fixed at construction. A later mutation of its binding
+cannot change a previously admitted program or Session. Fixed row-local
+filters and projections preserve monotonicity in a growing positive
+input relation, but =+= can generate fresh integers recursively; the
+fact budget is a failure bound, not a proof of finite-height closure.
+The native qualification checks direct programs, fragment composition,
+source replacement and earlier result stability against an independent
+finite Scheme model.
 
 The [[file:../t/qualification/scheme-relational-test.ss][qualification
 case]] compares recursive closure with an independent Floyd-Warshall
@@ -501,7 +553,7 @@ Gerbil macro prototype before this spelling is final.
 | Logic term | =?name= | Bind on first positive use; repeated use checks equality; must be bound before head/negative use |
 | Literal term | Exact integer/Boolean/character or =(value expression)= | Implemented; =value= evaluates once and accepts an immutable scalar, including symbols |
 | Anonymous term | =?_= | Implemented; each occurrence is independent and creates no output binding |
-| Scalar clause | =where= or =compute= with declared input variables | Lower to one operator descriptor after inputs are bound |
+| Scalar clause | =where= or =compute= with bound variables and fixed scalar inputs | Lower to one checked operator descriptor; captured values freeze at construction |
 | Negative clause | =(not (relation term ...))= | All variables already bound; lower-stratum dependency |
 
 String literals and richer compound values remain open lexical and

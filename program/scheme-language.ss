@@ -128,6 +128,33 @@
     ((_ bad ...)
      (raise-syntax-error #f "expected checked reduction" stx))))
 
+;;; Rule-local operands admit only bound logic variables or scalar values
+;;; captured once during construction. A plain Scheme identifier is never
+;;; interpreted as a hidden runtime callback or a literal symbol.
+(defsyntax (relational-operator-input stx)
+  (syntax-case stx (value)
+    ((_ (value expression))
+     (syntax (relational-operator-literal expression)))
+    ((_ input)
+     (identifier? (syntax input))
+     (let* ((datum (syntax->datum (syntax input)))
+            (spelling (symbol->string datum)))
+       (if (and (not (eq? datum '?_))
+                (> (string-length spelling) 1)
+                (char=? (string-ref spelling 0) #\?))
+         (syntax (vector 'variable 'input))
+         (raise-syntax-error
+          #f "operator input must be a ?variable or scalar literal"
+          (syntax input)))))
+    ((_ input)
+     (let (datum (syntax->datum (syntax input)))
+       (if (or (exact-integer? datum) (boolean? datum)
+               (char? datum))
+         (syntax (relational-operator-literal input))
+         (raise-syntax-error
+          #f "operator input must be an immutable scalar literal"
+          (syntax input)))))))
+
 ;;; Both public forms share one rule-body grammar. The three lowering macros
 ;;; choose named or lexical relation references; scalar operators use the
 ;;; same checked descriptor path in either form. Keeping this expansion
@@ -143,15 +170,16 @@
   (syntax-case stx (where compute not reduce)
     ((_ atom-lowering negation-lowering reduce-lowering
         (where (operation input ...)))
-     (and (identifier? (syntax operation))
-          (andmap logic-variable? (syntax->list (syntax (input ...)))))
-     (syntax (relational-where 'operation '(input ...))))
+     (identifier? (syntax operation))
+     (syntax (relational-where
+              'operation (list (relational-operator-input input) ...))))
     ((_ atom-lowering negation-lowering reduce-lowering
         (compute output (operation input ...)))
      (and (logic-variable? (syntax output))
-          (identifier? (syntax operation))
-          (andmap logic-variable? (syntax->list (syntax (input ...)))))
-     (syntax (relational-compute 'output 'operation '(input ...))))
+          (identifier? (syntax operation)))
+     (syntax (relational-compute
+              'output 'operation
+              (list (relational-operator-input input) ...))))
     ((_ atom-lowering negation-lowering reduce-lowering
         (not (name term ...)))
      (syntax (negation-lowering (name term ...))))
@@ -235,9 +263,11 @@
 ;; relational-program
 ;;   : (-> Syntax CheckedPositiveProgramExpression)
 ;;   | doc m%
-;;       Build a checked positive program. Source and derived values are
+;;       Build a checked relational program. Source and derived values are
 ;;       immutable scalar atoms. Rules admit only fixed checked scalar
-;;       operators, not host closures or plain Scheme identifiers. The final
+;;       operators, not host closures or plain Scheme identifiers. Fixed
+;;       rule-local literals and explicit (value ...) inputs are captured
+;;       when the program is constructed. The final
 ;;       limits clause supplies resource-failure bounds.
 ;;
 ;;       # Examples
@@ -262,7 +292,7 @@
 ;; relational-fragment
 ;;   : (-> Syntax FirstClassFragmentExpression)
 ;;   | doc m%
-;;       Instantiate a positive fragment with fresh source and private
+;;       Instantiate a checked fragment with fresh source and private
 ;;       predicate names. Imports are existing relation handles. Named
 ;;       exports are recorded on the existing typed POO fragment value.
 ;;

@@ -16,7 +16,7 @@
         (only-in :gerbil-ascent/program/scheme-language
                  relational-program relational-fragment
                  relational-compose relational-export relational-admit
-                 relational-solve relational-query
+                 relational-solve relational-query relational-query-name
                  relational-open-session
                  relational-session-replace-source!
                  relational-session-run
@@ -109,6 +109,50 @@
       (edge ?x ?y)
       (compute ?z (identity ?x)))
     (limits 32 32 64))))
+
+(def (literal-scalar-program source-rows offset)
+  (relational-program
+   (relation input (left right) source-rows)
+   (relation selected (left right))
+   (relation shifted (value))
+   (rule (selected ?x ?y)
+     (input ?x ?y)
+     (where (< ?x 3))
+     (where (< ?x ?y)))
+   (rule (shifted ?z)
+     (selected ?x ?y)
+     (compute ?z (+ ?x (value offset)))
+     (where (even? ?z)))
+   (limits 32 64 64)))
+
+(def (literal-scalar-fragment input-handle offset)
+  (relational-fragment
+   (import (input input-handle))
+   (source)
+   (private (selected (left right)) (shifted (value)))
+   (export (selected selected) (shifted shifted))
+   (rule (selected ?x ?y)
+     (input ?x ?y)
+     (where (< ?x 3))
+     (where (< ?x ?y)))
+   (rule (shifted ?z)
+     (selected ?x ?y)
+     (compute ?z (+ ?x (value offset)))
+     (where (even? ?z)))))
+
+(def (reference-literal-scalar rows offset)
+  (let* ((selected
+          (filter (lambda (row)
+                    (and (< (car row) 3)
+                         (< (car row) (cadr row))))
+                  rows))
+         (shifted
+          (delete-duplicates/hash
+           (map (lambda (row) (list (+ (car row) offset)))
+                (filter (lambda (row)
+                          (even? (+ (car row) offset)))
+                        selected)))))
+    (values (delete-duplicates/hash selected) shifted)))
 
 (def (rows result name)
   ((.ref result 'rows-of) name))
@@ -400,7 +444,8 @@
                      (gerbil-ascent-guard
                       '(?x)
                       (lambda (_value) (set! called #t) #t)
-                      (vector 'where 'even? '(?x))))))
+                      (vector 'where 'even?
+                              (list (vector 'variable '?x)))))))
              (injected (gerbil-ascent-fragment [] (list rule)))
              (solution
               (relational-solve
@@ -460,6 +505,83 @@
                                  expected-sum) #t)
         (check-equal? (same-set? (rows direct 'copied-left)
                                  expected-copied) #t)))
+    (poo-flow-test-case "literal scalar clauses bind at native construction"
+      (let* ((input
+              (append-map
+               (lambda (left)
+                 (map (lambda (right) (list left right)) '(0 1 2 3)))
+               '(0 1 2 3)))
+             (offset 1)
+             (direct (literal-scalar-program input offset))
+             (source (source-fragment input))
+             (fragment
+              (literal-scalar-fragment
+               (relational-export source 'edge) offset))
+             (composed
+              (relational-compose (list source fragment) 32 64 64)))
+        (set! offset 100)
+        (let* ((direct-result (relational-solve (relational-admit direct)))
+               (fragment-result
+                (relational-solve
+                 (relational-admit composed))))
+          (let-values (((expected-selected expected-shifted)
+                        (reference-literal-scalar input 1)))
+            (check-equal?
+             (same-set? (relational-query-name direct-result 'selected)
+                        expected-selected) #t)
+            (check-equal?
+             (same-set? (relational-query-name direct-result 'shifted)
+                        expected-shifted) #t)
+            (check-equal?
+             (same-set? (relational-query fragment-result fragment 'selected)
+                        expected-selected) #t)
+            (check-equal?
+             (same-set? (relational-query fragment-result fragment 'shifted)
+                        expected-shifted) #t)))
+        (let* ((session (relational-open-session composed))
+               (first (relational-session-run session))
+               (replacement '((0 1) (1 2) (2 3))))
+          (relational-session-replace-source!
+           session source 'edge replacement)
+          (let (second (relational-session-run session))
+            (let-values (((original-selected original-shifted)
+                          (reference-literal-scalar input 1))
+                         ((next-selected next-shifted)
+                          (reference-literal-scalar replacement 1)))
+              (check-equal?
+               (same-set? (relational-query first fragment 'selected)
+                          original-selected) #t)
+              (check-equal?
+               (same-set? (relational-query first fragment 'shifted)
+                          original-shifted) #t)
+              (check-equal?
+               (same-set? (relational-query second fragment 'selected)
+                          next-selected) #t)
+              (check-equal?
+               (same-set? (relational-query second fragment 'shifted)
+                          next-shifted) #t))))
+        (check-exception
+         (literal-scalar-program '((1 2)) '(not-a-scalar)) true)))
+    (poo-flow-test-case "constant guard and captured symbol stay stable"
+      (let* ((tag 'accepted)
+             (lower 0)
+             (program
+              (relational-program
+               (relation input (value) '((0) (1) (2)))
+               (relation labeled (value tag))
+               (rule (labeled ?x ?label)
+                 (input ?x)
+                 (where (< (value lower) ?x))
+                 (where (< 1 3))
+                 (compute ?label (identity (value tag))))
+               (limits 8 8 16))))
+        (set! lower 100)
+        (set! tag 'changed)
+        (check-equal?
+         (same-set?
+          (relational-query-name
+           (relational-solve (relational-admit program)) 'labeled)
+          '((1 accepted) (2 accepted))) #t)))
     (poo-flow-test-case "checked operator modes reject invalid uses"
       (check-exception
        (relational-fragment

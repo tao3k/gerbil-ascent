@@ -39,7 +39,6 @@
     "candidate/provenance"
     "candidate/nonmembership"
     "candidate/reasoning"
-    "candidate/wire"
     "interface/request"))
 
 (asp-gerbil-scheme-package-spec!

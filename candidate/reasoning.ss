@@ -12,6 +12,7 @@
                  reasoning-snapshot-identity reasoning-snapshot-generation
                  reasoning-snapshot-digest reasoning-snapshot-relations
                  reasoning-snapshot-content-digest reasoning-snapshot-valid?
+                 reasoning-bounded-data?
                  make-reasoning-diagnostic reasoning-diagnostic?
                  reasoning-diagnostic-code reasoning-diagnostic-path
                  reasoning-diagnostic-detail
@@ -35,6 +36,7 @@
                  relational-solve relational-query-name))
 
 (export reasoning-source-snapshot reasoning-attempt
+        reasoning-receipt-bound?
         reasoning-snapshot? reasoning-snapshot-identity
         reasoning-snapshot-generation reasoning-snapshot-digest
         reasoning-receipt? reasoning-receipt-status
@@ -73,6 +75,42 @@
      (call-with-output-string ""
        (lambda (port) (write datum port)))))))
 
+;;; A malformed cyclic or executable proposal has no safe content digest.
+;;; Well-formed inert proposals keep the same digest across rejected and
+;;; completed attempts, so feedback can be tied to the submitted content.
+(def (candidate-content-digest candidate)
+  (and (reasoning-bounded-data? candidate 16384 128)
+       (digest-datum (list 'reasoning-candidate-v1 candidate))))
+
+;; reasoning-receipt-bound?
+;;   : (forall (row) (-> ReasoningReceipt (Snapshot row) Datum Boolean))
+;;   : (-> ReasoningReceipt ReasoningSnapshot Datum Boolean)
+;;   | doc m%
+;;       Check local snapshot and inert candidate content binding for a
+;;       receipt. This does not validate the candidate's intended meaning,
+;;       source authority, native completion or an attached proof.
+;;
+;;       # Examples
+;;
+;;       ```scheme
+;;       (reasoning-receipt-bound? receipt snapshot proposal)
+;;       ;; => #t only for matching current local content
+;;       ```
+;;     %
+(def (reasoning-receipt-bound? receipt snapshot candidate)
+  (and (reasoning-receipt? receipt)
+       (reasoning-snapshot-valid? snapshot)
+       (equal? (reasoning-receipt-snapshot-identity receipt)
+               (reasoning-snapshot-identity snapshot))
+       (equal? (reasoning-receipt-snapshot-generation receipt)
+               (reasoning-snapshot-generation snapshot))
+       (equal? (reasoning-receipt-snapshot-digest receipt)
+               (reasoning-snapshot-digest snapshot))
+       (let (digest (candidate-content-digest candidate))
+         (and digest
+              (equal? digest
+                      (reasoning-receipt-candidate-digest receipt))))))
+
 ;;; The caller supplies identity and generation. The digest binds their
 ;;; contents for this local receipt; it does not certify source authority.
 ;; reasoning-source-snapshot
@@ -92,6 +130,7 @@
 (def (reasoning-source-snapshot identity generation declarations)
   (unless (and (or (symbol? identity) (string? identity))
                (exact-integer? generation) (<= 0 generation)
+               (reasoning-bounded-data? declarations 131072 128)
                (list? declarations)
                (<= (length declarations) +max-relations+))
     (error "invalid reasoning source snapshot"))
@@ -296,20 +335,21 @@
   (unless (and (exact-integer? proof-steps) (> proof-steps 0))
     (error "reasoning attempt requires positive proof work budget"
            proof-steps))
-  (let (inspection (capture (lambda () (candidate-inspect snapshot candidate))))
+  (let* ((digest (candidate-content-digest candidate))
+         (inspection
+          (capture (lambda () (candidate-inspect snapshot candidate)))))
     (if (not (vector-ref inspection 0))
       (let (failure (vector-ref inspection 1))
         (if (candidate-rejection? failure)
           (reasoning-receipt-for
-           snapshot #f 'rejected #f []
+           snapshot digest 'rejected #f []
            (list (candidate-rejection-diagnostic failure)) #f)
           (reasoning-receipt-for
-           snapshot #f 'unknown #f []
+           snapshot digest 'unknown #f []
            (list (make-reasoning-diagnostic
                   'inspector-failed '(candidate)
                   (failure-detail failure))) #f)))
       (let* ((spec (vector-ref inspection 1))
-             (digest (digest-datum (list 'reasoning-candidate-v1 candidate)))
              (query (vector-ref (reasoning-candidate-query spec) 0))
              (prepared
               (capture

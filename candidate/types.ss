@@ -13,6 +13,7 @@
         reasoning-snapshot-generation reasoning-snapshot-digest
         reasoning-snapshot-relations
         reasoning-snapshot-content-digest reasoning-snapshot-valid?
+        reasoning-bounded-data?
         make-reasoning-diagnostic reasoning-diagnostic?
         reasoning-diagnostic-code
         reasoning-diagnostic-path reasoning-diagnostic-detail
@@ -34,6 +35,55 @@
 (def +max-input-facts+ 1024)
 (def +max-derived-facts+ 4096)
 (def +max-output-facts+ 4096)
+
+;;; Walk untrusted pair trees without recursing through caller-owned input.
+;;; The active-path check rejects cycles while allowing shared, acyclic rows.
+;;; Cdr steps do not increase nesting depth, so a flat finite list is bounded
+;;; by node count rather than an arbitrary list-length depth limit.
+;; reasoning-bounded-data?
+;;   : (forall (a) (-> a Nat Nat Boolean))
+;;   : (-> Datum Nat Nat Boolean)
+;;   | doc m%
+;;       Check an inert scalar/pair tree before any list traversal or digest.
+;;       The result is false for cycles, executable leaves or work exhaustion.
+;;       Sharing between finite branches is allowed.
+;;
+;;       # Examples
+;;
+;;       ```scheme
+;;       (reasoning-bounded-data? '(edge 1 2) 16 8)
+;;       ;; => #t
+;;       ```
+;;     %
+(def (reasoning-bounded-data? datum max-nodes max-depth)
+  (let (active (make-hash-table-eq))
+    (let loop ((pending (list (vector 'enter datum 0)))
+               (remaining max-nodes))
+      (if (null? pending)
+        #t
+        (let* ((item (car pending))
+               (rest (cdr pending))
+               (kind (vector-ref item 0))
+               (value (vector-ref item 1))
+               (depth (vector-ref item 2)))
+          (if (eq? kind 'exit)
+            (begin (hash-put! active value #f)
+                   (loop rest remaining))
+            (cond
+             ((<= remaining 0) #f)
+             ((pair? value)
+              (if (or (> depth max-depth) (hash-get active value))
+                #f
+                (begin
+                  (hash-put! active value #t)
+                  (loop
+                   (cons (vector 'enter (car value) (+ depth 1))
+                         (cons (vector 'enter (cdr value) depth)
+                               (cons (vector 'exit value depth) rest)))
+                   (- remaining 1)))))
+             ((or (null? value) (snapshot-scalar? value))
+              (loop rest (- remaining 1)))
+             (else #f))))))))
 
 ;; : (forall (row) (-> SourceId Nat (Relations row) Digest))
 ;; : (-> SourceId Nat Relations Digest)
@@ -90,6 +140,7 @@
              (names (make-hash-table))
              (facts 0))
          (and
+          (reasoning-bounded-data? relations 131072 128)
           (list? relations)
           (<= (length relations) +max-relations+)
           (andmap

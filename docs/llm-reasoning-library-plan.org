@@ -86,6 +86,30 @@ recursive join as a complete but semantically wrong candidate, and
 checks all 64 directed three-node graphs against an independent
 Floyd-Warshall-style finite reference.
 
+Candidate and source inputs now pass an iterative scalar/pair-tree
+preflight before list traversal or digest. It rejects cycles,
+executable leaves, excessive nesting and node-budget exhaustion while
+allowing a finite shared row. An inert but structurally rejected
+proposal keeps its content digest, so its diagnostic can be tied to
+the exact submitted proposal; a cyclic or executable proposal has no
+safe candidate digest. =reasoning-receipt-bound?= checks the current
+local snapshot identity, generation and digest together with candidate
+content. It does not authenticate the source, replay a proof or establish
+that the candidate means what the caller intended.
+
+The scripted transcript in
+=t/qualification/ascent-reasoning-library-test.ss= exercises this
+boundary end to end. A missing predicate is rejected with feedback; a
+valid but wrong recursive join completes with an incorrect total; the
+corrected join yields the independent finite-model total. A later
+source withdrawal changes that total, while a hypothetical candidate
+edge changes only its own attempt. An old receipt does not bind to the
+new generation, and a mutated proposal does not bind to its receipt.
+This is a fixed scripted caller, not evidence that an LLM can discover
+or repair a rule. [[file:research/agent-inference/logic-lm-ll23.org][Logic-LM]] uses solver errors for formalization repair;
+[[file:research/agent-inference/linc-li23.org][LINC]] distinguishes parse failures and semantic errors. Neither paper
+establishes this Library's model usefulness or source authority.
+
 * Code map and intended seam
 :PROPERTIES:
 :CUSTOM_ID: llm-library-code-map
@@ -181,6 +205,9 @@ or benchmark scores to this implementation.
    only when closure is complete.  Negative cases must return =unknown=
    on budget exhaustion.
 6. Compare a scripted LLM-like transcript before a live model study.
+   The first deterministic transcript is executable: it includes
+   located rejection, valid wrong formalization, corrected finite-model
+   result, generation change and hypothetical source overlay.
    Then freeze model, task set, sources, tool budget and prompts; compare
    model-only, search+model and search+Library+model.  Score exact
    answers, unsupported claims, repair turns, abstention, latency and

@@ -13,6 +13,7 @@
                  make-reasoning-candidate reasoning-candidate-relations
                  reasoning-candidate-facts reasoning-candidate-rules
                  reasoning-candidate-query reasoning-candidate-limits
+                 reasoning-bounded-data?
                  +max-relations+ +max-rules+ +max-input-facts+
                  +max-derived-facts+ +max-output-facts+)
         (only-in :gerbil-ascent/program/objects
@@ -47,25 +48,14 @@
   (and (scalar? value)
        (not (eq? value '?))))
 
-;;; Reject syntax objects, vectors, closures and other executable values
-;;; before inspection. The depth guard prevents a recursively shaped datum
-;;; from consuming unbounded inspector stack before structural budgets apply.
-(def (candidate-inert? value fuel)
-  (and (> fuel 0)
-       (or (scalar? value)
-           (and (pair? value)
-                (candidate-inert? (car value) (- fuel 1))
-                (candidate-inert? (cdr value) (- fuel 1)))
-           (null? value))))
-
 ;;; Keep the data grammar restricted to fixed, inspectable operations from
 ;;; the trusted Scheme DSL. No candidate procedure or operator body runs.
 ;;; Clause indexes survive lowering so a rejected proposal can be revised
 ;;; without guessing which relation or body atom caused the failure.
 (def (candidate-parse datum)
-  (unless (and (list? datum) (pair? datum)
+  (unless (and (reasoning-bounded-data? datum 16384 128)
+               (list? datum) (pair? datum)
                (eq? (car datum) 'candidate)
-               (candidate-inert? datum 16384)
                (<= (length (cdr datum)) 256))
     (reject 'invalid-candidate '(candidate) 'expected-inert-candidate-list))
   (let loop ((clauses (cdr datum)) (index 1)

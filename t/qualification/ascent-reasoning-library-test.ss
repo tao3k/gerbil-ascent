@@ -3,8 +3,11 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 (import (only-in :std/test check-equal? check-exception test-suite test-case)
+        (only-in :gerbil-ascent/candidate/types
+                 make-reasoning-snapshot reasoning-snapshot-valid?)
         (only-in :gerbil-ascent/candidate/reasoning
                  reasoning-source-snapshot reasoning-attempt
+                 reasoning-receipt-bound?
                  reasoning-snapshot-digest
                  reasoning-receipt-status reasoning-receipt-rows
                  reasoning-receipt-diagnostics reasoning-receipt-evidence
@@ -65,6 +68,50 @@
 (def (same-rows? actual expected)
   (and (= (length actual) (length expected))
        (andmap (lambda (row) (if (member row expected) #t #f)) actual)))
+
+;;; A scripted caller can revise a proposal without changing the Library's
+;;; source snapshot. The finite reference calculates the intended summary
+;;; from graph closure and scalar weights, independently of rule evaluation.
+(def (rich-proposal join (extra []))
+  (append
+   '(candidate
+      (relation path 2)
+      (relation allowed 2)
+      (relation score 2)
+      (relation summary 2)
+      (rule (path ?x ?y) (edge ?x ?y)))
+   (list (list 'rule '(path ?x ?z)
+               '(path ?x ?y) (list 'edge join '?z)))
+   '((rule (allowed ?x ?y)
+       (path ?x ?y) (not (blocked ?x ?y)))
+     (rule (score ?x ?d)
+       (allowed ?x ?y) (weight ?y ?w)
+       (where (even? ?w)) (compute ?d (+ ?w ?w)))
+     (rule (summary ?r ?total)
+       (root ?r) (reduce ?total (sum ?d) (score ?r ?d))))
+   extra
+   '((query summary 0 ?total) (limits 16 64 128))))
+
+(def (reference-rich-summary edges)
+  (let* ((reachable (reference-closure edges))
+         (values
+          (map (lambda (row)
+                 (* 2 (cdr (assq (cadr row) '((1 . 4) (2 . 6))))))
+               (filter
+                (lambda (row)
+                  (and (= (car row) 0)
+                       (not (equal? row '(1 2)))
+                       (assq (cadr row) '((1 . 4) (2 . 6)))))
+                reachable))))
+    (list (list 0 (apply + values)))))
+
+(def (rich-snapshot generation edges)
+  (reasoning-source-snapshot
+   'rich-graph generation
+   (list (list 'edge 2 edges)
+         '(blocked 2 ((1 2)))
+         '(weight 2 ((1 4) (2 6)))
+         '(root 1 ((0))))))
 
 (def ascent-reasoning-library-test
   (test-suite "bounded inert reasoning library"
@@ -164,6 +211,46 @@
         (check-exception
          (reasoning-source-snapshot 'graph 1 '((edge 2 ((1 2)))
                                                (edge 2 ((2 3))))) true)))
+    (test-case "inert data preflight bounds cycles and depth before parsing"
+      (let* ((snapshot (edge-snapshot 1 '((1 2))))
+             (cycle (cons 'candidate [])))
+        (set-cdr! cycle cycle)
+        (let (receipt (reasoning-attempt snapshot cycle))
+          (check-equal? (reasoning-receipt-status receipt) 'rejected)
+          (check-equal? (reasoning-diagnostic-code
+                         (first-diagnostic receipt)) 'invalid-candidate))
+        (let (receipt
+              (reasoning-attempt
+               snapshot
+               (let loop ((depth 0) (datum '(candidate)))
+                 (if (= depth 200)
+                   datum
+                   (loop (+ depth 1) (list datum))))))
+          (check-equal? (reasoning-receipt-status receipt) 'rejected))
+        (check-equal?
+         (reasoning-receipt-status
+          (reasoning-attempt
+           snapshot (cons 'candidate (make-list 20000 'relation))))
+         'rejected)
+        (check-equal?
+         (reasoning-receipt-status
+          (reasoning-attempt snapshot
+                             (list 'candidate (lambda () 'run))))
+         'rejected))
+      (let (cycle (cons '(edge 2 ((1 2))) []))
+        (set-cdr! cycle cycle)
+        (check-exception
+         (reasoning-source-snapshot 'graph 1 cycle) true)
+        (check-equal?
+         (reasoning-snapshot-valid?
+          (make-reasoning-snapshot 'graph 1 "forged" cycle))
+         #f))
+      (let (row (list 1 2))
+        (check-equal?
+         (reasoning-snapshot-valid?
+          (reasoning-source-snapshot
+           'graph 1 (list (list 'edge 2 (list row row)))))
+         #t)))
     (test-case "nonreflexive empty graph has complete unsupported evidence"
       (let* ((snapshot (edge-snapshot 1 '()))
              (receipt (reasoning-attempt snapshot (proposal 1 1))))
@@ -213,6 +300,47 @@
                     (not (blocked ?x ?y)))
               (query path 1 ?y) (limits 16 32 64))))
          '((1 2)))))
+    (test-case "scripted feedback revision stays bound to exact source and proposal"
+      (let* ((first (rich-snapshot 1 '((0 1) (1 2))))
+             (invalid
+              '(candidate (relation path 2)
+                          (rule (path ?x ?y) (missing ?x ?y))
+                          (query path 0 2) (limits 16 64 128)))
+             (wrong (rich-proposal '?x))
+             (correct (rich-proposal '?y))
+             (rejected (reasoning-attempt first invalid))
+             (wrong-answer (reasoning-attempt first wrong))
+             (correct-answer (reasoning-attempt first correct))
+             (second (rich-snapshot 2 '((0 1))))
+             (withdrawn (reasoning-attempt second correct))
+             (hypothesis (rich-proposal '?y '((fact edge 0 2))))
+             (overlay (reasoning-attempt second hypothesis))
+             (base-again (reasoning-attempt second correct)))
+        (check-equal? (reasoning-receipt-status rejected) 'rejected)
+        (check-equal? (reasoning-receipt-bound? rejected first invalid) #t)
+        (check-equal? (reasoning-receipt-bound? rejected first correct) #f)
+        (check-equal? (reasoning-receipt-status wrong-answer) 'complete)
+        (check-equal? (reasoning-receipt-rows wrong-answer) '((0 8)))
+        (check-equal? (reasoning-receipt-bound? wrong-answer first wrong) #t)
+        (check-equal? (reasoning-receipt-bound? wrong-answer first correct) #f)
+        (check-equal? (reasoning-receipt-status correct-answer) 'complete)
+        (check-equal? (reasoning-receipt-rows correct-answer)
+                      (reference-rich-summary '((0 1) (1 2))))
+        (check-equal? (reasoning-receipt-bound? correct-answer first correct)
+                      #t)
+        (check-equal? (reasoning-receipt-bound? correct-answer second correct)
+                      #f)
+        (check-equal? (reasoning-receipt-rows withdrawn)
+                      (reference-rich-summary '((0 1))))
+        (check-equal? (reasoning-receipt-rows overlay)
+                      (reference-rich-summary '((0 1) (0 2))))
+        (check-equal? (reasoning-receipt-rows base-again)
+                      (reasoning-receipt-rows withdrawn))
+        (check-equal? (reasoning-receipt-bound? overlay second hypothesis)
+                      #t)
+        (set-car! (cadr wrong) 'altered)
+        (check-equal? (reasoning-receipt-bound? wrong-answer first wrong)
+                      #f)))
     (test-case "candidate modes and stratification reject at their boundary"
       (let* ((snapshot (edge-snapshot 1 '((1 2))))
              (unsafe

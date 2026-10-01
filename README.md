@@ -93,6 +93,16 @@ have no general proof claim. For a missing ground target under finite
 positive atom rules, `candidate/nonmembership.ss` separately emits a
 bounded per-relation closed-set certificate; its verifier checks input
 coverage, rule closure and target absence relative to the named snapshot.
+Candidate and snapshot data pass a bounded iterative preflight before
+parsing or hashing; cycles and executable leaves are rejected. Inert
+rejected candidates retain a content digest, and
+`reasoning-receipt-bound?` checks whether feedback still belongs to the
+same local source generation and proposal. The scripted feedback test
+covers a rejected proposal, a valid wrong join, its correction, source
+withdrawal and an isolated hypothetical edge against an independent
+finite graph model. This binding check does not authenticate the source
+or prove that the proposal captures a caller's intended meaning.
+
 The operator compiler supports source, union,
 equijoin, fixed equality selection, projection, finite mapping and
 positive fixed points. An operator graph can now become a fresh fragment

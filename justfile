@@ -101,7 +101,9 @@ performance:
     export GERBIL_LOADPATH="{{ justfile_directory() }}${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}"
     # The ASP runner reports after its 1000 timed attempts; printing from a
     # timed thunk would change the samples. Qualification tests keep 5s idle,
-    # while SS scenarios use a bounded quiet window and their total timeout.
+    # while SS scenarios use bounded startup and quiet windows plus their
+    # total timeout.
+    export ASCENT_GXTEST_STARTUP_SECONDS="${ASCENT_SS_STARTUP_SECONDS:-20}"
     export ASCENT_GXTEST_IDLE_SECONDS="${ASCENT_SS_IDLE_SECONDS:-90}"
     run_case() {
         local name="$1"

@@ -30,13 +30,20 @@ test:
     output_file="$(mktemp)"
     trap 'rm -f "$output_file"' EXIT
     export GERBIL_LOADPATH="{{ justfile_directory() }}${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}"
-    timeout "${ASCENT_GXTEST_TIMEOUT:-120s}" gerbil {{ gerbil_test_runtime_options }} env gxtest "${files[@]}" 2>&1 | tee "$output_file"
-    if grep -E 'ERROR (CHECK|CASE|HARNESS|MODULE)|Heap overflow|Stack overflow' "$output_file" >/dev/null; then exit 1; fi
-    for file in "${files[@]}"; do
-        grep -Fx "MODULE-OK $file" "$output_file" >/dev/null
+    # Reset Gerbil and the POO Flow debug case watchdog between bounded
+    # batches; a single long harness accumulates unrelated module state.
+    batch_size=6
+    for ((start=0; start<${#files[@]}; start+=batch_size)); do
+        batch=("${files[@]:start:batch_size}")
+        : > "$output_file"
+        timeout "${ASCENT_GXTEST_TIMEOUT:-120s}" gerbil {{ gerbil_test_runtime_options }} env gxtest "${batch[@]}" 2>&1 | tee "$output_file"
+        if grep -E 'ERROR (CHECK|CASE|HARNESS|MODULE)|Heap overflow|Stack overflow' "$output_file" >/dev/null; then exit 1; fi
+        for file in "${batch[@]}"; do
+            grep -Fx "MODULE-OK $file" "$output_file" >/dev/null
+        done
+        grep -F 'HARNESS-OK' "$output_file" >/dev/null
+        grep -x 'OK' "$output_file" >/dev/null
     done
-    grep -F 'HARNESS-OK' "$output_file" >/dev/null
-    grep -x 'OK' "$output_file" >/dev/null
 
 # Matched finite-operator research probe; every sample checks independent
 # closure before reporting cost. This is separate from the SS suite.

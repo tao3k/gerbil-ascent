@@ -36,6 +36,7 @@
     "candidate/closure"
     "candidate/types"
     "candidate/program"
+    "candidate/provenance"
     "candidate/reasoning"
     "interface/request"))
 

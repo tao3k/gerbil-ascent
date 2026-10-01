@@ -4,8 +4,6 @@
 
 ;;; Bounded, inert rule proposals against a caller-owned snapshot.
 ;;; A receipt is an observation of one candidate, not source admission.
-;;; Bounded, inert rule proposals against a caller-owned snapshot.
-;;; A receipt is an observation of one candidate, not source admission.
 (import (only-in :std/crypto/digest sha256)
         (only-in :std/encoding/hex hex-encode)
         (only-in :std/error exception->string)
@@ -23,6 +21,8 @@
         (only-in :gerbil-ascent/candidate/program
                  scalar? candidate-variable? candidate-inspect candidate-program
                  candidate-planner-path)
+        (only-in :gerbil-ascent/candidate/provenance
+                 candidate-positive-proof)
         (only-in :gerbil-ascent/program/scheme-language
                  relational-admit/report
                  relational-admission-report-admission
@@ -41,6 +41,7 @@
         reasoning-receipt-candidate-digest
         reasoning-receipt-query reasoning-receipt-rows
         reasoning-receipt-diagnostics reasoning-receipt-evidence
+        reasoning-receipt-proof
         reasoning-diagnostic? reasoning-diagnostic-code
         reasoning-diagnostic-path reasoning-diagnostic-detail
         reasoning-evidence? reasoning-evidence-kind
@@ -48,7 +49,7 @@
 
 (defstruct reasoning-receipt
   (status snapshot-identity snapshot-generation snapshot-digest
-          candidate-digest query rows diagnostics evidence))
+          candidate-digest query rows diagnostics evidence proof))
 (defstruct reasoning-evidence (kind support reachable))
 
 (def (copy-row row arity)
@@ -230,7 +231,7 @@
 ;;; Detach lists from the submitted candidate and from engine output.
 ;;; Accessors still return ordinary Scheme values; callers own mutations.
 (def (reasoning-receipt-for snapshot digest status query rows
-                            diagnostics evidence)
+                            diagnostics evidence (proof #f))
   (make-reasoning-receipt
    status
    (reasoning-snapshot-identity snapshot)
@@ -247,7 +248,8 @@
         (make-reasoning-evidence
          (reasoning-evidence-kind evidence)
          (copy-datum (reasoning-evidence-support evidence))
-         (copy-datum (reasoning-evidence-reachable evidence))))))
+         (copy-datum (reasoning-evidence-reachable evidence))))
+   proof))
 
 (def (capture thunk)
   (with-catch
@@ -261,11 +263,13 @@
       message)))
 
 ;; reasoning-attempt
-;;   : (-> ReasoningSnapshot InertCandidate ReasoningReceipt)
+;;   : (-> ReasoningSnapshot InertCandidate [Nat] ReasoningReceipt)
 ;;   | doc m%
 ;;       Inspect a bounded candidate as data, run it against one
 ;;       copied source snapshot, and return a complete/rejected/unknown
 ;;       observation. The receipt cannot promote candidate facts to source.
+;;       The optional third argument caps positive-proof body-row probes;
+;;       native query completion and proof status remain independent.
 ;;
 ;;       # Examples
 ;;
@@ -279,9 +283,12 @@
 ;;     %
 ;;; Boundary: Structural diagnostics use candidate clause indexes, not
 ;;; Scheme syntax locations; planner failures retain their own messages.
-(def (reasoning-attempt snapshot candidate)
+(def (reasoning-attempt snapshot candidate (proof-steps 100000))
   (unless (reasoning-snapshot? snapshot)
     (error "reasoning attempt requires a source snapshot" snapshot))
+  (unless (and (exact-integer? proof-steps) (> proof-steps 0))
+    (error "reasoning attempt requires positive proof work budget"
+           proof-steps))
   (let (inspection (capture (lambda () (candidate-inspect snapshot candidate))))
     (if (not (vector-ref inspection 0))
       (let (failure (vector-ref inspection 1))
@@ -352,10 +359,22 @@
                           'query-failed '(query)
                           (failure-detail (vector-ref observed 1)))) #f))
                  ((vector-ref (vector-ref observed 1) 1)
-                  (reasoning-receipt-for
-                   snapshot digest 'complete query
-                   (vector-ref (vector-ref observed 1) 0) []
-                   (vector-ref (vector-ref observed 1) 1)))
+                  (let* ((rows (vector-ref (vector-ref observed 1) 0))
+                         (proof-result
+                          (capture
+                           (lambda ()
+                             (candidate-positive-proof
+                              snapshot spec digest 'complete rows
+                              proof-steps))))
+                         (proof-ok? (vector-ref proof-result 0)))
+                    (reasoning-receipt-for
+                     snapshot digest 'complete query rows
+                     (if proof-ok? []
+                       (list (make-reasoning-diagnostic
+                              'proof-failed '(explain)
+                              (failure-detail (vector-ref proof-result 1)))))
+                     (vector-ref (vector-ref observed 1) 1)
+                     (and proof-ok? (vector-ref proof-result 1)))))
                  (else
                   (reasoning-receipt-for
                    snapshot digest 'unknown query []

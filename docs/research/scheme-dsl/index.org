@@ -32,6 +32,9 @@ compares update latency with fresh materialization.
 The [[file:deletion-h18.org][deletion study]] records DRed/Counting prerequisites, the current
 cross-fragment atomic transaction gate, and a falsifiable route to a
 future incremental deletion experiment.
+The [[file:positive-provenance.org][finite positive provenance gate]] records a replayable
+rule-instance DAG for inspected positive atom proposals, with source and
+candidate facts separated and no general Why-Not claim.
 
 #+NAME: source-ledger
 | Key | Source and durable link | Local note | Main design constraint |

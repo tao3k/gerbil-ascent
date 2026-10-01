@@ -144,7 +144,11 @@ result of a compiling wrong join, and returns a row-labelled path
 witness or reachable cut for the exact canonical graph program.  The
 [[file:llm-reasoning-library-plan.org::#llm-library-first-transcript][implemented contract and limits]] and
 [[file:research/agent-inference/index.org::#agent-inference-gate][research gate]] distinguish this case from a general explanation or
-model-control API.  MRR remains the later
+model-control API.  A separate [[file:research/scheme-dsl/positive-provenance.org][finite positive provenance gate]]
+now replays inspected positive atom-only rules into a rule-instance DAG
+and matches its roots against a completed native query.  It reports
+=bounded= or =unsupported= without claiming Why-Not for absent rows.
+MRR remains the later
 semantic admission owner, while POO Flow owns caller context and
 effect handoff.
 

@@ -85,7 +85,11 @@ bounded inert candidate boundary in `candidate/reasoning.ss` share the
 POO rule evaluator. Candidate inspection in `candidate/program.ss` accepts
 ordered atoms, checked negation, fixed scalar filters/computations and
 count/sum/min/max reductions as inert data; receipts expose complete rows
-with `unsupported` evidence except for the exact graph witness/cut case.
+with the exact graph witness/cut case as a narrow explanation. For an
+inspected positive atom-only proposal, `candidate/provenance.ss` can attach
+a bounded, replayable rule-instance proof DAG to a completed query. Its
+source and hypothetical candidate nodes remain distinct; other constructs
+and absent answers have no general proof claim.
 The operator compiler supports source, union,
 equijoin, fixed equality selection, projection, finite mapping and
 positive fixed points. An operator graph can now become a fresh fragment
@@ -131,7 +135,9 @@ General typed higher-order change, deletion deltas and arbitrary host
 callbacks remain in the
 [language design](docs/scheme-relational-language-design.org). The
 [LLM reasoning Library plan](docs/llm-reasoning-library-plan.org) records
-the candidate grammar and the narrow graph witness/cut evidence contract.
+the candidate grammar. The
+[positive proof contract](docs/research/scheme-dsl/positive-provenance.org)
+states the supported Why subset and its Why-Not boundary.
 POO Flow
 consumes this package as a pinned submodule. MRR owns the semantic adapter
 and admission of its own evidence.

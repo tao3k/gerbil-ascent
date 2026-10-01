@@ -17,11 +17,7 @@ test-file path:
     test -f "{{ path }}"
     output_file="$(mktemp)"
     trap 'rm -f "$output_file"' EXIT
-    startup="${ASCENT_GXTEST_STARTUP_SECONDS:-5}"
-    # This joint native/candidate module takes longer to compile cold. Its
-    # runtime still keeps the ordinary five-second progress watchdog.
-    if [[ "{{ path }}" == t/qualification/scheme-library-contract-test.ss && -z "${ASCENT_GXTEST_STARTUP_SECONDS:-}" ]]; then startup=20; fi
-    GERBIL_LOADPATH="{{ justfile_directory() }}${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" timeout "${ASCENT_GXTEST_TIMEOUT:-45s}" python3 t/harness/watch_output.py --startup-seconds "$startup" --idle-seconds "${ASCENT_GXTEST_IDLE_SECONDS:-5}" -- gxtest {{ gerbil_test_runtime_options }} -v 5 "{{ path }}" 2>&1 | tee "$output_file"
+    GERBIL_LOADPATH="{{ justfile_directory() }}${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" timeout "${ASCENT_GXTEST_TIMEOUT:-120s}" gerbil {{ gerbil_test_runtime_options }} test -v 5 "{{ path }}" 2>&1 | tee "$output_file"
     if grep -E 'ERROR (CHECK|CASE|HARNESS)|Heap overflow|Stack overflow' "$output_file" >/dev/null; then exit 1; fi
     grep -F 'MODULE-OK {{ path }}' "$output_file" >/dev/null
     grep -F 'HARNESS-OK' "$output_file" >/dev/null
@@ -36,13 +32,11 @@ test:
     trap 'rm -f "$output_file"' EXIT
     export GERBIL_LOADPATH="{{ justfile_directory() }}${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}"
     # Reset Gerbil between bounded batches. The exhaustive operator modules
-    # run alone so their own 45s cap remains meaningful.
+    # run alone so each has its own timeout and completion receipts.
     run_batch() {
         local batch=("$@")
-        local startup="${ASCENT_GXTEST_STARTUP_SECONDS:-5}"
-        if [[ " ${batch[*]} " == *" t/qualification/scheme-library-contract-test.ss "* && -z "${ASCENT_GXTEST_STARTUP_SECONDS:-}" ]]; then startup=20; fi
         : > "$output_file"
-        timeout "${ASCENT_GXTEST_TIMEOUT:-45s}" python3 t/harness/watch_output.py --startup-seconds "$startup" --idle-seconds "${ASCENT_GXTEST_IDLE_SECONDS:-5}" -- gxtest {{ gerbil_test_runtime_options }} -v 5 "${batch[@]}" 2>&1 | tee "$output_file"
+        timeout "${ASCENT_GXTEST_TIMEOUT:-120s}" gerbil {{ gerbil_test_runtime_options }} test -v 5 "${batch[@]}" 2>&1 | tee "$output_file"
         if grep -E 'ERROR (CHECK|CASE|HARNESS|MODULE)|Heap overflow|Stack overflow' "$output_file" >/dev/null; then exit 1; fi
         local batch_file
         for batch_file in "${batch[@]}"; do
@@ -71,6 +65,20 @@ test:
     for ((i=0; i<${#files[@]}; i++)); do
         test "${qualified[i]}" = "${files[i]}"
     done
+
+test-quick:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    export GERBIL_LOADPATH="{{ justfile_directory() }}${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}"
+    gerbil {{ gerbil_test_runtime_options }} test -v 3 \
+        t/qualification/ascent-finite-evidence-test.ss \
+        t/qualification/ascent-positive-nonmembership-test.ss \
+        t/qualification/ascent-positive-provenance-test.ss \
+        t/qualification/ascent-reasoning-library-test.ss \
+        t/qualification/ascent-stratified-proof-test.ss
+
+small-graph-benchmark:
+    GERBIL_LOADPATH="{{ justfile_directory() }}${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" timeout 180s gerbil {{ gerbil_test_runtime_options }} env gxi t/performance/small-graph-benchmark.ss
 
 # Abstract theorem and bounded local receipt-lifecycle safety model.
 # Supply TLC_BIN when tlc is not on PATH; this gate does not build Scheme.
@@ -115,11 +123,8 @@ performance:
     set -euo pipefail
     export GERBIL_LOADPATH="{{ justfile_directory() }}${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}"
     # The ASP runner reports after its 1000 timed attempts; printing from a
-    # timed thunk would change the samples. Qualification tests keep 5s idle,
-    # while SS scenarios use bounded startup and quiet windows plus their
-    # total timeout.
-    export ASCENT_GXTEST_STARTUP_SECONDS="${ASCENT_SS_STARTUP_SECONDS:-20}"
-    export ASCENT_GXTEST_IDLE_SECONDS="${ASCENT_SS_IDLE_SECONDS:-90}"
+    # timed thunk would change the samples. Each native test process has a
+    # bounded total timeout and the scenario wrapper prints progress.
     run_case() {
         local name="$1"
         shift

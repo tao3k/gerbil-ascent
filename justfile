@@ -70,12 +70,24 @@ test-quick:
     #!/usr/bin/env bash
     set -euo pipefail
     export GERBIL_LOADPATH="{{ justfile_directory() }}${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}"
-    gerbil {{ gerbil_test_runtime_options }} test -v 3 \
+    output_file="$(mktemp)"
+    trap 'rm -f "$output_file"' EXIT
+    timeout "${ASCENT_GXTEST_TIMEOUT:-120s}" gerbil {{ gerbil_test_runtime_options }} test -v 3 \
         t/qualification/ascent-finite-evidence-test.ss \
         t/qualification/ascent-positive-nonmembership-test.ss \
         t/qualification/ascent-positive-provenance-test.ss \
         t/qualification/ascent-reasoning-library-test.ss \
-        t/qualification/ascent-stratified-proof-test.ss
+        t/qualification/ascent-stratified-proof-test.ss 2>&1 | tee "$output_file"
+    if grep -E 'ERROR (CHECK|CASE|HARNESS|MODULE)|Heap overflow|Stack overflow' "$output_file" >/dev/null; then exit 1; fi
+    for path in t/qualification/ascent-finite-evidence-test.ss \
+                t/qualification/ascent-positive-nonmembership-test.ss \
+                t/qualification/ascent-positive-provenance-test.ss \
+                t/qualification/ascent-reasoning-library-test.ss \
+                t/qualification/ascent-stratified-proof-test.ss; do
+        grep -Fx "MODULE-OK $path" "$output_file" >/dev/null
+    done
+    grep -F 'HARNESS-OK' "$output_file" >/dev/null
+    grep -x 'OK' "$output_file" >/dev/null
 
 small-graph-benchmark:
     GERBIL_LOADPATH="{{ justfile_directory() }}${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" timeout 180s gerbil {{ gerbil_test_runtime_options }} env gxi t/performance/small-graph-benchmark.ss

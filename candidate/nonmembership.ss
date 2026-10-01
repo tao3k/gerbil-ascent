@@ -17,11 +17,13 @@
                  reasoning-candidate-limits)
         (only-in :gerbil-ascent/candidate/program
                  candidate-variable? scalar?)
+        (only-in :gerbil-ascent/candidate/funs
+                 candidate-copy-pairs candidate-schema-of
+                 candidate-bind-atom candidate-fixed-clause)
         (only-in :gerbil-ascent/candidate/provenance
                  candidate-positive-closed-absence positive-proof-status
                  positive-proof-nodes proof-node-relation proof-node-row
-                 positive-rule-body? positive-fixed-clause?
-                 positive-apply-fixed-clause))
+                 positive-rule-body? positive-fixed-clause?))
 
 (export candidate-positive-nonmembership
         candidate-verify-positive-nonmembership
@@ -85,14 +87,6 @@
                            row-list))))))
           closure))))
 
-;;; Freeze certificate-owned pairs without changing scalar leaves.
-;; : (forall (a) (-> (PairTree a) (PairTree a)))
-;; : (-> Datum Datum)
-(def (copy-pairs datum)
-  (if (pair? datum)
-    (cons (copy-pairs (car datum)) (copy-pairs (cdr datum)))
-    datum))
-
 ;; : (forall (p) (-> (InspectedProgram p) Digest))
 ;; : (-> InspectedCandidate Digest)
 (def (program-fingerprint spec)
@@ -129,14 +123,11 @@
                (not (eq? term '?_))))
         (cdr query))))
 
-;; : (forall (a) (-> (Snapshot a) (Program a) Schema))
-;; : (-> ReasoningSnapshot InspectedCandidate Schema)
-(def (schema-of snapshot spec)
-  (append
-   (map (lambda (entry) (list (car entry) (cadr entry)))
-        (reasoning-snapshot-relations snapshot))
-   (map (lambda (entry) (list (car entry) (cdr entry)))
-        (reasoning-candidate-relations spec))))
+;;; Certificates use two-element list declarations; the shared candidate
+;;; schema uses pairs for name-to-arity lookup.
+(def (certificate-schema-of snapshot spec)
+  (map (lambda (entry) (list (car entry) (cdr entry)))
+       (candidate-schema-of snapshot spec)))
 
 ;; candidate-positive-nonmembership
 ;;   : (forall (row) (-> (Snapshot row) (Candidate row) Digest Status (Rows row) Nat PositiveNonmembership))
@@ -165,7 +156,7 @@
        (reasoning-snapshot-generation snapshot)
        (reasoning-snapshot-digest snapshot)
        candidate-digest (program-fingerprint spec)
-       (copy-pairs query) max-steps closure))
+       (candidate-copy-pairs query) max-steps closure))
     (if (or (not (reasoning-snapshot-valid? snapshot))
             (not (eq? native-status 'complete))
             (pair? native-rows)
@@ -188,13 +179,13 @@
                       (list
                        (car declaration) (cadr declaration)
                        (map (lambda (node)
-                              (copy-pairs (proof-node-row node)))
+                              (candidate-copy-pairs (proof-node-row node)))
                             (filter
                              (lambda (node)
                                (eq? (proof-node-relation node)
                                     (car declaration)))
                              nodes))))
-                    (schema-of snapshot spec)))
+                    (certificate-schema-of snapshot spec)))
                (if (certificate-size-valid? closure)
                  (result 'complete closure)
                  (result 'bounded [])))))
@@ -202,24 +193,7 @@
 
 ;; : (forall (v) (-> (Atom v) (Row v) (Bindings v) (Maybe (Bindings v))))
 ;; : (-> Atom Row Bindings (Maybe Bindings))
-(def (bind-atom atom row prior)
-  (let loop ((terms (cdr atom)) (values row) (bindings prior))
-    (if (null? terms)
-      bindings
-      (let ((term (car terms)) (value (car values)))
-        (cond
-         ((eq? term '?_)
-          (loop (cdr terms) (cdr values) bindings))
-         ((candidate-variable? term)
-          (let (existing (assq term bindings))
-            (if existing
-              (and (equal? (cdr existing) value)
-                   (loop (cdr terms) (cdr values) bindings))
-              (loop (cdr terms) (cdr values)
-                    (cons (cons term value) bindings)))))
-         (else
-          (and (equal? term value)
-               (loop (cdr terms) (cdr values) bindings))))))))
+
 
 ;; : (forall (v) (-> (Atom v) (Bindings v) (Row v)))
 ;; : (-> Atom Bindings Row)
@@ -267,7 +241,7 @@
   (unless (and (exact-integer? max-checks) (> max-checks 0))
     (error "invalid nonmembership verification budget" max-checks))
   (let* ((query (vector-ref (reasoning-candidate-query spec) 0))
-         (schema (schema-of snapshot spec))
+         (schema (certificate-schema-of snapshot spec))
          (closure (and (positive-nonmembership? certificate)
                        (positive-nonmembership-closure certificate)))
          (preflight
@@ -379,7 +353,7 @@
                            (if (> steps max-checks)
                              (set! bounded? #t)
                              (let (next
-                                   (positive-apply-fixed-clause
+                                   (candidate-fixed-clause
                                     clause bindings))
                                (when next
                                  (walk (cdr remaining) next)))))
@@ -390,7 +364,7 @@
                               (if (> steps max-checks)
                                 (set! bounded? #t)
                                 (let (next
-                                      (bind-atom clause row bindings))
+                                      (candidate-bind-atom clause row bindings))
                                   (when next
                                     (walk (cdr remaining) next))))))
                           (rows (car clause))))))))

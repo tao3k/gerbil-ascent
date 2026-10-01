@@ -15,7 +15,12 @@
                  reasoning-candidate-relations reasoning-candidate-facts
                  reasoning-candidate-rules reasoning-candidate-query
                  reasoning-candidate-limits)
-        (only-in :gerbil-ascent/candidate/program candidate-variable? scalar?))
+        (only-in :gerbil-ascent/candidate/program candidate-variable? scalar?)
+        (only-in :gerbil-ascent/candidate/funs
+                 candidate-copy-pairs candidate-same-row-set?
+                 candidate-schema-of candidate-required-entry
+                 candidate-bind-atom candidate-fixed-clause
+                 candidate-strata-of))
 
 (export candidate-finite-evidence candidate-verify-finite-evidence
         candidate-verified-finite-closure
@@ -38,20 +43,6 @@
        (count 0 (+ count 1)))
       ((or (null? rest) (not (pair? rest)) (>= count maximum))
        (and (null? rest) count))))
-
-;; : (forall (a) (-> (PairTree a) (PairTree a)))
-;; : (-> Datum Datum)
-(def (copy-pairs datum)
-  (if (pair? datum)
-    (cons (copy-pairs (car datum)) (copy-pairs (cdr datum)))
-    datum))
-
-;; : (forall (row) (-> (List row) (List row) Boolean))
-;; : (-> Rows Rows Boolean)
-(def (same-row-set? left right)
-  (and (= (length left) (length right))
-       (andmap (lambda (row) (and (member row right) #t)) left)
-       (andmap (lambda (row) (and (member row left) #t)) right)))
 
 ;; : (forall (row) (-> (List row) Boolean))
 ;; : (-> Rows Boolean)
@@ -120,122 +111,23 @@
      (call-with-output-string ""
        (lambda (port) (write (program-shape spec) port)))))))
 
-;; : (-> ReasoningSnapshot InspectedCandidate Schema)
-(def (schema-of snapshot spec)
-  (append
-   (map (lambda (entry) (cons (car entry) (cadr entry)))
-        (reasoning-snapshot-relations snapshot))
-   (reasoning-candidate-relations spec)))
-
-;;; Both strata and relation tables are keyed by their admitted relation
-;;; names. A missing entry is an invalid inspected-program invariant.
-;; : (forall (v) (-> Symbol (List (Pair Symbol v)) (Pair Symbol v)))
-;; : (-> Symbol RelationIndex Entry)
-(def (required-entry name index)
-  (or (assq name index)
-      (error "finite evidence is missing admitted relation" name)))
-
-;; : (forall (v) (-> (Atom v) (Row v) (Bindings v) (Maybe (Bindings v))))
-;; : (-> Atom Row Bindings (Maybe Bindings))
-(def (bind-atom atom row prior)
-  (let loop ((terms (cdr atom)) (values row) (bindings prior))
-    (if (null? terms)
-      bindings
-      (let ((term (car terms)) (value (car values)))
-        (cond
-         ((eq? term '?_) (loop (cdr terms) (cdr values) bindings))
-         ((candidate-variable? term)
-          (let (old (assq term bindings))
-            (if old
-              (and (equal? (cdr old) value)
-                   (loop (cdr terms) (cdr values) bindings))
-              (loop (cdr terms) (cdr values)
-                    (cons (cons term value) bindings)))))
-         (else
-          (and (equal? term value)
-               (loop (cdr terms) (cdr values) bindings))))))))
-
 ;; : (forall (v) (-> (List v) (Bindings v) (Row v)))
 ;; : (-> Terms Bindings Row)
 (def (instantiate terms bindings)
   (map (lambda (term)
          (if (candidate-variable? term)
-           (cdr (required-entry term bindings))
+           (cdr (candidate-required-entry term bindings))
            term))
        terms))
-
-;; : (-> FixedClause Bindings (Maybe Bindings))
-(def (fixed-clause clause bindings)
-  (let* ((mode (car clause))
-         (form (if (eq? mode 'where) (cadr clause) (caddr clause)))
-         (inputs (map (lambda (name) (assq name bindings)) (cdr form))))
-    (and (andmap (lambda (input) (and input #t)) inputs)
-         (let (values (map cdr inputs))
-           (case mode
-             ((where)
-              (case (car form)
-                ((even?) (and (exact-integer? (car values))
-                              (even? (car values)) bindings))
-                ((<) (and (andmap exact-integer? values)
-                          (< (car values) (cadr values)) bindings))
-                (else #f)))
-             ((compute)
-              (and (not (assq (cadr clause) bindings))
-                   (case (car form)
-                     ((identity)
-                      (cons (cons (cadr clause) (car values)) bindings))
-                     ((+)
-                      (and (andmap exact-integer? values)
-                           (cons (cons (cadr clause)
-                                       (+ (car values) (cadr values)))
-                                 bindings)))
-                     (else #f))))
-             (else #f))))))
-
-;;; A strict dependency adds one stratum; positive reads may stay in the
-;;; current stratum. Relaxation beyond the number of relations rejects a
-;;; negative or aggregate cycle independently of the native planner.
-;; : (-> Schema Rules (Maybe Strata))
-(def (strata-of schema rules)
-  (let ((levels (map (lambda (entry) (cons (car entry) 0)) schema))
-        (changed? #f))
-    (let loop ((round 0))
-      (set! changed? #f)
-      (for-each
-       (lambda (rule)
-         (let ((head (car (vector-ref rule 0)))
-               (body (vector-ref rule 1)))
-           (for-each
-            (lambda (clause)
-              (let (dependency
-                    (case (car clause)
-                      ((not) (cons (caadr clause) 1))
-                      ((reduce) (cons (car (cadddr clause)) 1))
-                      ((where compute) #f)
-                      (else (cons (car clause) 0))))
-                (when dependency
-                  (let ((head-level (required-entry head levels))
-                        (dep-level
-                         (required-entry (car dependency) levels)))
-                    (let (required (+ (cdr dep-level) (cdr dependency)))
-                      (when (< (cdr head-level) required)
-                        (set-cdr! head-level required)
-                        (set! changed? #t)))))))
-            body)))
-       rules)
-      (cond
-       ((not changed?) levels)
-       ((>= round (length schema)) #f)
-       (else (loop (+ round 1)))))))
 
 ;;; Returns exact relation sets or bounded/unsupported. The input is an
 ;;; already inspected candidate. Work counts every relation-row probe and
 ;;; fixed operation, including probes that do not produce a row.
 ;; : (-> ReasoningSnapshot InspectedCandidate Nat (Values Status Closure))
 (def (finite-replay snapshot spec work-budget)
-  (let* ((schema (schema-of snapshot spec))
+  (let* ((schema (candidate-schema-of snapshot spec))
          (rules (reasoning-candidate-rules spec))
-         (levels (strata-of schema rules))
+         (levels (candidate-strata-of schema rules))
          (tables
           (map (lambda (entry) (list (car entry) (cdr entry) [])) schema))
          (steps 0)
@@ -243,9 +135,9 @@
          (derived-count 0)
          (derived-limit (cadr (reasoning-candidate-limits spec))))
         (def (rows name)
-          (caddr (required-entry name tables)))
+          (caddr (candidate-required-entry name tables)))
         (def (add-row! name row derived?)
-          (let (entry (required-entry name tables))
+          (let (entry (candidate-required-entry name tables))
             (if (member row (caddr entry))
               #f
               (begin
@@ -257,7 +149,7 @@
                   #f
                   (begin
                     (set-car! (cddr entry)
-                              (append (caddr entry) (list (copy-pairs row))))
+                              (append (caddr entry) (list (candidate-copy-pairs row))))
                     #t))))))
         (def (step!)
           (set! steps (+ steps 1))
@@ -277,7 +169,7 @@
                     (case (car clause)
                       ((where compute)
                        (when (step!)
-                         (let (next (fixed-clause clause bindings))
+                         (let (next (candidate-fixed-clause clause bindings))
                            (when next (walk (cdr clauses) next)))))
                       ((not)
                        (let* ((atom (cadr clause))
@@ -285,7 +177,7 @@
                          (for-each
                           (lambda (row)
                             (when (step!)
-                              (when (bind-atom atom row bindings)
+                              (when (candidate-bind-atom atom row bindings)
                                 (set! matched? #t))))
                           (rows (car atom)))
                          (when (and (not bounded?) (not matched?)
@@ -299,12 +191,12 @@
                          (for-each
                           (lambda (row)
                             (when (step!)
-                              (let (next (bind-atom atom row bindings))
+                              (let (next (candidate-bind-atom atom row bindings))
                                 (when next
                                   (set! matches
                                     (cons (if (eq? (car operator) 'count)
                                             #t
-                                            (cdr (required-entry
+                                            (cdr (candidate-required-entry
                                                   (cadr operator) next)))
                                           matches))))))
                           (rows (car atom)))
@@ -328,7 +220,7 @@
                        (for-each
                         (lambda (row)
                           (when (step!)
-                            (let (next (bind-atom clause row bindings))
+                            (let (next (candidate-bind-atom clause row bindings))
                               (when next (walk (cdr clauses) next)))))
                         (rows (car clause)))))))))
             (walk body [])
@@ -353,7 +245,7 @@
                 (for-each
                  (lambda (rule)
                    (when (and (not bounded?)
-                              (= (cdr (required-entry
+                              (= (cdr (candidate-required-entry
                                        (car (vector-ref rule 0)) levels))
                                  level))
                      (when (evaluate-rule rule)
@@ -367,8 +259,8 @@
 ;; : (-> InspectedCandidate Closure Rows)
 (def (query-rows spec closure)
   (let* ((query (vector-ref (reasoning-candidate-query spec) 0))
-         (entry (required-entry (car query) closure)))
-    (filter (lambda (row) (and (bind-atom query row []) #t))
+         (entry (candidate-required-entry (car query) closure)))
+    (filter (lambda (row) (and (candidate-bind-atom query row []) #t))
             (caddr entry))))
 
 ;;; The generator compares independent replay with a completed native
@@ -384,8 +276,8 @@
      (reasoning-snapshot-generation snapshot)
      (reasoning-snapshot-digest snapshot) candidate-digest
      (program-fingerprint spec)
-     (copy-pairs (vector-ref (reasoning-candidate-query spec) 0))
-     work-budget (copy-pairs closure)))
+     (candidate-copy-pairs (vector-ref (reasoning-candidate-query spec) 0))
+     work-budget (candidate-copy-pairs closure)))
   (if (or (not (reasoning-snapshot-valid? snapshot))
           (not (eq? native-status 'complete)))
     (result 'unsupported [])
@@ -394,9 +286,9 @@
       (case status
         ((complete)
          (cond
-          ((not (closure-valid? closure (schema-of snapshot spec)))
+          ((not (closure-valid? closure (candidate-schema-of snapshot spec)))
            (result 'bounded []))
-          ((same-row-set? (query-rows spec closure) native-rows)
+          ((candidate-same-row-set? (query-rows spec closure) native-rows)
            (result 'complete closure))
           (else (result 'mismatch []))))
         ((bounded) (result 'bounded []))
@@ -429,7 +321,7 @@
                 (equal? (finite-evidence-query certificate)
                         (vector-ref (reasoning-candidate-query spec) 0))
                 (closure-valid? (finite-evidence-closure certificate)
-                                (schema-of snapshot spec))))
+                                (candidate-schema-of snapshot spec))))
     (values 'invalid [])
     (let-values (((status closure)
                   (finite-replay snapshot spec work-budget)))
@@ -438,9 +330,9 @@
         ((complete)
          (if (and
               (andmap (lambda (actual supplied)
-                        (same-row-set? (caddr actual) (caddr supplied)))
+                        (candidate-same-row-set? (caddr actual) (caddr supplied)))
                       closure (finite-evidence-closure certificate))
-              (same-row-set? (query-rows spec closure) native-rows))
+              (candidate-same-row-set? (query-rows spec closure) native-rows))
            (values 'valid closure) (values 'invalid [])))
         (else (values 'invalid []))))))
 

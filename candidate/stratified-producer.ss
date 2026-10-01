@@ -6,11 +6,16 @@
 ;;; Build one founded proof from a verified finite candidate closure. Search
 ;;; order is stratum then rule/fact order; the separate checker remains the
 ;;; authority for the returned proof. This is not a Why-Not producer.
-(import (only-in :gerbil-ascent/candidate/types
+(import (only-in :std/hash/misc hash-ensure-modify!)
+        (only-in :gerbil-ascent/candidate/types
                  reasoning-snapshot-relations
                  reasoning-candidate-relations reasoning-candidate-facts
                  reasoning-candidate-rules reasoning-candidate-query)
         (only-in :gerbil-ascent/candidate/program candidate-variable?)
+        (only-in :gerbil-ascent/candidate/funs
+                 candidate-copy-pairs candidate-schema-of
+                 candidate-required-entry candidate-bind-atom
+                 candidate-fixed-clause candidate-strata-of)
         (only-in :gerbil-ascent/candidate/finite-evidence
                  candidate-verified-finite-closure)
         (only-in :gerbil-ascent/candidate/stratified-proof
@@ -20,117 +25,25 @@
 
 (def +maximum-nodes+ 4096)
 
-;; : (forall (a) (-> (PairTree a) (PairTree a)))
-;; : (-> Datum Datum)
-(def (copy-pairs datum)
-  (if (pair? datum)
-    (cons (copy-pairs (car datum)) (copy-pairs (cdr datum)))
-    datum))
-
-;; : (forall (a) (-> (Atom a) (Row a) (Bindings a)
-;;                    (Maybe (Bindings a))))
-;; : (-> Atom Row Bindings (Maybe Bindings))
-(def (bind-atom atom row prior)
-  (let loop ((terms (cdr atom)) (values row) (bindings prior))
-    (if (null? terms)
-      bindings
-      (let ((term (car terms)) (value (car values)))
-        (cond
-         ((eq? term '?_) (loop (cdr terms) (cdr values) bindings))
-         ((candidate-variable? term)
-          (let (old (assq term bindings))
-            (if old
-              (and (equal? (cdr old) value)
-                   (loop (cdr terms) (cdr values) bindings))
-              (loop (cdr terms) (cdr values)
-                    (cons (cons term value) bindings)))))
-         (else
-          (and (equal? term value)
-               (loop (cdr terms) (cdr values) bindings))))))))
-
-;; : (forall (v) (-> Symbol (List (Pair Symbol v)) v))
-;; : (-> Symbol SymbolIndex EntryValue)
-(def (required-value name bindings)
-  (let (entry (assq name bindings))
-    (if entry (cdr entry)
-      (error "stratified producer is missing inspected entry" name))))
-
-;; : (-> FixedClause Bindings (Maybe Bindings))
-(def (fixed-clause clause bindings)
-  (let* ((mode (car clause))
-         (form (if (eq? mode 'where) (cadr clause) (caddr clause)))
-         (inputs (map (lambda (name) (assq name bindings)) (cdr form))))
-    (and (andmap (lambda (input) (and input #t)) inputs)
-         (let (values (map cdr inputs))
-           (case mode
-             ((where)
-              (case (car form)
-                ((even?) (and (exact-integer? (car values))
-                              (even? (car values)) bindings))
-                ((<) (and (andmap exact-integer? values)
-                          (< (car values) (cadr values)) bindings))
-                (else #f)))
-             ((compute)
-              (and (not (assq (cadr clause) bindings))
-                   (case (car form)
-                     ((identity)
-                      (cons (cons (cadr clause) (car values)) bindings))
-                     ((+)
-                      (and (andmap exact-integer? values)
-                           (cons (cons (cadr clause)
-                                       (+ (car values) (cadr values)))
-                                 bindings)))
-                     (else #f))))
-             (else #f))))))
-
-;;; Positive reads may stay in a stratum; absence and complete groups must
-;;; read a strictly lower stratum. A strict cycle has no founded proof.
-;; : (forall (r) (-> (Schema r) (Rules r) (Maybe (Strata r))))
-;; : (-> Schema Rules (Maybe Strata))
-(def (strata-of schema rules)
-  (let ((levels (map (lambda (entry) (cons (car entry) 0)) schema))
-        (changed? #f))
-    (let loop ((round 0))
-      (set! changed? #f)
-      (for-each
-       (lambda (rule)
-         (let (head (car (vector-ref rule 0)))
-           (for-each
-            (lambda (clause)
-              (let (dependency
-                    (case (car clause)
-                      ((not) (cons (caadr clause) 1))
-                      ((reduce) (cons (car (cadddr clause)) 1))
-                      ((where compute) #f)
-                      (else (cons (car clause) 0))))
-                (when dependency
-                  (let* ((head-entry (assq head levels))
-                         (dep-entry (assq (car dependency) levels))
-                         (required (+ (cdr dep-entry) (cdr dependency))))
-                    (when (< (cdr head-entry) required)
-                      (set-cdr! head-entry required)
-                      (set! changed? #t))))))
-            (vector-ref rule 1))))
-       rules)
-      (cond
-       ((not changed?) levels)
-       ((>= round (length schema)) #f)
-       (else (loop (+ round 1)))))))
-
 ;;; Return (values complete Proof), (values bounded ()), or an explicit
 ;;; unsupported/invalid verdict. The checker independently replays the finite
 ;;; model and checks every node before this producer claims completion.
 ;; candidate-produce-stratified-proof
-;;   : (forall (row) (-> (Snapshot row) (Candidate row) Digest Status
-;;                       (Rows row) FiniteEvidence Nat Nat
-;;                       (Values Status (Proof row))))
-;;   : (-> ReasoningSnapshot InspectedCandidate Digest Status Rows
-;;          FiniteEvidence Nat Nat (Values Status ProofDatum))
+;;   : (forall (row) (-> (Snapshot row) (Candidate row) Digest Status (Rows row) FiniteEvidence Nat Nat (Values Status (Proof row))))
+;;   : (-> ReasoningSnapshot InspectedCandidate Digest Status Rows FiniteEvidence Nat Nat (Values Status ProofDatum))
 ;;   | doc m%
 ;;       Produce a bounded founded derivation for every nonempty native query
 ;;       row. Source, hypothetical fact and rule nodes are ordered so each
 ;;       positive or reduction dependency points backward. An empty query
 ;;       and general Why-Not remain unsupported.
+;;
+;;       # Examples
+;;
+;;       ```scheme
+;;       (candidate-produce-stratified-proof
+;;         snapshot spec digest 'complete rows finite-certificate 5000 5000)
+;;       ;; => (values 'complete proof) when every row has a founded derivation
+;;       ```
 ;;     %
 (def (candidate-produce-stratified-proof snapshot spec candidate-digest
                                          native-status native-rows certificate
@@ -146,17 +59,12 @@
       (values finite-verdict [])
       (if (null? native-rows)
         (values 'unsupported [])
-        (let* ((schema
-                (append
-                 (map (lambda (entry) (cons (car entry) (cadr entry)))
-                      (reasoning-snapshot-relations snapshot))
-                 (reasoning-candidate-relations spec)))
+        (let* ((schema (candidate-schema-of snapshot spec))
                (rules (reasoning-candidate-rules spec))
-               (levels (strata-of schema rules))
+               (levels (candidate-strata-of schema rules))
                (nodes (make-vector +maximum-nodes+ #f))
                (by-row (make-hash-table))
-               (by-relation
-                (map (lambda (entry) (cons (car entry) [])) schema))
+               (by-relation (make-hash-table-eq))
                (node-count 0)
                (steps 0)
                (bounded? #f)
@@ -168,7 +76,7 @@
           (def (rows name)
             (caddr (assq name closure)))
           (def (level name)
-            (required-value name levels))
+            (cdr (candidate-required-entry name levels)))
           (def (node-id name row)
             (hash-get by-row (cons name row)))
           (def (add-node! kind name row label witnesses)
@@ -178,12 +86,13 @@
               (if (>= node-count +maximum-nodes+)
                 (set! bounded? #t)
                 (let ((id node-count)
-                      (copy (copy-pairs row)))
+                      (copy (candidate-copy-pairs row)))
                   (vector-set! nodes id
                     (list kind name copy label witnesses))
                   (hash-put! by-row (cons name copy) id)
-                  (let (entry (assq name by-relation))
-                    (set-cdr! entry (cons id (cdr entry))))
+                  (hash-ensure-modify!
+                   by-relation name (lambda () [])
+                   (lambda (ids) (cons id ids)))
                   (set! node-count (+ node-count 1))
                   (set! added? #t)))))
           (def (reduction clause bindings head)
@@ -198,7 +107,7 @@
                 (for-each
                  (lambda (row)
                    (when (step!)
-                     (let (next (bind-atom atom row bindings))
+                     (let (next (candidate-bind-atom atom row bindings))
                        (when next
                          (let (id (node-id name row))
                            (if (not id)
@@ -207,8 +116,8 @@
                                (set! ids (cons id ids))
                                (unless (eq? (car operator) 'count)
                                  (set! values
-                                   (cons (required-value
-                                          (cadr operator) next)
+                                   (cons (cdr (candidate-required-entry
+                                               (cadr operator) next))
                                          values))))))))))
                  (rows name)))
               (and (not bounded?) ready?
@@ -238,7 +147,8 @@
                     (let (row
                           (map (lambda (term)
                                  (if (candidate-variable? term)
-                                   (required-value term bindings) term))
+                                   (cdr (candidate-required-entry
+                                         term bindings)) term))
                                (cdr head)))
                       (when (step!)
                         (add-node! 'rule head-name row label
@@ -247,7 +157,7 @@
                       (case (car clause)
                         ((where compute)
                          (when (step!)
-                           (let (next (fixed-clause clause bindings))
+                           (let (next (candidate-fixed-clause clause bindings))
                              (when next
                                (walk (cdr clauses) next
                                      (cons '(fixed) evidence))))))
@@ -260,7 +170,7 @@
                              (for-each
                               (lambda (row)
                                 (when (step!)
-                                  (when (bind-atom atom row bindings)
+                                  (when (candidate-bind-atom atom row bindings)
                                     (set! absent? #f))))
                               (rows name)))
                            (when (and (not bounded?) absent?)
@@ -278,12 +188,12 @@
                             (when (step!)
                               (let* ((node (vector-ref nodes id))
                                      (next
-                                      (bind-atom clause (caddr node)
-                                                 bindings)))
+                                      (candidate-bind-atom clause (caddr node)
+                                                           bindings)))
                                 (when next
                                   (walk (cdr clauses) next
                                         (cons (list 'atom id) evidence))))))
-                          (cdr (assq (car clause) by-relation)))))))))
+                          (or (hash-get by-relation (car clause)) []))))))))
               (walk body [] [])))
           (if (not levels)
             (values 'invalid [])

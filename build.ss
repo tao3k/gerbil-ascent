@@ -36,6 +36,7 @@
     "candidate/closure"
     "candidate/types"
     "candidate/program"
+    "candidate/funs"
     "candidate/provenance"
     "candidate/nonmembership"
     "candidate/finite-evidence"

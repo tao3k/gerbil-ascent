@@ -13,12 +13,14 @@
                  reasoning-snapshot-valid?
                  reasoning-candidate-facts reasoning-candidate-rules
                  reasoning-candidate-query reasoning-candidate-limits)
-        (only-in :gerbil-ascent/candidate/program candidate-variable?))
+        (only-in :gerbil-ascent/candidate/program candidate-variable?)
+        (only-in :gerbil-ascent/candidate/funs
+                 candidate-copy-pairs candidate-same-row-set?
+                 candidate-bind-atom candidate-fixed-clause))
 
 (export candidate-positive-proof candidate-positive-closed-absence
         candidate-verify-positive-proof
         positive-rule-body? positive-fixed-clause?
-        positive-apply-fixed-clause
         positive-proof? positive-proof-status
         positive-proof-snapshot-identity positive-proof-snapshot-generation
         positive-proof-snapshot-digest positive-proof-candidate-digest
@@ -31,12 +33,6 @@
   (status snapshot-identity snapshot-generation snapshot-digest
           candidate-digest query work-budget nodes roots))
 (defstruct proof-node (id kind relation row label inputs))
-
-(def (copy-pairs datum)
-  (if (pair? datum)
-    (cons (copy-pairs (car datum)) (copy-pairs (cdr datum)))
-    datum))
-
 (def (positive-atom? atom)
   (and (pair? atom) (symbol? (car atom))
        (not (memq (car atom) '(not where compute reduce)))))
@@ -74,66 +70,12 @@
    positive-rule-body?
    (reasoning-candidate-rules spec)))
 
-;;; A fixed clause has no row input. Replay its checked operation from the
-;;; bindings established by preceding clauses; #f means the branch fails.
-(def (positive-apply-fixed-clause clause bindings)
-  (let* ((form (if (eq? (car clause) 'where)
-                 (cadr clause) (caddr clause)))
-         (inputs (map (lambda (name) (assq name bindings)) (cdr form))))
-    (and (andmap (lambda (input) (and input #t)) inputs)
-         (let ((values (map cdr inputs)))
-           (case (car clause)
-             ((where)
-              (case (car form)
-                ((even?) (and (exact-integer? (car values))
-                              (even? (car values)) bindings))
-                ((<) (and (andmap exact-integer? values)
-                          (< (car values) (cadr values)) bindings))
-                (else #f)))
-             ((compute)
-              (and (not (assq (cadr clause) bindings))
-                   (case (car form)
-                     ((identity)
-                      (cons (cons (cadr clause) (car values)) bindings))
-                     ((+)
-                      (and (andmap exact-integer? values)
-                           (cons (cons (cadr clause)
-                                       (+ (car values) (cadr values)))
-                                 bindings)))
-                     (else #f))))
-             (else #f))))))
-
-(def (bind-atom atom row prior)
-  (let loop ((terms (cdr atom)) (values row) (bindings prior))
-    (if (null? terms)
-      bindings
-      (let ((term (car terms)) (value (car values)))
-        (cond
-         ((eq? term '?_)
-          (loop (cdr terms) (cdr values) bindings))
-         ((candidate-variable? term)
-          (let (existing (assq term bindings))
-            (if existing
-              (and (equal? (cdr existing) value)
-                   (loop (cdr terms) (cdr values) bindings))
-              (loop (cdr terms) (cdr values)
-                    (cons (cons term value) bindings)))))
-         (else
-          (and (equal? term value)
-               (loop (cdr terms) (cdr values) bindings))))))))
-
 (def (instantiate-head head bindings)
   (map (lambda (term)
          (if (candidate-variable? term)
            (cdr (assq term bindings))
            term))
        (cdr head)))
-
-(def (same-row-set? left right)
-  (and (= (length left) (length right))
-       (andmap (lambda (row) (if (member row right) #t #f)) left)
-       (andmap (lambda (row) (if (member row left) #t #f)) right)))
-
 ;;; max-steps bounds body-row probes and fixed-clause evaluations,
 ;;; including unsuccessful unifications and filters.
 ;;; The proposal's derived-fact limit separately bounds the DAG size.
@@ -167,7 +109,7 @@
        status (reasoning-snapshot-identity snapshot)
        (reasoning-snapshot-generation snapshot)
        (reasoning-snapshot-digest snapshot)
-       candidate-digest (copy-pairs query) max-steps nodes roots))
+       candidate-digest (candidate-copy-pairs query) max-steps nodes roots))
     (if (or (not (reasoning-snapshot-valid? snapshot))
             (not (eq? native-status 'complete))
             (not (positive-rules? spec)))
@@ -190,8 +132,8 @@
                     extra)))
         (def (add! kind name row label inputs)
           (unless (known? name row [])
-            (let (node (make-proof-node next-id kind name (copy-pairs row)
-                                       label (copy-pairs inputs)))
+            (let (node (make-proof-node next-id kind name (candidate-copy-pairs row)
+                                       label (candidate-copy-pairs inputs)))
               (set! next-id (+ next-id 1))
               (hash-put! index name (append (facts name) (list node)))
               (set! nodes (cons node nodes)))))
@@ -227,7 +169,7 @@
                              (set! pending
                                (cons (make-proof-node
                                       (+ next-id (length pending))
-                                      'rule name (copy-pairs row) label
+                                      'rule name (candidate-copy-pairs row) label
                                       (reverse inputs))
                                      pending)))))
                        (let (clause (car remaining))
@@ -236,7 +178,7 @@
                              (set! steps (+ steps 1))
                              (if (> steps max-steps)
                                (set! bounded? #t)
-                               (let (next (positive-apply-fixed-clause
+                               (let (next (candidate-fixed-clause
                                            clause bindings))
                                  (when next
                                    (walk (cdr remaining) next inputs)))))
@@ -247,7 +189,7 @@
                                 (if (> steps max-steps)
                                   (set! bounded? #t)
                                   (let (next
-                                        (bind-atom
+                                        (candidate-bind-atom
                                          clause (proof-node-row node)
                                          bindings))
                                     (when next
@@ -263,13 +205,13 @@
                 (let* ((matching
                         (filter
                          (lambda (node)
-                           (bind-atom query (proof-node-row node) []))
+                           (candidate-bind-atom query (proof-node-row node) []))
                          (facts (car query))))
                        (rows (map proof-node-row matching))
                        (roots (map proof-node-id matching)))
                   (cond
                    ((and (pair? roots)
-                         (same-row-set? rows native-rows))
+                         (candidate-same-row-set? rows native-rows))
                     (result 'complete (reverse nodes) roots))
                    ((and retain-closed-absence?
                          (null? roots)
@@ -409,7 +351,7 @@
                               (let (clause (car clauses))
                                 (if (positive-fixed-clause? clause)
                                   (let (next
-                                        (positive-apply-fixed-clause
+                                        (candidate-fixed-clause
                                          clause bindings))
                                     (and next
                                          (loop (cdr clauses)
@@ -421,7 +363,7 @@
                                             (eq? (proof-node-relation input)
                                                  (car clause))
                                             (let (next
-                                                  (bind-atom
+                                                  (candidate-bind-atom
                                                    clause
                                                    (proof-node-row input)
                                                    bindings))
@@ -440,10 +382,10 @@
              (and (existing-input? id (length nodes))
                   (eq? (proof-node-relation (vector-ref by-id id))
                        (car query))
-                  (bind-atom
+                  (candidate-bind-atom
                    query (proof-node-row (vector-ref by-id id)) [])))
            (positive-proof-roots proof))
-          (same-row-set?
+          (candidate-same-row-set?
            (map (lambda (id)
                   (proof-node-row (vector-ref by-id id)))
                 (positive-proof-roots proof))

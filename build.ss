@@ -39,6 +39,7 @@
     "candidate/provenance"
     "candidate/nonmembership"
     "candidate/finite-evidence"
+    "candidate/stratified-proof"
     "candidate/reasoning"
     "interface/request"))
 

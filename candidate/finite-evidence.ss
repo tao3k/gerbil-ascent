@@ -18,6 +18,7 @@
         (only-in :gerbil-ascent/candidate/program candidate-variable? scalar?))
 
 (export candidate-finite-evidence candidate-verify-finite-evidence
+        candidate-verified-finite-closure
         finite-evidence? finite-evidence-status finite-evidence-closure
         finite-evidence-query finite-evidence-candidate-digest)
 
@@ -401,12 +402,14 @@
         ((bounded) (result 'bounded []))
         (else (result 'unsupported []))))))
 
-;;; Recompute from the snapshot and inspected program. A supplied closure
-;;; cannot authenticate the snapshot or claim more than this finite model.
-;; : (-> ReasoningSnapshot InspectedCandidate Digest Status Rows FiniteEvidence Nat Verdict)
-(def (candidate-verify-finite-evidence snapshot spec candidate-digest
-                                       native-status native-rows certificate
-                                       work-budget)
+;;; Return only the independently replayed closure when all certificate and
+;;; native-answer checks pass. Downstream proof checkers must use this value,
+;;; not reread a mutable caller-supplied certificate after verification.
+;; : (-> ReasoningSnapshot InspectedCandidate Digest Status Rows FiniteEvidence Nat
+;;       (Values Verdict Closure))
+(def (candidate-verified-finite-closure snapshot spec candidate-digest
+                                        native-status native-rows certificate
+                                        work-budget)
   (unless (and (exact-integer? work-budget) (> work-budget 0))
     (error "finite evidence verification needs positive budget" work-budget))
   (if (not (and (finite-evidence? certificate)
@@ -427,16 +430,28 @@
                         (vector-ref (reasoning-candidate-query spec) 0))
                 (closure-valid? (finite-evidence-closure certificate)
                                 (schema-of snapshot spec))))
-    'invalid
+    (values 'invalid [])
     (let-values (((status closure)
                   (finite-replay snapshot spec work-budget)))
       (case status
-        ((bounded) 'bounded)
+        ((bounded) (values 'bounded []))
         ((complete)
          (if (and
               (andmap (lambda (actual supplied)
                         (same-row-set? (caddr actual) (caddr supplied)))
                       closure (finite-evidence-closure certificate))
               (same-row-set? (query-rows spec closure) native-rows))
-           'valid 'invalid))
-        (else 'invalid)))))
+           (values 'valid closure) (values 'invalid [])))
+        (else (values 'invalid []))))))
+
+;;; Recompute from the snapshot and inspected program. A supplied closure
+;;; cannot authenticate the snapshot or claim more than this finite model.
+;; : (-> ReasoningSnapshot InspectedCandidate Digest Status Rows FiniteEvidence Nat Verdict)
+(def (candidate-verify-finite-evidence snapshot spec candidate-digest
+                                       native-status native-rows certificate
+                                       work-budget)
+  (let-values (((verdict closure)
+                (candidate-verified-finite-closure
+                 snapshot spec candidate-digest native-status native-rows
+                 certificate work-budget)))
+    verdict))

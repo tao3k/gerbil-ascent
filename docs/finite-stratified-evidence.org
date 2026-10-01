@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 #+TITLE: Finite stratified evidence for inspected candidates
-#+STATUS: bounded Scheme replay implemented; general provenance open
+#+STATUS: bounded replay and checked derivations implemented; general provenance open
 #+DATE: 2026-10-01
 #+FILETAGS: :ascent:scheme:evidence:verification:
 
@@ -54,9 +54,26 @@ derivation provenance or causal counterfactual proof.
    =unsupported= means native completion or a valid stratification is absent.
    Verification returns =valid=, =invalid= or =bounded=.
 
-This is deliberately a full finite replay, not a compact proof DAG. A
-general recursive Why/Why-Not representation, reduction lineage, open-world
-negation and larger-scale performance require separate semantics and tests.
+The =candidate-verify-stratified-proof= checker adds a *supplied* derivation
+DAG for a nonempty completed query. Each source node names a snapshot row
+position, each hypothetical fact node names the inspected fact label, and
+each rule node names a rule label and one witness per clause. Positive atoms
+refer to earlier nodes. A negated atom is checked against the exact completed
+lower-stratum relation, with the preceding bindings fixed. A reduction
+enumerates earlier nodes for its complete matching group; the checker compares
+the distinct rows against the replayed relation before recomputing
+=count=, =sum=, =min= or =max=. Fixed scalar operations are recomputed. Root
+nodes must equal all native query rows. Both the supplied proof and its work
+have explicit bounds; the checker returns =unsupported= for an empty answer.
+
+The checker first validates the finite certificate and obtains the *freshly
+replayed* closure from =candidate-verified-finite-closure=. It does not trust
+the certificate's mutable closure as a source of lower-stratum facts. This
+supports a founded derivation claim relative to the supplied snapshot and
+inspected candidate. It does not supply a proof producer, exhaustive lineage
+for every derivation, a Why-Not explanation, open-world absence, source
+authentication, or larger-scale performance evidence. A general recursive
+Why/Why-Not representation needs separate semantics and tests.
 The older [[file:research/scheme-dsl/positive-provenance.org][positive proof]] and
 [[file:llm-reasoning-library-plan.org][LLM Library plan]] retain their own
 narrower statuses.
@@ -74,10 +91,15 @@ and all 64 directed three-node graph subsets against a separate
 reachability count model. The last corpus is finite evidence for those
 programs only. Neither that corpus nor the replay is a model-benefit test.
 
+=t/qualification/ascent-stratified-proof-test.ss= checks founded negation,
+fixed computation and reduction support, all four reducers and empty groups;
+it rejects omitted or repeated group support, forward references, a changed
+negative row, stale source generation, altered closure, wrong roots and a
+proof-work cap. These are bounded examples, not a completeness theorem.
+
 #+begin_src sh
-ASCENT_GXTEST_STARTUP_SECONDS=30 ASCENT_GXTEST_IDLE_SECONDS=20 \
-  ASCENT_GXTEST_TIMEOUT=180s \
-  just test-file t/qualification/ascent-finite-evidence-test.ss
+ASCENT_GXTEST_TIMEOUT=180s just test-file t/qualification/ascent-finite-evidence-test.ss
+ASCENT_GXTEST_TIMEOUT=180s just test-file t/qualification/ascent-stratified-proof-test.ss
 #+end_src
 
 * Model gate and next proof gate
@@ -93,13 +115,8 @@ temporal-causality cases separately inspect a native closed cut and an
 open parent; this finite relation replay does not itself certify valid
 time, knowledge time, causal cuts or release authority.
 
-The next evidence design gate is a derivation certificate for the checked
-stratified subset. It must identify the snapshot and inspected program;
-carry support for each asserted derived tuple; reference a completed
-lower stratum for every negated match; enumerate the exact contributing
-set for each count/sum/min/max group, including empty groups; and bind
-the final query to that evidence. A verifier must reject self-supporting
-cycles, incomplete groups, changed source generations and altered proof
-nodes while respecting explicit size and work caps. Until that format
-and checker pass an independent finite oracle, =finite-evidence= remains
-an exact bounded replay rather than a general derivation proof.
+The remaining gate is a producer that emits these proof nodes for the full
+checked subset, plus an independent finite oracle corpus that compares the
+checker and the producer across recursive strata, source changes and bounded
+failures. The current checker validates caller-supplied proofs only. General
+negative explanations and model benefit remain separate research gates.

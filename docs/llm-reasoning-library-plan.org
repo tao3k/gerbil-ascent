@@ -102,21 +102,25 @@ finite model and binds a supplied closure to the snapshot, program and
 native answer. This is a full bounded replay, not a general derivation DAG
 or an explanation of why a real-world fact is absent.
 
+A further supplied [[file:finite-stratified-evidence.org][stratified derivation certificate]] now checks
+founded positive witnesses, lower-stratum negative absence, exact reduction
+groups and final query roots against that replay. Its checker is implemented;
+an automatic producer and general Why-Not semantics are still open.
+
 #+NAME: llm-library-evidence-status
 | Claim | Executable evidence | Remaining boundary |
 |-------+---------------------+--------------------|
 | Positive derivation | Replayable proof DAG for the checked positive clauses | No complete provenance for all derivations |
 | Ground positive nonmembership | Finite closed-relation certificate and independent rule-closure checker | No open-world absence or general Why-Not cause |
-| Negation and reduction | Separate stratum-by-stratum finite replay and independent check against the native answer | No compact general derivation proof or reduction lineage |
+| Negation and reduction | Separate finite replay plus checker for supplied founded proof nodes and exact groups | No automatic proof producer, complete lineage or general Why-Not |
 | Model usefulness | Two pre-registered five-task paired pilots in POO Flow Python Testing | No general benefit, deployed result or causal explanation |
 
 The finite verifier is independent of the native planner and solver, but its
-certificate generator and verifier share the separate replay semantics. An
-independently checkable *derivation* for arbitrary negated or reduced tuples
-would additionally need explicit lower-stratum completeness, every reduction
-input group, and support for each derived tuple. That proof format and its
-checker remain unimplemented. The current certificate must keep its
-snapshot-relative, inspected-candidate scope.
+certificate generator and verifier share the separate replay semantics. The
+new proof checker uses the freshly replayed closure for lower-stratum
+completeness and exact reduction groups. It validates one supplied finite
+proof for the inspected candidate, not arbitrary programs or real-world
+absence. The producer and broader semantics remain unimplemented.
 
 Candidate and source inputs now pass an iterative scalar/pair-tree
 preflight before list traversal or digest. It rejects cycles,

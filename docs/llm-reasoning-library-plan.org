@@ -91,9 +91,9 @@ derivation DAG when every rule body uses relation atoms and fixed
 =where=/=compute= clauses. The verifier replays scalar operations from
 earlier bindings and accepts no input node for them. The receipt keeps
 complete native rows when this proof is =bounded= or =unsupported=.
-Negation and reduction still have no derivation-proof claim; the
-ground nonmembership certificate supports the same fixed clauses when
-their finite closure fits its bounds.
+The ordinary receipt still has no attached negation/reduction derivation
+proof; the ground nonmembership certificate supports the same fixed clauses
+when their finite closure fits its bounds.
 
 A separate [[file:finite-stratified-evidence.org][finite stratified replay]]
 now checks exact relation sets for inspected candidates containing checked
@@ -102,25 +102,28 @@ finite model and binds a supplied closure to the snapshot, program and
 native answer. This is a full bounded replay, not a general derivation DAG
 or an explanation of why a real-world fact is absent.
 
-A further supplied [[file:finite-stratified-evidence.org][stratified derivation certificate]] now checks
-founded positive witnesses, lower-stratum negative absence, exact reduction
-groups and final query roots against that replay. Its checker is implemented;
-an automatic producer and general Why-Not semantics are still open.
+A separate [[file:finite-stratified-evidence.org][stratified derivation certificate]] checks founded
+positive witnesses, lower-stratum negative absence, exact reduction groups
+and final query roots against that replay. A bounded producer now emits one
+checked proof for nonempty candidate answers. It is a callable API and is
+not yet attached to the ordinary candidate receipt. General Why-Not
+semantics remain open.
 
 #+NAME: llm-library-evidence-status
 | Claim | Executable evidence | Remaining boundary |
 |-------+---------------------+--------------------|
 | Positive derivation | Replayable proof DAG for the checked positive clauses | No complete provenance for all derivations |
 | Ground positive nonmembership | Finite closed-relation certificate and independent rule-closure checker | No open-world absence or general Why-Not cause |
-| Negation and reduction | Separate finite replay plus checker for supplied founded proof nodes and exact groups | No automatic proof producer, complete lineage or general Why-Not |
+| Negation and reduction | Separate finite replay, bounded producer and checker for founded nodes and exact groups | No receipt integration, complete lineage or general Why-Not |
 | Model usefulness | Two pre-registered five-task paired pilots in POO Flow Python Testing | No general benefit, deployed result or causal explanation |
 
 The finite verifier is independent of the native planner and solver, but its
 certificate generator and verifier share the separate replay semantics. The
 new proof checker uses the freshly replayed closure for lower-stratum
-completeness and exact reduction groups. It validates one supplied finite
-proof for the inspected candidate, not arbitrary programs or real-world
-absence. The producer and broader semantics remain unimplemented.
+completeness and exact reduction groups. The producer runs this checker
+before reporting completion. Both apply to inspected candidates and copied
+finite snapshots, not arbitrary programs or real-world absence. Broader
+semantics remain unimplemented.
 
 Candidate and source inputs now pass an iterative scalar/pair-tree
 preflight before list traversal or digest. It rejects cycles,
@@ -283,5 +286,6 @@ the final gate cannot be inferred from a green unit test.
 | Adapter location | Scheme Library first; external serving adapter later | Measured protocol or latency bottleneck at the plain boundary |
 
 The candidate API and bounded pilots are implemented within these bounds.
-General derivation proofs for negation and reduction, broader model
-usefulness and general reasoning verification remain unproved.
+General derivation provenance, broad model usefulness and general reasoning
+verification remain unproved. The bounded stratified producer handles one
+checked support per nonempty answer, not every derivation or Why-Not cause.

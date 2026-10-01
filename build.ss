@@ -40,6 +40,7 @@
     "candidate/nonmembership"
     "candidate/finite-evidence"
     "candidate/stratified-proof"
+    "candidate/stratified-producer"
     "candidate/reasoning"
     "interface/request"))
 

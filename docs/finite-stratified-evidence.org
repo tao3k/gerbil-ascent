@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 #+TITLE: Finite stratified evidence for inspected candidates
-#+STATUS: bounded replay and checked derivations implemented; general provenance open
+#+STATUS: bounded replay, proof producer and checker implemented; general provenance open
 #+DATE: 2026-10-01
 #+FILETAGS: :ascent:scheme:evidence:verification:
 
@@ -68,10 +68,18 @@ have explicit bounds; the checker returns =unsupported= for an empty answer.
 
 The checker first validates the finite certificate and obtains the *freshly
 replayed* closure from =candidate-verified-finite-closure=. It does not trust
-the certificate's mutable closure as a source of lower-stratum facts. This
-supports a founded derivation claim relative to the supplied snapshot and
-inspected candidate. It does not supply a proof producer, exhaustive lineage
-for every derivation, a Why-Not explanation, open-world absence, source
+the certificate's mutable closure as a source of lower-stratum facts.
+=candidate-produce-stratified-proof= now searches that verified closure by
+stratum and fixed-point round, emits one founded support per reachable row,
+and calls the checker before returning =complete= with a proof. It returns
+=bounded= when its work/node limit is exhausted, =unsupported= for an empty
+answer or missing support, and =invalid= when the certificate or produced
+proof fails verification. This API is separate from the existing positive
+receipt proof and is not automatically attached to candidate receipts.
+
+The bounded claim is relative to the supplied snapshot and inspected
+candidate. Neither the producer nor checker provides exhaustive lineage for
+every derivation, a Why-Not explanation, open-world absence, source
 authentication, or larger-scale performance evidence. A general recursive
 Why/Why-Not representation needs separate semantics and tests.
 The older [[file:research/scheme-dsl/positive-provenance.org][positive proof]] and
@@ -95,7 +103,10 @@ programs only. Neither that corpus nor the replay is a model-benefit test.
 fixed computation and reduction support, all four reducers and empty groups;
 it rejects omitted or repeated group support, forward references, a changed
 negative row, stale source generation, altered closure, wrong roots and a
-proof-work cap. These are bounded examples, not a completeness theorem.
+proof-work cap. It checks produced proofs for these cases and every nonempty
+answer among all 64 directed three-node graph subsets against the independent
+checker; an empty answer returns =unsupported=. These are bounded examples,
+not a completeness theorem.
 
 #+begin_src sh
 ASCENT_GXTEST_TIMEOUT=180s just test-file t/qualification/ascent-finite-evidence-test.ss
@@ -115,8 +126,9 @@ temporal-causality cases separately inspect a native closed cut and an
 open parent; this finite relation replay does not itself certify valid
 time, knowledge time, causal cuts or release authority.
 
-The remaining gate is a producer that emits these proof nodes for the full
-checked subset, plus an independent finite oracle corpus that compares the
-checker and the producer across recursive strata, source changes and bounded
-failures. The current checker validates caller-supplied proofs only. General
-negative explanations and model benefit remain separate research gates.
+The producer and checker now cover the inspected checked subset for nonempty
+answers with explicit finite limits. The remaining proof gate is broader
+independent oracle coverage across recursive strata, source changes,
+duplicate support and all bounded-failure modes, followed by a defined
+receipt integration contract. General negative explanations, exhaustive
+lineage and model benefit remain separate research gates.

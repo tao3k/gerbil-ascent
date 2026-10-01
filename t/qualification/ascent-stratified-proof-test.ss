@@ -12,7 +12,9 @@
         (only-in :gerbil-ascent/candidate/finite-evidence
                  candidate-finite-evidence finite-evidence-closure)
         (only-in :gerbil-ascent/candidate/stratified-proof
-                 candidate-verify-stratified-proof))
+                 candidate-verify-stratified-proof)
+        (only-in :gerbil-ascent/candidate/stratified-producer
+                 candidate-produce-stratified-proof))
 
 (export ascent-stratified-proof-test)
 
@@ -52,6 +54,16 @@
   (if (pair? datum)
     (cons (copy-pairs (car datum)) (copy-pairs (cdr datum)))
     datum))
+
+(def possible-edges '((0 1) (0 2) (1 0) (1 2) (2 0) (2 1)))
+
+(def (mask-edges mask)
+  (let loop ((remaining possible-edges) (bit 1) (rows []))
+    (if (null? remaining)
+      (reverse rows)
+      (loop (cdr remaining) (* bit 2)
+            (if (zero? (bitwise-and mask bit)) rows
+              (cons (car remaining) rows))))))
 
 (def (case-values)
   (let* ((source (snapshot 1))
@@ -112,7 +124,13 @@
     (check-equal? status 'complete)
     (check-equal? rows (list (list root expected)))
     (check-equal? (verify source spec digest status rows finite witness)
-                  'valid)))
+                  'valid)
+    (let-values (((produced-status produced)
+                  (candidate-produce-stratified-proof
+                   source spec digest status rows finite 5000 5000)))
+      (check-equal? produced-status 'complete)
+      (check-equal? (verify source spec digest status rows finite produced)
+                    'valid))))
 
 (def ascent-stratified-proof-test
   (test-suite "bounded stratified derivation checker"
@@ -141,6 +159,12 @@
         (check-equal? rows '((1 4)))
         (check-equal? (verify source spec digest status rows finite witness)
                       'valid)
+        (let-values (((produced-status produced)
+                      (candidate-produce-stratified-proof
+                       source spec digest status rows finite 5000 5000)))
+          (check-equal? produced-status 'complete)
+          (check-equal? (verify source spec digest status rows finite produced)
+                        'valid))
         (let (changed (copy-pairs witness))
           (set-car! (cdddr (car (cadr changed))) 99)
           (check-equal? (verify source spec digest status rows finite changed)
@@ -151,7 +175,121 @@
         (check-equal? status 'complete)
         (check-equal? rows '((1 1)))
         (check-equal? (verify source spec digest status rows finite proof)
-                      'valid)))
+                      'valid)
+        (let-values (((produced-status produced)
+                      (candidate-produce-stratified-proof
+                       source spec digest status rows finite 5000 5000)))
+          (check-equal? produced-status 'complete)
+          (check-equal? (verify source spec digest status rows finite produced)
+                        'valid))
+        (let-values (((produced-status produced)
+                      (candidate-produce-stratified-proof
+                       source spec digest status rows finite 5000 1)))
+          (check-equal? produced-status 'bounded)
+          (check-equal? produced []))))
+    (test-case "recursive producer roots have founded earlier support"
+      (let* ((source
+              (reasoning-source-snapshot
+               'recursive-proof 1
+               '((edge 2 ((0 1) (1 2) (2 0))))))
+             (datum
+              '(candidate
+                 (relation path 2)
+                 (rule (path ?x ?y) (edge ?x ?y))
+                 (rule (path ?x ?z) (path ?x ?y) (edge ?y ?z))
+                 (query path 0 ?y)
+                 (limits 16 64 128)))
+             (receipt (reasoning-attempt source datum))
+             (spec (candidate-inspect source datum))
+             (digest (reasoning-receipt-candidate-digest receipt))
+             (status (reasoning-receipt-status receipt))
+             (rows (reasoning-receipt-rows receipt))
+             (finite (candidate-finite-evidence
+                      source spec digest status rows 20000)))
+        (check-equal? status 'complete)
+        (let-values (((produced-status produced)
+                      (candidate-produce-stratified-proof
+                       source spec digest status rows finite 20000 20000)))
+          (check-equal? produced-status 'complete)
+          (check-equal?
+           (verify source spec digest status rows finite produced 20000)
+           'valid))))
+    (test-case "producer handles comparison, identity and negative wildcard"
+      (let* ((source
+              (reasoning-source-snapshot
+               'fixed-proof 1
+               '((edge 2 ((1 2) (1 3)))
+                 (blocked 2 ((3 0))))))
+             (datum
+              '(candidate
+                 (relation selected 2)
+                 (rule (selected ?x ?v) (edge ?x ?y)
+                       (where (< ?x ?y))
+                       (compute ?v (identity ?y))
+                       (not (blocked ?y ?_)))
+                 (query selected 1 ?v)
+                 (limits 16 64 128)))
+             (receipt (reasoning-attempt source datum))
+             (spec (candidate-inspect source datum))
+             (digest (reasoning-receipt-candidate-digest receipt))
+             (status (reasoning-receipt-status receipt))
+             (rows (reasoning-receipt-rows receipt))
+             (finite (candidate-finite-evidence
+                      source spec digest status rows 5000)))
+        (check-equal? status 'complete)
+        (check-equal? rows '((1 2)))
+        (let-values (((produced-status produced)
+                      (candidate-produce-stratified-proof
+                       source spec digest status rows finite 5000 5000)))
+          (check-equal? produced-status 'complete)
+          (check-equal?
+           (verify source spec digest status rows finite produced)
+           'valid))))
+    (test-case "all sixty-four finite graphs have checked producer roots"
+      (for-each
+       (lambda (mask)
+         (let* ((source
+                 (reasoning-source-snapshot
+                  'recursive-corpus mask
+                  (list (list 'edge 2 (mask-edges mask)))))
+                (datum
+                 '(candidate
+                    (relation path 2)
+                    (rule (path ?x ?y) (edge ?x ?y))
+                    (rule (path ?x ?z) (path ?x ?y) (edge ?y ?z))
+                    (query path 0 ?y)
+                    (limits 16 64 128)))
+                (receipt (reasoning-attempt source datum))
+                (spec (candidate-inspect source datum))
+                (digest (reasoning-receipt-candidate-digest receipt))
+                (status (reasoning-receipt-status receipt))
+                (rows (reasoning-receipt-rows receipt))
+                (finite
+                 (candidate-finite-evidence
+                  source spec digest status rows 20000)))
+           (check-equal? status 'complete)
+           (let-values (((produced-status produced)
+                         (candidate-produce-stratified-proof
+                          source spec digest status rows finite
+                          20000 20000)))
+             (if (null? rows)
+               (check-equal? produced-status 'unsupported)
+               (begin
+                 (check-equal? produced-status 'complete)
+                 (check-equal?
+                  (verify source spec digest status rows finite
+                          produced 20000)
+                  'valid))))))
+       (iota 64)))
+    (test-case "stale finite certificate cannot produce a proof"
+      (let-values (((source spec digest status rows finite)
+                    (case-values)))
+        (let-values (((produced-status produced)
+                      (candidate-produce-stratified-proof
+                       (snapshot 2) spec digest status rows finite
+                       5000 5000)))
+          (check-equal? produced-status 'invalid)
+          (check-equal? produced []))))
     (test-case "repeated, omitted and forward group support fail"
       (let-values (((source spec digest status rows finite)
                     (case-values)))

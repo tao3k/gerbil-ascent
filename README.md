@@ -82,7 +82,11 @@ compatibility target for the proposed
 The Scheme-native rule surface in `program/scheme-language.ss`,
 finite relation operator descriptors in `program/operator.ss`, and
 bounded inert candidate boundary in `candidate/reasoning.ss` share the
-POO rule evaluator. The operator compiler supports source, union,
+POO rule evaluator. Candidate inspection in `candidate/program.ss` accepts
+ordered atoms, checked negation, fixed scalar filters/computations and
+count/sum/min/max reductions as inert data; receipts expose complete rows
+with `unsupported` evidence except for the exact graph witness/cut case.
+The operator compiler supports source, union,
 equijoin, fixed equality selection, projection, finite mapping and
 positive fixed points. An operator graph can now become a fresh fragment
 and compose with native rules; a first-class relation transformer has an
@@ -102,6 +106,14 @@ sources in one completed transaction, including the transformer's
 generated input label; failed validation or solving leaves the earlier
 state available. Withdrawal and batch replacement rebuild the native
 source snapshot, without claiming an incremental deletion algorithm.
+For a composed program, `relational-session-transaction!` accepts
+`(fragment label rows)` updates across fragments and returns one solved
+snapshot. A direct named program uses `relational-program-transaction!`
+with `(name . rows)` updates. The combined qualification changes
+recursive edges, a negated source, finite view rows, grouping roots and
+lattice seeds together, checking a separate finite model and failure
+rollback. The [deletion research note](docs/research/scheme-dsl/deletion-h18.org)
+records the evidence needed before optimizing withdrawal.
 The [retained Session receipt](docs/research/scheme-dsl/e4-retained-session.org)
 checks all 64 three-node graph masks through append, duplicate append,
 withdrawal and two-source nested closure, and records a matched local

@@ -26,9 +26,11 @@
         relational-open-session relational-session-append-source!
         relational-session-replace-source!
         relational-session-replace-sources!
+        relational-session-transaction!
         relational-session-run relational-open-program-session
         relational-program-append-source!
         relational-program-replace-source!
+        relational-program-transaction!
         relational-program-session-run relational-program-query)
 
 (defstruct relational-admission (run))
@@ -339,41 +341,68 @@
      (relational-session-engine session)
      (relational-session-source-arities session) name rows)))
 
-;;; Check every exported source and copy every row before entering the
-;;; Session's atomic batch solve. Replacements are (label . rows) pairs.
-;;; The returned solution is complete, or the earlier session remains live.
-(def (relational-session-replace-sources! session fragment replacements)
+;;; Both named programs and composed fragments share one checked source
+;;; replacement boundary. Nothing enters the Session before all rows have
+;;; been copied and every source name has passed arity and uniqueness checks.
+(def (relational-checked-replacements arities entries)
+  (unless (and (list? entries) (pair? entries))
+    (error "relational transaction requires source updates" entries))
+  (let (seen (make-hash-table-eq))
+    (map
+     (lambda (entry)
+       (unless (and (pair? entry) (symbol? (car entry)))
+         (error "invalid relational source update" entry))
+       (let* ((name (car entry))
+              (arity (assq name arities)))
+         (unless arity
+           (error "relation is not a source in this session" name))
+         (when (hash-get seen name)
+           (error "duplicate relational transaction source" name))
+         (hash-put! seen name #t)
+         (let (rows (relational-copy-rows (cdr entry) (cdr arity)))
+           (cons name rows))))
+     entries)))
+
+;;; Updates are (fragment label rows) triples. Each handle must be an
+;;; exported source in this composed session. The returned solution is
+;;; complete, or the previous completed snapshot remains current.
+(def (relational-session-transaction! session updates)
   (unless (relational-session? session)
-    (error "relational batch replacement requires a session" session))
-  (validate GerbilAscentFragmentContract fragment)
-  (unless (list? replacements)
-    (error "relational batch replacements must be a list" replacements))
-  (let ((seen (make-hash-table-eq))
-        (arities (relational-session-source-arities session)))
-    (let (checked
-          (map
-           (lambda (replacement)
-             (unless (and (pair? replacement)
-                          (symbol? (car replacement)))
-               (error "invalid relational source replacement" replacement))
-             (let* ((label (car replacement))
-                    (name (relational-export fragment label))
-                    (arity (assq name arities)))
-               (unless (and (memq name (.ref fragment 'source-handles))
-                            arity)
+    (error "relational transaction requires a session" session))
+  (unless (and (list? updates) (pair? updates))
+    (error "relational transaction requires source updates" updates))
+  (let (entries
+        (map
+         (lambda (update)
+           (unless (and (list? update) (= (length update) 3)
+                        (symbol? (cadr update)))
+             (error "invalid relational transaction update" update))
+           (let* ((fragment (car update))
+                  (label (cadr update)))
+             (let (name (relational-export fragment label))
+               (unless (memq name (.ref fragment 'source-handles))
                  (error "relational export is not a source in this session"
                         label))
-               (when (hash-get seen name)
-                 (error "duplicate relational batch source" label))
-               (hash-put! seen name #t)
-               (let (rows (relational-copy-rows
-                           (cdr replacement) (cdr arity)))
-                 (relational-source name (cdr arity) rows)
-                 (cons name rows))))
-           replacements))
-      (make-relational-solution
-       (gerbil-ascent-session-replace-sources!
-        (relational-session-engine session) checked)))))
+               (cons name (caddr update)))))
+         updates))
+    (make-relational-solution
+     (gerbil-ascent-session-replace-sources!
+      (relational-session-engine session)
+      (relational-checked-replacements
+       (relational-session-source-arities session) entries)))))
+
+;;; Single-fragment batches use the same cross-fragment transaction owner.
+(def (relational-session-replace-sources! session fragment replacements)
+  (unless (list? replacements)
+    (error "relational batch replacements must be a list" replacements))
+  (relational-session-transaction!
+   session
+   (map
+    (lambda (replacement)
+      (unless (and (pair? replacement) (symbol? (car replacement)))
+        (error "invalid relational source replacement" replacement))
+      (list fragment (car replacement) (cdr replacement)))
+    replacements)))
 
 (def (relational-program-replace-source! session name rows)
   (unless (relational-program-session? session)
@@ -388,6 +417,18 @@
   (relational-append-source/checked!
    (relational-program-session-engine session)
    (relational-program-session-source-arities session) name row))
+
+;;; The direct named program uses the same atomic Session transaction and
+;;; row checks. Its result retains the distinct named-solution query type.
+(def (relational-program-transaction! session replacements)
+  (unless (relational-program-session? session)
+    (error "named transaction requires a program session" session))
+  (make-relational-program-solution
+   (gerbil-ascent-session-replace-sources!
+    (relational-program-session-engine session)
+    (relational-checked-replacements
+     (relational-program-session-source-arities session)
+     replacements))))
 
 (def (relational-session-result engine)
   (let (result (gerbil-ascent-session-run engine))

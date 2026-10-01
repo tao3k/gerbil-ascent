@@ -195,6 +195,12 @@ The 64-mask nested-closure check covers two-source changes and a failed
 batch followed by a successful update tests rollback. Its earlier matched local probe
 compares update latency after initialization with fresh materialization;
 it does not establish lifecycle-wide or general performance superiority.
+The same transaction owner now accepts checked updates across distinct
+fragments and from a direct named program. One end-to-end qualification
+uses an independent finite model for recursive reachability, negation,
+finite mapping, grouped count and a max lattice, then checks both
+withdrawal and failure rollback. [[file:research/scheme-dsl/deletion-h18.org][H18]] makes explicit that this is
+atomic recomputation, pending any support-aware deletion algorithm.
 The LLM candidate/observation contract follows the admitted Scheme
 core; it cannot claim stronger semantics than that core provides.
 Flix and Datafun inform semantic questions;

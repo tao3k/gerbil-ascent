@@ -171,6 +171,81 @@
         (check-equal? (reasoning-receipt-rows receipt) '())
         (check-equal? (reasoning-evidence-kind
                        (reasoning-receipt-evidence receipt)) 'unsupported)))
+    (test-case "checked candidate clauses share trusted Scheme semantics"
+      (let* ((snapshot
+              (reasoning-source-snapshot
+               'joined 1
+               '((edge 2 ((1 2) (2 3)))
+                 (blocked 2 ((1 3)))
+                 (weight 2 ((2 4) (3 6)))
+                 (root 1 ((1) (2))))))
+             (candidate
+              '(candidate
+                 (relation path 2)
+                 (relation allowed 2)
+                 (relation weighted 2)
+                 (relation summary 2)
+                 (rule (path ?x ?y) (edge ?x ?y))
+                 (rule (path ?x ?z) (path ?x ?y) (edge ?y ?z))
+                 (rule (allowed ?x ?y)
+                   (path ?x ?y) (not (blocked ?x ?y)))
+                 (rule (weighted ?x ?v)
+                   (allowed ?x ?y) (weight ?y ?w)
+                   (where (even? ?w))
+                   (compute ?v (+ ?w ?w)))
+                 (rule (summary ?r ?n)
+                   (root ?r)
+                   (reduce ?n (count) (weighted ?r ?v)))
+                 (query summary 1 ?n)
+                 (limits 16 64 128)))
+             (receipt (reasoning-attempt snapshot candidate)))
+        (check-equal? (reasoning-receipt-status receipt) 'complete)
+        (check-equal? (reasoning-receipt-rows receipt) '((1 1)))
+        (check-equal? (reasoning-evidence-kind
+                       (reasoning-receipt-evidence receipt)) 'unsupported)
+        (check-equal?
+         (reasoning-receipt-rows
+          (reasoning-attempt
+           snapshot
+           '(candidate
+              (relation path 2)
+              (rule (path ?x ?y) (edge ?x ?y)
+                    (not (blocked ?x ?y)))
+              (query path 1 ?y) (limits 16 32 64))))
+         '((1 2)))))
+    (test-case "candidate modes and stratification reject at their boundary"
+      (let* ((snapshot (edge-snapshot 1 '((1 2))))
+             (unsafe
+              (reasoning-attempt
+               snapshot
+               '(candidate (relation path 2)
+                           (rule (path ?x ?y) (not (edge ?x ?y)))
+                           (query path ?x ?y) (limits 8 8 16))))
+             (unbound
+              (reasoning-attempt
+               snapshot
+               '(candidate (relation path 2)
+                           (rule (path ?x ?v) (edge ?x ?y)
+                                 (compute ?v (+ ?w ?w)))
+                           (query path ?x ?v) (limits 8 8 16))))
+             (cycle
+              (reasoning-attempt
+               snapshot
+               '(candidate (relation path 2)
+                           (rule (path ?x ?y) (edge ?x ?y)
+                                 (not (path ?x ?y)))
+                           (query path ?x ?y) (limits 8 8 16)))))
+        (check-equal? (reasoning-receipt-status unsafe) 'rejected)
+        (check-equal? (reasoning-diagnostic-code
+                       (first-diagnostic unsafe)) 'unsafe-negation)
+        (check-equal? (reasoning-diagnostic-path
+                       (first-diagnostic unsafe)) '(clause 2 body 1 term 1))
+        (check-equal? (reasoning-receipt-status unbound) 'rejected)
+        (check-equal? (reasoning-diagnostic-code
+                       (first-diagnostic unbound)) 'unbound-operator-input)
+        (check-equal? (reasoning-receipt-status cycle) 'rejected)
+        (check-equal? (reasoning-diagnostic-code
+                       (first-diagnostic cycle)) 'invalid-dependencies)))
     (test-case "all sixty-four three-node graphs match finite reference"
       (let (possible '((0 1) (0 2) (1 0) (1 2) (2 0) (2 1)))
         (for-each

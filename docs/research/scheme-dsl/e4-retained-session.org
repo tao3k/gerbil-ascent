@@ -68,6 +68,14 @@ future deletion design, but do not license applying an insertion-only
 set derivative to the present batch API. The transaction guarantees
 snapshot consistency while that algorithm remains an open gate.
 
+The composed Scheme language now uses =relational-session-transaction!=
+for =(fragment label rows)= updates spanning *different* fragments.
+Named =relational-program= sessions expose =relational-program-transaction!=
+with =(name . rows)= entries. Both reuse the same checked row boundary
+and the native Session's prospective solve. The [[file:deletion-h18.org][H18 deletion reading]] explains
+why recursive support counts or a different change algebra would be
+needed before replacing that full recomputation.
+
 The [[file:../../../t/qualification/scheme-operator-retained-test.ss][qualification test]] covers every mask of six directed three-node edges.
 For each of the 64 initial graphs it compares the old result, insertion,
 duplicate insertion, and withdrawal with an independent

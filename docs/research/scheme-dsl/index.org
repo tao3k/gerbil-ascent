@@ -29,6 +29,9 @@ samples and its scope limit.
 The [[file:e4-retained-session.org][retained Session receipt]] follows the same operator graph into the
 native indexed evaluator, checks update/withdrawal semantics and
 compares update latency with fresh materialization.
+The [[file:deletion-h18.org][deletion study]] records DRed/Counting prerequisites, the current
+cross-fragment atomic transaction gate, and a falsifiable route to a
+future incremental deletion experiment.
 
 #+NAME: source-ledger
 | Key | Source and durable link | Local note | Main design constraint |
@@ -39,6 +42,7 @@ compares update latency with fresh materialization.
 | F20 | [[https://plg.uwaterloo.ca/~olhotak/pubs/oopsla20c.pdf][Flix paper]] / [[https://doi.org/10.1145/3428193][DOI]] | [[file:flix-f20.org][Flix]] | Validate composition and stratification |
 | S20 | [[https://www.rntz.net/files/seminaive-datafun.pdf][Datafun semi-naive paper]] / [[https://doi.org/10.1145/3371090][DOI]] | [[file:datafun-s20.org][Datafun S20]] | Higher-order deltas need typed transformation |
 | B22 | [[https://arxiv.org/pdf/2203.16684][DBSP paper]] / [[https://doi.org/10.48550/arXiv.2203.16684][DOI]] | [[file:dbsp-b22.org][DBSP]] | Separate retained update work from full reconstruction |
+| H18 | [[https://ojs.aaai.org/index.php/AAAI/article/view/11554/11413][DRedc paper]] / [[https://doi.org/10.1609/aaai.v32i1.11554][DOI]] | [[file:deletion-h18.org][Deletion H18]] | Count supports separately before maintaining recursive deletions |
 | L25 | [[https://plg.uwaterloo.ca/~olhotak/pubs/oopsla25b.pdf][Flix design paper]] / [[https://doi.org/10.1145/3763126][DOI]] | [[file:flix-l25.org][Flix L25]] | Program values, private names and solve/query boundary |
 
 * Cross-paper synthesis

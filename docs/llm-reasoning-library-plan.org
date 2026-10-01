@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 #+TITLE: From Scheme Datalog to an LLM reasoning Library
-#+STATUS: first bounded graph transcript implemented; wider Library remains design
+#+STATUS: bounded candidate Library implemented; wider evidence and model study remain design
 #+DATE: 2026-09-30
 #+FILETAGS: :design:scheme-dsl:llm:research:
 
@@ -59,15 +59,20 @@ the stored snapshot.
 #+end_src
 
 The candidate grammar accepts derived =relation= declarations,
-hypothetical =fact= rows only for source relations, positive =rule=
-heads/bodies, one =query=, and explicit input/derived/output =limits=.
+hypothetical =fact= rows only for source relations, =rule= heads with
+ordered positive atoms, checked negation, fixed =where= and =compute=
+operators, and checked count/sum/min/max =reduce= clauses. It accepts
+one =query= and explicit input/derived/output =limits=.
 Terms are exact integers, booleans, symbols or characters; =?name=
 symbols bind variables and =?_= is a wildcard.  It admits no callable
-Scheme values; hypothetical facts must be ground.  It admits no
-negation, aggregates, scalar operators, or model control
-loop.  The implementation uses the Scheme relational admission and
+Scheme values; hypothetical facts must be ground. The fixed operator
+vocabulary is =even?= and =<= for =where=, =identity= and =+= for
+=compute=. Negated atoms read already bound variables; reduction
+reads an admitted relation. The planner checks strata and cycles after
+inspection. This surface admits no model control loop. The implementation uses the Scheme relational admission and
 one-shot solve/query path.  Inspect errors contain clause/body/term
-paths.  Planner rejection is distinguished from solve/query failure.
+paths, including mapped planner rule locations. Planner rejection is
+distinguished from solve/query failure.
 
 The receipt status is =rejected= for structural or planner rejection,
 =unknown= for resource exhaustion or an internal failure, and
@@ -93,15 +98,16 @@ Floyd-Warshall-style finite reference.
 | =program/analysis.ss=, =program/summary.ss= | Cached schema/plan metadata and dependency SCCs | Return stable admission diagnostics with relation/rule/clause location |
 | =program/evaluate.ss=, =program/session.ss= | Fixed-point results, immutable result snapshots and retained source replacement | The first candidate boundary uses one-shot admission/solve against a copied source snapshot |
 | =candidate/closure.ss= | Bounded binary-closure candidates and one shortest source support | The first candidate boundary implements its own row-labelled graph witness/cut; these remain distinct APIs |
+| =candidate/types.ss=, =candidate/program.ss=, =candidate/reasoning.ss= | Shared bounded data, inert inspection/lowering, snapshot execution and receipts | Keep source authority and general provenance outside the attempt boundary |
 | =interface/request.ss= | Inert identity/bound projection for MRR handoff | Keep MRR identity authority separate from the LLM candidate contract |
 
 The public Library boundary should wrap these modules, not replicate
 their relation store or evaluator.  Its first candidate format is inert
-data: declared relation names and arities, finite source rows, positive
-rule heads/bodies, a query, and budget values.  It must not deserialize
-an arbitrary Scheme closure from LLM output.  The trusted Scheme API can
-later construct richer fragments with explicitly declared operators;
-the untrusted LLM surface admits only constructs it can inspect.
+data: declared relation names and arities, finite source rows, checked
+rule bodies, a query, and budget values. It must not deserialize
+an arbitrary Scheme closure from LLM output. The trusted Scheme API can
+construct richer fragments with explicitly declared operators; the
+untrusted LLM surface admits only a fixed, inspectable subset.
 
 * Proposed flow and statuses
 :PROPERTIES:
@@ -196,11 +202,11 @@ the final gate cannot be inferred from a green unit test.
 #+NAME: llm-library-decisions
 | Decision | Recommended first choice | Evidence that could change it |
 |----------+--------------------------+-------------------------------|
-| LLM candidate syntax | Small inert positive-rule data grammar | A task requires an operator that can be safely inspected and bounded |
+| LLM candidate syntax | Inert rule data with a fixed checked operator subset | A task requires another operator that can be safely inspected and bounded |
 | Program identity | Content-derived identity plus named source generation in each attempt | Collision/canonicalization or source-revision test fails |
 | Explanation | One replayable positive witness; finite graph absence/cut | A use case demands complete provenance or a general Why-Not meaning |
 | Feedback size | Typed error code, precise location and bounded supporting rows | Model study shows needed detail without increased unsupported claims |
 | Adapter location | Scheme Library first; external serving adapter later | Measured protocol or latency bottleneck at the plain boundary |
 
-These are proposed choices for implementation discussion, not an
-implemented API or a claim of general reasoning verification.
+The candidate API is implemented within these bounds. Wider evidence,
+model usefulness and general reasoning verification remain unproved.

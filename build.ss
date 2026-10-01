@@ -34,6 +34,8 @@
     "program/interface"
     "core/binary-program"
     "candidate/closure"
+    "candidate/types"
+    "candidate/program"
     "candidate/reasoning"
     "interface/request"))
 

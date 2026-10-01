@@ -344,6 +344,13 @@ generated source label is returned by =relational-op-retained-input-label=;
 other graph sources use their declared labels. The Session validates
 all new rows and runs a prospective snapshot before committing any
 source or result.
+For a composed program, =relational-session-transaction!= takes
+=(fragment label rows)= triples from several fragments. The direct
+=relational-program= path uses =relational-program-transaction!= with
+=(name . rows)= pairs. Both call the same checked source-update owner;
+the combined qualification checks recursion, negation, count and max
+after changing five source fragments together. The [[file:research/scheme-dsl/deletion-h18.org][deletion study]] records
+why current set results cannot yet support a DRedc-style withdrawal.
 The engine may recompute during replacement, so an invalid or
 over-budget update can fail at that call.
 

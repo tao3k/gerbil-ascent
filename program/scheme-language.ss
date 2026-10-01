@@ -17,9 +17,11 @@
         relational-open-session relational-session-append-source!
         relational-session-replace-source!
         relational-session-replace-sources!
+        relational-session-transaction!
         relational-session-run relational-open-program-session
         relational-program-append-source!
         relational-program-replace-source!
+        relational-program-transaction!
         relational-program-session-run relational-program-query)
 
 ;;; A rule term is syntax, not a call to an arbitrary Scheme expression.

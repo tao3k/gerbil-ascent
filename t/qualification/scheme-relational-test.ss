@@ -22,6 +22,7 @@
                  relational-session-run
                  relational-open-program-session
                  relational-program-replace-source!
+                 relational-program-transaction!
                  relational-program-session-run relational-program-query)
         (only-in :gerbil-ascent/program/interface
                  gerbil-ascent-evaluate-program
@@ -71,6 +72,17 @@
    (rule (path ?x ?y) (edge ?x ?y))
    (rule (path ?x ?z) (path ?x ?y) (edge ?y ?z))
    (limits 16 32 64)))
+
+(def (direct-filter-program edges blocked)
+  (relational-program
+   (relation edge (from to) edges)
+   (relation blocked (from to) blocked)
+   (relation path (from to))
+   (relation allowed (from to))
+   (rule (path ?x ?y) (edge ?x ?y))
+   (rule (path ?x ?z) (path ?x ?y) (edge ?y ?z))
+   (rule (allowed ?x ?y) (path ?x ?y) (not (blocked ?x ?y)))
+   (limits 32 64 128)))
 
 (def (counted-direct-program source-rows)
   (relational-program
@@ -312,6 +324,36 @@
            (relational-program-query
             (relational-program-session-run session) 'path)
            '((4 5))))))
+    (poo-flow-test-case "named transaction updates recursion and negation"
+      (let* ((session
+              (relational-open-program-session
+               (direct-filter-program '((1 2) (2 3)) '((1 3)))))
+             (first (relational-program-session-run session))
+             (replacement (list (list 3 4)))
+             (second
+              (relational-program-transaction!
+               session (list (cons 'edge replacement)
+                             (cons 'blocked '())))))
+        (set-car! (car replacement) 99)
+        (check-equal?
+         (same-set? (relational-program-query first 'allowed)
+                    '((1 2) (2 3))) #t)
+        (check-equal? (relational-program-query second 'path) '((3 4)))
+        (check-equal? (relational-program-query second 'allowed) '((3 4)))
+        (check-exception
+         (relational-program-transaction!
+          session (list (cons 'edge '((4 5)))
+                        (cons 'blocked '((4 5 6))))) true)
+        (check-exception
+         (relational-program-transaction!
+          session (list (cons 'edge '()) (cons 'edge '((4 5))))) true)
+        (let (third
+              (relational-program-transaction!
+               session (list (cons 'blocked '((3 4))))))
+          (check-equal? (relational-program-query third 'path) '((3 4)))
+          (check-equal? (relational-program-query third 'allowed) '())
+          (check-equal?
+           (relational-program-query second 'allowed) '((3 4))))))
     (poo-flow-test-case "named program evaluates a source expression once"
       (let ((calls 0)
             (program #f))

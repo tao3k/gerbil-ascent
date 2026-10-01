@@ -12,12 +12,14 @@
         (only-in "scheme-admission.ss"
                  relational-compose relational-open-session
                  relational-session-append-source!
-                 relational-session-replace-source!
+                 relational-session-replace-sources!
                  relational-session-run relational-query))
 
 (export relational-op-open-retained
         relational-op-retained? relational-op-retained-rows
-        relational-op-retained-append! relational-op-retained-replace!)
+        relational-op-retained-input-label
+        relational-op-retained-append! relational-op-retained-replace!
+        relational-op-retained-replace-sources!)
 
 (defstruct relational-op-retained
   (session fragment input-label output-label latest))
@@ -91,22 +93,30 @@
       (set! (relational-op-retained-latest retained) next)
       (values before after (row-difference after before)))))
 
-;;; Replacement may withdraw rows, so the native Session recomputes from
-;;; its accepted source snapshot. Return both directions of the set change.
-(def (relational-op-retained-replace! retained rows)
+;;; Replace any subset of exported graph sources in one completed solve.
+;;; Each entry is (source-label . checked-rows). The Session commits the
+;;; entire prospective snapshot only after its native run succeeds.
+(def (relational-op-retained-replace-sources! retained replacements)
+  (unless (relational-op-retained? retained)
+    (error "expected a retained relational operator" retained))
   (let (before (relational-op-retained-rows retained))
-    (relational-session-replace-source!
-     (relational-op-retained-session retained)
-     (relational-op-retained-fragment retained)
-     (relational-op-retained-input-label retained) rows)
-    (let* ((next
-            (relational-session-run
-             (relational-op-retained-session retained)))
-           (after
+    (let (next
+          (relational-session-replace-sources!
+           (relational-op-retained-session retained)
+           (relational-op-retained-fragment retained)
+           replacements))
+      (let (after
             (relational-query
              next (relational-op-retained-fragment retained)
-             (relational-op-retained-output-label retained))))
-      (set! (relational-op-retained-latest retained) next)
-      (values before after
-              (row-difference after before)
-              (row-difference before after)))))
+             (relational-op-retained-output-label retained)))
+        (set! (relational-op-retained-latest retained) next)
+        (values before after
+                (row-difference after before)
+                (row-difference before after))))))
+
+;;; The single-input replacement is the one-source form of the same
+;;; transaction, including withdrawal and failure recovery.
+(def (relational-op-retained-replace! retained rows)
+  (relational-op-retained-replace-sources!
+   retained
+   (list (cons (relational-op-retained-input-label retained) rows))))

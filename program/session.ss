@@ -15,6 +15,7 @@
 (export gerbil-ascent-open-session
         gerbil-ascent-session-append-source!
         gerbil-ascent-session-replace-source!
+        gerbil-ascent-session-replace-sources!
         gerbil-ascent-session-run
         gerbil-ascent-session-run-timeout)
 
@@ -183,6 +184,45 @@
           (recover! pending (vector-ref outcome 1)))
         (set! clean? #f)
         (vector-ref outcome 1)))
+    ;;; Rebuild and solve a complete prospective source snapshot before
+    ;;; changing the retained engine. A failed batch leaves both the last
+    ;;; completed result and its source state available for later updates.
+    (def (replace-sources! replacements)
+      (unless (and initialized? clean?)
+        (error "batch replacement requires a completed clean session"))
+      (unless (list? replacements)
+        (error "batch replacements must be a list" replacements))
+      (when (null? replacements)
+        (error "batch replacement requires at least one source"))
+      (let ((prospective (snapshot-copy committed))
+            (seen (make-hash-table-eq)))
+        (for-each
+         (lambda (replacement)
+           (unless (and (pair? replacement)
+                        (symbol? (car replacement)))
+             (error "invalid source replacement" replacement))
+           (let* ((name (car replacement))
+                  (index (position-of name)))
+             (when (hash-get seen name)
+               (error "duplicate batch source" name))
+             (hash-put! seen name #t)
+             (vector-set! prospective index
+                          (cons (cdr replacement) []))))
+         replacements)
+        (let* ((candidate (snapshot-program prospective))
+               (fresh (gerbil-ascent-make-engine
+                       candidate #t engine-analysis engine-schema
+                       measure-rule-times?))
+               (result ((.ref fresh '.run))))
+          (unless (.ref result 'finished)
+            (error "batch source replacement did not complete"))
+          (adopt-engine! fresh candidate)
+          (set! pending (snapshot-copy prospective))
+          (set! committed (snapshot-copy prospective))
+          (set! last-result result)
+          (set! clean? #t)
+          (set! partial? #f)
+          result)))
     (def (run!)
       (if clean?
         last-result
@@ -243,6 +283,7 @@
                    (if direct-appends? direct-append-source!
                        append-source!))
                   (.replace-source! replace-source!)
+                  (.replace-sources! replace-sources!)
                   (.run run!)
                   (.run-timeout run-timeout!)))))
 
@@ -251,6 +292,9 @@
 
 (def (gerbil-ascent-session-replace-source! session name rows)
   ((.ref session '.replace-source!) name rows))
+
+(def (gerbil-ascent-session-replace-sources! session replacements)
+  ((.ref session '.replace-sources!) replacements))
 
 (def (gerbil-ascent-session-run session)
   ((.ref session '.run)))

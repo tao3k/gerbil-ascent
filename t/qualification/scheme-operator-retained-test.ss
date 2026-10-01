@@ -10,8 +10,10 @@
                  relational-op-apply
                  relational-op-select-eq relational-op-flatmap
                  relational-op-open-retained relational-op-retained-rows
+                 relational-op-retained-input-label
                  relational-op-retained-append!
-                 relational-op-retained-replace!))
+                 relational-op-retained-replace!
+                 relational-op-retained-replace-sources!))
 
 (export scheme-operator-retained-test)
 
@@ -28,6 +30,18 @@
 
 (def closure
   (relational-op-function 2 (lambda (edge) (reachability edge))))
+
+(def (nested-reachability edge)
+  (relational-op-fix
+   2 (lambda (outer)
+       (relational-op-fix
+        2 (lambda (inner)
+            (relational-op-union
+             edge
+             (relational-op-union
+              outer
+              (relational-op-project
+               (relational-op-join inner edge 1 0) '(0 3)))))))))
 
 ;;; Deliberately independent finite graph model; the rule planner and
 ;;; operator interpreter are not called for expected values.
@@ -139,6 +153,70 @@
           (check-equal? added '())
           (check-equal? removed '((a))))
         (check-equal? old '((a)))))
+    (test-case "batch replacement commits both sources and nested closure"
+      (let* ((possible '((0 1) (0 2) (1 0) (1 2) (2 0) (2 1)))
+             (transformer
+              (relational-op-function
+               2 (lambda (input)
+                   (nested-reachability
+                    (relational-op-union
+                     input (relational-op-source 'other 2 '())))))))
+        (for-each
+         (lambda (mask)
+           (let* ((left (mask-edges mask possible))
+                  (right (mask-edges (bitwise-xor mask 21) possible))
+                  (retained
+                   (relational-op-open-retained transformer '()
+                                                32 128 256))
+                  (input (relational-op-retained-input-label retained))
+                  (before (relational-op-retained-rows retained))
+                  (expected (finite-closure (append left right))))
+             (let-values (((old after added removed)
+                           (relational-op-retained-replace-sources!
+                            retained
+                            (list (cons input left) (cons 'other right)))))
+               (check-equal? old before)
+               (check-equal? (same-rows? after expected) #t)
+               (check-equal? (same-rows? added (difference expected before))
+                             #t)
+               (check-equal? removed '()))
+             (check-equal? (same-rows? (relational-op-retained-rows retained)
+                                      expected) #t)))
+         (iota 64))))
+    (test-case "failed batch preserves all sources and the prior result"
+      (let* ((transformer
+              (relational-op-function
+               2 (lambda (input)
+                   (reachability
+                    (relational-op-union
+                     input (relational-op-source 'other 2 '((1 2))))))))
+             (retained
+              (relational-op-open-retained transformer '((0 1))
+                                           3 64 256))
+             (input (relational-op-retained-input-label retained))
+             (first (relational-op-retained-rows retained)))
+        (check-equal? (same-rows? first '((0 1) (1 2) (0 2))) #t)
+        (check-exception
+         (relational-op-retained-replace-sources!
+          retained (list (cons input '((0 1) (1 2)))
+                         (cons 'other '((2 0) (2 1))))) true)
+        (check-equal? (same-rows? (relational-op-retained-rows retained)
+                                  first) #t)
+        (check-exception
+         (relational-op-retained-replace-sources!
+          retained (list (cons input '((0 1)))
+                         (cons 'other '((0 1 2))))) true)
+        (check-exception
+         (relational-op-retained-replace-sources!
+          retained (list (cons input '((0 1)))
+                         (cons input '()))) true)
+        (let-values (((old after added removed)
+                      (relational-op-retained-replace-sources!
+                       retained (list (cons input '())))))
+          (check-equal? (same-rows? old first) #t)
+          (check-equal? after '((1 2)))
+          (check-equal? added '())
+          (check-equal? (same-rows? removed '((0 1) (0 2))) #t))))
     (test-case "invalid or over-budget update preserves last result"
       (let* ((retained
               (relational-op-open-retained closure '((0 1))

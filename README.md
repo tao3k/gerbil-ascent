@@ -97,9 +97,15 @@ it does not establish a general speed advantage.
 `relational-op-open-retained` also admits a first-class transformer
 once into the native Session. Checked append and replacement return
 before/after output differences while preserving completed snapshots.
+`relational-op-retained-replace-sources!` replaces multiple exported
+sources in one completed transaction, including the transformer's
+generated input label; failed validation or solving leaves the earlier
+state available. Withdrawal and batch replacement rebuild the native
+source snapshot, without claiming an incremental deletion algorithm.
 The [retained Session receipt](docs/research/scheme-dsl/e4-retained-session.org)
-checks all 64 three-node graph masks through append, duplicate append
-and withdrawal, and records a matched local update-latency probe.
+checks all 64 three-node graph masks through append, duplicate append,
+withdrawal and two-source nested closure, and records a matched local
+update-latency probe for the earlier single-source interface.
 The rule surface also supports explicit scalar
 capture, stratified negation, checked count/sum/min/max reductions and
 checked min/max lattices. `relational-admit/report` returns a typed

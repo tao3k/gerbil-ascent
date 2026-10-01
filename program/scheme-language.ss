@@ -16,6 +16,7 @@
         relational-solve relational-query relational-query-name
         relational-open-session relational-session-append-source!
         relational-session-replace-source!
+        relational-session-replace-sources!
         relational-session-run relational-open-program-session
         relational-program-append-source!
         relational-program-replace-source!

@@ -9,6 +9,7 @@
         (only-in "session.ss" gerbil-ascent-open-session
                  gerbil-ascent-session-append-source!
                  gerbil-ascent-session-replace-source!
+                 gerbil-ascent-session-replace-sources!
                  gerbil-ascent-session-run)
         (only-in :clan/poo/object .ref)
         (only-in :clan/poo/mop validate)
@@ -24,6 +25,7 @@
         relational-solve relational-query relational-query-name
         relational-open-session relational-session-append-source!
         relational-session-replace-source!
+        relational-session-replace-sources!
         relational-session-run relational-open-program-session
         relational-program-append-source!
         relational-program-replace-source!
@@ -336,6 +338,42 @@
     (relational-replace-source/checked!
      (relational-session-engine session)
      (relational-session-source-arities session) name rows)))
+
+;;; Check every exported source and copy every row before entering the
+;;; Session's atomic batch solve. Replacements are (label . rows) pairs.
+;;; The returned solution is complete, or the earlier session remains live.
+(def (relational-session-replace-sources! session fragment replacements)
+  (unless (relational-session? session)
+    (error "relational batch replacement requires a session" session))
+  (validate GerbilAscentFragmentContract fragment)
+  (unless (list? replacements)
+    (error "relational batch replacements must be a list" replacements))
+  (let ((seen (make-hash-table-eq))
+        (arities (relational-session-source-arities session)))
+    (let (checked
+          (map
+           (lambda (replacement)
+             (unless (and (pair? replacement)
+                          (symbol? (car replacement)))
+               (error "invalid relational source replacement" replacement))
+             (let* ((label (car replacement))
+                    (name (relational-export fragment label))
+                    (arity (assq name arities)))
+               (unless (and (memq name (.ref fragment 'source-handles))
+                            arity)
+                 (error "relational export is not a source in this session"
+                        label))
+               (when (hash-get seen name)
+                 (error "duplicate relational batch source" label))
+               (hash-put! seen name #t)
+               (let (rows (relational-copy-rows
+                           (cdr replacement) (cdr arity)))
+                 (relational-source name (cdr arity) rows)
+                 (cons name rows))))
+           replacements))
+      (make-relational-solution
+       (gerbil-ascent-session-replace-sources!
+        (relational-session-engine session) checked)))))
 
 (def (relational-program-replace-source! session name rows)
   (unless (relational-program-session? session)

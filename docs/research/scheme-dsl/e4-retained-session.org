@@ -43,14 +43,30 @@ label is private to one instance; captured finite sources stay fixed.
 | =relational-op-open-retained= | Completed first result | Compile, admit and solve once with explicit input/derived/output budgets |
 | =relational-op-retained-append!= | Before, after, newly added output rows | Checked source row; positive native Session may reuse retained relation state |
 | =relational-op-retained-replace!= | Before, after, added and removed output rows | Checked full source replacement; native Session recomputes for withdrawal |
+| =relational-op-retained-replace-sources!= | Before, after, added and removed output rows | One checked batch of exported graph sources; commit follows a complete native solve |
 | =relational-op-retained-rows= | Copied rows of last completed solution | Caller mutation does not rewrite the retained result |
 
 The Session owns recovery after a failed update. The facade publishes a
 new =latest= solution only after =relational-session-run= completes. It
 does not admit caller procedures into rule evaluation. Its source is
-one explicit transformer parameter; additional captured finite
-sources cannot be changed through this facade. A duplicate input row
+one explicit transformer parameter; the original append and replace
+operations address that parameter only. A duplicate input row
 can consume the input-fact budget while adding no output row.
+
+The later batch API extends this boundary: callers may replace the
+explicit input, addressed by =relational-op-retained-input-label=, and
+any captured source with an exported label. The checked layer copies
+every row and rejects unknown, derived, or duplicate labels before
+evaluation. The native Session constructs a prospective snapshot and
+runs it in a separate engine; only success installs the new engine and
+completed solution. This is an atomic multi-source *recomputation*,
+not DBSP's signed-change circuit or an incremental deletion result.
+DBSP §4.1 (PDF p. 5) uses integer-weighted sets, with negative weights
+representing removal; its join-change equation in §3.3 (PDF p. 4)
+includes old/new, new/old, and new/new terms. Those results motivate a
+future deletion design, but do not license applying an insertion-only
+set derivative to the present batch API. The transaction guarantees
+snapshot consistency while that algorithm remains an open gate.
 
 The [[file:../../../t/qualification/scheme-operator-retained-test.ss][qualification test]] covers every mask of six directed three-node edges.
 For each of the 64 initial graphs it compares the old result, insertion,
@@ -60,6 +76,13 @@ captured input, finite mapping and selection, invalid row/replacement,
 an exceeded output budget, prior snapshot stability, and mutation of
 a returned row copy. This is bounded evidence for the implemented
 grammar, not a proof of general higher-order incrementalization.
+
+A second 64-mask check updates two source relations feeding a nested
+fixed point. Expected output comes from an independent finite closure
+over their union. An over-budget batch, an invalid row, and a repeated
+source label fail; a later update of only one source proves the other
+source and the earlier completed result were retained. This tests the
+transaction's semantic boundary, not its update latency.
 
 * Matched local experiment
 :PROPERTIES:

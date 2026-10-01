@@ -146,7 +146,9 @@ first-class descriptor values and a complete finite reference meaning.
 =program/operator-change.ss= owns insertion-change interpretation.
 =program/operator-session.ss= admits one transformer into the existing
 retained native Session; its checked input updates publish only completed
-results and preserve earlier row snapshots.
+results and preserve earlier row snapshots. A checked batch can update
+the explicit input and captured exported graph sources together; it
+rebuilds and solves a prospective snapshot before publishing it.
 Ordinary Scheme functions may accept
 and return these values during construction. =relational-op-function=
 builds a first-class transformer with one explicit relation parameter;
@@ -234,7 +236,10 @@ earlier solved results stay stable. Eight finite nested-fixed-point cases
 check an inner fixed point depending on an outer changing parameter.
 The retained operator facade checks 64 graphs across append, duplicate
 append and withdrawal, plus captured finite sources, invalid and
-over-budget updates, and copied query rows.
+over-budget updates, and copied query rows. A second 64-mask check
+replaces two sources of a nested fixed point in one batch against an
+independent closure model. A failed batch cannot change the result or
+either source seen by the next successful update.
 The combined native test composes a recursive operator fragment with
 finite views, negation, grouped count and a max lattice, then withdraws
 its source while preserving prior results. These are bounded semantic
@@ -331,6 +336,14 @@ scalar rows and copy their list
 structure before handing them to the existing Session.  A failed
 replacement preserves the last completed result; a successful run
 returns a new solution snapshot, leaving earlier solutions queryable.
+For multiple simultaneous replacements, =relational-session-replace-sources!=
+accepts =(label . rows)= pairs for one fragment and returns a completed
+solution. =relational-op-retained-replace-sources!= wraps that transaction
+with before/after and added/removed output sets. The transformer's
+generated source label is returned by =relational-op-retained-input-label=;
+other graph sources use their declared labels. The Session validates
+all new rows and runs a prospective snapshot before committing any
+source or result.
 The engine may recompute during replacement, so an invalid or
 over-budget update can fail at that call.
 

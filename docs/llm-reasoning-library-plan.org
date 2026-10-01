@@ -119,6 +119,68 @@ or repair a rule. [[file:research/agent-inference/logic-lm-ll23.org][Logic-LM]] 
 [[file:research/agent-inference/linc-li23.org][LINC]] distinguishes parse failures and semantic errors. Neither paper
 establishes this Library's model usefulness or source authority.
 
+* Version-one JSON candidate and receipt boundary
+:PROPERTIES:
+:CUSTOM_ID: llm-library-json-wire
+:END:
+
+=candidate/wire.ss= exports =reasoning-wire-attempt=. A trusted caller
+passes a current =ReasoningSnapshot=, a JSON string from a model or other
+untrusted producer, and optionally a positive proof work budget. The JSON
+request does not name or modify a source. It contains exactly =version=
+and =candidate= keys. Version 1 encodes each native candidate clause as a
+JSON array. JSON strings become inert Scheme symbols, including variables
+such as =?x=; there is no JSON string literal in this grammar. Exact
+integers and booleans keep their scalar types. A character uses the sole
+allowed nested object form, ={"char":"a"}=. Floating point values, null,
+arbitrary objects, executable Scheme syntax and extra envelope keys are
+rejected. The existing candidate inspector and planner remain the semantic
+gate after JSON decoding.
+
+#+begin_src json
+{"version":1,"candidate":[
+  ["relation","path",2],
+  ["rule",["path","?x","?y"],["edge","?x","?y"]],
+  ["rule",["path","?x","?z"],["path","?x","?y"],["edge","?y","?z"]],
+  ["query","path",1,3],
+  ["limits",16,32,64]
+]}
+#+end_src
+
+The call is =reasoning-wire-attempt source json-text= or
+=reasoning-wire-attempt source json-text proof-steps=. It returns a JSON
+string. A full receipt has =version=, =status=, =source= (identity,
+generation, local digest), =sourceSchema=, =candidateDigest=,
+=attemptId=, =query=, =rowCount=, =rowsComplete=, =rows=, =diagnostics=,
+=evidence=, =proof= and =nonmembership=. The status is =rejected=,
+=unknown= or =complete= with the same meaning as the native receipt.
+=attemptId= concatenates the local source and candidate digests; it is
+a correlation marker, not an authenticated identifier. A parse or
+envelope rejection has null candidate digest and attempt ID. Diagnostic
+paths locate invalid clauses and terms. The =proof= and =nonmembership=
+objects summarize native evidence status and node or relation counts;
+they do not serialize the replayable certificate. The caller must use
+the native API to inspect and verify a certificate.
+
+The wire parser caps request text at 32,768 characters and JSON nesting
+at 64; the native candidate gate adds its own clause, node, fact and solve
+limits. A complete result with at most 256 rows and at most 65,536
+serialized characters retains its rows. An answer beyond either
+projection limit returns =projectionStatus= =row-limit= or =size-limit=,
+=rowsComplete=false=, an empty =rows= array, =rowCount= and
+=evidenceStatus= =omitted=. The underlying =status= may still be
+=complete=; the omitted rows and evidence cannot be interpreted as an
+empty answer or a checked explanation. Rejected and unknown receipts
+also have =rowsComplete=false=. These are wire projection bounds, not
+new semantic limits on the native evaluator.
+
+=t/qualification/ascent-reasoning-wire-test.ss= checks a rejected
+proposal, valid wrong and corrected rules, source withdrawal and an
+isolated hypothetical fact through JSON, plus malformed input,
+character typing and explicit row/size omission. This is a scripted
+protocol test, not a live SGLang/vLLM integration or a measured model
+repair result.
+
 * Code map and intended seam
 :PROPERTIES:
 :CUSTOM_ID: llm-library-code-map

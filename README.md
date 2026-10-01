@@ -105,6 +105,12 @@ withdrawal and an isolated hypothetical edge against an independent
 finite graph model. This binding check does not authenticate the source
 or prove that the proposal captures a caller's intended meaning.
 
+`candidate/wire.ss` exposes this boundary as bounded version-one JSON.
+The model supplies an inert candidate envelope; the application passes
+the source snapshot and proof work budget separately. Its receipt carries
+typed status, source and candidate digests, diagnostics and explicit row
+projection completeness. See the [wire contract](docs/llm-reasoning-library-plan.org#llm-library-json-wire).
+
 The operator compiler supports source, union,
 equijoin, fixed equality selection, projection, finite mapping and
 positive fixed points. An operator graph can now become a fresh fragment

@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 #+TITLE: SGLang and vLLM: serving-time reasoning Library integration
-#+STATUS: interface research; no integration implemented
+#+STATUS: model-neutral JSON Library boundary implemented; serving adapters remain design
 #+DATE: 2026-09-30
 #+FILETAGS: :research:llm:inference:serving:
 
@@ -55,13 +55,15 @@ candidate and execute under an exact source snapshot and budget.
 :END:
 
 Expose one *versioned* application tool, provisionally =reason_check=,
-whose arguments select a named task/snapshot, candidate facts or rules,
-query, and budget class.  The endpoint resolves only authorized source
-handles and validates the program before execution.  It returns an
-attempt ID, snapshot/program identities, typed status, diagnostics,
-rows or bounded witness/gap, and completion/bound flags.  The LLM caller
-receives that result as a =tool= message and may revise its candidate.
-The name and JSON schema are provisional; their semantics come from the
+whose version-one argument is the JSON candidate envelope now decoded
+by =candidate/wire.ss=. The application resolves an authorized source
+snapshot and budget separately, calls =reasoning-wire-attempt=, then
+returns the JSON receipt as a =tool= message. The receipt includes local
+source/candidate binding, typed status, diagnostics and bounded rows;
+oversize projections explicitly omit rows and evidence. The exact request
+and receipt contract is in the
+[[file:../../llm-reasoning-library-plan.org::#llm-library-json-wire][Library plan]]. The tool name, server declaration and endpoint routing
+remain provisional; their semantics come from the
 [[file:index.org::#agent-inference-synthesis][LLM reasoning Library contract]], not either serving framework.
 
 #+NAME: serving-owner-boundaries

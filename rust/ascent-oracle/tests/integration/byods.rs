@@ -11,6 +11,7 @@ use std::collections::BTreeSet;
 type BinaryRows = Vec<(u32, u32)>;
 type TernaryRows = Vec<(u32, u32, u32)>;
 type ByodsSnapshot = (BinaryRows, TernaryRows);
+type BinaryOracle = fn(&[(u32, u32)], &[(u32, u32, u32)]) -> Vec<String>;
 
 fn four_node_edges() -> [(u32, u32); 8] {
     [
@@ -153,8 +154,17 @@ fn eight_node_byods_subsets_match_model_and_selected_scheme_snapshots() {
     }
 }
 
-#[test]
-fn byods_chain_components_match_model_and_scheme_at_input_scale() {
+// Each provider is an independent scale check. Separate test cases let the
+// Rust harness schedule them independently. The pinned Rust trrel-uf 10,000
+// edge run is opt-in below; the independent model and Scheme check remain
+// in the ordinary oracle at both scales.
+fn check_chain_components_at_input_scale(
+    recipe: &str,
+    symmetric: bool,
+    reflexive: bool,
+    ascent_rows: BinaryOracle,
+    max_rust_edges: u32,
+) {
     for edge_count in [1_000_u32, 10_000] {
         // Four edges connect five nodes per component. Keeping components
         // separate bounds output size while exercising multi-step closure.
@@ -172,46 +182,77 @@ fn byods_chain_components_match_model_and_scheme_at_input_scale() {
                 .collect::<Vec<_>>()
                 .join(" ")
         );
-        for (recipe, symmetric, reflexive, rust_rows) in [
-            (
-                "eqrel-scale-rows",
-                true,
-                true,
-                ascent_eqrel_rows(&edges, &[]),
-            ),
-            (
-                "trrel-scale-rows",
-                false,
-                false,
-                ascent_trrel_rows(&edges, &[]),
-            ),
-            (
-                "trrel-uf-scale-rows",
-                false,
-                true,
-                ascent_trrel_uf_rows(&edges, &[]),
-            ),
-        ] {
-            let mut expected = Vec::new();
-            for component in 0..edge_count / 4 {
-                let base = component * 5;
-                for from in 0..5 {
-                    for to in 0..5 {
-                        if symmetric || from < to || (reflexive && from == to) {
-                            expected.push(format!("binary-output\t{}\t{}", base + from, base + to));
-                        }
+        let mut expected = Vec::new();
+        for component in 0..edge_count / 4 {
+            let base = component * 5;
+            for from in 0..5 {
+                for to in 0..5 {
+                    if symmetric || from < to || (reflexive && from == to) {
+                        expected.push(format!("binary-output\t{}\t{}", base + from, base + to));
                     }
                 }
             }
-            expected.sort_unstable();
-            assert_eq!(rust_rows, expected, "Rust {recipe} edges={edge_count}");
-            let output = scheme_output(recipe, &request);
-            let mut actual = output.lines().map(str::to_owned).collect::<Vec<_>>();
-            assert_eq!(actual.pop().as_deref(), Some("END"));
-            actual.sort_unstable();
-            assert_eq!(actual, expected, "Scheme {recipe} edges={edge_count}");
         }
+        expected.sort_unstable();
+        if edge_count <= max_rust_edges {
+            let rust_rows = ascent_rows(&edges, &[]);
+            assert_eq!(rust_rows, expected, "Rust {recipe} edges={edge_count}");
+        }
+        let output = scheme_output(recipe, &request);
+        let mut actual = output.lines().map(str::to_owned).collect::<Vec<_>>();
+        assert_eq!(actual.pop().as_deref(), Some("END"));
+        actual.sort_unstable();
+        assert_eq!(actual, expected, "Scheme {recipe} edges={edge_count}");
     }
+}
+
+#[test]
+fn eqrel_chain_components_match_model_and_scheme_at_input_scale() {
+    check_chain_components_at_input_scale(
+        "eqrel-scale-rows",
+        true,
+        true,
+        ascent_eqrel_rows,
+        10_000,
+    );
+}
+
+#[test]
+fn trrel_chain_components_match_model_and_scheme_at_input_scale() {
+    check_chain_components_at_input_scale(
+        "trrel-scale-rows",
+        false,
+        false,
+        ascent_trrel_rows,
+        10_000,
+    );
+}
+
+#[test]
+fn trrel_uf_chain_components_match_model_and_scheme_at_input_scale() {
+    check_chain_components_at_input_scale(
+        "trrel-uf-scale-rows",
+        false,
+        true,
+        ascent_trrel_uf_rows,
+        1_000,
+    );
+}
+
+// Opt-in full Rust scale oracle. A focused macOS run on 2026-10-01 spent
+// 196.9s in pinned Ascent 0.8.0 at 10,000 edges and 5.6s in the Scheme
+// fixture. Keep the Rust comparison available without serializing every PR
+// on this one reference case.
+#[test]
+#[ignore = "pinned Ascent trrel-uf 10,000-edge reference is a slow full-scale gate"]
+fn trrel_uf_full_rust_scale_oracle() {
+    check_chain_components_at_input_scale(
+        "trrel-uf-scale-rows",
+        false,
+        true,
+        ascent_trrel_uf_rows,
+        10_000,
+    );
 }
 
 fn ascent_eqrel_rows(binary: &[(u32, u32)], grouped: &[(u32, u32, u32)]) -> Vec<String> {

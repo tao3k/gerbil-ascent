@@ -20,7 +20,8 @@ jobs:
       - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential ca-certificates git jq libssl-dev openssl pkg-config zlib1g-dev
+          sudo apt-get install -y build-essential ca-certificates git jq just libssl-dev openssl pkg-config zlib1g-dev
+          just --version
       - name: Install immutable Gerbil v0.19 release
         run: bash tools/ci/install-gerbil-v19-release.sh "$GERBIL_RELEASE_ROOT"
       - name: Install declared Gerbil dependencies
@@ -31,8 +32,6 @@ jobs:
           gerbil env gerbil interactive -e '(begin (import :asp-gerbil-scheme/building-api :asp-gerbil-scheme/benchmark-api) (displayln "ascent-dependencies-ready"))'
       - name: Build Scheme package
         run: gerbil build
-      - name: Install Just
-        run: cargo install just --version 1.56.0 --locked
       - name: Qualify Scheme rules
         run: just test
       - name: Qualify ASCENT SS scenarios
@@ -52,7 +51,8 @@ jobs:
       - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential ca-certificates git jq libssl-dev openssl pkg-config zlib1g-dev
+          sudo apt-get install -y build-essential ca-certificates git jq just libssl-dev openssl pkg-config zlib1g-dev
+          just --version
       - name: Install immutable Gerbil v0.19 release
         run: bash tools/ci/install-gerbil-v19-release.sh "$GERBIL_RELEASE_ROOT"
       - name: Install declared Gerbil dependencies
@@ -63,8 +63,6 @@ jobs:
           gerbil env gerbil interactive -e '(begin (import :asp-gerbil-scheme/building-api :asp-gerbil-scheme/benchmark-api) (displayln "ascent-dependencies-ready"))'
       - name: Build Scheme package
         run: gerbil build
-      - name: Install Just
-        run: cargo install just --version 1.56.0 --locked
       - name: Enforce Rust warnings and ASP policy
         if: matrix.shard == 'other'
         run: |

@@ -35,6 +35,9 @@ future incremental deletion experiment.
 The [[file:positive-provenance.org][finite positive provenance gate]] records a replayable
 rule-instance DAG for inspected positive atom proposals, with source and
 candidate facts separated and no general Why-Not claim.
+The [[file:positive-nonmembership.org][ground Why-Not certificate]] checks a finite
+post-fixed relation set for the same positive subset, relative to one
+snapshot and program; source completeness remains a caller obligation.
 
 #+NAME: source-ledger
 | Key | Source and durable link | Local note | Main design constraint |

@@ -147,7 +147,11 @@ witness or reachable cut for the exact canonical graph program.  The
 model-control API.  A separate [[file:research/scheme-dsl/positive-provenance.org][finite positive provenance gate]]
 now replays inspected positive atom-only rules into a rule-instance DAG
 and matches its roots against a completed native query.  It reports
-=bounded= or =unsupported= without claiming Why-Not for absent rows.
+=bounded= or =unsupported= for this Why proof. A distinct
+[[file:research/scheme-dsl/positive-nonmembership.org][ground Why-Not certificate]]
+checks input inclusion, rule closure and tuple absence for a finite
+positive program relative to one snapshot. It does not assert that
+the caller supplied every real-world source fact.
 MRR remains the later
 semantic admission owner, while POO Flow owns caller context and
 effect handoff.

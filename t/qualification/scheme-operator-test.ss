@@ -139,7 +139,11 @@
              (check-equal? (same-rows? actual reference) #t)
              (check-equal? (same-rows? fragment-rows reference) #t)
              (check-equal?
-              (same-rows? actual (reasoning-receipt-rows candidate)) #t)))
+              (same-rows? actual (reasoning-receipt-rows candidate)) #t)
+             (when (zero? (modulo (+ mask 1) 2))
+               (displayln "PROGRESS operator graph parity " (+ mask 1)
+                          "/64")
+               (force-output))))
          (iota 64))))
     (test-case "reference change matches finite closure set difference"
       (let ((possible '((0 1) (0 2) (1 0) (1 2) (2 0) (2 1)))
@@ -167,7 +171,11 @@
                             closure before '((0 1)))))
                (check-equal? (same-rows? base expected-base) #t)
                (check-equal? (same-rows? grown expected-grown) #t)
-               (check-equal? (same-rows? delta expected-delta) #t))))
+               (check-equal? (same-rows? delta expected-delta) #t))
+             (when (zero? (modulo (+ mask 1) 2))
+               (displayln "PROGRESS operator change parity " (+ mask 1)
+                          "/64")
+               (force-output))))
          (iota 64))))
     (test-case "both changing join sides and a finite map propagate inserts"
       (let* ((transformer

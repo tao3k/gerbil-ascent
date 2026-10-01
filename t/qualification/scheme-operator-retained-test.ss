@@ -92,17 +92,25 @@
 (def scheme-operator-retained-test
   (test-suite "retained first-class relational operators"
     (test-case "all finite graphs survive append, duplicate and withdrawal"
-      (let (possible '((0 1) (0 2) (1 0) (1 2) (2 0) (2 1)))
+      (let* ((possible '((0 1) (0 2) (1 0) (1 2) (2 0) (2 1)))
+             (retained
+              (relational-op-open-retained closure '() 32 128 256))
+             (prior '()))
         (for-each
          (lambda (mask)
            (let* ((before (mask-edges mask possible))
                   (base (finite-closure before))
                   (grown (finite-closure (cons '(0 1) before)))
-                  (retained
-                   (relational-op-open-retained closure before
-                                                32 128 256))
                   (old (relational-op-retained-rows retained)))
-             (check-equal? (same-rows? old base) #t)
+             (check-equal? (same-rows? old prior) #t)
+             (let-values (((previous current added removed)
+                           (relational-op-retained-replace! retained before)))
+               (check-equal? (same-rows? previous prior) #t)
+               (check-equal? (same-rows? current base) #t)
+               (check-equal? (same-rows? added (difference base prior)) #t)
+               (check-equal? (same-rows? removed (difference prior base)) #t))
+             (check-equal?
+              (same-rows? (relational-op-retained-rows retained) base) #t)
              (let-values (((previous current added)
                            (relational-op-retained-append!
                             retained '(0 1))))
@@ -124,7 +132,11 @@
                (check-equal? (same-rows? added (difference base grown)) #t)
                (check-equal?
                 (same-rows? removed (difference grown base)) #t))
-             (check-equal? (same-rows? old base) #t)))
+             (check-equal? (same-rows? old prior) #t)
+             (set! prior base)
+             (when (zero? (modulo (+ mask 1) 2))
+               (displayln "PROGRESS retained graphs " (+ mask 1) "/64")
+               (force-output))))
          (iota 64))))
     (test-case "fixed captured source and finite mapping share retained solve"
       (let* ((transformer
@@ -160,17 +172,18 @@
                2 (lambda (input)
                    (nested-reachability
                     (relational-op-union
-                     input (relational-op-source 'other 2 '())))))))
+                     input (relational-op-source 'other 2 '()))))))
+             (retained
+              (relational-op-open-retained transformer '() 32 128 256))
+             (input (relational-op-retained-input-label retained))
+             (prior '()))
         (for-each
          (lambda (mask)
            (let* ((left (mask-edges mask possible))
                   (right (mask-edges (bitwise-xor mask 21) possible))
-                  (retained
-                   (relational-op-open-retained transformer '()
-                                                32 128 256))
-                  (input (relational-op-retained-input-label retained))
                   (before (relational-op-retained-rows retained))
                   (expected (finite-closure (append left right))))
+             (check-equal? (same-rows? before prior) #t)
              (let-values (((old after added removed)
                            (relational-op-retained-replace-sources!
                             retained
@@ -179,9 +192,15 @@
                (check-equal? (same-rows? after expected) #t)
                (check-equal? (same-rows? added (difference expected before))
                              #t)
-               (check-equal? removed '()))
+               (check-equal? (same-rows? removed
+                                        (difference before expected)) #t))
              (check-equal? (same-rows? (relational-op-retained-rows retained)
-                                      expected) #t)))
+                                      expected) #t)
+             (set! prior expected)
+             (when (zero? (modulo (+ mask 1) 2))
+               (displayln "PROGRESS nested source cuts " (+ mask 1)
+                          "/64")
+               (force-output))))
          (iota 64))))
     (test-case "failed batch preserves all sources and the prior result"
       (let* ((transformer

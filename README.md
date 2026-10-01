@@ -89,7 +89,10 @@ with the exact graph witness/cut case as a narrow explanation. For an
 inspected positive atom-only proposal, `candidate/provenance.ss` can attach
 a bounded, replayable rule-instance proof DAG to a completed query. Its
 source and hypothetical candidate nodes remain distinct; other constructs
-and absent answers have no general proof claim.
+have no general proof claim. For a missing ground target under finite
+positive atom rules, `candidate/nonmembership.ss` separately emits a
+bounded per-relation closed-set certificate; its verifier checks input
+coverage, rule closure and target absence relative to the named snapshot.
 The operator compiler supports source, union,
 equijoin, fixed equality selection, projection, finite mapping and
 positive fixed points. An operator graph can now become a fresh fragment
@@ -137,7 +140,9 @@ callbacks remain in the
 [LLM reasoning Library plan](docs/llm-reasoning-library-plan.org) records
 the candidate grammar. The
 [positive proof contract](docs/research/scheme-dsl/positive-provenance.org)
-states the supported Why subset and its Why-Not boundary.
+states the supported Why subset. The
+[ground Why-Not contract](docs/research/scheme-dsl/positive-nonmembership.org)
+records the distinct nonmembership proof and closed-world limit.
 POO Flow
 consumes this package as a pinned submodule. MRR owns the semantic adapter
 and admission of its own evidence.

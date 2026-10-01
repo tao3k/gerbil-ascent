@@ -9,11 +9,13 @@
 (import (only-in :gerbil-ascent/candidate/types
                  reasoning-snapshot-identity reasoning-snapshot-generation
                  reasoning-snapshot-digest reasoning-snapshot-relations
+                 reasoning-snapshot-valid?
                  reasoning-candidate-facts reasoning-candidate-rules
                  reasoning-candidate-query reasoning-candidate-limits)
         (only-in :gerbil-ascent/candidate/program candidate-variable?))
 
-(export candidate-positive-proof candidate-verify-positive-proof
+(export candidate-positive-proof candidate-positive-closed-absence
+        candidate-verify-positive-proof
         positive-proof? positive-proof-status
         positive-proof-snapshot-identity positive-proof-snapshot-generation
         positive-proof-snapshot-digest positive-proof-candidate-digest
@@ -94,8 +96,9 @@
 ;;       ;; => a bound proof value, or bounded/unsupported without nodes
 ;;       ```
 ;;     %
-(def (candidate-positive-proof snapshot spec candidate-digest
-                               native-status native-rows max-steps)
+(def (candidate-positive-proof/option snapshot spec candidate-digest
+                                      native-status native-rows max-steps
+                                      retain-closed-absence?)
   (unless (and (exact-integer? max-steps) (> max-steps 0))
     (error "invalid positive proof work budget" max-steps))
   (let ((query (vector-ref (reasoning-candidate-query spec) 0)))
@@ -105,7 +108,8 @@
        (reasoning-snapshot-generation snapshot)
        (reasoning-snapshot-digest snapshot)
        candidate-digest (copy-pairs query) max-steps nodes roots))
-    (if (or (not (eq? native-status 'complete))
+    (if (or (not (reasoning-snapshot-valid? snapshot))
+            (not (eq? native-status 'complete))
             (not (positive-rules? spec)))
       (result 'unsupported [] [])
       (let ((index (make-hash-table))
@@ -193,10 +197,15 @@
                          (facts (car query))))
                        (rows (map proof-node-row matching))
                        (roots (map proof-node-id matching)))
-                  (if (and (pair? roots)
-                           (same-row-set? rows native-rows))
-                    (result 'complete (reverse nodes) roots)
-                    (result 'unsupported [] [])))
+                  (cond
+                   ((and (pair? roots)
+                         (same-row-set? rows native-rows))
+                    (result 'complete (reverse nodes) roots))
+                   ((and retain-closed-absence?
+                         (null? roots)
+                         (null? native-rows))
+                    (result 'closed-absent (reverse nodes) []))
+                   (else (result 'unsupported [] []))))
                 (begin
                   ;; Assign stable IDs in production order; every dependency
                   ;; came from an earlier completed round.
@@ -210,6 +219,20 @@
                   (set! next-id (+ next-id (length pending)))
                   (set! derived-count (+ derived-count (length pending)))
                   (saturate))))))))))
+
+(def (candidate-positive-proof snapshot spec candidate-digest
+                               native-status native-rows max-steps)
+  (candidate-positive-proof/option
+   snapshot spec candidate-digest native-status native-rows
+   max-steps #f))
+
+;;; Internal closure witness for the finite positive nonmembership module.
+;;; Its nodes are a candidate post-fixed relation set, not a Why proof.
+(def (candidate-positive-closed-absence snapshot spec candidate-digest
+                                       native-status native-rows max-steps)
+  (candidate-positive-proof/option
+   snapshot spec candidate-digest native-status native-rows
+   max-steps #t))
 
 ;;; Recheck an externally held proof without trusting its rule nodes.
 ;;; This checks one derivation per native row, not provenance completeness
@@ -233,6 +256,7 @@
                                       native-status native-rows proof
                                       max-nodes)
   (and (positive-proof? proof)
+       (reasoning-snapshot-valid? snapshot)
        (eq? (positive-proof-status proof) 'complete)
        (eq? native-status 'complete)
        (positive-rules? spec)

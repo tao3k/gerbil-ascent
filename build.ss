@@ -37,6 +37,7 @@
     "candidate/types"
     "candidate/program"
     "candidate/provenance"
+    "candidate/nonmembership"
     "candidate/reasoning"
     "interface/request"))
 

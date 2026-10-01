@@ -17,7 +17,7 @@ test-file path:
     test -f "{{ path }}"
     output_file="$(mktemp)"
     trap 'rm -f "$output_file"' EXIT
-    GERBIL_LOADPATH="{{ justfile_directory() }}${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" timeout "${ASCENT_GXTEST_TIMEOUT:-120s}" gerbil {{ gerbil_test_runtime_options }} env gxtest "{{ path }}" 2>&1 | tee "$output_file"
+    GERBIL_LOADPATH="{{ justfile_directory() }}${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" timeout "${ASCENT_GXTEST_TIMEOUT:-45s}" python3 t/harness/watch_output.py --startup-seconds "${ASCENT_GXTEST_STARTUP_SECONDS:-5}" --idle-seconds "${ASCENT_GXTEST_IDLE_SECONDS:-5}" -- gxtest {{ gerbil_test_runtime_options }} -v 5 "{{ path }}" 2>&1 | tee "$output_file"
     if grep -E 'ERROR (CHECK|CASE|HARNESS)|Heap overflow|Stack overflow' "$output_file" >/dev/null; then exit 1; fi
     grep -F 'MODULE-OK {{ path }}' "$output_file" >/dev/null
     grep -F 'HARNESS-OK' "$output_file" >/dev/null
@@ -30,20 +30,42 @@ test:
     output_file="$(mktemp)"
     trap 'rm -f "$output_file"' EXIT
     export GERBIL_LOADPATH="{{ justfile_directory() }}${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}"
-    # Reset Gerbil and the POO Flow debug case watchdog between bounded
-    # batches; a single long harness accumulates unrelated module state.
-    batch_size=6
-    for ((start=0; start<${#files[@]}; start+=batch_size)); do
-        batch=("${files[@]:start:batch_size}")
+    # Reset Gerbil between bounded batches. The exhaustive operator modules
+    # run alone so their own 45s cap remains meaningful.
+    run_batch() {
+        local batch=("$@")
         : > "$output_file"
-        timeout "${ASCENT_GXTEST_TIMEOUT:-120s}" gerbil {{ gerbil_test_runtime_options }} env gxtest "${batch[@]}" 2>&1 | tee "$output_file"
+        timeout "${ASCENT_GXTEST_TIMEOUT:-45s}" python3 t/harness/watch_output.py --startup-seconds "${ASCENT_GXTEST_STARTUP_SECONDS:-5}" --idle-seconds "${ASCENT_GXTEST_IDLE_SECONDS:-5}" -- gxtest {{ gerbil_test_runtime_options }} -v 5 "${batch[@]}" 2>&1 | tee "$output_file"
         if grep -E 'ERROR (CHECK|CASE|HARNESS|MODULE)|Heap overflow|Stack overflow' "$output_file" >/dev/null; then exit 1; fi
         for file in "${batch[@]}"; do
             grep -Fx "MODULE-OK $file" "$output_file" >/dev/null
         done
         grep -F 'HARNESS-OK' "$output_file" >/dev/null
         grep -x 'OK' "$output_file" >/dev/null
+    }
+    batch=()
+    for file in "${files[@]}"; do
+        if [[ "$file" == t/qualification/ascent-reasoning-library-test.ss ||
+              "$file" == t/qualification/scheme-operator-test.ss ||
+              "$file" == t/qualification/scheme-operator-retained-test.ss ]]; then
+            if ((${#batch[@]})); then run_batch "${batch[@]}"; batch=(); fi
+            run_batch "$file"
+        else
+            batch+=("$file")
+            if ((${#batch[@]} == 2)); then run_batch "${batch[@]}"; batch=(); fi
+        fi
     done
+    if ((${#batch[@]})); then run_batch "${batch[@]}"; fi
+
+# Abstract theorem and bounded local receipt-lifecycle safety model.
+# Supply TLC_BIN when tlc is not on PATH; this gate does not build Scheme.
+check-nonmembership-formal:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    lean packages/proofs/lean/PositiveNonmembership.lean
+    model_dir="$(mktemp -d)"
+    trap 'rm -rf "$model_dir"' EXIT
+    "${TLC_BIN:-tlc}" -config packages/proofs/tla/PositiveNonmembershipSession.cfg -metadir "$model_dir" packages/proofs/tla/PositiveNonmembershipSession.tla
 
 # Matched finite-operator research probe; every sample checks independent
 # closure before reporting cost. This is separate from the SS suite.

@@ -11,6 +11,7 @@
                  make-reasoning-snapshot reasoning-snapshot?
                  reasoning-snapshot-identity reasoning-snapshot-generation
                  reasoning-snapshot-digest reasoning-snapshot-relations
+                 reasoning-snapshot-content-digest reasoning-snapshot-valid?
                  make-reasoning-diagnostic reasoning-diagnostic?
                  reasoning-diagnostic-code reasoning-diagnostic-path
                  reasoning-diagnostic-detail
@@ -23,6 +24,8 @@
                  candidate-planner-path)
         (only-in :gerbil-ascent/candidate/provenance
                  candidate-positive-proof)
+        (only-in :gerbil-ascent/candidate/nonmembership
+                 candidate-positive-nonmembership)
         (only-in :gerbil-ascent/program/scheme-language
                  relational-admit/report
                  relational-admission-report-admission
@@ -41,7 +44,7 @@
         reasoning-receipt-candidate-digest
         reasoning-receipt-query reasoning-receipt-rows
         reasoning-receipt-diagnostics reasoning-receipt-evidence
-        reasoning-receipt-proof
+        reasoning-receipt-proof reasoning-receipt-nonmembership
         reasoning-diagnostic? reasoning-diagnostic-code
         reasoning-diagnostic-path reasoning-diagnostic-detail
         reasoning-evidence? reasoning-evidence-kind
@@ -49,7 +52,8 @@
 
 (defstruct reasoning-receipt
   (status snapshot-identity snapshot-generation snapshot-digest
-          candidate-digest query rows diagnostics evidence proof))
+          candidate-digest query rows diagnostics evidence proof
+          nonmembership))
 (defstruct reasoning-evidence (kind support reachable))
 
 (def (copy-row row arity)
@@ -96,8 +100,8 @@
       (let (relations (reverse copied))
         (make-reasoning-snapshot
          identity generation
-         (digest-datum (list 'reasoning-snapshot-v1 identity
-                             generation relations))
+         (reasoning-snapshot-content-digest
+          identity generation relations)
          relations))
       (let (entry (car remaining))
         (unless (and (list? entry) (= (length entry) 3)
@@ -231,7 +235,8 @@
 ;;; Detach lists from the submitted candidate and from engine output.
 ;;; Accessors still return ordinary Scheme values; callers own mutations.
 (def (reasoning-receipt-for snapshot digest status query rows
-                            diagnostics evidence (proof #f))
+                            diagnostics evidence (proof #f)
+                            (nonmembership #f))
   (make-reasoning-receipt
    status
    (reasoning-snapshot-identity snapshot)
@@ -249,7 +254,7 @@
          (reasoning-evidence-kind evidence)
          (copy-datum (reasoning-evidence-support evidence))
          (copy-datum (reasoning-evidence-reachable evidence))))
-   proof))
+   proof nonmembership))
 
 (def (capture thunk)
   (with-catch
@@ -269,7 +274,8 @@
 ;;       copied source snapshot, and return a complete/rejected/unknown
 ;;       observation. The receipt cannot promote candidate facts to source.
 ;;       The optional third argument caps positive-proof body-row probes;
-;;       native query completion and proof status remain independent.
+;;       native query completion, Why proof and ground Why-Not certificate
+;;       statuses remain independent.
 ;;
 ;;       # Examples
 ;;
@@ -284,8 +290,9 @@
 ;;; Boundary: Structural diagnostics use candidate clause indexes, not
 ;;; Scheme syntax locations; planner failures retain their own messages.
 (def (reasoning-attempt snapshot candidate (proof-steps 100000))
-  (unless (reasoning-snapshot? snapshot)
-    (error "reasoning attempt requires a source snapshot" snapshot))
+  (unless (reasoning-snapshot-valid? snapshot)
+    (error "reasoning attempt requires a current valid source snapshot"
+           snapshot))
   (unless (and (exact-integer? proof-steps) (> proof-steps 0))
     (error "reasoning attempt requires positive proof work budget"
            proof-steps))
@@ -366,15 +373,30 @@
                              (candidate-positive-proof
                               snapshot spec digest 'complete rows
                               proof-steps))))
-                         (proof-ok? (vector-ref proof-result 0)))
+                         (absence-result
+                          (capture
+                           (lambda ()
+                             (candidate-positive-nonmembership
+                              snapshot spec digest 'complete rows
+                              proof-steps))))
+                         (proof-ok? (vector-ref proof-result 0))
+                         (absence-ok? (vector-ref absence-result 0)))
                     (reasoning-receipt-for
                      snapshot digest 'complete query rows
-                     (if proof-ok? []
-                       (list (make-reasoning-diagnostic
-                              'proof-failed '(explain)
-                              (failure-detail (vector-ref proof-result 1)))))
+                     (append
+                      (if proof-ok? []
+                        (list (make-reasoning-diagnostic
+                               'proof-failed '(explain)
+                               (failure-detail
+                                (vector-ref proof-result 1)))))
+                      (if absence-ok? []
+                        (list (make-reasoning-diagnostic
+                               'nonmembership-failed '(explain)
+                               (failure-detail
+                                (vector-ref absence-result 1))))))
                      (vector-ref (vector-ref observed 1) 1)
-                     (and proof-ok? (vector-ref proof-result 1)))))
+                     (and proof-ok? (vector-ref proof-result 1))
+                     (and absence-ok? (vector-ref absence-result 1)))))
                  (else
                   (reasoning-receipt-for
                    snapshot digest 'unknown query []

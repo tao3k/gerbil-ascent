@@ -71,5 +71,7 @@ The public integration test replays its proof against the original
 inspected proposal and checks that a smaller proof budget leaves the
 native rows complete while proof status becomes bounded.  General negation,
 aggregate, computed value,
-Why-Not, and deletion-aware support invalidation require separate
-semantics.
+general Why-Not, and deletion-aware support invalidation require separate
+semantics. A separate [[file:positive-nonmembership.org][ground finite positive
+nonmembership certificate]] now covers a bounded absent tuple case;
+its closure checker is not this Why DAG verifier.

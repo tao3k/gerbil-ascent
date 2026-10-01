@@ -4,10 +4,11 @@
 
 (import (only-in :std/test check-equal? test-suite test-case)
         (only-in :gerbil-ascent/candidate/types
-                 make-reasoning-snapshot make-reasoning-candidate)
+                 make-reasoning-candidate)
         (only-in :gerbil-ascent/candidate/program candidate-inspect)
         (only-in :gerbil-ascent/candidate/reasoning
                  reasoning-source-snapshot reasoning-attempt
+                 reasoning-snapshot-digest
                  reasoning-receipt-status reasoning-receipt-rows
                  reasoning-receipt-candidate-digest
                  reasoning-receipt-proof)
@@ -34,9 +35,8 @@
    '(8 16 32)))
 
 (def (graph-source)
-  (make-reasoning-snapshot
-   'graph 7 'snapshot-digest
-   '((edge 2 ((1 2))))))
+  (reasoning-source-snapshot
+   'graph 7 '((edge 2 ((1 2))))))
 
 (def ascent-positive-provenance-test
   (test-suite "bounded positive provenance"
@@ -79,7 +79,7 @@
              (last (list-ref nodes 4)))
         (check-equal? (positive-proof-status proof) 'complete)
         (check-equal? (positive-proof-snapshot-digest proof)
-                      'snapshot-digest)
+                      (reasoning-snapshot-digest (graph-source)))
         (check-equal? (positive-proof-candidate-digest proof)
                       'candidate-digest)
         (check-equal? (positive-proof-query proof) '(path 1 3))
@@ -133,8 +133,8 @@
           (check-equal? (positive-proof-nodes bounded) '()))))
     (test-case "repeated variables, multi-source join and derived cap"
       (let* ((snapshot
-              (make-reasoning-snapshot
-               'family 3 'family-digest
+              (reasoning-source-snapshot
+               'family 3
                '((parent 2 ((1 2) (2 3) (1 4)))
                  (alias 2 ((2 2) (4 5))))))
              (spec

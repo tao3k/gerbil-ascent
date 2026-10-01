@@ -80,16 +80,26 @@ ASCENT_GXTEST_STARTUP_SECONDS=30 ASCENT_GXTEST_IDLE_SECONDS=20 \
   just test-file t/qualification/ascent-finite-evidence-test.ss
 #+end_src
 
-* Next gate
+* Model gate and next proof gate
 :PROPERTIES:
 :CUSTOM_ID: finite-stratified-evidence-next
 :END:
 
-Before using this evidence in a live model comparison, freeze task cases,
-independent expected answers, source generations, model/configuration,
-prompt variants, token/tool/time budgets and scoring. Compare model-only
-against model plus the same typed Library observation on paired tasks.
-Report per-case mistakes and abstentions, not just aggregate accuracy.
-Temporal-causality cases must separately identify valid time, knowledge
-time, causal cut and open frontier; this finite relation replay alone does
-not certify those domain semantics.
+POO Flow Python Testing completed two small paired model pilots with the
+tasks, source fixtures, model settings, request cap and choice/boundary
+scores fixed before each run. The per-case results and limitations are in
+[[https://github.com/tao3k/poo-flow/pull/34][POO Flow PR #34]]. They did not establish general model benefit. The
+temporal-causality cases separately inspect a native closed cut and an
+open parent; this finite relation replay does not itself certify valid
+time, knowledge time, causal cuts or release authority.
+
+The next evidence design gate is a derivation certificate for the checked
+stratified subset. It must identify the snapshot and inspected program;
+carry support for each asserted derived tuple; reference a completed
+lower stratum for every negated match; enumerate the exact contributing
+set for each count/sum/min/max group, including empty groups; and bind
+the final query to that evidence. A verifier must reject self-supporting
+cycles, incomplete groups, changed source generations and altered proof
+nodes while respecting explicit size and work caps. Until that format
+and checker pass an independent finite oracle, =finite-evidence= remains
+an exact bounded replay rather than a general derivation proof.

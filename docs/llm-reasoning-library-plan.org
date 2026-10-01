@@ -2,8 +2,8 @@
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 #+TITLE: From Scheme Datalog to an LLM reasoning Library
-#+STATUS: bounded candidate Library implemented; wider evidence and model study remain design
-#+DATE: 2026-09-30
+#+STATUS: bounded evidence and paired model pilots completed; general proof open
+#+DATE: 2026-10-01
 #+FILETAGS: :design:scheme-dsl:llm:research:
 
 * Aim and terminology
@@ -101,6 +101,22 @@ negation and count/sum/min/max reduction. It independently recomputes the
 finite model and binds a supplied closure to the snapshot, program and
 native answer. This is a full bounded replay, not a general derivation DAG
 or an explanation of why a real-world fact is absent.
+
+#+NAME: llm-library-evidence-status
+| Claim | Executable evidence | Remaining boundary |
+|-------+---------------------+--------------------|
+| Positive derivation | Replayable proof DAG for the checked positive clauses | No complete provenance for all derivations |
+| Ground positive nonmembership | Finite closed-relation certificate and independent rule-closure checker | No open-world absence or general Why-Not cause |
+| Negation and reduction | Separate stratum-by-stratum finite replay and independent check against the native answer | No compact general derivation proof or reduction lineage |
+| Model usefulness | Two pre-registered five-task paired pilots in POO Flow Python Testing | No general benefit, deployed result or causal explanation |
+
+The finite verifier is independent of the native planner and solver, but its
+certificate generator and verifier share the separate replay semantics. An
+independently checkable *derivation* for arbitrary negated or reduced tuples
+would additionally need explicit lower-stratum completeness, every reduction
+input group, and support for each derived tuple. That proof format and its
+checker remain unimplemented. The current certificate must keep its
+snapshot-relative, inspected-candidate scope.
 
 Candidate and source inputs now pass an iterative scalar/pair-tree
 preflight before list traversal or digest. It rejects cycles,
@@ -227,20 +243,22 @@ native/candidate finite-model gate are in
    witness soundness by replaying its source labels, and test absence
    only when closure is complete.  Negative cases must return =unknown=
    on budget exhaustion.
-6. Compare a scripted LLM-like transcript before a live model study.
-   The first deterministic transcript is executable: it includes
-   located rejection, valid wrong formalization, corrected finite-model
-   result, generation change and hypothetical source overlay.
-   A live model comparison is deferred. When resumed, use a separate
-   Python caller and freeze model, task set, sources, tool budget and
-   prompts; compare
-   model-only, search+model and search+Library+model.  Score exact
-   answers, unsupported claims, repair turns, abstention, latency and
-   explanation fidelity separately.  Predeclare the scoring rule and
-   task split; use paired tasks and repeated model runs with recorded
-   sampling parameters.  Report per-case failures and uncertainty, not
-   only an aggregate win rate.  Keep the reference answers independent
-   of the candidate evaluator.
+6. The first deterministic transcript covers located rejection, valid
+   wrong formalization, corrected finite-model result, generation change
+   and hypothetical source overlay. A separate POO Flow Python Testing
+   caller then pre-registered five finite tasks, source fixtures, two arms,
+   three paired repeats per arm, fixed model settings, a 30-request cap
+   per pilot and separate choice/boundary scores before each run. The v1
+   model-only/tool choice scores were 12/15 and 15/15, while boundary
+   scores were 11/15 and 9/15. The v2 old/typed observation choice scores
+   were 15/15 in both arms; boundary scores were 9/15 and 12/15. All six
+   v2 closed-cut responses still claimed release authority despite the
+   native denial. POO Flow's Testing Runtime guard withholds that claim;
+   it does not repair the model. Protocols, individual failures and
+   receipts are in =packages/python-testing/docs/model-study-v{1,2}*.org=
+   on [[https://github.com/tao3k/poo-flow/pull/34][POO Flow PR #34]]. These pilots did not include a separate search arm,
+   repair-turn score or a deployment test. They do not establish a general
+   model advantage.
 
 Keep semantic conformance, Library protocol conformance and model
 helpfulness as three different claims.  The first gate needs no model;
@@ -260,5 +278,6 @@ the final gate cannot be inferred from a green unit test.
 | Feedback size | Typed error code, precise location and bounded supporting rows | Model study shows needed detail without increased unsupported claims |
 | Adapter location | Scheme Library first; external serving adapter later | Measured protocol or latency bottleneck at the plain boundary |
 
-The candidate API is implemented within these bounds. Wider evidence,
-model usefulness and general reasoning verification remain unproved.
+The candidate API and bounded pilots are implemented within these bounds.
+General derivation proofs for negation and reduction, broader model
+usefulness and general reasoning verification remain unproved.

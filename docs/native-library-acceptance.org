@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 #+TITLE: Scheme-native Library admission and next gates
-#+STATUS: active contract; model study deferred
+#+STATUS: active contract; bounded model pilots completed
 #+DATE: 2026-10-01
 #+FILETAGS: :scheme-dsl:qualification:roadmap:
 
@@ -96,12 +96,18 @@ about 48. Neither run changes the budget or qualifies the local SS
 gate. This performance result is distinct from the passing Scheme and
 Rust semantic gates; an exact-head Ubuntu CI run is still required.
 
-* Deferred model gate
+* Bounded model gate
 
-A later Python caller can invoke a fixed model, present candidate
-feedback and record prompts, response bytes, source revision, budgets,
-latency and independent answer scores. This adapter must not define
-the Scheme grammar or source authority. The live model comparison is
-deferred until a model, invocation and task corpus are fixed. The
-scripted caller in =ascent-reasoning-library-test.ss= is a Library
-protocol test, not evidence of model helpfulness.
+The separate POO Flow Python Testing caller ran two pre-registered paired
+pilots on five finite ASCENT/temporal tasks. It fixed prompts, source
+fixtures, model settings, request budgets and independent choice/boundary
+scores before each pilot. The first tool arm improved choice scores but
+worsened boundary scores; the typed-observation pilot improved three
+wrong-join boundary labels while all six closed-cut responses still
+asserted release authority against the native denial. A deterministic
+POO Flow Testing Runtime guard withholds that claim. See the protocols,
+per-case results and limits on [[https://github.com/tao3k/poo-flow/pull/34][POO Flow PR #34]]. The scripted caller in
+=ascent-reasoning-library-test.ss= remains a Library protocol test. Neither
+it nor the small live pilots establish general model helpfulness, source
+authority or deployed behavior. The Python adapter does not define the
+Scheme grammar.

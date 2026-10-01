@@ -20,6 +20,10 @@ public syntax, implementation tests and examples around that contract.
 Existing Rust-oriented fixtures can remain as historical research
 receipts; they are not admission tests for the new language.  No
 compatibility aliases or second parser belong in the target.
+The current executable admission and performance gates are stated in
+[[file:native-library-acceptance.org][the native Library contract]]; the
+[[file:replication-checklist.org][Rust replication checklist]] tracks a
+separate historical research claim.
 
 This document proposes a first gate for review.  It draws conceptual
 constraints from [[file:research/scheme-dsl/ascent-a22.org][Ascent A22]],

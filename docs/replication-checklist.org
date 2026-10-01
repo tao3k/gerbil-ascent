@@ -17,8 +17,11 @@ documented difference. The [[file:rust-parity.org][parity matrix]] gives the det
 An item is checked only when its named evidence runs on the same source head.
 An example or finite corpus is evidence for its stated domain; it does not
 close a whole feature family. All required items below must be checked before
-calling the replication complete or the PR safe to squash. Keep new Agent
-research and broader POO Flow integration outside the replication claim.
+calling *Rust 0.8.0 replication* complete. This historical comparison is a
+separate research claim from admission of the Scheme-native Library; its open
+items do not automatically block that Library's PR. The native admission
+contract is [[file:native-library-acceptance.org][tracked separately]]. Keep new Agent research and broader POO Flow
+integration outside the replication claim.
 
 * P0: Inventory and language surface
 
@@ -73,7 +76,7 @@ and stopped at the existing derived-aggregate 1 ms p95 limit with 1.163 ms;
 host load was about 19 then. No budget was changed. These are local timing
 observations, not a final-head Linux admission receipt.
 
-* Next execution order
+* Next execution order for the historical replication claim
 
 1. Finish the P0 source/API inventory and the missing invalid/dependency probes.
 2. Close P1 semantic interactions, using differential plus independent models.

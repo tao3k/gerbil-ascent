@@ -82,6 +82,9 @@ tracks the remaining executable closure gates and the final-head admission.
 The Rust comparison documents the current implementation; it is not a
 compatibility target for the proposed
 [Scheme relational language](docs/scheme-relational-language-design.org).
+The [native Library admission contract](docs/native-library-acceptance.org)
+separates the Scheme language gate from the historical full Rust replication
+claim and records the next semantic and performance evidence.
 The Scheme-native rule surface in `program/scheme-language.ss`,
 finite relation operator descriptors in `program/operator.ss`, and
 bounded inert candidate boundary in `candidate/reasoning.ss` share the

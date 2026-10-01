@@ -155,6 +155,36 @@ path pays compilation/admission/startup costs that the retained path
 already paid before timing in the *single-update* cases; both paths pay
 their initialization cost in the lifecycle case.
 
+** Current contract-gate rerun
+
+On 2026-10-01, base head =42902ff= plus documentation and a new
+qualification test (no evaluator edit), the same probe completed once.
+The [[file:e4-retained-session-2026-10-01-contract-gate.txt][raw receipt]] has every sample and the final warning. The host load
+average observed immediately after the run was about 45; a concurrent
+repeat hit the existing 120-second probe timeout and is *not* a second
+successful performance observation. The medians below exclude each
+method's warmup and use five paired samples for one append or three
+paired lifecycle samples. Units are microseconds.
+
+#+NAME: scheme-e4-current-contract-probe
+| Case | Retained median | Fresh median |
+|------+-----------------+--------------|
+| chain 12 | 44679 | 65910 |
+| chain 24 | 34728 | 233324 |
+| chain 36 | 64135 | 381752 |
+| star 12 | 47673 | 85078 |
+| star 24 | 38563 | 103925 |
+| star 36 | 18060 | 65983 |
+| chain 24, initial plus eleven inserts | 1695827 | 4064099 |
+
+Every successful sample checked complete rows against an independent
+finite closure. These noisy timings preserve the retained-insertion
+hypothesis but do not isolate native rule work from admission, allocation
+or host contention. No optimizer change is admitted on this evidence.
+Whole-snapshot recomputation remains the withdrawal baseline; the
+[[file:deletion-h18.org][alternative-support and mixed-update gate]] must
+pass before replacing it.
+
 * Remaining discriminators
 :PROPERTIES:
 :CUSTOM_ID: scheme-e4-retained-next

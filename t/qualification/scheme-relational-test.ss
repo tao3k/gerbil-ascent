@@ -623,13 +623,14 @@
          ((1 2) (1 2) (2 3) (4 5))
          ((1 1) (1 2) (2 2)))))
     (poo-flow-test-case "all 64 simple directed graphs on three nodes"
-      (let (graphs
-            (foldl
-             (lambda (edge sets)
-               (append sets
-                       (map (lambda (set) (cons edge set)) sets)))
-             (list [])
-             '((1 2) (1 3) (2 1) (2 3) (3 1) (3 2))))
+      (let ((graphs
+             (foldl
+              (lambda (edge sets)
+                (append sets
+                        (map (lambda (set) (cons edge set)) sets)))
+              (list [])
+              '((1 2) (1 3) (2 1) (2 3) (3 1) (3 2))))
+            (checked 0))
         (check-equal? (length graphs) 64)
         (for-each
          (lambda (edges)
@@ -646,7 +647,11 @@
               (same-set? (rows (evaluate edges) 'path) expected) #t)
              (check-equal?
               (same-set? (relational-query solution reach 'reach)
-                         expected) #t)))
+                         expected) #t)
+             (set! checked (+ checked 1))
+             (when (zero? (modulo checked 8))
+               (displayln "NATIVE-CLOSURE-PROGRESS " checked)
+               (force-output))))
          graphs)))
     (poo-flow-test-case "new source snapshot does not mutate old result"
       (let* ((before (evaluate '((1 2) (2 3))))

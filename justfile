@@ -17,7 +17,11 @@ test-file path:
     test -f "{{ path }}"
     output_file="$(mktemp)"
     trap 'rm -f "$output_file"' EXIT
-    GERBIL_LOADPATH="{{ justfile_directory() }}${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" timeout "${ASCENT_GXTEST_TIMEOUT:-45s}" python3 t/harness/watch_output.py --startup-seconds "${ASCENT_GXTEST_STARTUP_SECONDS:-5}" --idle-seconds "${ASCENT_GXTEST_IDLE_SECONDS:-5}" -- gxtest {{ gerbil_test_runtime_options }} -v 5 "{{ path }}" 2>&1 | tee "$output_file"
+    startup="${ASCENT_GXTEST_STARTUP_SECONDS:-5}"
+    # This joint native/candidate module takes longer to compile cold. Its
+    # runtime still keeps the ordinary five-second progress watchdog.
+    if [[ "{{ path }}" == t/qualification/scheme-library-contract-test.ss && -z "${ASCENT_GXTEST_STARTUP_SECONDS:-}" ]]; then startup=20; fi
+    GERBIL_LOADPATH="{{ justfile_directory() }}${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" timeout "${ASCENT_GXTEST_TIMEOUT:-45s}" python3 t/harness/watch_output.py --startup-seconds "$startup" --idle-seconds "${ASCENT_GXTEST_IDLE_SECONDS:-5}" -- gxtest {{ gerbil_test_runtime_options }} -v 5 "{{ path }}" 2>&1 | tee "$output_file"
     if grep -E 'ERROR (CHECK|CASE|HARNESS)|Heap overflow|Stack overflow' "$output_file" >/dev/null; then exit 1; fi
     grep -F 'MODULE-OK {{ path }}' "$output_file" >/dev/null
     grep -F 'HARNESS-OK' "$output_file" >/dev/null
@@ -27,6 +31,7 @@ test:
     #!/usr/bin/env bash
     set -euo pipefail
     files=(t/qualification/*-test.ss)
+    qualified=()
     output_file="$(mktemp)"
     trap 'rm -f "$output_file"' EXIT
     export GERBIL_LOADPATH="{{ justfile_directory() }}${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}"
@@ -34,18 +39,23 @@ test:
     # run alone so their own 45s cap remains meaningful.
     run_batch() {
         local batch=("$@")
+        local startup="${ASCENT_GXTEST_STARTUP_SECONDS:-5}"
+        if [[ " ${batch[*]} " == *" t/qualification/scheme-library-contract-test.ss "* && -z "${ASCENT_GXTEST_STARTUP_SECONDS:-}" ]]; then startup=20; fi
         : > "$output_file"
-        timeout "${ASCENT_GXTEST_TIMEOUT:-45s}" python3 t/harness/watch_output.py --startup-seconds "${ASCENT_GXTEST_STARTUP_SECONDS:-5}" --idle-seconds "${ASCENT_GXTEST_IDLE_SECONDS:-5}" -- gxtest {{ gerbil_test_runtime_options }} -v 5 "${batch[@]}" 2>&1 | tee "$output_file"
+        timeout "${ASCENT_GXTEST_TIMEOUT:-45s}" python3 t/harness/watch_output.py --startup-seconds "$startup" --idle-seconds "${ASCENT_GXTEST_IDLE_SECONDS:-5}" -- gxtest {{ gerbil_test_runtime_options }} -v 5 "${batch[@]}" 2>&1 | tee "$output_file"
         if grep -E 'ERROR (CHECK|CASE|HARNESS|MODULE)|Heap overflow|Stack overflow' "$output_file" >/dev/null; then exit 1; fi
-        for file in "${batch[@]}"; do
-            grep -Fx "MODULE-OK $file" "$output_file" >/dev/null
+        local batch_file
+        for batch_file in "${batch[@]}"; do
+            grep -Fx "MODULE-OK $batch_file" "$output_file" >/dev/null
         done
         grep -F 'HARNESS-OK' "$output_file" >/dev/null
         grep -x 'OK' "$output_file" >/dev/null
+        qualified+=("${batch[@]}")
     }
     batch=()
     for file in "${files[@]}"; do
         if [[ "$file" == t/qualification/ascent-reasoning-library-test.ss ||
+              "$file" == t/qualification/scheme-library-contract-test.ss ||
               "$file" == t/qualification/scheme-operator-test.ss ||
               "$file" == t/qualification/scheme-operator-retained-test.ss ]]; then
             if ((${#batch[@]})); then run_batch "${batch[@]}"; batch=(); fi
@@ -56,6 +66,11 @@ test:
         fi
     done
     if ((${#batch[@]})); then run_batch "${batch[@]}"; fi
+    # A successful shell exit must mean every discovered test ran exactly once.
+    test "${#qualified[@]}" -eq "${#files[@]}"
+    for ((i=0; i<${#files[@]}; i++)); do
+        test "${qualified[i]}" = "${files[i]}"
+    done
 
 # Abstract theorem and bounded local receipt-lifecycle safety model.
 # Supply TLC_BIN when tlc is not on PATH; this gate does not build Scheme.

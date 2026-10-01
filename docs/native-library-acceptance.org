@@ -1,0 +1,107 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+#+TITLE: Scheme-native Library admission and next gates
+#+STATUS: active contract; model study deferred
+#+DATE: 2026-10-01
+#+FILETAGS: :scheme-dsl:qualification:roadmap:
+
+* Delivery boundary
+
+The public language is the =relational-program= and
+=relational-fragment= API exported by =program/interface.ss=. Trusted
+Scheme code constructs finite program values before admission. Its
+checked rule subset has positive atoms, lower-stratum negation,
+=where= (=even?=, =<=), =compute= (=identity=, =+=), checked reductions,
+finite pointwise views, and min/max lattice declarations. Scalar
+literals and explicit =(value expression)= captures are copied at
+construction; no host procedure is called from a checked rule body.
+Admission inspects dependencies, modes, types and budgets; a successful
+solve yields a completed immutable result or an explicit failure.
+
+=candidate/reasoning.ss= accepts inert Scheme data from an untrusted
+caller. It shares the admitted fixed scalar and relational semantics
+for its declared subset, but does not accept host =value= expressions,
+finite views, lattice declarations or arbitrary callbacks. A complete
+receipt says the admitted program reached a fixed point for the copied
+source snapshot; it does not certify that the proposal expresses the
+caller's intent. Its content digest is a local consistency marker,
+not source authentication. Positive proof and nonmembership fields
+have their own narrower verification contracts.
+
+The Rust Ascent 0.8.0 oracle is a test-only historical comparison.
+[[file:replication-checklist.org][Complete Rust replication]] is a separate research claim and not
+the admission definition for this native language. The historical
+=program/syntax.ss= is still built for that oracle, but it is not
+re-exported by =program/interface.ss=. Retirement of that parser
+requires moving its qualification to a test-only build path; its
+presence does not enlarge the native public grammar. No internal JSON
+protocol, model scheduler or Rust runtime bridge is part of this gate.
+
+* Executable semantic admission
+
+The shared contract test =t/qualification/scheme-library-contract-test.ss=
+uses one independent Floyd-Warshall-style finite model for eight
+diagnostic three-node graphs. The same source and rules are evaluated
+through a direct native program, a first-class fragment and an inert
+candidate. It compares complete *sets* after recursion, negation,
+fixed filtering/computation and grouped sum. A multi-source update
+withdraws an edge, changes a blocker and weights atomically; an
+invalid transaction must leave the last completed result and an older
+snapshot unchanged. This complements, rather than replaces, the
+existing 64-graph native/operator/candidate corpora and their different
+coverage. Order of rows, wall-clock timing and candidate intent are
+outside the set-equivalence claim.
+
+The repository gate is =just build=, =just test=, =just oracle=,
+=just performance= and policy checks at one exact head, followed by
+the same-head Ubuntu CI. The abstract Lean/TLA nonmembership gate is
+=just check-nonmembership-formal= when that toolchain is available; it
+does not prove the Gerbil implementation. A prior green head cannot
+qualify a later edit.
+
+The =just test= batch runner now records the discovered file list and
+requires each file to produce one =MODULE-OK= in order. This closes a
+shell-variable shadowing error that had silently repeated the previous
+batch in place of three standalone modules. The corrected local run
+reported 30 distinct =MODULE-OK= entries for 30 discovered files,
+19 =HARNESS-OK= batches and 19 final =OK= markers, with no error or
+overflow markers. The cold compilation of the new joint module has a
+20-second startup allowance; its runtime still has the five-second
+idle watchdog and the ordinary 45-second batch cap.
+
+* Performance decision gate
+
+Retained positive insertion may reuse the native Session's state.
+Source replacement and withdrawal currently solve a prospective
+snapshot and publish it only after completion. The paired
+=just operator-retained-probe= checks identical complete outputs
+against an independent model. Its single-update timing excludes the
+retained initialization; its lifecycle timing includes it. Timing
+and resident-memory receipts must be interpreted separately from
+semantic equivalence. Change the insertion algorithm only for a
+repeatable matched gain on the same program and budget. A deletion
+algorithm needs alternative-support, last-support, cycle, lower-stratum
+and failed-update cases before it can replace recomputation. See
+[[file:research/scheme-dsl/deletion-h18.org][the deletion discriminator]].
+The [[file:research/scheme-dsl/e4-retained-session.org][current local
+rerun]] checks identical outputs but ran under high host load; it does
+not admit an optimizer change. This gate therefore retains the existing
+insertion Session and recomputation withdrawal algorithms.
+
+On this development host the unchanged =just performance= suite stopped
+at =ascent-table-expression= with p95 =2.628 ms= against its =2 ms=
+limit; an isolated rerun measured =2.124 ms=. The host load average was
+about 48. Neither run changes the budget or qualifies the local SS
+gate. This performance result is distinct from the passing Scheme and
+Rust semantic gates; an exact-head Ubuntu CI run is still required.
+
+* Deferred model gate
+
+A later Python caller can invoke a fixed model, present candidate
+feedback and record prompts, response bytes, source revision, budgets,
+latency and independent answer scores. This adapter must not define
+the Scheme grammar or source authority. The live model comparison is
+deferred until a model, invocation and task corpus are fixed. The
+scripted caller in =ascent-reasoning-library-test.ss= is a Library
+protocol test, not evidence of model helpfulness.

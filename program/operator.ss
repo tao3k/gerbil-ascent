@@ -203,6 +203,22 @@
      (list (variable-atom target variables))
      (list (variable-atom source variables)))))
 
+;;; A join's shared key uses the same variable on both atoms. Projection
+;;; may select either copy, including repeated columns, without changing
+;;; the set of output tuples.
+(def (join-variables node)
+  (let* ((inputs (relational-op-inputs node))
+         (left-vars (fresh-variables (relational-op-arity (car inputs))))
+         (left-key (vector-ref (relational-op-data node) 0))
+         (right-key (vector-ref (relational-op-data node) 1))
+         (right-vars
+          (map (lambda (column)
+                 (if (= column right-key)
+                   (list-ref left-vars left-key)
+                   (gensym '?right)))
+               (iota (relational-op-arity (cadr inputs))))))
+    (values left-vars right-vars)))
+
 ;;; Compute lexical dependencies before consulting the shared compiler memo.
 ;;; Otherwise a child cached while its fix parameter is bound could be
 ;;; silently reused outside that fix and capture its private relation.
@@ -311,10 +327,20 @@
                      (body (car (relational-op-inputs node)))
                      (parameter (relational-op-data node)))
                 (remember node name free)
-                (let (body-name
-                      (emit body (cons (cons parameter name) active)))
-                  (add-rule
-                   (copy-rule name body-name (relational-op-arity node))))
+                ;; A fixed point of a union is the least relation receiving
+                ;; each branch directly. Materializing the union and copying
+                ;; it back into the fixed-point relation adds no tuples.
+                (let (body-active (cons (cons parameter name) active))
+                  (if (eq? (relational-op-kind body) 'union)
+                    (for-each
+                     (lambda (branch)
+                       (add-rule
+                        (copy-rule name (emit branch body-active)
+                                   (relational-op-arity node))))
+                     (relational-op-inputs body))
+                    (add-rule
+                     (copy-rule name (emit body body-active)
+                                (relational-op-arity node)))))
                 name))
              ((eq? kind 'apply)
               (let* ((transform (relational-op-data node))
@@ -327,6 +353,26 @@
                                    input-name)
                              active))))
                 (remember node result free)))
+             ((and (eq? kind 'project)
+                   (eq? (relational-op-kind
+                         (car (relational-op-inputs node))) 'join))
+              (let* ((joined (car (relational-op-inputs node)))
+                     (names (map (lambda (input) (emit input active))
+                                 (relational-op-inputs joined)))
+                     (name (add-derived (relational-op-arity node))))
+                (let-values (((left-vars right-vars)
+                              (join-variables joined)))
+                  (let* ((variables (append left-vars right-vars))
+                         (selected
+                          (map (lambda (column)
+                                 (list-ref variables column))
+                               (relational-op-data node))))
+                    (add-rule
+                     (gerbil-ascent-rule
+                      (list (variable-atom name selected))
+                      (list (variable-atom (car names) left-vars)
+                            (variable-atom (cadr names) right-vars))))))
+                (remember node name free)))
              (else
               (let* ((inputs (relational-op-inputs node))
                      (input-names (map (lambda (input) (emit input active))
@@ -341,18 +387,8 @@
                        (copy-rule name input (relational-op-arity node))))
                     input-names))
                   ((join)
-                   (let* ((left (car inputs))
-                          (right (cadr inputs))
-                          (left-vars
-                           (fresh-variables (relational-op-arity left)))
-                          (left-key (vector-ref (relational-op-data node) 0))
-                          (right-key (vector-ref (relational-op-data node) 1))
-                          (right-vars
-                           (map (lambda (column)
-                                  (if (= column right-key)
-                                    (list-ref left-vars left-key)
-                                    (gensym '?right)))
-                                (iota (relational-op-arity right)))))
+                   (let-values (((left-vars right-vars)
+                                 (join-variables node)))
                      (add-rule
                       (gerbil-ascent-rule
                        (list (variable-atom

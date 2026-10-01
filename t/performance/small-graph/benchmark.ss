@@ -10,5 +10,5 @@
  (optimizationFocus . "separate fixed-point work from construction, lowering, admission, query and source updates")
  (inputShape . "three vertices and six possible directed non-self edges; masks 0, 7 and 63")
  (expectedOutcome . "same exact row set as an independent Floyd-Warshall closure")
- (measurementPhases reference compile admit admit-solve fragment retained-open retained-replace retained-duplicate)
+ (measurementPhases reference compile admit admit-solve native-core fragment retained-open retained-replace retained-duplicate)
  (tags small-graph finite-model research))

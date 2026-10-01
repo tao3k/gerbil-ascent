@@ -260,13 +260,14 @@
                      '((0 1) (1 2) (0 2))) #t)))
     (test-case "failed output budget does not publish an insertion"
       (let (retained
-            (relational-op-open-retained closure '() 8 8 2))
+            (relational-op-open-retained closure '((0 1)) 8 8 2))
         (check-exception
-         (relational-op-retained-append! retained '(0 1)) true)
-        (check-equal? (relational-op-retained-rows retained) '())
+         (relational-op-retained-append! retained '(1 2)) true)
+        (check-equal? (relational-op-retained-rows retained) '((0 1)))
         (let-values (((before after added removed)
-                      (relational-op-retained-replace! retained '())))
-          (check-equal? before '())
-          (check-equal? after '())
+                      (relational-op-retained-replace!
+                       retained '((0 1)))))
+          (check-equal? before '((0 1)))
+          (check-equal? after '((0 1)))
           (check-equal? added '())
           (check-equal? removed '()))))))

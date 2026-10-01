@@ -8,6 +8,8 @@
 (import (only-in :asp-gerbil-scheme/benchmark-api
                  benchmark-fixture-ref benchmark-fixture-contract-pass?
                  testing-benchmark-run/result)
+        (only-in :clan/poo/object .ref)
+        (only-in :gerbil-ascent/program/evaluate gerbil-ascent-make-engine)
         (only-in :gerbil-ascent/program/operator
                  relational-op-source relational-op-union relational-op-join
                  relational-op-project relational-op-fix
@@ -144,7 +146,19 @@
                (lambda ()
                  (relational-query-name
                   (relational-solve (relational-admit program)) output))
-               (lambda (rows) (check-rows 'admit-solve rows expected))))
+               (lambda (rows) (check-rows 'admit-solve rows expected)))
+      ;; Reuse only immutable schema/analysis. Each sample still builds a
+      ;; fresh evaluation state and executes the full semi-naive fixpoint.
+      (let* ((seed (gerbil-ascent-make-engine program #t))
+             (analysis (.ref seed '.analysis))
+             (schema (.ref seed '.schema)))
+        (measure 'native-core
+                 (lambda ()
+                   (let* ((run (gerbil-ascent-make-engine
+                                program #f analysis schema))
+                          (result (run)))
+                     ((.ref result 'rows-of) output)))
+                 (lambda (rows) (check-rows 'native-core rows expected)))))
     (measure 'fragment
              (lambda ()
                (let* ((fragment (relational-op-fragment graph 'reach))

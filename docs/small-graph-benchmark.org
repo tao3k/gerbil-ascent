@@ -28,6 +28,11 @@ retained operator session. =retained-replace= updates an existing session.
 =retained-duplicate= appends a row already in an existing session. These
 phases overlap by design and must not be added together.
 
+The later =native-core= phase reuses immutable schema and rule analysis
+from a prebuilt engine, then builds a fresh state and executes the full
+semi-naive evaluator. It bypasses the public admission copy and is an
+attribution probe, not a replacement public API.
+
 The fixture's 1 ms =target_total= is an aspirational p95 target for each
 phase. Its 999 ms =max_total= is a permissive research guard, not a CI
 performance promise. =targetMet= in receipts compares each phase's p95
@@ -76,3 +81,47 @@ stratified negation, reducers, larger graphs, multicore throughput, or
 deployed latency. A future change should rerun the same fixture, compare
 matched distributions, and retain semantic equality with the independent
 closure and the 64-mask qualification corpus.
+
+* Operator lowering experiment
+
+The before code was commit =f587d91= with only the =native-core= phase
+added to the benchmark script. The after code fused =project(join(...))=
+into one projected rule and directed =fix(union(...))= branches into the
+fixed-point relation. The latter transformation removes a materialized
+union and its copy rule. For this reachability graph, the Core program
+changed from five relations and five rules to three relations and three
+rules. The 64 graph shapes in =scheme-operator-test.ss= and its nested,
+retained, and budget cases passed after the change.
+
+Two separate runs before and after used the same three masks, 20 samples
+per phase, machine, and ASP fixture. The receipts are
+[[file:../t/performance/small-graph/receipts/2026-10-01-optimization-before-1.txt][before 1]],
+[[file:../t/performance/small-graph/receipts/2026-10-01-optimization-before-2.txt][before 2]],
+[[file:../t/performance/small-graph/receipts/2026-10-01-optimization-after-1.txt][after 1]], and
+[[file:../t/performance/small-graph/receipts/2026-10-01-optimization-after-2.txt][after 2]].
+The table gives the median of the six p50 values (three masks times two
+runs), in milliseconds. The last column counts mask/run pairs whose after
+p50 was smaller. It is an indicative local comparison, not a CI gate.
+
+| Phase | Before | After | Lower pairs |
+|-------+--------+-------+-------------|
+| reference | 0.034 | 0.046 | 1/6 |
+| compile | 45.258 | 18.410 | 6/6 |
+| admit | 47.918 | 16.605 | 6/6 |
+| admit-solve | 53.575 | 19.970 | 6/6 |
+| native-core | 0.266 | 0.310 | 3/6 |
+| fragment | 154.520 | 82.000 | 5/6 |
+| retained-open | 175.571 | 82.412 | 6/6 |
+| retained-replace | 73.370 | 27.936 | 5/6 |
+| retained-duplicate | 52.608 | 23.343 | 6/6 |
+
+The two fusions reduced public-path cost in these matched runs. The
+independent reference stayed microsecond scale and native-core did not
+show a matched speedup, so the main gain is fewer intermediate POO
+declarations and admission work. Public operations still miss the 1 ms
+research target by a wide margin. Removing intermediate relations also
+reduces consumption of =max-derived-facts=, which is a resource budget:
+programs at a very tight budget may complete after this optimization where
+the prior lowering was bounded. Exact row-set semantics are unchanged when
+both versions complete. Another optimization should target the remaining
+snapshot and validation cost directly, with the same qualified boundaries.

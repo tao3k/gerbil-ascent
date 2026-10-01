@@ -3,6 +3,7 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 (import (only-in :std/test check-equal? check-exception test-case test-suite)
+        (only-in :clan/poo/object .ref)
         (only-in :gerbil-ascent/program/operator
                  relational-op-source relational-op-union
                  relational-op-join relational-op-select-eq
@@ -105,6 +106,42 @@
 
 (def scheme-operator-test
   (test-suite "Scheme finite relation operator graph"
+    (test-case "projected join compiles directly to its output relation"
+      (let* ((edge (relational-op-source
+                    'edge 2 '((0 1) (1 2) (2 0))))
+             (path (relational-op-project
+                    (relational-op-join edge edge 1 0) '(0 3))))
+        (let-values (((program output)
+                      (relational-op-compile path 16 64 64)))
+          (check-equal? (length (.ref program 'relations)) 2)
+          (check-equal? (length (.ref program 'rules)) 1)
+          (check-equal?
+           (same-rows?
+            (relational-query-name
+             (relational-solve (relational-admit program)) output)
+           '((0 2) (1 0) (2 1)))
+           #t))))
+    (test-case "projected join retains zero-arity and repeated columns"
+      (let* ((edge (relational-op-source
+                    'edge 2 '((0 1) (1 2))))
+             (joined (relational-op-join edge edge 1 0)))
+        (check-equal? (solve-op (relational-op-project joined '()))
+                      '(()))
+        (check-equal? (solve-op (relational-op-project joined '(0 0)))
+                      '((0 0)))))
+    (test-case "fixed-point union branches target the fixed relation"
+      (let (edge (relational-op-source 'edge 2 '((0 1) (1 2))))
+        (let-values (((program output)
+                      (relational-op-compile
+                       (reachability edge) 16 64 64)))
+          (check-equal? (length (.ref program 'relations)) 3)
+          (check-equal? (length (.ref program 'rules)) 3)
+          (check-equal?
+           (same-rows?
+            (relational-query-name
+             (relational-solve (relational-admit program)) output)
+            '((0 1) (1 2) (0 2)))
+           #t))))
     (test-case "sixty-four graph fixed points equal independent closure"
       (let (possible '((0 1) (0 2) (1 0) (1 2) (2 0) (2 1)))
         (for-each

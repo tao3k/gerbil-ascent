@@ -3,7 +3,8 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-;;; A bounded proof interpreter for inspected, positive atom-only proposals.
+;;; A bounded proof interpreter for inspected positive rules with fixed
+;;; scalar filters and computations.
 ;;; Its result is checked against the completed native query before use.
 ;;; Node inputs always refer to earlier nodes, so the list is a finite DAG.
 (import (only-in :gerbil-ascent/candidate/types
@@ -16,6 +17,8 @@
 
 (export candidate-positive-proof candidate-positive-closed-absence
         candidate-verify-positive-proof
+        positive-rule-body? positive-fixed-clause?
+        positive-apply-fixed-clause
         positive-proof? positive-proof-status
         positive-proof-snapshot-identity positive-proof-snapshot-generation
         positive-proof-snapshot-digest positive-proof-candidate-digest
@@ -38,11 +41,67 @@
   (and (pair? atom) (symbol? (car atom))
        (not (memq (car atom) '(not where compute reduce)))))
 
+(def (positive-fixed-clause? clause)
+  (and (list? clause) (pair? clause)
+       (case (car clause)
+         ((where)
+          (and (= (length clause) 2)
+               (list? (cadr clause))
+               (pair? (cadr clause))
+               (case (caadr clause)
+                 ((even?) (= (length (cadr clause)) 2))
+                 ((<) (= (length (cadr clause)) 3))
+                 (else #f))))
+         ((compute)
+          (and (= (length clause) 3)
+               (candidate-variable? (cadr clause))
+               (list? (caddr clause))
+               (pair? (caddr clause))
+               (case (caaddr clause)
+                 ((identity) (= (length (caddr clause)) 2))
+                 ((+) (= (length (caddr clause)) 3))
+                 (else #f))))
+         (else #f))))
+
+(def (positive-rule-body? rule)
+  (andmap (lambda (clause)
+            (or (positive-atom? clause)
+                (positive-fixed-clause? clause)))
+          (vector-ref rule 1)))
+
 (def (positive-rules? spec)
   (andmap
-   (lambda (rule)
-     (andmap positive-atom? (vector-ref rule 1)))
+   positive-rule-body?
    (reasoning-candidate-rules spec)))
+
+;;; A fixed clause has no row input. Replay its checked operation from the
+;;; bindings established by preceding clauses; #f means the branch fails.
+(def (positive-apply-fixed-clause clause bindings)
+  (let* ((form (if (eq? (car clause) 'where)
+                 (cadr clause) (caddr clause)))
+         (inputs (map (lambda (name) (assq name bindings)) (cdr form))))
+    (and (andmap (lambda (input) (and input #t)) inputs)
+         (let ((values (map cdr inputs)))
+           (case (car clause)
+             ((where)
+              (case (car form)
+                ((even?) (and (exact-integer? (car values))
+                              (even? (car values)) bindings))
+                ((<) (and (andmap exact-integer? values)
+                          (< (car values) (cadr values)) bindings))
+                (else #f)))
+             ((compute)
+              (and (not (assq (cadr clause) bindings))
+                   (case (car form)
+                     ((identity)
+                      (cons (cons (cadr clause) (car values)) bindings))
+                     ((+)
+                      (and (andmap exact-integer? values)
+                           (cons (cons (cadr clause)
+                                       (+ (car values) (cadr values)))
+                                 bindings)))
+                     (else #f))))
+             (else #f))))))
 
 (def (bind-atom atom row prior)
   (let loop ((terms (cdr atom)) (values row) (bindings prior))
@@ -75,7 +134,8 @@
        (andmap (lambda (row) (if (member row right) #t #f)) left)
        (andmap (lambda (row) (if (member row left) #t #f)) right)))
 
-;;; max-steps bounds body-row probes, including unsuccessful unifications.
+;;; max-steps bounds body-row probes and fixed-clause evaluations,
+;;; including unsuccessful unifications and filters.
 ;;; The proposal's derived-fact limit separately bounds the DAG size.
 ;;; A complete proof is returned only when the native solve completed and
 ;;; this independent interpreter reproduces every native query row.
@@ -84,9 +144,9 @@
 ;;   : (-> ReasoningSnapshot InspectedCandidate Digest Status Rows Nat
 ;;         PositiveProof)
 ;;   | doc m%
-;;       Replay an inspected positive-atom proposal against a copied
+;;       Replay an inspected positive proposal against a copied
 ;;       snapshot and compare its query rows with a complete native solve.
-;;       The work cap bounds body-row probes; result status distinguishes
+;;       The work cap bounds body-row probes and scalar clauses; status distinguishes
 ;;       complete, bounded and unsupported proof generation.
 ;;
 ;;       # Examples
@@ -170,21 +230,31 @@
                                       'rule name (copy-pairs row) label
                                       (reverse inputs))
                                      pending)))))
-                       (let (atom (car remaining))
-                         (for-each
-                          (lambda (node)
-                            (unless bounded?
-                              (set! steps (+ steps 1))
-                              (if (> steps max-steps)
-                                (set! bounded? #t)
-                                (let (next
-                                      (bind-atom atom (proof-node-row node)
-                                                 bindings))
-                                  (when next
-                                    (walk (cdr remaining) next
-                                          (cons (proof-node-id node)
-                                                inputs)))))))
-                          (facts (car atom)))))))
+                       (let (clause (car remaining))
+                         (if (positive-fixed-clause? clause)
+                           (begin
+                             (set! steps (+ steps 1))
+                             (if (> steps max-steps)
+                               (set! bounded? #t)
+                               (let (next (positive-apply-fixed-clause
+                                           clause bindings))
+                                 (when next
+                                   (walk (cdr remaining) next inputs)))))
+                           (for-each
+                            (lambda (node)
+                              (unless bounded?
+                                (set! steps (+ steps 1))
+                                (if (> steps max-steps)
+                                  (set! bounded? #t)
+                                  (let (next
+                                        (bind-atom
+                                         clause (proof-node-row node)
+                                         bindings))
+                                    (when next
+                                      (walk (cdr remaining) next
+                                            (cons (proof-node-id node)
+                                                  inputs)))))))
+                            (facts (car clause))))))))
                  (walk body [] [])))
              (reasoning-candidate-rules spec))
             (if bounded?
@@ -324,30 +394,41 @@
                           (eq? (proof-node-relation node)
                                (car (vector-ref rule 0)))
                           (= (length (proof-node-inputs node))
-                             (length (vector-ref rule 1)))
-                          (let loop ((atoms (vector-ref rule 1))
+                             (length
+                              (filter positive-atom?
+                                      (vector-ref rule 1))))
+                          (let loop ((clauses (vector-ref rule 1))
                                      (inputs (proof-node-inputs node))
                                      (bindings []))
-                            (if (null? atoms)
-                              (equal?
-                               (proof-node-row node)
-                               (instantiate-head
-                                (vector-ref rule 0) bindings))
-                              (let (id (car inputs))
-                                (and (existing-input? id index)
-                                     (let (input (vector-ref by-id id))
-                                       (and
-                                        (eq? (proof-node-relation input)
-                                             (caar atoms))
-                                        (let (next
-                                              (bind-atom
-                                               (car atoms)
-                                               (proof-node-row input)
-                                               bindings))
-                                          (and next
-                                               (loop (cdr atoms)
-                                                     (cdr inputs)
-                                                     next))))))))))))
+                            (if (null? clauses)
+                              (and (null? inputs)
+                                   (equal?
+                                    (proof-node-row node)
+                                    (instantiate-head
+                                     (vector-ref rule 0) bindings)))
+                              (let (clause (car clauses))
+                                (if (positive-fixed-clause? clause)
+                                  (let (next
+                                        (positive-apply-fixed-clause
+                                         clause bindings))
+                                    (and next
+                                         (loop (cdr clauses)
+                                               inputs next)))
+                                  (let (id (car inputs))
+                                    (and (existing-input? id index)
+                                         (let (input (vector-ref by-id id))
+                                           (and
+                                            (eq? (proof-node-relation input)
+                                                 (car clause))
+                                            (let (next
+                                                  (bind-atom
+                                                   clause
+                                                   (proof-node-row input)
+                                                   bindings))
+                                              (and next
+                                                   (loop (cdr clauses)
+                                                         (cdr inputs)
+                                                         next))))))))))))))
                   (else #f))))
          (and
           (let loop ((remaining nodes) (index 0))

@@ -19,7 +19,9 @@
                  candidate-variable? scalar?)
         (only-in :gerbil-ascent/candidate/provenance
                  candidate-positive-closed-absence positive-proof-status
-                 positive-proof-nodes proof-node-relation proof-node-row))
+                 positive-proof-nodes proof-node-relation proof-node-row
+                 positive-rule-body? positive-fixed-clause?
+                 positive-apply-fixed-clause))
 
 (export candidate-positive-nonmembership
         candidate-verify-positive-nonmembership
@@ -127,15 +129,6 @@
                (not (eq? term '?_))))
         (cdr query))))
 
-;; : (forall (a) (-> (Rule a) Boolean))
-;; : (-> InspectedRule Boolean)
-(def (positive-body? rule)
-  (andmap
-   (lambda (atom)
-     (and (pair? atom) (symbol? (car atom))
-          (not (memq (car atom) '(not where compute reduce)))))
-   (vector-ref rule 1)))
-
 ;; : (forall (a) (-> (Snapshot a) (Program a) Schema))
 ;; : (-> ReasoningSnapshot InspectedCandidate Schema)
 (def (schema-of snapshot spec)
@@ -177,7 +170,7 @@
             (not (eq? native-status 'complete))
             (pair? native-rows)
             (not (ground-query? query))
-            (not (andmap positive-body?
+            (not (andmap positive-rule-body?
                          (reasoning-candidate-rules spec))))
       (result 'unsupported [])
       (let* ((witness
@@ -300,7 +293,8 @@
               (eq? native-status 'complete)
               (null? native-rows)
               (ground-query? query)
-              (andmap positive-body? (reasoning-candidate-rules spec))
+              (andmap positive-rule-body?
+                      (reasoning-candidate-rules spec))
               (equal? (positive-nonmembership-snapshot-identity certificate)
                       (reasoning-snapshot-identity snapshot))
               (equal? (positive-nonmembership-snapshot-generation certificate)
@@ -378,17 +372,28 @@
                      (unless (contains? (car head)
                                         (head-row head bindings))
                        (set! invalid? #t))
-                     (let (atom (car remaining))
-                       (for-each
-                        (lambda (row)
-                          (unless (or bounded? invalid?)
-                            (set! steps (+ steps 1))
-                            (if (> steps max-checks)
-                              (set! bounded? #t)
-                              (let (next (bind-atom atom row bindings))
-                                (when next
-                                  (walk (cdr remaining) next))))))
-                        (rows (car atom)))))))
+                     (let (clause (car remaining))
+                       (if (positive-fixed-clause? clause)
+                         (begin
+                           (set! steps (+ steps 1))
+                           (if (> steps max-checks)
+                             (set! bounded? #t)
+                             (let (next
+                                   (positive-apply-fixed-clause
+                                    clause bindings))
+                               (when next
+                                 (walk (cdr remaining) next)))))
+                         (for-each
+                          (lambda (row)
+                            (unless (or bounded? invalid?)
+                              (set! steps (+ steps 1))
+                              (if (> steps max-checks)
+                                (set! bounded? #t)
+                                (let (next
+                                      (bind-atom clause row bindings))
+                                  (when next
+                                    (walk (cdr remaining) next))))))
+                          (rows (car clause))))))))
                (walk body [])))
            (reasoning-candidate-rules spec)))
         (cond

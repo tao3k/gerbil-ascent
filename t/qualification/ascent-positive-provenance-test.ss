@@ -164,6 +164,53 @@
             (vector '(selected 1 ?z) 4) '(16 1 32))
            'program-digest 'complete '((1 2) (1 4)) 200))
          'bounded)))
+    (test-case "fixed filters and computations replay in a proof DAG"
+      (let* ((snapshot
+              (reasoning-source-snapshot
+               'arithmetic 1 '((edge 2 ((1 2) (1 3) (2 4))))))
+             (datum
+              '(candidate
+                 (relation doubled 2)
+                 (relation selected 2)
+                 (rule (doubled ?x ?z)
+                   (edge ?x ?y) (where (even? ?y))
+                   (compute ?z (+ ?y ?y)))
+                 (rule (selected ?x ?v)
+                   (doubled ?x ?z) (compute ?v (identity ?z))
+                   (where (< ?x ?v)))
+                 (query selected ?x ?v) (limits 8 16 32)))
+             (receipt (reasoning-attempt snapshot datum))
+             (spec (candidate-inspect snapshot datum))
+             (proof (reasoning-receipt-proof receipt))
+             (expected
+              (map (lambda (row) (list (car row) (* 2 (cadr row))))
+                   (filter (lambda (row) (even? (cadr row)))
+                           '((1 2) (1 3) (2 4))))))
+        (check-equal? (reasoning-receipt-status receipt) 'complete)
+        (check-equal?
+         (and (= (length (reasoning-receipt-rows receipt))
+                 (length expected))
+              (andmap (lambda (row)
+                        (if (member row expected) #t #f))
+                      (reasoning-receipt-rows receipt)))
+         #t)
+        (check-equal? (positive-proof-status proof) 'complete)
+        (check-equal?
+         (candidate-verify-positive-proof
+          snapshot spec (reasoning-receipt-candidate-digest receipt)
+          'complete expected proof 16)
+         #t)
+        (check-equal?
+         (positive-proof-status
+          (reasoning-receipt-proof (reasoning-attempt snapshot datum 1)))
+         'bounded)
+        (set-car! (proof-node-row
+                   (list-ref (positive-proof-nodes proof) 5)) 99)
+        (check-equal?
+         (candidate-verify-positive-proof
+          snapshot spec (reasoning-receipt-candidate-digest receipt)
+          'complete expected proof 16)
+         #f)))
     (test-case "absence and nonpositive clauses have no proof claim"
       (let ((absent
              (candidate-positive-proof

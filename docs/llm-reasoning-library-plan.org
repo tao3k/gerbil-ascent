@@ -86,6 +86,15 @@ recursive join as a complete but semantically wrong candidate, and
 checks all 64 directed three-node graphs against an independent
 Floyd-Warshall-style finite reference.
 
+Separately, =reasoning-receipt-proof= can hold a replayable positive
+derivation DAG when every rule body uses relation atoms and fixed
+=where=/=compute= clauses. The verifier replays scalar operations from
+earlier bindings and accepts no input node for them. The receipt keeps
+complete native rows when this proof is =bounded= or =unsupported=.
+Negation and reduction still have no derivation-proof claim; the
+ground nonmembership certificate supports the same fixed clauses when
+their finite closure fits its bounds.
+
 Candidate and source inputs now pass an iterative scalar/pair-tree
 preflight before list traversal or digest. It rejects cycles,
 executable leaves, excessive nesting and node-budget exhaustion while

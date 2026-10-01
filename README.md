@@ -86,11 +86,13 @@ POO rule evaluator. Candidate inspection in `candidate/program.ss` accepts
 ordered atoms, checked negation, fixed scalar filters/computations and
 count/sum/min/max reductions as inert data; receipts expose complete rows
 with the exact graph witness/cut case as a narrow explanation. For an
-inspected positive atom-only proposal, `candidate/provenance.ss` can attach
+inspected positive proposal with fixed `where` and `compute` clauses,
+`candidate/provenance.ss` can attach
 a bounded, replayable rule-instance proof DAG to a completed query. Its
-source and hypothetical candidate nodes remain distinct; other constructs
-have no general proof claim. For a missing ground target under finite
-positive atom rules, `candidate/nonmembership.ss` separately emits a
+source and hypothetical candidate nodes remain distinct; negation and
+reduction have no general proof claim. For a missing ground target under finite
+positive rules with the same fixed scalar clauses,
+`candidate/nonmembership.ss` separately emits a
 bounded per-relation closed-set certificate; its verifier checks input
 coverage, rule closure and target absence relative to the named snapshot.
 Candidate and snapshot data pass a bounded iterative preflight before

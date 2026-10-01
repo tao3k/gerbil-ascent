@@ -11,11 +11,14 @@
 The certificate answers only a *ground* tuple question for one copied
 snapshot and one inspected program.  Let =D= be the finite relation-tagged
 source rows, =H= the candidate facts (which the inspector permits only on
-source relations), and =P= safe, function-free rules whose bodies contain
-positive atoms only and whose heads write derived relations.  The
+source relations), and =P= safe rules whose bodies contain positive
+atoms and checked, deterministic =where=/=compute= clauses only, and
+whose heads write derived relations. The
 inspector has already checked schema, arity, bound head variables and
 these source/derived boundaries.  The generator and verifier additionally
-check this positive subset and a ground query.
+check this positive subset and a ground query. Fixed scalar operations
+may produce values outside the input domain; the certificate is issued
+only when finite saturation fits the row and work bounds.
 
 The certificate gives a finite relation set =C= for *every declared
 relation*. Its checker establishes:
@@ -25,7 +28,7 @@ relation*. Its checker establishes:
 |------------+-------|
 | Scope | Snapshot identity, generation, digest; candidate digest and independently recomputed inspected-program fingerprint; exact ground query |
 | Input inclusion | Every row of =D= and =H= belongs to its named relation in =C= |
-| Rule closure | Every grounded body instance drawn from =C= has its head tuple in =C= |
+| Rule closure | Every grounded body instance drawn from =C=, after fixed filters and computations, has its head tuple in =C= |
 | Target absence | The ground target tuple is absent from its relation in =C= |
 | Native boundary | Native solve completed and returned no row for that query |
 | Finite work | Generation and rule-instance verification have separate work caps; exhaustion yields =bounded=. External certificates also have hard relation, row and cell size limits. |
@@ -59,8 +62,9 @@ and work budget. It returns a =positive-nonmembership= with =complete=,
 per-relation closure. The checker receives a separate verification cap
 and returns =valid=, =bounded= or =invalid=. It enumerates all body
 matches against the supplied =C=, checking each resulting head tuple.
-The verification work cap counts row preflight and rule-body probes; it
-is not a total CPU instruction bound. Before this enumeration, the
+The verification work cap counts row preflight, rule-body probes and
+fixed-clause evaluations; it is not a total CPU instruction bound.
+Before this enumeration, the
 checker rejects a supplied certificate over 64 relations, 4096 rows,
 32768 scalar cells or 1024 cells in one row. These are independent
 hard input-size limits, so even a caller-supplied huge closure cannot
@@ -112,8 +116,8 @@ session behavior or correspondence to the Scheme implementation.
 =just test-file t/qualification/ascent-positive-nonmembership-test.ss=
 checks public receipt integration, closure rows, independent replay,
 missing source/candidate row, broken rule closure, altered digest,
-oversized external closure,
-generation and verification budgets, an actually derivable target,
+oversized external closure, fixed scalar closure and a corrupted
+computed row, generation and verification budgets, an actually derivable target,
 non-ground query, negative rule, and incomplete native execution.
 The complete Scheme qualification passed with bounded two-file batches
 and standalone exhaustive operator modules. The harness now fails after
@@ -123,7 +127,7 @@ graph progress are actual test progress. The earlier single-process
 harness triggered a POO Flow debug memory watchdog after the new proof
 tests had passed.
 
-Negation, aggregate/reducer bodies, =where=, =compute=, arbitrary
+Negation, aggregate/reducer bodies, arbitrary
 Scheme callbacks, and non-ground query patterns remain unsupported by
 this certificate. The omitted-premise summary sometimes desired for
 interactive Why-Not is future work; a summary is not the proof.

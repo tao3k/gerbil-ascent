@@ -160,6 +160,35 @@
           (check-equal? (verify valid input missing) 'valid)
           (set-cdr! (cdr edge-rows) '())
           (check-equal? (verify valid input missing) 'invalid))))
+    (test-case "fixed arithmetic is replayed in an absence certificate"
+      (let* ((input
+              (reasoning-source-snapshot
+               'arithmetic 1 '((edge 2 ((1 2) (1 3) (2 4))))))
+             (datum
+              '(candidate
+                 (relation doubled 2)
+                 (rule (doubled ?x ?z)
+                   (edge ?x ?y) (where (even? ?y))
+                   (compute ?z (+ ?y ?y)) (where (< ?x ?z)))
+                 (query doubled 1 8) (limits 8 16 32)))
+             (receipt (reasoning-attempt input datum))
+             (program (candidate-inspect input datum))
+             (cert (reasoning-receipt-nonmembership receipt)))
+        (check-equal? (reasoning-receipt-status receipt) 'complete)
+        (check-equal? (reasoning-receipt-rows receipt) '())
+        (check-equal? (positive-nonmembership-status cert) 'complete)
+        (check-equal?
+         (candidate-verify-positive-nonmembership
+          input program (reasoning-receipt-candidate-digest receipt)
+          'complete [] cert 500)
+         'valid)
+        (set-car! (cddr (cadr (positive-nonmembership-closure cert)))
+                  '((1 6) (2 8)))
+        (check-equal?
+         (candidate-verify-positive-nonmembership
+          input program (reasoning-receipt-candidate-digest receipt)
+          'complete [] cert 500)
+         'invalid)))
     (test-case "non-ground, nonpositive and incomplete executions abstain"
       (let* ((input (snapshot))
              (ground (spec '(path 1 3)))

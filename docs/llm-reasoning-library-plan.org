@@ -119,7 +119,7 @@ leaves native completion intact. General Why-Not semantics remain open.
 | Positive derivation | Replayable proof DAG for the checked positive clauses | No complete provenance for all derivations |
 | Ground positive nonmembership | Finite closed-relation certificate and independent rule-closure checker | No open-world absence or general Why-Not cause |
 | Negation and reduction | Opt-in receipt certificate, bounded producer and independent checker for founded nodes and exact groups | No complete lineage or general Why-Not |
-| Model usefulness | Two pre-registered five-task paired pilots in POO Flow Python Testing | No general benefit, deployed result or causal explanation |
+| Model usefulness | Two five-task paired pilots, one typed/founded observation study, and a three-source Scheme pilot in POO Flow Python Testing | No general benefit, deployed result or causal explanation |
 
 The finite verifier is independent of the native planner and solver, but its
 certificate generator and verifier share the separate replay semantics. The
@@ -271,6 +271,16 @@ native/candidate finite-model gate are in
    on [[https://github.com/tao3k/poo-flow/pull/34][POO Flow PR #34]]. These pilots did not include a separate search arm,
    repair-turn score or a deployment test. They do not establish a general
    model advantage.
+   A later typed/founded JSON observation study scored choice 15/15 and
+   boundary 12/15 in both arms; its six closed-cut outputs still claimed
+   release authority. A separate nine-call study sent actual Gerbil
+   calling-program source and obtained 8/9 valid answer shapes after a
+   documented post-hoc syntax correction, but 0/9 exact row sets. It did
+   not send the imported Library implementation or use a native receipt
+   as feedback. These results do not isolate Scheme comprehension or
+   test model-to-Library tool use. The next protocol must freeze distinct
+   self-contained Scheme, explicit API-contract, and native-receipt
+   repair controls before any further paid calls.
 
 Keep semantic conformance, Library protocol conformance and model
 helpfulness as three different claims.  The first gate needs no model;

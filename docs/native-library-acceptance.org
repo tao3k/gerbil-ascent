@@ -113,6 +113,18 @@ it nor the small live pilots establish general model helpfulness, source
 authority or deployed behavior. The Python adapter does not define the
 Scheme grammar.
 
+A later typed/founded observation study made 30 calls. Choice and
+boundary scores were unchanged between its arms (15/15 and 12/15);
+all six closed-cut outputs still claimed release authority, which the
+native guard withheld. Its JSON observations measured that interface,
+not Scheme reading. A separate nine-call pilot sent three actual Gerbil
+calling programs, with no JSON observation. Native regrading accepted
+8/9 answer shapes and found 0/9 exact row sets. The model did not see
+the imported ASCENT implementation. These small, repeated inputs do
+not isolate Scheme literacy, the library contract, or tool use. The
+next model gate must freeze those controls and a candidate-to-receipt
+repair score before further calls.
+
 * Mainline execution order
 
 The next work is organized by capability and its admission gate.
@@ -152,14 +164,27 @@ remains open on its separately listed families and scale cases.
    their semantic owner, retain exact row sets and budget behavior, and show
    a reproducible matched reduction across all measured masks. The 1 ms
    public target remains open.
+   A separate POO Flow model-study case measured an identical
+   candidate and 188-byte receipt inside Scheme and around its
+   persistent Python worker. Ten warm calls gave Scheme median
+   2.915 s and worker median 2.917 s; their boundary delta median was
+   2.03 ms. One cold call was 35.761 s versus 2.053 s of measured
+   Scheme work. This includes three finite/founded source states and
+   must not be compared to the three-node operator benchmark as if
+   they were the same workload. The warm result does not justify a
+   new ASCENT C ABI. Investigate compiled worker startup and process
+   reuse for the cold path before any ABI extension.
 3. *Language and explanation scope.* Expand typed higher-order change only
    after its finite operator laws and scale evidence; extend provenance and
    Why-Not only with explicit semantics for alternative supports and cycles.
    Keep the Rust 0.8.0 replication checklist as a separate historical claim.
-4. *Model usefulness.* Repeat a pre-registered caller study only after the
-   receipt and latency contracts stabilize. Score answer choice and authority
-   boundaries separately. The two current pilots do not establish general
-   model benefit, and their temporal release errors remain a live boundary.
+4. *Model usefulness.* Exercise one candidate proposal, native Scheme
+   evaluation with finite and founded verification, and one repair turn.
+   Freeze exact row sets, receipt validity, source binding, syntax and
+   authority scores before model calls. Include a self-contained Scheme
+   control and an explicit public API contract control. The completed
+   pilots establish no general model benefit; temporal release errors
+   remain a live boundary.
 
 An exact-head local and Ubuntu gate is required for a release candidate;
 passing one focused module does not complete this sequence.

@@ -309,7 +309,8 @@ fn support_withdrawal_matches_public_library_contract() {
 #[test]
 fn support_discriminators_match_public_library_contract() {
     let edges: &[Edge] = &[(0, 1), (1, 2), (0, 2)];
-    let cases: &[(&[Edge], &[Edge], &[Edge], u32)] = &[
+    type SupportCase<'a> = (&'a [Edge], &'a [Edge], &'a [Edge], u32);
+    let cases: &[SupportCase<'_>] = &[
         (edges, &[], &[(0, 2), (1, 4), (2, 6)], 20),
         (&[(0, 1), (1, 2)], &[], &[(0, 2), (1, 4), (2, 6)], 20),
         (&[(0, 1)], &[], &[(0, 2), (1, 4), (2, 6)], 8),

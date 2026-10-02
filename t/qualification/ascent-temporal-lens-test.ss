@@ -2,7 +2,8 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(import (only-in :std/error Error?)
+(import (only-in :clan/poo/object .o)
+        (only-in :std/error Error?)
         (only-in :std/test check-equal? check-exception test-suite test-case)
         (only-in :gerbil-ascent/temporal/lens
                  temporal-lens temporal-source temporal-solve temporal-fork temporal-scope temporal-projection
@@ -127,10 +128,26 @@
         (check-equal? (temporal-verify (lens 0 9 members 7) s 'a observed) 'invalid)
         (check-exception (temporal-compare observed
                            (temporal-solve (lens 0 9 members 8 #f) s 'a)) Error?)))
+    (test-case "POO extension cannot relabel an equal-output native receipt"
+      (let* ((l (lens 0)) (s (source 0 dual))
+             (answer (temporal-solve l s 'a))
+             (changed-lens (temporal-lens 0 'positions 0 11 9 'other-cut members 8 #t))
+             (d (temporal-projection answer))
+             (changed (cons (car d) (cons (temporal-projection changed-lens) (cddr d))))
+             (forged (.o (:: @ answer) projection: (lambda () changed))))
+        (check-equal? (temporal-verify changed-lens s 'a forged) 'invalid)
+        (let* ((changed-scope (append (take d 6) '((hypothetical forged-base 0 forged-cut))))
+               (scope-forged (.o (:: @ answer) projection: (lambda () changed-scope))))
+          (check-equal? (temporal-verify l s 'a scope-forged) 'invalid))))
     (test-case "native receipt tampering cannot pass lens verification"
       (let* ((l (lens 0)) (s (source 0 dual)) (answer (temporal-solve l s 'a)))
         (set-car! (car (reasoning-receipt-rows (temporal-receipt answer))) 'tampered)
-        (check-equal? (temporal-verify l s 'a answer) 'invalid)))
+        (check-equal? (temporal-verify l s 'a answer) 'invalid)
+        (check-exception (temporal-compare answer
+                           (temporal-solve (lens 1) (source 1 dual) 'a)) Error?)
+        (check-exception (temporal-fork answer
+                           (temporal-lens 0 'positions 0 10 9 'hypothesis-cut members 8 #t)
+                           (temporal-source 'hypothesis-source 0 'positions events dual)) Error?)))
     (test-case "independent cut knowledge and window cross product"
       (for-each
        (lambda (cut-mask)

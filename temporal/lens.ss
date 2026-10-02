@@ -5,7 +5,9 @@
 ;;; Boundary: finite point-time projection, followed by the existing admitted engine.
 ;;; Invariant: open cuts have no complete evidence or definitive absence.
 ;;; Source-owned identities and closure declarations confer no authority.
-(import (only-in :clan/poo/object .o .ref .slot? object?)
+(import (only-in :std/crypto/digest sha256)
+        (only-in :std/encoding/hex hex-encode)
+        (only-in :clan/poo/object .o .ref .slot? object?)
         (only-in :gerbil-ascent/candidate/types reasoning-bounded-data?)
         (only-in :gerbil-ascent/candidate/reasoning
                  reasoning-source-snapshot reasoning-attempt
@@ -109,6 +111,17 @@
                       (list-sort (lambda (a b) (id<? (car a) (car b))) events)
                       (list-sort row<? parents))))
 
+;;; Binding boundary: native evidence includes the full temporal coordinates,
+;;; even when a changed window/cut/scope yields the same projected graph.
+;;; This is local content integrity, never source authentication.
+;; : (forall (scope) (-> Datum Datum Symbol scope String))
+;; : (-> LensData SourceData Root Scope SnapshotIdentity)
+(def (snapshot-identity lens source root scope)
+  (hex-encode (sha256 (string->utf8
+                       (call-with-output-string ""
+                         (lambda (port)
+                           (write (list 'ascent.temporal-binding.v1 lens source root scope) port)))))))
+
 ;;; Fixed positive program. Temporal projection cannot introduce negation
 ;;; over an open frontier. The candidate boundary produces existing evidence.
 (def reach-candidate
@@ -186,7 +199,7 @@
                 (else (set! within (foldl cons within next))
                       (loop next (+ depth 1))))))
       (let* ((snapshot (reasoning-source-snapshot
-                        (list-ref s 0) generation (list (list 'parent 2 edges) (list 'root 1 (list (list root))))))
+                        (snapshot-identity l s root scope-value) generation (list (list 'parent 2 edges) (list 'root 1 (list (list root))))))
              (receipt (and (not rejection) (null? frontier)
                            (reasoning-attempt snapshot reach-candidate 100000 100000)))
              (valid (and receipt (eq? (reasoning-receipt-status receipt) 'complete)
@@ -222,6 +235,7 @@
 (def (temporal-fork answer hypothetical-lens hypothetical-source)
   (unless (and (temporal-answer? answer)
                (eq? (temporal-status answer) 'complete)
+               (verified-answer? answer)
                (temporal-lens? hypothetical-lens)
                (temporal-source? hypothetical-source))
     (error "temporal fork requires a complete base and explicit hypothetical inputs"))
@@ -290,6 +304,16 @@
                               receipt snapshot reach-candidate 100000) 'valid)))))
       'valid 'invalid)))
 
+;;; Evidence boundary: composed operations recheck actual receipts before
+;;; consuming complete projections, including objects extended by the caller.
+;; : (-> TemporalAnswer Boolean)
+;; : (-> Answer LocallyVerified)
+(def (verified-answer? answer)
+  (let (data (temporal-projection answer))
+    (eq? (temporal-verify (apply temporal-lens (cadr data))
+                          (apply temporal-source (caddr data))
+                          (list-ref data 3) answer) 'valid)))
+
 ;;; A tuple delta is not a domain causal effect. Cut membership may change
 ;;; across generations, but clock/window/as-of/horizon/closure policy may not.
 ;; : (-> TemporalAnswer TemporalAnswer (List (List Datum)))
@@ -298,6 +322,7 @@
   (let* ((b (temporal-projection before)) (a (temporal-projection after))
          (bl (cadr b)) (al (cadr a)))
     (unless (and (eq? (car b) 'complete) (eq? (car a) 'complete)
+                 (verified-answer? before) (verified-answer? after)
                  (< (car bl) (car al))
                  (eq? (car (list-ref b 2)) (car (list-ref a 2)))
                  (equal? (temporal-scope before) (temporal-scope after))

@@ -492,7 +492,7 @@ in the approved budget; the existing PRs remain open and unmerged.
 The next independent semantic slice is now implemented in =temporal/lens.ss=:
 POO values bind explicit source generation, clock, half-open valid window,
 knowledge-as-of and a caller-named parent-closed cut. The existing positive
-candidate evaluator produces finite/founded evidence. Eight integrated cases
+candidate evaluator produces finite/founded evidence. Nine integrated cases
 cover late events, dual/last-support withdrawal, immutable snapshots, open
 coverage, invalid cuts, horizon exhaustion, hypothetical isolation and receipt
 tampering. Two independent finite models cover 128 graph-order solves and
@@ -504,3 +504,10 @@ founded Why-Not evidence. No general temporal rule language, interval algebra,
 POO/MRR source authority bridge or real-world causal semantics is admitted.
 The [[file:temporal-causality-module-design.org][temporal design ledger]] distinguishes this implemented gate from its open
 extensions. Model calls remain separately budgeted; none were made here.
+
+Native temporal receipts now bind all canonical lens/source/root/scope
+coordinates through their snapshot identity, including equal-output cut or
+window changes. A POO extension cannot relabel an old receipt; solve/verify,
+fork and compare all retain actual native evidence checks. The ninth
+qualification case tests that binding explicitly. This is content integrity,
+not source-owner authority.

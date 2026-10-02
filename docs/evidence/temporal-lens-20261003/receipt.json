@@ -1,11 +1,12 @@
 {
   "benchmark": "same star/snapshot/candidate/budgets, finite/founded verification once per path, 5 alternating pairs after warmup",
-  "cases": 8,
+  "binding": "native snapshot identity SHA256 binds full canonical lens/source/root/scope; compare/fork reverify actual base receipts",
+  "cases": 9,
   "cut_knowledge_window_cases": 128,
   "date": "2026-10-03",
   "files": {
     "build-policy.log": "546af03a75f74a88aeb7a8513379b84589ae6abb19bb789a782aba870fa899a7",
-    "final-qualification-scale.log": "e56e6be2397463f3c71ba37ba607802c646af38912afd03829461911208bb1a3"
+    "final-qualification-scale.log": "8534c6ac4bff709ba6b5b7e202ab39c9db15c3b5d5f1c134130becf6b98784b0"
   },
   "limits": {
     "derived": 4096,
@@ -24,102 +25,102 @@
   "scale": [
     {
       "events": 8,
-      "plain_median_ms": 43.782949447631836,
+      "plain_median_ms": 43.65897178649902,
       "repetitions": 5,
       "samples": [
         {
-          "plain_ms": 48.23899269104004,
+          "plain_ms": 50.633907318115234,
           "rep": 0,
-          "temporal_ms": 15.464067459106445
+          "temporal_ms": 15.069961547851562
         },
         {
-          "plain_ms": 16.358137130737305,
+          "plain_ms": 16.12401008605957,
           "rep": 1,
-          "temporal_ms": 15.424013137817383
+          "temporal_ms": 15.48314094543457
         },
         {
-          "plain_ms": 44.54207420349121,
+          "plain_ms": 45.027971267700195,
           "rep": 2,
-          "temporal_ms": 15.275001525878906
+          "temporal_ms": 15.017986297607422
         },
         {
-          "plain_ms": 16.190052032470703,
+          "plain_ms": 15.120983123779297,
           "rep": 3,
-          "temporal_ms": 15.398979187011719
+          "temporal_ms": 14.961957931518555
         },
         {
-          "plain_ms": 43.782949447631836,
+          "plain_ms": 43.65897178649902,
           "rep": 4,
-          "temporal_ms": 14.922142028808594
+          "temporal_ms": 15.06495475769043
         }
       ],
-      "temporal_median_ms": 15.398979187011719
+      "temporal_median_ms": 15.06495475769043
     },
     {
       "events": 32,
-      "plain_median_ms": 33.88619422912598,
+      "plain_median_ms": 28.01799774169922,
       "repetitions": 5,
       "samples": [
         {
-          "plain_ms": 33.88619422912598,
+          "plain_ms": 27.287006378173828,
           "rep": 0,
-          "temporal_ms": 97.92900085449219
+          "temporal_ms": 56.596994400024414
         },
         {
-          "plain_ms": 56.54311180114746,
+          "plain_ms": 27.647018432617188,
           "rep": 1,
-          "temporal_ms": 31.718015670776367
+          "temporal_ms": 27.608871459960938
         },
         {
-          "plain_ms": 28.091907501220703,
+          "plain_ms": 56.09416961669922,
           "rep": 2,
-          "temporal_ms": 28.61499786376953
+          "temporal_ms": 27.797937393188477
         },
         {
-          "plain_ms": 29.042959213256836,
+          "plain_ms": 46.582937240600586,
           "rep": 3,
-          "temporal_ms": 58.28213691711426
+          "temporal_ms": 69.65994834899902
         },
         {
-          "plain_ms": 57.2049617767334,
+          "plain_ms": 28.01799774169922,
           "rep": 4,
-          "temporal_ms": 28.142929077148438
+          "temporal_ms": 90.46196937561035
         }
       ],
-      "temporal_median_ms": 31.718015670776367
+      "temporal_median_ms": 56.596994400024414
     },
     {
       "events": 128,
-      "plain_median_ms": 230.73601722717285,
+      "plain_median_ms": 219.18797492980957,
       "repetitions": 5,
       "samples": [
         {
-          "plain_ms": 230.73601722717285,
+          "plain_ms": 217.91505813598633,
           "rep": 0,
-          "temporal_ms": 260.33806800842285
+          "temporal_ms": 219.70510482788086
         },
         {
-          "plain_ms": 234.73405838012695,
+          "plain_ms": 219.18797492980957,
           "rep": 1,
-          "temporal_ms": 224.23601150512695
+          "temporal_ms": 246.59204483032227
         },
         {
-          "plain_ms": 221.4498519897461,
+          "plain_ms": 190.4890537261963,
           "rep": 2,
-          "temporal_ms": 259.37914848327637
+          "temporal_ms": 222.14007377624512
         },
         {
-          "plain_ms": 236.0248565673828,
+          "plain_ms": 226.35984420776367,
           "rep": 3,
-          "temporal_ms": 206.8808078765869
+          "temporal_ms": 268.3429718017578
         },
         {
-          "plain_ms": 221.51899337768555,
+          "plain_ms": 227.34689712524414,
           "rep": 4,
-          "temporal_ms": 223.80495071411133
+          "temporal_ms": 221.8918800354004
         }
       ],
-      "temporal_median_ms": 224.23601150512695
+      "temporal_median_ms": 222.14007377624512
     }
   ],
   "scope": "finite-point-time-lens"

@@ -11,6 +11,9 @@ default:
 build:
     GERBIL_BUILD_CORES="${GERBIL_BUILD_CORES:-$(getconf NPROCESSORS_ONLN)}" gerbil build
 
+check-policy:
+    ASP_GERBIL_SCHEME_POLICY=1 GERBIL_BUILD_CORES="${GERBIL_BUILD_CORES:-$(getconf NPROCESSORS_ONLN)}" gerbil build
+
 test-file path:
     #!/usr/bin/env bash
     set -euo pipefail

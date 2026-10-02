@@ -31,7 +31,7 @@ jobs:
           gerbil deps --install
           gerbil env gerbil interactive -e '(begin (import :asp-gerbil-scheme/building-api :asp-gerbil-scheme/benchmark-api) (displayln "ascent-dependencies-ready"))'
       - name: Build Scheme package
-        run: gerbil build
+        run: ASP_GERBIL_SCHEME_POLICY=1 gerbil build
       - name: Qualify Scheme rules
         run: just test
       - name: Qualify ASCENT SS scenarios

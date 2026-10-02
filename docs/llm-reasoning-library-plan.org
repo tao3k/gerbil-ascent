@@ -357,10 +357,20 @@ The first receipt fails both verifiers against generation 1 even
 though its answer equals that generation's answer. The Rust test
 =support_withdrawal_matches_public_library_contract= checks full path,
 allowed and weighted sets plus the totals for the same four inputs,
-using a fresh Rust 0.8.0 program each time. These are matching corpus
-checks, not a cross-process differential run or a retained Rust
+using a fresh Rust 0.8.0 program each time. The Rust gate also directly
+compares the reference output of
+=ascent-support-study-output.ss=, which imports this qualification
+corpus. This is a finite differential gate, not a retained Rust
 deletion algorithm. The POO Flow model comparison for this corpus is
-still pending; the prior five source questions do not cover it.
+still pending; the prior five source questions do not cover it. Its
+four-call protocol compares candidate self-review with initial-source
+native feedback at an equal two-call budget per arm. Both final
+candidates are executed over all four states. ASCENT supplies the
+reference and inert candidate transport; Python Testing supplies no
+new Scheme program. The feedback omits held-out source outputs. Native
+validity and task shape are scored separately; a hypothetical fact may
+have valid evidence while violating this task. One pair cannot
+estimate general model benefit.
 
 Run native and Rust checks first, then freeze the POO Flow protocol
 against the exact qualified ASCENT head. Python Testing should

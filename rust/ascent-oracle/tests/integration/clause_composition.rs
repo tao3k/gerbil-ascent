@@ -283,6 +283,26 @@ fn support_withdrawal_matches_public_library_contract() {
             BTreeSet::from([(0, expected_total)])
         );
     }
+    let scheme = scheme_output("support-study-reference", "");
+    let expected = [
+        "0\tcomplete\t((0 20))\tvalid\tvalid\ttask-shape\t()",
+        "1\tcomplete\t((0 20))\tvalid\tvalid\ttask-shape\t()",
+        "2\tcomplete\t((0 8))\tvalid\tvalid\ttask-shape\t()",
+        "3\tcomplete\t((0 12))\tvalid\tvalid\ttask-shape\t()",
+        "stale\tcomplete\t((0 20))\tinvalid\tinvalid\ttask-shape\t()",
+        "END",
+    ];
+    assert_eq!(scheme.lines().collect::<Vec<_>>(), expected);
+    // Native validity of a hypothetical fact does not satisfy this task.
+    let outside = scheme_output("support-study-hypothetical", "");
+    for (generation, (line, total)) in outside.lines().take(4).zip([20, 20, 20, 12]).enumerate() {
+        assert_eq!(
+            line,
+            format!("{generation}\tcomplete\t((0 {total}))\tvalid\tvalid\toutside-task-shape\t()")
+        );
+    }
+    assert_eq!(outside.lines().count(), 6);
+    assert_eq!(outside.lines().last(), Some("END"));
 }
 
 #[test]

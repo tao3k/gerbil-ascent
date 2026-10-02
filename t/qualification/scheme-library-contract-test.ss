@@ -20,12 +20,16 @@
                  reasoning-verify-finite-receipt
                  reasoning-verify-stratified-receipt))
 
-(export scheme-library-contract-test)
+(export scheme-library-contract-test candidate weights support-phases
+        support-totals contract-snapshot)
 
 (def vertices '(0 1 2))
 (def possible-edges '((0 1) (0 2) (1 0) (1 2) (2 0) (2 1)))
 (def weights '((0 2) (1 4) (2 6)))
 (def roots '((0) (1) (2)))
+(def support-phases '(((0 1) (1 2) (0 2))
+                      ((0 1) (1 2)) ((0 1)) ((0 2))))
+(def support-totals '(20 20 8 12))
 
 (def (edges-for-mask mask)
   (let loop ((i 0) (rest possible-edges) (rows []))
@@ -219,9 +223,8 @@
          (same-set? (relational-program-query first 'summary)
                     expected-first) #t)))
     (test-case "alternate and last support withdrawal preserve snapshot binding"
-      (let* ((phases '(((0 1) (1 2) (0 2))
-                       ((0 1) (1 2)) ((0 1)) ((0 2))))
-             (totals '(20 20 8 12))
+      (let* ((phases support-phases)
+             (totals support-totals)
              (source-roots '((0)))
              (session
               (relational-open-program-session

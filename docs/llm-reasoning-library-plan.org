@@ -342,6 +342,26 @@ inside its supplied closed snapshot.
 execution scoring and separate diagnostic feedback; their published
 model scores do not transfer to this Library.
 
+The public contract now fixes four source states over nodes =0,1,2=,
+weights =2,4,6= and root =0=. The first graph contains edges =0->1=,
+=1->2= and =0->2=; removing =0->2= preserves the alternate chain;
+removing =1->2= removes the last support for =0->2=; replacing the
+source with only =0->2= produces a fresh result. Even weights are
+doubled before summation, so the expected totals are =20,20,8,12=.
+
+=scheme-library-contract-test.ss= compares direct, fragment and inert
+candidate results against an independent matrix model at each state,
+and checks the retained session and immutable first result. Each fresh
+candidate receipt separately passes finite and founded verification.
+The first receipt fails both verifiers against generation 1 even
+though its answer equals that generation's answer. The Rust test
+=support_withdrawal_matches_public_library_contract= checks full path,
+allowed and weighted sets plus the totals for the same four inputs,
+using a fresh Rust 0.8.0 program each time. These are matching corpus
+checks, not a cross-process differential run or a retained Rust
+deletion algorithm. The POO Flow model comparison for this corpus is
+still pending; the prior five source questions do not cover it.
+
 Run native and Rust checks first, then freeze the POO Flow protocol
 against the exact qualified ASCENT head. Python Testing should
 orchestrate real model calls and preserve their results; ASCENT owns

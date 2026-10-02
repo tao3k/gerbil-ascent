@@ -17,6 +17,7 @@
                  reasoning-receipt-bound?
                  reasoning-receipt-stratified
                  reasoning-stratified-evidence-status
+                 reasoning-verify-finite-receipt
                  reasoning-verify-stratified-receipt))
 
 (export scheme-library-contract-test)
@@ -127,19 +128,24 @@
        (root ?r) (reduce ?n (sum ?v) (weighted ?r ?v)))
      (query summary ?r ?n) (limits 16 64 128)))
 
+(def (contract-snapshot generation edges blocked supplied-weights supplied-roots)
+  (reasoning-source-snapshot
+   'contract generation
+   (list (list 'edge 2 edges) (list 'blocked 2 blocked)
+         (list 'weight 2 supplied-weights) (list 'root 1 supplied-roots))))
+
 (def (candidate-result generation edges blocked supplied-weights supplied-roots)
   (let* ((snapshot
-          (reasoning-source-snapshot
-           'contract generation
-           (list (list 'edge 2 edges) (list 'blocked 2 blocked)
-                 (list 'weight 2 supplied-weights)
-                 (list 'root 1 supplied-roots))))
+          (contract-snapshot generation edges blocked supplied-weights
+                             supplied-roots))
          (receipt (reasoning-attempt snapshot candidate 100000 20000)))
     (check-equal? (reasoning-receipt-status receipt) 'complete)
     (check-equal? (reasoning-receipt-bound? receipt snapshot candidate) #t)
     (check-equal?
      (reasoning-stratified-evidence-status
       (reasoning-receipt-stratified receipt)) 'complete)
+    (check-equal?
+     (reasoning-verify-finite-receipt receipt snapshot candidate 20000) 'valid)
     (check-equal?
      (reasoning-verify-stratified-receipt
       receipt snapshot candidate 20000) 'valid)
@@ -212,6 +218,44 @@
         (check-equal?
          (same-set? (relational-program-query first 'summary)
                     expected-first) #t)))
+    (test-case "alternate and last support withdrawal preserve snapshot binding"
+      (let* ((phases '(((0 1) (1 2) (0 2))
+                       ((0 1) (1 2)) ((0 1)) ((0 2))))
+             (totals '(20 20 8 12))
+             (source-roots '((0)))
+             (session
+              (relational-open-program-session
+               (native-program (car phases) '() weights source-roots)))
+             (first (relational-program-session-run session))
+             (snapshot
+              (contract-snapshot 0 (car phases) '() weights source-roots))
+             (receipt (reasoning-attempt snapshot candidate 100000 20000)))
+        (for-each
+         (lambda (generation edges total)
+           (let* ((expected (list (list 0 total)))
+                  (current
+                   (if (zero? generation) first
+                     (relational-program-transaction!
+                      session (list (cons 'edge edges))))))
+             (check-equal?
+              (model-summary edges '() weights source-roots) expected)
+             (check-all generation edges '() weights source-roots)
+             (check-equal?
+              (same-set? (relational-program-query current 'summary)
+                         expected) #t)))
+         '(0 1 2 3) phases totals)
+        (check-equal? (relational-program-query first 'summary) '((0 20)))
+        (check-equal? (reasoning-receipt-rows receipt) '((0 20)))
+        ;; Same answer after removing one support does not preserve authority.
+        (let (changed
+              (contract-snapshot 1 (cadr phases) '() weights source-roots))
+          (check-equal? (reasoning-receipt-bound? receipt changed candidate) #f)
+          (check-equal?
+           (reasoning-verify-finite-receipt receipt changed candidate 20000)
+           'invalid)
+          (check-equal?
+           (reasoning-verify-stratified-receipt receipt changed candidate 20000)
+           'invalid))))
     (test-case "resource exhaustion is never a completed answer"
       (let* ((snapshot
               (reasoning-source-snapshot

@@ -4,7 +4,7 @@
 //! Finite interaction of generators, guards, bindings, negation and aggregation.
 
 use super::common::scheme_output;
-use ascent::aggregators::count;
+use ascent::aggregators::{count, sum};
 use ascent::ascent;
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -227,6 +227,62 @@ fn model_study_negation_count_matches_finite_expectations() {
     assert_eq!(rows(&edges, &[(1, 3)]), blocked);
     assert_eq!(rows(&edges, &[]), unblocked);
     assert_eq!(rows(&[(1, 2), (1, 2), (2, 3)], &[]), unblocked);
+}
+
+// Same four source states as the Scheme public Library contract. Rust is
+// rebuilt for each state: retained deletion is not a Rust oracle guarantee.
+#[test]
+fn support_withdrawal_matches_public_library_contract() {
+    let phases: &[(&[Edge], &[Edge], u32)] = &[
+        (&[(0, 1), (1, 2), (0, 2)], &[(0, 1), (0, 2), (1, 2)], 20),
+        (&[(0, 1), (1, 2)], &[(0, 1), (0, 2), (1, 2)], 20),
+        (&[(0, 1)], &[(0, 1)], 8),
+        (&[(0, 2)], &[(0, 2)], 12),
+    ];
+    for &(edges, expected_path, expected_total) in phases {
+        ascent! {
+            relation edge(u32, u32);
+            relation blocked(u32, u32);
+            relation weight(u32, u32);
+            relation root(u32);
+            relation path(u32, u32);
+            relation allowed(u32, u32);
+            relation weighted(u32, u32);
+            relation summary(u32, u32);
+
+            path(x, y) <-- edge(x, y);
+            path(x, z) <-- path(x, y), edge(y, z);
+            allowed(x, y) <-- path(x, y), !blocked(x, y);
+            weighted(x, v) <-- allowed(x, y), weight(y, w),
+                if *w % 2 == 0, let v = *w + *w;
+            summary(r, n) <-- root(r), agg n = sum(v) in weighted(r, v);
+        }
+        let mut program = AscentProgram {
+            edge: edges.to_vec(),
+            weight: vec![(0, 2), (1, 4), (2, 6)],
+            root: vec![(0,)],
+            ..AscentProgram::default()
+        };
+        program.run();
+        let expected = expected_path.iter().copied().collect::<BTreeSet<_>>();
+        assert_eq!(program.path.into_iter().collect::<BTreeSet<_>>(), expected);
+        assert_eq!(
+            program.allowed.into_iter().collect::<BTreeSet<_>>(),
+            expected
+        );
+        let expected_weighted = expected_path
+            .iter()
+            .map(|&(from, to)| (from, 2 * [2, 4, 6][to as usize]))
+            .collect::<BTreeSet<_>>();
+        assert_eq!(
+            program.weighted.into_iter().collect::<BTreeSet<_>>(),
+            expected_weighted
+        );
+        assert_eq!(
+            program.summary.into_iter().collect::<BTreeSet<_>>(),
+            BTreeSet::from([(0, expected_total)])
+        );
+    }
 }
 
 #[test]

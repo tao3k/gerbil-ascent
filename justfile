@@ -375,3 +375,7 @@ oracle:
 
 timed-rows:
     @timeout 60s gerbil {{ gerbil_test_runtime_options }} t/qualification/ascent-timing-test.ss
+
+# Matched finite temporal metadata cost; no speedup claim or added threshold.
+temporal-scale:
+    @timeout 90s gerbil {{ gerbil_test_runtime_options }} t/qualification/ascent-temporal-scale-output.ss

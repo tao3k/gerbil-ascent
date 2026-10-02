@@ -419,7 +419,7 @@ late events and two independent supports before a model sees a temporal
 receipt. The source owner supplies clock conversion and cut identity;
 ASCENT cannot infer them from arrival order. POO Flow's observed
 closed-cut release-claim failures remain a model boundary result, not
-evidence that the temporal lens is already implemented or verified.
+evidence for the separate finite point-time lens implemented below.
 
 * Parser contract and discriminator qualification
 
@@ -486,3 +486,21 @@ correctness advantage in these two selected task pairs. General model benefit,
 verdict interpretation, temporal lens qualification, other replication
 families and release/deployment authority remain separate. No calls remain
 in the approved budget; the existing PRs remain open and unmerged.
+
+* Mainline temporal lens gate (2026-10-03)
+
+The next independent semantic slice is now implemented in =temporal/lens.ss=:
+POO values bind explicit source generation, clock, half-open valid window,
+knowledge-as-of and a caller-named parent-closed cut. The existing positive
+candidate evaluator produces finite/founded evidence. Eight integrated cases
+cover late events, dual/last-support withdrawal, immutable snapshots, open
+coverage, invalid cuts, horizon exhaustion, hypothetical isolation and receipt
+tampering. Two independent finite models cover 128 graph-order solves and
+128 cut/knowledge/window combinations. A matched 8/32/128-event scale recipe
+records metadata costs without a speedup claim.
+
+Empty complete queries retain valid finite closure and explicitly unsupported
+founded Why-Not evidence. No general temporal rule language, interval algebra,
+POO/MRR source authority bridge or real-world causal semantics is admitted.
+The [[file:temporal-causality-module-design.org][temporal design ledger]] distinguishes this implemented gate from its open
+extensions. Model calls remain separately budgeted; none were made here.

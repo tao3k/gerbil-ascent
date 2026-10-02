@@ -3,7 +3,7 @@
 
 #+TITLE: Temporal causality over Scheme ASCENT: module design gate
 #+DATE: 2026-09-30
-#+STATUS: research-backed design proposal; no temporal-causality API implemented
+#+STATUS: finite point-time lens implemented; broader interval and integration proposals remain open
 #+FILETAGS: :design:temporal:causality:scheme:
 
 * Decision to make
@@ -210,3 +210,85 @@ leaving wall-clock/calendar interpretation outside the module.
 The paper readings motivate testable design choices.  They are not evidence
 that the proposed module is implemented, performant or causally sound for a
 vertical domain.
+
+* Implemented finite point-time gate (2026-10-03)
+
+=temporal/lens.ss= exports POO value constructors =temporal-lens= and
+=temporal-source=, pure =temporal-solve=, =temporal-fork=, =temporal-compare=,
+=temporal-verify= and detached projection/accessor functions. The sketch above
+remains a broader design; it does not name these implemented functions.
+
+The first exchange contract is deliberately finite and explicit:
+
+- Source, cut, event and clock identities are non-reserved symbols supplied
+  by the caller. Source generation is an exact nonnegative integer. Identities
+  bind local data; they do not authenticate ownership or committed status.
+- Valid and knowledge coordinates are exact nonnegative positions in one
+  declared clock. Clock conversion, wall-clock/calendar interpretation and
+  external POO/MRR identity mapping remain with source owners. No conversion
+  or identity is inferred from arrival order.
+- A lens takes =generation clock start end as-of cut members horizon closed?=.
+  Its window is half-open =[start,end)=; horizon counts edges from the selected
+  root, with maximum 128. Cut members are unique, at most 256.
+- A source takes =identity generation clock events parents=. Event rows are
+  =(id valid-position-or-unknown knowledge-position)=; parent rows are
+  =(parent child)=, at most 512. IDs are unique; duplicate edges are rejected.
+  Constructors copy and canonically order rows/members. Projections return
+  fresh trees, so input or accessor-list mutation does not alter saved values.
+- Parent closure and cycles use the entire declared cut before window
+  projection. Missing members/parents, knowledge beyond as-of, unknown valid
+  time, declared open coverage or a horizon frontier produce =partial= with
+  a diagnostic frontier and no native receipt. Reversed parent valid-time
+  order, cycles, mismatched clock/generation and an outside-cut root reject.
+  Equal valid positions are allowed for explicitly declared parent edges;
+  incomparable events do not acquire edges or order from timestamps.
+- Only definitely eligible endpoint pairs feed the fixed positive recursive
+  ASCENT program. It uses the existing candidate admission, evaluator and
+  finite/founded producers/checkers, with fixed limits =1024/4096/4096= and
+  100000 work steps. Exhausted native evidence cannot become =complete=.
+  No temporal rule engine or negative-query extension was added.
+- Nonempty complete answers require independently valid finite and founded
+  evidence. Empty complete answers require valid finite closure; their
+  founded/Why-Not verdict remains =unsupported=. =temporal-evidence-verdicts=
+  reports these separately. =temporal-verify= checks every lens/source/root
+  coordinate and verifies the actual retained native receipt; a tampered
+  receipt or equal-answer new generation is invalid.
+- =temporal-fork= requires a complete base, a separately named source and cut,
+  and the same generation/clock/window/as-of/horizon policy. Its scope remains
+  =hypothetical= with base coordinates. It cannot update the base or be
+  compared to it as an observed correction. =temporal-compare= requires
+  complete answers, the same source/root/lens policy and scope, and a strictly
+  later generation; it returns added/removed tuples, not domain causal effects.
+
+The integrated qualification covers dual-support withdrawal, last-support
+removal, immutable old results, late knowledge, half-open endpoints, unknown
+coverage, cycles/order violations, horizon exhaustion, incomparable events,
+isolated forks, detached projections and native-receipt tampering. An
+independent Floyd-Warshall model checks all 64 ordered four-node DAGs under
+both source orders (128 solves). A separate source-selection model checks
+all 8 root-containing cuts x 4 knowledge-as-of positions x 4 valid-window
+starts (128 combinations). Source permutation preserves full value binding.
+
+The heap-fenced =just temporal-scale= uses a matched star corpus at 8, 32 and
+128 events, five alternating-order pairs after warmup. Both paths construct
+the same projected snapshot, run the same candidate and budgets, check exact
+row sets and verify finite/founded evidence once. The temporal path includes
+cut/window/knowledge projection, canonicalization and temporal value copying.
+Its 2026-10-03 local median milliseconds (plain / temporal) were
+=43.783/15.399=, =33.886/31.718= and =230.736/224.236=. GC/order noise is visible;
+these selected samples do not establish a speedup or a general overhead bound.
+The first exploratory run performed duplicate verifier work only in the
+temporal arm and is explicitly superseded; it is not a matched receipt.
+
+Qualification: eight cases passed with =MODULE-OK=, =HARNESS-OK= and final
+=OK=, including both 128-case model matrices. Strict startup/idle watchdogs
+remain five seconds. Rust Ascent has no oracle for the temporal lens; the
+independent finite models, not historical Rust parity, test this new contract.
+
+Remaining gates: interval endpoints and overlaps with uncertainty; general
+fragment/temporal-operator composition; explicit POO/MRR clock/cut/source
+admission bridge; configurable/expired budgets and Provider update failures;
+canonical labelled support projection beyond the retained native evidence;
+broader scales and retained deletion maintenance. No model calls, real-world
+causation, source authority, release approval or runtime effects follow from
+this implementation.

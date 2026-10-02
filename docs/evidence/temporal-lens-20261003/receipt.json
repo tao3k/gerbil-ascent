@@ -1,0 +1,126 @@
+{
+  "benchmark": "same star/snapshot/candidate/budgets, finite/founded verification once per path, 5 alternating pairs after warmup",
+  "cases": 8,
+  "cut_knowledge_window_cases": 128,
+  "date": "2026-10-03",
+  "files": {
+    "build-policy.log": "546af03a75f74a88aeb7a8513379b84589ae6abb19bb789a782aba870fa899a7",
+    "final-qualification-scale.log": "e56e6be2397463f3c71ba37ba607802c646af38912afd03829461911208bb1a3"
+  },
+  "limits": {
+    "derived": 4096,
+    "events": 256,
+    "evidence_steps": 100000,
+    "horizon": 128,
+    "input": 1024,
+    "output": 4096,
+    "parents": 512
+  },
+  "model_calls": 0,
+  "ordered_graph_solves": 128,
+  "policy_errors": 0,
+  "policy_findings": 0,
+  "policy_modules": 37,
+  "scale": [
+    {
+      "events": 8,
+      "plain_median_ms": 43.782949447631836,
+      "repetitions": 5,
+      "samples": [
+        {
+          "plain_ms": 48.23899269104004,
+          "rep": 0,
+          "temporal_ms": 15.464067459106445
+        },
+        {
+          "plain_ms": 16.358137130737305,
+          "rep": 1,
+          "temporal_ms": 15.424013137817383
+        },
+        {
+          "plain_ms": 44.54207420349121,
+          "rep": 2,
+          "temporal_ms": 15.275001525878906
+        },
+        {
+          "plain_ms": 16.190052032470703,
+          "rep": 3,
+          "temporal_ms": 15.398979187011719
+        },
+        {
+          "plain_ms": 43.782949447631836,
+          "rep": 4,
+          "temporal_ms": 14.922142028808594
+        }
+      ],
+      "temporal_median_ms": 15.398979187011719
+    },
+    {
+      "events": 32,
+      "plain_median_ms": 33.88619422912598,
+      "repetitions": 5,
+      "samples": [
+        {
+          "plain_ms": 33.88619422912598,
+          "rep": 0,
+          "temporal_ms": 97.92900085449219
+        },
+        {
+          "plain_ms": 56.54311180114746,
+          "rep": 1,
+          "temporal_ms": 31.718015670776367
+        },
+        {
+          "plain_ms": 28.091907501220703,
+          "rep": 2,
+          "temporal_ms": 28.61499786376953
+        },
+        {
+          "plain_ms": 29.042959213256836,
+          "rep": 3,
+          "temporal_ms": 58.28213691711426
+        },
+        {
+          "plain_ms": 57.2049617767334,
+          "rep": 4,
+          "temporal_ms": 28.142929077148438
+        }
+      ],
+      "temporal_median_ms": 31.718015670776367
+    },
+    {
+      "events": 128,
+      "plain_median_ms": 230.73601722717285,
+      "repetitions": 5,
+      "samples": [
+        {
+          "plain_ms": 230.73601722717285,
+          "rep": 0,
+          "temporal_ms": 260.33806800842285
+        },
+        {
+          "plain_ms": 234.73405838012695,
+          "rep": 1,
+          "temporal_ms": 224.23601150512695
+        },
+        {
+          "plain_ms": 221.4498519897461,
+          "rep": 2,
+          "temporal_ms": 259.37914848327637
+        },
+        {
+          "plain_ms": 236.0248565673828,
+          "rep": 3,
+          "temporal_ms": 206.8808078765869
+        },
+        {
+          "plain_ms": 221.51899337768555,
+          "rep": 4,
+          "temporal_ms": 223.80495071411133
+        }
+      ],
+      "temporal_median_ms": 224.23601150512695
+    }
+  ],
+  "scope": "finite-point-time-lens"
+}

@@ -26,6 +26,7 @@
     "program/operator"
     "program/operator-change"
     "program/operator-session"
+    "program/graph"
     "program/funs"
     "program/analysis"
     "program/summary"

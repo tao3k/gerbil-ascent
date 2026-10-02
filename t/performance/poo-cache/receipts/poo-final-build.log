@@ -1,0 +1,72 @@
+env -u SDKROOT -u CPATH -u LIBRARY_PATH -u C_INCLUDE_PATH -u CPLUS_INCLUDE_PATH -u MACOSX_DEPLOYMENT_TARGET COMPILER_PATH=/usr/bin GERBIL_BUILD_VERBOSE=3 gxi build.ss
+[qualification] RUNNING poo-heads-build (5s)
+[qualification] RUNNING poo-heads-build (10s)
+[qualification] RUNNING poo-heads-build (18s)
+... compile object
+[qualification] RUNNING poo-heads-build (23s)
+[qualification] RUNNING poo-heads-build (28s)
+... execute compile job (compile-file /private/tmp/ascent-poo-plc-gerbil/lib/clan/poo/object~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-poo-plc-gerbil/lib/clan/poo/object.scm)
+... execute compile job (compile-file /private/tmp/ascent-poo-plc-gerbil/lib/clan/poo/object~1.scm)
+... compile brace
+... execute compile job (compile-file /private/tmp/ascent-poo-plc-gerbil/lib/clan/poo/brace.scm)
+... execute compile job (compile-file /private/tmp/ascent-poo-plc-gerbil/lib/clan/poo/brace~1.scm)
+... compile cli
+... compile mop
+[qualification] RUNNING poo-heads-build (33s)
+... execute compile job (compile-file /private/tmp/ascent-poo-plc-gerbil/lib/clan/poo/cli~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-poo-plc-gerbil/lib/clan/poo/cli.scm)
+... execute compile job (compile-file /private/tmp/ascent-poo-plc-gerbil/lib/clan/poo/mop~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-poo-plc-gerbil/lib/clan/poo/mop.scm)
+... execute compile job (compile-file /private/tmp/ascent-poo-plc-gerbil/lib/clan/poo/mop~1.scm)
+... compile io
+... compile t/table-testing
+[qualification] RUNNING poo-heads-build (38s)
+... execute compile job (compile-file /private/tmp/ascent-poo-plc-gerbil/lib/clan/poo/io~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-poo-plc-gerbil/lib/clan/poo/io.scm)
+... execute compile job (compile-file /private/tmp/ascent-poo-plc-gerbil/lib/clan/poo/t/table-testing~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-poo-plc-gerbil/lib/clan/poo/t/table-testing.scm)
+... execute compile job (compile-file /private/tmp/ascent-poo-plc-gerbil/lib/clan/poo/io~1.scm)
+... compile number
+... execute compile job (compile-file /private/tmp/ascent-poo-plc-gerbil/lib/clan/poo/t/table-testing~1.scm)
+... execute compile job (compile-file /private/tmp/ascent-poo-plc-gerbil/lib/clan/poo/number~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-poo-plc-gerbil/lib/clan/poo/number.scm)
+... compile type
+... compile fq
+... compile polynomial
+... compile table
+... compile debug
+... compile fun
+[qualification] RUNNING poo-heads-build (43s)
+... execute compile job (compile-file /private/tmp/ascent-poo-plc-gerbil/lib/clan/poo/type~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-poo-plc-gerbil/lib/clan/poo/type.scm)
+... execute compile job (compile-file /private/tmp/ascent-poo-plc-gerbil/lib/clan/poo/type~1.scm)
+... execute compile job (compile-file /private/tmp/ascent-poo-plc-gerbil/lib/clan/poo/fq~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-poo-plc-gerbil/lib/clan/poo/fq.scm)
+... execute compile job (compile-file /private/tmp/ascent-poo-plc-gerbil/lib/clan/poo/polynomial~0.scm)
+... compile rationaldict
+... compile trie
+[qualification] RUNNING poo-heads-build (48s)
+[qualification] RUNNING poo-heads-build (53s)
+[qualification] RUNNING poo-heads-build (58s)
+[qualification] RUNNING poo-heads-build (63s)
+[qualification] RUNNING poo-heads-build (68s)
+[qualification] RUNNING poo-heads-build (73s)
+[qualification] RUNNING poo-heads-build (78s)
+[qualification] RUNNING poo-heads-build (83s)
+... execute compile job (compile-file /private/tmp/ascent-poo-plc-gerbil/lib/clan/poo/polynomial.scm)
+... execute compile job (compile-file /private/tmp/ascent-poo-plc-gerbil/lib/clan/poo/debug~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-poo-plc-gerbil/lib/clan/poo/debug.scm)
+... execute compile job (compile-file /private/tmp/ascent-poo-plc-gerbil/lib/clan/poo/fun~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-poo-plc-gerbil/lib/clan/poo/fun.scm)
+... execute compile job (compile-file /private/tmp/ascent-poo-plc-gerbil/lib/clan/poo/polynomial~1.scm)
+... execute compile job (compile-file /private/tmp/ascent-poo-plc-gerbil/lib/clan/poo/table~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-poo-plc-gerbil/lib/clan/poo/table.scm)
+... execute compile job (compile-file /private/tmp/ascent-poo-plc-gerbil/lib/clan/poo/debug~1.scm)
+... execute compile job (compile-file /private/tmp/ascent-poo-plc-gerbil/lib/clan/poo/table~1.scm)
+... execute compile job (compile-file /private/tmp/ascent-poo-plc-gerbil/lib/clan/poo/rationaldict~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-poo-plc-gerbil/lib/clan/poo/rationaldict.scm)
+... execute compile job (compile-file /private/tmp/ascent-poo-plc-gerbil/lib/clan/poo/trie~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-poo-plc-gerbil/lib/clan/poo/trie.scm)
+... execute compile job (compile-file /private/tmp/ascent-poo-plc-gerbil/lib/clan/poo/trie~1.scm)
+[qualification] END poo-heads-build exit=0 (88s)

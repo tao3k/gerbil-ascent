@@ -1,0 +1,26 @@
+test -f "t/mop-test.ss"
+just _test "t/mop-test.ss" 90
+[qualification] RUNNING final-mop (5s)
+[qualification] RUNNING final-mop (10s)
+[qualification] RUNNING final-mop (15s)
+HARNESS ("t/mop-test.ss")
+MODULE t/mop-test.ss
+SUITE test suite for clan/poo/mop
+CASE simple tests
+CASE-OK simple tests
+CASE source expressions extend through prototype slots
+CASE-OK source expressions extend through prototype slots
+CASE class tests
+CASE-OK class tests
+CASE custom slot definitions observe incremental state
+CASE-OK custom slot definitions observe incremental state
+CASE Lenses
+CASE-OK Lenses
+CASE class JSON string round trip preserves the object contract
+CASE-OK class JSON string round trip preserves the object contract
+SUITE-OK test suite for clan/poo/mop
+MODULE-OK t/mop-test.ss
+HARNESS-OK ("t/mop-test.ss")
+OK
+[qualification] RUNNING final-mop (20s)
+[qualification] END final-mop exit=0 (25s)

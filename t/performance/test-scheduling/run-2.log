@@ -1,0 +1,4 @@
+python3 tools/test_execution.py parallel --jobs 2
+[parallel-test] END t/qualification/ascent-strata-test.ss exit=0 log=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/parallel-1790955403824990000/ascent-strata-test.log
+[parallel-test] RUNNING remaining=1 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/parallel-1790955403824990000
+[parallel-test] END t/qualification/ascent-scc-summary-test.ss exit=0 log=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/parallel-1790955403824990000/ascent-scc-summary-test.log

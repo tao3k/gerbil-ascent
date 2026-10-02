@@ -1,0 +1,17 @@
+[test-lane] START exclusive just
+[ascent-test] START t/fixtures/std-test-serial-test.ss
+HARNESS ("t/fixtures/std-test-serial-test.ss")
+MODULE t/fixtures/std-test-serial-test.ss
+SUITE native std/test scheduling
+CASE first Case finishes on its harness thread
+CASE-OK first Case finishes on its harness thread
+CASE second Case starts after the first finishes
+CASE-OK second Case starts after the first finishes
+CASE third Case observes the complete ordered execution
+CASE-OK third Case observes the complete ordered execution
+SUITE-OK native std/test scheduling
+MODULE-OK t/fixtures/std-test-serial-test.ss
+HARNESS-OK ("t/fixtures/std-test-serial-test.ss")
+OK
+[ascent-test] PASS t/fixtures/std-test-serial-test.ss (1s)
+[test-lane] END exclusive exit=0

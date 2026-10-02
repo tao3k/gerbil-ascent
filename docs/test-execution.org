@@ -1,0 +1,131 @@
+#+title: Native test execution and process isolation
+
+* Native execution
+
+In the installed Gerbil 0.19 std/test implementation, =do-subtest!=
+iterates a list synchronously. Harness modules, module suites, and suite
+Cases run in sequence. =test-case!= calls the Case thunk on that harness
+thread. There is no Case-level parallel option in this implementation.
+=t/fixtures/std-test-serial-test.ss= verifies the thread and observed order
+through the real =just test-file= entrypoint.
+
+Pinned Core =e85fd45303b208b23e5957fd316e7004994109a4= wraps this Case,
+without replacing native discovery or assertions. The memory watchdog
+uses a separate sampler thread and can interrupt the harness thread.
+Heap counters are process-wide. With =collect-before-sample?=#t= the
+sampler collects the process heap; these pauses count toward elapsed time.
+A sampler thread does not make Cases parallel.
+
+* Explicit policy
+
+=tools/test_execution.py= owns the outer process lease. Native std/test
+still owns Case registration, assertion semantics and reporting.
+=just test= now discovers every qualification module and runs a mixed
+plan: admitted semantic modules use independent processes, followed by
+exclusive modules after that pool drains. Default concurrency is resolved
+by the pinned ASP Build API's =initialize-native-build-core-capacity!=:
+a positive =GERBIL_BUILD_CORES= wins, otherwise the native host CPU count
+is used. =tools/native_test_capacity.ss= calls that native projection;
+the Python scheduler does not duplicate its environment parsing.
+=just test 2= explicitly uses two workers, and =just test 1= uses one.
+There is no fixed four-worker cap. Active workers are the smaller of the
+resolved job count and the number of eligible modules.
+Every module has its own retained log. Failures are accumulated and make
+the complete invocation fail; a failed module does not silently remove
+later modules from the plan. =just test-serial= retains the former batched
+runner for comparisons. =just test-parallel 4= runs only the admitted set.
+
+The shared lane currently admits these seven modules:
+
+- =ascent-binary-program-test.ss=
+- =ascent-closure-candidates-test.ss=
+- =ascent-poo-primitives-test.ss=
+- =ascent-request-projection-test.ss=
+- =ascent-table-expression-test.ss=
+- =ascent-strata-test.ss=
+- =ascent-scc-summary-test.ss=
+
+These exercise isolated object, table, graph and result values, without
+external mutable resources or custom tight timing/forced collection profiles.
+Their internal Cases remain serial. Unlisted =just test-file= modules remain
+exclusive; classification expansion requires inspection and a real parallel
+run. Currently the full discovery set is 37 modules: seven admitted and
+30 exclusive, including custom timing/GC and unaudited modules.
+
+Builds, policy builds, quick tests, operator probes, and primary performance
+recipes use the exclusive lane. A benchmark holds its lease through compilation,
+warmup and measurement. Nested test entrypoints reuse an inherited lock
+file descriptor; an environment flag alone cannot skip lock acquisition.
+This prevents a nested performance Case from deadlocking on its parent.
+
+The lease coordinates these repository entrypoints. Direct Gerbil commands,
+private underscored recipes, other repositories and unrelated host workloads
+are outside that coordination boundary. It is not a host-wide CPU reservation.
+Lock waits fail after 120 seconds and emit progress every five seconds;
+measured Case time starts inside the harness after the lease is acquired.
+No original Case or SS budget is relaxed.
+
+* Verification
+
+=python3 -m unittest discover -s tools/tests -v= exercises actual child
+processes for semantic overlap, exclusive barriers, reentrant leases,
+worker failure aggregation and logs, unknown-module exclusion, and
+termination/lease release. Eight checks pass, including a mixed plan that
+runs every discovered fixture module once and preserves a worker failure. Real native std/test and
+nested native entrypoints both pass all three Cases and harness markers.
+The scheduling policy makes no full-suite or end-to-end speedup claim.
+
+The pinned dependency environment was restored in
+=/private/tmp/ascent-test-scheduling-gerbil= without changing gerbil.pkg.
+The explicit 12-core main build passed in about 50 s. The frozen strata
+fixture was compiled using its existing std/make builder into that same
+prefix. With =GERBIL_PATH= set to this prefix, the originally admitted two modules
+passed all four historical runs in order =jobs=1,2,2,1=. Each module retains all Case
+receipts, MODULE-OK, HARNESS-OK, final OK and exit 0.
+
+| run | workers | complete entrypoint wall time s | exit |
+|-----+---------+---------------------------------+------|
+| 1 | 1 | 15.41 | 0 |
+| 2 | 2 | 4.25 | 0 |
+| 3 | 2 | 14.27 | 0 |
+| 4 | 1 | 21.43 | 0 |
+
+The timings include process startup, module admission, assertion execution
+and output. They are four harness observations, not a 1000-sample performance
+gate or a stable acceleration factor. Raw logs and source hashes are retained
+under [[file:../t/performance/test-scheduling/][test-scheduling receipts]]. The previously failed
+rule-program duration and SS p95 boundaries are unchanged and remain open.
+
+* Expanded default plan
+
+The installed =std/test/unit.ss= macro accepts a description and body;
+=TestSuite= has the standard TestObject fields and no execution mode.
+=TestConfig= in =std/test/base.ss= has only verbosity and capture-output.
+=do-subtest!= loops synchronously through subtests. The installed gxtest
+options include verbosity, suite filtering, and features, with no jobs or
+parallel setting. The [[https://gerbil.scheme.org/reference/std/test.html][official library reference]] likewise documents
+=test-suite= as a Case grouping interface. This is a finding about the
+installed version, not a claim about every future Gerbil implementation.
+
+The expanded seven-module, four-worker run passes all Case receipts and
+MODULE-OK/HARNESS-OK/OK markers, each module and the parent exiting 0.
+The eight scheduling checks verify mixed-plan exactly-once discovery and
+failure accumulation. The complete 37-module mixed plan has not been
+qualified green; its known original duration/SS failures remain separate.
+No fixed whole-suite acceleration factor is claimed from this run.
+
+* Builder capacity integration
+
+The earlier four-worker limit was a separate local scheduling choice and
+has been removed. Builder worker count and test process count are separate
+execution mechanisms; the test scheduler now consumes the same native
+capacity projection by default. An explicit test argument overrides that
+one invocation without changing the build environment.
+
+On this machine, =GERBIL_BUILD_CORES=12= resolves to 12 and
+=GERBIL_BUILD_CORES=0= falls back to the native 12-core host count.
+The real =GERBIL_BUILD_CORES=12 just test-parallel= invocation reports
+=configured-jobs=12 workers=7 modules=7= and passes all seven modules.
+Ten scheduling checks pass, including a count above four, use of the native
+projection, and explicit test argument precedence. The earlier four-worker
+logs remain historical receipts rather than the current default policy.

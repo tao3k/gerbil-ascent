@@ -1,0 +1,99 @@
+GERBIL_BUILD_CORES="${GERBIL_BUILD_CORES:-$(getconf NPROCESSORS_ONLN)}" gerbil build
+[qualification] RUNNING build (5s)
+[qualification] RUNNING build (10s)
+[qualification] RUNNING build (15s)
+[qualification] RUNNING build (20s)
+[qualification] RUNNING build (26s)
+... compile program/funs
+... compile program/objects
+[qualification] RUNNING build (31s)
+[qualification] RUNNING build (36s)
+[qualification] RUNNING build (41s)
+... execute compile job (compile-file /private/tmp/ascent-v0121-gerbil/lib/gerbil-ascent/program/funs~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-v0121-gerbil/lib/gerbil-ascent/program/funs.scm)
+... execute compile job (compile-file /private/tmp/ascent-v0121-gerbil/lib/gerbil-ascent/program/objects~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-v0121-gerbil/lib/gerbil-ascent/program/objects.scm)
+... compile program/planning
+... compile program/scheme-checked
+... compile program/syntax
+[qualification] RUNNING build (46s)
+[qualification] RUNNING build (51s)
+... execute compile job (compile-file /private/tmp/ascent-v0121-gerbil/lib/gerbil-ascent/program/planning~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-v0121-gerbil/lib/gerbil-ascent/program/planning.scm)
+... compile program/evaluate
+... execute compile job (compile-file /private/tmp/ascent-v0121-gerbil/lib/gerbil-ascent/program/syntax.scm)
+... execute compile job (compile-file /private/tmp/ascent-v0121-gerbil/lib/gerbil-ascent/program/scheme-checked~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-v0121-gerbil/lib/gerbil-ascent/program/scheme-checked.scm)
+... compile program/operator
+... compile candidate/program
+[qualification] RUNNING build (56s)
+... execute compile job (compile-file /private/tmp/ascent-v0121-gerbil/lib/gerbil-ascent/program/evaluate~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-v0121-gerbil/lib/gerbil-ascent/program/evaluate.scm)
+... execute compile job (compile-file /private/tmp/ascent-v0121-gerbil/lib/gerbil-ascent/program/syntax~1.scm)
+... compile program/session
+... execute compile job (compile-file /private/tmp/ascent-v0121-gerbil/lib/gerbil-ascent/candidate/program~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-v0121-gerbil/lib/gerbil-ascent/candidate/program.scm)
+... execute compile job (compile-file /private/tmp/ascent-v0121-gerbil/lib/gerbil-ascent/program/operator~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-v0121-gerbil/lib/gerbil-ascent/program/operator.scm)
+... compile candidate/funs
+... execute compile job (compile-file /private/tmp/ascent-v0121-gerbil/lib/gerbil-ascent/program/operator~1.scm)
+... compile program/operator-change
+... execute compile job (compile-file /private/tmp/ascent-v0121-gerbil/lib/gerbil-ascent/program/session~0.scm)
+... compile program/scheme-admission
+... execute compile job (compile-file /private/tmp/ascent-v0121-gerbil/lib/gerbil-ascent/program/session.scm)
+... execute compile job (compile-file /private/tmp/ascent-v0121-gerbil/lib/gerbil-ascent/candidate/funs~0.scm)
+... compile candidate/provenance
+... compile candidate/finite-evidence
+... compile program/scheme-language
+... compile program/operator-session
+... compile candidate/nonmembership
+... compile candidate/stratified-proof
+[qualification] RUNNING build (61s)
+[qualification] RUNNING build (66s)
+... execute compile job (compile-file /private/tmp/ascent-v0121-gerbil/lib/gerbil-ascent/candidate/funs.scm)
+... execute compile job (compile-file /private/tmp/ascent-v0121-gerbil/lib/gerbil-ascent/program/operator-change~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-v0121-gerbil/lib/gerbil-ascent/program/operator-change.scm)
+... execute compile job (compile-file /private/tmp/ascent-v0121-gerbil/lib/gerbil-ascent/program/scheme-admission~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-v0121-gerbil/lib/gerbil-ascent/program/scheme-admission.scm)
+... execute compile job (compile-file /private/tmp/ascent-v0121-gerbil/lib/gerbil-ascent/program/scheme-admission~1.scm)
+... execute compile job (compile-file /private/tmp/ascent-v0121-gerbil/lib/gerbil-ascent/candidate/provenance~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-v0121-gerbil/lib/gerbil-ascent/candidate/provenance.scm)
+... execute compile job (compile-file /private/tmp/ascent-v0121-gerbil/lib/gerbil-ascent/candidate/finite-evidence~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-v0121-gerbil/lib/gerbil-ascent/candidate/finite-evidence.scm)
+... execute compile job (compile-file /private/tmp/ascent-v0121-gerbil/lib/gerbil-ascent/candidate/provenance~1.scm)
+... execute compile job (compile-file /private/tmp/ascent-v0121-gerbil/lib/gerbil-ascent/candidate/finite-evidence~1.scm)
+... compile candidate/stratified-producer
+... compile program/interface
+... compile candidate/reasoning
+[qualification] RUNNING build (71s)
+[qualification] RUNNING build (76s)
+... execute compile job (compile-file /private/tmp/ascent-v0121-gerbil/lib/gerbil-ascent/program/scheme-language.scm)
+... execute compile job (compile-file /private/tmp/ascent-v0121-gerbil/lib/gerbil-ascent/program/operator-session~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-v0121-gerbil/lib/gerbil-ascent/program/operator-session.scm)
+... execute compile job (compile-file /private/tmp/ascent-v0121-gerbil/lib/gerbil-ascent/candidate/nonmembership~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-v0121-gerbil/lib/gerbil-ascent/candidate/nonmembership.scm)
+... execute compile job (compile-file /private/tmp/ascent-v0121-gerbil/lib/gerbil-ascent/candidate/stratified-proof~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-v0121-gerbil/lib/gerbil-ascent/candidate/stratified-proof.scm)
+... execute compile job (compile-file /private/tmp/ascent-v0121-gerbil/lib/gerbil-ascent/program/scheme-language~1.scm)
+... execute compile job (compile-file /private/tmp/ascent-v0121-[qualification] RUNNING build (81s)
+[qualification] RUNNING build (86s)
+[qualification] RUNNING build (91s)
+[qualification] RUNNING build (96s)
+[qualification] RUNNING build (101s)
+[qualification] RUNNING build (106s)
+[qualification] RUNNING build (112s)
+[qualification] RUNNING build (117s)
+[qualification] RUNNING build (122s)
+[qualification] RUNNING build (127s)
+gerbil/lib/gerbil-ascent/program/operator-session~1.scm)
+... execute compile job (compile-file /private/tmp/ascent-v0121-gerbil/lib/gerbil-ascent/candidate/nonmembership~1.scm)
+... execute compile job (compile-file /private/tmp/ascent-v0121-gerbil/lib/gerbil-ascent/program/interface.scm)
+... execute compile job (compile-file /private/tmp/ascent-v0121-gerbil/lib/gerbil-ascent/candidate/stratified-producer~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-v0121-gerbil/lib/gerbil-ascent/candidate/stratified-producer.scm)
+... execute compile job (compile-file /private/tmp/ascent-v0121-gerbil/lib/gerbil-ascent/candidate/reasoning~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-v0121-gerbil/lib/gerbil-ascent/candidate/reasoning.scm)
+... execute compile job (compile-file /private/tmp/ascent-v0121-gerbil/lib/gerbil-ascent/candidate/reasoning~1.scm)
+... build in current directory
+*** WARNING module std/net/request is DEPRECATED and will be removed in the future
+[qualification] RUNNING build (132s)
+[qualification] END build exit=0 (137s)

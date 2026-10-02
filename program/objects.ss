@@ -73,10 +73,10 @@
 
 (def (indexed-atom plan bound)
   (let loop ((terms (vector-ref plan 1)) (column 0)
-             (columns []) (seen-bound bound))
+             (columns []) (seen-bound bound) (bindings []))
     (if (null? terms)
       (vector (vector-ref plan 0) (vector-ref plan 1)
-              (reverse columns))
+              (reverse columns) (reverse bindings))
       (let* ((term (car terms))
              (kind (car term))
              (inputs (and (eq? kind 'expression)
@@ -94,7 +94,15 @@
                ((eq? kind 'variable) (cons (cdr term) seen-bound))
                ((eq? kind 'pattern)
                 (append (pattern-outputs term) seen-bound))
-               (else seen-bound)))))))
+               (else seen-bound))
+              ;; Admission establishes which names can already occur in the
+              ;; environment. Only a first variable occurrence can skip assq;
+              ;; repeats and names introduced by a pattern still compare.
+              (cons (if (and (eq? kind 'variable)
+                             (not (memq (cdr term) seen-bound)))
+                      (cons 'fresh-variable (cdr term))
+                      term)
+                    bindings))))))
 
 (def (atom-clause-plan clause atom-plan bound)
   (let* ((plan (indexed-atom (atom-plan clause) bound))

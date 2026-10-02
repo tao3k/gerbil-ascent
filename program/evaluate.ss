@@ -692,7 +692,7 @@
                                                (= depth delta-at))))
                       (for-each
                        (lambda (row)
-                         (let (bound (gerbil-ascent-bind-row (vector-ref atom 1)
+                         (let (bound (gerbil-ascent-bind-row (vector-ref atom 3)
                                                 row environment))
                            (when bound
                              (visit-body (cdr body) delta-at (+ depth 1)
@@ -703,7 +703,7 @@
                            (rows (indexed-rows atom environment #f)))
                       (unless (ormap
                                (lambda (row)
-                                 (gerbil-ascent-bind-row (vector-ref atom 1)
+                                 (gerbil-ascent-bind-row (vector-ref atom 3)
                                            row environment))
                                rows)
                         (visit-body (cdr body) delta-at depth
@@ -715,7 +715,7 @@
                            (tuples []))
                       (for-each
                        (lambda (row)
-                         (let (bound (gerbil-ascent-bind-row (vector-ref atom 1)
+                         (let (bound (gerbil-ascent-bind-row (vector-ref atom 3)
                                                 row environment))
                            (when bound
                              (set! tuples
@@ -809,11 +809,29 @@
                                     heads)))
                      (for-each
                       (lambda (delta-at)
-                        (visit-body body delta-at 0 []
-                                    (lambda (environment)
-                                      (for-each
-                                       (lambda (head) (emit! head environment))
-                                       heads))))
+                        ;; An empty second-atom frontier cannot produce rows.
+                        ;; Skip its variable-only first atom: it has no index
+                        ;; columns, expressions, patterns or callback clauses.
+                        ;; The empty pivot itself uses the raw-row path, so
+                        ;; no Provider lookup/build callback is skipped either.
+                        (unless
+                            (and (= delta-at 1)
+                                 (pair? body) (pair? (cdr body))
+                                 (eq? (vector-ref (car body) 0) 'atom)
+                                 (eq? (vector-ref (cadr body) 0) 'atom)
+                                 (let (first-atom (vector-ref (car body) 1))
+                                   (and (null? (vector-ref first-atom 2))
+                                        (andmap (lambda (term)
+                                                  (eq? (car term) 'variable))
+                                                (vector-ref first-atom 1))))
+                                 (= (vector-ref delta-size
+                                      (vector-ref (vector-ref (cadr body) 1) 0))
+                                    0))
+                          (visit-body body delta-at 0 []
+                                      (lambda (environment)
+                                        (for-each
+                                         (lambda (head) (emit! head environment))
+                                         heads)))))
                       positions)))
                  (when started
                    (let (index (vector-ref rule 3))

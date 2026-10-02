@@ -82,6 +82,46 @@ invariants become easier to see and the errors stay stable.
 Relevant qualification: repeated-variable, lattice, pattern, rule,
 and invalid-program fixtures. Record values, row order, and errors.
 
+** Checked binding and identity storage
+
+=program/objects.ss= now retains raw atom terms for admission and
+index-key planning, and prepares a separate binding-term list. A
+=fresh-variable= term is permitted only when the name is absent from
+earlier clauses and earlier terms of this atom. At row time that term
+conses its binding directly. Repeated variables, pattern outputs,
+expressions, and externally bound names retain the original checks.
+This removes environment searches for first variable occurrences;
+it does not change the public term grammar.
+
+A separate experiment bypassed identity storage wrapping for the exact
+built-in Set Provider without field callbacks. It was reverted because
+matched whole-solve measurements did not qualify a stable gain. The
+retained evaluator changes only the three atom-binding calls to use
+prepared terms. Storage admission, duplicate accounting, budgets,
+custom Providers, and field callbacks keep their original paths.
+
+The frozen binder and evaluator in =t/qualification/= come from
+=74f0046bb6137b4fce22db5ae398b9812734c137=. The evaluator oracle
+uses original raw binding terms, while both evaluators share current
+declaration metadata. The finite binder comparison covers 99,999
+combinations of term shape, binary rows, and prior environments,
+plus pattern, expression, false-value, and error goldens. Source
+admission qualification covers duplicate order/counts, row mutation,
+nullary facts, budgets, custom Providers, and stateful callbacks.
+
+Performance qualification uses =just binding-benchmark= with identical
+optimizing compilation and 1000 alternating old/new pairs per case.
+It excludes cold declaration construction. Wide binding kernels
+require at least 900 paired wins and median nonregression;
+individual solves are median nonregression controls.
+The initial individual projection measurements failed the experimental
+900-win gate (854/1000 and 882/1000 in the last initial run). An
+eight-evaluation batching experiment also failed at 705/1000 wins for
+width 16 and timed out before completing width 32. Neither experiment
+supports a retained whole-solve optimization. No stable
+individual-solve speedup or tail-latency improvement is claimed.
+The original SS 1000-sample, 2 ms p95 gate remains unchanged.
+
 * Feature: indexed relations
 
 =table/funs.ss= builds bucket order by reversing the current relation
@@ -99,19 +139,12 @@ BYODS cases plus a matched wide-row probe before choosing an algorithm.
 
 * Feature: stratification and dependency cycles
 
-=program/funs.ss= performs stratum relaxation and, on an invalid
-strict cycle, searches dependency edges repeatedly to classify the
-error. This search is mainly a diagnostic path. =program/summary.ss=
-already uses =append-map= and =delete-duplicates/hash= for static SCC
-metadata and implements Tarjan because =:std/struct/dag= rejects
-cyclic input. The two graphs have different output contracts.
-
-A shared adjacency or SCC representation is justified only if it
-reduces conceptual state while retaining minimum strata and the
-aggregate, negation, and lattice-projection error classification and
-current encountered-edge ordering of diagnostics.
-Benchmark it on the same rule graphs; do not turn an error-path cost
-into an unsupported runtime speedup claim.
+The initial implementation used stratum relaxation and repeated
+reachability searches for strict-cycle diagnostics. The second round
+below replaces it with SCC condensation while preserving minimum
+strata, diagnostic kind, and encountered-edge ordering. The rule
+summary and relation stratifier share Tarjan traversal but retain
+their different vertices and output contracts.
 
 * Feature: finite selection and admission
 
@@ -197,6 +230,108 @@ The same snapshot-copy pattern appears in =candidate/reasoning.ss= and
 =program/scheme-admission.ss=. Its presence across those boundaries
 is evidence of an isolation rule, not a reason for a blanket rewrite.
 
+* Second round: SCC stratification and reusable graph analysis
+
+The installed Gerbil Compiler gives three concrete lessons for this
+implementation. =compiler/optimize-xform.ss:16= registers handlers by AST
+form with =defcompile-method=; =compiler/optimize.ss:27= creates pass-local
+mutator and type tables before traversal; =compiler/optimize-call.ss:43=
+specializes calls after resolving their operators and checking safety.
+The applicable pattern is to move declaration work into checked planning
+and keep mutable execution state local. The compiler's method hierarchy
+and unchecked-call machinery are not needed for this graph algorithm.
+
+Previously =program/funs.ss= relaxed every dependency edge until the
+strata stopped changing. A reverse-ordered strict chain required one
+pass per relation, giving worst-case =O(V*E)= work. Cycle diagnostics
+then searched reachability separately for strict edges.
+
+=program/graph.ss= now owns the Tarjan implementation formerly embedded
+in =program/summary.ss=. Both the rule summary and relation stratifier
+use it with their own vertices and edge metadata. A strict edge within
+one SCC is rejected, selecting the first invalid dependency in the old
+ordering to preserve aggregate, negation, and lattice-projection error
+messages. Every positive SCC receives the maximum incoming level; a
+single source-before-consumer pass propagates the minimum strata.
+Graph analysis and propagation take =O(V+E)= work. Programs containing
+only positive dependencies use stratum zero without building SCCs.
+
+The frozen relaxation oracle in
+=t/qualification/ascent-strata-fixture.ss= comes from commit =74f0046=.
+The qualification test compares 6,656 three-node graph configurations,
+including single strict edges, mixed strict kinds, and lattice
+projections. Additional checks cover a positive SCC with a strict
+incoming edge, empty declarations, and duplicate dependencies. All
+strata and concrete cycle diagnostics matched the oracle.
+
+=just strata-benchmark= compiles current planning and the oracle into one
+isolated output directory with identical optimizing =std/make= settings.
+It alternates old/new execution for
+1000 samples per case, checks exact strata outside every timed span,
+and retains all samples plus source hashes. The 32-relation positive
+case batches 32 calls per sample to resolve sub-microsecond differences;
+strict chains use one call per sample. The matched gate requires no
+median regression and at least 900/1000 wins for strict chains.
+
+Two consecutive runs passed all four matched cases. Strict-chain
+planning medians improved from 5 to 3 us at 32 relations, from 59 to
+10 us at 128 relations, and from 235/230 to 20 us at 256 relations.
+Each strict-chain case favored the candidate in 972--985 of 1000
+pairs. The positive-case median also improved.
+=t/performance/strata/README.org= records the
+protocol and links the retained raw samples and source manifests.
+
+These receipts measure planning over prebuilt lowered rules. They
+exclude declaration construction, POO admission, fixed-point solving,
+and process startup. They do not establish a full evaluator speedup.
+The existing =ascent-indexed-joins= SS fixture still uses 1000 samples;
+a local run completed in 28 s with correct rows but p95 =10.372 ms=,
+which failed its unchanged =2 ms= gate under heavy host load.
+
+An earlier experiment cached selected atom terms alongside index
+columns. The literal/expression/variable regression passed, but there
+was no matched full-solve gain, so the production and fixture changes
+were reverted. The retained row-key implementation and index plans
+remain as at =74f0046=.
+
+* Test startup and the POO Flow Core Case dependency
+
+The installed Gerbil v0.19 =tools/gxtest.ss= calls =import-module=
+with evaluation for each test source before it prints =HARNESS=. Its
+=std/test= files declare =test-suite= and =test-case= directly. The
+installed =gerbil/main.ss= maps =gerbil test= directly to =gxtest=,
+while =gerbil env= invokes =gxpkg env= first. In =std/make.ss=,
+=GERBIL_BUILD_CORES= defaults to zero workers unless set explicitly;
+the Ascent =just build= recipe already sets the detected core count.
+
+Timestamped local runs separate the phases. A minimal native Case
+reached =HARNESS= at 9.1 s and exited at 11.3 s. Importing POO Flow
+Core's =testing-case= without using its Case macro reached =HARNESS=
+at 22.4 s and exited at 32.4 s. The indexed-program module reached
+=HARNESS= at 33.5 s, completed its eight Cases at 35.5 s, and exited
+at 45.9 s. An installed Gerbil =std/string/misc-test.ss= module using
+the same =gerbil test= command reached =HARNESS= at 20.2 s and exited
+immediately after its 31 Cases. These observations locate substantial
+time before Case execution and after =OK=; they do not attribute the
+time to a particular library. Later host load exceeded 100, so the
+isolated Core-module split is not yet a measured startup improvement.
+
+The Core checkout has its own capitalized =Justfile=. Its test recipe
+used =gerbil env gxtest=; the local Core change now uses the standard
+=gerbil test= entrypoint with the same bounded timeout and receipts.
+It also prints start and elapsed-time markers so a long module import
+is visible. The extracted =observability/debug-memory.ss= keeps the
+memory and duration Case boundary apart from tracing and slot debug;
+the compatibility export in =debug.ss= preserves existing imports.
+The isolated Core build with explicit =GERBIL_BUILD_CORES=12= and the
+=t/core-test.ss= and =t/observability-feedback-test.ss= modules passed.
+Using that isolated Core build as =GERBIL_PATH=, the Ascent
+=just test-file t/qualification/ascent-index-program-test.ss= also
+passed all eight Cases, =MODULE-OK=, =HARNESS-OK=, final =OK=, and
+process exit 0.
+Startup latency remains an open performance question until matched
+measurements under a stable host load are available.
+
 * Feature: execution and evidence
 
 The stateful engine is in =program/evaluate.ss=; =program/analysis.ss=
@@ -221,6 +356,129 @@ cover one positive-closure workload and do not establish general
 Datalog speed.
 
 * Local qualification status
+
+** Current checked binding slice
+
+The retained changes are the atom-plan binding slot, the private
+=fresh-variable= binder case, and three evaluator binding calls.
+The experimental Set storage shortcut was reverted.
+
+- Explicit =GERBIL_BUILD_CORES=12= with
+  =GERBIL_PATH=/private/tmp/ascent-v0121-gerbil= passed =just build=
+  in 137 s and =just check-policy= in 92 s. The policy selected
+  37 modules and reported =findings=0 errors=0=; both processes exited 0.
+- =just test-file t/qualification/ascent-binding-test.ss= passed
+  99,999 finite comparisons and the pattern/expression/false/error
+  goldens in 36 s. =ascent-source-admission-test.ss= passed all
+  12 Provider, callback, duplicate, mutation, and budget Cases in 36 s.
+- =ascent-binding-program-test.ss= passed in 31 s: all 15 mixed-rule
+  relations match the frozen raw-binding evaluator, including exact
+  row order, and independent goldens. This covers repeated variables,
+  recursion, generators, dependent inputs, expressions, and negation.
+  These new tests use the compiled reference/candidate benchmark
+  library; its production source hashes match the retained sources.
+- The installed-prefix =ascent-index-program-test.ss= passed in
+  40 s; aggregate and lattice modules passed in 28 s and 29 s.
+  =scheme-operator-retained-test.ss= passed in 94 s, including both
+  64-graph append/withdrawal and nested-source replacement matrices.
+  =ascent-strata-test.ss= passed its 6,656 reference comparisons and
+  goldens in 16 s.
+  Each successful module has =MODULE-OK=, =HARNESS-OK=, final =OK=,
+  and process exit 0.
+- Two final =just binding-benchmark= runs passed all six paired
+  1000-sample gates. Both source manifests match this implementation.
+  The 16/32-column kernels qualify approximately 2.5x/3.9x median
+  gains. The individual solves qualify only median nonregression.
+  Raw samples and experiment failures are in
+  [[file:../t/performance/binding/README.org][the binding receipt index]].
+
+The original rule-program module failed its first mixed-ternary Case
+with =PooFlowDebugDurationAnomaly= at the unchanged 2000 ms budget.
+A standalone serial repeat failed the same boundary during Core
+contract validation. Its other Cases completed without check failures.
+The independent mixed-program comparison above establishes semantics
+under Core's default profile; it does not qualify the 2000 ms gate.
+The complete qualification suite and SS performance suite remain
+unqualified. The SS experiment also retained its original 2 ms p95
+limit and failed at 28.703 ms; no cause is inferred from that result.
+
+** Ancestry cache root-cause experiment
+
+Core's native responsibility checks repeatedly call POO ancestry lookup.
+At the pinned POO commit =099b381588360a8a49fd772f666a1a00351366f5=,
+=compute-precedence-list!= creates an active hash table before examining
+its cached precedence list. A local upstream candidate moves the valid-heads
+cache hit before that allocation and leaves cold traversal unchanged.
+The patch, review snapshots, hashes, both raw 1000-pair runs, and logs are
+[[file:../t/performance/poo-cache/README.org][retained in the POO cache receipt index]].
+ASCENT's dependency pin and the original installed dependency are unchanged.
+
+Both matched runs qualify 3.2--3.9x median cached-path gains and about
+0.9 percent cold median regression, within the prespecified 5 percent
+cold allowance. All 1536 three-node graph/root comparisons, cache identity,
+malformed heads, and explicit slot uninstantiation pass. This establishes
+the ancestry-function boundary, not full solve latency or source authority.
+
+The unchanged indexed-joins SS gate still fails with the candidate:
+1000 samples, median 0.547 ms, p95 14.889 ms, 2 ms p95 limit.
+The earlier 28.703 ms failure used a different experimental source state;
+there is no matched end-to-end speedup claim from these two values.
+Core's forced-collection profile also shows long pauses in the clock/memory
+probe; =:std/time/precise= and the existing jiffy clock agree on those spans.
+No timing or memory budget was relaxed. The final-source rule-program
+module fails its unchanged duration Cases in both concurrent and serial
+repeats. An earlier candidate pass does not establish stable integration
+closure. Existing POO object/MOP suites and all three ASCENT responsibility
+admission Cases pass under the final candidate library.
+
+** Native test scheduling
+
+The installed std/test runs modules, suites and Cases synchronously;
+Core's independent watchdog sampler does not parallelize assertions.
+The repository now has explicit shared semantic and exclusive measurement
+process lanes. Unknown modules remain exclusive. Original profiles and
+budgets are unchanged. The admitted parallel modules, nested-lease rules,
+coordination boundary and scheduling checks are documented in
+[[file:test-execution.org][the test execution policy]].
+
+** Discovered-Case harness gate
+
+=just test-file= and the batched =just test= now reject a =MODULE-OK=
+receipt when that module discovered zero =CASE= records. A real fixture-only
+module previously emitted =MODULE-OK=, =HARNESS-OK= and =OK= without executing
+a Case. The new guard rejects that run and a mixed positive/empty batch;
+it accepts the positive captured harness log. This closes an empty-suite
+receipt gap; it does not qualify the complete test suite.
+
+** Current SCC slice
+
+The final =program/graph.ss= folds each adjacency list to its lowlink
+and writes that node's lowlink once. The DFS stack and visit tables
+remain invocation-local; this preserves the original traversal order.
+
+- =GERBIL_BUILD_CORES=12 GERBIL_PATH=/private/tmp/ascent-v0121-gerbil
+  just build= passed with process exit 0 after the final graph change.
+- The same explicit 12-core environment passed =just check-policy=:
+  37 selected modules, =findings=0 errors=0=, and process exit 0.
+- =just test-file t/qualification/ascent-strata-test.ss= passed the
+  6,656 oracle comparisons and additional goldens, all harness markers,
+  and process exit 0 in 19 s.
+- =just test-file t/qualification/ascent-scc-summary-test.ss= passed
+  after the shared traversal change, all harness markers, and exit 0
+  in 21 s. The two independent final module checks ran concurrently.
+- The existing =ascent-invalid-program-test.ss= passed its dependency
+  and safety error checks with all markers and exit 0. The final
+  exhaustive graph comparison rechecks concrete cycle diagnostics.
+- Two final =just strata-benchmark= runs passed their unchanged
+  1000-sample matched gates, final =OK=, and process exit 0. Both
+  retained source manifests identify the SCC slice before subsequent
+  binding edits; they were verified against that source state.
+
+The full qualification suite and full performance suite are not marked
+green for this slice. Their earlier timing failures below remain
+separate from these focused correctness and planning measurements.
+
+** Earlier slices and environment findings
 
 - The initial =just test-file t/qualification/ascent-index-program-test.ss=
   attempt could not load =:core/observability/testing-case= in the
@@ -282,3 +540,38 @@ replacement rollback, append isolation, all 64 finite graph cases,
 then passed with 36 selected modules, =findings=0=, =errors=0=, and
 exit 0. The full =just test= timing gate described above has not been
 rerun for this slice, so this is not a whole-suite qualification claim.
+
+** Empty second-atom frontier pruning
+
+The evaluator previously traversed historical rows of a variable-only
+first atom even when the second atom's selected delta was empty.
+=program/evaluate.ss= now skips that single branch when the first two
+clauses are atoms, the first has no index columns or non-variable terms,
+and delta position 1 has zero rows. The old branch dispatches no Provider
+callback and cannot reach subsequent clauses or emit rows. Other prefix
+forms retain their existing path. Ordinary cardinality maintenance is
+unchanged; its separate candidate failed paired admission and was removed.
+
+Two final compiled whole-solve comparisons against the frozen pre-slice
+evaluator pass 1000 alternating pairs per shape. Both small controls
+retain median nonregression; the 1024-edge chain has 980 and 977 strict
+wins, exceeding the unchanged 900-pair gate. Medians are 20.702/31.009 ms
+for the reference and 1.846/1.917 ms for the candidate (11.2x/16.2x).
+The reference includes the previously retained binding and SCC changes.
+This gain is qualified only for the constructed chain workload.
+
+Seven semantic Cases pass exact ordered snapshots and sizes, duplicate
+source rows, all two-node graphs with both roots, retained-session updates,
+Provider build/lookup counts, guard/generator callback counts, lattice key
+replacement, and timeout resumption. Full-suite and SS latency closure
+remain separate gates. Raw samples, source manifests, logs, and the rejected
+count experiment are [[file:../t/performance/frontier/README.org][indexed here]].
+
+Final-source integration checks also pass =just build= and
+=just check-policy= (37 modules, findings=0, errors=0), plus 32 existing
+index, BYODS, lattice and source-admission Cases. Two unchanged indexed-joins
+SS runs pass all 1000 samples with p95=563/634 us, below the original
+2000 us gate, and semanticEquivalent=#t. Each native module has
+=MODULE-OK=, =HARNESS-OK=, final =OK= and exit 0. This updates the local
+indexed-joins result only; the complete SS suite and prior Core duration
+failures were not rerun for this slice. No dependency pin or budget changed.

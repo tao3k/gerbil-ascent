@@ -1,0 +1,72 @@
+test -f "t/object-test.ss"
+just _test "t/object-test.ss" 90
+[qualification] RUNNING final-object-mop (5s)
+[qualification] RUNNING final-object-mop (10s)
+[qualification] RUNNING final-object-mop (15s)
+[qualification] RUNNING final-object-mop (20s)
+HARNESS ("t/object-test.ss")
+MODULE t/object-test.ss
+SUITE test suite for clan/poo/object
+CASE V19 C4 linearizes composed object prototypes
+CASE-OK V19 C4 linearizes composed object prototypes
+CASE precedence cycle guard uses object identity
+CASE-OK precedence cycle guard uses object identity
+CASE simple tests from poo.md
+CASE-OK simple tests from poo.md
+CASE simple hello tests
+CASE-OK simple hello tests
+CASE testing side-effects
+CASE-OK testing side-effects
+CASE cached slots preserve false values
+CASE-OK cached slots preserve false values
+CASE keyword and brace syntax
+CASE-OK keyword and brace syntax
+CASE referring to another method
+CASE-OK referring to another method
+CASE nested object methods retain the outer lexical slot scope
+CASE-OK nested object methods retain the outer lexical slot scope
+CASE testing overrides
+CASE-OK testing overrides
+CASE testing match
+CASE-OK testing match
+CASE testing with-slots
+CASE-OK testing with-slots
+CASE testing with-prefixed-slots
+CASE-OK testing with-prefixed-slots
+CASE testing def-slots
+CASE-OK testing def-slots
+CASE testing def-prefixed-slots
+CASE-OK testing def-prefixed-slots
+CASE testing put!
+CASE-OK testing put!
+CASE testing set!
+CASE-OK testing set!
+CASE testing putslot!
+CASE-OK testing putslot!
+CASE incremental slot storage preserves list snapshots and duplicate keys
+CASE-OK incremental slot storage preserves list snapshots and duplicate keys
+CASE testing .+
+CASE-OK testing .+
+CASE testing slot definitions: (slot-name form)
+CASE-OK testing slot definitions: (slot-name form)
+CASE testing slot definitions: (slot-name => function-form extra-function-args ...)
+CASE-OK testing slot definitions: (slot-name => function-form extra-function-args ...)
+CASE testing slot definitions: (slot-name =>.+ overriding-prototype)
+CASE-OK testing slot definitions: (slot-name =>.+ overriding-prototype)
+CASE testing slot definitions: (slot-name (inherited-computation) form)
+CASE-OK testing slot definitions: (slot-name (inherited-computation) form)
+CASE testing slot definitions: slot-name / (slot-name) -- lexical scope for objects
+CASE-OK testing slot definitions: slot-name / (slot-name) -- lexical scope for objects
+CASE testing slot definitions: (slot-name ? default-value)
+CASE-OK testing slot definitions: (slot-name ? default-value)
+CASE testing single inheritance
+CASE-OK testing single inheritance
+CASE testing POO Definition Syntax: extra-slots
+CASE-OK testing POO Definition Syntax: extra-slots
+CASE testing multiple inheritance
+CASE-OK testing multiple inheritance
+SUITE-OK test suite for clan/poo/object
+MODULE-OK t/object-test.ss
+HARNESS-OK ("t/object-test.ss")
+OK
+[qualification] END final-object-mop exit=0 (26s)

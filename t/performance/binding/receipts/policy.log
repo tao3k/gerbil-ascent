@@ -1,0 +1,23 @@
+ASP_GERBIL_SCHEME_POLICY=1 GERBIL_BUILD_CORES="${GERBIL_BUILD_CORES:-$(getconf NPROCESSORS_ONLN)}" gerbil build
+[qualification] RUNNING policy (5s)
+[qualification] RUNNING policy (10s)
+[qualification] RUNNING policy (15s)
+[qualification] RUNNING policy (20s)
+[asp-gerbil-scheme-policy] START selected modules=37
+[qualification] RUNNING policy (25s)
+[qualification] RUNNING policy (30s)
+[qualification] RUNNING policy (35s)
+[qualification] RUNNING policy (40s)
+[qualification] RUNNING policy (45s)
+[qualification] RUNNING policy (50s)
+[asp-gerbil-scheme-policy] COMPLETE findings=0 errors=0
+[qualification] RUNNING policy (55s)
+[qualification] RUNNING policy (60s)
+[qualification] RUNNING policy (65s)
+[qualification] RUNNING policy (70s)
+[qualification] RUNNING policy (75s)
+[qualification] RUNNING policy (81s)
+... build in current directory
+*** WARNING module std/net/request is DEPRECATED and will be removed in the future
+[qualification] RUNNING policy (87s)
+[qualification] END policy exit=0 (92s)

@@ -5,6 +5,7 @@
 ;;; Static rule dependency SCCs. This is declaration metadata, independent of
 ;;; source rows and of the evaluator's (possibly coarser) strata.
 (import (only-in :clan/poo/object .o .ref)
+        (only-in "graph.ss" gerbil-ascent-graph-components)
         (only-in :std/list/list append-map delete-duplicates/hash))
 
 (export gerbil-ascent-program-summary)
@@ -63,45 +64,7 @@
     ;; std/struct/dag rejects cyclic graphs, so it cannot find these SCCs.
     ;; Tarjan visits each rule and dependency once. The reversed list of
     ;; completed components is in producer-before-consumer order.
-    (let ((next-index 0)
-          (indices (make-vector count #f))
-          (lowlinks (make-vector count 0))
-          (on-stack (make-vector count #f))
-          (stack [])
-          (components []))
-      (def (visit node)
-        (let (index next-index)
-          (set! next-index (+ next-index 1))
-          (vector-set! indices node index)
-          (vector-set! lowlinks node index)
-          (vector-set! on-stack node #t)
-          (set! stack (cons node stack)))
-        (for-each
-         (lambda (neighbor)
-           (cond
-            ((not (vector-ref indices neighbor))
-             (visit neighbor)
-             (vector-set! lowlinks node
-                          (min (vector-ref lowlinks node)
-                               (vector-ref lowlinks neighbor))))
-            ((vector-ref on-stack neighbor)
-             (vector-set! lowlinks node
-                          (min (vector-ref lowlinks node)
-                               (vector-ref indices neighbor))))))
-         (vector-ref successors node))
-        (when (= (vector-ref lowlinks node) (vector-ref indices node))
-          (let pop ((members []))
-            (let (member (car stack))
-              (set! stack (cdr stack))
-              (vector-set! on-stack member #f)
-              (let (collected (cons member members))
-                (if (= member node)
-                  (set! components (cons collected components))
-                  (pop collected)))))))
-      (for-each
-       (lambda (index)
-         (unless (vector-ref indices index) (visit index)))
-       (iota count))
+    (let (components (gerbil-ascent-graph-components successors))
       (.o
        (sccs
         (map

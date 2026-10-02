@@ -1,0 +1,48 @@
+[precedence-benchmark] RUNNING (6s)
+... compile t/precedence-cache-reference-fixture
+[precedence-benchmark] RUNNING (11s)
+[precedence-benchmark] RUNNING (16s)
+[precedence-benchmark] RUNNING (21s)
+... execute compile job (compile-file /private/tmp/ascent-poo-plc-gerbil/lib/clan/poo/t/precedence-cache-reference-fixture~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-poo-plc-gerbil/lib/clan/poo/t/precedence-cache-reference-fixture.scm)
+[precedence-benchmark] RUNNING (26s)
+[precedence-benchmark] RUNNING (31s)
+CASE cached-root samples=1000 repetitions=128
+PROGRESS cached-root 100/1000
+PROGRESS cached-root 200/1000
+PROGRESS cached-root 300/1000
+PROGRESS cached-root 400/1000
+PROGRESS cached-root 500/1000
+PROGRESS cached-root 600/1000
+PROGRESS cached-root 700/1000
+PROGRESS cached-root 800/1000
+PROGRESS cached-root 900/1000
+PROGRESS cached-root 1000/1000
+RESULT cached-root old-p50-ns=554 new-p50-ns=148 paired-wins=988/1000
+CASE cached-diamond samples=1000 repetitions=128
+PROGRESS cached-diamond 100/1000
+PROGRESS cached-diamond 200/1000
+PROGRESS cached-diamond 300/1000
+[precedence-benchmark] RUNNING (36s)
+PROGRESS cached-diamond 400/1000
+PROGRESS cached-diamond 500/1000
+PROGRESS cached-diamond 600/1000
+PROGRESS cached-diamond 700/1000
+PROGRESS cached-diamond 800/1000
+PROGRESS cached-diamond 900/1000
+PROGRESS cached-diamond 1000/1000
+RESULT cached-diamond old-p50-ns=476 new-p50-ns=148 paired-wins=970/1000
+CASE cold-diamond samples=1000 repetitions=32
+PROGRESS cold-diamond 100/1000
+PROGRESS cold-diamond 200/1000
+PROGRESS cold-diamond 300/1000
+PROGRESS cold-diamond 400/1000
+PROGRESS cold-diamond 500/1000
+[precedence-benchmark] RUNNING (41s)
+PROGRESS cold-diamond 600/1000
+PROGRESS cold-diamond 700/1000
+PROGRESS cold-diamond 800/1000
+PROGRESS cold-diamond 900/1000
+PROGRESS cold-diamond 1000/1000
+RESULT cold-diamond old-p50-ns=3625 new-p50-ns=3656 paired-wins=324/1000
+OK

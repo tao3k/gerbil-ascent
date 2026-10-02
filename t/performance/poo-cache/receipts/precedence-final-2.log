@@ -1,0 +1,42 @@
+[precedence-benchmark] RUNNING (5s)
+[precedence-benchmark] RUNNING (10s)
+CASE cached-root samples=1000 repetitions=128
+PROGRESS cached-root 100/1000
+[precedence-benchmark] RUNNING (15s)
+PROGRESS cached-root 200/1000
+PROGRESS cached-root 300/1000
+PROGRESS cached-root 400/1000
+PROGRESS cached-root 500/1000
+PROGRESS cached-root 600/1000
+PROGRESS cached-root 700/1000
+PROGRESS cached-root 800/1000
+PROGRESS cached-root 900/1000
+PROGRESS cached-root 1000/1000
+RESULT cached-root old-p50-ns=570 new-p50-ns=148 paired-wins=959/1000
+CASE cached-diamond samples=1000 repetitions=128
+PROGRESS cached-diamond 100/1000
+PROGRESS cached-diamond 200/1000
+PROGRESS cached-diamond 300/1000
+PROGRESS cached-diamond 400/1000
+PROGRESS cached-diamond 500/1000
+PROGRESS cached-diamond 600/1000
+[precedence-benchmark] RUNNING (20s)
+PROGRESS cached-diamond 700/1000
+PROGRESS cached-diamond 800/1000
+PROGRESS cached-diamond 900/1000
+PROGRESS cached-diamond 1000/1000
+RESULT cached-diamond old-p50-ns=484 new-p50-ns=148 paired-wins=962/1000
+CASE cold-diamond samples=1000 repetitions=32
+PROGRESS cold-diamond 100/1000
+PROGRESS cold-diamond 200/1000
+PROGRESS cold-diamond 300/1000
+PROGRESS cold-diamond 400/1000
+[precedence-benchmark] RUNNING (25s)
+PROGRESS cold-diamond 500/1000
+PROGRESS cold-diamond 600/1000
+PROGRESS cold-diamond 700/1000
+PROGRESS cold-diamond 800/1000
+PROGRESS cold-diamond 900/1000
+PROGRESS cold-diamond 1000/1000
+RESULT cold-diamond old-p50-ns=3656 new-p50-ns=3687 paired-wins=276/1000
+OK

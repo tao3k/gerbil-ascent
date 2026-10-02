@@ -4,7 +4,8 @@
 
 ;;; Pure planning over private lowered rule vectors. These functions do not
 ;;; retain relation state and are shared by the serial execution path.
-(import (only-in :std/list/list butlast))
+(import (only-in :std/list/list butlast)
+        (only-in "graph.ss" gerbil-ascent-graph-components))
 
 (export gerbil-ascent-rule-strata
         gerbil-ascent-lattice-feeds-relation?
@@ -60,6 +61,11 @@
         (case kind
           ((wildcard)
            (loop (cdr patterns) (cdr values) bindings))
+          ((fresh-variable)
+           ;; Private checked plans prove this name absent, including earlier
+           ;; terms in the same atom. No row-time environment search is needed.
+           (loop (cdr patterns) (cdr values)
+                 (cons (cons (cdr term) value) bindings)))
           ((pattern)
            (let* ((payload (cdr term))
                   (matched ((vector-ref payload 1) value))
@@ -122,32 +128,9 @@
                  (vector-ref rule 1))))
    rule-plans))
 
-(def (gerbil-ascent-dependency-reaches? dependencies from target seen)
-  (cond
-   ((= from target) #t)
-   ((vector-ref seen from) #f)
-   (else
-    (vector-set! seen from #t)
-    (ormap
-     (lambda (dependency)
-       (and (= (vector-ref dependency 0) from)
-            (gerbil-ascent-dependency-reaches?
-             dependencies (vector-ref dependency 1) target seen)))
-     dependencies))))
-
-(def (gerbil-ascent-cycle-kind dependencies relation-count)
-  (ormap
-   (lambda (dependency)
-     (and (= (vector-ref dependency 2) 1)
-          (gerbil-ascent-dependency-reaches?
-           dependencies (vector-ref dependency 1)
-           (vector-ref dependency 0)
-           (make-vector relation-count #f))
-          (vector-ref dependency 3)))
-   dependencies))
-
 ;;; Negative, aggregate, and lattice-to-relation edges require a later
-;;; stratum. Relaxation rejects cycles that violate that ordering.
+;;; stratum. A strict edge inside an SCC is invalid. The SCC condensation
+;;; order then propagates the minimum strata in one pass over the edges.
 ;; gerbil-ascent-rule-strata
 ;;   : (-> RulePlans Nat RelationKinds Strata)
 ;;   | doc m%
@@ -162,7 +145,8 @@
 ;;     %
 (def (gerbil-ascent-rule-strata rule-plans relation-count kinds)
   (let ((strata (make-vector relation-count 0))
-        (dependencies []))
+        (dependencies [])
+        (has-strict? #f))
     (for-each
      (lambda (rule)
        (for-each
@@ -178,42 +162,73 @@
                       (lattice-projection?
                        (and (eq? kind 'atom)
                             (eq? (vector-ref kinds body-index) 'lattice)
-                            (eq? (vector-ref kinds head-index) 'relation))))
+                            (eq? (vector-ref kinds head-index) 'relation)))
+                      (strict? (or (not (eq? kind 'atom)) lattice-projection?)))
+                 (when strict? (set! has-strict? #t))
                  (set! dependencies
                    (cons (vector head-index body-index
-                                 (if (and (eq? kind 'atom)
-                                          (not lattice-projection?))
-                                   0 1)
+                                 (if strict? 1 0)
                                  (if lattice-projection?
                                    'lattice-projection kind))
                          dependencies)))))
            (vector-ref rule 1)))
         (vector-ref rule 0)))
      rule-plans)
-    (let relax ((pass 0))
-      (let (changed? #f)
+    ;; Positive dependencies alone always admit stratum zero.
+    (when has-strict?
+      (let ((successors (make-vector relation-count []))
+            (outgoing (make-vector relation-count []))
+            (component-of (make-vector relation-count #f)))
         (for-each
          (lambda (dependency)
-           (let* ((head (vector-ref dependency 0))
-                  (body (vector-ref dependency 1))
-                  (required (+ (vector-ref strata body)
-                               (vector-ref dependency 2))))
-             (when (> required (vector-ref strata head))
-               (vector-set! strata head required)
-               (set! changed? #t))))
+           (let ((head (vector-ref dependency 0))
+                 (body (vector-ref dependency 1)))
+             (vector-set! successors body
+                          (cons head (vector-ref successors body)))
+             (vector-set! outgoing body
+                          (cons dependency (vector-ref outgoing body)))))
          dependencies)
-        (when changed?
-          (when (>= pass (- relation-count 1))
-            (case (gerbil-ascent-cycle-kind dependencies relation-count)
-              ((aggregate)
-               (error "unstratifiable ASCENT aggregate cycle"))
-              ((negation)
-               (error "unstratifiable ASCENT negation cycle"))
-              ((lattice-projection)
-               (error "unstratifiable ASCENT lattice projection cycle"))
-              (else
-               (error "unstratifiable ASCENT dependency cycle"))))
-          (relax (+ pass 1)))))
+        (let (components (gerbil-ascent-graph-components successors))
+          (for-each
+           (lambda (members)
+             (for-each (lambda (node)
+                         (vector-set! component-of node members))
+                       members))
+           components)
+          ;; Keep dependency order when selecting the cycle diagnostic.
+          (for-each
+           (lambda (dependency)
+             (when (and (= (vector-ref dependency 2) 1)
+                        (eq? (vector-ref component-of (vector-ref dependency 0))
+                             (vector-ref component-of (vector-ref dependency 1))))
+               (case (vector-ref dependency 3)
+                 ((aggregate)
+                  (error "unstratifiable ASCENT aggregate cycle"))
+                 ((negation)
+                  (error "unstratifiable ASCENT negation cycle"))
+                 ((lattice-projection)
+                  (error "unstratifiable ASCENT lattice projection cycle"))
+                 (else
+                  (error "unstratifiable ASCENT dependency cycle")))))
+           dependencies)
+          (for-each
+           (lambda (members)
+             (let (stratum
+                   (foldl (lambda (node prior)
+                            (max prior (vector-ref strata node)))
+                          0 members))
+               (for-each (lambda (node) (vector-set! strata node stratum)) members)
+               (for-each
+                (lambda (node)
+                  (for-each
+                   (lambda (dependency)
+                     (let* ((head (vector-ref dependency 0))
+                            (required (+ stratum (vector-ref dependency 2))))
+                       (vector-set! strata head
+                                    (max (vector-ref strata head) required))))
+                   (vector-ref outgoing node)))
+                members)))
+           components))))
     strata))
 
 ;;; Delta positions count only positive atom scans; guards and generators do

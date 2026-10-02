@@ -1,0 +1,15 @@
+test_child_failure_is_preserved (test_test_execution.SchedulingTest.test_child_failure_is_preserved) ... ok
+test_explicit_jobs_above_four_are_not_capped (test_test_execution.SchedulingTest.test_explicit_jobs_above_four_are_not_capped) ... ok
+test_native_capacity_projection_is_used_for_default (test_test_execution.SchedulingTest.test_native_capacity_projection_is_used_for_default) ... ok
+test_nested_exclusive_does_not_deadlock (test_test_execution.SchedulingTest.test_nested_exclusive_does_not_deadlock) ... ok
+test_parallel_aggregates_worker_failure_and_keeps_log (test_test_execution.SchedulingTest.test_parallel_aggregates_worker_failure_and_keeps_log) ... ok
+test_parallel_rejects_unadmitted_module_before_start (test_test_execution.SchedulingTest.test_parallel_rejects_unadmitted_module_before_start) ... ok
+test_semantic_processes_overlap_and_exclusive_waits (test_test_execution.SchedulingTest.test_semantic_processes_overlap_and_exclusive_waits) ... ok
+test_suite_runs_every_discovered_module_once_and_retains_failures (test_test_execution.SchedulingTest.test_suite_runs_every_discovered_module_once_and_retains_failures) ... ok
+test_termination_releases_lease (test_test_execution.SchedulingTest.test_termination_releases_lease) ... ok
+test_unknown_module_is_exclusive (test_test_execution.SchedulingTest.test_unknown_module_is_exclusive) ... ok
+
+----------------------------------------------------------------------
+Ran 10 tests in 3.193s
+
+OK

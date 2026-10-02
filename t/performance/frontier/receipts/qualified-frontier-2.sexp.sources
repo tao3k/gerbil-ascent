@@ -1,0 +1,4 @@
+bb3067909f48ef9efa3056687a4742c0cc6d1a95d5d89542c923a1cbd281c5ae  program/evaluate.ss
+9eb5dfc03fed9b4958f3b940cd4e81b766ff64b95f657292da3022ce80c1fe95  t/qualification/ascent-size-reference-evaluate.ss
+2e59af05aa4b7a79e48ca79e5383caa6ddf50a48661180ec94cdd3b350952f65  t/performance/size-benchmark.ss
+804e675d1f9c48499cbdd02405747077f8b7bec788a58b3c2827ee2d10e6ad22  tools/build-size-benchmark.ss

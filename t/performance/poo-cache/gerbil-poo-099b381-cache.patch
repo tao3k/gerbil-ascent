@@ -1,0 +1,326 @@
+diff --git a/justfile b/justfile
+index 087c0c0..df2cb78 100644
+--- a/justfile
++++ b/justfile
+@@ -48,6 +48,22 @@ benchmark-object-scale:
+     {{ platform-env }} {{ timeout-executable }} --foreground --signal=TERM --kill-after=5s 300s gxc -d "$bench_dir" -exe -o "$bench_dir/object-scale" t/object-scale-benchmark.ss
+     {{ platform-env }} {{ timeout-executable }} --foreground --signal=TERM --kill-after=5s 90s "$bench_dir/object-scale"
+ 
++benchmark-precedence-cache:
++    #!/usr/bin/env bash
++    set -euo pipefail
++    export POO_PRECEDENCE_RECEIPT="${POO_PRECEDENCE_RECEIPT:-$PWD/.gerbil/precedence-receipt.sexp}"
++    mkdir -p .gerbil
++    shasum -a 256 object.ss t/precedence-cache-reference-fixture.ss t/precedence-cache-benchmark.ss t/build-precedence-cache-benchmark.ss > "$POO_PRECEDENCE_RECEIPT.sources"
++    started=$SECONDS
++    log="$(mktemp)"
++    (while sleep 5; do printf '[precedence-benchmark] RUNNING (%ss)\n' "$((SECONDS-started))"; done) &
++    progress_pid=$!
++    trap 'kill "$progress_pid" 2>/dev/null || true; wait "$progress_pid" 2>/dev/null || true; rm -f "$log"' EXIT
++    {{ build-env }} {{ timeout-executable }} 60s gxi {{ test-runtime-options }} t/build-precedence-cache-benchmark.ss
++    {{ platform-env }} {{ timeout-executable }} 90s gxi {{ test-runtime-options }} t/precedence-cache-benchmark.ss 2>&1 | tee "$log"
++    test "$(grep -c '^RESULT ' "$log")" -eq 3
++    grep -x 'OK' "$log" >/dev/null
++
+ clean:
+     {{ platform-env }} gxi build.ss clean
+ 
+diff --git a/object.ss b/object.ss
+index 35bd23b..87212ed 100644
+--- a/object.ss
++++ b/object.ss
+@@ -126,28 +126,32 @@
+   (InvalidObject slots: (map car (append (object-slots self) (object-defaults self)))))
+ 
+ (def (compute-precedence-list! self (heads '()))
+-  ;; Preserve the ordered heads for diagnostics while keeping the cycle guard
+-  ;; as private implementation state at this abstraction boundary.
+-  (def active (make-hash-table-eq))
+-  (for-each (lambda (head) (hash-put! active head #t)) heads)
+-  (let compute ((object self) (heads heads))
+-    (cond
+-     ((object-%precedence-list object))
+-     ((hash-key? active object)
+-      (error "Circular precedence graph" (member object heads)))
+-     (else
+-      (hash-put! active object #t)
+-      (let (precedence-list
+-            (first-value
+-             (c4-linearize
+-              [object] (object-supers object)
+-              get-precedence-list:
+-              (lambda (super) (compute super [object . heads]))
+-              eq: eq?
+-              get-name: invalid-object-summary)))
+-        (hash-remove! active object)
+-        (set! (object-%precedence-list object) precedence-list)
+-        precedence-list)))))
++  ;; A cached result does not need an invocation-local cycle guard.
++  ;; Preserve for-each's rejection of malformed heads, even on a cache hit.
++  (or (and (list? heads) (object-%precedence-list self))
++      (let ()
++        ;; Preserve the ordered heads for diagnostics while keeping the cycle guard
++        ;; as private implementation state at this abstraction boundary.
++        (def active (make-hash-table-eq))
++        (for-each (lambda (head) (hash-put! active head #t)) heads)
++        (let compute ((object self) (heads heads))
++          (cond
++           ((object-%precedence-list object))
++           ((hash-key? active object)
++            (error "Circular precedence graph" (member object heads)))
++           (else
++            (hash-put! active object #t)
++            (let (precedence-list
++                  (first-value
++                   (c4-linearize
++                    [object] (object-supers object)
++                    get-precedence-list:
++                    (lambda (super) (compute super [object . heads]))
++                    eq: eq?
++                    get-name: invalid-object-summary)))
++              (hash-remove! active object)
++              (set! (object-%precedence-list object) precedence-list)
++              precedence-list)))))))
+ 
+ (def (compute-slot-funs! self)
+   (def h (make-hash-table-symbolic))
+diff --git a/t/precedence-cache-reference-fixture.ss b/t/precedence-cache-reference-fixture.ss
+new file mode 100644
+index 0000000..428ebc8
+--- /dev/null
++++ b/t/precedence-cache-reference-fixture.ss
+@@ -0,0 +1,31 @@
++;;; -*- Gerbil -*-
++;;; Original cached/cold algorithm from 099b381588360a8a49fd772f666a1a00351366f5.
++(import (only-in ../object object-%precedence-list object-%precedence-list-set!
++                 object-supers invalid-object-summary)
++        (only-in :std/values first-value)
++        (only-in :gerbil/runtime/c3 c4-linearize))
++(export precedence-reference!)
++
++(def (precedence-reference! self (heads '()))
++  ;; Preserve the ordered heads for diagnostics while keeping the cycle guard
++  ;; as private implementation state at this abstraction boundary.
++  (def active (make-hash-table-eq))
++  (for-each (lambda (head) (hash-put! active head #t)) heads)
++  (let compute ((object self) (heads heads))
++    (cond
++     ((object-%precedence-list object))
++     ((hash-key? active object)
++      (error "Circular precedence graph" (member object heads)))
++     (else
++      (hash-put! active object #t)
++      (let (precedence-list
++            (first-value
++             (c4-linearize
++              [object] (object-supers object)
++              get-precedence-list:
++              (lambda (super) (compute super [object . heads]))
++              eq: eq?
++              get-name: invalid-object-summary)))
++        (hash-remove! active object)
++        (object-%precedence-list-set! object precedence-list)
++        precedence-list)))))
+diff --git a/t/precedence-cache-benchmark.ss b/t/precedence-cache-benchmark.ss
+new file mode 100644
+index 0000000..8ac35ee
+--- /dev/null
++++ b/t/precedence-cache-benchmark.ss
+@@ -0,0 +1,94 @@
++;;; Matched compiled old/new ancestry over the same cached native objects.
++(import (only-in :clan/poo/object .o .mix compute-precedence-list!)
++        (only-in :clan/poo/t/precedence-cache-reference-fixture precedence-reference!))
++
++(def (statistic samples percent)
++  (list-ref (list-sort < samples)
++            (- (quotient (* (length samples) percent) 100) 1)))
++
++(def (timed call repetitions)
++  (let ((started (current-jiffy)) (result #f))
++    (for-each (lambda (_) (set! result (call))) (iota repetitions))
++    (values result (quotient (* (- (current-jiffy) started) 1000000000)
++                             (* repetitions (jiffies-per-second))))))
++
++(def (matched name old new repetitions required-wins regression-percent)
++  (displayln "CASE " name " samples=1000 repetitions=" repetitions)
++  (force-output)
++  (for-each (lambda (_) (unless (equal? (old) (new)) (error "ancestry changed" name)))
++            (iota 20))
++  (let ((old-samples []) (new-samples []) (wins 0))
++    (for-each
++     (lambda (sample)
++       (let-values (((old-result old-ns new-result new-ns)
++                     (if (even? sample)
++                       (let-values (((left left-ns) (timed old repetitions))
++                                    ((right right-ns) (timed new repetitions)))
++                         (values left left-ns right right-ns))
++                       (let-values (((right right-ns) (timed new repetitions))
++                                    ((left left-ns) (timed old repetitions)))
++                         (values left left-ns right right-ns)))))
++         (unless (equal? old-result new-result) (error "cached result changed" name))
++         (set! old-samples (cons old-ns old-samples))
++         (set! new-samples (cons new-ns new-samples))
++         (when (< new-ns old-ns) (set! wins (+ wins 1))))
++       (when (zero? (modulo (+ sample 1) 100))
++         (displayln "PROGRESS " name " " (+ sample 1) "/1000")
++         (force-output)))
++     (iota 1000))
++    (let ((old-p50 (statistic old-samples 50)) (new-p50 (statistic new-samples 50)))
++      (displayln "RESULT " name " old-p50-ns=" old-p50 " new-p50-ns=" new-p50
++                 " paired-wins=" wins "/1000")
++      (force-output)
++      (list (cons 'name name) (cons 'repetitions repetitions)
++            (cons 'required-wins required-wins) (cons 'regression-percent regression-percent)
++            (cons 'old-p50-ns old-p50) (cons 'new-p50-ns new-p50)
++            (cons 'old-p95-ns (statistic old-samples 95))
++            (cons 'new-p95-ns (statistic new-samples 95))
++            (cons 'paired-wins wins)
++            (cons 'old-samples-ns (reverse old-samples))
++            (cons 'new-samples-ns (reverse new-samples))))))
++
++(def (diamond)
++  (let* ((root (.o)) (left (.o (:: @ root))) (right (.o (:: @ root))))
++    (.mix left right)))
++
++(def (hot name object)
++  (let (cached (precedence-reference! object))
++    (matched name
++             (lambda ()
++               (let (actual (precedence-reference! object))
++                 (unless (eq? actual cached) (error "old cache identity changed"))
++                 (length actual)))
++             (lambda ()
++               (let (actual (compute-precedence-list! object))
++                 (unless (eq? actual cached) (error "new cache identity changed"))
++                 (length actual)))
++             128 900 0)))
++
++(let (receipts
++      (list (hot 'cached-root (.o)) (hot 'cached-diamond (diamond))
++            ;; A cold call performs an extra cache read. Its fixed 5% median
++            ;; allowance is declared before measurement; the hot gates have
++            ;; no regression allowance and require 900 strictly faster pairs.
++            (matched 'cold-diamond
++                     (lambda () (length (precedence-reference! (diamond))))
++                     (lambda () (length (compute-precedence-list! (diamond))))
++                     32 0 5)))
++  (call-with-output-file (getenv "POO_PRECEDENCE_RECEIPT")
++    (lambda (port)
++      (write (list (cons 'baseline-commit '099b381)
++                   (cons 'sample-count 1000) (cons 'cases receipts)) port)
++      (newline port)))
++  (for-each
++   (lambda (receipt)
++     (unless (and (>= (cdr (assq 'paired-wins receipt))
++                      (cdr (assq 'required-wins receipt)))
++                  (<= (* (cdr (assq 'new-p50-ns receipt)) 100)
++                      (* (cdr (assq 'old-p50-ns receipt))
++                         (+ 100 (cdr (assq 'regression-percent receipt))))))
++       (error "precedence benchmark failed the matched gate" (cdr (assq 'name receipt)))))
++   receipts))
++(displayln "OK")
++(force-output)
++(exit 0)
+diff --git a/t/build-precedence-cache-benchmark.ss b/t/build-precedence-cache-benchmark.ss
+new file mode 100644
+index 0000000..34d061f
+--- /dev/null
++++ b/t/build-precedence-cache-benchmark.ss
+@@ -0,0 +1,6 @@
++(import (only-in :std/make make))
++(make '("t/precedence-cache-reference-fixture")
++      srcdir: (current-directory)
++      libdir: (path-expand "lib" (getenv "GERBIL_PATH"))
++      build-deps: ".gerbil/precedence-benchmark-deps")
++(exit 0)
+diff --git a/t/precedence-cache-test.ss b/t/precedence-cache-test.ss
+new file mode 100644
+index 0000000..4654be9
+--- /dev/null
++++ b/t/precedence-cache-test.ss
+@@ -0,0 +1,85 @@
++;;; Cached and cold ancestry stay equivalent to the frozen 099b381 algorithm.
++(import :std/test
++        (only-in :gerbil/runtime/gambit type-exception?)
++        (only-in ../object make-object object-supers-set!
++                 object-%precedence-list compute-precedence-list!
++                 .o .mix .ref .putslot! uninstantiate-object!)
++        (only-in ../object $constant-slot-spec)
++        (only-in ./precedence-cache-reference-fixture precedence-reference!))
++(export precedence-cache-test)
++
++(def (graph mask)
++  (let (nodes (list->vector (map (lambda (_) (make-object)) (iota 3))))
++    (for-each
++     (lambda (from)
++       (object-supers-set!
++        (vector-ref nodes from)
++        (filter-map
++         (lambda (to)
++           (and (not (zero? (bitwise-and mask (arithmetic-shift 1 (+ (* from 3) to)))))
++                (vector-ref nodes to)))
++         (iota 3))))
++     (iota 3))
++    nodes))
++
++(def (outcome compute nodes root)
++  (with-catch (lambda (failure) (list 'error (error-message failure)))
++    (lambda ()
++      (list 'precedence
++            (map (lambda (node)
++                   (let find ((index 0))
++                     (if (eq? node (vector-ref nodes index))
++                       index (find (+ index 1)))))
++                 (compute (vector-ref nodes root)))))))
++
++(def precedence-cache-test
++  (test-suite "precedence list cache admission"
++    (test-case "all three-node graphs preserve cold linearization and errors"
++      (for-each
++       (lambda (mask)
++         (for-each
++          (lambda (root)
++            (check-equal? (outcome precedence-reference! (graph mask) root)
++                          (outcome compute-precedence-list! (graph mask) root)))
++          (iota 3))
++         (when (zero? (modulo (+ mask 1) 32))
++           (displayln "PRECEDENCE-PARITY " (+ mask 1) "/512 roots=3")
++           (force-output)))
++       (iota 512)))
++    (test-case "cached list identity and heads precedence are preserved"
++      (let* ((root (.o)) (left (.o (:: @ root))) (right (.o (:: @ root)))
++             (diamond (.mix left right))
++             (cached (precedence-reference! diamond)))
++        (check-equal? cached (list diamond left right root))
++        (check-equal? (eq? cached (compute-precedence-list! diamond)) #t)
++        ;; The original cached branch also precedes the supplied heads guard.
++        (check-equal? (eq? cached (compute-precedence-list! diamond (list diamond))) #t)
++        (check-equal? (eq? cached (precedence-reference! diamond (list diamond))) #t)))
++    (test-case "malformed heads retain their existing cache-hit behavior"
++      (let* ((root (.o)) (cached (compute-precedence-list! root)))
++        (def (failure compute heads)
++          (with-catch
++           (lambda (exception)
++             (if (type-exception? exception)
++               '(type-error)
++               (list 'error (error-message exception))))
++           (lambda () (compute root heads) 'accepted)))
++        (for-each
++         (lambda (heads)
++           (let ((old (failure precedence-reference! heads))
++                 (new (failure compute-precedence-list! heads)))
++             (check-equal? old new)))
++         (list #f 1 "heads" (cons root 1)))))
++    (test-case "slot invalidation recomputes ancestry without changing lookup"
++      (let* ((root (.o (value 1))) (child (.o (:: @ root))))
++        (check-equal? (.ref child 'value) 1)
++        (check-equal? (eq? (compute-precedence-list! child)
++                          (object-%precedence-list child)) #t)
++        (.putslot! child 'value ($constant-slot-spec 2))
++        ;; .putslot! edits the specification; already cached values retain
++        ;; their existing lifetime until explicit uninstantiation.
++        (check-equal? (.ref child 'value) 1)
++        (uninstantiate-object! child)
++        (check-equal? (object-%precedence-list child) #f)
++        (check-equal? (compute-precedence-list! child) (list child root))
++        (check-equal? (.ref child 'value) 2)))))

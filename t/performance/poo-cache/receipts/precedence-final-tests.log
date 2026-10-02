@@ -1,0 +1,37 @@
+test -f "t/precedence-cache-test.ss"
+just _test "t/precedence-cache-test.ss" 90
+[qualification] RUNNING precedence-final (5s)
+[qualification] RUNNING precedence-final (10s)
+HARNESS ("t/precedence-cache-test.ss")
+MODULE t/precedence-cache-test.ss
+SUITE precedence list cache admission
+CASE all three-node graphs preserve cold linearization and errors
+PRECEDENCE-PARITY 32/512 roots=3
+PRECEDENCE-PARITY 64/512 roots=3
+PRECEDENCE-PARITY 96/512 roots=3
+PRECEDENCE-PARITY 128/512 roots=3
+PRECEDENCE-PARITY 160/512 roots=3
+PRECEDENCE-PARITY 192/512 roots=3
+PRECEDENCE-PARITY 224/512 roots=3
+PRECEDENCE-PARITY 256/512 roots=3
+PRECEDENCE-PARITY 288/512 roots=3
+PRECEDENCE-PARITY 320/512 roots=3
+PRECEDENCE-PARITY 352/512 roots=3
+PRECEDENCE-PARITY 384/512 roots=3
+PRECEDENCE-PARITY 416/512 roots=3
+PRECEDENCE-PARITY 448/512 roots=3
+PRECEDENCE-PARITY 480/512 roots=3
+PRECEDENCE-PARITY 512/512 roots=3
+CASE-OK all three-node graphs preserve cold linearization and errors
+CASE cached list identity and heads precedence are preserved
+CASE-OK cached list identity and heads precedence are preserved
+CASE malformed heads retain their existing cache-hit behavior
+CASE-OK malformed heads retain their existing cache-hit behavior
+CASE slot invalidation recomputes ancestry without changing lookup
+CASE-OK slot invalidation recomputes ancestry without changing lookup
+SUITE-OK precedence list cache admission
+MODULE-OK t/precedence-cache-test.ss
+HARNESS-OK ("t/precedence-cache-test.ss")
+OK
+[qualification] RUNNING precedence-final (15s)
+[qualification] END precedence-final exit=0 (20s)

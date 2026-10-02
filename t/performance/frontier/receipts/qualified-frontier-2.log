@@ -1,0 +1,51 @@
+[test-lane] START exclusive just
+timeout 90s gxi -:max-heap=1G,debug=q tools/build-size-benchmark.ss
+GERBIL_LOADPATH="$ASCENT_SIZE_BENCH_LIB${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" timeout 150s gxi -:max-heap=1G,debug=q t/performance/size-benchmark.ss
+[test-lane] RUNNING exclusive (5s)
+CASE recursive-chain-16 samples=1000 repetitions=1
+PROGRESS recursive-chain-16 100/1000
+PROGRESS recursive-chain-16 200/1000
+PROGRESS recursive-chain-16 300/1000
+PROGRESS recursive-chain-16 400/1000
+PROGRESS recursive-chain-16 500/1000
+PROGRESS recursive-chain-16 600/1000
+PROGRESS recursive-chain-16 700/1000
+PROGRESS recursive-chain-16 800/1000
+PROGRESS recursive-chain-16 900/1000
+PROGRESS recursive-chain-16 1000/1000
+RESULT recursive-chain-16 old-p50-ns=23000 new-p50-ns=20000 paired-wins=869/1000
+CASE recursive-chain-256 samples=1000 repetitions=1
+PROGRESS recursive-chain-256 100/1000
+PROGRESS recursive-chain-256 200/1000
+PROGRESS recursive-chain-256 300/1000
+PROGRESS recursive-chain-256 400/1000
+PROGRESS recursive-chain-256 500/1000
+[test-lane] RUNNING exclusive (10s)
+PROGRESS recursive-chain-256 600/1000
+PROGRESS recursive-chain-256 700/1000
+PROGRESS recursive-chain-256 800/1000
+PROGRESS recursive-chain-256 900/1000
+PROGRESS recursive-chain-256 1000/1000
+RESULT recursive-chain-256 old-p50-ns=868000 new-p50-ns=348000 paired-wins=954/1000
+CASE recursive-chain-1024 samples=1000 repetitions=1
+[test-lane] RUNNING exclusive (15s)
+[test-lane] RUNNING exclusive (20s)
+PROGRESS recursive-chain-1024 100/1000
+[test-lane] RUNNING exclusive (25s)
+PROGRESS recursive-chain-1024 200/1000
+[test-lane] RUNNING exclusive (30s)
+PROGRESS recursive-chain-1024 300/1000
+PROGRESS recursive-chain-1024 400/1000
+[test-lane] RUNNING exclusive (35s)
+PROGRESS recursive-chain-1024 500/1000
+[test-lane] RUNNING exclusive (40s)
+PROGRESS recursive-chain-1024 600/1000
+PROGRESS recursive-chain-1024 700/1000
+[test-lane] RUNNING exclusive (45s)
+PROGRESS recursive-chain-1024 800/1000
+PROGRESS recursive-chain-1024 900/1000
+[test-lane] RUNNING exclusive (50s)
+PROGRESS recursive-chain-1024 1000/1000
+RESULT recursive-chain-1024 old-p50-ns=31009000 new-p50-ns=1917000 paired-wins=977/1000
+OK
+[test-lane] END exclusive exit=0

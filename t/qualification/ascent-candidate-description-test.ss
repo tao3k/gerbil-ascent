@@ -46,7 +46,9 @@
                        (list 'rule '(result ?x) '(input ?x) (list 'where form))
                        '(query result ?x) '(limits 16 64 128)) 100000))
            (check-equal? (reasoning-receipt-status receipt) 'complete)))
-       '((even? ?x) (< ?x ?x)))
+       (map (lambda (spec) (cons (car spec) (make-list (cadr spec) '?x)))
+            (cdr (assq 'where
+                       (cdr (assq 'operators (cddr (candidate-language-description))))))))
       (diagnostic '(where even? ?x) 'invalid-filter)
       (diagnostic '(compute ?out + ?x ?x) 'invalid-computation)
       (diagnostic '(compute ?out (* ?x 2)) 'unsupported-operator)

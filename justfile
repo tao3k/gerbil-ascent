@@ -326,6 +326,15 @@ arity-repetition-rows:
 clause-composition-rows:
     @timeout 90s gerbil {{ gerbil_test_runtime_options }} t/qualification/ascent-clause-composition-output.ss
 
+support-study-reference:
+    @timeout 120s gerbil {{ gerbil_test_runtime_options }} t/qualification/ascent-support-study-output.ss reference
+
+support-study-hypothetical:
+    @timeout 120s gerbil {{ gerbil_test_runtime_options }} t/qualification/ascent-support-study-output.ss hypothetical
+
+support-study-candidate mode="evaluate":
+    @timeout 120s gerbil {{ gerbil_test_runtime_options }} t/qualification/ascent-support-study-output.ss {{ mode }}
+
 clause-scale-rows:
     @timeout 90s gerbil {{ gerbil_test_runtime_options }} t/qualification/ascent-clause-scale-output.ss
 

@@ -91,9 +91,9 @@ derivation DAG when every rule body uses relation atoms and fixed
 =where=/=compute= clauses. The verifier replays scalar operations from
 earlier bindings and accepts no input node for them. The receipt keeps
 complete native rows when this proof is =bounded= or =unsupported=.
-The ordinary receipt still has no attached negation/reduction derivation
-proof; the ground nonmembership certificate supports the same fixed clauses
-when their finite closure fits its bounds.
+The default ordinary receipt does not run finite stratified proof generation;
+the optional fourth budget requests it. The ground nonmembership certificate
+supports the same fixed clauses when their finite closure fits its bounds.
 
 A separate [[file:finite-stratified-evidence.org][finite stratified replay]]
 now checks exact relation sets for inspected candidates containing checked
@@ -104,17 +104,21 @@ or an explanation of why a real-world fact is absent.
 
 A separate [[file:finite-stratified-evidence.org][stratified derivation certificate]] checks founded
 positive witnesses, lower-stratum negative absence, exact reduction groups
-and final query roots against that replay. A bounded producer now emits one
-checked proof for nonempty candidate answers. It is a callable API and is
-not yet attached to the ordinary candidate receipt. General Why-Not
-semantics remain open.
+and final query roots against that replay. A bounded producer emits one
+checked proof for nonempty candidate answers. Supplying a fourth positive
+work budget to =reasoning-attempt= attaches this finite certificate and proof
+status to the ordinary receipt. The verifier rebinds the receipt to the
+current source and inert proposal, reinspects the candidate and checks the
+proof against a freshly replayed closure. An empty query keeps a verifiable
+finite certificate and an =unsupported= proof status. Budget exhaustion
+leaves native completion intact. General Why-Not semantics remain open.
 
 #+NAME: llm-library-evidence-status
 | Claim | Executable evidence | Remaining boundary |
 |-------+---------------------+--------------------|
 | Positive derivation | Replayable proof DAG for the checked positive clauses | No complete provenance for all derivations |
 | Ground positive nonmembership | Finite closed-relation certificate and independent rule-closure checker | No open-world absence or general Why-Not cause |
-| Negation and reduction | Separate finite replay, bounded producer and checker for founded nodes and exact groups | No receipt integration, complete lineage or general Why-Not |
+| Negation and reduction | Opt-in receipt certificate, bounded producer and independent checker for founded nodes and exact groups | No complete lineage or general Why-Not |
 | Model usefulness | Two pre-registered five-task paired pilots in POO Flow Python Testing | No general benefit, deployed result or causal explanation |
 
 The finite verifier is independent of the native planner and solver, but its

@@ -50,8 +50,9 @@ withdraws an edge, changes a blocker and weights atomically; an
 invalid transaction must leave the last completed result and an older
 snapshot unchanged. This complements, rather than replaces, the
 existing 64-graph native/operator/candidate corpora and their different
-coverage. Order of rows, wall-clock timing and candidate intent are
-outside the set-equivalence claim.
+coverage. The candidate arm also requests and verifies a bounded stratified
+receipt proof for each diagnostic graph. Order of rows, wall-clock timing and
+candidate intent are outside the set-equivalence claim.
 
 The repository gate is =just build=, =just test=, =just oracle=,
 =just performance= and policy checks at one exact head, followed by
@@ -111,3 +112,37 @@ per-case results and limits on [[https://github.com/tao3k/poo-flow/pull/34][POO 
 it nor the small live pilots establish general model helpfulness, source
 authority or deployed behavior. The Python adapter does not define the
 Scheme grammar.
+
+* Mainline execution order
+
+The next work is organized by capability and its admission gate.
+
+1. *Bounded candidate evidence through the public receipt.* A caller may
+   request finite stratified evidence with an explicit fourth
+   =reasoning-attempt= work budget. Native completion is independent of
+   evidence completion. Verifiers rebind the current source and candidate,
+   then replay the finite closure and founded proof independently. The
+   finite verifier can validate an empty answer without claiming a proof for
+   absent rows. The native/candidate common-contract corpus and the proof
+   corpus are required together. This
+   closes the checked subset's receipt path, not exhaustive lineage or
+   general Why-Not.
+2. *Public lifecycle latency.* The matched three-node benchmark currently
+   measures roughly 20 ms median for admit-and-solve after operator fusion,
+   while its native core is about 0.3 ms; see
+   [[file:small-graph-benchmark.org][the phase receipts]]. The next change
+   must attribute snapshot construction and POO validation before editing
+   their semantic owner, retain exact row sets and budget behavior, and show
+   a reproducible matched reduction across all measured masks. The 1 ms
+   public target remains open.
+3. *Language and explanation scope.* Expand typed higher-order change only
+   after its finite operator laws and scale evidence; extend provenance and
+   Why-Not only with explicit semantics for alternative supports and cycles.
+   Keep the Rust 0.8.0 replication checklist as a separate historical claim.
+4. *Model usefulness.* Repeat a pre-registered caller study only after the
+   receipt and latency contracts stabilize. Score answer choice and authority
+   boundaries separately. The two current pilots do not establish general
+   model benefit, and their temporal release errors remain a live boundary.
+
+An exact-head local and Ubuntu gate is required for a release candidate;
+passing one focused module does not complete this sequence.

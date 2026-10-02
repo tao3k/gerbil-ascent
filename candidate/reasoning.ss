@@ -27,6 +27,13 @@
                  candidate-positive-proof)
         (only-in :gerbil-ascent/candidate/nonmembership
                  candidate-positive-nonmembership)
+        (only-in :gerbil-ascent/candidate/finite-evidence
+                 candidate-finite-evidence candidate-verify-finite-evidence
+                 finite-evidence-status)
+        (only-in :gerbil-ascent/candidate/stratified-producer
+                 candidate-produce-stratified-proof)
+        (only-in :gerbil-ascent/candidate/stratified-proof
+                 candidate-verify-stratified-proof)
         (only-in :gerbil-ascent/program/scheme-language
                  relational-admit/report
                  relational-admission-report-admission
@@ -36,6 +43,8 @@
                  relational-solve relational-query-name))
 
 (export reasoning-source-snapshot reasoning-attempt
+        reasoning-verify-finite-receipt
+        reasoning-verify-stratified-receipt
         reasoning-receipt-bound?
         reasoning-snapshot? reasoning-snapshot-identity
         reasoning-snapshot-generation reasoning-snapshot-digest
@@ -47,6 +56,12 @@
         reasoning-receipt-query reasoning-receipt-rows
         reasoning-receipt-diagnostics reasoning-receipt-evidence
         reasoning-receipt-proof reasoning-receipt-nonmembership
+        reasoning-receipt-stratified
+        reasoning-stratified-evidence?
+        reasoning-stratified-evidence-status
+        reasoning-stratified-evidence-finite
+        reasoning-stratified-evidence-proof
+        reasoning-stratified-evidence-work-budget
         reasoning-diagnostic? reasoning-diagnostic-code
         reasoning-diagnostic-path reasoning-diagnostic-detail
         reasoning-evidence? reasoning-evidence-kind
@@ -55,8 +70,9 @@
 (defstruct reasoning-receipt
   (status snapshot-identity snapshot-generation snapshot-digest
           candidate-digest query rows diagnostics evidence proof
-          nonmembership))
+          nonmembership stratified))
 (defstruct reasoning-evidence (kind support reachable))
+(defstruct reasoning-stratified-evidence (status finite proof work-budget))
 
 (def (copy-row row arity)
   (and (list? row) (= (length row) arity)
@@ -275,7 +291,7 @@
 ;;; Accessors still return ordinary Scheme values; callers own mutations.
 (def (reasoning-receipt-for snapshot digest status query rows
                             diagnostics evidence (proof #f)
-                            (nonmembership #f))
+                            (nonmembership #f) (stratified #f))
   (make-reasoning-receipt
    status
    (reasoning-snapshot-identity snapshot)
@@ -293,7 +309,7 @@
          (reasoning-evidence-kind evidence)
          (copy-datum (reasoning-evidence-support evidence))
          (copy-datum (reasoning-evidence-reachable evidence))))
-   proof nonmembership))
+   proof nonmembership stratified))
 
 (def (capture thunk)
   (with-catch
@@ -306,15 +322,98 @@
       (substring message 0 240)
       message)))
 
+;;; Requested evidence never changes native completion. Its finite replay
+;;; checks the complete answer before a founded proof is offered.
+(def (produce-receipt-stratified snapshot spec digest rows work-budget)
+  (let (finite
+        (candidate-finite-evidence
+         snapshot spec digest 'complete rows work-budget))
+    (if (eq? (finite-evidence-status finite) 'complete)
+      (let-values (((status proof)
+                    (candidate-produce-stratified-proof
+                     snapshot spec digest 'complete rows finite
+                     work-budget work-budget)))
+        (make-reasoning-stratified-evidence
+         status finite proof work-budget))
+      (make-reasoning-stratified-evidence
+       (finite-evidence-status finite) finite [] work-budget))))
+
+;; reasoning-verify-finite-receipt
+;;   : (-> ReasoningReceipt ReasoningSnapshot InertCandidate Nat Verdict)
+;;   | doc m%
+;;       Reinspect and replay the optional finite certificate against the
+;;       current source, candidate and native answer. This also checks an
+;;       empty answer without claiming a derivation for absent rows.
+;;     %
+(def (reasoning-verify-finite-receipt receipt snapshot candidate
+                                      work-budget)
+  (unless (and (exact-integer? work-budget) (> work-budget 0))
+    (error "finite receipt verification needs positive work budget"
+           work-budget))
+  (if (and (reasoning-receipt-bound? receipt snapshot candidate)
+           (eq? (reasoning-receipt-status receipt) 'complete)
+           (reasoning-stratified-evidence?
+            (reasoning-receipt-stratified receipt)))
+    (let (checked
+          (capture
+           (lambda ()
+             (candidate-verify-finite-evidence
+              snapshot (candidate-inspect snapshot candidate)
+              (reasoning-receipt-candidate-digest receipt)
+              'complete (reasoning-receipt-rows receipt)
+              (reasoning-stratified-evidence-finite
+               (reasoning-receipt-stratified receipt))
+              work-budget))))
+      (if (vector-ref checked 0) (vector-ref checked 1) 'invalid))
+    'invalid))
+
+;; reasoning-verify-stratified-receipt
+;;   : (-> ReasoningReceipt ReasoningSnapshot InertCandidate Nat Verdict)
+;;   | doc m%
+;;       Reinspect the candidate and independently check a completed
+;;       receipt's optional founded proof against its bound finite snapshot.
+;;       An absent or unsupported proof never validates by implication.
+;;     %
+(def (reasoning-verify-stratified-receipt receipt snapshot candidate
+                                          work-budget)
+  (unless (and (exact-integer? work-budget) (> work-budget 0))
+    (error "stratified receipt verification needs positive work budget"
+           work-budget))
+  (if (and (reasoning-receipt-bound? receipt snapshot candidate)
+           (eq? (reasoning-receipt-status receipt) 'complete)
+           (reasoning-stratified-evidence?
+            (reasoning-receipt-stratified receipt)))
+    (let (evidence (reasoning-receipt-stratified receipt))
+      (case (reasoning-stratified-evidence-status evidence)
+        ((complete)
+         (let (checked
+               (capture
+                (lambda ()
+                  (candidate-verify-stratified-proof
+                   snapshot (candidate-inspect snapshot candidate)
+                   (reasoning-receipt-candidate-digest receipt)
+                   'complete (reasoning-receipt-rows receipt)
+                   (reasoning-stratified-evidence-finite evidence)
+                   work-budget
+                   (reasoning-stratified-evidence-proof evidence)
+                   work-budget))))
+           (if (vector-ref checked 0) (vector-ref checked 1) 'invalid)))
+        ((bounded) 'bounded)
+        ((unsupported) 'unsupported)
+        (else 'invalid)))
+    'invalid))
+
 ;; reasoning-attempt
-;;   : (-> ReasoningSnapshot InertCandidate [Nat] ReasoningReceipt)
+;;   : (-> ReasoningSnapshot InertCandidate [Nat] [Nat] ReasoningReceipt)
 ;;   | doc m%
 ;;       Inspect a bounded candidate as data, run it against one
 ;;       copied source snapshot, and return a complete/rejected/unknown
 ;;       observation. The receipt cannot promote candidate facts to source.
 ;;       The optional third argument caps positive-proof body-row probes;
 ;;       native query completion, Why proof and ground Why-Not certificate
-;;       statuses remain independent.
+;;       statuses remain independent. An optional fourth positive work
+;;       budget requests finite stratified replay and a founded proof;
+;;       it never changes the native answer or completion status.
 ;;
 ;;       # Examples
 ;;
@@ -324,17 +423,24 @@
 ;;                     (rule (path ?x ?y) (edge ?x ?y))
 ;;                     (query path 1 2) (limits 8 8 16)))
 ;;       ;; => a receipt with status complete or a located rejection
+;;       (reasoning-attempt snapshot candidate 100000 20000)
+;;       ;; => also request finite stratified evidence with a 20000-step cap
 ;;       ```
 ;;     %
 ;;; Boundary: Structural diagnostics use candidate clause indexes, not
 ;;; Scheme syntax locations; planner failures retain their own messages.
-(def (reasoning-attempt snapshot candidate (proof-steps 100000))
+(def (reasoning-attempt snapshot candidate (proof-steps 100000)
+                        (stratified-steps #f))
   (unless (reasoning-snapshot-valid? snapshot)
     (error "reasoning attempt requires a current valid source snapshot"
            snapshot))
   (unless (and (exact-integer? proof-steps) (> proof-steps 0))
     (error "reasoning attempt requires positive proof work budget"
            proof-steps))
+  (unless (or (not stratified-steps)
+              (and (exact-integer? stratified-steps) (> stratified-steps 0)))
+    (error "reasoning attempt requires positive stratified work budget"
+           stratified-steps))
   (let* ((digest (candidate-content-digest candidate))
          (inspection
           (capture (lambda () (candidate-inspect snapshot candidate)))))
@@ -419,8 +525,18 @@
                              (candidate-positive-nonmembership
                               snapshot spec digest 'complete rows
                               proof-steps))))
+                         (stratified-result
+                          (and stratified-steps
+                               (capture
+                                (lambda ()
+                                  (produce-receipt-stratified
+                                   snapshot spec digest rows
+                                   stratified-steps)))))
                          (proof-ok? (vector-ref proof-result 0))
-                         (absence-ok? (vector-ref absence-result 0)))
+                         (absence-ok? (vector-ref absence-result 0))
+                         (stratified-ok?
+                          (or (not stratified-result)
+                              (vector-ref stratified-result 0))))
                     (reasoning-receipt-for
                      snapshot digest 'complete query rows
                      (append
@@ -433,10 +549,17 @@
                         (list (make-reasoning-diagnostic
                                'nonmembership-failed '(explain)
                                (failure-detail
-                                (vector-ref absence-result 1))))))
+                                (vector-ref absence-result 1)))))
+                      (if stratified-ok? []
+                        (list (make-reasoning-diagnostic
+                               'stratified-evidence-failed '(explain)
+                               (failure-detail
+                                (vector-ref stratified-result 1))))))
                      (vector-ref (vector-ref observed 1) 1)
                      (and proof-ok? (vector-ref proof-result 1))
-                     (and absence-ok? (vector-ref absence-result 1)))))
+                     (and absence-ok? (vector-ref absence-result 1))
+                     (and stratified-result stratified-ok?
+                          (vector-ref stratified-result 1)))))
                  (else
                   (reasoning-receipt-for
                    snapshot digest 'unknown query []

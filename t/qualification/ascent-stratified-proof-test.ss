@@ -57,6 +57,20 @@
 
 (def possible-edges '((0 1) (0 2) (1 0) (1 2) (2 0) (2 1)))
 
+(def stratified-graph-program
+  '(candidate
+     (relation path 2)
+     (relation allowed 2)
+     (relation total 2)
+     (rule (path ?x ?y) (edge ?x ?y))
+     (rule (path ?x ?z) (path ?x ?y) (edge ?y ?z))
+     (rule (allowed ?x ?y) (path ?x ?y)
+           (not (blocked ?x ?y)))
+     (rule (total ?r ?n) (root ?r)
+           (reduce ?n (count) (allowed ?r ?y)))
+     (query total 0 ?n)
+     (limits 8 32 64)))
+
 (def (mask-edges mask)
   (let loop ((remaining possible-edges) (bit 1) (rows []))
     (if (null? remaining)
@@ -281,6 +295,67 @@
                           produced 20000)
                   'valid))))))
        (iota 64)))
+    (test-case "recursive strata track source correction and distinct support"
+      ;; Edges give paths 0->1 and 0->2. Blocking 0->2 leaves one
+      ;; allowed target; removing that block leaves two. Repeating an
+      ;; edge must not turn the count into three.
+      (let* ((first
+              (reasoning-source-snapshot
+               'stratified-change 1
+               '((edge 2 ((0 1) (1 2)))
+                 (blocked 2 ((0 2)))
+                 (root 1 ((0))))))
+             (changed
+              (reasoning-source-snapshot
+               'stratified-change 2
+               '((edge 2 ((0 1) (1 2)))
+                 (blocked 2 ())
+                 (root 1 ((0))))))
+             (repeated
+              (reasoning-source-snapshot
+               'stratified-change 3
+               '((edge 2 ((0 1) (0 1) (1 2)))
+                 (blocked 2 ())
+                 (root 1 ((0))))))
+             (old-receipt
+              (reasoning-attempt first stratified-graph-program))
+             (old-spec (candidate-inspect first stratified-graph-program))
+             (old-digest
+              (reasoning-receipt-candidate-digest old-receipt))
+             (old-rows (reasoning-receipt-rows old-receipt))
+             (old-finite
+              (candidate-finite-evidence
+               first old-spec old-digest 'complete old-rows 20000)))
+        (check-equal? old-rows '((0 1)))
+        (for-each
+         (lambda (source expected)
+           (let* ((receipt (reasoning-attempt source stratified-graph-program))
+                  (spec (candidate-inspect source stratified-graph-program))
+                  (digest (reasoning-receipt-candidate-digest receipt))
+                  (status (reasoning-receipt-status receipt))
+                  (rows (reasoning-receipt-rows receipt))
+                  (finite
+                   (candidate-finite-evidence
+                    source spec digest status rows 20000)))
+             (check-equal? status 'complete)
+             (check-equal? rows expected)
+             (let-values (((produced-status produced)
+                           (candidate-produce-stratified-proof
+                            source spec digest status rows finite
+                            20000 20000)))
+               (check-equal? produced-status 'complete)
+               (check-equal?
+                (verify source spec digest status rows finite
+                        produced 20000)
+                'valid))))
+         (list first changed repeated)
+         '(((0 1)) ((0 2)) ((0 2))))
+        (let-values (((verdict produced)
+                      (candidate-produce-stratified-proof
+                       changed old-spec old-digest 'complete old-rows
+                       old-finite 20000 20000)))
+          (check-equal? verdict 'invalid)
+          (check-equal? produced []))))
     (test-case "stale finite certificate cannot produce a proof"
       (let-values (((source spec digest status rows finite)
                     (case-values)))
@@ -289,6 +364,19 @@
                        (snapshot 2) spec digest status rows finite
                        5000 5000)))
           (check-equal? produced-status 'invalid)
+          (check-equal? produced []))))
+    (test-case "finite replay and proof search expose separate budget caps"
+      (let-values (((source spec digest status rows finite)
+                    (case-values)))
+        (let-values (((verdict produced)
+                      (candidate-produce-stratified-proof
+                       source spec digest status rows finite 1 5000)))
+          (check-equal? verdict 'bounded)
+          (check-equal? produced []))
+        (let-values (((verdict produced)
+                      (candidate-produce-stratified-proof
+                       source spec digest status rows finite 5000 1)))
+          (check-equal? verdict 'bounded)
           (check-equal? produced []))))
     (test-case "repeated, omitted and forward group support fail"
       (let-values (((source spec digest status rows finite)

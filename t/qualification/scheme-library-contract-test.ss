@@ -14,7 +14,10 @@
         (only-in :gerbil-ascent/candidate/reasoning
                  reasoning-source-snapshot reasoning-attempt
                  reasoning-receipt-status reasoning-receipt-rows
-                 reasoning-receipt-bound?))
+                 reasoning-receipt-bound?
+                 reasoning-receipt-stratified
+                 reasoning-stratified-evidence-status
+                 reasoning-verify-stratified-receipt))
 
 (export scheme-library-contract-test)
 
@@ -131,9 +134,15 @@
            (list (list 'edge 2 edges) (list 'blocked 2 blocked)
                  (list 'weight 2 supplied-weights)
                  (list 'root 1 supplied-roots))))
-         (receipt (reasoning-attempt snapshot candidate)))
+         (receipt (reasoning-attempt snapshot candidate 100000 20000)))
     (check-equal? (reasoning-receipt-status receipt) 'complete)
     (check-equal? (reasoning-receipt-bound? receipt snapshot candidate) #t)
+    (check-equal?
+     (reasoning-stratified-evidence-status
+      (reasoning-receipt-stratified receipt)) 'complete)
+    (check-equal?
+     (reasoning-verify-stratified-receipt
+      receipt snapshot candidate 20000) 'valid)
     (reasoning-receipt-rows receipt)))
 
 (def (check-all generation edges blocked supplied-weights supplied-roots)

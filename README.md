@@ -96,8 +96,17 @@ inspected positive proposal with fixed `where` and `compute` clauses,
 `candidate/provenance.ss` can attach
 a bounded, replayable rule-instance proof DAG to a completed query. Its
 source and hypothetical candidate nodes remain distinct; negation and
-reduction have no general proof claim. For a missing ground target under finite
-positive rules with the same fixed scalar clauses,
+reduction use a separate finite stratified proof when the caller supplies an
+explicit fourth work-budget argument to `reasoning-attempt`. The optional
+`reasoning-receipt-stratified` value contains a finite closure certificate,
+one founded support for each nonempty query row when supported, and an explicit
+status. `reasoning-verify-stratified-receipt` rechecks a completed proof against
+the bound source and candidate. `reasoning-verify-finite-receipt` also checks
+the finite closure when a query answer is empty. A bounded or unsupported
+proof leaves the native completed answer intact. Neither proof is exhaustive
+provenance.
+For a missing ground target under finite positive rules with the same fixed
+scalar clauses,
 `candidate/nonmembership.ss` separately emits a
 bounded per-relation closed-set certificate; its verifier checks input
 coverage, rule closure and target absence relative to the named snapshot.

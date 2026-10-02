@@ -75,7 +75,25 @@ and calls the checker before returning =complete= with a proof. It returns
 =bounded= when its work/node limit is exhausted, =unsupported= for an empty
 answer or missing support, and =invalid= when the certificate or produced
 proof fails verification. This API is separate from the existing positive
-receipt proof and is not automatically attached to candidate receipts.
+receipt proof. A caller can request attachment to an ordinary receipt by
+passing a fourth positive =reasoning-attempt= argument. The same budget caps
+finite replay and proof search; omission leaves the existing receipt path
+unchanged. The attached value exposes its finite certificate, proof datum and
+=complete=, =bounded=, =unsupported=, =mismatch= or =invalid= status.
+=reasoning-verify-stratified-receipt= checks the current snapshot/proposal
+binding, reinspects the inert candidate, and independently checks a
+=complete= proof with a caller-selected positive verification budget. The
+other verdicts never validate a proof by implication. An empty query still
+has a finite certificate that can be checked through
+=reasoning-verify-finite-receipt=, but its proof status is =unsupported=.
+
+#+begin_src scheme
+(def receipt (reasoning-attempt snapshot candidate 100000 20000))
+(reasoning-verify-finite-receipt receipt snapshot candidate 20000)
+;; => valid for the bounded finite model, including an empty answer
+(reasoning-verify-stratified-receipt receipt snapshot candidate 20000)
+;; => valid only for a completed, founded nonempty proof
+#+end_src
 
 The bounded claim is relative to the supplied snapshot and inspected
 candidate. Neither the producer nor checker provides exhaustive lineage for
@@ -105,8 +123,21 @@ it rejects omitted or repeated group support, forward references, a changed
 negative row, stale source generation, altered closure, wrong roots and a
 proof-work cap. It checks produced proofs for these cases and every nonempty
 answer among all 64 directed three-node graph subsets against the independent
-checker; an empty answer returns =unsupported=. These are bounded examples,
-not a completeness theorem.
+checker; an empty answer returns =unsupported=. A separate hand-calculated
+recursive path, negation and count case checks source correction and duplicate
+edge support (counts 1, 2 and 2), then rejects the old certificate against
+the changed source. Separate finite-replay and proof-search budget tests return
+=bounded=. These are bounded examples, not a completeness theorem.
+
+=t/qualification/ascent-reasoning-library-test.ss= exercises the optional
+ordinary-receipt path with recursion, negation, fixed operations and a
+reduction. It checks source correction, wrong-proposal binding, a changed
+proof root, an independent verification budget, and native completion after
+evidence budget exhaustion. For an empty answer it verifies the finite
+certificate while the proof remains =unsupported=.
+The shared =scheme-library-contract-test.ss= checks requested receipt proofs
+alongside direct native, fragment and candidate outputs against one
+independent finite model on eight diagnostic graph snapshots.
 
 #+begin_src sh
 ASCENT_GXTEST_TIMEOUT=180s just test-file t/qualification/ascent-finite-evidence-test.ss
@@ -126,9 +157,14 @@ temporal-causality cases separately inspect a native closed cut and an
 open parent; this finite relation replay does not itself certify valid
 time, knowledge time, causal cuts or release authority.
 
-The producer and checker now cover the inspected checked subset for nonempty
-answers with explicit finite limits. The remaining proof gate is broader
-independent oracle coverage across recursive strata, source changes,
-duplicate support and all bounded-failure modes, followed by a defined
-receipt integration contract. General negative explanations, exhaustive
-lineage and model benefit remain separate research gates.
+The checked subset now has an opt-in receipt path. It binds the same snapshot,
+candidate digest, query rows and finite certificate, preserves native
+completion when proof generation is bounded or unsupported, and states its
+additional work budget. Independent small-case expectations cover recursive,
+negative and reduction strata, source changes and duplicate support; finite
+and proof work caps are separate in the direct API. The 64-graph producer
+corpus relies on the separate checker for proof validity; its answer model is
+exercised by the finite-evidence corpus. The remaining proof gate is broader
+independent oracle coverage for combined clauses and capacity limits.
+General negative explanations, exhaustive lineage and model benefit remain
+separate research gates.

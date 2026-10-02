@@ -8,14 +8,22 @@
         (only-in :gerbil-ascent/candidate/reasoning
                  reasoning-source-snapshot reasoning-attempt
                  reasoning-receipt-bound?
+                 reasoning-verify-finite-receipt
+                 reasoning-verify-stratified-receipt
                  reasoning-snapshot-digest
                  reasoning-receipt-status reasoning-receipt-rows
                  reasoning-receipt-diagnostics reasoning-receipt-evidence
+                 reasoning-receipt-stratified
+                 reasoning-stratified-evidence-status
+                 reasoning-stratified-evidence-finite
+                 reasoning-stratified-evidence-proof
                  reasoning-receipt-snapshot-generation
                  reasoning-receipt-snapshot-digest
                  reasoning-diagnostic-code reasoning-diagnostic-path
                  reasoning-evidence-kind reasoning-evidence-support
-                 reasoning-evidence-reachable))
+                 reasoning-evidence-reachable)
+        (only-in :gerbil-ascent/candidate/finite-evidence
+                 finite-evidence-closure))
 
 (export ascent-reasoning-library-test)
 
@@ -121,6 +129,7 @@
              (present (reasoning-attempt first (proposal 1 3)))
              (absent (reasoning-attempt first (proposal 1 4))))
         (check-equal? (reasoning-receipt-status present) 'complete)
+        (check-equal? (reasoning-receipt-stratified present) #f)
         (check-equal? (reasoning-receipt-rows present) '((1 3)))
         (check-equal? (reasoning-evidence-kind
                        (reasoning-receipt-evidence present)) 'witness)
@@ -253,11 +262,21 @@
          #t)))
     (test-case "nonreflexive empty graph has complete unsupported evidence"
       (let* ((snapshot (edge-snapshot 1 '()))
-             (receipt (reasoning-attempt snapshot (proposal 1 1))))
+             (candidate (proposal 1 1))
+             (receipt (reasoning-attempt snapshot candidate 100000 20000))
+             (stratified (reasoning-receipt-stratified receipt)))
         (check-equal? (reasoning-receipt-status receipt) 'complete)
         (check-equal? (reasoning-receipt-rows receipt) '())
         (check-equal? (reasoning-evidence-kind
-                       (reasoning-receipt-evidence receipt)) 'unsupported)))
+                       (reasoning-receipt-evidence receipt)) 'unsupported)
+        (check-equal? (reasoning-stratified-evidence-status stratified)
+                      'unsupported)
+        (check-equal?
+         (reasoning-verify-finite-receipt
+          receipt snapshot candidate 20000) 'valid)
+        (check-equal?
+         (reasoning-verify-stratified-receipt
+          receipt snapshot candidate 20000) 'unsupported)))
     (test-case "checked candidate clauses share trusted Scheme semantics"
       (let* ((snapshot
               (reasoning-source-snapshot
@@ -285,11 +304,17 @@
                    (reduce ?n (count) (weighted ?r ?v)))
                  (query summary 1 ?n)
                  (limits 16 64 128)))
-             (receipt (reasoning-attempt snapshot candidate)))
+             (receipt (reasoning-attempt snapshot candidate 100000 20000)))
         (check-equal? (reasoning-receipt-status receipt) 'complete)
         (check-equal? (reasoning-receipt-rows receipt) '((1 1)))
         (check-equal? (reasoning-evidence-kind
                        (reasoning-receipt-evidence receipt)) 'unsupported)
+        (check-equal?
+         (reasoning-stratified-evidence-status
+          (reasoning-receipt-stratified receipt)) 'complete)
+        (check-equal?
+         (reasoning-verify-stratified-receipt
+          receipt snapshot candidate 20000) 'valid)
         (check-equal?
          (reasoning-receipt-rows
           (reasoning-attempt
@@ -300,6 +325,68 @@
                     (not (blocked ?x ?y)))
               (query path 1 ?y) (limits 16 32 64))))
          '((1 2)))))
+    (test-case "optional receipt proof follows source and candidate binding"
+      (let* ((first (rich-snapshot 1 '((0 1) (1 2))))
+             (second (rich-snapshot 2 '((0 1))))
+             (candidate (rich-proposal '?y))
+             (first-receipt
+              (reasoning-attempt first candidate 100000 20000))
+             (second-receipt
+              (reasoning-attempt second candidate 100000 20000))
+             (bounded
+              (reasoning-attempt first candidate 100000 1))
+             (rejected
+              (reasoning-attempt
+               first
+               '(candidate (relation x 1)
+                           (rule (x ?x) (missing ?x))
+                           (query x ?x) (limits 8 8 16))
+               100000 20000)))
+        (check-equal? (reasoning-receipt-rows first-receipt) '((0 20)))
+        (check-equal? (reasoning-receipt-rows second-receipt) '((0 8)))
+        (check-equal? (reasoning-receipt-status bounded) 'complete)
+        (check-equal?
+         (reasoning-stratified-evidence-status
+          (reasoning-receipt-stratified bounded)) 'bounded)
+        (check-equal?
+         (reasoning-verify-stratified-receipt bounded first candidate 20000)
+         'bounded)
+        (check-equal?
+         (reasoning-verify-stratified-receipt
+          first-receipt first candidate 20000) 'valid)
+        (check-equal?
+         (reasoning-verify-stratified-receipt
+          second-receipt second candidate 20000) 'valid)
+        (check-equal?
+         (reasoning-verify-stratified-receipt
+          first-receipt second candidate 20000) 'invalid)
+        (check-equal?
+         (reasoning-verify-stratified-receipt
+          first-receipt first (rich-proposal '?x) 20000) 'invalid)
+        (check-equal? (reasoning-receipt-stratified rejected) #f)
+        (check-equal?
+         (reasoning-verify-stratified-receipt
+          rejected first candidate 20000) 'invalid)
+        (check-equal?
+         (reasoning-verify-finite-receipt
+          first-receipt first candidate 1) 'bounded)
+        (let (proof
+              (reasoning-stratified-evidence-proof
+               (reasoning-receipt-stratified first-receipt)))
+          (set-car! (caddr proof) 999)
+          (check-equal?
+           (reasoning-verify-stratified-receipt
+            first-receipt first candidate 20000) 'invalid))
+        (set-car!
+         (cddr
+          (assq 'path
+                (finite-evidence-closure
+                 (reasoning-stratified-evidence-finite
+                  (reasoning-receipt-stratified second-receipt)))))
+         '((99 99)))
+        (check-equal?
+         (reasoning-verify-stratified-receipt
+          second-receipt second candidate 20000) 'invalid)))
     (test-case "scripted feedback revision stays bound to exact source and proposal"
       (let* ((first (rich-snapshot 1 '((0 1) (1 2))))
              (invalid

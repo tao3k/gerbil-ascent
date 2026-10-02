@@ -1,0 +1,89 @@
+[ascent-test] START t/qualification/scheme-operator-retained-test.ss
+[test-lane] START exclusive t/qualification/scheme-operator-retained-test.ss
+HARNESS ("t/qualification/scheme-operator-retained-test.ss")
+MODULE t/qualification/scheme-operator-retained-test.ss
+SUITE retained first-class relational operators
+CASE all finite graphs survive append, duplicate and withdrawal
+PROGRESS retained graphs 2/64
+PROGRESS retained graphs 4/64
+PROGRESS retained graphs 6/64
+PROGRESS retained graphs 8/64
+PROGRESS retained graphs 10/64
+PROGRESS retained graphs 12/64
+PROGRESS retained graphs 14/64
+PROGRESS retained graphs 16/64
+PROGRESS retained graphs 18/64
+PROGRESS retained graphs 20/64
+PROGRESS retained graphs 22/64
+PROGRESS retained graphs 24/64
+PROGRESS retained graphs 26/64
+PROGRESS retained graphs 28/64
+PROGRESS retained graphs 30/64
+PROGRESS retained graphs 32/64
+PROGRESS retained graphs 34/64
+PROGRESS retained graphs 36/64
+PROGRESS retained graphs 38/64
+PROGRESS retained graphs 40/64
+PROGRESS retained graphs 42/64
+PROGRESS retained graphs 44/64
+PROGRESS retained graphs 46/64
+[test-lane] RUNNING exclusive (5s)
+PROGRESS retained graphs 48/64
+PROGRESS retained graphs 50/64
+PROGRESS retained graphs 52/64
+PROGRESS retained graphs 54/64
+PROGRESS retained graphs 56/64
+PROGRESS retained graphs 58/64
+PROGRESS retained graphs 60/64
+PROGRESS retained graphs 62/64
+PROGRESS retained graphs 64/64
+CASE-OK all finite graphs survive append, duplicate and withdrawal
+CASE fixed captured source and finite mapping share retained solve
+CASE-OK fixed captured source and finite mapping share retained solve
+CASE batch replacement commits both sources and nested closure
+PROGRESS nested source cuts 2/64
+PROGRESS nested source cuts 4/64
+PROGRESS nested source cuts 6/64
+PROGRESS nested source cuts 8/64
+PROGRESS nested source cuts 10/64
+PROGRESS nested source cuts 12/64
+PROGRESS nested source cuts 14/64
+PROGRESS nested source cuts 16/64
+PROGRESS nested source cuts 18/64
+PROGRESS nested source cuts 20/64
+PROGRESS nested source cuts 22/64
+PROGRESS nested source cuts 24/64
+PROGRESS nested source cuts 26/64
+PROGRESS nested source cuts 28/64
+PROGRESS nested source cuts 30/64
+PROGRESS nested source cuts 32/64
+PROGRESS nested source cuts 34/64
+PROGRESS nested source cuts 36/64
+PROGRESS nested source cuts 38/64
+PROGRESS nested source cuts 40/64
+PROGRESS nested source cuts 42/64
+PROGRESS nested source cuts 44/64
+PROGRESS nested source cuts 46/64
+PROGRESS nested source cuts 48/64
+PROGRESS nested source cuts 50/64
+PROGRESS nested source cuts 52/64
+[test-lane] RUNNING exclusive (10s)
+PROGRESS nested source cuts 54/64
+PROGRESS nested source cuts 56/64
+PROGRESS nested source cuts 58/64
+PROGRESS nested source cuts 60/64
+PROGRESS nested source cuts 62/64
+PROGRESS nested source cuts 64/64
+CASE-OK batch replacement commits both sources and nested closure
+CASE failed batch preserves all sources and the prior result
+CASE-OK failed batch preserves all sources and the prior result
+CASE invalid or over-budget update preserves last result
+CASE-OK invalid or over-budget update preserves last result
+CASE failed output budget does not publish an insertion
+CASE-OK failed output budget does not publish an insertion
+SUITE-OK retained first-class relational operators
+MODULE-OK t/qualification/scheme-operator-retained-test.ss
+HARNESS-OK ("t/qualification/scheme-operator-retained-test.ss")
+OK
+[test-lane] END exclusive exit=0
+[ascent-test] PASS t/qualification/scheme-operator-retained-test.ss (12s)

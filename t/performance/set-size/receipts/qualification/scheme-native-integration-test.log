@@ -1,0 +1,13 @@
+[ascent-test] START t/qualification/scheme-native-integration-test.ss
+[test-lane] START exclusive t/qualification/scheme-native-integration-test.ss
+HARNESS ("t/qualification/scheme-native-integration-test.ss")
+MODULE t/qualification/scheme-native-integration-test.ss
+SUITE native Scheme combined language lifecycle
+CASE views, negation, reduction and lattice survive withdrawal
+CASE-OK views, negation, reduction and lattice survive withdrawal
+SUITE-OK native Scheme combined language lifecycle
+MODULE-OK t/qualification/scheme-native-integration-test.ss
+HARNESS-OK ("t/qualification/scheme-native-integration-test.ss")
+OK
+[test-lane] END exclusive exit=0
+[ascent-test] PASS t/qualification/scheme-native-integration-test.ss (3s)

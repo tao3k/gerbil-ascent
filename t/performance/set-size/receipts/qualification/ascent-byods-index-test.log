@@ -1,0 +1,15 @@
+[ascent-test] START t/qualification/ascent-byods-index-test.ss
+[test-lane] START exclusive t/qualification/ascent-byods-index-test.ss
+HARNESS ("t/qualification/ascent-byods-index-test.ss")
+MODULE t/qualification/ascent-byods-index-test.ss
+SUITE ASCENT BYODS storage and custom index composition
+CASE grouped eqrel lookup uses custom composite index
+CASE-OK grouped eqrel lookup uses custom composite index
+CASE custom BYODS index survives append and replacement
+CASE-OK custom BYODS index survives append and replacement
+SUITE-OK ASCENT BYODS storage and custom index composition
+MODULE-OK t/qualification/ascent-byods-index-test.ss
+HARNESS-OK ("t/qualification/ascent-byods-index-test.ss")
+OK
+[test-lane] END exclusive exit=0
+[ascent-test] PASS t/qualification/ascent-byods-index-test.ss (3s)

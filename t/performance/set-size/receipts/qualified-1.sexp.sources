@@ -1,0 +1,4 @@
+4a5467d8abd8485fe221ce58f267648572e8d95aa5f0db23c24718448c137773  program/evaluate.ss
+f34cd9c4d5bd235a43113a39183a884815235217461fa667540b702d1432293b  t/qualification/ascent-set-size-reference-evaluate.ss
+4c88ae08767a4946c712cf262fa63737ec1c249f771d2873753dfeaa74b7e8a8  t/performance/set-size-benchmark.ss
+cbe3087f91572a7a26ccd5deb8863326522d2daacdccbbbc9bff5acb836e2373  tools/build-set-size-benchmark.ss

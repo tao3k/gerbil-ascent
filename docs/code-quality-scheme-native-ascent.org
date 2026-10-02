@@ -609,3 +609,41 @@ and exit 0. Source manifests match the final files; the frozen reference
 matches committed =98a96ca= after import relocation and export alpha-renaming.
 The complete qualification and SS suites and remote CI remain unrun for
 this slice. No gate or dependency pin changed.
+
+** Built-in Set cardinality after frontier pruning
+
+The next slice is measured against committed =d918a35=. It computes each
+pending batch size once and advances historical cardinality by that count
+only for exact built-in Set storage with exact built-in hash indexing.
+Lattice and custom storage/index Providers retain full historical recounts.
+Source duplicates and retained-session source update accounting are unchanged.
+This removes another repeated historical scan after frontier pruning has
+reduced the previous join traversal work.
+
+Both final matched whole-solve runs pass 1000 alternating pairs per shape,
+with 20 warmups and independent exact ordered-row checks outside timing.
+The 1024-edge chain improves 1.492x/1.493x: reference medians
+1.732/1.723 ms versus candidate 1.161/1.154 ms, with 924/942 strict wins
+against the unchanged >=900 gate. Both 16- and 256-edge controls retain
+median nonregression. The reference is byte-for-byte committed =d918a35=
+after import relocation and export alpha-renaming. These results are
+separate from the earlier unrestricted count experiment that failed admission.
+
+Ten semantic Cases pass, including custom storage expansion and exact
+callback observations, multi-atom gates, Provider callback counts, duplicate
+source rows, two-node graph goldens, retained-session updates, lattice
+replacement and timeout resumption. Final-source =just build= and
+=just check-policy= pass (37 modules, findings=0, errors=0).
+The complete =just test= passes all 40 modules and 315 Cases with
+=GERBIL_BUILD_CORES=12=: seven admitted modules use separate processes,
+33 remaining modules use the exclusive lane. Every module has
+=MODULE-OK=, =HARNESS-OK=, final =OK= and process exit 0.
+Raw samples, hashes and full module logs are
+[[file:../t/performance/set-size/README.org][retained here]]. Remote CI remains unrun.
+
+The original complete =just performance= entrypoint passes all 17
+entries with exit 0; the log contains 21 benchmark summaries.
+All original fixtures, 1000-sample counts, timing and memory budgets remain
+unchanged. This is one full local SS pass, not remote CI or a repeated
+whole-suite stability qualification. The raw log and suite source manifest
+are retained alongside the paired receipts.

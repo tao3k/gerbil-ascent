@@ -1,0 +1,35 @@
+[ascent-test] START t/qualification/ascent-rule-program-test.ss
+[test-lane] START exclusive t/qualification/ascent-rule-program-test.ss
+HARNESS ("t/qualification/ascent-rule-program-test.ss")
+MODULE t/qualification/ascent-rule-program-test.ss
+SUITE ASCENT positive relations with arbitrary columns
+CASE mixed ternary inputs derive four-column, unary and recursive rows
+CASE-OK mixed ternary inputs derive four-column, unary and recursive rows
+CASE source withdrawal recomputes without changing earlier result
+CASE-OK source withdrawal recomputes without changing earlier result
+CASE positive session retains rows across source additions
+CASE-OK positive session retains rows across source additions
+CASE ten thousand positive appends retain order and recover state
+CASE-OK ten thousand positive appends retain order and recover state
+CASE staged Set rows share one global output budget
+CASE-OK staged Set rows share one global output budget
+CASE batched Set duplicates retain first source order
+CASE-OK batched Set duplicates retain first source order
+CASE session recomputes negation after source updates
+CASE-OK session recomputes negation after source updates
+CASE nonpositive recomputation rejects over-budget source atomically
+CASE-OK nonpositive recomputation rejects over-budget source atomically
+CASE empty rule set preserves sources and returns
+CASE-OK empty rule set preserves sources and returns
+CASE POO rule refinement receives its own immutable analysis
+CASE-OK POO rule refinement receives its own immutable analysis
+CASE zero-column fact gates typed boolean and string rows
+CASE-OK zero-column fact gates typed boolean and string rows
+CASE arity, unsafe heads, and derived budgets reject
+CASE-OK arity, unsafe heads, and derived budgets reject
+SUITE-OK ASCENT positive relations with arbitrary columns
+MODULE-OK t/qualification/ascent-rule-program-test.ss
+HARNESS-OK ("t/qualification/ascent-rule-program-test.ss")
+OK
+[test-lane] END exclusive exit=0
+[ascent-test] PASS t/qualification/ascent-rule-program-test.ss (5s)

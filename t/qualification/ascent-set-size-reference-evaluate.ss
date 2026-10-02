@@ -7,11 +7,11 @@
 (import (only-in :clan/poo/object .o .ref object?)
         (only-in :clan/poo/mop validate)
         (only-in :std/iter for iter Iterator &Iterator-next!)
-        (only-in "planning.ss" gerbil-ascent-prepare-rule)
-        (only-in "types.ss" GerbilAscentSessionContract)
-        (only-in "analysis.ss" gerbil-ascent-program-analysis
+        (only-in :gerbil-ascent/program/planning gerbil-ascent-prepare-rule)
+        (only-in :gerbil-ascent/program/types GerbilAscentSessionContract)
+        (only-in :gerbil-ascent/program/analysis gerbil-ascent-program-analysis
                  gerbil-ascent-program-schema)
-        (only-in "funs.ss" gerbil-ascent-rule-strata
+        (only-in :gerbil-ascent/program/funs gerbil-ascent-rule-strata
                  gerbil-ascent-lattice-feeds-relation?
                  gerbil-ascent-delta-positions
                  gerbil-ascent-lattice-key
@@ -21,7 +21,6 @@
                  gerbil-ascent-bind-row
                  gerbil-ascent-head-row)
         (only-in :gerbil-ascent/table/provider
-                 gerbil-ascent-hash-index-provider
                  gerbil-ascent-index-provider-build
                  gerbil-ascent-index-provider-extend!
                  gerbil-ascent-index-provider-lookup)
@@ -31,13 +30,13 @@
                  gerbil-ascent-set-storage-provider)
         (only-in :clan/poo/support/base until))
 
-(export gerbil-ascent-evaluate-program gerbil-ascent-make-engine)
+(export ascent-set-size-reference-evaluate-program ascent-set-size-reference-make-engine)
 
 (def Session. (.ref GerbilAscentSessionContract 'proto))
 
 ;;; One engine owns all mutable row buffers and indexes. Reused immutable
 ;;; analysis/schema values never share evaluation-local relation state.
-;; gerbil-ascent-make-engine
+;; ascent-set-size-reference-make-engine
 ;;   : (-> Program Boolean (Maybe Analysis) (Maybe Schema) Boolean Engine)
 ;;   | doc m%
 ;;       Construct a stratified evaluator for a program and an optional
@@ -46,11 +45,11 @@
 ;;       # Examples
 ;;
 ;;       ```scheme
-;;       (gerbil-ascent-make-engine program #f)
+;;       (ascent-set-size-reference-make-engine program #f)
 ;;       ;; => an engine with one fresh evaluation state
 ;;       ```
 ;;     %
-(def (gerbil-ascent-make-engine program session? (analysis-override #f)
+(def (ascent-set-size-reference-make-engine program session? (analysis-override #f)
                                 (schema-override #f)
                                 (measure-rule-times? #f)
                                 (plan-error #f))
@@ -438,7 +437,7 @@
               (let* ((replacement
                       (append (source-rows-at index) (list row)))
                      (candidate (source-program-with index replacement))
-                     (result ((gerbil-ascent-make-engine
+                     (result ((ascent-set-size-reference-make-engine
                                candidate #f analysis schema
                                measure-rule-times?))))
                 (set! source-count (+ source-count 1))
@@ -546,7 +545,7 @@
               (when (> next-count input-limit)
                 (error "ASCENT session input fact budget exceeded"))
               (let* ((candidate (source-program-with index rows))
-                     (result ((gerbil-ascent-make-engine
+                     (result ((ascent-set-size-reference-make-engine
                                candidate #f analysis schema
                                measure-rule-times?))))
                 (set! source-count next-count)
@@ -892,29 +891,19 @@
                      (set! derived-count (+ derived-count 1))
                      (set! active? #t))
                    (vector-ref pending index)))
-                (let (batch-size (length (vector-ref pending index)))
-                  (unless (= batch-size 0)
-                    (unless (vector-ref lattice-joins index)
-                      (advance-all-indexes! index
-                                            (vector-ref pending index)))
-                    (vector-set! all-version index
-                      (+ 1 (vector-ref all-version index)))
-                    ;; Only the exact built-in Set appends unique pending rows
-                    ;; without replacing historical rows. Restrict indexing to
-                    ;; the built-in hash Provider too: custom callbacks may
-                    ;; retain the row spine. Other Providers keep the recount.
-                    (vector-set! all-size index
-                      (if (and (not (vector-ref lattice-joins index))
-                               (eq? (vector-ref storage-providers index)
-                                    gerbil-ascent-set-storage-provider)
-                               (eq? (vector-ref index-providers index)
-                                    gerbil-ascent-hash-index-provider))
-                        (+ (vector-ref all-size index) batch-size)
-                        (length (vector-ref all index)))))
-                  (vector-set! delta index (vector-ref pending index))
-                  (vector-set! delta-size index batch-size)
-                  (vector-set! delta-version index
-                    (+ 1 (vector-ref delta-version index))))
+                (unless (null? (vector-ref pending index))
+                  (unless (vector-ref lattice-joins index)
+                    (advance-all-indexes! index
+                                          (vector-ref pending index)))
+                  (vector-set! all-version index
+                    (+ 1 (vector-ref all-version index)))
+                  (vector-set! all-size index
+                    (length (vector-ref all index))))
+                (vector-set! delta index (vector-ref pending index))
+                (vector-set! delta-size index
+                  (length (vector-ref pending index)))
+                (vector-set! delta-version index
+                  (+ 1 (vector-ref delta-version index)))
                 (commit (+ index 1))))
             (when (and active? deadline (>= (current-jiffy) deadline))
               (set! resume-stratum stratum)
@@ -981,8 +970,8 @@
           run!)))))
 
 ;; : (-> Program EvaluationResult)
-(def (gerbil-ascent-evaluate-program program
+(def (ascent-set-size-reference-evaluate-program program
                                       measure-rule-times?: (measure-rule-times? #f))
   (unless (boolean? measure-rule-times?)
     (error "invalid ASCENT rule timing option" measure-rule-times?))
-  ((gerbil-ascent-make-engine program #f #f #f measure-rule-times?)))
+  ((ascent-set-size-reference-make-engine program #f #f #f measure-rule-times?)))

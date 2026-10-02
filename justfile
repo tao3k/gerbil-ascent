@@ -95,6 +95,22 @@ test-quick:
 small-graph-benchmark:
     GERBIL_LOADPATH="{{ justfile_directory() }}${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" timeout 180s gerbil {{ gerbil_test_runtime_options }} env gxi t/performance/small-graph-benchmark.ss
 
+# Matched row-copy boundary costs. The probe checks equal rows and isolation
+# after every sample; it does not time a complete retained-session solve.
+admission-copy-benchmark:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    output_file="$(mktemp)"
+    trap 'rm -f "$output_file"' EXIT
+    export GERBIL_LOADPATH="{{ justfile_directory() }}${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}"
+    printf '[admission-copy] START three matched row-copy cases\n'
+    timeout 180s gxi {{ gerbil_test_runtime_options }} t/performance/scheme-admission-copy-benchmark.ss 2>&1 | tee "$output_file"
+    test "$(grep -c '^CASE ' "$output_file")" -eq 3
+    test "$(grep -c '^WARM ' "$output_file")" -eq 6
+    test "$(grep -c '^SAMPLE ' "$output_file")" -eq 48
+    grep -x 'OK' "$output_file" >/dev/null
+    if grep -E 'ERROR|Heap overflow|Stack overflow' "$output_file" >/dev/null; then exit 1; fi
+
 # Abstract theorem and bounded local receipt-lifecycle safety model.
 # Supply TLC_BIN when tlc is not on PATH; this gate does not build Scheme.
 check-nonmembership-formal:

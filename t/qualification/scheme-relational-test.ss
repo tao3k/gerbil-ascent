@@ -10,7 +10,8 @@
         (only-in :gerbil-ascent/program/types
                  GerbilAscentFragmentContract)
         (only-in :gerbil-ascent/program/objects
-                 gerbil-ascent-fragment gerbil-ascent-rule
+                 gerbil-ascent-fragment gerbil-ascent-program
+                 gerbil-ascent-relation gerbil-ascent-rule
                  gerbil-ascent-atom gerbil-ascent-guard
                  gerbil-ascent-variable)
         (only-in :gerbil-ascent/program/scheme-language
@@ -18,6 +19,7 @@
                  relational-compose relational-export relational-admit
                  relational-solve relational-query relational-query-name
                  relational-open-session
+                 relational-session-append-source!
                  relational-session-replace-source!
                  relational-session-run
                  relational-open-program-session
@@ -298,6 +300,17 @@
           (check-equal? (relational-query
                          (relational-solve admission) source 'edge)
                         '((1 2))))))
+    (poo-flow-test-case "admission copies rows from a mutable Core declaration"
+      (let* ((row (list 1 2))
+             (program
+              (gerbil-ascent-program
+               (list (gerbil-ascent-relation 'edge 2 (list row)))
+               [] 8 8 16 '(edge)))
+             (admission (relational-admit program)))
+        (set-car! row 9)
+        (check-equal?
+         (relational-query-name (relational-solve admission) 'edge)
+         '((1 2)))))
     (poo-flow-test-case "session replaces exported sources with snapshots"
       (let* ((source (source-fragment '((1 2) (2 3))))
              (reach (reach-fragment (relational-export source 'edge)))
@@ -325,6 +338,23 @@
            (relational-query (relational-session-run session)
                              reach 'reach)
            '((7 8))))))
+    (poo-flow-test-case "session append isolates caller row and rejects non-scalars"
+      (let* ((source (source-fragment '((1 2))))
+             (reach (reach-fragment (relational-export source 'edge)))
+             (session
+              (relational-open-session
+               (relational-compose (list source reach) 8 16 32)))
+             (row (list 2 3)))
+        (relational-session-run session)
+        (relational-session-append-source! session source 'edge row)
+        (set-car! row 9)
+        (check-equal?
+         (same-set?
+          (relational-query (relational-session-run session) reach 'reach)
+          '((1 2) (2 3) (1 3))) #t)
+        (check-exception
+         (relational-session-append-source!
+          session source 'edge '(2 "mutable")) true)))
     (poo-flow-test-case "session restores last completed solve on budget failure"
       (let* ((source (source-fragment '((1 2))))
              (foreign (source-fragment '((9 10))))

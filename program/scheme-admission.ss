@@ -185,8 +185,7 @@
              (relational-source
               (.ref relation 'name)
               (.ref relation 'arity)
-              (relational-copy-rows
-               (.ref relation 'rows) (.ref relation 'arity))))
+              (.ref relation 'rows)))
             ((lattice)
              (let (descriptor (.ref relation 'checked-operator))
                (unless (and (vector? descriptor)
@@ -303,7 +302,7 @@
     (unless arity
       (error "relation is not a source in this session" name))
     (let (copied (relational-copy-rows rows (cdr arity)))
-      (relational-source name (cdr arity) copied)
+      ;; The checked copy already validates every row and owns its list spine.
       (gerbil-ascent-session-replace-source! engine name copied)
       (void))))
 
@@ -314,8 +313,7 @@
   (let (arity (and (symbol? name) (assq name arities)))
     (unless arity
       (error "relation is not a source in this session" name))
-    (let (copied (car (relational-copy-rows (list row) (cdr arity))))
-      (relational-source name (cdr arity) (list copied))
+    (let (copied (relational-copy-row row (cdr arity)))
       (gerbil-ascent-session-append-source! engine name copied)
       (void))))
 

@@ -12,7 +12,8 @@
         (only-in :gerbil-ascent/table/storage
                  gerbil-ascent-set-storage-provider))
 
-(export relational-scalar? relational-copy-rows relational-finite-rows
+(export relational-scalar? relational-copy-row relational-copy-rows
+        relational-finite-rows
         relational-source
         relational-checked-lattice relational-lattice-fragment
         relational-finite-view relational-captured-value

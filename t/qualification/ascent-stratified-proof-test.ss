@@ -8,7 +8,14 @@
         (only-in :gerbil-ascent/candidate/reasoning
                  reasoning-source-snapshot reasoning-attempt
                  reasoning-receipt-status reasoning-receipt-rows
-                 reasoning-receipt-candidate-digest)
+                 reasoning-receipt-candidate-digest
+                 reasoning-receipt-stratified
+                 reasoning-stratified-evidence-status
+                 reasoning-stratified-evidence-finite
+                 reasoning-verify-finite-receipt
+                 reasoning-verify-stratified-receipt)
+        (only-in :gerbil-ascent/candidate/funs
+                 candidate-same-row-set?)
         (only-in :gerbil-ascent/candidate/finite-evidence
                  candidate-finite-evidence finite-evidence-closure)
         (only-in :gerbil-ascent/candidate/stratified-proof
@@ -70,6 +77,22 @@
            (reduce ?n (count) (allowed ?r ?y)))
      (query total 0 ?n)
      (limits 8 32 64)))
+
+(def model-study-program
+  '(candidate
+     (relation path 2)
+     (relation allowed 2)
+     (relation weighted 2)
+     (relation summary 2)
+     (rule (path ?x ?y) (edge ?x ?y))
+     (rule (path ?x ?z) (path ?x ?y) (edge ?y ?z))
+     (rule (allowed ?x ?y) (path ?x ?y) (not (blocked ?x ?y)))
+     (rule (weighted ?x ?v) (allowed ?x ?y) (weight ?y ?w)
+           (where (even? ?w)) (compute ?v (+ ?w ?w)))
+     (rule (summary ?r ?n) (root ?r)
+           (reduce ?n (count) (weighted ?r ?v)))
+     (query summary 1 ?n)
+     (limits 16 64 128)))
 
 (def (mask-edges mask)
   (let loop ((remaining possible-edges) (bit 1) (rows []))
@@ -422,6 +445,77 @@
                   '((1 3)))
         (check-equal? (verify source spec digest status rows finite proof)
                       'invalid)))
+    (test-case "model-study input agrees with Rust and finite expectations"
+      ;; The POO Flow frozen task uses exactly these three source states.
+      ;; Blocking (1,3) leaves one distinct weighted row; removing the
+      ;; block gives two; repeating an edge does not change the count.
+      (let* ((first
+              (reasoning-source-snapshot
+               'study-negation-count 1
+               '((edge 2 ((1 2) (2 3)))
+                 (blocked 2 ((1 3)))
+                 (weight 2 ((2 4) (3 6)))
+                 (root 1 ((1))))))
+             (changed
+              (reasoning-source-snapshot
+               'study-negation-count 2
+               '((edge 2 ((1 2) (2 3)))
+                 (blocked 2 ())
+                 (weight 2 ((2 4) (3 6)))
+                 (root 1 ((1))))))
+             (repeated
+              (reasoning-source-snapshot
+               'study-negation-count 3
+               '((edge 2 ((1 2) (1 2) (2 3)))
+                 (blocked 2 ())
+                 (weight 2 ((2 4) (3 6)))
+                 (root 1 ((1))))))
+             (old (reasoning-attempt first model-study-program 100000 20000)))
+        (for-each
+         (lambda (source expected allowed weighted)
+           (let* ((receipt
+                   (reasoning-attempt source model-study-program
+                                      100000 20000))
+                  (evidence (reasoning-receipt-stratified receipt))
+                  (closure
+                   (finite-evidence-closure
+                    (reasoning-stratified-evidence-finite evidence))))
+             (check-equal? (reasoning-receipt-status receipt) 'complete)
+             (check-equal? (reasoning-receipt-rows receipt) expected)
+             (check-equal?
+              (candidate-same-row-set? (caddr (assq 'path closure))
+                                       '((1 2) (1 3) (2 3)))
+              #t)
+             (check-equal?
+              (candidate-same-row-set? (caddr (assq 'allowed closure))
+                                       allowed)
+              #t)
+             (check-equal?
+              (candidate-same-row-set? (caddr (assq 'weighted closure))
+                                       weighted)
+              #t)
+             (check-equal? (reasoning-stratified-evidence-status evidence)
+                           'complete)
+             (check-equal?
+              (reasoning-verify-finite-receipt
+               receipt source model-study-program 20000)
+              'valid)
+             (check-equal?
+              (reasoning-verify-stratified-receipt
+               receipt source model-study-program 20000)
+              'valid)))
+         (list first changed repeated)
+         '(((1 1)) ((1 2)) ((1 2)))
+         '(((1 2) (2 3))
+           ((1 2) (1 3) (2 3))
+           ((1 2) (1 3) (2 3)))
+         '(((1 8) (2 12))
+           ((1 8) (1 12) (2 12))
+           ((1 8) (1 12) (2 12))))
+        (check-equal?
+         (reasoning-verify-stratified-receipt
+          old changed model-study-program 20000)
+         'invalid)))
     (test-case "all reducers require an exact contributing group"
       (for-each
        (lambda (operator value)

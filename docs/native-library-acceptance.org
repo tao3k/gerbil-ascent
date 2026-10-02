@@ -117,6 +117,23 @@ Scheme grammar.
 
 The next work is organized by capability and its admission gate.
 
+The first joint acceptance case now follows one input through the
+[[file:research/scheme-dsl/ascent-a22.org][Ascent paper's fixed-point boundary]],
+pinned Rust 0.8.0, this Scheme Library, and the POO Flow Python model
+caller. =model_study_negation_count_matches_finite_expectations= in
+=rust/ascent-oracle/tests/integration/clause_composition.rs= pins the Rust
+result for recursion, lower-stratum negation, even-weight computation and
+count on the model-study source. The corresponding
+=ascent-stratified-proof-test.ss= case checks complete =path=, =allowed=
+and =weighted= sets plus =((1 1))=, correction to =((1 2))=,
+duplicate support, current-source verification and stale
+receipt rejection. The POO Flow consumer's frozen Python fixture checks
+the public finite and founded proof verdicts before exposing any typed
+observation to its model runner. This establishes a *same-input bounded
+vertical case*, not complete Rust API parity or general model benefit.
+The [[file:replication-checklist.org][historical Rust replication gate]]
+remains open on its separately listed families and scale cases.
+
 1. *Bounded candidate evidence through the public receipt.* A caller may
    request finite stratified evidence with an explicit fourth
    =reasoning-attempt= work budget. Native completion is independent of

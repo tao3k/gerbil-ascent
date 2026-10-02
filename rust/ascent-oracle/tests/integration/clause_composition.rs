@@ -140,6 +140,95 @@ fn model_rows(edges: &[Edge]) -> BTreeSet<String> {
     rows
 }
 
+// The same finite input is used by POO Flow's negation/count model fixture.
+// This pins the Rust 0.8.0 behavior before its Scheme receipt is shown to a model.
+#[test]
+fn model_study_negation_count_matches_finite_expectations() {
+    fn rows(edges: &[Edge], blocked: &[Edge]) -> BTreeSet<String> {
+        ascent! {
+            relation edge(u32, u32);
+            relation blocked(u32, u32);
+            relation weight(u32, u32);
+            relation root(u32);
+            relation path(u32, u32);
+            relation allowed(u32, u32);
+            relation weighted(u32, u32);
+            relation summary(u32, usize);
+
+            path(x, y) <-- edge(x, y);
+            path(x, z) <-- path(x, y), edge(y, z);
+            allowed(x, y) <-- path(x, y), !blocked(x, y);
+            weighted(x, v) <-- allowed(x, y), weight(y, w),
+                if *w % 2 == 0, let v = *w + *w;
+            summary(r, n) <-- root(r), agg n = count() in weighted(r, _);
+        }
+        let mut program = AscentProgram {
+            edge: edges.to_vec(),
+            blocked: blocked.to_vec(),
+            weight: vec![(2, 4), (3, 6)],
+            root: vec![(1,)],
+            ..AscentProgram::default()
+        };
+        program.run();
+        program
+            .path
+            .iter()
+            .map(|(x, y)| format!("path\t{x}\t{y}"))
+            .chain(
+                program
+                    .allowed
+                    .iter()
+                    .map(|(x, y)| format!("allowed\t{x}\t{y}")),
+            )
+            .chain(
+                program
+                    .weighted
+                    .iter()
+                    .map(|(x, v)| format!("weighted\t{x}\t{v}")),
+            )
+            .chain(
+                program
+                    .summary
+                    .iter()
+                    .map(|(r, n)| format!("summary\t{r}\t{n}")),
+            )
+            .collect()
+    }
+
+    let edges = [(1, 2), (2, 3)];
+    let blocked: BTreeSet<String> = [
+        "path\t1\t2",
+        "path\t1\t3",
+        "path\t2\t3",
+        "allowed\t1\t2",
+        "allowed\t2\t3",
+        "weighted\t1\t8",
+        "weighted\t2\t12",
+        "summary\t1\t1",
+    ]
+    .into_iter()
+    .map(str::to_owned)
+    .collect();
+    let unblocked: BTreeSet<String> = [
+        "path\t1\t2",
+        "path\t1\t3",
+        "path\t2\t3",
+        "allowed\t1\t2",
+        "allowed\t1\t3",
+        "allowed\t2\t3",
+        "weighted\t1\t8",
+        "weighted\t1\t12",
+        "weighted\t2\t12",
+        "summary\t1\t2",
+    ]
+    .into_iter()
+    .map(str::to_owned)
+    .collect();
+    assert_eq!(rows(&edges, &[(1, 3)]), blocked);
+    assert_eq!(rows(&edges, &[]), unblocked);
+    assert_eq!(rows(&[(1, 2), (1, 2), (2, 3)], &[]), unblocked);
+}
+
 #[test]
 fn clause_composition_matches_rust_scheme_and_independent_model() {
     let mut cases = (0..512)

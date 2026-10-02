@@ -266,7 +266,8 @@ native/candidate finite-model gate are in
    v2 closed-cut responses still claimed release authority despite the
    native denial. POO Flow's Testing Runtime guard withholds that claim;
    it does not repair the model. Protocols, individual failures and
-   receipts are in =packages/python-testing/docs/model-study-v{1,2}*.org=
+   receipts are in the POO Flow Python Testing documents
+   =model-study-baseline-results.org= and =model-study-typed-results.org=
    on [[https://github.com/tao3k/poo-flow/pull/34][POO Flow PR #34]]. These pilots did not include a separate search arm,
    repair-turn score or a deployment test. They do not establish a general
    model advantage.

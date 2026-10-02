@@ -361,16 +361,46 @@ using a fresh Rust 0.8.0 program each time. The Rust gate also directly
 compares the reference output of
 =ascent-support-study-output.ss=, which imports this qualification
 corpus. This is a finite differential gate, not a retained Rust
-deletion algorithm. The POO Flow model comparison for this corpus is
-still pending; the prior five source questions do not cover it. Its
-four-call protocol compares candidate self-review with initial-source
-native feedback at an equal two-call budget per arm. Both final
-candidates are executed over all four states. ASCENT supplies the
-reference and inert candidate transport; Python Testing supplies no
-new Scheme program. The feedback omits held-out source outputs. Native
-validity and task shape are scored separately; a hypothetical fact may
-have valid evidence while violating this task. One pair cannot
-estimate general model benefit.
+deletion algorithm.
+
+The approved POO Flow pair ran four =deepseek-flash= calls at POO Flow
+=f2f2315a= and ASCENT =d2b2eb5=, after both exact heads passed CI.
+The immutable preview manifest SHA256 is
+=780f9e96cd466c1f6e07c4d55ecf2d0abc668cb6b45384470165358461ec6283=.
+Candidate self-review and initial-source native feedback each used two
+calls with identical first prompts, non-thinking mode, temperature 0,
+maximum 1024 output tokens and zero retries. The two first responses
+were different despite identical requests. Four responses completed and
+were readable; both final candidates were rejected at all four states.
+
+The self arm preserved a flat compute clause, rejected as
+=invalid-computation= at =(clause 8 body 3)=. The native arm initially
+used unsupported multiplication; after =unsupported-operator= feedback
+it changed the operator to addition, but its flat where clause still
+failed as =invalid-filter= at =(clause 8 body 4)=. This is an observed
+local change without an admitted final program. It does not establish
+feedback benefit or failure of the qualified evaluator. The raw request,
+response, usage and native receipts are recorded by POO Flow in
+=model-study-support-candidates.org= and the external result directory
+=/private/tmp/poo-support-candidate-live-head-f2f2315a/=.
+
+No model-derived receipt completed or verified. Rejected receipts fail
+stale verification too, so the model pair does not test generation
+binding; that axis is inapplicable until the original-source receipt
+completes and verifies. The independent reference candidate still passes
+that gate. Blocked sets are empty and all source weights even in these
+four update states, so this model corpus does not independently detect
+missing negation or original-weight guards. Python Testing supplies no
+new Scheme program, and the feedback omits held-out source outputs.
+
+The next interface gate should expose accepted inert clause shapes,
+closed operator names/arities and located diagnostics as canonical data
+owned by the native parser, then check that description against actual
+admission. Reading implementation source alone did not produce admitted
+proposals in this pair. The next finite discriminator should include
+blocked pairs and odd source weights, and require a valid original
+receipt before evaluating stale generation. These remain new design and
+qualification tasks; no additional model calls were authorized or made.
 
 Run native and Rust checks first, then freeze the POO Flow protocol
 against the exact qualified ASCENT head. Python Testing should

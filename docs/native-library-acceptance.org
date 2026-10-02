@@ -155,7 +155,9 @@ support, replacement and stale receipt rejection despite equal query
 answers. Scheme direct/fragment/candidate and retained sessions share
 an independent finite model; Rust runs fresh programs and checks all
 intermediate relation sets. See [[file:llm-reasoning-library-plan.org::*Integrated ASCENT, Rust and model gate][the integrated gate]] for exact
-inputs and the still-pending model comparison. This does not qualify
+inputs and the completed four-call model comparison. Both final model
+candidates failed admission; this establishes a recorded model-input
+boundary, while the native and Rust corpus remains qualified. This does not qualify
 incremental deletion performance or exhaustive provenance.
 
 1. *Bounded candidate evidence through the public receipt.* A caller may

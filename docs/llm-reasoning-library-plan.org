@@ -3,7 +3,7 @@
 
 #+TITLE: From Scheme Datalog to an LLM reasoning Library
 #+STATUS: bounded evidence and paired model pilots completed; general proof open
-#+DATE: 2026-10-01
+#+DATE: 2026-10-02
 #+FILETAGS: :design:scheme-dsl:llm:research:
 
 * Aim and terminology
@@ -277,10 +277,18 @@ native/candidate finite-model gate are in
    calling-program source and obtained 8/9 valid answer shapes after a
    documented post-hoc syntax correction, but 0/9 exact row sets. It did
    not send the imported Library implementation or use a native receipt
-   as feedback. These results do not isolate Scheme comprehension or
-   test model-to-Library tool use. The next protocol must freeze distinct
-   self-contained Scheme, explicit API-contract, and native-receipt
-   repair controls before any further paid calls.
+   as feedback. Later Scheme-source studies are recorded separately in
+   POO Flow Python Testing. The latest five-call run sent existing pinned
+   ASCENT module source, one question per contract, and no answer key.
+   All five responses were readable; three matched the fixed answer
+   exactly. One body-diagnostic answer had the right code and zero-based
+   path but nested them incorrectly. One finite-receipt answer returned
+   =complete=, the receipt/evidence status, instead of the verifier's
+   =valid= verdict. Exact prompts, raw responses and scores are in
+   =model-study-scheme-source-questions.org= on
+   [[https://github.com/tao3k/poo-flow/pull/34][POO Flow PR #34]]. One answer per question cannot establish general
+   Scheme comprehension, and source questions do not test actual
+   model-to-Library tool use.
 
 Keep semantic conformance, Library protocol conformance and model
 helpfulness as three different claims.  The first gate needs no model;
@@ -304,3 +312,51 @@ The candidate API and bounded pilots are implemented within these bounds.
 General derivation provenance, broad model usefulness and general reasoning
 verification remain unproved. The bounded stratified producer handles one
 checked support per nonempty answer, not every derivation or Why-Not cause.
+
+* Integrated ASCENT, Rust and model gate
+:PROPERTIES:
+:CUSTOM_ID: llm-library-integrated-gate
+:END:
+
+The next vertical case must bind one frozen source corpus, rule program
+and generation sequence across three separate checks. Agreement in one
+does not substitute for the others.
+
+| Check | Owner and input | Passing receipt | Open boundary |
+|-------+-----------------+-----------------+---------------|
+| Relational semantics | ASCENT Scheme direct/fragment/candidate paths; pinned Rust 0.8.0 where the behavior is defined; independent finite model | Complete row sets match after initial solve, alternate-support withdrawal, last-support withdrawal and source replacement; old snapshots stay immutable | The known =eqrel= split-producer Rust 0.8.0 divergence is a discriminator, not behavior to copy into Scheme |
+| Evidence semantics | ASCENT receipt bound to the same snapshot, candidate and budget | =complete= answer, =valid= finite verifier verdict and founded proof verdict are asserted independently; stale generation and changed candidate fail | One support is not all derivations; a complete finite closure does not certify source completeness or intent |
+| Model behavior | POO Flow Python Testing reads existing ASCENT source and invokes its public boundary; prompts, held-out source cases and expected native results are frozen before calls | Report execution correctness, diagnostic use, receipt-verdict interpretation and unsupported claims per task, with raw responses, budget and hashes | No conclusion about internal cognition, general model benefit or permission to act follows from a small sample |
+
+The [[file:research/scheme-dsl/ascent-a22.org][Ascent paper]] and
+[[file:related-work-matrix.org][BYODS comparison]] motivate the Rust oracle
+and representation discriminator. [[file:research/scheme-dsl/deletion-h18.org][Deletion maintenance]]
+and [[file:research/scheme-dsl/dbsp-b22.org][DBSP]] make alternate support
+and recomputation the first update comparison; no retained deletion
+algorithm is admitted without matched output and cost receipts.
+[[file:research/agent-inference/pug-p18.org][PUG]] motivates explicit
+Why/Why-Not scope, while the finite closure above justifies absence only
+inside its supplied closed snapshot.
+[[file:research/agent-inference/datalogbench-db26.org][DatalogBench]] and
+[[file:research/agent-inference/logic-lm-ll23.org][Logic-LM]] motivate
+execution scoring and separate diagnostic feedback; their published
+model scores do not transfer to this Library.
+
+Run native and Rust checks first, then freeze the POO Flow protocol
+against the exact qualified ASCENT head. Python Testing should
+orchestrate real model calls and preserve their results; ASCENT owns
+Scheme programs, reference outputs and qualification. A new paid run
+needs an immutable prompt preview and explicit call budget. The first
+model comparison should distinguish source-only answers from actual
+candidate execution and bounded native feedback on the same task. A
+correct-format S-expression alone is not evidence of correct reasoning.
+
+The [[file:temporal-causality-module-design.org][temporal and causal lens]] is
+a subsequent, separate semantic gate. [[https://www2.eecs.berkeley.edu/Pubs/TechRpts/2009/EECS-2009-173.html][Dedalus]] motivates explicit logical
+time, but Rust Ascent 0.8.0 has no oracle for this proposed lens. Its
+finite reference must test valid time, knowledge generation, closed cuts,
+late events and two independent supports before a model sees a temporal
+receipt. The source owner supplies clock conversion and cut identity;
+ASCENT cannot infer them from arrival order. POO Flow's observed
+closed-cut release-claim failures remain a model boundary result, not
+evidence that the temporal lens is already implemented or verified.

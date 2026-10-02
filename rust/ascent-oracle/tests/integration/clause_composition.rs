@@ -305,6 +305,113 @@ fn support_withdrawal_matches_public_library_contract() {
     assert_eq!(outside.lines().last(), Some("END"));
 }
 
+// Frozen support states plus independent negation/guard/set-sum discriminators.
+#[test]
+fn support_discriminators_match_public_library_contract() {
+    let edges: &[Edge] = &[(0, 1), (1, 2), (0, 2)];
+    let cases: &[(&[Edge], &[Edge], &[Edge], u32)] = &[
+        (edges, &[], &[(0, 2), (1, 4), (2, 6)], 20),
+        (&[(0, 1), (1, 2)], &[], &[(0, 2), (1, 4), (2, 6)], 20),
+        (&[(0, 1)], &[], &[(0, 2), (1, 4), (2, 6)], 8),
+        (&[(0, 2)], &[], &[(0, 2), (1, 4), (2, 6)], 12),
+        (edges, &[(0, 2)], &[(0, 2), (1, 4), (2, 6)], 8),
+        (edges, &[], &[(0, 2), (1, 3), (2, 6)], 12),
+        (edges, &[], &[(0, 2), (1, 4), (2, 4)], 8),
+    ];
+    let mut expected_lines = Vec::new();
+    for (generation, &(edges, blocked, weights, total)) in cases.iter().enumerate() {
+        ascent! {
+            relation edge(u32, u32);
+            relation blocked(u32, u32);
+            relation weight(u32, u32);
+            relation root(u32);
+            relation path(u32, u32);
+            relation allowed(u32, u32);
+            relation weighted(u32, u32);
+            relation summary(u32, u32);
+            path(x, y) <-- edge(x, y);
+            path(x, z) <-- path(x, y), edge(y, z);
+            allowed(x, y) <-- path(x, y), !blocked(x, y);
+            weighted(x, v) <-- allowed(x, y), weight(y, w),
+                if *w % 2 == 0, let v = *w + *w;
+            summary(r, n) <-- root(r), agg n = sum(v) in weighted(r, v);
+        }
+        let mut program = AscentProgram {
+            edge: edges.to_vec(),
+            blocked: blocked.to_vec(),
+            weight: weights.to_vec(),
+            root: vec![(0,)],
+            ..AscentProgram::default()
+        };
+        program.run();
+        let mut closure = [[false; 3]; 3];
+        for &(x, y) in edges {
+            closure[x as usize][y as usize] = true;
+        }
+        for via in 0..3 {
+            for from in 0..3 {
+                for to in 0..3 {
+                    closure[from][to] |= closure[from][via] && closure[via][to];
+                }
+            }
+        }
+        let path = (0..3)
+            .flat_map(|x| (0..3).map(move |y| (x, y)))
+            .filter(|&(x, y)| closure[x as usize][y as usize])
+            .collect::<BTreeSet<Edge>>();
+        let allowed = path
+            .iter()
+            .copied()
+            .filter(|edge| !blocked.contains(edge))
+            .collect::<BTreeSet<_>>();
+        let weighted = allowed
+            .iter()
+            .flat_map(|&(x, y)| {
+                weights
+                    .iter()
+                    .filter(move |&&(node, value)| node == y && value % 2 == 0)
+                    .map(move |&(_, value)| (x, 2 * value))
+            })
+            .collect::<BTreeSet<_>>();
+        assert_eq!(program.path.into_iter().collect::<BTreeSet<_>>(), path);
+        assert_eq!(
+            program.allowed.into_iter().collect::<BTreeSet<_>>(),
+            allowed
+        );
+        assert_eq!(
+            program.weighted.into_iter().collect::<BTreeSet<_>>(),
+            weighted
+        );
+        assert_eq!(
+            weighted
+                .iter()
+                .filter(|&&(x, _)| x == 0)
+                .map(|&(_, value)| value)
+                .sum::<u32>(),
+            total
+        );
+        assert_eq!(
+            program.summary.into_iter().collect::<BTreeSet<_>>(),
+            BTreeSet::from([(0, total)])
+        );
+        expected_lines.push(format!(
+            "{generation}\tcomplete\t((0 {total}))\tvalid\tvalid\ttask-shape\t()"
+        ));
+        eprintln!("RUST-DISCRIMINATOR-PROGRESS {generation}");
+    }
+    expected_lines.extend([
+        "stale\tcomplete\t((0 20))\tinvalid\tinvalid\ttask-shape\t()".into(),
+        "END".into(),
+    ]);
+    assert_eq!(
+        scheme_output("support-discriminator-reference", "")
+            .lines()
+            .map(str::to_owned)
+            .collect::<Vec<_>>(),
+        expected_lines
+    );
+}
+
 #[test]
 fn clause_composition_matches_rust_scheme_and_independent_model() {
     let mut cases = (0..512)

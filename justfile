@@ -335,6 +335,18 @@ support-study-hypothetical:
 support-study-candidate mode="evaluate":
     @timeout 120s gerbil {{ gerbil_test_runtime_options }} t/qualification/ascent-support-study-output.ss {{ mode }}
 
+candidate-description:
+    @timeout 120s gerbil {{ gerbil_test_runtime_options }} t/qualification/ascent-support-study-output.ss description
+
+candidate-repair-seed mode="repair-seed":
+    @timeout 120s gerbil {{ gerbil_test_runtime_options }} t/qualification/ascent-support-study-output.ss {{ mode }}
+
+support-discriminator-reference:
+    @timeout 120s gerbil {{ gerbil_test_runtime_options }} t/qualification/ascent-support-study-output.ss discriminator-reference
+
+support-discriminator-candidate:
+    @timeout 120s gerbil {{ gerbil_test_runtime_options }} t/qualification/ascent-support-study-output.ss discriminator-evaluate
+
 clause-scale-rows:
     @timeout 90s gerbil {{ gerbil_test_runtime_options }} t/qualification/ascent-clause-scale-output.ss
 

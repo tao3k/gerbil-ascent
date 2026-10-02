@@ -5,17 +5,15 @@
 ;;; Test-only inert candidate transport over the qualified public corpus.
 ;;; Reference and model calls share the qualification's data and native API.
 (import (only-in "./scheme-library-contract-test"
-                 candidate weights support-phases contract-snapshot)
-        (only-in :gerbil-ascent/candidate/program candidate-variable?)
+                 candidate weights support-phases contract-snapshot
+                 study-cases study-repair-seed study-filter-seed)
+        (only-in :gerbil-ascent/candidate/program candidate-variable? candidate-language-description)
         (only-in :gerbil-ascent/candidate/reasoning
                  reasoning-attempt reasoning-receipt-status reasoning-receipt-rows
                  reasoning-receipt-diagnostics reasoning-diagnostic-code
                  reasoning-diagnostic-path reasoning-verify-finite-receipt
                  reasoning-verify-stratified-receipt))
 (export main)
-
-(def (snapshot generation edges)
-  (contract-snapshot generation edges '() weights '((0))))
 
 (def (task-shape proposal)
   (if (and (list? proposal) (pair? proposal) (eq? (car proposal) 'candidate)
@@ -49,23 +47,33 @@
 
 (def (main . args)
   (unless (and (= (length args) 1)
-               (member (car args) '("reference" "hypothetical" "initial" "evaluate")))
-    (error "support study requires reference, hypothetical, initial or evaluate mode"))
-  (let* ((mode (car args))
-         (proposal
-          (cond ((equal? mode "reference") candidate)
-                ((equal? mode "hypothetical")
-                 (cons 'candidate (cons '(fact edge 0 2) (cdr candidate))))
-                (else (read))))
-         (first-source (snapshot 0 (car support-phases)))
-         (first (reasoning-attempt first-source proposal 100000 20000)))
-    (emit 0 first first-source proposal)
-    (unless (equal? mode "initial")
-      (for-each
-       (lambda (generation edges)
-         (let* ((source (snapshot generation edges))
-                (receipt (reasoning-attempt source proposal 100000 20000)))
-           (emit generation receipt source proposal)))
-       '(1 2 3) (cdr support-phases))
-      (emit 'stale first (snapshot 1 (cadr support-phases)) proposal))
-    (displayln "END")))
+               (member (car args) '("reference" "hypothetical" "initial" "evaluate"
+                                    "description" "repair-seed" "filter-seed"
+                                    "discriminator-reference" "discriminator-evaluate")))
+    (error "unsupported support study mode"))
+  (let (mode (car args))
+    (cond
+     ((equal? mode "description") (write (candidate-language-description)) (newline))
+     ((equal? mode "repair-seed") (write study-repair-seed) (newline))
+     ((equal? mode "filter-seed") (write study-filter-seed) (newline))
+     (else
+      (let* ((extended? (member mode '("discriminator-reference" "discriminator-evaluate")))
+             (states (if extended? study-cases
+                       (map (lambda (edges) (list edges '() weights '((0)))) support-phases)))
+             (proposal
+              (cond ((member mode '("reference" "discriminator-reference")) candidate)
+                    ((equal? mode "hypothetical")
+                     (cons 'candidate (cons '(fact edge 0 2) (cdr candidate))))
+                    (else (read))))
+             (first-source (apply contract-snapshot 0 (car states)))
+             (first (reasoning-attempt first-source proposal 100000 20000)))
+        (emit 0 first first-source proposal)
+        (unless (equal? mode "initial")
+          (for-each
+           (lambda (generation state)
+             (let* ((source (apply contract-snapshot generation state))
+                    (receipt (reasoning-attempt source proposal 100000 20000)))
+               (emit generation receipt source proposal)))
+           (iota (- (length states) 1) 1) (cdr states))
+          (emit 'stale first (apply contract-snapshot 1 (cadr states)) proposal))
+        (displayln "END"))))))

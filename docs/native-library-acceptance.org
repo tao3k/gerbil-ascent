@@ -202,3 +202,14 @@ incremental deletion performance or exhaustive provenance.
 
 An exact-head local and Ubuntu gate is required for a release candidate;
 passing one focused module does not complete this sequence.
+
+* Candidate description and semantic discriminators
+
+=candidate-language-description= returns a fresh inert syntax projection from
+=candidate/program.ss=. Admission and description share operator/reducer
+registries; the projection is not schema admission or task-intent verification.
+The native description test checks admitted forms, wrong arities/shapes,
+located binding failures and detached values. The public contract's seven-state
+study corpus includes blocked, odd original weights and distinct-value sums.
+Three native-valid wrong-rule candidates must fail intended output comparison.
+See [[file:llm-reasoning-library-plan.org][the integrated plan]] for ownership, repair controls and evidence retention.

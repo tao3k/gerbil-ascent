@@ -21,7 +21,8 @@
                  reasoning-verify-stratified-receipt))
 
 (export scheme-library-contract-test candidate weights support-phases
-        support-totals contract-snapshot)
+        support-totals contract-snapshot study-cases study-repair-seed study-filter-seed
+        study-mutants model-summary)
 
 (def vertices '(0 1 2))
 (def possible-edges '((0 1) (0 2) (1 0) (1 2) (2 0) (2 1)))
@@ -30,6 +31,12 @@
 (def support-phases '(((0 1) (1 2) (0 2))
                       ((0 1) (1 2)) ((0 1)) ((0 2))))
 (def support-totals '(20 20 8 12))
+
+(def study-cases
+  (append (map (lambda (edges) (list edges '() weights '((0)))) support-phases)
+          (list (list (car support-phases) '((0 2)) weights '((0)))
+                (list (car support-phases) '() '((0 2) (1 3) (2 6)) '((0)))
+                (list (car support-phases) '() '((0 2) (1 4) (2 4)) '((0))))))
 
 (def (edges-for-mask mask)
   (let loop ((i 0) (rest possible-edges) (rows []))
@@ -43,6 +50,9 @@
   (and (= (length actual) (length expected))
        (andmap (lambda (row) (if (member row expected) #t #f)) actual)
        (andmap (lambda (row) (if (member row actual) #t #f)) expected)))
+
+(def (unique-values values)
+  (foldl (lambda (value prior) (if (memv value prior) prior (cons value prior))) [] values))
 
 (def (model-summary edges blocked supplied-weights supplied-roots)
   (let (matrix (make-vector 9 #f))
@@ -67,7 +77,7 @@
        (let (origin (car root))
          (list origin
                (apply +
-                      (map (lambda (weight) (* 2 (cadr weight)))
+                      (unique-values (map (lambda (weight) (* 2 (cadr weight)))
                            (filter
                             (lambda (weight)
                               (and (even? (cadr weight))
@@ -76,7 +86,7 @@
                                    (not (member
                                          (list origin (car weight))
                                          blocked))))
-                            supplied-weights))))))
+                            supplied-weights)))))))
      supplied-roots)))
 
 (def (native-program edges blocked supplied-weights supplied-roots)
@@ -131,6 +141,35 @@
      (rule (summary ?r ?n)
        (root ?r) (reduce ?n (sum ?v) (weighted ?r ?v)))
      (query summary ?r ?n) (limits 16 64 128)))
+
+(def (replace-rule proposal head replacement)
+  (map (lambda (clause)
+         (if (and (pair? clause) (eq? (car clause) 'rule)
+                  (eq? (caadr clause) head)) replacement clause)) proposal))
+
+(def study-repair-seed
+  (replace-rule candidate 'weighted
+    '(rule (weighted ?x ?v) (allowed ?x ?y) (weight ?y ?w)
+       (where (even? ?w)) (compute ?v + ?w ?w))))
+
+(def study-filter-seed
+  (replace-rule candidate 'weighted
+    '(rule (weighted ?x ?v) (allowed ?x ?y) (weight ?y ?w)
+       (where even? ?w) (compute ?v (+ ?w ?w)))))
+
+(def study-mutants
+  (list
+   (cons 'missing-negation
+     (replace-rule candidate 'allowed
+       '(rule (allowed ?x ?y) (path ?x ?y))))
+   (cons 'missing-guard
+     (replace-rule candidate 'weighted
+       '(rule (weighted ?x ?v) (allowed ?x ?y) (weight ?y ?w)
+          (compute ?v (+ ?w ?w)))))
+   (cons 'guard-after-doubling
+     (replace-rule candidate 'weighted
+       '(rule (weighted ?x ?v) (allowed ?x ?y) (weight ?y ?w)
+          (compute ?v (+ ?w ?w)) (where (even? ?v)))))))
 
 (def (contract-snapshot generation edges blocked supplied-weights supplied-roots)
   (reasoning-source-snapshot
@@ -187,6 +226,34 @@
          (displayln "CONTRACT-PROGRESS " mask)
          (force-output))
        '(0 1 3 7 24 31 47 63)))
+    (test-case "blocked odd and equal-weight states discriminate admitted mistakes"
+      (for-each
+       (lambda (generation state)
+         (apply check-all generation state)
+         (displayln "DISCRIMINATOR-PROGRESS " generation)
+         (force-output))
+       '(0 1 2 3 4 5 6) study-cases)
+      (for-each
+       (lambda (mutant)
+         (let (mismatches 0)
+           (for-each
+            (lambda (generation state)
+              (let* ((source (apply contract-snapshot generation state))
+                     (proposal (cdr mutant))
+                     (receipt (reasoning-attempt source proposal 100000 20000)))
+                (check-equal? (reasoning-receipt-status receipt) 'complete)
+                (check-equal? (reasoning-verify-finite-receipt receipt source proposal 20000) 'valid)
+                (check-equal? (reasoning-verify-stratified-receipt receipt source proposal 20000) 'valid)
+                (unless (same-set? (reasoning-receipt-rows receipt)
+                                  (apply model-summary state))
+                  (set! mismatches (+ mismatches 1)))
+                (displayln "MUTANT-PROGRESS " (car mutant) " " generation)
+                (force-output)))
+            '(0 1 2 3 4 5 6) study-cases)
+           (check-equal? (> mismatches 0) #t)
+           (displayln "MUTANT-DISCRIMINATED " (car mutant))
+           (force-output)))
+       study-mutants))
     (test-case "multi-source withdrawal and failed transaction are atomic"
       (let* ((edges '((0 1) (1 2)))
              (session

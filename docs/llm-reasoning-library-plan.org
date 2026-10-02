@@ -420,3 +420,48 @@ receipt. The source owner supplies clock conversion and cut identity;
 ASCENT cannot infer them from arrival order. POO Flow's observed
 closed-cut release-claim failures remain a model boundary result, not
 evidence that the temporal lens is already implemented or verified.
+
+* Parser contract and discriminator qualification
+
+The next implementation slice exposes =candidate-language-description= from
+=candidate/program.ss=. Operator and reducer names/arities share the same
+registry with admission. Its fresh inert projection documents nested forms,
+prior-bound operator inputs and one-based candidate diagnostic paths. It is
+not a replacement for source schema, bindings, planner or bounded admission.
+=ascent-candidate-description-test.ss= sends advertised positive forms and
+malformed shapes/arities through real attempts, checks located failures and
+ensures mutating the description cannot change subsequent inspection.
+
+The shared =study-cases= extends the qualified support sequence with blocked,
+odd-weight and equal-weight cases, totals =20,20,8,12,8,12,8=. The independent
+matrix reference now sums distinct weighted values, matching relation set
+semantics even when two destinations share a weight. The direct, fragment and
+candidate paths check that model. Three admitted mutants (missing negation,
+missing guard, guard after doubling) must complete, verify finite/founded
+evidence and still disagree with intended output. Rust checks full path,
+allowed, weighted and summary sets and the exact native adapter projection.
+The retained support-withdrawal and valid-old-receipt generation tests remain.
+
+ASCENT also owns two erroneous syntax seeds, projected as inert data through
+=candidate-repair-seed=. POO Flow's new shared-seed repair protocol gives each
+arm the same contract, task and seed; only one receives initial-source native
+feedback. Two tasks alternate arm order at one call per arm/task (four calls).
+This measures bounded syntax repair conditional on seeds, not end-to-end
+program generation, verifier interpretation or general feedback benefit.
+The generation and evidence gates run before any paid call. A new immutable
+preview, exact-head CI and explicit budget approval remain required.
+
+The earlier model study's temporary evidence paths are gone. POO Flow retains
+four original response texts recovered only where bytes match their recorded
+hashes; original JSON, requests, preview and native records remain unavailable.
+No missing original records are reconstructed. New live runs require durable,
+verified archives for completed and failed runs. This retention correction does
+not change the historical rejected outcomes. Temporal lens work stays separate.
+
+Local receipts for this slice: parser-description 4 cases and public contract
+5 cases passed with =MODULE-OK=, =HARNESS-OK= and final =OK= under the five-second
+output watchdog. The Rust discriminator test passed (1 test, 74 filtered;
+2.80 seconds) against all seven adapter rows and meaningful stale rejection.
+Policy inspection selected 36 modules with zero findings/errors; the package
+build passed after selecting the system SDK rather than inherited Nix headers.
+These are local receipts; current-head remote CI is a separate required gate.

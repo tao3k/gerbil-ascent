@@ -25,7 +25,7 @@
                  relational-where relational-compute relational-reducer))
 
 (export scalar? candidate-variable? candidate-inspect candidate-program
-        candidate-planner-path)
+        candidate-planner-path candidate-language-description)
 
 (def (scalar? value)
   (or (exact-integer? value) (boolean? value) (symbol? value) (char? value)))
@@ -151,25 +151,41 @@
                (append path (list 'input position)) input)))
    inputs (iota (length inputs) 1)))
 
+(def +candidate-reducer-specs+ '((count 0) (sum 1) (min 1) (max 1)))
+
+(def +candidate-operator-specs+
+  '((where (even? 1) (< 2)) (compute (identity 1) (+ 2))))
+
+;;; A fresh inert projection of the parser contract, never executable code.
+;;; Operator admission and this public description share the same registry.
+(def (candidate-language-description)
+  (def (copy datum)
+    (if (pair? datum) (cons (copy (car datum)) (copy (cdr datum))) datum))
+  (copy
+   (list 'candidate-language 'v1
+         '(forms (relation NAME ARITY) (fact SOURCE TERM ...)
+                 (rule HEAD BODY ...) (query RELATION TERM ...)
+                 (limits INPUT DERIVED OUTPUT))
+         '(body (RELATION TERM ...) (not (RELATION TERM ...))
+                (where (OP INPUT ...)) (compute OUTPUT (OP INPUT ...))
+                (reduce OUTPUT (MODE INPUT ...) (RELATION TERM ...)))
+         (cons 'operators +candidate-operator-specs+)
+         (cons 'reducers +candidate-reducer-specs+)
+         '(binding positive-atoms-bind negation-and-operators-read-bound
+                   compute-and-reduce-bind-fresh)
+         '(operator-inputs bound-variables-only)
+         '(diagnostic-index-base 1)
+         '(scope syntax-description-not-source-authority-or-task-intent))))
+
 (def (checked-operation form mode bound path)
   (unless (and (list? form) (pair? form) (symbol? (car form)))
     (reject 'invalid-operator path form))
   (let ((operation (car form))
         (inputs (cdr form)))
-    (unless
-     (case mode
-       ((where)
-        (case operation
-          ((even?) (= (length inputs) 1))
-          ((<) (= (length inputs) 2))
-          (else #f)))
-       ((compute)
-        (case operation
-          ((identity) (= (length inputs) 1))
-          ((+) (= (length inputs) 2))
-          (else #f)))
-       (else #f))
-     (reject 'unsupported-operator path form))
+    (let* ((tier (assq mode +candidate-operator-specs+))
+           (spec (and tier (assq operation (cdr tier)))))
+      (unless (and spec (= (length inputs) (cadr spec)))
+        (reject 'unsupported-operator path form)))
     (require-bound-inputs inputs bound path)))
 
 ;;; Inspect body clauses in evaluation order. Positive atoms bind variables;
@@ -217,10 +233,8 @@
             (inputs (cdaddr clause))
             (atom (cadddr clause)))
        (unless (and (symbol? mode)
-                    (case mode
-                      ((count) (null? inputs))
-                      ((sum min max) (= (length inputs) 1))
-                      (else #f))
+                    (let (spec (assq mode +candidate-reducer-specs+))
+                      (and spec (= (length inputs) (cadr spec))))
                     (andmap logic-variable? inputs))
          (reject 'unsupported-reduction path (caddr clause)))
        (atom-check atom schema (append path '(aggregate)))

@@ -1,0 +1,55 @@
+[test-lane] START exclusive just
+timeout 90s gxi -:max-heap=1G,debug=q tools/build-multi-frontier-benchmark.ss
+GERBIL_LOADPATH="$ASCENT_MULTI_FRONTIER_LIB${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" timeout 150s gxi -:max-heap=1G,debug=q t/performance/multi-frontier-benchmark.ss
+CASE control-chain-16 samples=1000 repetitions=1
+PROGRESS control-chain-16 100/1000
+PROGRESS control-chain-16 200/1000
+PROGRESS control-chain-16 300/1000
+PROGRESS control-chain-16 400/1000
+PROGRESS control-chain-16 500/1000
+PROGRESS control-chain-16 600/1000
+PROGRESS control-chain-16 700/1000
+PROGRESS control-chain-16 800/1000
+PROGRESS control-chain-16 900/1000
+PROGRESS control-chain-16 1000/1000
+RESULT control-chain-16 old-p50-ns=18000 new-p50-ns=18000 paired-wins=371/1000
+CASE control-chain-256 samples=1000 repetitions=1
+PROGRESS control-chain-256 100/1000
+PROGRESS control-chain-256 200/1000
+PROGRESS control-chain-256 300/1000
+PROGRESS control-chain-256 400/1000
+PROGRESS control-chain-256 500/1000
+PROGRESS control-chain-256 600/1000
+PROGRESS control-chain-256 700/1000
+PROGRESS control-chain-256 800/1000
+PROGRESS control-chain-256 900/1000
+PROGRESS control-chain-256 1000/1000
+RESULT control-chain-256 old-p50-ns=325000 new-p50-ns=322000 paired-wins=756/1000
+CASE multi-chain-16 samples=1000 repetitions=1
+PROGRESS multi-chain-16 100/1000
+PROGRESS multi-chain-16 200/1000
+PROGRESS multi-chain-16 300/1000
+PROGRESS multi-chain-16 400/1000
+PROGRESS multi-chain-16 500/1000
+PROGRESS multi-chain-16 600/1000
+PROGRESS multi-chain-16 700/1000
+PROGRESS multi-chain-16 800/1000
+PROGRESS multi-chain-16 900/1000
+PROGRESS multi-chain-16 1000/1000
+RESULT multi-chain-16 old-p50-ns=48000 new-p50-ns=36000 paired-wins=997/1000
+CASE multi-chain-256 samples=1000 repetitions=1
+[test-lane] RUNNING exclusive (5s)
+PROGRESS multi-chain-256 100/1000
+PROGRESS multi-chain-256 200/1000
+PROGRESS multi-chain-256 300/1000
+PROGRESS multi-chain-256 400/1000
+PROGRESS multi-chain-256 500/1000
+PROGRESS multi-chain-256 600/1000
+PROGRESS multi-chain-256 700/1000
+[test-lane] RUNNING exclusive (10s)
+PROGRESS multi-chain-256 800/1000
+PROGRESS multi-chain-256 900/1000
+PROGRESS multi-chain-256 1000/1000
+RESULT multi-chain-256 old-p50-ns=3313000 new-p50-ns=655000 paired-wins=989/1000
+OK
+[test-lane] END exclusive exit=0

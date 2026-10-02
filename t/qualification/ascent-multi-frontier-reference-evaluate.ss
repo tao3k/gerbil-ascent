@@ -7,11 +7,11 @@
 (import (only-in :clan/poo/object .o .ref object?)
         (only-in :clan/poo/mop validate)
         (only-in :std/iter for iter Iterator &Iterator-next!)
-        (only-in "planning.ss" gerbil-ascent-prepare-rule)
-        (only-in "types.ss" GerbilAscentSessionContract)
-        (only-in "analysis.ss" gerbil-ascent-program-analysis
+        (only-in :gerbil-ascent/program/planning gerbil-ascent-prepare-rule)
+        (only-in :gerbil-ascent/program/types GerbilAscentSessionContract)
+        (only-in :gerbil-ascent/program/analysis gerbil-ascent-program-analysis
                  gerbil-ascent-program-schema)
-        (only-in "funs.ss" gerbil-ascent-rule-strata
+        (only-in :gerbil-ascent/program/funs gerbil-ascent-rule-strata
                  gerbil-ascent-lattice-feeds-relation?
                  gerbil-ascent-delta-positions
                  gerbil-ascent-lattice-key
@@ -30,13 +30,13 @@
                  gerbil-ascent-set-storage-provider)
         (only-in :clan/poo/support/base until))
 
-(export gerbil-ascent-evaluate-program gerbil-ascent-make-engine)
+(export ascent-multi-frontier-reference-evaluate-program ascent-multi-frontier-reference-make-engine)
 
 (def Session. (.ref GerbilAscentSessionContract 'proto))
 
 ;;; One engine owns all mutable row buffers and indexes. Reused immutable
 ;;; analysis/schema values never share evaluation-local relation state.
-;; gerbil-ascent-make-engine
+;; ascent-multi-frontier-reference-make-engine
 ;;   : (-> Program Boolean (Maybe Analysis) (Maybe Schema) Boolean Engine)
 ;;   | doc m%
 ;;       Construct a stratified evaluator for a program and an optional
@@ -45,11 +45,11 @@
 ;;       # Examples
 ;;
 ;;       ```scheme
-;;       (gerbil-ascent-make-engine program #f)
+;;       (ascent-multi-frontier-reference-make-engine program #f)
 ;;       ;; => an engine with one fresh evaluation state
 ;;       ```
 ;;     %
-(def (gerbil-ascent-make-engine program session? (analysis-override #f)
+(def (ascent-multi-frontier-reference-make-engine program session? (analysis-override #f)
                                 (schema-override #f)
                                 (measure-rule-times? #f)
                                 (plan-error #f))
@@ -270,18 +270,6 @@
             (vector-set! delta-size index
               (vector-ref all-size index))
             (initialize (cdr remaining) (+ index 1)))))
-      ;; Engine-local metadata keeps the shared immutable analysis layout
-      ;; unchanged, including when a retained engine reuses that analysis.
-      (def (prunable-prefix body)
-        (if (and (pair? body) (eq? (vector-ref (car body) 0) 'atom))
-          (let (atom (vector-ref (car body) 1))
-            (cons (vector-ref atom 0)
-                  (if (and (null? (vector-ref atom 2))
-                           (andmap (lambda (term)
-                                     (eq? (car term) 'variable))
-                                   (vector-ref atom 1)))
-                    (prunable-prefix (cdr body)) [])))
-          []))
       (let* ((analysis
               ;; Source-only replacement preserves declarations and rules.
               ;; Its session reuses this immutable rule plan while the fresh
@@ -336,16 +324,7 @@
              (rule-ticks (and measure-rule-times?
                               (make-vector (length rules) 0)))
              (strata (vector-ref analysis 3))
-             (active-by-stratum
-              (vector-map
-               (lambda (rules)
-                 (map (lambda (rule)
-                        (vector (vector-ref rule 0) (vector-ref rule 1)
-                                (vector-ref rule 2) (vector-ref rule 3)
-                                (list->vector
-                                 (prunable-prefix (vector-ref rule 1)))))
-                      rules))
-               (vector-ref analysis 4)))
+             (active-by-stratum (vector-ref analysis 4))
              (highest-stratum (- (vector-length active-by-stratum) 1))
              (lattice-feeds-relation?
               (and session?
@@ -437,7 +416,7 @@
               (let* ((replacement
                       (append (source-rows-at index) (list row)))
                      (candidate (source-program-with index replacement))
-                     (result ((gerbil-ascent-make-engine
+                     (result ((ascent-multi-frontier-reference-make-engine
                                candidate #f analysis schema
                                measure-rule-times?))))
                 (set! source-count (+ source-count 1))
@@ -545,7 +524,7 @@
               (when (> next-count input-limit)
                 (error "ASCENT session input fact budget exceeded"))
               (let* ((candidate (source-program-with index rows))
-                     (result ((gerbil-ascent-make-engine
+                     (result ((ascent-multi-frontier-reference-make-engine
                                candidate #f analysis schema
                                measure-rule-times?))))
                 (set! source-count next-count)
@@ -810,8 +789,7 @@
                (let ((started (and rule-ticks (current-jiffy)))
                      (heads (vector-ref rule 0))
                      (body (vector-ref rule 1))
-                     (positions (vector-ref rule 2))
-                     (prunable (vector-ref rule 4)))
+                     (positions (vector-ref rule 2)))
                  (if (null? positions)
                    (when (and (= round 1) first-run?)
                      (visit-body body -1 0 []
@@ -831,11 +809,24 @@
                                     heads)))
                      (for-each
                       (lambda (delta-at)
-                        ;; Prefix atoms have no index, expression, pattern or
-                        ;; clause callbacks. The empty pivot uses raw rows.
-                        (unless (and (< delta-at (vector-length prunable))
-                                     (= (vector-ref delta-size
-                                          (vector-ref prunable delta-at)) 0))
+                        ;; An empty second-atom frontier cannot produce rows.
+                        ;; Skip its variable-only first atom: it has no index
+                        ;; columns, expressions, patterns or callback clauses.
+                        ;; The empty pivot itself uses the raw-row path, so
+                        ;; no Provider lookup/build callback is skipped either.
+                        (unless
+                            (and (= delta-at 1)
+                                 (pair? body) (pair? (cdr body))
+                                 (eq? (vector-ref (car body) 0) 'atom)
+                                 (eq? (vector-ref (cadr body) 0) 'atom)
+                                 (let (first-atom (vector-ref (car body) 1))
+                                   (and (null? (vector-ref first-atom 2))
+                                        (andmap (lambda (term)
+                                                  (eq? (car term) 'variable))
+                                                (vector-ref first-atom 1))))
+                                 (= (vector-ref delta-size
+                                      (vector-ref (vector-ref (cadr body) 1) 0))
+                                    0))
                           (visit-body body delta-at 0 []
                                       (lambda (environment)
                                         (for-each
@@ -970,8 +961,8 @@
           run!)))))
 
 ;; : (-> Program EvaluationResult)
-(def (gerbil-ascent-evaluate-program program
+(def (ascent-multi-frontier-reference-evaluate-program program
                                       measure-rule-times?: (measure-rule-times? #f))
   (unless (boolean? measure-rule-times?)
     (error "invalid ASCENT rule timing option" measure-rule-times?))
-  ((gerbil-ascent-make-engine program #f #f #f measure-rule-times?)))
+  ((ascent-multi-frontier-reference-make-engine program #f #f #f measure-rule-times?)))

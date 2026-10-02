@@ -575,3 +575,37 @@ SS runs pass all 1000 samples with p95=563/634 us, below the original
 =MODULE-OK=, =HARNESS-OK=, final =OK= and exit 0. This updates the local
 indexed-joins result only; the complete SS suite and prior Core duration
 failures were not rerun for this slice. No dependency pin or budget changed.
+
+** Multiple empty-frontier pivots
+
+After committing the earlier slices as =98a96ca=, the next evaluator
+candidate generalizes pruning across contiguous variable-only atoms without
+index columns. An empty pivot uses the raw-row path. Any indexed atom,
+non-variable term or other clause ends the safely bypassable prefix.
+Each engine precomputes relation-index metadata in local active-rule copies;
+the shared immutable analysis retains its original layout. This avoids
+repeated per-round term checks and preserves old/new analysis cache sharing
+and retained-session replacement behavior.
+
+The first per-round recursive-check candidate gained on the three-atom
+shape but regressed the two-atom control by about 1.5 percent. It was
+rejected. The retained candidate passes two full compiled comparisons
+against the frozen committed =98a96ca= evaluator: 1000 alternating pairs
+per shape, 20 warmups, independent ordered-row goldens outside timing.
+Both two-atom controls retain median nonregression. The 256-edge three-atom
+shape with four independent gate rows improves 5.20x/5.06x, with 973/989
+strict wins against the unchanged >=900 gate. Nine semantic Cases pass,
+including observable indexed-prefix callbacks before an empty third atom.
+Raw samples, source hashes and rejected-candidate logs are
+[[file:../t/performance/multi-frontier/README.org][indexed here]]. These gains
+are separate from the preceding chain workload and are not multiplied.
+
+Final-source build and policy pass (37 modules, findings=0, errors=0).
+All 44 existing index, BYODS, lattice, source-admission and rule-program
+Cases pass, including unchanged rule duration profiles. The indexed-joins
+SS scenario passes 1000 samples at p95=460 us versus the original 2000 us
+limit. All native modules include =MODULE-OK=, =HARNESS-OK=, final =OK=
+and exit 0. Source manifests match the final files; the frozen reference
+matches committed =98a96ca= after import relocation and export alpha-renaming.
+The complete qualification and SS suites and remote CI remain unrun for
+this slice. No gate or dependency pin changed.

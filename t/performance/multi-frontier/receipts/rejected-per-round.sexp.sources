@@ -1,0 +1,4 @@
+6988c95a91a567c07ee86440125801c4a0c19e8cc72ed9198d7b0e1e9cc561ef  program/evaluate.ss
+56909fc04f77dbcbc0f12f03383c58391800f259b3127f842a1a5f09306a547f  t/qualification/ascent-multi-frontier-reference-evaluate.ss
+efe12f4692a120f495f81cf9a52467efe372b62e4e0bea7ac6a2975581839c91  t/performance/multi-frontier-benchmark.ss
+6e30cb5131f77806be937adff8f8b6082dcdab8cbd030fcc15be7dab24462e4d  tools/build-multi-frontier-benchmark.ss

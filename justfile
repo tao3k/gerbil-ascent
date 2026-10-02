@@ -474,3 +474,17 @@ size-benchmark:
 _size-benchmark:
     timeout 90s gxi {{ gerbil_test_runtime_options }} tools/build-size-benchmark.ss
     GERBIL_LOADPATH="$ASCENT_SIZE_BENCH_LIB${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" timeout 150s gxi {{ gerbil_test_runtime_options }} t/performance/size-benchmark.ss
+
+# Whole-solve comparison against the committed narrow-frontier evaluator.
+multi-frontier-benchmark:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    mkdir -p .gerbil/multi-frontier
+    export ASCENT_MULTI_FRONTIER_LIB="{{ justfile_directory() }}/.gerbil/multi-frontier/lib"
+    export ASCENT_MULTI_FRONTIER_RECEIPT="${ASCENT_MULTI_FRONTIER_RECEIPT:-{{ justfile_directory() }}/.gerbil/multi-frontier/receipt.sexp}"
+    shasum -a 256 program/evaluate.ss t/qualification/ascent-multi-frontier-reference-evaluate.ss t/performance/multi-frontier-benchmark.ss tools/build-multi-frontier-benchmark.ss > "$ASCENT_MULTI_FRONTIER_RECEIPT.sources"
+    python3 tools/test_execution.py run -- just _multi-frontier-benchmark
+
+_multi-frontier-benchmark:
+    timeout 90s gxi {{ gerbil_test_runtime_options }} tools/build-multi-frontier-benchmark.ss
+    GERBIL_LOADPATH="$ASCENT_MULTI_FRONTIER_LIB${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" timeout 150s gxi {{ gerbil_test_runtime_options }} t/performance/multi-frontier-benchmark.ss

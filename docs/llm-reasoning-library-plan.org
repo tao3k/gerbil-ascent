@@ -449,7 +449,8 @@ feedback. Two tasks alternate arm order at one call per arm/task (four calls).
 This measures bounded syntax repair conditional on seeds, not end-to-end
 program generation, verifier interpretation or general feedback benefit.
 The generation and evidence gates run before any paid call. A new immutable
-preview, exact-head CI and explicit budget approval remain required.
+preview, exact-head CI and explicit budget approval were satisfied for the
+completed four-call run recorded below.
 
 The earlier model study's temporary evidence paths are gone. POO Flow retains
 four original response texts recovered only where bytes match their recorded
@@ -465,3 +466,23 @@ output watchdog. The Rust discriminator test passed (1 test, 74 filtered;
 Policy inspection selected 36 modules with zero findings/errors; the package
 build passed after selecting the system SDK rather than inherited Nix headers.
 These are local receipts; current-head remote CI is a separate required gate.
+
+* Completed shared-seed repair gate (2026-10-03)
+
+At qualified ASCENT =cd6f60f= and POO Flow =0b7a6c52=, the approved final
+manifest =8974b1c55a150a8595f56a2c70f977116db7c428ab09997e098265890b6cb781=
+produced exactly four completed requests, with zero retries. Both self and
+native repaired both supplied syntax-error seeds into the same candidate.
+All four candidates matched all seven independent outputs and verified
+current finite/founded receipts; each valid first receipt was rejected at
+the equal-answer next generation. The durable archive contains 23 verified
+original files (manifest SHA256
+=8843adf26bc2873635ab9910ea37fa44b095f2ed1aba9520ad95bec328278550=).
+
+POO Flow's =model-study-shared-seed-repair.org= and committed result inventory
+record request/response IDs, usage, timings, hashes and per-state scores.
+This closes this bounded repair protocol. Native feedback showed no observed
+correctness advantage in these two selected task pairs. General model benefit,
+verdict interpretation, temporal lens qualification, other replication
+families and release/deployment authority remain separate. No calls remain
+in the approved budget; the existing PRs remain open and unmerged.

@@ -1,0 +1,198 @@
+#+title: Code Quality: Scheme-native Ascent
+
+* Source picture
+
+#+begin_example
+syntax                   declaration analysis         execution
+program/syntax.ss ------> program/planning.ss -------> program/evaluate.ss
+program/scheme-language.ss       |                            |
+         |                        v                            v
+         +----------------> program/funs.ss              table/funs.ss
+                           strata and terms             row indexes
+#+end_example
+
+The two syntax surfaces have different contracts. The historical
+=ascent= form admits general Scheme expressions and patterns and is
+kept for the Rust-oracle qualification path. It is not re-exported by
+=program/interface.ss=. The native public =relational-program= form has
+a checked scalar grammar and an admission boundary. Shared machinery
+must preserve that distinction. =program/analysis.ss= caches immutable
+declaration plans, while =program/evaluate.ss= owns mutable relation
+state and retained-session behavior.
+
+* Exact Gerbil source
+
+The active Homebrew executable is =/opt/homebrew/bin/gerbil=, linked to
+=/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/=.
+Its source root is =2591dcd/src/= under that directory. The tool reports
+=Gerbil 2591dcd on Gambit dcd677c=. The installed release receipt pins
+upstream revision =2591dcd9b7c6d2c4e9dd8611a17c5b1a5d82bbdb= and
+patchset =f5cedd8168cb365ba41289327601d9305738c9a0=. Findings
+below refer to this installed source rather than a newer upstream API.
+
+- =gerbil/compiler/optimize.ss:27=: =optimize!= parameterizes pass-local
+  mutation and type tables before loading dependencies and optimizing
+  module code. This is a useful ownership model for keeping our
+  declaration analysis separate from evaluator state.
+- =gerbil/compiler/optimize-xform.ss:16=: =defcompile-method= dispatches
+  explicitly on syntax forms. It is a model for making supported DSL
+  forms visible, but does not justify introducing a generic pass
+  framework into this repository.
+- =gerbil/compiler/compile.ss= and =optimize-call.ss:50=: direct calls are
+  optimized according to resolved procedure information; the call
+  optimizer may emit unchecked calls for known procedures and handles
+  lambda inlining only under binding/side-effect conditions. A shorter
+  source expression is not by itself evidence of faster generated code.
+- =gerbil/core/match.ss= and =more-syntax-sugar.ss=: available match and
+  hygienic syntax mechanisms. Use them where they express a grammar or
+  variant more clearly without changing expansion-time diagnostics.
+- =std/list/list.ss:9,24,259=: =append-map=, =delete-duplicates/hash=,
+  =butlast=, =group-same=, and length predicates are available.
+  =butlast= returns an empty list for empty input, so
+  =gerbil-ascent-lattice-key= checks the nonempty row contract first.
+- =std/iter/macros.ss:34,289= and =api.ss=: =for= and =for/fold= exist in this
+  version. Their iteration order and temporary allocations need a
+  concrete local use case before replacing a named loop.
+- =std/hash/misc.ss:261=: =hash-ensure-modify!= first ensures a default
+  entry and then modifies it. For an empty-list default,
+  =gerbil/runtime/hash.ss:580= also exposes =hash-update!=, which avoids
+  a separate default thunk. It was tried locally and then reverted;
+  a simpler expression alone was not enough reason to replace the
+  established implementation.
+
+Two direct =gxi= checks on this toolchain returned =(8 7)= after
+updating the same hash key with values 7 and 8 using
+=hash-update!=, and raised a pair-expected error for =(last '())=.
+They confirm the small operations, not the whole evaluator.
+
+* Feature: lattice rows and term binding
+
+=program/funs.ss= extracted a lattice key with two reversals and a
+lattice value with another reversal. It now uses =butlast= and =last=,
+with an explicit nonempty check for the private key helper. The
+evaluator also calls key and value separately in some paths, so a
+single extraction at the caller is a possible later measurement target
+without adding a new public helper.
+
+=gerbil-ascent-bind-row= is a compact state machine. Its invariants are
+repeated-variable equality, pattern result arity, and shadowing order
+of newly bound variables. A =match= rewrite is desirable only if those
+invariants become easier to see and the errors stay stable.
+
+Relevant qualification: repeated-variable, lattice, pattern, rule,
+and invalid-program fixtures. Record values, row order, and errors.
+
+* Feature: indexed relations
+
+=table/funs.ss= builds bucket order by reversing the current relation
+snapshot once and then prepending each row. This is intentional.
+=hash-update!= with an empty-list default passed the index qualification
+but was reverted after a broader test hit a time budget. The same
+time budget failed after the revert, so that test does not attribute
+the anomaly to either hash implementation. The existing standard
+=hash-ensure-modify!= remains the clearer bounded choice here.
+=gerbil-ascent-index-key= uses =list-ref= for each selected column;
+its cost grows with both row width and selected columns. A single
+pass over the row could help wide composite keys, but arbitrary
+column order must be preserved. Use the existing index-program and
+BYODS cases plus a matched wide-row probe before choosing an algorithm.
+
+* Feature: stratification and dependency cycles
+
+=program/funs.ss= performs stratum relaxation and, on an invalid
+strict cycle, searches dependency edges repeatedly to classify the
+error. This search is mainly a diagnostic path. =program/summary.ss=
+already uses =append-map= and =delete-duplicates/hash= for static SCC
+metadata and implements Tarjan because =:std/struct/dag= rejects
+cyclic input. The two graphs have different output contracts.
+
+A shared adjacency or SCC representation is justified only if it
+reduces conceptual state while retaining minimum strata and the
+aggregate, negation, and lattice-projection error classification and
+current encountered-edge ordering of diagnostics.
+Benchmark it on the same rule graphs; do not turn an error-path cost
+into an unsupported runtime speedup claim.
+
+* Feature: syntax boundaries
+
+=program/syntax.ss= and =program/scheme-language.ss= both lower atoms,
+negation, and reducers. Their generated objects and error paths must
+be compared production by production before sharing code. Keep
+lexical fragment handles hygienic, preserve source locations and
+diagnostics, and never broaden the public checked scalar grammar
+to accept arbitrary callbacks. An extra macro that hides one runtime
+call would make the layer harder to read.
+
+The current =relational-atom= and =relational-atom/lexical= expansions
+look alike but quote a relation spelling versus evaluate a lexical
+handle. That difference is the ownership boundary, so a common
+expander would need to keep it visible. =relational-copy-row= and the
+operator project constructor use =map identity= to copy list spines
+before retention; these are intentional copies, not redundant maps.
+The contract in =docs/native-library-acceptance.org= also keeps the
+historical =ascent= syntax on the test path, so deleting or folding it
+into the native language would be a separate interface change.
+The same snapshot-copy pattern appears in =candidate/reasoning.ss= and
+=program/scheme-admission.ss=. Its presence across those boundaries
+is evidence of an isolation rule, not a reason for a blanket rewrite.
+
+* Feature: execution and evidence
+
+The stateful engine is in =program/evaluate.ss=; =program/analysis.ss=
+owns immutable declaration caches. A change that crosses this boundary
+needs retained-session source replacement, cache invalidation,
+provider dispatch, and stale-receipt tests together.
+
+For each code change, record the old and new invariant, the exact
+v0.19 source operation used, a qualifying example including edge
+cases, and the smallest relevant =just test-file= result. A complete
+slice also needs =just test=, =just check-policy=, and =just build=.
+The =justfile= harness requires =MODULE-OK=, =HARNESS-OK=, final =OK=,
+and no error or overflow markers. For a performance claim, compare
+matched runs from =just small-graph-benchmark= and the existing
+scenario recipes, including timing spread and semantic equivalence.
+
+The current code-review reference is PR #1, branch =feature/ascent-scheme-syntax=,
+commit =80fee6f0860ff71aaea27ebd08c36b195d4a225f=. The published
+small-graph receipts in =docs/small-graph-benchmark.org= include earlier
+source states; rerun the exact head for performance comparisons. They
+cover one positive-closure workload and do not establish general
+Datalog speed.
+
+* Local qualification status
+
+- The initial =just test-file t/qualification/ascent-index-program-test.ss=
+  attempt could not load =:core/observability/testing-case= in the
+  default Gerbil package environment. The isolated
+  =/private/tmp/ascent-v0121-gerbil= environment contains the pinned
+  =poo-flow-core= commit =e85fd45303b208b23e5957fd316e7004994109a4=
+  and =asp-gerbil-scheme= tag =v0.1.2.1=.
+- With =GERBIL_PATH= set to that environment, =just build= passed and
+  =just test-file t/qualification/ascent-index-program-test.ss= passed
+  all cases, =MODULE-OK=, =HARNESS-OK=, and final =OK=.
+- A full =just test= run reached =ascent-rule-program-test.ss= after
+  passing earlier batches, then failed its first Case with
+  =PooFlowDebugDurationAnomaly= under the Case's 2000 ms budget.
+  Standalone repeats failed the same Case before and after reverting
+  the =hash-update!= experiment. The first Case uses ordinary
+  relations, so it does not exercise the lattice helper change.
+  This is a local timing gate failure, not a semantic mismatch receipt.
+- =just check-policy= completed with 36 selected modules and
+  =findings=0 errors=0=.
+- The subsequent =just test-file= runs passed the SCC summary,
+  stratified proof, syntax, table expression, timeout, timing,
+  Scheme library contract, native integration, native language,
+  native reduction, and relational qualification modules. The
+  retained operator module exceeded the default 120-second process
+  timeout after 30 of 64 checks; the ordinary operator module was
+  interrupted while stopping the slow sequential run. Neither has
+  a complete local receipt from this pass.
+
+The =justfile= sets =GERBIL_BUILD_CORES= (defaulting to the detected
+processor count) for =build= and =check-policy=. Its =test= recipe
+deliberately resets Gerbil between sequential batches of two and
+runs four exhaustive modules alone. =ASCENT_GXTEST_TIMEOUT= controls
+each test process deadline; it does not enable parallel test batches.
+Use the repository's =just= entrypoints and their receipt checks for
+future work, and report the first failing batch instead of launching
+a long serial list of individual retries.

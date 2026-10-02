@@ -4,6 +4,8 @@
 
 ;;; Pure planning over private lowered rule vectors. These functions do not
 ;;; retain relation state and are shared by the serial execution path.
+(import (only-in :std/list/list butlast))
+
 (export gerbil-ascent-rule-strata
         gerbil-ascent-lattice-feeds-relation?
         gerbil-ascent-delta-positions
@@ -15,10 +17,12 @@
         gerbil-ascent-head-row)
 
 (def (gerbil-ascent-lattice-key row)
-  (reverse (cdr (reverse row))))
+  (unless (pair? row)
+    (error "invalid ASCENT lattice row" row))
+  (butlast row))
 
 (def (gerbil-ascent-lattice-value row)
-  (car (reverse row)))
+  (last row))
 
 (def (gerbil-ascent-joined-row key value)
   (append key (list value)))

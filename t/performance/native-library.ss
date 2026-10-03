@@ -1,7 +1,7 @@
 ;;; -*- Gerbil -*-
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
-(import (only-in :gerbil/expander import-module module-context-path))
+(import :gerbil/expander)
 (export assert-native-library!)
 ;; Verify the actual gxtest process before the scenario starts timing.
 ;; : (-> Void)
@@ -11,7 +11,9 @@
       (for-each
        (lambda (name)
          (let* ((id (string->symbol (string-append ":gerbil-ascent/" name)))
-                (resolved (module-context-path (import-module id)))
+                ;; Resolve before Cases without importing unrelated production
+                ;; modules and constructing their process-local contract state.
+                (resolved (gx#core-resolve-library-module-path id))
                 (expected (path-expand (string-append "gerbil-ascent/" name ".ssi")
                                        library)))
            (unless (equal? resolved expected)

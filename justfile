@@ -4,129 +4,95 @@
 set shell := ["bash", "-euo", "pipefail", "-c"]
 
 gerbil_test_runtime_options := "-:max-heap=1G,debug=q"
+build_script := 'GERBIL_LOADPATH="' + justfile_directory() + '${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" gxi -:max-heap=1G,debug=q build.ss'
 
 default:
     @just --list
 
 build:
-    python3 tools/test_execution.py run -- just _build
-
-_build:
     GERBIL_BUILD_CORES="${GERBIL_BUILD_CORES:-$(getconf NPROCESSORS_ONLN)}" gerbil build
 
 check-policy:
-    python3 tools/test_execution.py run -- just _check-policy
-
-_check-policy:
     ASP_GERBIL_SCHEME_POLICY=1 GERBIL_BUILD_CORES="${GERBIL_BUILD_CORES:-$(getconf NPROCESSORS_ONLN)}" gerbil build
 
 test-file path:
+    {{ build_script }} test-file "{{ path }}"
+
+# Native gxtest owns module execution; the package entrypoint owns the lane.
+_test-file path:
     #!/usr/bin/env bash
     set -euo pipefail
     test -f "{{ path }}"
-    if [[ "{{ path }}" == t/qualification/ascent-temporal-lens-test.ss ]]; then exec just test-temporal; fi
+    if [[ "{{ path }}" == t/qualification/ascent-temporal-lens-test.ss ]]; then exec just _test-temporal; fi
     mkdir -p "{{ justfile_directory() }}/.cache/ascent/tmp"
     output_file="$(mktemp "{{ justfile_directory() }}/.cache/ascent/tmp/case.XXXXXX")"
     trap 'rm -f "$output_file"' EXIT
     started=$SECONDS
     printf '[ascent-test] START %s\n' "{{ path }}"
-    GERBIL_LOADPATH="${ASCENT_TEST_LIBRARY:+$ASCENT_TEST_LIBRARY:}{{ justfile_directory() }}${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" python3 tools/test_execution.py run --module "{{ path }}" -- timeout "${ASCENT_GXTEST_TIMEOUT:-120s}" gerbil {{ gerbil_test_runtime_options }} test -v 5 "{{ path }}" 2>&1 | tee "$output_file"
+    export GERBIL_LOADPATH="${ASCENT_TEST_LIBRARY:+$ASCENT_TEST_LIBRARY:}{{ justfile_directory() }}${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}"
+    test_module="{{ path }}"
+    if [[ -n "${ASCENT_TEST_LIBRARY:-}" ]]; then
+        compiled="$ASCENT_TEST_LIBRARY/gerbil-ascent/${test_module%.ss}.ssi"
+        test -f "$compiled"
+        test_module="$compiled"
+        runner=(gxi {{ gerbil_test_runtime_options }} t/harness/gxtest.ss)
+    else
+        runner=(gerbil {{ gerbil_test_runtime_options }} test)
+    fi
+    timeout "${ASCENT_GXTEST_TIMEOUT:-120s}" "${runner[@]}" -v 5 "$test_module" 2>&1 | tee "$output_file"
     if grep -E 'ERROR (CHECK|CASE|HARNESS|MODULE)|Heap overflow|Stack overflow' "$output_file" >/dev/null; then exit 1; fi
     awk -f "{{ justfile_directory() }}/tools/assert-test-cases.awk" "$output_file"
-    grep -Fx 'MODULE-OK {{ path }}' "$output_file" >/dev/null
+    grep -Fx "MODULE-OK $test_module" "$output_file" >/dev/null
     grep -F 'HARNESS-OK' "$output_file" >/dev/null
     grep -x 'OK' "$output_file" >/dev/null
+    if [[ -n "${ASCENT_TEST_LIBRARY:-}" ]]; then grep -Fx 'NATIVE-MODULES-OK' "$output_file" >/dev/null; fi
     printf '[ascent-test] PASS %s (%ss)\n' "{{ path }}" "$((SECONDS - started))"
 
 # Explicitly admitted modules run in separate processes; native Cases stay serial.
 test-parallel jobs='auto':
-    python3 tools/test_execution.py parallel --jobs "{{ jobs }}"
+    {{ build_script }} test "{{ jobs }}" parallel
 
 # Native Cases stay serial; admitted modules use a process pool.
 test jobs='auto':
-    python3 tools/test_execution.py suite --jobs "{{ jobs }}"
+    {{ build_script }} test "{{ jobs }}" all
 
-# Retain the original batch runner for comparisons.
+# Compile through build.ss, then execute the selected native test module.
+test-native path:
+    {{ build_script }} test-file "{{ path }}"
+
+# Run the same native module inventory with one worker.
 test-serial:
+    {{ build_script }} test 1 all
+
+# Independent modules use the standard process pool; native Cases stay serial.
+_test-suite jobs lane:
     #!/usr/bin/env bash
     set -euo pipefail
-    files=(t/qualification/*-test.ss)
-    qualified=()
-    mkdir -p "{{ justfile_directory() }}/.cache/ascent/tmp"
-    output_file="$(mktemp "{{ justfile_directory() }}/.cache/ascent/tmp/case.XXXXXX")"
-    trap 'rm -f "$output_file"' EXIT
-    export GERBIL_LOADPATH="{{ justfile_directory() }}${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}"
-    # Reset Gerbil between bounded batches. The exhaustive operator modules
-    # run alone so each has its own timeout and completion receipts.
-    run_batch() {
-        local batch=("$@")
-        : > "$output_file"
-        printf '[ascent-test] START batch %s\n' "${batch[*]}"
-        python3 tools/test_execution.py run -- timeout "${ASCENT_GXTEST_TIMEOUT:-120s}" gerbil {{ gerbil_test_runtime_options }} test -v 5 "${batch[@]}" 2>&1 | tee "$output_file"
-        if grep -E 'ERROR (CHECK|CASE|HARNESS|MODULE)|Heap overflow|Stack overflow' "$output_file" >/dev/null; then exit 1; fi
-        awk -f "{{ justfile_directory() }}/tools/assert-test-cases.awk" "$output_file"
-        local batch_file
-        for batch_file in "${batch[@]}"; do
-            grep -Fx "MODULE-OK $batch_file" "$output_file" >/dev/null
-        done
-        grep -F 'HARNESS-OK' "$output_file" >/dev/null
-        grep -x 'OK' "$output_file" >/dev/null
-        qualified+=("${batch[@]}")
-        printf '[ascent-test] PASS batch %s\n' "${batch[*]}"
-    }
-    batch=()
-    for file in "${files[@]}"; do
-        if [[ "$file" == t/qualification/ascent-temporal-lens-test.ss ]]; then
-            if ((${#batch[@]})); then run_batch "${batch[@]}"; batch=(); fi
-            just test-temporal
-            qualified+=("$file")
-        elif [[ "$file" == t/qualification/ascent-reasoning-library-test.ss ||
-              "$file" == t/qualification/scheme-library-contract-test.ss ||
-              "$file" == t/qualification/scheme-operator-test.ss ||
-              "$file" == t/qualification/scheme-operator-retained-test.ss ]]; then
-            if ((${#batch[@]})); then run_batch "${batch[@]}"; batch=(); fi
-            run_batch "$file"
-        else
-            batch+=("$file")
-            if ((${#batch[@]} == 2)); then run_batch "${batch[@]}"; batch=(); fi
-        fi
-    done
-    if ((${#batch[@]})); then run_batch "${batch[@]}"; fi
-    # A successful shell exit must mean every discovered test ran exactly once.
-    test "${#qualified[@]}" -eq "${#files[@]}"
-    for ((i=0; i<${#files[@]}; i++)); do
-        test "${qualified[i]}" = "${files[i]}"
-    done
+    case "{{ lane }}" in all|parallel) ;; *) exit 2 ;; esac
+    jobs="$(gxi {{ gerbil_test_runtime_options }} build.ss test-jobs "{{ jobs }}")"
+    directory="$(mktemp -d "{{ justfile_directory() }}/.cache/ascent/native-library/test.XXXXXX")"
+    gxi {{ gerbil_test_runtime_options }} build.ss test-modules parallel > "$directory/parallel"
+    gxi {{ gerbil_test_runtime_options }} build.ss test-modules exclusive > "$directory/exclusive"
+    printf '[ascent-test] PLAN parallel=%s exclusive=%s jobs=%s logs=%s\n' "$(wc -l < "$directory/parallel")" "$(wc -l < "$directory/exclusive")" "$jobs" "$directory"
+    export ASCENT_TEST_LOG_DIRECTORY="$directory"
+    (while sleep 5; do printf '[ascent-test] RUNNING logs=%s\n' "$directory"; done) &
+    progress_pid=$!
+    trap 'kill "$progress_pid" 2>/dev/null || true; wait "$progress_pid" 2>/dev/null || true' EXIT
+    if [[ -s "$directory/parallel" ]]; then xargs -P "$jobs" -n 1 bash -c 'path="$1"; log="$ASCENT_TEST_LOG_DIRECTORY/$(basename "$path").log"; printf "[ascent-test] RUN %s\n" "$path"; if just _test-file "$path" > "$log" 2>&1; then printf "[ascent-test] PASS %s\n" "$path"; else cat "$log"; exit 1; fi' _ < "$directory/parallel"; fi
+    if [[ "{{ lane }}" == all ]]; then
+        while IFS= read -r path; do just _test-file "$path" 2>&1 | tee "$directory/$(basename "$path").log"; done < "$directory/exclusive"
+    fi
 
 test-quick:
-    python3 tools/test_execution.py run -- just _test-quick
+    {{ build_script }} test-quick
 
 _test-quick:
     #!/usr/bin/env bash
     set -euo pipefail
-    export GERBIL_LOADPATH="{{ justfile_directory() }}${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}"
-    mkdir -p "{{ justfile_directory() }}/.cache/ascent/tmp"
-    output_file="$(mktemp "{{ justfile_directory() }}/.cache/ascent/tmp/case.XXXXXX")"
-    trap 'rm -f "$output_file"' EXIT
-    timeout "${ASCENT_GXTEST_TIMEOUT:-120s}" gerbil {{ gerbil_test_runtime_options }} test -v 3 \
-        t/qualification/ascent-finite-evidence-test.ss \
-        t/qualification/ascent-positive-nonmembership-test.ss \
-        t/qualification/ascent-positive-provenance-test.ss \
-        t/qualification/ascent-reasoning-library-test.ss \
-        t/qualification/ascent-stratified-proof-test.ss 2>&1 | tee "$output_file"
-    if grep -E 'ERROR (CHECK|CASE|HARNESS|MODULE)|Heap overflow|Stack overflow' "$output_file" >/dev/null; then exit 1; fi
-    for path in t/qualification/ascent-finite-evidence-test.ss \
-                t/qualification/ascent-positive-nonmembership-test.ss \
-                t/qualification/ascent-positive-provenance-test.ss \
-                t/qualification/ascent-reasoning-library-test.ss \
-                t/qualification/ascent-stratified-proof-test.ss; do
-        grep -Fx "MODULE-OK $path" "$output_file" >/dev/null
-    done
-    grep -F 'HARNESS-OK' "$output_file" >/dev/null
-    grep -x 'OK' "$output_file" >/dev/null
+    gxi {{ gerbil_test_runtime_options }} build.ss test-modules quick | while IFS= read -r path; do just _test-file "$path"; done
 
 small-graph-benchmark:
-    python3 tools/test_execution.py run -- just _small-graph-benchmark
+    {{ build_script }} run -- just _small-graph-benchmark
 
 _small-graph-benchmark:
     GERBIL_LOADPATH="{{ justfile_directory() }}${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" timeout 180s gerbil {{ gerbil_test_runtime_options }} env gxi t/performance/small-graph-benchmark.ss
@@ -134,7 +100,7 @@ _small-graph-benchmark:
 # Matched row-copy boundary costs. The probe checks equal rows and isolation
 # after every sample; it does not time a complete retained-session solve.
 admission-copy-benchmark:
-    python3 tools/test_execution.py run -- just _admission-copy-benchmark
+    {{ build_script }} run -- just _admission-copy-benchmark
 
 _admission-copy-benchmark:
     #!/usr/bin/env bash
@@ -164,7 +130,7 @@ check-nonmembership-formal:
 # Matched finite-operator research probe; every sample checks independent
 # closure before reporting cost. This is separate from the SS suite.
 operator-change-probe:
-    python3 tools/test_execution.py run -- just _operator-change-probe
+    {{ build_script }} run -- just _operator-change-probe
 
 _operator-change-probe:
     #!/usr/bin/env bash
@@ -180,7 +146,7 @@ _operator-change-probe:
 
 # Exact-set gate and matched exploratory timing for native retained updates.
 operator-retained-probe:
-    python3 tools/test_execution.py run -- just _operator-retained-probe
+    {{ build_script }} run -- just _operator-retained-probe
 
 _operator-retained-probe:
     #!/usr/bin/env bash
@@ -200,7 +166,7 @@ clock-memory-probe:
     ASCENT_GXTEST_TIMEOUT="${ASCENT_GXTEST_TIMEOUT:-100s}" just test-file t/performance/ascent-clock-memory-probe.ss
 
 binding-benchmark:
-    python3 tools/test_execution.py run -- just _binding-benchmark
+    {{ build_script }} run -- just _binding-benchmark
 
 _binding-benchmark:
     #!/usr/bin/env bash
@@ -224,7 +190,7 @@ _binding-benchmark:
     grep -x 'OK' "$log" >/dev/null
 
 strata-benchmark:
-    python3 tools/test_execution.py run -- just _strata-benchmark
+    {{ build_script }} run -- just _strata-benchmark
 
 _strata-benchmark:
     #!/usr/bin/env bash
@@ -249,20 +215,28 @@ _strata-benchmark:
 
 # Run one unchanged SS fixture through the native qualification harness.
 performance-scenario name:
-    python3 tools/test_execution.py run -- python3 tools/performance_execution.py "{{ name }}"
+    {{ build_script }} performance "{{ name }}"
+
+# ASCENT owns its 1000-sample SS receipts using ASP's benchmark profile.
+performance:
+    {{ build_script }} performance suite
 
 _performance-scenario name:
     #!/usr/bin/env bash
     set -euo pipefail
     name="{{ name }}"
     path="t/scenarios/performance/$name/scenario.ss"
-    test -f "$path"
+    case "$name" in
+        ascent-binary-program) test_module=t/performance/ascent-binary-program-performance-test.ss ;;
+        ascent-shortest-candidates) test_module=t/performance/ascent-shortest-candidates-performance-test.ss ;;
+        *) test -f "$path"; test_module=t/performance/ascent-scenario-performance-test.ss ;;
+    esac
     started=$SECONDS
     printf '[ascent-ss] START %s (1000 samples)\n' "$name"
     (while sleep 10; do printf '[ascent-ss] RUNNING %s (%ss)\n' "$name" "$((SECONDS - started))"; done) &
     progress_pid=$!
     trap 'kill "$progress_pid" 2>/dev/null || true; wait "$progress_pid" 2>/dev/null || true' EXIT
-    if ASCENT_SS_SCENARIO="$path" ASCENT_GXTEST_TIMEOUT="${ASCENT_GXTEST_TIMEOUT:-120s}" just test-file t/performance/ascent-scenario-performance-test.ss; then
+    if ASCENT_SS_SCENARIO="$path" ASCENT_GXTEST_TIMEOUT="${ASCENT_GXTEST_TIMEOUT:-120s}" just _test-file "$test_module"; then
         printf '[ascent-ss] PASS %s (%ss)\n' "$name" "$((SECONDS - started))"
     else
         status=$?
@@ -270,14 +244,9 @@ _performance-scenario name:
         exit "$status"
     fi
 
-# ASCENT owns its 1000-sample SS receipts using ASP's benchmark profile.
-performance:
-    python3 tools/test_execution.py run -- python3 tools/performance_execution.py suite
-
 _performance:
     #!/usr/bin/env bash
     set -euo pipefail
-    export GERBIL_LOADPATH="{{ justfile_directory() }}${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}"
     # The ASP runner reports after its 1000 timed attempts; printing from a
     # timed thunk would change the samples. Each native test process has a
     # bounded total timeout and the scenario wrapper prints progress.
@@ -301,7 +270,7 @@ _performance:
         fi
     }
     run_scenario() {
-        ASCENT_GXTEST_TIMEOUT="${ASCENT_GXTEST_TIMEOUT:-180s}" just performance-scenario "$1"
+        ASCENT_GXTEST_TIMEOUT="${ASCENT_GXTEST_TIMEOUT:-180s}" just _performance-scenario "$1"
     }
     run_scenario ascent-byods-trrel
     run_scenario ascent-session-update
@@ -315,11 +284,11 @@ _performance:
     run_scenario ascent-derived-aggregate
     run_scenario ascent-indexed-joins
     run_scenario ascent-byods-eqrel
-    run_case ascent-binary-program just performance-scenario ascent-binary-program
+    run_case ascent-binary-program just _performance-scenario ascent-binary-program
     run_scenario ascent-reachability-closure
     run_scenario ascent-table-expression
     run_scenario ascent-table-expression-membership
-    run_case ascent-shortest-candidates just performance-scenario ascent-shortest-candidates
+    run_case ascent-shortest-candidates just _performance-scenario ascent-shortest-candidates
 ascent-pairs:
     @timeout 90s gerbil {{ gerbil_test_runtime_options }} t/qualification/ascent-binary-program-pairs.ss
 
@@ -506,7 +475,7 @@ size-benchmark:
     export ASCENT_SIZE_BENCH_LIB="{{ justfile_directory() }}/.gerbil/size-benchmark/lib"
     export ASCENT_SIZE_RECEIPT="${ASCENT_SIZE_RECEIPT:-{{ justfile_directory() }}/.gerbil/size-benchmark/receipt.sexp}"
     shasum -a 256 program/evaluate.ss t/qualification/ascent-size-reference-evaluate.ss t/performance/size-benchmark.ss tools/build-size-benchmark.ss > "$ASCENT_SIZE_RECEIPT.sources"
-    python3 tools/test_execution.py run -- just _size-benchmark
+    {{ build_script }} run -- just _size-benchmark
 
 _size-benchmark:
     timeout 90s gxi {{ gerbil_test_runtime_options }} tools/build-size-benchmark.ss
@@ -520,7 +489,7 @@ multi-frontier-benchmark:
     export ASCENT_MULTI_FRONTIER_LIB="{{ justfile_directory() }}/.gerbil/multi-frontier/lib"
     export ASCENT_MULTI_FRONTIER_RECEIPT="${ASCENT_MULTI_FRONTIER_RECEIPT:-{{ justfile_directory() }}/.gerbil/multi-frontier/receipt.sexp}"
     shasum -a 256 program/evaluate.ss t/qualification/ascent-multi-frontier-reference-evaluate.ss t/performance/multi-frontier-benchmark.ss tools/build-multi-frontier-benchmark.ss > "$ASCENT_MULTI_FRONTIER_RECEIPT.sources"
-    python3 tools/test_execution.py run -- just _multi-frontier-benchmark
+    {{ build_script }} run -- just _multi-frontier-benchmark
 
 _multi-frontier-benchmark:
     timeout 90s gxi {{ gerbil_test_runtime_options }} tools/build-multi-frontier-benchmark.ss
@@ -533,7 +502,7 @@ set-size-benchmark:
     export ASCENT_SET_SIZE_LIB="{{ justfile_directory() }}/.gerbil/set-size/lib"
     export ASCENT_SET_SIZE_RECEIPT="${ASCENT_SET_SIZE_RECEIPT:-{{ justfile_directory() }}/.gerbil/set-size/receipt.sexp}"
     shasum -a 256 program/evaluate.ss t/qualification/ascent-set-size-reference-evaluate.ss t/performance/set-size-benchmark.ss tools/build-set-size-benchmark.ss > "$ASCENT_SET_SIZE_RECEIPT.sources"
-    python3 tools/test_execution.py run -- just _set-size-benchmark
+    {{ build_script }} run -- just _set-size-benchmark
 
 _set-size-benchmark:
     timeout 90s gxi {{ gerbil_test_runtime_options }} tools/build-set-size-benchmark.ss
@@ -546,7 +515,7 @@ set-batch-benchmark:
     export ASCENT_SET_BATCH_LIB="{{ justfile_directory() }}/.gerbil/set-batch/lib"
     export ASCENT_SET_BATCH_RECEIPT="${ASCENT_SET_BATCH_RECEIPT:-{{ justfile_directory() }}/.gerbil/set-batch/receipt.sexp}"
     shasum -a 256 table/storage.ss t/qualification/ascent-set-batch-reference.ss t/performance/set-batch-benchmark.ss tools/build-set-batch-benchmark.ss > "$ASCENT_SET_BATCH_RECEIPT.sources"
-    python3 tools/test_execution.py run -- just _set-batch-benchmark
+    {{ build_script }} run -- just _set-batch-benchmark
 
 _set-batch-benchmark:
     timeout 90s gxi {{ gerbil_test_runtime_options }} tools/build-set-batch-benchmark.ss
@@ -559,7 +528,7 @@ set-emit-benchmark:
     export ASCENT_SET_EMIT_LIB="{{ justfile_directory() }}/.gerbil/set-emit/lib"
     export ASCENT_SET_EMIT_RECEIPT="${ASCENT_SET_EMIT_RECEIPT:-{{ justfile_directory() }}/.gerbil/set-emit/receipt.sexp}"
     shasum -a 256 program/evaluate.ss t/qualification/ascent-set-emit-reference-evaluate.ss t/performance/set-emit-benchmark.ss tools/build-set-emit-benchmark.ss > "$ASCENT_SET_EMIT_RECEIPT.sources"
-    python3 tools/test_execution.py run -- just _set-emit-benchmark
+    {{ build_script }} run -- just _set-emit-benchmark
 
 _set-emit-benchmark:
     timeout 90s gxi {{ gerbil_test_runtime_options }} tools/build-set-emit-benchmark.ss
@@ -572,7 +541,7 @@ set-emit-allocation:
     export ASCENT_SET_EMIT_LIB="{{ justfile_directory() }}/.gerbil/set-emit/lib"
     export ASCENT_SET_EMIT_ALLOCATION_RECEIPT="${ASCENT_SET_EMIT_ALLOCATION_RECEIPT:-{{ justfile_directory() }}/.gerbil/set-emit/allocation.sexp}"
     shasum -a 256 program/evaluate.ss t/qualification/ascent-set-emit-reference-evaluate.ss t/performance/set-emit-allocation.ss tools/build-set-emit-benchmark.ss > "$ASCENT_SET_EMIT_ALLOCATION_RECEIPT.sources"
-    python3 tools/test_execution.py run -- just _set-emit-allocation
+    {{ build_script }} run -- just _set-emit-allocation
 
 _set-emit-allocation:
     timeout 90s gxi {{ gerbil_test_runtime_options }} tools/build-set-emit-benchmark.ss
@@ -585,7 +554,7 @@ set-source-allocation:
     export ASCENT_SET_SOURCE_LIB="{{ justfile_directory() }}/.gerbil/set-source/lib"
     export ASCENT_SET_SOURCE_ALLOCATION_RECEIPT="${ASCENT_SET_SOURCE_ALLOCATION_RECEIPT:-{{ justfile_directory() }}/.gerbil/set-source/allocation.sexp}"
     shasum -a 256 program/evaluate.ss program/admission.ss t/qualification/ascent-set-source-reference-evaluate.ss t/performance/set-source-allocation.ss tools/build-set-source-benchmark.ss > "$ASCENT_SET_SOURCE_ALLOCATION_RECEIPT.sources"
-    python3 tools/test_execution.py run -- just _set-source-allocation
+    {{ build_script }} run -- just _set-source-allocation
 
 _set-source-allocation:
     timeout 90s gxi {{ gerbil_test_runtime_options }} tools/build-set-source-benchmark.ss
@@ -593,7 +562,7 @@ _set-source-allocation:
 
 # Whole-solve positive rule plans: ordered semantics, allocation and raw timing.
 positive-plan-benchmark:
-    python3 tools/test_execution.py run -- just _positive-plan-benchmark
+    {{ build_script }} run -- just _positive-plan-benchmark
 
 _positive-plan-benchmark:
     #!/usr/bin/env bash
@@ -612,7 +581,7 @@ _positive-plan-benchmark:
     grep -x 'OK' "$log" >/dev/null
 
 workspace-benchmark:
-    python3 tools/test_execution.py run -- just _workspace-benchmark
+    {{ build_script }} run -- just _workspace-benchmark
 
 _workspace-benchmark:
     #!/usr/bin/env bash
@@ -631,10 +600,10 @@ _workspace-benchmark:
     grep -x 'OK' "$log" >/dev/null
 
 ordered-relations-benchmark:
-    python3 tools/test_execution.py run -- python3 t/performance/ordered-relations/qualify.py
+    {{ build_script }} run -- gxi {{ gerbil_test_runtime_options }} t/performance/ordered-relations/qualify.ss
 
 materialization-benchmark:
-    python3 tools/test_execution.py run -- just _materialization-benchmark
+    {{ build_script }} run -- just _materialization-benchmark
 
 _materialization-benchmark:
     #!/usr/bin/env bash
@@ -653,7 +622,7 @@ _materialization-benchmark:
     grep -x 'OK' "$log" >/dev/null
 
 index-lifecycle-benchmark:
-    python3 tools/test_execution.py run -- just _index-lifecycle-benchmark
+    {{ build_script }} run -- just _index-lifecycle-benchmark
 
 _index-lifecycle-benchmark:
     #!/usr/bin/env bash
@@ -674,7 +643,7 @@ _index-lifecycle-benchmark:
     grep -x 'OK' "$log" >/dev/null
 
 result-benchmark:
-    python3 tools/test_execution.py run -- just _result-benchmark
+    {{ build_script }} run -- just _result-benchmark
 
 _result-benchmark:
     #!/usr/bin/env bash
@@ -700,7 +669,7 @@ temporal-scale:
 
 # Visible import progress for the composed temporal proof dependency graph.
 test-temporal:
-    python3 tools/test_execution.py run --module t/qualification/ascent-temporal-lens-test.ss -- just _test-temporal
+    {{ build_script }} test-file t/qualification/ascent-temporal-lens-test.ss
 
 _test-temporal:
     #!/usr/bin/env bash
@@ -708,9 +677,12 @@ _test-temporal:
     mkdir -p "{{ justfile_directory() }}/.cache/ascent/tmp"
     log="$(mktemp "{{ justfile_directory() }}/.cache/ascent/tmp/run.XXXXXX")"
     trap 'rm -f "$log"' EXIT
-    GERBIL_LOADPATH="{{ justfile_directory() }}${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" timeout 120s gerbil {{ gerbil_test_runtime_options }} env gerbil {{ gerbil_test_runtime_options }} t/harness/temporal-test.ss 2>&1 | tee "$log"
+    test_module="${ASCENT_TEST_LIBRARY:+$ASCENT_TEST_LIBRARY/gerbil-ascent/}t/qualification/ascent-temporal-lens-test${ASCENT_TEST_LIBRARY:+.ssi}"
+    if [[ -z "${ASCENT_TEST_LIBRARY:-}" ]]; then test_module="$test_module.ss"; fi
+    ASCENT_TEMPORAL_TEST_MODULE="$test_module" GERBIL_LOADPATH="${ASCENT_TEST_LIBRARY:+$ASCENT_TEST_LIBRARY:}{{ justfile_directory() }}${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" timeout 120s gxi {{ gerbil_test_runtime_options }} t/harness/temporal-test.ss 2>&1 | tee "$log"
     if grep -E 'ERROR (CHECK|CASE|HARNESS|MODULE)|Heap overflow|Stack overflow' "$log" >/dev/null; then exit 1; fi
     awk -f "{{ justfile_directory() }}/tools/assert-test-cases.awk" "$log"
-    grep -Fx 'MODULE-OK t/qualification/ascent-temporal-lens-test.ss' "$log" >/dev/null
+    grep -Fx "MODULE-OK $test_module" "$log" >/dev/null
     grep -F 'HARNESS-OK' "$log" >/dev/null
     grep -x 'OK' "$log" >/dev/null
+    if [[ -n "${ASCENT_TEST_LIBRARY:-}" ]]; then grep -Fx 'NATIVE-MODULES-OK' "$log" >/dev/null; fi

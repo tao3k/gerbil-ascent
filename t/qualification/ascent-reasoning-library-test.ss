@@ -82,12 +82,14 @@
 ;;; from graph closure and scalar weights, independently of rule evaluation.
 (def (rich-proposal join (extra []))
   (append
-   '(candidate
-      (relation path 2)
-      (relation allowed 2)
-      (relation score 2)
-      (relation summary 2)
-      (rule (path ?x ?y) (edge ?x ?y)))
+   ;; This declaration is mutated by the receipt-isolation Case.
+   ;; Allocate the pair at runtime; compiled quoted data is immutable.
+   (list 'candidate
+         (list 'relation 'path 2)
+         '(relation allowed 2)
+         '(relation score 2)
+         '(relation summary 2)
+         '(rule (path ?x ?y) (edge ?x ?y)))
    (list (list 'rule '(path ?x ?z)
                '(path ?x ?y) (list 'edge join '?z)))
    '((rule (allowed ?x ?y)
@@ -154,7 +156,7 @@
           (check-equal? (reasoning-receipt-rows present) '((1 3))))))
     (test-case "hypothetical source fact stays labelled and unpromoted"
       (let* ((snapshot (edge-snapshot 1 '((1 2) (2 3))))
-             (candidate (proposal 1 4 '((fact edge 3 4))))
+             (candidate (proposal 1 4 (list (list 'fact 'edge 3 4))))
              (hypothesis
               (reasoning-attempt snapshot candidate))
              (without (reasoning-attempt snapshot (proposal 1 4))))

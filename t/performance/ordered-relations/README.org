@@ -41,7 +41,7 @@ are unchanged.
 
 baseline.txt pins the preceding commit cb67c4d. reference.ss is its exact
 production table/expression.ss with only two exported names alpha renamed.
-qualify.py reconstructs and checks it before each qualification. Both modules
+=t/performance/ordered-relations/qualify.ss= reconstructs and checks it before each qualification. Both modules
 compile together into an isolated library. dependency-verification.json also
 checks the 299 installed dependency artifact hashes against the preceding and
 subsequent full production snapshots. The probe checks actual .ssi import
@@ -126,13 +126,19 @@ match after completion.
 * Reproduction
 
 #+begin_src sh
-GERBIL_PATH=/private/tmp/ascent-test-scheduling-gerbil GERBIL_BUILD_CORES=12 \
-  just ordered-relations-benchmark
-python3 t/performance/ordered-relations/report.py
-GERBIL_PATH=/private/tmp/ascent-test-scheduling-gerbil GERBIL_BUILD_CORES=12 \
-  python3 tools/test_execution.py run -- python3 t/performance/ordered-relations/gates.py
-# Run the functional suite outside the parent exclusive lease:
-GERBIL_PATH=/private/tmp/ascent-test-scheduling-gerbil GERBIL_BUILD_CORES=12 \
-  ASCENT_TEST_LIBRARY=<library from production-snapshot.json> just test
-python3 t/performance/ordered-relations/collect-suite.py
+export GERBIL_PATH=/private/tmp/ascent-asp-v0122-gerbil
+export GERBIL_BUILD_CORES=12
+just ordered-relations-benchmark
+just performance-scenario ascent-table-expression
+just performance-scenario ascent-table-expression-membership
+just performance-scenario ascent-reachability-closure
+just performance-scenario ascent-binary-program
+just test
 #+end_src
+
+* Current execution
+The active qualifier uses Scheme process APIs under the common native lease.
+=just ordered-relations-benchmark= runs the frozen native comparison twice.
+Current logs, samples, library artifacts and receipts are stored under
+=.cache/ascent/t/performance/ordered-relations/=. Historical JSON receipts in
+this directory describe the earlier revisions; they are not current CI results.

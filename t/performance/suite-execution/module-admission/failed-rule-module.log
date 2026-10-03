@@ -1,0 +1,121 @@
+[ascent-test] START t/qualification/ascent-rule-program-test.ss
+[test-lane] START exclusive t/qualification/ascent-rule-program-test.ss
+[test-lane] RUNNING exclusive (5s)
+[test-lane] RUNNING exclusive (10s)
+[test-lane] RUNNING exclusive (15s)
+[test-lane] RUNNING exclusive (20s)
+HARNESS ("t/qualification/ascent-rule-program-test.ss")
+MODULE t/qualification/ascent-rule-program-test.ss
+SUITE ASCENT positive relations with arbitrary columns
+CASE mixed ternary inputs derive four-column, unary and recursive rows
+[test-lane] RUNNING exclusive (25s)
+ERROR CASE mixed ternary inputs derive four-column, unary and recursive rows
+
+*** ERROR IN ? [PooFlowDebugDurationAnomaly]: POO Flow testing Case duration budget exceeded
+--- continuation backtrace:
+[0] raise                                                                                                                                                                   
+[1] cast                                                                                                                                                                    
+[2] make-hash-table__%                                                                                                                                                      
+[3] clan/poo/object#compute-precedence-list!__%                                                                                                                             
+[4] clan/poo/object#instantiate-object!                                                                                                                                     
+[5] clan/poo/object#.slot?                                                                                                                                                  
+[6] every                                                                                                                                                                   
+[7] core/types#poo-flow-evidence-object?                                                                                                                                    
+[8] core/types#poo-flow-classification-evidence-element?                                                                                                                    
+[9] core/types#poo-flow-object-admit                                                                                                                                        
+...
+[42] std/test/base#__test-harness!                                                                                                                                                                                                                                                                                                                       (##call-with-current-continuation __tmp242457)
+[43] std/test/base#__test-harness!                                                                                                                                                                                                                                                                                                                       (##for-each __tmp242456 __tmp242455)
+[44] std/test/base#__test-harness!                                                                                                                                                                                                                                                                                                                       (##for-each __tmp242456 __tmp242455)
+[45] gerbil/tools/gxtest#gxtest-main                                                                                                                                        
+CASE source withdrawal recomputes without changing earlier result
+[test-lane] RUNNING exclusive (30s)
+ERROR CASE source withdrawal recomputes without changing earlier result
+
+*** ERROR IN ? [PooFlowDebugDurationAnomaly]: POO Flow testing Case duration budget exceeded
+--- continuation backtrace:
+[0] raise                                                                                                                                                                   
+[1] make-symbol-hash-table                                                                                                                                                  
+[2] make-hash-table__%                                                                                                                                                      
+[3] clan/poo/object#instantiate-object!                                                                                                                                     
+[4] clan/poo/object#.slot?                                                                                                                                                  
+[5] every                                                                                                                                                                   
+[6] core/types#poo-flow-evidence-object?                                                                                                                                    
+[7] core/types#poo-flow-validation-evidence-element?                                                                                                                        
+[8] core/types#poo-flow-object-admit                                                                                                                                        
+[9] ##filter                                                                                                                                                                
+...
+[34] std/test/base#__test-harness!                                                                                                                                                                                                                                                                                                                       (##call-with-current-continuation __tmp242457)
+[35] std/test/base#__test-harness!                                                                                                                                                                                                                                                                                                                       (##for-each __tmp242456 __tmp242455)
+[36] std/test/base#__test-harness!                                                                                                                                                                                                                                                                                                                       (##for-each __tmp242456 __tmp242455)
+[37] gerbil/tools/gxtest#gxtest-main                                                                                                                                        
+CASE positive session retains rows across source additions
+CASE-OK positive session retains rows across source additions
+CASE ten thousand positive appends retain order and recover state
+CASE-OK ten thousand positive appends retain order and recover state
+CASE staged Set rows share one global output budget
+CASE-OK staged Set rows share one global output budget
+CASE batched Set duplicates retain first source order
+CASE-OK batched Set duplicates retain first source order
+CASE session recomputes negation after source updates
+[test-lane] RUNNING exclusive (35s)
+CASE-OK session recomputes negation after source updates
+CASE nonpositive recomputation rejects over-budget source atomically
+CASE-OK nonpositive recomputation rejects over-budget source atomically
+CASE empty rule set preserves sources and returns
+CASE-OK empty rule set preserves sources and returns
+CASE POO rule refinement receives its own immutable analysis
+CASE-OK POO rule refinement receives its own immutable analysis
+CASE zero-column fact gates typed boolean and string rows
+CASE-OK zero-column fact gates typed boolean and string rows
+CASE arity, unsafe heads, and derived budgets reject
+[test-lane] RUNNING exclusive (40s)
+CASE-OK arity, unsafe heads, and derived budgets reject
+SUITE-OK ASCENT positive relations with arbitrary columns
+MODULE-OK t/qualification/ascent-rule-program-test.ss
+HARNESS-OK ("t/qualification/ascent-rule-program-test.ss")
+ERROR HARNESS (t/qualification/ascent-rule-program-test.ss)
+at HARNESS ("t/qualification/ascent-rule-program-test.ss")
+at MODULE t/qualification/ascent-rule-program-test.ss
+at SUITE ASCENT positive relations with arbitrary columns
+at CASE mixed ternary inputs derive four-column, unary and recursive rows
+
+*** ERROR IN ? [PooFlowDebugDurationAnomaly]: POO Flow testing Case duration budget exceeded
+--- continuation backtrace:
+[0] raise                                                                                                                                                                   
+[1] cast                                                                                                                                                                    
+[2] make-hash-table__%                                                                                                                                                      
+[3] clan/poo/object#compute-precedence-list!__%                                                                                                                             
+[4] clan/poo/object#instantiate-object!                                                                                                                                     
+[5] clan/poo/object#.slot?                                                                                                                                                  
+[6] every                                                                                                                                                                   
+[7] core/types#poo-flow-evidence-object?                                                                                                                                    
+[8] core/types#poo-flow-classification-evidence-element?                                                                                                                    
+[9] core/types#poo-flow-object-admit                                                                                                                                        
+...
+[42] std/test/base#__test-harness!                                                                                                                                                                                                                                                                                                                       (##call-with-current-continuation __tmp242457)
+[43] std/test/base#__test-harness!                                                                                                                                                                                                                                                                                                                       (##for-each __tmp242456 __tmp242455)
+[44] std/test/base#__test-harness!                                                                                                                                                                                                                                                                                                                       (##for-each __tmp242456 __tmp242455)
+[45] gerbil/tools/gxtest#gxtest-main                                                                                                                                        
+at CASE source withdrawal recomputes without changing earlier result
+
+*** ERROR IN ? [PooFlowDebugDurationAnomaly]: POO Flow testing Case duration budget exceeded
+--- continuation backtrace:
+[0] raise                                                                                                                                                                   
+[1] make-symbol-hash-table                                                                                                                                                  
+[2] make-hash-table__%                                                                                                                                                      
+[3] clan/poo/object#instantiate-object!                                                                                                                                     
+[4] clan/poo/object#.slot?                                                                                                                                                  
+[5] every                                                                                                                                                                   
+[6] core/types#poo-flow-evidence-object?                                                                                                                                    
+[7] core/types#poo-flow-validation-evidence-element?                                                                                                                        
+[8] core/types#poo-flow-object-admit                                                                                                                                        
+[9] ##filter                                                                                                                                                                
+...
+[34] std/test/base#__test-harness!                                                                                                                                                                                                                                                                                                                       (##call-with-current-continuation __tmp242457)
+[35] std/test/base#__test-harness!                                                                                                                                                                                                                                                                                                                       (##for-each __tmp242456 __tmp242455)
+[36] std/test/base#__test-harness!                                                                                                                                                                                                                                                                                                                       (##for-each __tmp242456 __tmp242455)
+[37] gerbil/tools/gxtest#gxtest-main                                                                                                                                        
+[test-lane] RUNNING exclusive (45s)
+[test-lane] END exclusive exit=0
+error: recipe `test-file` failed with exit code 1

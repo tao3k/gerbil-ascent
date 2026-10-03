@@ -1,0 +1,63 @@
+#+TITLE: Native qualification module scheduling
+#+AUTHOR: tao3k team and Contributors
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+* Module admission and Case execution
+=just test= discovers every qualification module. The reviewed semantic modules
+run in separate native processes in one pool; std/test retains Case order inside
+each module. The complete pool finishes before duration-sensitive modules run.
+Builds and performance recipes take the same exclusive lease.
+
+The current inventory has 50 modules: 47 admitted to parallel execution and
+3 requiring exclusivity. Parallel admission includes candidate/temporal proofs,
+operator graph enumeration, persistent snapshots, callbacks, and zero-timeout
+semantics. Per-rule timing tests check presence/type/nonnegativity, not speed.
+These fixtures have process-local state and no shared output mutation.
+
+| Exclusive module | Reason |
+|------------------+--------|
+| ascent-rule-program-test.ss | Custom 2/5-second Case limits |
+| ascent-mutual-program-test.ss | Custom 15-second Case limit |
+| ascent-observability-test.ss | Sampling and duration contract |
+
+Unknown modules stay exclusive until reviewed. The suite prints the reason for
+every exclusive module so new semantic tests do not silently accumulate there.
+The temporal import harness also uses the common lease and validates CASE-OK,
+MODULE-OK, HARNESS-OK, final OK and the real exit code.
+
+* Capacity and selected modules
+Capacity comes from ASP's native resolver: GERBIL_BUILD_CORES, otherwise the
+native CPU count. =just test 12= explicitly selects twelve workers. Actual worker
+count is bounded by the number of modules, with no artificial four-worker cap.
+
+For a focused semantic qualification, submit all selected modules to one pool:
+#+begin_src bash
+GERBIL_BUILD_CORES=12 python3 tools/test_execution.py parallel \
+  t/qualification/ascent-binary-program-test.ss \
+  t/qualification/ascent-candidate-description-test.ss \
+  t/qualification/scheme-library-contract-test.ss \
+  t/qualification/ascent-temporal-lens-test.ss
+#+end_src
+
+The pool records per-module logs, exit codes and durations under
+=.gerbil/test-execution/=. It preserves failures and cancellation and never
+interprets a progress heartbeat as a successful Case. Module deadlines and
+Case budgets are unchanged. Concurrent scheduling reduces queueing; it does
+not shorten the graph enumeration performed by an individual module.
+
+* Current validation
+The 12-worker complete suite took 296.0 seconds for 50 modules: all 47 parallel
+modules and two exclusive modules passed. The final exclusive rule module failed
+two original duration assertions (394 CASE-OK, 2 ERROR CASE). The full suite is
+therefore not green. Its native module deadline and Case limits were not changed.
+
+All 13 scheduler checks passed. An earlier scheduler-unit invocation overlapped
+the native pool and hit its existing five-second process deadline in one test;
+the first failure is recorded as well. The host reported high load, but the
+receipt does not attribute the duration failures to host load as a proven cause.
+
+Source hashes, per-module durations, native markers, the failing module log and
+unit results are retained under =t/performance/suite-execution/module-admission/=.
+These results verify parallel semantic admission and exclusive gating. They are
+not a controlled speedup measurement or remote CI evidence.

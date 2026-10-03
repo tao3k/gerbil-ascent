@@ -687,12 +687,16 @@ temporal-scale:
 
 # Visible import progress for the composed temporal proof dependency graph.
 test-temporal:
+    python3 tools/test_execution.py run --module t/qualification/ascent-temporal-lens-test.ss -- just _test-temporal
+
+_test-temporal:
     #!/usr/bin/env bash
     set -euo pipefail
     log="$(mktemp)"
     trap 'rm -f "$log"' EXIT
     GERBIL_LOADPATH="{{ justfile_directory() }}${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" timeout 120s gerbil {{ gerbil_test_runtime_options }} env gerbil {{ gerbil_test_runtime_options }} t/harness/temporal-test.ss 2>&1 | tee "$log"
     if grep -E 'ERROR (CHECK|CASE|HARNESS|MODULE)|Heap overflow|Stack overflow' "$log" >/dev/null; then exit 1; fi
-    grep -F 'MODULE-OK t/qualification/ascent-temporal-lens-test.ss' "$log" >/dev/null
+    awk -f "{{ justfile_directory() }}/tools/assert-test-cases.awk" "$log"
+    grep -Fx 'MODULE-OK t/qualification/ascent-temporal-lens-test.ss' "$log" >/dev/null
     grep -F 'HARNESS-OK' "$log" >/dev/null
     grep -x 'OK' "$log" >/dev/null

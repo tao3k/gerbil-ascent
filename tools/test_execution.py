@@ -14,7 +14,9 @@ import time
 
 ROOT = Path(__file__).resolve().parent.parent
 # Explicit admission: these fixtures compare values, not elapsed-time samples.
-# Unknown modules, custom duration profiles, and performance recipes are exclusive.
+# Unknown modules and performance recipes remain exclusive. Zero-timeout and
+# nonnegative timing metadata assertions do not measure performance thresholds.
+# Module processes isolate callbacks, globals, sessions, and native GC state.
 PARALLEL_MODULES = frozenset({
     't/qualification/ascent-aggregate-program-test.ss',
     't/qualification/ascent-binary-program-test.ss',
@@ -22,18 +24,25 @@ PARALLEL_MODULES = frozenset({
     't/qualification/ascent-binding-test.ss',
     't/qualification/ascent-byods-index-test.ss',
     't/qualification/ascent-byods-invariants-test.ss',
+    't/qualification/ascent-candidate-description-test.ss',
     't/qualification/ascent-closure-candidates-test.ss',
     't/qualification/ascent-contract-union-test.ss',
+    't/qualification/ascent-eqrel-program-test.ss',
     't/qualification/ascent-finite-evidence-test.ss',
+    't/qualification/ascent-index-lifecycle-test.ss',
     't/qualification/ascent-index-program-test.ss',
     't/qualification/ascent-invalid-program-test.ss',
     't/qualification/ascent-lattice-program-test.ss',
+    't/qualification/ascent-materialization-test.ss',
     't/qualification/ascent-module-program-test.ss',
     't/qualification/ascent-multi-frontier-test.ss',
     't/qualification/ascent-poo-primitives-test.ss',
     't/qualification/ascent-positive-nonmembership-test.ss',
+    't/qualification/ascent-positive-plan-test.ss',
     't/qualification/ascent-positive-provenance-test.ss',
+    't/qualification/ascent-reasoning-library-test.ss',
     't/qualification/ascent-request-projection-test.ss',
+    't/qualification/ascent-result-publication-test.ss',
     't/qualification/ascent-scc-summary-test.ss',
     't/qualification/ascent-set-batch-test.ss',
     't/qualification/ascent-set-emit-test.ss',
@@ -45,11 +54,26 @@ PARALLEL_MODULES = frozenset({
     't/qualification/ascent-stratified-proof-test.ss',
     't/qualification/ascent-syntax-test.ss',
     't/qualification/ascent-table-expression-test.ss',
+    't/qualification/ascent-temporal-lens-test.ss',
+    't/qualification/ascent-timeout-test.ss',
+    't/qualification/ascent-timing-test.ss',
+    't/qualification/ascent-workspace-test.ss',
+    't/qualification/scheme-library-contract-test.ss',
     't/qualification/scheme-native-integration-test.ss',
     't/qualification/scheme-native-language-test.ss',
     't/qualification/scheme-native-reduction-test.ss',
+    't/qualification/scheme-operator-retained-test.ss',
+    't/qualification/scheme-operator-test.ss',
     't/qualification/scheme-relational-test.ss',
 })
+
+
+# These Cases enforce wall-clock budgets; each requires an uncontended lane.
+EXCLUSIVE_REASONS = {
+    't/qualification/ascent-mutual-program-test.ss': 'custom 15-second Case budget',
+    't/qualification/ascent-observability-test.ss': 'duration and sampling contract',
+    't/qualification/ascent-rule-program-test.ss': 'custom 2/5-second Case budgets',
+}
 
 
 def resolve_jobs(override):
@@ -250,6 +274,10 @@ def suite(args):
     exclusive = [path for path in files if path not in PARALLEL_MODULES]
     print(f'[test-suite] PLAN parallel={len(shared)} exclusive={len(exclusive)} '
           f'jobs={args.jobs}', flush=True)
+    for path in exclusive:
+        print(f'[test-suite] EXCLUSIVE {path}: '
+              f'{EXCLUSIVE_REASONS.get(path, "module not yet reviewed for concurrency")}',
+              flush=True)
     started = time.monotonic()
     results = execute_modules(shared, args.jobs, 'parallel')
     results += execute_modules(exclusive, 1, 'exclusive')

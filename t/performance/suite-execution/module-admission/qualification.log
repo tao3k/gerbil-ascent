@@ -1,0 +1,1369 @@
+=== t/qualification/ascent-aggregate-program-test.ss ===
+[ascent-test] START t/qualification/ascent-aggregate-program-test.ss
+HARNESS ("t/qualification/ascent-aggregate-program-test.ss")
+MODULE t/qualification/ascent-aggregate-program-test.ss
+SUITE ASCENT aggregate procedures
+CASE builtins and custom aggregator over source rows
+CASE-OK builtins and custom aggregator over source rows
+CASE empty input follows Rust aggregate cardinality
+CASE-OK empty input follows Rust aggregate cardinality
+CASE aggregate result destructures a native pattern
+CASE-OK aggregate result destructures a native pattern
+CASE aggregate output pattern rejects a mismatched value
+CASE-OK aggregate output pattern rejects a mismatched value
+CASE aggregate a completed recursive closure in a higher stratum
+CASE-OK aggregate a completed recursive closure in a higher stratum
+CASE recursive aggregate dependency rejects
+CASE-OK recursive aggregate dependency rejects
+SUITE-OK ASCENT aggregate procedures
+MODULE-OK t/qualification/ascent-aggregate-program-test.ss
+HARNESS-OK ("t/qualification/ascent-aggregate-program-test.ss")
+OK
+[ascent-test] PASS t/qualification/ascent-aggregate-program-test.ss (33s)
+=== t/qualification/ascent-binary-program-test.ss ===
+[ascent-test] START t/qualification/ascent-binary-program-test.ss
+HARNESS ("t/qualification/ascent-binary-program-test.ss")
+MODULE t/qualification/ascent-binary-program-test.ss
+SUITE ASCENT positive binary rules in Scheme
+CASE recursive copy and join match the existing cyclic closure
+CASE-OK recursive copy and join match the existing cyclic closure
+CASE diamond and support withdrawal match the Rust pair fixtures
+CASE-OK diamond and support withdrawal match the Rust pair fixtures
+CASE seeded recursive head preserves source facts and rule order
+CASE-OK seeded recursive head preserves source facts and rule order
+CASE Ascent if-clause parity composes guarded facts with a join
+CASE-OK Ascent if-clause parity composes guarded facts with a join
+CASE guarded selection feeds both a copy and a join
+CASE-OK guarded selection feeds both a copy and a join
+CASE two changing join inputs and multiple heads
+CASE-OK two changing join inputs and multiple heads
+CASE staged recursive closure uses the composable evaluator
+CASE-OK staged recursive closure uses the composable evaluator
+CASE sparse radix retains the same binary join semantics
+CASE-OK sparse radix retains the same binary join semantics
+CASE dense closure respects combined output budgets and source publication
+CASE-OK dense closure respects combined output budgets and source publication
+CASE general initialization preserves observable guard order
+CASE-OK general initialization preserves observable guard order
+CASE persistent set demands retain snapshots and observe public row edits
+CASE-OK persistent set demands retain snapshots and observe public row edits
+CASE a dormant indexed right becomes active after several rounds
+CASE-OK a dormant indexed right becomes active after several rounds
+CASE filter callbacks complete the delta before a budget error
+CASE-OK filter callbacks complete the delta before a budget error
+CASE pending duplicates share admission across rules and heads
+CASE-OK pending duplicates share admission across rules and heads
+CASE dense admission crosses word and padded domain boundaries
+CASE-OK dense admission crosses word and padded domain boundaries
+CASE invalid declarations and pair budget fail
+CASE-OK invalid declarations and pair budget fail
+SUITE-OK ASCENT positive binary rules in Scheme
+MODULE-OK t/qualification/ascent-binary-program-test.ss
+HARNESS-OK ("t/qualification/ascent-binary-program-test.ss")
+OK
+[ascent-test] PASS t/qualification/ascent-binary-program-test.ss (26s)
+=== t/qualification/ascent-binding-program-test.ss ===
+[ascent-test] START t/qualification/ascent-binding-program-test.ss
+HARNESS ("t/qualification/ascent-binding-program-test.ss")
+MODULE t/qualification/ascent-binding-program-test.ss
+SUITE ASCENT prepared binding across mixed rule clauses
+CASE all mixed-program relations match raw binding and goldens
+CASE-OK all mixed-program relations match raw binding and goldens
+SUITE-OK ASCENT prepared binding across mixed rule clauses
+MODULE-OK t/qualification/ascent-binding-program-test.ss
+HARNESS-OK ("t/qualification/ascent-binding-program-test.ss")
+OK
+[ascent-test] PASS t/qualification/ascent-binding-program-test.ss (34s)
+=== t/qualification/ascent-binding-test.ss ===
+[ascent-test] START t/qualification/ascent-binding-test.ss
+HARNESS ("t/qualification/ascent-binding-test.ss")
+MODULE t/qualification/ascent-binding-test.ss
+SUITE ASCENT checked row binding specialization
+CASE nullary terms retain existing environments
+CASE-OK nullary terms retain existing environments
+CASE all unary terms preserve bindings and rejection
+CASE-OK all unary terms preserve bindings and rejection
+CASE all binary terms preserve binding order and repeats
+CASE-OK all binary terms preserve binding order and repeats
+CASE all ternary terms preserve binding order and repeats
+CASE-OK all ternary terms preserve binding order and repeats
+CASE all four-column terms preserve binding order and repeats
+CASE-OK all four-column terms preserve binding order and repeats
+CASE pattern outputs stay bound for later variable comparisons
+CASE-OK pattern outputs stay bound for later variable comparisons
+CASE row-local expression inputs retain evaluation order
+CASE-OK row-local expression inputs retain evaluation order
+CASE external bindings still reject mismatches
+CASE-OK external bindings still reject mismatches
+CASE false values are bindings rather than missing names
+CASE-OK false values are bindings rather than missing names
+CASE failed and malformed patterns preserve outcomes
+CASE-OK failed and malformed patterns preserve outcomes
+CASE admission still rejects duplicate pattern bindings
+CASE-OK admission still rejects duplicate pattern bindings
+SUITE-OK ASCENT checked row binding specialization
+MODULE-OK t/qualification/ascent-binding-test.ss
+HARNESS-OK ("t/qualification/ascent-binding-test.ss")
+OK
+[ascent-test] PASS t/qualification/ascent-binding-test.ss (27s)
+=== t/qualification/ascent-byods-index-test.ss ===
+[ascent-test] START t/qualification/ascent-byods-index-test.ss
+HARNESS ("t/qualification/ascent-byods-index-test.ss")
+MODULE t/qualification/ascent-byods-index-test.ss
+SUITE ASCENT BYODS storage and custom index composition
+CASE grouped eqrel lookup uses custom composite index
+CASE-OK grouped eqrel lookup uses custom composite index
+CASE custom BYODS index survives append and replacement
+CASE-OK custom BYODS index survives append and replacement
+SUITE-OK ASCENT BYODS storage and custom index composition
+MODULE-OK t/qualification/ascent-byods-index-test.ss
+HARNESS-OK ("t/qualification/ascent-byods-index-test.ss")
+OK
+[ascent-test] PASS t/qualification/ascent-byods-index-test.ss (33s)
+=== t/qualification/ascent-byods-invariants-test.ss ===
+[ascent-test] START t/qualification/ascent-byods-invariants-test.ss
+HARNESS ("t/qualification/ascent-byods-invariants-test.ss")
+MODULE t/qualification/ascent-byods-invariants-test.ss
+SUITE ASCENT BYODS exhaustive three-node invariants
+CASE all directed edge subsets preserve closure and insertion order independence
+CASE-OK all directed edge subsets preserve closure and insertion order independence
+CASE four-node sparse subsets preserve larger merges
+CASE-OK four-node sparse subsets preserve larger merges
+CASE eight-node cycles and bridges preserve closure
+CASE-OK eight-node cycles and bridges preserve closure
+CASE four-node edges close across every two-producer partition
+CASE-OK four-node edges close across every two-producer partition
+CASE eight-node producer partitions retain complete joins
+CASE-OK eight-node producer partitions retain complete joins
+CASE grouped storage isolates two interleaved edge sets
+CASE-OK grouped storage isolates two interleaved edge sets
+SUITE-OK ASCENT BYODS exhaustive three-node invariants
+MODULE-OK t/qualification/ascent-byods-invariants-test.ss
+HARNESS-OK ("t/qualification/ascent-byods-invariants-test.ss")
+OK
+[ascent-test] PASS t/qualification/ascent-byods-invariants-test.ss (48s)
+=== t/qualification/ascent-candidate-description-test.ss ===
+[ascent-test] START t/qualification/ascent-candidate-description-test.ss
+HARNESS ("t/qualification/ascent-candidate-description-test.ss")
+MODULE t/qualification/ascent-candidate-description-test.ss
+SUITE parser-owned candidate description
+CASE every advertised compute name and arity executes
+CASE-OK every advertised compute name and arity executes
+CASE where forms bind no outputs and reject flat shape
+CASE-OK where forms bind no outputs and reject flat shape
+CASE advertised reduction names and arities admit and wrong arity rejects
+CASE-OK advertised reduction names and arities admit and wrong arity rejects
+CASE public description is detached from parser state
+CASE-OK public description is detached from parser state
+SUITE-OK parser-owned candidate description
+MODULE-OK t/qualification/ascent-candidate-description-test.ss
+HARNESS-OK ("t/qualification/ascent-candidate-description-test.ss")
+OK
+[ascent-test] PASS t/qualification/ascent-candidate-description-test.ss (30s)
+=== t/qualification/ascent-closure-candidates-test.ss ===
+[ascent-test] START t/qualification/ascent-closure-candidates-test.ss
+HARNESS ("t/qualification/ascent-closure-candidates-test.ss")
+MODULE t/qualification/ascent-closure-candidates-test.ss
+SUITE ASCENT Scheme closure candidates
+CASE shortest support and canonical tie selection
+CASE-OK shortest support and canonical tie selection
+CASE withdrawal selects surviving support and then removes result
+CASE-OK withdrawal selects surviving support and then removes result
+CASE cycle has finite shortest reflexive support
+CASE-OK cycle has finite shortest reflexive support
+CASE sixty-four-node chain retains exact shortest supports
+CASE-OK sixty-four-node chain retains exact shortest supports
+CASE bounded result truncates after complete closure
+CASE-OK bounded result truncates after complete closure
+CASE input and theoretical pair budgets reject early
+CASE-OK input and theoretical pair budgets reject early
+SUITE-OK ASCENT Scheme closure candidates
+MODULE-OK t/qualification/ascent-closure-candidates-test.ss
+HARNESS-OK ("t/qualification/ascent-closure-candidates-test.ss")
+OK
+[ascent-test] PASS t/qualification/ascent-closure-candidates-test.ss (14s)
+=== t/qualification/ascent-contract-union-test.ss ===
+[ascent-test] START t/qualification/ascent-contract-union-test.ss
+HARNESS ("t/qualification/ascent-contract-union-test.ss")
+MODULE t/qualification/ascent-contract-union-test.ss
+SUITE ASCENT native union classification
+CASE six clause prototypes retain full responsibility checks
+CASE-OK six clause prototypes retain full responsibility checks
+CASE overlapping prototypes retain ordered fallback admission
+CASE-OK overlapping prototypes retain ordered fallback admission
+CASE relation and lattice union rejects malformed responsibilities
+CASE-OK relation and lattice union rejects malformed responsibilities
+SUITE-OK ASCENT native union classification
+MODULE-OK t/qualification/ascent-contract-union-test.ss
+HARNESS-OK ("t/qualification/ascent-contract-union-test.ss")
+OK
+[ascent-test] PASS t/qualification/ascent-contract-union-test.ss (24s)
+=== t/qualification/ascent-eqrel-program-test.ss ===
+[ascent-test] START t/qualification/ascent-eqrel-program-test.ss
+HARNESS ("t/qualification/ascent-eqrel-program-test.ss")
+MODULE t/qualification/ascent-eqrel-program-test.ss
+SUITE ASCENT BYODS equivalence storage
+CASE binary eqrel yields reflexive symmetric transitive facts
+CASE-OK binary eqrel yields reflexive symmetric transitive facts
+CASE ternary eqrel isolates leading groups
+CASE-OK ternary eqrel isolates leading groups
+CASE source eqrel facts are materialized at initialization
+CASE-OK source eqrel facts are materialized at initialization
+CASE eqrel component state is private to concurrent runs
+CASE-OK eqrel component state is private to concurrent runs
+CASE trrel preserves directed reachability without reflexive facts
+CASE-OK trrel preserves directed reachability without reflexive facts
+CASE trrel excludes cyclic self reachability
+CASE-OK trrel excludes cyclic self reachability
+CASE trrel keeps explicit reflexive facts
+CASE-OK trrel keeps explicit reflexive facts
+CASE trrel_uf exposes reflexive transitive closure
+CASE-OK trrel_uf exposes reflexive transitive closure
+CASE directed closure state is private to concurrent runs
+CASE-OK directed closure state is private to concurrent runs
+CASE BYODS relations join with typed group and wanted facts
+CASE-OK BYODS relations join with typed group and wanted facts
+CASE BYODS rules merge independently sourced path segments
+CASE-OK BYODS rules merge independently sourced path segments
+CASE eqrel delta joins two producer rules in one group
+CASE-OK eqrel delta joins two producer rules in one group
+CASE BYODS session joins a later source producer
+CASE-OK BYODS session joins a later source producer
+CASE nonpositive BYODS session matches fresh state and rejects invalid input
+CASE-OK nonpositive BYODS session matches fresh state and rejects invalid input
+CASE BYODS source withdrawal rebuilds a larger transitive relation
+CASE-OK BYODS source withdrawal rebuilds a larger transitive relation
+CASE BYODS providers emit only new rows across edge prefixes
+CASE-OK BYODS providers emit only new rows across edge prefixes
+CASE BYODS budget rejection leaves provider state reusable
+CASE-OK BYODS budget rejection leaves provider state reusable
+CASE BYODS session can continue after a rejected append
+CASE-OK BYODS session can continue after a rejected append
+CASE invalid storage method output fails at the boundary
+CASE-OK invalid storage method output fails at the boundary
+CASE invalid or over-budget Provider batch cannot partially update a session
+CASE-OK invalid or over-budget Provider batch cannot partially update a session
+CASE mutating Provider failure leaves retained session reusable
+CASE-OK mutating Provider failure leaves retained session reusable
+CASE failed run restores the last committed source snapshot
+CASE-OK failed run restores the last committed source snapshot
+CASE eqrel output stays within the program fact budget
+CASE-OK eqrel output stays within the program fact budget
+CASE materialized source facts count toward total output
+CASE-OK materialized source facts count toward total output
+SUITE-OK ASCENT BYODS equivalence storage
+MODULE-OK t/qualification/ascent-eqrel-program-test.ss
+HARNESS-OK ("t/qualification/ascent-eqrel-program-test.ss")
+OK
+[ascent-test] PASS t/qualification/ascent-eqrel-program-test.ss (36s)
+=== t/qualification/ascent-finite-evidence-test.ss ===
+[ascent-test] START t/qualification/ascent-finite-evidence-test.ss
+HARNESS ("t/qualification/ascent-finite-evidence-test.ss")
+MODULE t/qualification/ascent-finite-evidence-test.ss
+SUITE finite stratified replay evidence
+CASE negation and count have an exact snapshot-relative closure
+CASE-OK negation and count have an exact snapshot-relative closure
+CASE closed absence after negative and aggregate strata
+CASE-OK closed absence after negative and aggregate strata
+CASE source correction changes count but not old evidence
+CASE-OK source correction changes count but not old evidence
+CASE replay mismatch is not certified
+CASE-OK replay mismatch is not certified
+CASE oversized external closure is rejected before replay
+CASE-OK oversized external closure is rejected before replay
+CASE strict dependency cycle has no finite certificate
+CASE-OK strict dependency cycle has no finite certificate
+CASE all fixed reducers and empty groups
+CASE-OK all fixed reducers and empty groups
+CASE negated wildcard checks absence of any matching row
+CASE-OK negated wildcard checks absence of any matching row
+CASE all 64 three-node graphs match a separate reachability model
+CASE-OK all 64 three-node graphs match a separate reachability model
+SUITE-OK finite stratified replay evidence
+MODULE-OK t/qualification/ascent-finite-evidence-test.ss
+HARNESS-OK ("t/qualification/ascent-finite-evidence-test.ss")
+OK
+[ascent-test] PASS t/qualification/ascent-finite-evidence-test.ss (52s)
+=== t/qualification/ascent-index-lifecycle-test.ss ===
+[ascent-test] START t/qualification/ascent-index-lifecycle-test.ss
+HARNESS ("t/qualification/ascent-index-lifecycle-test.ss")
+MODULE t/qualification/ascent-index-lifecycle-test.ss
+SUITE Complete index lifecycle
+CASE all ordered subsets and arbitrary columns preserve keys and bucket order
+CASE-OK all ordered subsets and arbitrary columns preserve keys and bucket order
+CASE default index crosses threshold and extends without changing retained snapshots
+CASE-OK default index crosses threshold and extends without changing retained snapshots
+CASE custom build extend lookup traces and superset candidates remain identical
+CASE-OK custom build extend lookup traces and superset candidates remain identical
+CASE custom improper lookup rows retain the exact error boundary
+CASE-OK custom improper lookup rows retain the exact error boundary
+SUITE-OK Complete index lifecycle
+MODULE-OK t/qualification/ascent-index-lifecycle-test.ss
+HARNESS-OK ("t/qualification/ascent-index-lifecycle-test.ss")
+OK
+[ascent-test] PASS t/qualification/ascent-index-lifecycle-test.ss (31s)
+=== t/qualification/ascent-index-program-test.ss ===
+[ascent-test] START t/qualification/ascent-index-program-test.ss
+HARNESS ("t/qualification/ascent-index-program-test.ss")
+MODULE t/qualification/ascent-index-program-test.ss
+SUITE ASCENT indexed relation access
+CASE bound-column index preserves two-hop join semantics
+CASE-OK bound-column index preserves two-hop join semantics
+CASE a custom alist Provider replaces the physical index
+CASE-OK a custom alist Provider replaces the physical index
+CASE composite group and node index preserves two-hop joins
+CASE-OK composite group and node index preserves two-hop joins
+CASE source append extends an existing index without rebuilding
+CASE-OK source append extends an existing index without rebuilding
+CASE bound composite key reads a merged lattice through its index
+CASE-OK bound composite key reads a merged lattice through its index
+CASE lattice refinement removes obsolete indexed relation rows
+CASE-OK lattice refinement removes obsolete indexed relation rows
+CASE malformed Provider values fail at the boundary
+CASE-OK malformed Provider values fail at the boundary
+SUITE-OK ASCENT indexed relation access
+MODULE-OK t/qualification/ascent-index-program-test.ss
+HARNESS-OK ("t/qualification/ascent-index-program-test.ss")
+OK
+[ascent-test] PASS t/qualification/ascent-index-program-test.ss (26s)
+=== t/qualification/ascent-invalid-program-test.ss ===
+[ascent-test] START t/qualification/ascent-invalid-program-test.ss
+HARNESS ("t/qualification/ascent-invalid-program-test.ss")
+MODULE t/qualification/ascent-invalid-program-test.ss
+SUITE ASCENT invalid program admission
+CASE dependency and safety errors have distinct causes
+CASE-OK dependency and safety errors have distinct causes
+SUITE-OK ASCENT invalid program admission
+MODULE-OK t/qualification/ascent-invalid-program-test.ss
+HARNESS-OK ("t/qualification/ascent-invalid-program-test.ss")
+OK
+[ascent-test] PASS t/qualification/ascent-invalid-program-test.ss (28s)
+=== t/qualification/ascent-lattice-program-test.ss ===
+[ascent-test] START t/qualification/ascent-lattice-program-test.ss
+HARNESS ("t/qualification/ascent-lattice-program-test.ss")
+MODULE t/qualification/ascent-lattice-program-test.ss
+SUITE ASCENT lattice fixed point
+CASE recursive shortest paths replace weaker key values
+CASE-OK recursive shortest paths replace weaker key values
+CASE ordinary projection waits for lattice fixed point
+CASE-OK ordinary projection waits for lattice fixed point
+CASE timeout resumes across the lattice projection stratum
+CASE-OK timeout resumes across the lattice projection stratum
+CASE lattice projection feedback rejects a strict cycle
+CASE-OK lattice projection feedback rejects a strict cycle
+CASE empty and invalid lattice declarations
+CASE-OK empty and invalid lattice declarations
+CASE C4 lattice refinements validate joined values
+CASE-OK C4 lattice refinements validate joined values
+CASE session joins direct lattice source values
+CASE-OK session joins direct lattice source values
+CASE direct lattice append rejects before changing state
+CASE-OK direct lattice append rejects before changing state
+CASE mixed lattice source and rule updates match fresh fixed points
+CASE-OK mixed lattice source and rule updates match fresh fixed points
+CASE source replacement retracts lattice and derived contributions
+CASE-OK source replacement retracts lattice and derived contributions
+CASE lattice refinement updates a later negative stratum
+CASE-OK lattice refinement updates a later negative stratum
+SUITE-OK ASCENT lattice fixed point
+MODULE-OK t/qualification/ascent-lattice-program-test.ss
+HARNESS-OK ("t/qualification/ascent-lattice-program-test.ss")
+OK
+[ascent-test] PASS t/qualification/ascent-lattice-program-test.ss (25s)
+=== t/qualification/ascent-materialization-test.ss ===
+[ascent-test] START t/qualification/ascent-materialization-test.ss
+HARNESS ("t/qualification/ascent-materialization-test.ss")
+MODULE t/qualification/ascent-materialization-test.ss
+SUITE Complete persistent relation materialization
+CASE all 512 graphs match independent composition closure and shortest distance
+CASE-OK all 512 graphs match independent composition closure and shortest distance
+CASE demanded snapshots remain independent after source withdrawal and replacement
+CASE-OK demanded snapshots remain independent after source withdrawal and replacement
+CASE public neighbor overrides retain ordered callback traces and external composition
+CASE-OK public neighbor overrides retain ordered callback traces and external composition
+CASE high fanout retains complete dense closure and sparse ordered source visitation
+CASE-OK high fanout retains complete dense closure and sparse ordered source visitation
+CASE ordered relation words preserve boundaries membership and exact closure budgets
+CASE-OK ordered relation words preserve boundaries membership and exact closure budgets
+CASE bounded closure retains exact failures across empty dense and sparse snapshots
+CASE-OK bounded closure retains exact failures across empty dense and sparse snapshots
+SUITE-OK Complete persistent relation materialization
+MODULE-OK t/qualification/ascent-materialization-test.ss
+HARNESS-OK ("t/qualification/ascent-materialization-test.ss")
+OK
+[ascent-test] PASS t/qualification/ascent-materialization-test.ss (20s)
+=== t/qualification/ascent-module-program-test.ss ===
+[ascent-test] START t/qualification/ascent-module-program-test.ss
+HARNESS ("t/qualification/ascent-module-program-test.ss")
+MODULE t/qualification/ascent-module-program-test.ss
+SUITE ASCENT Gerbil module and lexical scope
+CASE reused module captures each caller origin
+CASE-OK reused module captures each caller origin
+CASE POO slot refinement creates a second input snapshot
+CASE-OK POO slot refinement creates a second input snapshot
+CASE C4 combines independent ASCENT declaration refinements
+CASE-OK C4 combines independent ASCENT declaration refinements
+SUITE-OK ASCENT Gerbil module and lexical scope
+MODULE-OK t/qualification/ascent-module-program-test.ss
+HARNESS-OK ("t/qualification/ascent-module-program-test.ss")
+OK
+[ascent-test] PASS t/qualification/ascent-module-program-test.ss (19s)
+=== t/qualification/ascent-multi-frontier-test.ss ===
+[ascent-test] START t/qualification/ascent-multi-frontier-test.ss
+HARNESS ("t/qualification/ascent-multi-frontier-test.ss")
+MODULE t/qualification/ascent-multi-frontier-test.ss
+SUITE empty-frontier fixed-point evaluation
+CASE three-atom empty frontiers preserve exact fixed points
+CASE-OK three-atom empty frontiers preserve exact fixed points
+CASE indexed prefix callbacks remain observable before an empty third atom
+CASE-OK indexed prefix callbacks remain observable before an empty third atom
+CASE recursive chains retain exact row order and sizes
+CASE-OK recursive chains retain exact row order and sizes
+CASE all two-node graphs retain independent reachability goldens
+CASE-OK all two-node graphs retain independent reachability goldens
+CASE session appends and replacements keep committed sizes
+CASE-OK session appends and replacements keep committed sizes
+CASE custom index Provider callbacks retain their exact count
+CASE-OK custom index Provider callbacks retain their exact count
+CASE guard and generator prefix callback counts are unchanged
+CASE-OK guard and generator prefix callback counts are unchanged
+CASE lattice replacement keeps key cardinality and strongest rows
+CASE-OK lattice replacement keeps key cardinality and strongest rows
+CASE timeout resumption preserves the final fixed point
+CASE-OK timeout resumption preserves the final fixed point
+SUITE-OK empty-frontier fixed-point evaluation
+MODULE-OK t/qualification/ascent-multi-frontier-test.ss
+HARNESS-OK ("t/qualification/ascent-multi-frontier-test.ss")
+OK
+[ascent-test] PASS t/qualification/ascent-multi-frontier-test.ss (22s)
+=== t/qualification/ascent-mutual-program-test.ss ===
+[ascent-test] START t/qualification/ascent-mutual-program-test.ss
+HARNESS ("t/qualification/ascent-mutual-program-test.ss")
+MODULE t/qualification/ascent-mutual-program-test.ss
+SUITE ASCENT mutually recursive relations
+CASE cycle reaches a fixed point across two relations
+CASE-OK cycle reaches a fixed point across two relations
+CASE source order does not change the fixed point
+CASE-OK source order does not change the fixed point
+CASE retained multi-head SCC matches fresh snapshots after source additions
+CASE-OK retained multi-head SCC matches fresh snapshots after source additions
+CASE independent fixed-point runs are reentrant across workers
+CASE-OK independent fixed-point runs are reentrant across workers
+SUITE-OK ASCENT mutually recursive relations
+MODULE-OK t/qualification/ascent-mutual-program-test.ss
+HARNESS-OK ("t/qualification/ascent-mutual-program-test.ss")
+OK
+[ascent-test] PASS t/qualification/ascent-mutual-program-test.ss (27s)
+=== t/qualification/ascent-observability-test.ss ===
+[ascent-test] START t/qualification/ascent-observability-test.ss
+HARNESS ("t/qualification/ascent-observability-test.ss")
+MODULE t/qualification/ascent-observability-test.ss
+SUITE ASCENT Core Observability profile
+CASE a POO slot override rejects an over-budget SS Case
+CASE-OK a POO slot override rejects an over-budget SS Case
+CASE a POO Case slot interrupts a stalled operation
+CASE-OK a POO Case slot interrupts a stalled operation
+SUITE-OK ASCENT Core Observability profile
+MODULE-OK t/qualification/ascent-observability-test.ss
+HARNESS-OK ("t/qualification/ascent-observability-test.ss")
+OK
+[ascent-test] PASS t/qualification/ascent-observability-test.ss (15s)
+=== t/qualification/ascent-poo-primitives-test.ss ===
+[ascent-test] START t/qualification/ascent-poo-primitives-test.ss
+HARNESS ("t/qualification/ascent-poo-primitives-test.ss")
+MODULE t/qualification/ascent-poo-primitives-test.ss
+SUITE ASCENT native POO primitives
+CASE late refinement supplies a demanded relation slot
+CASE-OK late refinement supplies a demanded relation slot
+CASE C4 precedence composes a shared prototype once
+CASE-OK C4 precedence composes a shared prototype once
+CASE standard persistent set builds independent source snapshots
+CASE-OK standard persistent set builds independent source snapshots
+SUITE-OK ASCENT native POO primitives
+MODULE-OK t/qualification/ascent-poo-primitives-test.ss
+HARNESS-OK ("t/qualification/ascent-poo-primitives-test.ss")
+OK
+[ascent-test] PASS t/qualification/ascent-poo-primitives-test.ss (14s)
+=== t/qualification/ascent-positive-nonmembership-test.ss ===
+[ascent-test] START t/qualification/ascent-positive-nonmembership-test.ss
+HARNESS ("t/qualification/ascent-positive-nonmembership-test.ss")
+MODULE t/qualification/ascent-positive-nonmembership-test.ss
+SUITE finite positive ground nonmembership
+CASE public receipt carries independently verifiable absence
+CASE-OK public receipt carries independently verifiable absence
+CASE closed relation set certifies missing ground target
+CASE-OK closed relation set certifies missing ground target
+CASE mutable or forged snapshot content invalidates certificate
+CASE-OK mutable or forged snapshot content invalidates certificate
+CASE checker rejects omitted input and broken rule closure
+CASE-OK checker rejects omitted input and broken rule closure
+CASE oversized external certificates fail before rule traversal
+CASE-OK oversized external certificates fail before rule traversal
+CASE candidate fact is required in closure
+CASE-OK candidate fact is required in closure
+CASE fixed arithmetic is replayed in an absence certificate
+CASE-OK fixed arithmetic is replayed in an absence certificate
+CASE non-ground, nonpositive and incomplete executions abstain
+CASE-OK non-ground, nonpositive and incomplete executions abstain
+SUITE-OK finite positive ground nonmembership
+MODULE-OK t/qualification/ascent-positive-nonmembership-test.ss
+HARNESS-OK ("t/qualification/ascent-positive-nonmembership-test.ss")
+OK
+[ascent-test] PASS t/qualification/ascent-positive-nonmembership-test.ss (18s)
+=== t/qualification/ascent-positive-plan-test.ss ===
+[ascent-test] START t/qualification/ascent-positive-plan-test.ss
+HARNESS ("t/qualification/ascent-positive-plan-test.ss")
+MODULE t/qualification/ascent-positive-plan-test.ss
+SUITE Complete positive rule slot plans
+CASE all 512 directed three-node graphs match independent reachability
+CASE-OK all 512 directed three-node graphs match independent reachability
+CASE failed candidates and repeated variables never expose stale slots
+CASE-OK failed candidates and repeated variables never expose stale slots
+CASE wildcards zero-arity atoms and literal heads preserve ordered outputs
+CASE-OK wildcards zero-arity atoms and literal heads preserve ordered outputs
+CASE indexed fanout and multiple heads retain exact key and callback order
+CASE-OK indexed fanout and multiple heads retain exact key and callback order
+CASE custom output expansion observes the same candidates and pending snapshots
+CASE-OK custom output expansion observes the same candidates and pending snapshots
+CASE retained appends replacements and zero-timeout runs preserve snapshots
+CASE-OK retained appends replacements and zero-timeout runs preserve snapshots
+CASE wide rules read numeric slots without a fixed variable limit
+CASE-OK wide rules read numeric slots without a fixed variable limit
+CASE compiled emission preserves derived and output budget errors
+CASE-OK compiled emission preserves derived and output budget errors
+CASE cached plans never share frames across concurrent engines
+CASE-OK cached plans never share frames across concurrent engines
+CASE unsupported callback clauses preserve callback traces
+CASE-OK unsupported callback clauses preserve callback traces
+SUITE-OK Complete positive rule slot plans
+MODULE-OK t/qualification/ascent-positive-plan-test.ss
+HARNESS-OK ("t/qualification/ascent-positive-plan-test.ss")
+OK
+[ascent-test] PASS t/qualification/ascent-positive-plan-test.ss (48s)
+=== t/qualification/ascent-positive-provenance-test.ss ===
+[ascent-test] START t/qualification/ascent-positive-provenance-test.ss
+HARNESS ("t/qualification/ascent-positive-provenance-test.ss")
+MODULE t/qualification/ascent-positive-provenance-test.ss
+SUITE bounded positive provenance
+CASE public attempt binds native completion to replayable proof
+CASE-OK public attempt binds native completion to replayable proof
+CASE recursive rule DAG separates observed and candidate facts
+CASE-OK recursive rule DAG separates observed and candidate facts
+CASE wrong native answer and insufficient work cannot prove
+CASE-OK wrong native answer and insufficient work cannot prove
+CASE repeated variables, multi-source join and derived cap
+CASE-OK repeated variables, multi-source join and derived cap
+CASE fixed filters and computations replay in a proof DAG
+CASE-OK fixed filters and computations replay in a proof DAG
+CASE absence and nonpositive clauses have no proof claim
+CASE-OK absence and nonpositive clauses have no proof claim
+SUITE-OK bounded positive provenance
+MODULE-OK t/qualification/ascent-positive-provenance-test.ss
+HARNESS-OK ("t/qualification/ascent-positive-provenance-test.ss")
+OK
+[ascent-test] PASS t/qualification/ascent-positive-provenance-test.ss (20s)
+=== t/qualification/ascent-reasoning-library-test.ss ===
+[ascent-test] START t/qualification/ascent-reasoning-library-test.ss
+HARNESS ("t/qualification/ascent-reasoning-library-test.ss")
+MODULE t/qualification/ascent-reasoning-library-test.ss
+SUITE bounded inert reasoning library
+CASE complete witness, absent cut, withdrawal, and retained receipt
+CASE-OK complete witness, absent cut, withdrawal, and retained receipt
+CASE hypothetical source fact stays labelled and unpromoted
+CASE-OK hypothetical source fact stays labelled and unpromoted
+CASE structural errors have paths
+CASE-OK structural errors have paths
+CASE compiling wrong join is observed, not repaired
+CASE-OK compiling wrong join is observed, not repaired
+CASE bounded failure and source declaration validation
+CASE-OK bounded failure and source declaration validation
+CASE inert data preflight bounds cycles and depth before parsing
+CASE-OK inert data preflight bounds cycles and depth before parsing
+CASE nonreflexive empty graph has complete unsupported evidence
+CASE-OK nonreflexive empty graph has complete unsupported evidence
+CASE checked candidate clauses share trusted Scheme semantics
+CASE-OK checked candidate clauses share trusted Scheme semantics
+CASE optional receipt proof follows source and candidate binding
+CASE-OK optional receipt proof follows source and candidate binding
+CASE scripted feedback revision stays bound to exact source and proposal
+CASE-OK scripted feedback revision stays bound to exact source and proposal
+CASE candidate modes and stratification reject at their boundary
+CASE-OK candidate modes and stratification reject at their boundary
+CASE all sixty-four three-node graphs match finite reference
+CASE-OK all sixty-four three-node graphs match finite reference
+SUITE-OK bounded inert reasoning library
+MODULE-OK t/qualification/ascent-reasoning-library-test.ss
+HARNESS-OK ("t/qualification/ascent-reasoning-library-test.ss")
+OK
+[ascent-test] PASS t/qualification/ascent-reasoning-library-test.ss (32s)
+=== t/qualification/ascent-request-projection-test.ss ===
+[ascent-test] START t/qualification/ascent-request-projection-test.ss
+HARNESS ("t/qualification/ascent-request-projection-test.ss")
+MODULE t/qualification/ascent-request-projection-test.ss
+SUITE ASCENT inert request projection
+CASE projects an opaque source identity without a receipt schema
+CASE-OK projects an opaque source identity without a receipt schema
+CASE rejects a zero evaluation bound
+CASE-OK rejects a zero evaluation bound
+SUITE-OK ASCENT inert request projection
+MODULE-OK t/qualification/ascent-request-projection-test.ss
+HARNESS-OK ("t/qualification/ascent-request-projection-test.ss")
+OK
+[ascent-test] PASS t/qualification/ascent-request-projection-test.ss (9s)
+=== t/qualification/ascent-result-publication-test.ss ===
+[ascent-test] START t/qualification/ascent-result-publication-test.ss
+HARNESS ("t/qualification/ascent-result-publication-test.ss")
+MODULE t/qualification/ascent-result-publication-test.ss
+SUITE Persistent result publication
+CASE unchanged relations share ordered rows while changed history remains intact
+CASE-OK unchanged relations share ordered rows while changed history remains intact
+CASE clean reruns duplicate appends and source replacement preserve publication metadata
+CASE-OK clean reruns duplicate appends and source replacement preserve publication metadata
+CASE engines sharing analysis keep publication caches independent
+CASE-OK engines sharing analysis keep publication caches independent
+CASE unknown relation errors and rule timing metadata remain exact
+CASE-OK unknown relation errors and rule timing metadata remain exact
+CASE late reads of partial snapshots remain stable after resuming to completion
+CASE-OK late reads of partial snapshots remain stable after resuming to completion
+SUITE-OK Persistent result publication
+MODULE-OK t/qualification/ascent-result-publication-test.ss
+HARNESS-OK ("t/qualification/ascent-result-publication-test.ss")
+OK
+[ascent-test] PASS t/qualification/ascent-result-publication-test.ss (21s)
+=== t/qualification/ascent-rule-program-test.ss ===
+[ascent-test] START t/qualification/ascent-rule-program-test.ss
+HARNESS ("t/qualification/ascent-rule-program-test.ss")
+MODULE t/qualification/ascent-rule-program-test.ss
+SUITE ASCENT positive relations with arbitrary columns
+CASE mixed ternary inputs derive four-column, unary and recursive rows
+ERROR CASE mixed ternary inputs derive four-column, unary and recursive rows
+*** ERROR IN ? [PooFlowDebugDurationAnomaly]: POO Flow testing Case duration budget exceeded
+CASE source withdrawal recomputes without changing earlier result
+ERROR CASE source withdrawal recomputes without changing earlier result
+*** ERROR IN ? [PooFlowDebugDurationAnomaly]: POO Flow testing Case duration budget exceeded
+CASE positive session retains rows across source additions
+CASE-OK positive session retains rows across source additions
+CASE ten thousand positive appends retain order and recover state
+CASE-OK ten thousand positive appends retain order and recover state
+CASE staged Set rows share one global output budget
+CASE-OK staged Set rows share one global output budget
+CASE batched Set duplicates retain first source order
+CASE-OK batched Set duplicates retain first source order
+CASE session recomputes negation after source updates
+CASE-OK session recomputes negation after source updates
+CASE nonpositive recomputation rejects over-budget source atomically
+CASE-OK nonpositive recomputation rejects over-budget source atomically
+CASE empty rule set preserves sources and returns
+CASE-OK empty rule set preserves sources and returns
+CASE POO rule refinement receives its own immutable analysis
+CASE-OK POO rule refinement receives its own immutable analysis
+CASE zero-column fact gates typed boolean and string rows
+CASE-OK zero-column fact gates typed boolean and string rows
+CASE arity, unsafe heads, and derived budgets reject
+CASE-OK arity, unsafe heads, and derived budgets reject
+SUITE-OK ASCENT positive relations with arbitrary columns
+MODULE-OK t/qualification/ascent-rule-program-test.ss
+HARNESS-OK ("t/qualification/ascent-rule-program-test.ss")
+ERROR HARNESS (t/qualification/ascent-rule-program-test.ss)
+*** ERROR IN ? [PooFlowDebugDurationAnomaly]: POO Flow testing Case duration budget exceeded
+*** ERROR IN ? [PooFlowDebugDurationAnomaly]: POO Flow testing Case duration budget exceeded
+=== t/qualification/ascent-scc-summary-test.ss ===
+[ascent-test] START t/qualification/ascent-scc-summary-test.ss
+HARNESS ("t/qualification/ascent-scc-summary-test.ss")
+MODULE t/qualification/ascent-scc-summary-test.ss
+SUITE ASCENT rule dependency SCC summary
+CASE recursive pair and acyclic rules have distinct SCCs
+CASE-OK recursive pair and acyclic rules have distinct SCCs
+SUITE-OK ASCENT rule dependency SCC summary
+MODULE-OK t/qualification/ascent-scc-summary-test.ss
+HARNESS-OK ("t/qualification/ascent-scc-summary-test.ss")
+OK
+[ascent-test] PASS t/qualification/ascent-scc-summary-test.ss (22s)
+=== t/qualification/ascent-set-batch-test.ss ===
+[ascent-test] START t/qualification/ascent-set-batch-test.ss
+HARNESS ("t/qualification/ascent-set-batch-test.ss")
+MODULE t/qualification/ascent-set-batch-test.ss
+SUITE source-order Set batch admission
+CASE finite logs and staged prefixes preserve independent goldens and row identity
+CASE-OK finite logs and staged prefixes preserve independent goldens and row identity
+CASE nullary and heterogeneous rows preserve membership
+CASE-OK nullary and heterogeneous rows preserve membership
+CASE large duplicate batches preserve first occurrence identity
+CASE-OK large duplicate batches preserve first occurrence identity
+CASE unique full logs retain the original spine
+CASE-OK unique full logs retain the original spine
+SUITE-OK source-order Set batch admission
+MODULE-OK t/qualification/ascent-set-batch-test.ss
+HARNESS-OK ("t/qualification/ascent-set-batch-test.ss")
+OK
+[ascent-test] PASS t/qualification/ascent-set-batch-test.ss (22s)
+=== t/qualification/ascent-set-emit-test.ss ===
+[ascent-test] START t/qualification/ascent-set-emit-test.ss
+HARNESS ("t/qualification/ascent-set-emit-test.ss")
+MODULE t/qualification/ascent-set-emit-test.ss
+SUITE built-in Set output admission
+CASE built-in Set retains two field checks per emission including duplicates
+CASE-OK built-in Set retains two field checks per emission including duplicates
+CASE duplicate emissions retain derived and output budget boundaries
+CASE-OK duplicate emissions retain derived and output budget boundaries
+CASE custom storage expansion preserves callback observations and sizes
+CASE-OK custom storage expansion preserves callback observations and sizes
+CASE three-atom empty frontiers preserve exact fixed points
+CASE-OK three-atom empty frontiers preserve exact fixed points
+CASE indexed prefix callbacks remain observable before an empty third atom
+CASE-OK indexed prefix callbacks remain observable before an empty third atom
+CASE recursive chains retain exact row order and sizes
+CASE-OK recursive chains retain exact row order and sizes
+CASE all two-node graphs retain independent reachability goldens
+CASE-OK all two-node graphs retain independent reachability goldens
+CASE session appends and replacements keep committed sizes
+CASE-OK session appends and replacements keep committed sizes
+CASE custom index Provider callbacks retain their exact count
+CASE-OK custom index Provider callbacks retain their exact count
+CASE guard and generator prefix callback counts are unchanged
+CASE-OK guard and generator prefix callback counts are unchanged
+CASE lattice replacement keeps key cardinality and strongest rows
+CASE-OK lattice replacement keeps key cardinality and strongest rows
+CASE timeout resumption preserves the final fixed point
+CASE-OK timeout resumption preserves the final fixed point
+SUITE-OK built-in Set output admission
+MODULE-OK t/qualification/ascent-set-emit-test.ss
+HARNESS-OK ("t/qualification/ascent-set-emit-test.ss")
+OK
+[ascent-test] PASS t/qualification/ascent-set-emit-test.ss (23s)
+=== t/qualification/ascent-set-size-test.ss ===
+[ascent-test] START t/qualification/ascent-set-size-test.ss
+HARNESS ("t/qualification/ascent-set-size-test.ss")
+MODULE t/qualification/ascent-set-size-test.ss
+SUITE built-in Set cardinality maintenance
+CASE custom storage expansion preserves callback observations and sizes
+CASE-OK custom storage expansion preserves callback observations and sizes
+CASE three-atom empty frontiers preserve exact fixed points
+CASE-OK three-atom empty frontiers preserve exact fixed points
+CASE indexed prefix callbacks remain observable before an empty third atom
+CASE-OK indexed prefix callbacks remain observable before an empty third atom
+CASE recursive chains retain exact row order and sizes
+CASE-OK recursive chains retain exact row order and sizes
+CASE all two-node graphs retain independent reachability goldens
+CASE-OK all two-node graphs retain independent reachability goldens
+CASE session appends and replacements keep committed sizes
+CASE-OK session appends and replacements keep committed sizes
+CASE custom index Provider callbacks retain their exact count
+CASE-OK custom index Provider callbacks retain their exact count
+CASE guard and generator prefix callback counts are unchanged
+CASE-OK guard and generator prefix callback counts are unchanged
+CASE lattice replacement keeps key cardinality and strongest rows
+CASE-OK lattice replacement keeps key cardinality and strongest rows
+CASE timeout resumption preserves the final fixed point
+CASE-OK timeout resumption preserves the final fixed point
+SUITE-OK built-in Set cardinality maintenance
+MODULE-OK t/qualification/ascent-set-size-test.ss
+HARNESS-OK ("t/qualification/ascent-set-size-test.ss")
+OK
+[ascent-test] PASS t/qualification/ascent-set-size-test.ss (23s)
+=== t/qualification/ascent-set-source-test.ss ===
+[ascent-test] START t/qualification/ascent-set-source-test.ss
+HARNESS ("t/qualification/ascent-set-source-test.ss")
+MODULE t/qualification/ascent-set-source-test.ss
+SUITE ASCENT default Set source admission
+CASE all short three-symbol source logs preserve order and row identity
+CASE-OK all short three-symbol source logs preserve order and row identity
+CASE custom source expansion retains exact callback snapshots and row order
+CASE-OK custom source expansion retains exact callback snapshots and row order
+CASE identity storage preserves duplicate source order and counts
+CASE-OK identity storage preserves duplicate source order and counts
+CASE source rows mutated after declaration are checked again
+CASE-OK source rows mutated after declaration are checked again
+CASE duplicate facts still consume the source budget
+CASE-OK duplicate facts still consume the source budget
+CASE field callbacks retain both source and stored-row checks
+CASE-OK field callbacks retain both source and stored-row checks
+CASE a stateful field predicate still fails its second check
+CASE-OK a stateful field predicate still fails its second check
+CASE an inherited custom Provider still receives every source row
+CASE-OK an inherited custom Provider still receives every source row
+CASE custom Provider row widths are still checked
+CASE-OK custom Provider row widths are still checked
+CASE custom Provider expansion retains the materialized budget
+CASE-OK custom Provider expansion retains the materialized budget
+CASE nullary Set sources and derived facts retain their multiplicities
+CASE-OK nullary Set sources and derived facts retain their multiplicities
+CASE direct staging retains derived and total fact budgets
+CASE-OK direct staging retains derived and total fact budgets
+CASE derived field callbacks retain their second validation
+CASE-OK derived field callbacks retain their second validation
+CASE derived custom storage still receives each candidate
+CASE-OK derived custom storage still receives each candidate
+SUITE-OK ASCENT default Set source admission
+MODULE-OK t/qualification/ascent-set-source-test.ss
+HARNESS-OK ("t/qualification/ascent-set-source-test.ss")
+OK
+[ascent-test] PASS t/qualification/ascent-set-source-test.ss (19s)
+=== t/qualification/ascent-size-test.ss ===
+[ascent-test] START t/qualification/ascent-size-test.ss
+HARNESS ("t/qualification/ascent-size-test.ss")
+MODULE t/qualification/ascent-size-test.ss
+SUITE empty-frontier fixed-point evaluation
+CASE recursive chains retain exact row order and sizes
+CASE-OK recursive chains retain exact row order and sizes
+CASE all two-node graphs retain independent reachability goldens
+CASE-OK all two-node graphs retain independent reachability goldens
+CASE session appends and replacements keep committed sizes
+CASE-OK session appends and replacements keep committed sizes
+CASE custom index Provider callbacks retain their exact count
+CASE-OK custom index Provider callbacks retain their exact count
+CASE guard and generator prefix callback counts are unchanged
+CASE-OK guard and generator prefix callback counts are unchanged
+CASE lattice replacement keeps key cardinality and strongest rows
+CASE-OK lattice replacement keeps key cardinality and strongest rows
+CASE timeout resumption preserves the final fixed point
+CASE-OK timeout resumption preserves the final fixed point
+SUITE-OK empty-frontier fixed-point evaluation
+MODULE-OK t/qualification/ascent-size-test.ss
+HARNESS-OK ("t/qualification/ascent-size-test.ss")
+OK
+[ascent-test] PASS t/qualification/ascent-size-test.ss (22s)
+=== t/qualification/ascent-source-admission-test.ss ===
+[ascent-test] START t/qualification/ascent-source-admission-test.ss
+HARNESS ("t/qualification/ascent-source-admission-test.ss")
+MODULE t/qualification/ascent-source-admission-test.ss
+SUITE ASCENT default Set source admission
+CASE identity storage preserves duplicate source order and counts
+CASE-OK identity storage preserves duplicate source order and counts
+CASE source rows mutated after declaration are checked again
+CASE-OK source rows mutated after declaration are checked again
+CASE duplicate facts still consume the source budget
+CASE-OK duplicate facts still consume the source budget
+CASE field callbacks retain both source and stored-row checks
+CASE-OK field callbacks retain both source and stored-row checks
+CASE a stateful field predicate still fails its second check
+CASE-OK a stateful field predicate still fails its second check
+CASE an inherited custom Provider still receives every source row
+CASE-OK an inherited custom Provider still receives every source row
+CASE custom Provider row widths are still checked
+CASE-OK custom Provider row widths are still checked
+CASE custom Provider expansion retains the materialized budget
+CASE-OK custom Provider expansion retains the materialized budget
+CASE nullary Set sources and derived facts retain their multiplicities
+CASE-OK nullary Set sources and derived facts retain their multiplicities
+CASE direct staging retains derived and total fact budgets
+CASE-OK direct staging retains derived and total fact budgets
+CASE derived field callbacks retain their second validation
+CASE-OK derived field callbacks retain their second validation
+CASE derived custom storage still receives each candidate
+CASE-OK derived custom storage still receives each candidate
+SUITE-OK ASCENT default Set source admission
+MODULE-OK t/qualification/ascent-source-admission-test.ss
+HARNESS-OK ("t/qualification/ascent-source-admission-test.ss")
+OK
+[ascent-test] PASS t/qualification/ascent-source-admission-test.ss (19s)
+=== t/qualification/ascent-strata-test.ss ===
+[ascent-test] START t/qualification/ascent-strata-test.ss
+HARNESS ("t/qualification/ascent-strata-test.ss")
+MODULE t/qualification/ascent-strata-test.ss
+SUITE ASCENT SCC stratification
+CASE strict incoming edges lift every member of a positive SCC
+CASE-OK strict incoming edges lift every member of a positive SCC
+CASE all three-node graphs preserve minimum strata and cycle diagnostics
+CASE-OK all three-node graphs preserve minimum strata and cycle diagnostics
+CASE empty declarations and duplicate edges retain their strata
+CASE-OK empty declarations and duplicate edges retain their strata
+SUITE-OK ASCENT SCC stratification
+MODULE-OK t/qualification/ascent-strata-test.ss
+HARNESS-OK ("t/qualification/ascent-strata-test.ss")
+OK
+[ascent-test] PASS t/qualification/ascent-strata-test.ss (17s)
+=== t/qualification/ascent-stratified-proof-test.ss ===
+[ascent-test] START t/qualification/ascent-stratified-proof-test.ss
+HARNESS ("t/qualification/ascent-stratified-proof-test.ss")
+MODULE t/qualification/ascent-stratified-proof-test.ss
+SUITE bounded stratified derivation checker
+CASE hypothetical fact support is bound to its clause label
+CASE-OK hypothetical fact support is bound to its clause label
+CASE founded negation, computation and count rule instances
+CASE-OK founded negation, computation and count rule instances
+CASE recursive producer roots have founded earlier support
+CASE-OK recursive producer roots have founded earlier support
+CASE producer handles comparison, identity and negative wildcard
+CASE-OK producer handles comparison, identity and negative wildcard
+CASE all sixty-four finite graphs have checked producer roots
+CASE-OK all sixty-four finite graphs have checked producer roots
+CASE recursive strata track source correction and distinct support
+CASE-OK recursive strata track source correction and distinct support
+CASE stale finite certificate cannot produce a proof
+CASE-OK stale finite certificate cannot produce a proof
+CASE finite replay and proof search expose separate budget caps
+CASE-OK finite replay and proof search expose separate budget caps
+CASE repeated, omitted and forward group support fail
+CASE-OK repeated, omitted and forward group support fail
+CASE changed snapshot, closure and proof budget do not certify
+CASE-OK changed snapshot, closure and proof budget do not certify
+CASE model-study input agrees with Rust and finite expectations
+CASE-OK model-study input agrees with Rust and finite expectations
+CASE all reducers require an exact contributing group
+CASE-OK all reducers require an exact contributing group
+SUITE-OK bounded stratified derivation checker
+MODULE-OK t/qualification/ascent-stratified-proof-test.ss
+HARNESS-OK ("t/qualification/ascent-stratified-proof-test.ss")
+OK
+[ascent-test] PASS t/qualification/ascent-stratified-proof-test.ss (41s)
+=== t/qualification/ascent-syntax-test.ss ===
+[ascent-test] START t/qualification/ascent-syntax-test.ss
+HARNESS ("t/qualification/ascent-syntax-test.ss")
+MODULE t/qualification/ascent-syntax-test.ss
+SUITE ASCENT Scheme source syntax
+CASE lexical literals and multiple fact heads
+CASE-OK lexical literals and multiple fact heads
+CASE program default storage reaches local macro relations
+CASE-OK program default storage reaches local macro relations
+CASE nested disjunction composes finite rule bodies
+CASE-OK nested disjunction composes finite rule bodies
+CASE head expressions require bound inputs
+CASE-OK head expressions require bound inputs
+CASE body expression compares after an atom binding
+CASE-OK body expression compares after an atom binding
+CASE body expression reads a prior column in one atom
+CASE-OK body expression reads a prior column in one atom
+CASE bound body expression uses the Provider index
+CASE-OK bound body expression uses the Provider index
+CASE inline pattern binds later columns in one atom
+CASE-OK inline pattern binds later columns in one atom
+CASE inline pattern rejects duplicate bindings
+CASE-OK inline pattern rejects duplicate bindings
+CASE inline pattern cannot bind in rule head
+CASE-OK inline pattern cannot bind in rule head
+CASE each wildcard ignores one column independently
+CASE-OK each wildcard ignores one column independently
+CASE let and for destructure native Gerbil values
+CASE-OK let and for destructure native Gerbil values
+CASE typed relation checks source and derived fields
+CASE-OK typed relation checks source and derived fields
+CASE typed session update rejects before mutation
+CASE-OK typed session update rejects before mutation
+CASE imported Scheme fragment closes recursive path
+CASE-OK imported Scheme fragment closes recursive path
+CASE POO fragment refinement changes included source
+CASE-OK POO fragment refinement changes included source
+CASE included relation identity rejects duplicates
+CASE-OK included relation identity rejects duplicates
+CASE Gerbil macro generates a reusable POO fragment
+CASE-OK Gerbil macro generates a reusable POO fragment
+CASE inline hygienic macro expands fragments in declaration order
+CASE-OK inline hygienic macro expands fragments in declaration order
+CASE inline macro emits a relation and rule as one fragment
+CASE-OK inline macro emits a relation and rule as one fragment
+CASE typed macro ident parameter rejects a literal
+CASE-OK typed macro ident parameter rejects a literal
+CASE typed macro rejects an unsupported parameter kind
+CASE-OK typed macro rejects an unsupported parameter kind
+CASE included fragment expression is validated once
+CASE-OK included fragment expression is validated once
+CASE included value must satisfy the POO fragment contract
+CASE-OK included value must satisfy the POO fragment contract
+SUITE-OK ASCENT Scheme source syntax
+MODULE-OK t/qualification/ascent-syntax-test.ss
+HARNESS-OK ("t/qualification/ascent-syntax-test.ss")
+OK
+[ascent-test] PASS t/qualification/ascent-syntax-test.ss (33s)
+=== t/qualification/ascent-table-expression-test.ss ===
+[ascent-test] START t/qualification/ascent-table-expression-test.ss
+HARNESS ("t/qualification/ascent-table-expression-test.ss")
+MODULE t/qualification/ascent-table-expression-test.ss
+SUITE ASCENT table expression over native persistent tries
+CASE indexed composition deduplicates the diamond's two-hop path
+CASE-OK indexed composition deduplicates the diamond's two-hop path
+CASE a cycle produces only its bounded two-hop self pairs
+CASE-OK a cycle produces only its bounded two-hop self pairs
+CASE frontier steps deduplicate alternate paths and terminate on a cycle
+CASE-OK frontier steps deduplicate alternate paths and terminate on a cycle
+CASE empty source has an empty closure
+CASE-OK empty source has an empty closure
+CASE Dual shortest-distance lattice keeps the minimum path
+CASE-OK Dual shortest-distance lattice keeps the minimum path
+CASE Dual lattice stabilizes on a cycle and a sparse radix
+CASE-OK Dual lattice stabilizes on a cycle and a sparse radix
+CASE larger radix retains sparse snapshot and membership behavior
+CASE-OK larger radix retains sparse snapshot and membership behavior
+CASE rejects a radix that would alias pair identities
+CASE-OK rejects a radix that would alias pair identities
+SUITE-OK ASCENT table expression over native persistent tries
+MODULE-OK t/qualification/ascent-table-expression-test.ss
+HARNESS-OK ("t/qualification/ascent-table-expression-test.ss")
+OK
+[ascent-test] PASS t/qualification/ascent-table-expression-test.ss (21s)
+=== t/qualification/ascent-temporal-lens-test.ss ===
+IMPORT :gerbil-ascent/table/expression
+IMPORT-OK :gerbil-ascent/table/expression
+IMPORT :gerbil-ascent/table/funs
+IMPORT-OK :gerbil-ascent/table/funs
+IMPORT :gerbil-ascent/table/eqrel
+IMPORT-OK :gerbil-ascent/table/eqrel
+IMPORT :gerbil-ascent/table/trrel
+IMPORT-OK :gerbil-ascent/table/trrel
+IMPORT :gerbil-ascent/table/provider
+IMPORT-OK :gerbil-ascent/table/provider
+IMPORT :gerbil-ascent/table/storage
+IMPORT-OK :gerbil-ascent/table/storage
+IMPORT :gerbil-ascent/table/interface
+IMPORT-OK :gerbil-ascent/table/interface
+IMPORT :gerbil-ascent/program/types
+IMPORT-OK :gerbil-ascent/program/types
+IMPORT :gerbil-ascent/program/objects
+IMPORT-OK :gerbil-ascent/program/objects
+IMPORT :gerbil-ascent/program/aggregators
+IMPORT-OK :gerbil-ascent/program/aggregators
+IMPORT :gerbil-ascent/program/syntax
+IMPORT-OK :gerbil-ascent/program/syntax
+IMPORT :gerbil-ascent/program/planning
+IMPORT-OK :gerbil-ascent/program/planning
+IMPORT :gerbil-ascent/program/scheme-checked
+IMPORT-OK :gerbil-ascent/program/scheme-checked
+IMPORT :gerbil-ascent/program/scheme-admission
+IMPORT-OK :gerbil-ascent/program/scheme-admission
+IMPORT :gerbil-ascent/program/scheme-language
+IMPORT-OK :gerbil-ascent/program/scheme-language
+IMPORT :gerbil-ascent/program/operator
+IMPORT-OK :gerbil-ascent/program/operator
+IMPORT :gerbil-ascent/program/operator-change
+IMPORT-OK :gerbil-ascent/program/operator-change
+IMPORT :gerbil-ascent/program/operator-session
+IMPORT-OK :gerbil-ascent/program/operator-session
+IMPORT :gerbil-ascent/program/funs
+IMPORT-OK :gerbil-ascent/program/funs
+IMPORT :gerbil-ascent/program/analysis
+IMPORT-OK :gerbil-ascent/program/analysis
+IMPORT :gerbil-ascent/program/summary
+IMPORT-OK :gerbil-ascent/program/summary
+IMPORT :gerbil-ascent/program/evaluate
+IMPORT-OK :gerbil-ascent/program/evaluate
+IMPORT :gerbil-ascent/program/session
+IMPORT-OK :gerbil-ascent/program/session
+IMPORT :gerbil-ascent/program/interface
+IMPORT-OK :gerbil-ascent/program/interface
+IMPORT :gerbil-ascent/core/binary-program
+IMPORT-OK :gerbil-ascent/core/binary-program
+IMPORT :gerbil-ascent/candidate/closure
+IMPORT-OK :gerbil-ascent/candidate/closure
+IMPORT :gerbil-ascent/candidate/types
+IMPORT-OK :gerbil-ascent/candidate/types
+IMPORT :gerbil-ascent/candidate/program
+IMPORT-OK :gerbil-ascent/candidate/program
+IMPORT :gerbil-ascent/candidate/funs
+IMPORT-OK :gerbil-ascent/candidate/funs
+IMPORT :gerbil-ascent/candidate/provenance
+IMPORT-OK :gerbil-ascent/candidate/provenance
+IMPORT :gerbil-ascent/candidate/nonmembership
+IMPORT-OK :gerbil-ascent/candidate/nonmembership
+IMPORT :gerbil-ascent/candidate/finite-evidence
+IMPORT-OK :gerbil-ascent/candidate/finite-evidence
+IMPORT :gerbil-ascent/candidate/stratified-proof
+IMPORT-OK :gerbil-ascent/candidate/stratified-proof
+IMPORT :gerbil-ascent/candidate/stratified-producer
+IMPORT-OK :gerbil-ascent/candidate/stratified-producer
+IMPORT :gerbil-ascent/candidate/reasoning
+IMPORT-OK :gerbil-ascent/candidate/reasoning
+IMPORT :gerbil-ascent/temporal/lens
+IMPORT-OK :gerbil-ascent/temporal/lens
+IMPORT :gerbil-ascent/interface/request
+IMPORT-OK :gerbil-ascent/interface/request
+IMPORT :gerbil/tools/gxtest
+IMPORT-OK :gerbil/tools/gxtest
+HARNESS ("t/qualification/ascent-temporal-lens-test.ss")
+MODULE t/qualification/ascent-temporal-lens-test.ss
+SUITE finite temporal lens integrated gate
+CASE interval uncertainty, independent point enumeration and receipt binding
+CASE-OK interval uncertainty, independent point enumeration and receipt binding
+CASE dual supports, last withdrawal and immutable generations
+CASE-OK dual supports, last withdrawal and immutable generations
+CASE late knowledge and half-open valid window remain independent
+CASE-OK late knowledge and half-open valid window remain independent
+CASE missing parents, open cuts and unknown time never prove absence
+CASE-OK missing parents, open cuts and unknown time never prove absence
+CASE cycle/order/clock/generation failures preserve accepted answer
+CASE-OK cycle/order/clock/generation failures preserve accepted answer
+CASE concurrent events, isolated hypothetical sources and detached data
+CASE-OK concurrent events, isolated hypothetical sources and detached data
+CASE POO extension cannot relabel an equal-output native receipt
+CASE-OK POO extension cannot relabel an equal-output native receipt
+CASE native receipt tampering cannot pass lens verification
+CASE-OK native receipt tampering cannot pass lens verification
+CASE independent cut knowledge and window cross product
+CASE-OK independent cut knowledge and window cross product
+CASE all 64 ordered four-node graphs under both source orders
+CASE-OK all 64 ordered four-node graphs under both source orders
+SUITE-OK finite temporal lens integrated gate
+MODULE-OK t/qualification/ascent-temporal-lens-test.ss
+HARNESS-OK ("t/qualification/ascent-temporal-lens-test.ss")
+OK
+=== t/qualification/ascent-timeout-test.ss ===
+[ascent-test] START t/qualification/ascent-timeout-test.ss
+HARNESS ("t/qualification/ascent-timeout-test.ss")
+MODULE t/qualification/ascent-timeout-test.ss
+SUITE ASCENT retained timeout
+CASE zero budget commits rounds and resumes
+CASE-OK zero budget commits rounds and resumes
+CASE source changes wait for partial fixed point
+CASE-OK source changes wait for partial fixed point
+CASE resumed recursion feeds a later negation stratum
+CASE-OK resumed recursion feeds a later negation stratum
+CASE lattice joins survive a partial round boundary
+CASE-OK lattice joins survive a partial round boundary
+CASE BYODS closure and downstream copy resume together
+CASE-OK BYODS closure and downstream copy resume together
+CASE replacement runs honor a zero timeout
+CASE-OK replacement runs honor a zero timeout
+CASE negated source appends honor a zero timeout
+CASE-OK negated source appends honor a zero timeout
+CASE lattice source appends honor a zero timeout
+CASE-OK lattice source appends honor a zero timeout
+CASE timeout duration validation leaves session usable
+CASE-OK timeout duration validation leaves session usable
+CASE failed resume restores the accepted source snapshot
+CASE-OK failed resume restores the accepted source snapshot
+SUITE-OK ASCENT retained timeout
+MODULE-OK t/qualification/ascent-timeout-test.ss
+HARNESS-OK ("t/qualification/ascent-timeout-test.ss")
+OK
+[ascent-test] PASS t/qualification/ascent-timeout-test.ss (33s)
+=== t/qualification/ascent-timing-test.ss ===
+[ascent-test] START t/qualification/ascent-timing-test.ss
+HARNESS ("t/qualification/ascent-timing-test.ss")
+MODULE t/qualification/ascent-timing-test.ss
+SUITE ASCENT per-rule timing option
+CASE timed result and retained snapshots
+CASE-OK timed result and retained snapshots
+SUITE-OK ASCENT per-rule timing option
+MODULE-OK t/qualification/ascent-timing-test.ss
+HARNESS-OK ("t/qualification/ascent-timing-test.ss")
+OK
+[ascent-test] PASS t/qualification/ascent-timing-test.ss (29s)
+=== t/qualification/ascent-workspace-test.ss ===
+[ascent-test] START t/qualification/ascent-workspace-test.ss
+HARNESS ("t/qualification/ascent-workspace-test.ss")
+MODULE t/qualification/ascent-workspace-test.ss
+SUITE Complete fixed-point workspace lifetime
+CASE retained timeout append replacement cycles preserve old snapshots
+CASE-OK retained timeout append replacement cycles preserve old snapshots
+CASE custom storage retains exact all and pending row spines across rounds
+CASE-OK custom storage retains exact all and pending row spines across rounds
+CASE generic callback rules reuse rounds with exact invocation order
+CASE-OK generic callback rules reuse rounds with exact invocation order
+SUITE-OK Complete fixed-point workspace lifetime
+MODULE-OK t/qualification/ascent-workspace-test.ss
+HARNESS-OK ("t/qualification/ascent-workspace-test.ss")
+OK
+[ascent-test] PASS t/qualification/ascent-workspace-test.ss (30s)
+=== t/qualification/scheme-library-contract-test.ss ===
+[ascent-test] START t/qualification/scheme-library-contract-test.ss
+HARNESS ("t/qualification/scheme-library-contract-test.ss")
+MODULE t/qualification/scheme-library-contract-test.ss
+SUITE native and candidate common semantic contract
+CASE eight diagnostic graphs share one finite model
+CASE-OK eight diagnostic graphs share one finite model
+CASE blocked odd and equal-weight states discriminate admitted mistakes
+CASE-OK blocked odd and equal-weight states discriminate admitted mistakes
+CASE multi-source withdrawal and failed transaction are atomic
+CASE-OK multi-source withdrawal and failed transaction are atomic
+CASE alternate and last support withdrawal preserve snapshot binding
+CASE-OK alternate and last support withdrawal preserve snapshot binding
+CASE resource exhaustion is never a completed answer
+CASE-OK resource exhaustion is never a completed answer
+SUITE-OK native and candidate common semantic contract
+MODULE-OK t/qualification/scheme-library-contract-test.ss
+HARNESS-OK ("t/qualification/scheme-library-contract-test.ss")
+OK
+[ascent-test] PASS t/qualification/scheme-library-contract-test.ss (88s)
+=== t/qualification/scheme-native-integration-test.ss ===
+[ascent-test] START t/qualification/scheme-native-integration-test.ss
+HARNESS ("t/qualification/scheme-native-integration-test.ss")
+MODULE t/qualification/scheme-native-integration-test.ss
+SUITE native Scheme combined language lifecycle
+CASE views, negation, reduction and lattice survive withdrawal
+CASE-OK views, negation, reduction and lattice survive withdrawal
+SUITE-OK native Scheme combined language lifecycle
+MODULE-OK t/qualification/scheme-native-integration-test.ss
+HARNESS-OK ("t/qualification/scheme-native-integration-test.ss")
+OK
+[ascent-test] PASS t/qualification/scheme-native-integration-test.ss (28s)
+=== t/qualification/scheme-native-language-test.ss ===
+[ascent-test] START t/qualification/scheme-native-language-test.ss
+HARNESS ("t/qualification/scheme-native-language-test.ss")
+MODULE t/qualification/scheme-native-language-test.ss
+SUITE native Scheme captured values and stratified negation
+CASE explicit value capture freezes a scalar at construction
+CASE-OK explicit value capture freezes a scalar at construction
+CASE mutable host capture is rejected
+CASE-OK mutable host capture is rejected
+CASE negative read uses completed lower stratum
+CASE-OK negative read uses completed lower stratum
+CASE negative source withdrawal recomputes without rewriting old result
+CASE-OK negative source withdrawal recomputes without rewriting old result
+CASE a negative cycle is rejected after whole-program composition
+CASE-OK a negative cycle is rejected after whole-program composition
+CASE planner reports the actual failing body and head locations
+CASE-OK planner reports the actual failing body and head locations
+CASE successful report carries the admitted program
+CASE-OK successful report carries the admitted program
+SUITE-OK native Scheme captured values and stratified negation
+MODULE-OK t/qualification/scheme-native-language-test.ss
+HARNESS-OK ("t/qualification/scheme-native-language-test.ss")
+OK
+[ascent-test] PASS t/qualification/scheme-native-language-test.ss (25s)
+=== t/qualification/scheme-native-reduction-test.ss ===
+[ascent-test] START t/qualification/scheme-native-reduction-test.ss
+HARNESS ("t/qualification/scheme-native-reduction-test.ss")
+MODULE t/qualification/scheme-native-reduction-test.ss
+SUITE checked reduction and lattice semantics
+CASE count and sum group by an already bound key
+CASE-OK count and sum group by an already bound key
+CASE numeric reducer rejects a noninteger row
+CASE-OK numeric reducer rejects a noninteger row
+CASE checked max lattice keeps the best value per key
+CASE-OK checked max lattice keeps the best value per key
+CASE lattice fragment composes and remains instance local
+CASE-OK lattice fragment composes and remains instance local
+CASE lattice source replacement keeps prior solved snapshot
+CASE-OK lattice source replacement keeps prior solved snapshot
+CASE unknown lattice join and invalid values reject
+CASE-OK unknown lattice join and invalid values reject
+SUITE-OK checked reduction and lattice semantics
+MODULE-OK t/qualification/scheme-native-reduction-test.ss
+HARNESS-OK ("t/qualification/scheme-native-reduction-test.ss")
+OK
+[ascent-test] PASS t/qualification/scheme-native-reduction-test.ss (25s)
+=== t/qualification/scheme-operator-retained-test.ss ===
+[ascent-test] START t/qualification/scheme-operator-retained-test.ss
+HARNESS ("t/qualification/scheme-operator-retained-test.ss")
+MODULE t/qualification/scheme-operator-retained-test.ss
+SUITE retained first-class relational operators
+CASE all finite graphs survive append, duplicate and withdrawal
+CASE-OK all finite graphs survive append, duplicate and withdrawal
+CASE fixed captured source and finite mapping share retained solve
+CASE-OK fixed captured source and finite mapping share retained solve
+CASE batch replacement commits both sources and nested closure
+CASE-OK batch replacement commits both sources and nested closure
+CASE failed batch preserves all sources and the prior result
+CASE-OK failed batch preserves all sources and the prior result
+CASE invalid or over-budget update preserves last result
+CASE-OK invalid or over-budget update preserves last result
+CASE failed output budget does not publish an insertion
+CASE-OK failed output budget does not publish an insertion
+SUITE-OK retained first-class relational operators
+MODULE-OK t/qualification/scheme-operator-retained-test.ss
+HARNESS-OK ("t/qualification/scheme-operator-retained-test.ss")
+OK
+[ascent-test] PASS t/qualification/scheme-operator-retained-test.ss (118s)
+=== t/qualification/scheme-operator-test.ss ===
+[ascent-test] START t/qualification/scheme-operator-test.ss
+HARNESS ("t/qualification/scheme-operator-test.ss")
+MODULE t/qualification/scheme-operator-test.ss
+SUITE Scheme finite relation operator graph
+CASE projected join compiles directly to its output relation
+CASE-OK projected join compiles directly to its output relation
+CASE projected join retains zero-arity and repeated columns
+CASE-OK projected join retains zero-arity and repeated columns
+CASE fixed-point union branches target the fixed relation
+CASE-OK fixed-point union branches target the fixed relation
+CASE sixty-four graph fixed points equal independent closure
+CASE-OK sixty-four graph fixed points equal independent closure
+CASE reference change matches finite closure set difference
+CASE-OK reference change matches finite closure set difference
+CASE both changing join sides and a finite map propagate inserts
+CASE-OK both changing join sides and a finite map propagate inserts
+CASE selection after join sees only new paths
+CASE-OK selection after join sees only new paths
+CASE nested fixed points with an outer changing parameter
+CASE-OK nested fixed points with an outer changing parameter
+CASE zero-change propagation avoids old recursive joins
+CASE-OK zero-change propagation avoids old recursive joins
+CASE select, project, finite flatmap and union share one solve
+CASE-OK select, project, finite flatmap and union share one solve
+CASE fixed-point placeholder is local to its builder
+CASE-OK fixed-point placeholder is local to its builder
+CASE one relation transformer applies to two distinct inputs
+CASE-OK one relation transformer applies to two distinct inputs
+CASE shared child cannot capture a fixed-point parameter
+CASE-OK shared child cannot capture a fixed-point parameter
+CASE one source withdrawal recompiles to a new complete result
+CASE-OK one source withdrawal recompiles to a new complete result
+CASE two builder instances retain separate private names
+CASE-OK two builder instances retain separate private names
+CASE operator graphs compose as fresh native fragments
+CASE-OK operator graphs compose as fresh native fragments
+CASE delta prediction matches retained append and withdrawal
+CASE-OK delta prediction matches retained append and withdrawal
+CASE construction rejects hidden code and invalid shapes
+CASE-OK construction rejects hidden code and invalid shapes
+CASE growth budget cannot return a complete fixed point
+CASE-OK growth budget cannot return a complete fixed point
+SUITE-OK Scheme finite relation operator graph
+MODULE-OK t/qualification/scheme-operator-test.ss
+HARNESS-OK ("t/qualification/scheme-operator-test.ss")
+OK
+[ascent-test] PASS t/qualification/scheme-operator-test.ss (85s)
+=== t/qualification/scheme-relational-test.ss ===
+[ascent-test] START t/qualification/scheme-relational-test.ss
+HARNESS ("t/qualification/scheme-relational-test.ss")
+MODULE t/qualification/scheme-relational-test.ss
+SUITE Scheme relational finite positive gate
+CASE two fragment instances retain private identities
+CASE-OK two fragment instances retain private identities
+CASE assembled program rejects duplicate instance
+CASE-OK assembled program rejects duplicate instance
+CASE fragment export names are unique and instance scoped
+CASE-OK fragment export names are unique and instance scoped
+CASE fragment constructor freezes supplied export list
+CASE-OK fragment constructor freezes supplied export list
+CASE source handles must name local declarations
+CASE-OK source handles must name local declarations
+CASE admission and query isolate source and result rows
+CASE-OK admission and query isolate source and result rows
+CASE admission copies rows from a mutable Core declaration
+CASE-OK admission copies rows from a mutable Core declaration
+CASE session replaces exported sources with snapshots
+CASE-OK session replaces exported sources with snapshots
+CASE session append isolates caller row and rejects non-scalars
+CASE-OK session append isolates caller row and rejects non-scalars
+CASE session restores last completed solve on budget failure
+CASE-OK session restores last completed solve on budget failure
+CASE named program session replaces declared input
+CASE-OK named program session replaces declared input
+CASE named transaction updates recursion and negation
+CASE-OK named transaction updates recursion and negation
+CASE named program evaluates a source expression once
+CASE-OK named program evaluates a source expression once
+CASE admission rejects opaque host callbacks
+CASE-OK admission rejects opaque host callbacks
+CASE admission rebuilds a claimed checked operator
+CASE-OK admission rebuilds a claimed checked operator
+CASE whole-program admission rejects an absent import
+CASE-OK whole-program admission rejects an absent import
+CASE solve fails when closure exceeds its fact budget
+CASE-OK solve fails when closure exceeds its fact budget
+CASE checked where and compute match finite Scheme model
+CASE-OK checked where and compute match finite Scheme model
+CASE literal scalar clauses bind at native construction
+CASE-OK literal scalar clauses bind at native construction
+CASE constant guard and captured symbol stay stable
+CASE-OK constant guard and captured symbol stay stable
+CASE checked operator modes reject invalid uses
+CASE-OK checked operator modes reject invalid uses
+CASE recursive compute budget fails without a result
+CASE-OK recursive compute budget fails without a result
+CASE recursive closure equals independent graph model
+CASE-OK recursive closure equals independent graph model
+CASE all 64 simple directed graphs on three nodes
+CASE-OK all 64 simple directed graphs on three nodes
+CASE new source snapshot does not mutate old result
+CASE-OK new source snapshot does not mutate old result
+CASE repeated variables and scalar literals
+CASE-OK repeated variables and scalar literals
+CASE source replacement retains scalar contract
+CASE-OK source replacement retains scalar contract
+CASE unsafe head, invalid source and budget fail
+CASE-OK unsafe head, invalid source and budget fail
+SUITE-OK Scheme relational finite positive gate
+MODULE-OK t/qualification/scheme-relational-test.ss
+HARNESS-OK ("t/qualification/scheme-relational-test.ss")
+OK
+[ascent-test] PASS t/qualification/scheme-relational-test.ss (60s)

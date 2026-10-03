@@ -52,9 +52,10 @@ class SchedulingTest(unittest.TestCase):
         worker = ('from pathlib import Path; import time,sys; '
                   'p=Path(sys.argv[1]); p.write_text("started"); '
                   '\nwhile not Path("release").exists(): time.sleep(.01)')
-        options = ['--module', 't/qualification/ascent-strata-test.ss']
-        first = self.start(options, [sys.executable, '-c', worker, 'first'])
-        second = self.start(options, [sys.executable, '-c', worker, 'second'])
+        first = self.start(['--module', 't/qualification/ascent-candidate-description-test.ss'],
+                           [sys.executable, '-c', worker, 'first'])
+        second = self.start(['--module', 't/qualification/ascent-temporal-lens-test.ss'],
+                            [sys.executable, '-c', worker, 'second'])
         self.wait_file('first')
         self.wait_file('second')
         exclusive = self.start([], [sys.executable, '-c',
@@ -190,13 +191,15 @@ class SchedulingTest(unittest.TestCase):
         tools.mkdir()
         for name in ['test_execution.py', 'assert-test-cases.awk']:
             shutil.copyfile(SCRIPT.parent / name, tools / name)
-        module = 't/qualification/ascent-strata-test.ss'
-        (self.root / module).parent.mkdir(parents=True)
-        (self.root / module).touch()
+        modules = ['t/qualification/ascent-strata-test.ss',
+                   't/qualification/ascent-temporal-lens-test.ss']
+        for module in modules:
+            (self.root / module).parent.mkdir(parents=True, exist_ok=True)
+            (self.root / module).touch()
         executable = self.root / 'gerbil'
         executable.write_text('#!' + sys.executable + '\n' +
             'import os\nmode=os.environ["FIXTURE_MODE"]\n'
-            f'module={module!r}\n'
+            'module=os.environ["FIXTURE_MODULE"]\n'
             'print("MODULE "+module)\n'
             'if mode != "empty": print("CASE fixture\\nCASE-OK fixture")\n'
             'if mode == "error": print("ERROR MODULE fixture")\n'
@@ -206,12 +209,14 @@ class SchedulingTest(unittest.TestCase):
         environment = os.environ.copy()
         environment['PATH'] = str(self.root) + os.pathsep + environment['PATH']
         environment.pop('ASCENT_TEST_EXCLUSIVE_FD', None)
-        for mode, expected in [('good', 0), ('error', 1), ('empty', 1), ('wrong', 1)]:
-            with self.subTest(mode=mode):
-                environment['FIXTURE_MODE'] = mode
-                result = subprocess.run(['just', 'test-file', module], cwd=self.root,
-                                        env=environment, capture_output=True, text=True, timeout=5)
-                self.assertEqual(result.returncode, expected, result.stdout+result.stderr)
+        for module in modules:
+            environment['FIXTURE_MODULE'] = module
+            for mode, expected in [('good', 0), ('error', 1), ('empty', 1), ('wrong', 1)]:
+                with self.subTest(module=module, mode=mode):
+                    environment['FIXTURE_MODE'] = mode
+                    result = subprocess.run(['just', 'test-file', module], cwd=self.root,
+                                            env=environment, capture_output=True, text=True, timeout=5)
+                    self.assertEqual(result.returncode, expected, result.stdout+result.stderr)
 
     def test_explicit_jobs_above_four_are_not_capped(self):
         executable = self.root / 'just'

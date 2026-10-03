@@ -1,0 +1,143 @@
+{
+  "entries": [
+    {
+      "name": "ascent-byods-trrel",
+      "exit": 0,
+      "log": "original-ss.log"
+    },
+    {
+      "name": "ascent-session-update",
+      "exit": 0,
+      "log": "original-ss.log"
+    },
+    {
+      "name": "ascent-ten-thousand-appends",
+      "exit": 0,
+      "log": "original-ss.log"
+    },
+    {
+      "name": "ascent-nonpositive-session-update",
+      "exit": 1,
+      "log": "original-ss.log"
+    },
+    {
+      "name": "ascent-rule-clauses",
+      "exit": 0,
+      "seconds": 7.20710304199747,
+      "log": "remaining-ss/ascent-rule-clauses.log",
+      "native_completion_markers": true,
+      "native_error": false
+    },
+    {
+      "name": "ascent-var-points-to",
+      "exit": 0,
+      "seconds": 6.411541875000694,
+      "log": "remaining-ss/ascent-var-points-to.log",
+      "native_completion_markers": true,
+      "native_error": false
+    },
+    {
+      "name": "ascent-upstream-examples",
+      "exit": 0,
+      "seconds": 10.046157832999597,
+      "log": "remaining-ss/ascent-upstream-examples.log",
+      "native_completion_markers": true,
+      "native_error": false
+    },
+    {
+      "name": "ascent-product-session",
+      "exit": 0,
+      "seconds": 7.76388649999717,
+      "log": "remaining-ss/ascent-product-session.log",
+      "native_completion_markers": true,
+      "native_error": false
+    },
+    {
+      "name": "ascent-mutual-recursive-heads",
+      "exit": 0,
+      "seconds": 7.44581462500355,
+      "log": "remaining-ss/ascent-mutual-recursive-heads.log",
+      "native_completion_markers": true,
+      "native_error": false
+    },
+    {
+      "name": "ascent-derived-aggregate",
+      "exit": 0,
+      "seconds": 6.5527791659988,
+      "log": "remaining-ss/ascent-derived-aggregate.log",
+      "native_completion_markers": true,
+      "native_error": false
+    },
+    {
+      "name": "ascent-indexed-joins",
+      "exit": 0,
+      "seconds": 6.267080584002542,
+      "log": "remaining-ss/ascent-indexed-joins.log",
+      "native_completion_markers": true,
+      "native_error": false
+    },
+    {
+      "name": "ascent-byods-eqrel",
+      "exit": 0,
+      "seconds": 6.972849999998289,
+      "log": "remaining-ss/ascent-byods-eqrel.log",
+      "native_completion_markers": true,
+      "native_error": false
+    },
+    {
+      "name": "ascent-binary-program",
+      "exit": 0,
+      "seconds": 4.847731500005466,
+      "log": "remaining-ss/ascent-binary-program.log",
+      "native_completion_markers": true,
+      "native_error": false
+    },
+    {
+      "name": "ascent-reachability-closure",
+      "exit": 0,
+      "seconds": 5.801941999998235,
+      "log": "remaining-ss/ascent-reachability-closure.log",
+      "native_completion_markers": true,
+      "native_error": false
+    },
+    {
+      "name": "ascent-table-expression",
+      "exit": 1,
+      "seconds": 52.85754729099426,
+      "log": "remaining-ss/ascent-table-expression.log",
+      "native_completion_markers": false,
+      "native_error": true
+    },
+    {
+      "name": "ascent-table-expression-membership",
+      "exit": 0,
+      "seconds": 8.394830208002531,
+      "log": "final-ss/ascent-table-expression-membership.log",
+      "native_completion_markers": true,
+      "native_error": false
+    },
+    {
+      "name": "ascent-shortest-candidates",
+      "exit": 0,
+      "seconds": 5.13358458300354,
+      "log": "final-ss/ascent-shortest-candidates.log",
+      "native_completion_markers": true,
+      "native_error": false
+    }
+  ],
+  "passed": 15,
+  "failed": 2,
+  "unrun": 0,
+  "nonpositive_controls": {
+    "baseline_p95_ns": 471000,
+    "current_p95_ns": 480000,
+    "passed": true
+  },
+  "table_expression": {
+    "p50_ns": 951000,
+    "p95_ns": 2072000,
+    "max_ns": 40923000,
+    "limit_ns": 1050000
+  },
+  "all_original_ss_passed": false
+}

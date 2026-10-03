@@ -1,0 +1,28 @@
+[ascent-test] START t/qualification/ascent-table-expression-test.ss
+[test-lane] START parallel-semantics t/qualification/ascent-table-expression-test.ss
+HARNESS ("t/qualification/ascent-table-expression-test.ss")
+MODULE t/qualification/ascent-table-expression-test.ss
+SUITE ASCENT table expression over native persistent tries
+CASE indexed composition deduplicates the diamond's two-hop path
+CASE-OK indexed composition deduplicates the diamond's two-hop path
+CASE a cycle produces only its bounded two-hop self pairs
+CASE-OK a cycle produces only its bounded two-hop self pairs
+CASE frontier steps deduplicate alternate paths and terminate on a cycle
+CASE-OK frontier steps deduplicate alternate paths and terminate on a cycle
+CASE empty source has an empty closure
+CASE-OK empty source has an empty closure
+CASE Dual shortest-distance lattice keeps the minimum path
+CASE-OK Dual shortest-distance lattice keeps the minimum path
+CASE Dual lattice stabilizes on a cycle and a sparse radix
+CASE-OK Dual lattice stabilizes on a cycle and a sparse radix
+CASE larger radix retains sparse snapshot and membership behavior
+CASE-OK larger radix retains sparse snapshot and membership behavior
+CASE rejects a radix that would alias pair identities
+CASE-OK rejects a radix that would alias pair identities
+SUITE-OK ASCENT table expression over native persistent tries
+MODULE-OK t/qualification/ascent-table-expression-test.ss
+HARNESS-OK ("t/qualification/ascent-table-expression-test.ss")
+OK
+[test-lane] RUNNING parallel-semantics (5s)
+[test-lane] END parallel-semantics exit=0
+[ascent-test] PASS t/qualification/ascent-table-expression-test.ss (6s)

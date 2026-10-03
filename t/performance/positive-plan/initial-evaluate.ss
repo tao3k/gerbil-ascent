@@ -10,8 +10,7 @@
         (only-in "admission.ss" gerbil-ascent-initialize-source-row!)
         (only-in "planning.ss" gerbil-ascent-prepare-rule)
         (only-in "positive.ss" gerbil-ascent-positive-plan
-                 gerbil-ascent-run-positive-plan! gerbil-ascent-index-key
-                 gerbil-ascent-emit-heads!)
+                 gerbil-ascent-run-positive-plan! gerbil-ascent-index-key)
         (only-in "types.ss" GerbilAscentSessionContract)
         (only-in "analysis.ss" gerbil-ascent-program-analysis
                  gerbil-ascent-program-schema)
@@ -22,7 +21,8 @@
                  gerbil-ascent-lattice-value
                  gerbil-ascent-joined-row
                  gerbil-ascent-expression-value
-                 gerbil-ascent-bind-row)
+                 gerbil-ascent-bind-row
+                 gerbil-ascent-head-row)
         (only-in :gerbil-ascent/table/provider
                  gerbil-ascent-hash-index-provider
                  gerbil-ascent-index-provider-build
@@ -126,7 +126,7 @@
                   (map (lambda (term)
                          (cons (term-kind term) (.ref term 'value)))
                        terms))))
-      (def (indexed-rows atom environment use-delta? slot-terms)
+      (def (indexed-rows atom environment use-delta? (slot-terms #f))
         (let* ((index (vector-ref atom 0))
                (columns (vector-ref atom 2))
                (rows (vector-ref (if use-delta? delta all) index)))
@@ -373,6 +373,180 @@
              (first-run? #t)
              (dirty? #t)
              (last-result #f))
+        (def (source-rows-at index)
+          (or (vector-ref source-overrides index)
+              (append (vector-ref source-originals index)
+                      (reverse (vector-ref source-additions index)))))
+        (def (source-program-with index replacement)
+          (let (next-relations
+                (map (lambda (relation position)
+                       (let (source-rows
+                             (if (= position index)
+                               replacement
+                               (source-rows-at position)))
+                         (.o (:: @ relation) rows: source-rows)))
+                     relations (iota count)))
+            (.o (:: @ program) relations: next-relations)))
+        (def (append-set-source! index row)
+          ;; A Set source is buffered in its persistent recovery log; the
+          ;; fixed-point boundary admits the whole batch exactly once.
+          (when (> (+ source-materialized-count derived-count
+                      staged-total 1)
+                   output-limit)
+            (flush-staged-set-rows!))
+          (when (and (>= (+ source-materialized-count derived-count)
+                         output-limit)
+                     (not (hash-get (vector-ref seen index) row)))
+            (error "ASCENT session output fact budget exceeded"))
+          (set! source-count (+ source-count 1))
+          (vector-set! source-additions index
+            (cons row (vector-ref source-additions index)))
+          (vector-set! staged-set-counts index
+            (+ 1 (vector-ref staged-set-counts index)))
+          (set! staged-total (+ staged-total 1))
+          (set! dirty? #t))
+        (def (append-source! name row)
+          (when first-run?
+            (error "ASCENT session must run before source updates"))
+          (let* ((index (position-of name))
+                 (width (vector-ref arity index))
+                 (built-in-set?
+                  (eq? (vector-ref storage-providers index)
+                       gerbil-ascent-set-storage-provider)))
+            (unless (and (list? row) (= (length row) width))
+              (error "invalid ASCENT session source row" name row))
+            (let (check (vector-ref field-checkers index))
+              (when check (check row)))
+            (when (>= source-count input-limit)
+              (error "ASCENT session input fact budget exceeded"))
+            (cond
+             ((or (not positive-rules?)
+                  lattice-feeds-relation?
+                  recompute-from-source?
+                  (vector-ref lattice-joins index))
+              ;; Negation, aggregation, and lattice-to-relation projections
+              ;; can invalidate prior rows. Re-evaluate the accepted source
+              ;; snapshot before publishing a changed fixed point.
+              (let* ((replacement
+                      (append (source-rows-at index) (list row)))
+                     (candidate (source-program-with index replacement))
+                     (result ((gerbil-ascent-make-engine
+                               candidate #f analysis schema
+                               measure-rule-times?))))
+                (set! source-count (+ source-count 1))
+                (vector-set! source-overrides index replacement)
+                (vector-set! source-additions index [])
+                (set! recompute-from-source? #t)
+                (set! dirty? #f)
+                (set! last-result result)))
+             (else
+              (if built-in-set?
+                (append-set-source! index row)
+              (begin
+                (flush-staged-set-rows!)
+                (let* ((expanded
+                    ((vector-ref storage-extensions index)
+                     (vector-ref storage-states index)
+                     (vector-ref all index)
+                     (vector-ref delta index) row
+                     (- output-limit
+                        (+ source-materialized-count derived-count))))
+                   (batch-seen
+                    (and (pair? expanded) (pair? (cdr expanded))
+                         (make-hash-table)))
+                   (new-rows []))
+              (unless (list? expanded)
+                (error "ASCENT storage provider returned non-list rows"))
+              ;; Validate the complete Provider batch before changing the
+              ;; evaluator's retained session, including its input counter.
+              (for-each
+               (lambda (stored)
+                 (unless (and (list? stored) (= (length stored) width))
+                   (error "invalid ASCENT storage provider row" stored))
+                 (let (check (vector-ref field-checkers index))
+                   (when check (check stored)))
+                 (unless (or (hash-get (vector-ref seen index) stored)
+                             (and batch-seen (hash-get batch-seen stored)))
+                   (when batch-seen (hash-put! batch-seen stored #t))
+                   (set! new-rows (cons stored new-rows))))
+               expanded)
+              (set! new-rows (reverse new-rows))
+              (let (added-count (length new-rows))
+                (when (> (+ source-materialized-count derived-count
+                            added-count) output-limit)
+                  (error "ASCENT session output fact budget exceeded"))
+                (set! source-count (+ source-count 1))
+                (for-each
+                 (lambda (stored)
+                   (hash-put! (vector-ref seen index) stored #t)
+                   (set! source-materialized-count
+                     (+ source-materialized-count 1))
+                   (vector-set! all index
+                     (cons stored (vector-ref all index)))
+                   (vector-set! delta index
+                     (cons stored (vector-ref delta index))))
+                 new-rows)
+                (when (pair? new-rows)
+                  (set! dirty? #t)
+                  (set! materialized-dirty? #t)
+                  (advance-all-indexes! index new-rows)
+                  (vector-set! all-size index
+                    (+ (vector-ref all-size index) added-count))
+                  (vector-set! delta-size index
+                    (+ (vector-ref delta-size index) added-count))
+                  (vector-set! all-version index
+                    (+ 1 (vector-ref all-version index)))
+                  (vector-set! delta-version index
+                    (+ 1 (vector-ref delta-version index))))))))))
+            (unless (or (vector-ref source-overrides index)
+                        built-in-set?)
+              (vector-set! source-additions index
+                (cons row (vector-ref source-additions index))))))
+        (def (append-single-set-source! name row)
+          (if recompute-from-source?
+            (append-source! name row)
+            (begin
+              (when first-run?
+                (error "ASCENT session must run before source updates"))
+              (unless (eq? name (vector-ref names 0))
+                (error "unknown ASCENT relation" name))
+              (unless (and (list? row)
+                           (= (length row) (vector-ref arity 0)))
+                (error "invalid ASCENT session source row" name row))
+              (let (check (vector-ref field-checkers 0))
+                (when check (check row)))
+              (when (>= source-count input-limit)
+                (error "ASCENT session input fact budget exceeded"))
+              (append-set-source! 0 row))))
+        (def (replace-source! name rows)
+          (when first-run?
+            (error "ASCENT session must run before source updates"))
+          (let* ((index (position-of name))
+                 (width (vector-ref arity index)))
+            (unless (list? rows)
+              (error "invalid ASCENT replacement source rows" name rows))
+            (for-each
+             (lambda (row)
+               (unless (and (list? row) (= (length row) width))
+                 (error "invalid ASCENT replacement source row" name row))
+               (let (check (vector-ref field-checkers index))
+                 (when check (check row))))
+             rows)
+            (let (next-count
+                  (+ (- source-count (length (source-rows-at index)))
+                     (length rows)))
+              (when (> next-count input-limit)
+                (error "ASCENT session input fact budget exceeded"))
+              (let* ((candidate (source-program-with index rows))
+                     (result ((gerbil-ascent-make-engine
+                               candidate #f analysis schema
+                               measure-rule-times?))))
+                (set! source-count next-count)
+                (vector-set! source-overrides index rows)
+                (vector-set! source-additions index [])
+                (set! recompute-from-source? #t)
+                (set! dirty? #f)
+                (set! last-result result)))))
         (def (flush-staged-set-rows!)
           (when session?
             (let (accepted-any? #f)
@@ -533,7 +707,7 @@
                    ((eq? (vector-ref clause 0) 'atom)
                     (let* ((atom (vector-ref clause 1))
                            (rows (indexed-rows atom environment
-                                               (= depth delta-at) #f)))
+                                               (= depth delta-at))))
                       (for-each
                        (lambda (row)
                          (let (bound (gerbil-ascent-bind-row (vector-ref atom 3)
@@ -544,7 +718,7 @@
                        rows)))
                    ((eq? (vector-ref clause 0) 'negation)
                     (let* ((atom (vector-ref clause 1))
-                           (rows (indexed-rows atom environment #f #f)))
+                           (rows (indexed-rows atom environment #f)))
                       (unless (ormap
                                (lambda (row)
                                  (gerbil-ascent-bind-row (vector-ref atom 3)
@@ -554,7 +728,7 @@
                                     environment consume))))
                    ((eq? (vector-ref clause 0) 'aggregate)
                     (let* ((atom (vector-ref clause 1))
-                           (rows (indexed-rows atom environment #f #f))
+                           (rows (indexed-rows atom environment #f))
                            (variables (vector-ref clause 3))
                            (tuples []))
                       (for-each
@@ -636,25 +810,26 @@
                      (positions (vector-ref rule 2))
                      (prunable (vector-ref rule 4))
                      (positive-plan (vector-ref rule 5)))
+                 (def (visit-rule delta-at)
+                   (if positive-plan
+                     (gerbil-ascent-run-positive-plan!
+                      positive-plan delta-at indexed-rows emit-row!)
+                     (visit-body body delta-at 0 []
+                       (lambda (environment)
+                         (for-each
+                          (lambda (head)
+                            (emit-row! head (gerbil-ascent-head-row
+                                             (vector-ref head 1) environment)))
+                          heads)))))
                  (if (null? positions)
                    (when (and (= round 1) first-run?)
-                     (if positive-plan
-                       (gerbil-ascent-run-positive-plan!
-                        positive-plan -1 indexed-rows emit-row!)
-                       (visit-body body -1 0 []
-                         (lambda (environment)
-                           (gerbil-ascent-emit-heads! heads environment emit-row!)))))
+                     (visit-rule -1))
                    (if (and (= round 1)
                             (or first-run? (> stratum 0)))
                      ;; At the first round every relation in this stratum has
                      ;; delta = all. One full evaluation covers every delta
                      ;; position without emitting the same join repeatedly.
-                     (if positive-plan
-                       (gerbil-ascent-run-positive-plan!
-                        positive-plan -1 indexed-rows emit-row!)
-                       (visit-body body -1 0 []
-                         (lambda (environment)
-                           (gerbil-ascent-emit-heads! heads environment emit-row!))))
+                     (visit-rule -1)
                      (for-each
                       (lambda (delta-at)
                         ;; Prefix atoms have no index, expression, pattern or
@@ -662,12 +837,7 @@
                         (unless (and (< delta-at (vector-length prunable))
                                      (= (vector-ref delta-size
                                           (vector-ref prunable delta-at)) 0))
-                          (if positive-plan
-                            (gerbil-ascent-run-positive-plan!
-                             positive-plan delta-at indexed-rows emit-row!)
-                            (visit-body body delta-at 0 []
-                              (lambda (environment)
-                                (gerbil-ascent-emit-heads! heads environment emit-row!))))))
+                          (visit-rule delta-at)))
                       positions)))
                  (when started
                    (let (index (vector-ref rule 3))
@@ -778,194 +948,19 @@
           (if recompute-from-source?
             last-result
             (run-retained!)))
-        (if session?
-          (let ()
-            (def (source-rows-at index)
-              (or (vector-ref source-overrides index)
-                  (append (vector-ref source-originals index)
-                          (reverse (vector-ref source-additions index)))))
-            (def (source-program-with index replacement)
-              (let (next-relations
-                    (map (lambda (relation position)
-                           (let (source-rows
-                                 (if (= position index)
-                                   replacement
-                                   (source-rows-at position)))
-                             (.o (:: @ relation) rows: source-rows)))
-                         relations (iota count)))
-                (.o (:: @ program) relations: next-relations)))
-            (def (append-set-source! index row)
-              ;; A Set source is buffered in its persistent recovery log; the
-              ;; fixed-point boundary admits the whole batch exactly once.
-              (when (> (+ source-materialized-count derived-count
-                          staged-total 1)
-                       output-limit)
-                (flush-staged-set-rows!))
-              (when (and (>= (+ source-materialized-count derived-count)
-                             output-limit)
-                         (not (hash-get (vector-ref seen index) row)))
-                (error "ASCENT session output fact budget exceeded"))
-              (set! source-count (+ source-count 1))
-              (vector-set! source-additions index
-                (cons row (vector-ref source-additions index)))
-              (vector-set! staged-set-counts index
-                (+ 1 (vector-ref staged-set-counts index)))
-              (set! staged-total (+ staged-total 1))
-              (set! dirty? #t))
-            (def (append-source! name row)
-              (when first-run?
-                (error "ASCENT session must run before source updates"))
-              (let* ((index (position-of name))
-                     (width (vector-ref arity index))
-                     (built-in-set?
-                      (eq? (vector-ref storage-providers index)
-                           gerbil-ascent-set-storage-provider)))
-                (unless (and (list? row) (= (length row) width))
-                  (error "invalid ASCENT session source row" name row))
-                (let (check (vector-ref field-checkers index))
-                  (when check (check row)))
-                (when (>= source-count input-limit)
-                  (error "ASCENT session input fact budget exceeded"))
-                (cond
-                 ((or (not positive-rules?)
-                      lattice-feeds-relation?
-                      recompute-from-source?
-                      (vector-ref lattice-joins index))
-                  ;; Negation, aggregation, and lattice-to-relation projections
-                  ;; can invalidate prior rows. Re-evaluate the accepted source
-                  ;; snapshot before publishing a changed fixed point.
-                  (let* ((replacement
-                          (append (source-rows-at index) (list row)))
-                         (candidate (source-program-with index replacement))
-                         (result ((gerbil-ascent-make-engine
-                                   candidate #f analysis schema
-                                   measure-rule-times?))))
-                    (set! source-count (+ source-count 1))
-                    (vector-set! source-overrides index replacement)
-                    (vector-set! source-additions index [])
-                    (set! recompute-from-source? #t)
-                    (set! dirty? #f)
-                    (set! last-result result)))
-                 (else
-                  (if built-in-set?
-                    (append-set-source! index row)
-                  (begin
-                    (flush-staged-set-rows!)
-                    (let* ((expanded
-                        ((vector-ref storage-extensions index)
-                         (vector-ref storage-states index)
-                         (vector-ref all index)
-                         (vector-ref delta index) row
-                         (- output-limit
-                            (+ source-materialized-count derived-count))))
-                       (batch-seen
-                        (and (pair? expanded) (pair? (cdr expanded))
-                             (make-hash-table)))
-                       (new-rows []))
-                  (unless (list? expanded)
-                    (error "ASCENT storage provider returned non-list rows"))
-                  ;; Validate the complete Provider batch before changing the
-                  ;; evaluator's retained session, including its input counter.
-                  (for-each
-                   (lambda (stored)
-                     (unless (and (list? stored) (= (length stored) width))
-                       (error "invalid ASCENT storage provider row" stored))
-                     (let (check (vector-ref field-checkers index))
-                       (when check (check stored)))
-                     (unless (or (hash-get (vector-ref seen index) stored)
-                                 (and batch-seen (hash-get batch-seen stored)))
-                       (when batch-seen (hash-put! batch-seen stored #t))
-                       (set! new-rows (cons stored new-rows))))
-                   expanded)
-                  (set! new-rows (reverse new-rows))
-                  (let (added-count (length new-rows))
-                    (when (> (+ source-materialized-count derived-count
-                                added-count) output-limit)
-                      (error "ASCENT session output fact budget exceeded"))
-                    (set! source-count (+ source-count 1))
-                    (for-each
-                     (lambda (stored)
-                       (hash-put! (vector-ref seen index) stored #t)
-                       (set! source-materialized-count
-                         (+ source-materialized-count 1))
-                       (vector-set! all index
-                         (cons stored (vector-ref all index)))
-                       (vector-set! delta index
-                         (cons stored (vector-ref delta index))))
-                     new-rows)
-                    (when (pair? new-rows)
-                      (set! dirty? #t)
-                      (set! materialized-dirty? #t)
-                      (advance-all-indexes! index new-rows)
-                      (vector-set! all-size index
-                        (+ (vector-ref all-size index) added-count))
-                      (vector-set! delta-size index
-                        (+ (vector-ref delta-size index) added-count))
-                      (vector-set! all-version index
-                        (+ 1 (vector-ref all-version index)))
-                      (vector-set! delta-version index
-                        (+ 1 (vector-ref delta-version index))))))))))
-                (unless (or (vector-ref source-overrides index)
-                            built-in-set?)
-                  (vector-set! source-additions index
-                    (cons row (vector-ref source-additions index))))))
-            (def (append-single-set-source! name row)
-              (if recompute-from-source?
-                (append-source! name row)
-                (begin
-                  (when first-run?
-                    (error "ASCENT session must run before source updates"))
-                  (unless (eq? name (vector-ref names 0))
-                    (error "unknown ASCENT relation" name))
-                  (unless (and (list? row)
-                               (= (length row) (vector-ref arity 0)))
-                    (error "invalid ASCENT session source row" name row))
-                  (let (check (vector-ref field-checkers 0))
-                    (when check (check row)))
-                  (when (>= source-count input-limit)
-                    (error "ASCENT session input fact budget exceeded"))
-                  (append-set-source! 0 row))))
-            (def (replace-source! name rows)
-              (when first-run?
-                (error "ASCENT session must run before source updates"))
-              (let* ((index (position-of name))
-                     (width (vector-ref arity index)))
-                (unless (list? rows)
-                  (error "invalid ASCENT replacement source rows" name rows))
-                (for-each
-                 (lambda (row)
-                   (unless (and (list? row) (= (length row) width))
-                     (error "invalid ASCENT replacement source row" name row))
-                   (let (check (vector-ref field-checkers index))
-                     (when check (check row))))
-                 rows)
-                (let (next-count
-                      (+ (- source-count (length (source-rows-at index)))
-                         (length rows)))
-                  (when (> next-count input-limit)
-                    (error "ASCENT session input fact budget exceeded"))
-                  (let* ((candidate (source-program-with index rows))
-                         (result ((gerbil-ascent-make-engine
-                                   candidate #f analysis schema
-                                   measure-rule-times?))))
-                    (set! source-count next-count)
-                    (vector-set! source-overrides index rows)
-                    (vector-set! source-additions index [])
-                    (set! recompute-from-source? #t)
-                    (set! dirty? #f)
-                    (set! last-result result)))))
-            (def (run-timeout! duration-nanoseconds)
+        (def (run-timeout! duration-nanoseconds)
 
-              (unless (and (exact-integer? duration-nanoseconds)
-                           (>= duration-nanoseconds 0))
-                (error "invalid ASCENT timeout in nanoseconds"
-                       duration-nanoseconds))
-              (if recompute-from-source?
-                last-result
-                (run-retained!
-                 (+ (current-jiffy)
-                    (quotient (* duration-nanoseconds (jiffies-per-second))
-                              1000000000)))))
+          (unless (and (exact-integer? duration-nanoseconds)
+                       (>= duration-nanoseconds 0))
+            (error "invalid ASCENT timeout in nanoseconds"
+                   duration-nanoseconds))
+          (if recompute-from-source?
+            last-result
+            (run-retained!
+             (+ (current-jiffy)
+                (quotient (* duration-nanoseconds (jiffies-per-second))
+                          1000000000)))))
+        (if session?
           (validate GerbilAscentSessionContract
                     (.o (:: @ Session.)
                         (.append-source!
@@ -978,7 +973,7 @@
                         (.schema schema)
                         (.recomputed? (lambda () recompute-from-source?))
                         (.source-additions source-additions)
-                        (.source-overrides source-overrides))))
+                        (.source-overrides source-overrides)))
           run!)))))
 
 ;; : (-> Program EvaluationResult)

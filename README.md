@@ -249,3 +249,13 @@ nonempty native Cases, exact module completion, harness completion, and final
 
 Measured full-suite comparisons and the admission rationale are recorded in
 [t/performance/suite-execution/README.org](t/performance/suite-execution/README.org).
+
+## Positive rule execution
+
+The evaluator compiles supported complete positive rules into cached numeric
+slot plans. Each traversal owns its variable frame and uses the existing index
+and output admission boundaries. Rules with callbacks retain the general
+interpreter. One-shot engines allocate Session update closures only when a
+Session is requested. Qualification and matched complete-solve measurements,
+including performance limits and failed original SS gates, are recorded in
+[t/performance/positive-plan/README.org](t/performance/positive-plan/README.org).

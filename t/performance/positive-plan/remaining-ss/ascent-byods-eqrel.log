@@ -1,0 +1,16 @@
+[ascent-ss] START ascent-byods-eqrel (1000 samples)
+[ascent-test] START t/performance/ascent-scenario-performance-test.ss
+HARNESS ("t/performance/ascent-scenario-performance-test.ss")
+MODULE t/performance/ascent-scenario-performance-test.ss
+SUITE ASCENT SS scenario
+CASE bounded scenario
+[gerbil-ascent-benchmark] ascent-byods-eqrel p95=474us semanticEquivalent=#t
+CASE-OK bounded scenario
+SUITE-OK ASCENT SS scenario
+MODULE-OK t/performance/ascent-scenario-performance-test.ss
+HARNESS-OK ("t/performance/ascent-scenario-performance-test.ss")
+OK
+[test-lane] RUNNING exclusive (5s)
+[test-lane] END exclusive exit=0
+[ascent-test] PASS t/performance/ascent-scenario-performance-test.ss (6s)
+[ascent-ss] PASS ascent-byods-eqrel (7s)

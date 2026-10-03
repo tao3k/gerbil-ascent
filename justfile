@@ -553,3 +553,22 @@ set-source-allocation:
 _set-source-allocation:
     timeout 90s gxi {{ gerbil_test_runtime_options }} tools/build-set-source-benchmark.ss
     GERBIL_LOADPATH="$ASCENT_SET_SOURCE_LIB${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" timeout 150s gxi {{ gerbil_test_runtime_options }} t/performance/set-source-allocation.ss
+
+# Whole-solve positive rule plans: ordered semantics, allocation and raw timing.
+positive-plan-benchmark:
+    python3 tools/test_execution.py run -- just _positive-plan-benchmark
+
+_positive-plan-benchmark:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    export ASCENT_POSITIVE_PLAN_LIB="{{ justfile_directory() }}/.gerbil/positive-plan/lib"
+    export ASCENT_POSITIVE_PLAN_RECEIPT="${ASCENT_POSITIVE_PLAN_RECEIPT:-{{ justfile_directory() }}/.gerbil/positive-plan/receipt.sexp}"
+    mkdir -p .gerbil/positive-plan
+    shasum -a 256 program/positive.ss program/evaluate.ss program/analysis.ss t/qualification/ascent-positive-plan-reference-analysis.ss t/qualification/ascent-positive-plan-reference-evaluate.ss t/performance/positive-plan-benchmark.ss tools/build-positive-plan-benchmark.ss > "$ASCENT_POSITIVE_PLAN_RECEIPT.sources"
+    timeout 150s gxi {{ gerbil_test_runtime_options }} tools/build-positive-plan-benchmark.ss
+    log="$(mktemp)"
+    trap 'rm -f "$log"' EXIT
+    GERBIL_LOADPATH="$ASCENT_POSITIVE_PLAN_LIB${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" timeout 180s gxi {{ gerbil_test_runtime_options }} t/performance/positive-plan-benchmark.ss 2>&1 | tee "$log"
+    test "$(grep -c '^RESULT ' "$log")" -eq 7
+    if grep -E 'ERROR|Heap overflow|Stack overflow' "$log" >/dev/null; then exit 1; fi
+    grep -x 'OK' "$log" >/dev/null

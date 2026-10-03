@@ -1,0 +1,43 @@
+python3 tools/test_execution.py run -- just _check-policy
+[test-lane] WAIT exclusive (5s)
+[test-lane] WAIT exclusive (10s)
+[test-lane] WAIT exclusive (15s)
+[test-lane] WAIT exclusive (20s)
+[test-lane] START exclusive just
+ASP_GERBIL_SCHEME_POLICY=1 GERBIL_BUILD_CORES="${GERBIL_BUILD_CORES:-$(getconf NPROCESSORS_ONLN)}" gerbil build
+[asp-gerbil-scheme-policy] START selected modules=39
+[test-lane] RUNNING exclusive (5s)
+[asp-gerbil-scheme-policy] warning GERBIL-SCHEME-AGENT-POLICY-013 program/positive.ss: Scheme source owner has 11 definitions but only 9 adjacent typed-combinator-style algebraic contracts; 1 public/policy-sensitive helpers need full typed doc blocks with | doc m%, # Examples, and result comments; typed-combinator-style has three criteria: adjacent Scheme-native typed block with both polymorphic generic signatures such as ;; : (forall (k v) (-> [(Pair k v)] [(Pair k v)] [(Pair k v)])) and readable/domain signatures such as ;; : (-> (Maybe Type) (Maybe Type) Boolean), compact expression-level composition, and optimization-boundary comments for specialized branches
+[asp-gerbil-scheme-policy] COMPLETE findings=1 errors=0
+[test-lane] RUNNING exclusive (10s)
+... compile program/positive
+... execute compile job (compile-file /private/tmp/ascent-test-scheduling-gerbil/lib/gerbil-ascent/program/positive~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-test-scheduling-gerbil/lib/gerbil-ascent/program/positive.scm)
+... compile program/evaluate
+... execute compile job (compile-file /private/tmp/ascent-test-scheduling-gerbil/lib/gerbil-ascent/program/evaluate~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-test-scheduling-gerbil/lib/gerbil-ascent/program/evaluate.scm)
+... compile program/session
+... execute compile job (compile-file /private/tmp/ascent-test-scheduling-gerbil/lib/gerbil-ascent/program/session~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-test-scheduling-gerbil/lib/gerbil-ascent/program/session.scm)
+... compile program/scheme-admission
+... execute compile job (compile-file /private/tmp/ascent-test-scheduling-gerbil/lib/gerbil-ascent/program/scheme-admission~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-test-scheduling-gerbil/lib/gerbil-ascent/program/scheme-admission.scm)
+... execute compile job (compile-file /private/tmp/ascent-test-scheduling-gerbil/lib/gerbil-ascent/program/scheme-admission~1.scm)
+... compile program/scheme-language
+... compile program/operator-session
+... execute compile job (compile-file /private/tmp/ascent-test-scheduling-gerbil/lib/gerbil-ascent/program/scheme-language.scm)
+... execute compile job (compile-file /private/tmp/ascent-test-scheduling-gerbil/lib/gerbil-ascent/program/operator-session~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-test-scheduling-gerbil/lib/gerbil-ascent/program/operator-session.scm)
+... execute compile job (compile-file /private/tmp/ascent-test-scheduling-gerbil/lib/gerbil-ascent/program/operator-session~1.scm)
+... execute compile job (compile-file /private/tmp/ascent-test-scheduling-gerbil/lib/gerbil-ascent/program/scheme-language~1.scm)
+... compile candidate/reasoning
+... compile program/interface
+[test-lane] RUNNING exclusive (15s)
+... execute compile job (compile-file /private/tmp/ascent-test-scheduling-gerbil/lib/gerbil-ascent/program/interface.scm)
+... execute compile job (compile-file /private/tmp/ascent-test-scheduling-gerbil/lib/gerbil-ascent/candidate/reasoning~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-test-scheduling-gerbil/lib/gerbil-ascent/candidate/reasoning.scm)
+... execute compile job (compile-file /private/tmp/ascent-test-scheduling-gerbil/lib/gerbil-ascent/candidate/reasoning~1.scm)
+[test-lane] RUNNING exclusive (20s)
+... build in current directory
+*** WARNING module std/net/request is DEPRECATED and will be removed in the future
+[test-lane] END exclusive exit=0

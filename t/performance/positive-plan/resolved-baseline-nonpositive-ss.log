@@ -1,0 +1,23 @@
+[test-lane] START exclusive timeout
+HARNESS ("t/performance/ascent-scenario-performance-test.ss")
+MODULE t/performance/ascent-scenario-performance-test.ss
+ERROR MODULE t/performance/ascent-scenario-performance-test.ss
+
+*** ERROR IN "t/performance/ascent-scenario-performance-test.ss"@7.18-7.64
+--- Syntax Error: cannot find library module
+--- Context: 
+ at expand
+ at gerbil-ascent/t/performance/ascent-scenario-performance-test
+... form:   :gerbil-ascent/t/performance/ascent-ss-profile
+HARNESS-OK ("t/performance/ascent-scenario-performance-test.ss")
+ERROR HARNESS (t/performance/ascent-scenario-performance-test.ss)
+at HARNESS ("t/performance/ascent-scenario-performance-test.ss")
+at MODULE t/performance/ascent-scenario-performance-test.ss
+
+*** ERROR IN "t/performance/ascent-scenario-performance-test.ss"@7.18-7.64
+--- Syntax Error: cannot find library module
+--- Context: 
+ at expand
+ at gerbil-ascent/t/performance/ascent-scenario-performance-test
+... form:   :gerbil-ascent/t/performance/ascent-ss-profile
+[test-lane] END exclusive exit=0

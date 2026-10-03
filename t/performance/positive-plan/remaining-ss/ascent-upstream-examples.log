@@ -1,0 +1,17 @@
+[ascent-ss] START ascent-upstream-examples (1000 samples)
+[ascent-test] START t/performance/ascent-scenario-performance-test.ss
+HARNESS ("t/performance/ascent-scenario-performance-test.ss")
+MODULE t/performance/ascent-scenario-performance-test.ss
+SUITE ASCENT SS scenario
+CASE bounded scenario
+[test-lane] RUNNING exclusive (5s)
+[gerbil-ascent-benchmark] ascent-fibonacci p95=883us semanticEquivalent=#t
+[gerbil-ascent-benchmark] ascent-context-flow p95=733us semanticEquivalent=#t
+CASE-OK bounded scenario
+SUITE-OK ASCENT SS scenario
+MODULE-OK t/performance/ascent-scenario-performance-test.ss
+HARNESS-OK ("t/performance/ascent-scenario-performance-test.ss")
+OK
+[test-lane] END exclusive exit=0
+[ascent-test] PASS t/performance/ascent-scenario-performance-test.ss (10s)
+[ascent-ss] PASS ascent-upstream-examples (10s)

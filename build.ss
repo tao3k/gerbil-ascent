@@ -20,6 +20,7 @@
     "program/aggregators"
     "program/syntax"
     "program/planning"
+    "program/positive"
     "program/scheme-checked"
     "program/scheme-admission"
     "program/scheme-language"

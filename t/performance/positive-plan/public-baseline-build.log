@@ -1,0 +1,6 @@
+[test-lane] START exclusive timeout
+... compile program/evaluate
+[test-lane] RUNNING exclusive (5s)
+... execute compile job (compile-file .gerbil/positive-plan-baseline/lib/gerbil-ascent/program/evaluate~0.scm)
+... execute compile job (compile-file .gerbil/positive-plan-baseline/lib/gerbil-ascent/program/evaluate.scm)
+[test-lane] END exclusive exit=0

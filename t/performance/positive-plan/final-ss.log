@@ -1,0 +1,10 @@
+[test-lane] START exclusive python3
+[remaining-ss] START ascent-table-expression-membership
+[test-lane] RUNNING exclusive (5s)
+[remaining-ss] RUNNING ascent-table-expression-membership
+{'name': 'ascent-table-expression-membership', 'exit': 0, 'seconds': 8.394830208002531}
+[remaining-ss] START ascent-shortest-candidates
+[test-lane] RUNNING exclusive (10s)
+[remaining-ss] RUNNING ascent-shortest-candidates
+{'name': 'ascent-shortest-candidates', 'exit': 0, 'seconds': 5.13358458300354}
+[test-lane] END exclusive exit=0

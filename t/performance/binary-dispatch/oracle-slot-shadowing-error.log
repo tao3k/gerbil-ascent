@@ -1,0 +1,8 @@
+[test-lane] START exclusive timeout
+[test-lane] RUNNING exclusive (5s)
+NATIVE-MODULE-OK /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/binary-dispatch/lib/gerbil-ascent/table/expression.ssi
+NATIVE-MODULE-OK /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/binary-dispatch/lib/gerbil-ascent/core/binary-program.ssi
+NATIVE-MODULE-OK /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/binary-dispatch/lib/gerbil-ascent/t/performance/binary-dispatch/reference-expression.ssi
+NATIVE-MODULE-OK /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/binary-dispatch/lib/gerbil-ascent/t/performance/binary-dispatch/reference-program.ssi
+*** ERROR IN ##structure-instance-of? -- Stack overflow
+[test-lane] END exclusive exit=70

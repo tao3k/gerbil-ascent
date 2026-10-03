@@ -1,0 +1,443 @@
+{
+  "warmups": 20,
+  "samples": 1000,
+  "runs": [
+    "first",
+    "repeat"
+  ],
+  "allocation_claim": false,
+  "results": [
+    {
+      "name": "empty-20",
+      "control": false,
+      "timing_qualified": false,
+      "control_within_ten_percent": null,
+      "runs": [
+        {
+          "repetitions": 1,
+          "old-p50-ns": 17000,
+          "new-p50-ns": 15000,
+          "old-p95-ns": 21000,
+          "new-p95-ns": 18000,
+          "time-paired-wins": 908
+        },
+        {
+          "repetitions": 1,
+          "old-p50-ns": 17000,
+          "new-p50-ns": 15000,
+          "old-p95-ns": 21000,
+          "new-p95-ns": 19000,
+          "time-paired-wins": 884
+        }
+      ]
+    },
+    {
+      "name": "empty-128",
+      "control": false,
+      "timing_qualified": true,
+      "control_within_ten_percent": null,
+      "runs": [
+        {
+          "repetitions": 1,
+          "old-p50-ns": 25000,
+          "new-p50-ns": 15000,
+          "old-p95-ns": 33000,
+          "new-p95-ns": 18000,
+          "time-paired-wins": 992
+        },
+        {
+          "repetitions": 1,
+          "old-p50-ns": 26000,
+          "new-p50-ns": 15000,
+          "old-p95-ns": 33000,
+          "new-p95-ns": 18000,
+          "time-paired-wins": 986
+        }
+      ]
+    },
+    {
+      "name": "empty-512",
+      "control": false,
+      "timing_qualified": true,
+      "control_within_ten_percent": null,
+      "runs": [
+        {
+          "repetitions": 1,
+          "old-p50-ns": 38000,
+          "new-p50-ns": 16000,
+          "old-p95-ns": 147000,
+          "new-p95-ns": 22000,
+          "time-paired-wins": 996
+        },
+        {
+          "repetitions": 1,
+          "old-p50-ns": 38000,
+          "new-p50-ns": 16000,
+          "old-p95-ns": 147000,
+          "new-p95-ns": 21000,
+          "time-paired-wins": 993
+        }
+      ]
+    },
+    {
+      "name": "sparse-512",
+      "control": false,
+      "timing_qualified": true,
+      "control_within_ten_percent": null,
+      "runs": [
+        {
+          "repetitions": 1,
+          "old-p50-ns": 41000,
+          "new-p50-ns": 18000,
+          "old-p95-ns": 51000,
+          "new-p95-ns": 21000,
+          "time-paired-wins": 1000
+        },
+        {
+          "repetitions": 1,
+          "old-p50-ns": 41000,
+          "new-p50-ns": 18000,
+          "old-p95-ns": 57000,
+          "new-p95-ns": 27000,
+          "time-paired-wins": 991
+        }
+      ]
+    },
+    {
+      "name": "chain-20",
+      "control": false,
+      "timing_qualified": true,
+      "control_within_ten_percent": null,
+      "runs": [
+        {
+          "repetitions": 1,
+          "old-p50-ns": 51000,
+          "new-p50-ns": 39000,
+          "old-p95-ns": 139000,
+          "new-p95-ns": 109000,
+          "time-paired-wins": 985
+        },
+        {
+          "repetitions": 1,
+          "old-p50-ns": 50000,
+          "new-p50-ns": 39000,
+          "old-p95-ns": 57000,
+          "new-p95-ns": 45000,
+          "time-paired-wins": 986
+        }
+      ]
+    },
+    {
+      "name": "chain-128",
+      "control": false,
+      "timing_qualified": true,
+      "control_within_ten_percent": null,
+      "runs": [
+        {
+          "repetitions": 1,
+          "old-p50-ns": 444000,
+          "new-p50-ns": 379000,
+          "old-p95-ns": 507000,
+          "new-p95-ns": 454000,
+          "time-paired-wins": 964
+        },
+        {
+          "repetitions": 1,
+          "old-p50-ns": 446000,
+          "new-p50-ns": 380000,
+          "old-p95-ns": 550000,
+          "new-p95-ns": 467000,
+          "time-paired-wins": 964
+        }
+      ]
+    },
+    {
+      "name": "degree-16-32",
+      "control": false,
+      "timing_qualified": true,
+      "control_within_ten_percent": null,
+      "runs": [
+        {
+          "repetitions": 1,
+          "old-p50-ns": 665000,
+          "new-p50-ns": 499000,
+          "old-p95-ns": 1261000,
+          "new-p95-ns": 632000,
+          "time-paired-wins": 969
+        },
+        {
+          "repetitions": 1,
+          "old-p50-ns": 667000,
+          "new-p50-ns": 501000,
+          "old-p95-ns": 3363000,
+          "new-p95-ns": 2197000,
+          "time-paired-wins": 934
+        }
+      ]
+    },
+    {
+      "name": "degree-24-32",
+      "control": false,
+      "timing_qualified": true,
+      "control_within_ten_percent": null,
+      "runs": [
+        {
+          "repetitions": 1,
+          "old-p50-ns": 942000,
+          "new-p50-ns": 481000,
+          "old-p95-ns": 5406000,
+          "new-p95-ns": 1130000,
+          "time-paired-wins": 968
+        },
+        {
+          "repetitions": 1,
+          "old-p50-ns": 943000,
+          "new-p50-ns": 482000,
+          "old-p95-ns": 2124000,
+          "new-p95-ns": 634000,
+          "time-paired-wins": 987
+        }
+      ]
+    },
+    {
+      "name": "degree-31-32",
+      "control": false,
+      "timing_qualified": true,
+      "control_within_ten_percent": null,
+      "runs": [
+        {
+          "repetitions": 1,
+          "old-p50-ns": 1174000,
+          "new-p50-ns": 592000,
+          "old-p95-ns": 5168000,
+          "new-p95-ns": 1630000,
+          "time-paired-wins": 966
+        },
+        {
+          "repetitions": 1,
+          "old-p50-ns": 1171000,
+          "new-p50-ns": 591000,
+          "old-p95-ns": 3139000,
+          "new-p95-ns": 1366000,
+          "time-paired-wins": 976
+        }
+      ]
+    },
+    {
+      "name": "degree-48-64",
+      "control": false,
+      "timing_qualified": true,
+      "control_within_ten_percent": null,
+      "runs": [
+        {
+          "repetitions": 1,
+          "old-p50-ns": 4535000,
+          "new-p50-ns": 1972000,
+          "old-p95-ns": 42167000,
+          "new-p95-ns": 21072000,
+          "time-paired-wins": 938
+        },
+        {
+          "repetitions": 1,
+          "old-p50-ns": 4521000,
+          "new-p50-ns": 1961000,
+          "old-p95-ns": 44841000,
+          "new-p95-ns": 17261000,
+          "time-paired-wins": 939
+        }
+      ]
+    },
+    {
+      "name": "degree-63-64",
+      "control": false,
+      "timing_qualified": true,
+      "control_within_ten_percent": null,
+      "runs": [
+        {
+          "repetitions": 1,
+          "old-p50-ns": 5821000,
+          "new-p50-ns": 2476000,
+          "old-p95-ns": 60367000,
+          "new-p95-ns": 24894000,
+          "time-paired-wins": 935
+        },
+        {
+          "repetitions": 1,
+          "old-p50-ns": 5828000,
+          "new-p50-ns": 2482000,
+          "old-p95-ns": 43893000,
+          "new-p95-ns": 19103000,
+          "time-paired-wins": 952
+        }
+      ]
+    },
+    {
+      "name": "materialized-31-32",
+      "control": false,
+      "timing_qualified": false,
+      "control_within_ten_percent": null,
+      "runs": [
+        {
+          "repetitions": 1,
+          "old-p50-ns": 16953000,
+          "new-p50-ns": 8840000,
+          "old-p95-ns": 129584000,
+          "new-p95-ns": 66322000,
+          "time-paired-wins": 896
+        },
+        {
+          "repetitions": 1,
+          "old-p50-ns": 17237000,
+          "new-p50-ns": 8993000,
+          "old-p95-ns": 148378000,
+          "new-p95-ns": 65276000,
+          "time-paired-wins": 912
+        }
+      ]
+    },
+    {
+      "name": "repeated-31-32",
+      "control": false,
+      "timing_qualified": true,
+      "control_within_ten_percent": null,
+      "runs": [
+        {
+          "repetitions": 1,
+          "old-p50-ns": 52688000,
+          "new-p50-ns": 10010000,
+          "old-p95-ns": 314179000,
+          "new-p95-ns": 71415000,
+          "time-paired-wins": 989
+        },
+        {
+          "repetitions": 1,
+          "old-p50-ns": 52520000,
+          "new-p50-ns": 10138000,
+          "old-p95-ns": 322764000,
+          "new-p95-ns": 63286000,
+          "time-paired-wins": 980
+        }
+      ]
+    },
+    {
+      "name": "general-copy-32",
+      "control": true,
+      "timing_qualified": false,
+      "control_within_ten_percent": true,
+      "runs": [
+        {
+          "repetitions": 1,
+          "old-p50-ns": 223000,
+          "new-p50-ns": 226000,
+          "old-p95-ns": 268000,
+          "new-p95-ns": 283000,
+          "time-paired-wins": 181
+        },
+        {
+          "repetitions": 1,
+          "old-p50-ns": 221000,
+          "new-p50-ns": 224000,
+          "old-p95-ns": 248000,
+          "new-p95-ns": 246000,
+          "time-paired-wins": 175
+        }
+      ]
+    },
+    {
+      "name": "general-join-32",
+      "control": true,
+      "timing_qualified": false,
+      "control_within_ten_percent": true,
+      "runs": [
+        {
+          "repetitions": 1,
+          "old-p50-ns": 49000,
+          "new-p50-ns": 50000,
+          "old-p95-ns": 67000,
+          "new-p95-ns": 83000,
+          "time-paired-wins": 257
+        },
+        {
+          "repetitions": 1,
+          "old-p50-ns": 49000,
+          "new-p50-ns": 49000,
+          "old-p95-ns": 52000,
+          "new-p95-ns": 52000,
+          "time-paired-wins": 228
+        }
+      ]
+    },
+    {
+      "name": "general-guard-32",
+      "control": true,
+      "timing_qualified": false,
+      "control_within_ten_percent": true,
+      "runs": [
+        {
+          "repetitions": 1,
+          "old-p50-ns": 249000,
+          "new-p50-ns": 251000,
+          "old-p95-ns": 290000,
+          "new-p95-ns": 299000,
+          "time-paired-wins": 265
+        },
+        {
+          "repetitions": 1,
+          "old-p50-ns": 248000,
+          "new-p50-ns": 250000,
+          "old-p95-ns": 592000,
+          "new-p95-ns": 599000,
+          "time-paired-wins": 204
+        }
+      ]
+    },
+    {
+      "name": "seeded-32",
+      "control": true,
+      "timing_qualified": false,
+      "control_within_ten_percent": true,
+      "runs": [
+        {
+          "repetitions": 1,
+          "old-p50-ns": 166000,
+          "new-p50-ns": 169000,
+          "old-p95-ns": 417000,
+          "new-p95-ns": 221000,
+          "time-paired-wins": 144
+        },
+        {
+          "repetitions": 1,
+          "old-p50-ns": 165000,
+          "new-p50-ns": 168000,
+          "old-p95-ns": 186000,
+          "new-p95-ns": 195000,
+          "time-paired-wins": 93
+        }
+      ]
+    },
+    {
+      "name": "sparse-513",
+      "control": true,
+      "timing_qualified": false,
+      "control_within_ten_percent": true,
+      "runs": [
+        {
+          "repetitions": 1,
+          "old-p50-ns": 13000,
+          "new-p50-ns": 13000,
+          "old-p95-ns": 16000,
+          "new-p95-ns": 16000,
+          "time-paired-wins": 320
+        },
+        {
+          "repetitions": 1,
+          "old-p50-ns": 13000,
+          "new-p50-ns": 13000,
+          "old-p95-ns": 14000,
+          "new-p95-ns": 14000,
+          "time-paired-wins": 203
+        }
+      ]
+    }
+  ]
+}

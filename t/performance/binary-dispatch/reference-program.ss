@@ -12,29 +12,29 @@
         (only-in :clan/poo/trie UIntTrieSet)
         (only-in :clan/poo/support/base until)
         (only-in :std/list/list filter)
-        (only-in :gerbil-ascent/table/expression
-                 gerbil-ascent-relation-closure-bounded))
+        (only-in :gerbil-ascent/t/performance/binary-dispatch/reference-expression
+                 binary-dispatch-reference-closure-bounded))
 
-(export gerbil-ascent-binary-relation
-        gerbil-ascent-binary-copy-rule
-        gerbil-ascent-binary-filter-rule
-        gerbil-ascent-binary-join-rule
-        gerbil-ascent-evaluate-binary-program)
+(export binary-dispatch-reference-binary-relation
+        binary-dispatch-reference-binary-copy-rule
+        binary-dispatch-reference-binary-filter-rule
+        binary-dispatch-reference-binary-join-rule
+        binary-dispatch-reference-evaluate-binary-program)
 
-(def (gerbil-ascent-binary-relation relation-name source-set)
+(def (binary-dispatch-reference-binary-relation relation-name source-set)
   (.o (name relation-name) (pairs source-set)))
 
-(def (gerbil-ascent-binary-copy-rule head-name body-name)
+(def (binary-dispatch-reference-binary-copy-rule head-name body-name)
   (.o (kind 'copy) (head head-name) (left body-name)))
 
 ;;; The guard is a pure Scheme predicate over decoded (from, to) endpoints.
-(def (gerbil-ascent-binary-filter-rule head-name body-name guard)
+(def (binary-dispatch-reference-binary-filter-rule head-name body-name guard)
   (unless (procedure? guard)
     (error "ASCENT binary filter requires a predicate"))
   (.o (kind 'filter) (head head-name) (left body-name)
       (predicate guard)))
 
-(def (gerbil-ascent-binary-join-rule head-name left-name right-name)
+(def (binary-dispatch-reference-binary-join-rule head-name left-name right-name)
   (.o (kind 'join) (head head-name)
       (left left-name) (right right-name)))
 
@@ -62,7 +62,7 @@
 ;;; Dense arrays handle bounded small domains; sparse hash indexes avoid
 ;;; allocating a quadratic domain when radix is large. Both paths publish
 ;;; the same canonical relation rows and POO result interface.
-;; gerbil-ascent-evaluate-binary-program
+;; binary-dispatch-reference-evaluate-binary-program
 ;;   : (-> BinaryProgram BinaryResult)
 ;;   | doc m%
 ;;       Evaluate finite copy, filter, and join rules to their fixed point.
@@ -70,11 +70,11 @@
 ;;       # Examples
 ;;
 ;;       ```scheme
-;;       (gerbil-ascent-evaluate-binary-program program)
+;;       (binary-dispatch-reference-evaluate-binary-program program)
 ;;       ;; => a result exposing relation names and pair snapshots
 ;;       ```
 ;;     %
-(def (gerbil-ascent-evaluate-binary-program program)
+(def (binary-dispatch-reference-evaluate-binary-program program)
   (let* ((width (.ref program 'radix))
          (sources (.ref program 'relations))
          (rules (.ref program 'rules))
@@ -146,7 +146,11 @@
        (lambda (relation)
          (let* ((name (.ref relation 'name))
                 (pairs (.ref relation 'pairs))
-                (position position-counter))
+                (position position-counter)
+                (all-links (and (hash-get indexed-rights name)
+                                (new-index)))
+                (present (and (hash-get derived-heads name)
+                              (new-seen))))
            (unless (and (symbol? name) (not (hash-get positions name)))
              (error "invalid or duplicate ASCENT relation" name))
            (.call UIntTrieSet .foldl
@@ -161,6 +165,8 @@
                     (when (> source-count output-limit)
                       (error "ASCENT output pair budget exceeded"
                              source-count output-limit))
+                    (when present (mark-seen! present pair))
+                    (when all-links (index-add! all-links pair))
                     (vector-set! all position
                                  (cons pair (vector-ref all position)))
                     (void))
@@ -168,7 +174,13 @@
            (vector-set! names position name)
            (hash-put! positions name (+ position 1))
            (set! position-counter (+ position-counter 1))
-           (vector-set! delta position (vector-ref all position))))
+           (vector-set! seen position present)
+           (when present
+             (vector-set! pending-epochs position
+                          (new-pending-epochs)))
+           (vector-set! all-index position all-links)
+           (vector-set! delta position (vector-ref all position))
+           (vector-set! delta-index position all-links)))
        sources)
       (def (position-of name)
         (let (slot (hash-get positions name))
@@ -188,53 +200,15 @@
              (position-of (.ref rule 'right)))))
        rules)
       (def (publish-result results path-name)
-        ;; Private records pair a row copy with its persistent set. Validate the
-        ;; copy on every demand: public lists are mutable, even though native
-        ;; UIntTrieSet snapshots can safely be shared.
-        (let (snapshots (make-vector count #f))
-          (.o (relation-names (vector->list names))
-              (evaluation-path path-name)
-              (pair-list-of
-               (lambda (name)
-                 (vector-ref results (position-of name))))
-              (pairs-of
-               (lambda (name)
-                 (let* ((i (position-of name)) (rows (vector-ref results i))
-                        (cached (vector-ref snapshots i)))
-                   (unless (or cached (hash-get derived-heads name))
-                     ;; Unchanged inputs already own the requested native set.
-                     ;; Compare with private captured rows, including mutations
-                     ;; made before the first set demand.
-                     (set! cached (vector (reverse (vector-ref all i))
-                                          (.ref (vector-ref source-vector i) 'pairs)))
-                     (vector-set! snapshots i cached))
-                   (if (and cached (equal? rows (vector-ref cached 0)))
-                     (vector-ref cached 1)
-                     (let (value (.call UIntTrieSet .<-list rows))
-                       (vector-set! snapshots i (vector (append rows []) value))
-                       value))))))))
-      ;; Validation captures source rows once. Only the general evaluator needs
-      ;; membership, pending epochs, and join indexes; build those after dispatch.
-      (def (initialize-general-state!)
-        (let initialize ((i 0))
-          (when (< i count)
-            (let* ((name (vector-ref names i))
-                   (rows (vector-ref all i))
-                   (links (and (hash-get indexed-rights name) (new-index)))
-                   (present (and (hash-get derived-heads name) (new-seen))))
-              ;; Replay indexed sources in the original fold order. Neighbor
-              ;; order can affect filter callback traces in subsequent rounds.
-              (when (or links present)
-                (for-each
-                 (lambda (pair)
-                   (when present (mark-seen! present pair))
-                   (when links (index-add! links pair)))
-                 (if links (reverse rows) rows)))
-              (vector-set! seen i present)
-              (when present (vector-set! pending-epochs i (new-pending-epochs)))
-              (vector-set! all-index i links)
-              (vector-set! delta-index i links))
-            (initialize (+ i 1)))))
+        (.o (relation-names (vector->list names))
+            (evaluation-path path-name)
+            (pair-list-of
+             (lambda (name)
+               (vector-ref results (position-of name))))
+            (pairs-of
+             (lambda (name)
+               (.call UIntTrieSet .<-list
+                      (vector-ref results (position-of name)))))))
       (let (pattern (and dense? (transitive-pattern rules all position-of)))
         (if pattern
           (let* ((source-position (.ref pattern 'source-index))
@@ -243,18 +217,18 @@
                   (.ref (vector-ref source-vector source-position) 'pairs))
                  (allowance (min limit (- output-limit source-count)))
                  (closure-pairs
-                  (.ref (gerbil-ascent-relation-closure-bounded
+                  (.ref (binary-dispatch-reference-closure-bounded
                          source-set width allowance) 'pairs))
                  (results (make-vector count #f)))
             (let publish-sources ((i 0))
               (when (< i count)
                 (vector-set! results i
-                             (reverse (vector-ref all i)))
+                             (.call UIntTrieSet .list<-
+                                    (.ref (vector-ref source-vector i) 'pairs)))
                 (publish-sources (+ i 1))))
             (vector-set! results head-position closure-pairs)
             (publish-result results 'transitive-closure))
           (begin
-            (initialize-general-state!)
             (let ((active? #t) (epoch 0))
               (until (not active?)
                 (let ((pending (make-vector count []))
@@ -343,6 +317,6 @@
               (let publish ((i 0))
                 (when (< i count)
                   (vector-set! results i
-                               (list-sort < (append (vector-ref all i) [])))
+                               (list-sort < (vector-ref all i)))
                   (publish (+ i 1))))
               (publish-result results 'semi-naive))))))))

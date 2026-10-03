@@ -11,8 +11,8 @@
         (only-in :clan/poo/trie UIntTrieSet)
         (only-in :clan/poo/support/base until))
 
-(export gerbil-ascent-table-expression-prototype
-        gerbil-ascent-relation-closure-bounded)
+(export binary-dispatch-reference-expression-prototype
+        binary-dispatch-reference-closure-bounded)
 
 ;; A provenance marker for the private prepared view, not a global result cache.
 (def native-path-view-tag (list 'native-path-view))
@@ -246,13 +246,9 @@
                     (hash-get sparse pair))))))))
 
 ;; : (-> UIntTrieSet Radix Nat PairProjection)
-(def (gerbil-ascent-relation-closure-bounded source radix max-pairs)
-  (let* ((view (relation-view source radix))
-         (layout (and (<= 32 radix 128)
-                      (build-native-path-layout view (vector-ref view 2) radix))))
-    (if layout
-      (path-projection (vector-ref (compute-native-path-analysis layout max-pairs #f) 0) radix)
-      (relation-closure (vector-ref view 0) (vector-ref view 2) radix max-pairs (vector-ref view 1)))))
+(def (binary-dispatch-reference-closure-bounded source radix max-pairs)
+  (let (view (relation-view source radix))
+    (relation-closure (vector-ref view 0) (vector-ref view 2) radix max-pairs (vector-ref view 1))))
 
 ;;; The selected unit-weight Ascent path lattice: Dual<usize> joins competing
 ;;; paths by minimum distance. The frontier contains only newly discovered or
@@ -463,7 +459,7 @@
 ;;; This signature describes extending source slots with .mix, not a direct
 ;;; Scheme call of the prototype value.
 ;; : (-> RelationSourceSlots RelationExpressionSlots)
-(def gerbil-ascent-table-expression-prototype
+(def binary-dispatch-reference-expression-prototype
   (.o (:: self [] source-pairs radix)
       (indexed-source (relation-view source-pairs radix))
       (right-index (vector-ref (.ref self 'indexed-source) 2))

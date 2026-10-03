@@ -188,31 +188,15 @@
              (position-of (.ref rule 'right)))))
        rules)
       (def (publish-result results path-name)
-        ;; Private records pair a row copy with its persistent set. Validate the
-        ;; copy on every demand: public lists are mutable, even though native
-        ;; UIntTrieSet snapshots can safely be shared.
-        (let (snapshots (make-vector count #f))
-          (.o (relation-names (vector->list names))
-              (evaluation-path path-name)
-              (pair-list-of
-               (lambda (name)
-                 (vector-ref results (position-of name))))
-              (pairs-of
-               (lambda (name)
-                 (let* ((i (position-of name)) (rows (vector-ref results i))
-                        (cached (vector-ref snapshots i)))
-                   (unless (or cached (hash-get derived-heads name))
-                     ;; Unchanged inputs already own the requested native set.
-                     ;; Compare with private captured rows, including mutations
-                     ;; made before the first set demand.
-                     (set! cached (vector (reverse (vector-ref all i))
-                                          (.ref (vector-ref source-vector i) 'pairs)))
-                     (vector-set! snapshots i cached))
-                   (if (and cached (equal? rows (vector-ref cached 0)))
-                     (vector-ref cached 1)
-                     (let (value (.call UIntTrieSet .<-list rows))
-                       (vector-set! snapshots i (vector (append rows []) value))
-                       value))))))))
+        (.o (relation-names (vector->list names))
+            (evaluation-path path-name)
+            (pair-list-of
+             (lambda (name)
+               (vector-ref results (position-of name))))
+            (pairs-of
+             (lambda (name)
+               (.call UIntTrieSet .<-list
+                      (vector-ref results (position-of name)))))))
       ;; Validation captures source rows once. Only the general evaluator needs
       ;; membership, pending epochs, and join indexes; build those after dispatch.
       (def (initialize-general-state!)
@@ -343,6 +327,6 @@
               (let publish ((i 0))
                 (when (< i count)
                   (vector-set! results i
-                               (list-sort < (append (vector-ref all i) [])))
+                               (list-sort < (vector-ref all i)))
                   (publish (+ i 1))))
               (publish-result results 'semi-naive))))))))

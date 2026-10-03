@@ -1,0 +1,1 @@
+{"runs":2,"warmups":20,"paired_samples":1000,"timing_qualified":"strictly lower p50 and at least 900 paired wins in both runs","controls":"general-copy-32, general-join-32, general-guard-32, seeded-32, sparse-513","control_regression_limit":"10 percent p50 in each run","allocation_claim":false}

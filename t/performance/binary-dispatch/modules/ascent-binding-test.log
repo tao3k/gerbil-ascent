@@ -1,0 +1,40 @@
+[ascent-test] START t/qualification/ascent-binding-test.ss
+[test-lane] START parallel-semantics t/qualification/ascent-binding-test.ss
+[test-lane] RUNNING parallel-semantics (5s)
+[test-lane] RUNNING parallel-semantics (10s)
+HARNESS ("t/qualification/ascent-binding-test.ss")
+MODULE t/qualification/ascent-binding-test.ss
+SUITE ASCENT checked row binding specialization
+CASE nullary terms retain existing environments
+BINDING-PARITY width=0 snapshots=9
+CASE-OK nullary terms retain existing environments
+CASE all unary terms preserve bindings and rejection
+BINDING-PARITY width=1 snapshots=90
+CASE-OK all unary terms preserve bindings and rejection
+CASE all binary terms preserve binding order and repeats
+BINDING-PARITY width=2 snapshots=900
+CASE-OK all binary terms preserve binding order and repeats
+CASE all ternary terms preserve binding order and repeats
+BINDING-PARITY width=3 snapshots=9000
+CASE-OK all ternary terms preserve binding order and repeats
+CASE all four-column terms preserve binding order and repeats
+BINDING-PARITY width=4 snapshots=90000
+CASE-OK all four-column terms preserve binding order and repeats
+CASE pattern outputs stay bound for later variable comparisons
+CASE-OK pattern outputs stay bound for later variable comparisons
+CASE row-local expression inputs retain evaluation order
+CASE-OK row-local expression inputs retain evaluation order
+CASE external bindings still reject mismatches
+CASE-OK external bindings still reject mismatches
+CASE false values are bindings rather than missing names
+CASE-OK false values are bindings rather than missing names
+CASE failed and malformed patterns preserve outcomes
+CASE-OK failed and malformed patterns preserve outcomes
+CASE admission still rejects duplicate pattern bindings
+CASE-OK admission still rejects duplicate pattern bindings
+SUITE-OK ASCENT checked row binding specialization
+MODULE-OK t/qualification/ascent-binding-test.ss
+HARNESS-OK ("t/qualification/ascent-binding-test.ss")
+OK
+[test-lane] END parallel-semantics exit=0
+[ascent-test] PASS t/qualification/ascent-binding-test.ss (12s)

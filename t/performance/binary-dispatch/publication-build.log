@@ -1,0 +1,6 @@
+[test-lane] START exclusive timeout
+... compile core/binary-program
+[test-lane] RUNNING exclusive (5s)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/binary-dispatch/lib/gerbil-ascent/core/binary-program~0.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/binary-dispatch/lib/gerbil-ascent/core/binary-program.scm)
+[test-lane] END exclusive exit=0

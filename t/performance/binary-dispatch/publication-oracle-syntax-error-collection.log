@@ -1,0 +1,21 @@
+[test-lane] START exclusive python3
+[binary-dispatch] START build
+[test-lane] RUNNING exclusive (5s)
+[binary-dispatch] RUNNING build
+{'name': 'build', 'exit': 0, 'seconds': 7.009626375001972}
+[binary-dispatch] START oracle
+Traceback (most recent call last):
+  File "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/t/performance/binary-dispatch/qualify.py", line 87, in <module>
+    run('oracle', ['timeout', '180s', 'gxi', '-:max-heap=1G,debug=q', str(root / 'oracle.ss')])
+    ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/t/performance/binary-dispatch/qualify.py", line 72, in run
+    assert not status, log[-3000:]
+           ^^^^^^^^^^
+AssertionError: *** ERROR IN ##load -- Datum or EOF expected
+--- continuation backtrace:
+[0] ##primordial-exception-handler-hook                                                                                                                                     
+[1] ##load                                                                                                                                                                  
+[2] ##load                                                                                                                                                                  
+[3] gerbil/main#gxi-main                                                                                                                                                    
+
+[test-lane] END exclusive exit=1

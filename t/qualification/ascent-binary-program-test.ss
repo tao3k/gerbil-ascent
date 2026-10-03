@@ -249,6 +249,32 @@
                           (lambda (from to) (set! calls (cons (list from to) calls)) #t))) 1)
          true)
         (check-equal? calls '((0 1) (0 2) (0 3)))))
+    (test-case "pending duplicates share admission across rules and heads"
+      (let* ((declarations (list (relation 'source '(1 2 3)) (relation 'left '())
+                                 (relation 'right '())))
+             (clauses (list (gerbil-ascent-binary-copy-rule 'left 'source)
+                            (gerbil-ascent-binary-copy-rule 'left 'source)
+                            (gerbil-ascent-binary-copy-rule 'right 'source)
+                            (gerbil-ascent-binary-copy-rule 'right 'left)
+                            (gerbil-ascent-binary-copy-rule 'left 'right)))
+             (result (evaluate declarations clauses 6 3 9)))
+        (check-equal? (pairs result 'left) '(1 2 3))
+        (check-equal? (pairs result 'right) '(1 2 3))
+        (check-exception (evaluate declarations clauses 5 3 9) true)
+        (check-exception (evaluate declarations clauses 6 3 8) true)))
+    (test-case "dense admission crosses word and padded domain boundaries"
+      (for-each
+       (lambda (width)
+         (let* ((rows (list 0 15 16 (- (* width width) 1)))
+                (clauses (list (gerbil-ascent-binary-copy-rule 'out 'source)
+                               (gerbil-ascent-binary-copy-rule 'out 'source)))
+                (result (gerbil-ascent-evaluate-binary-program
+                         (.o (radix width) (relations (list (relation 'source rows) (relation 'out '())))
+                             (rules clauses) (max-input-facts 4)
+                             (max-derived-pairs 4) (max-output-pairs 8)))))
+           (check-equal? (pairs result 'out) rows)
+           (check-equal? (.call UIntTrieSet .list<- ((.ref result 'pairs-of) 'out)) rows)))
+       '(5 32 512 513)))
     (test-case "invalid declarations and pair budget fail"
       (check-exception
        (evaluate (list (relation 'edge '(10)) (relation 'edge '())) '()) true)

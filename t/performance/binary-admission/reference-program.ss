@@ -12,29 +12,29 @@
         (only-in :clan/poo/trie UIntTrieSet)
         (only-in :clan/poo/support/base until)
         (only-in :std/list/list filter)
-        (only-in :gerbil-ascent/table/expression
-                 gerbil-ascent-relation-closure-bounded))
+        (only-in :gerbil-ascent/t/performance/binary-admission/reference-expression
+                 binary-admission-reference-closure-bounded))
 
-(export gerbil-ascent-binary-relation
-        gerbil-ascent-binary-copy-rule
-        gerbil-ascent-binary-filter-rule
-        gerbil-ascent-binary-join-rule
-        gerbil-ascent-evaluate-binary-program)
+(export binary-admission-reference-binary-relation
+        binary-admission-reference-binary-copy-rule
+        binary-admission-reference-binary-filter-rule
+        binary-admission-reference-binary-join-rule
+        binary-admission-reference-evaluate-binary-program)
 
-(def (gerbil-ascent-binary-relation relation-name source-set)
+(def (binary-admission-reference-binary-relation relation-name source-set)
   (.o (name relation-name) (pairs source-set)))
 
-(def (gerbil-ascent-binary-copy-rule head-name body-name)
+(def (binary-admission-reference-binary-copy-rule head-name body-name)
   (.o (kind 'copy) (head head-name) (left body-name)))
 
 ;;; The guard is a pure Scheme predicate over decoded (from, to) endpoints.
-(def (gerbil-ascent-binary-filter-rule head-name body-name guard)
+(def (binary-admission-reference-binary-filter-rule head-name body-name guard)
   (unless (procedure? guard)
     (error "ASCENT binary filter requires a predicate"))
   (.o (kind 'filter) (head head-name) (left body-name)
       (predicate guard)))
 
-(def (gerbil-ascent-binary-join-rule head-name left-name right-name)
+(def (binary-admission-reference-binary-join-rule head-name left-name right-name)
   (.o (kind 'join) (head head-name)
       (left left-name) (right right-name)))
 
@@ -62,7 +62,7 @@
 ;;; Dense arrays handle bounded small domains; sparse hash indexes avoid
 ;;; allocating a quadratic domain when radix is large. Both paths publish
 ;;; the same canonical relation rows and POO result interface.
-;; gerbil-ascent-evaluate-binary-program
+;; binary-admission-reference-evaluate-binary-program
 ;;   : (-> BinaryProgram BinaryResult)
 ;;   | doc m%
 ;;       Evaluate finite copy, filter, and join rules to their fixed point.
@@ -70,11 +70,11 @@
 ;;       # Examples
 ;;
 ;;       ```scheme
-;;       (gerbil-ascent-evaluate-binary-program program)
+;;       (binary-admission-reference-evaluate-binary-program program)
 ;;       ;; => a result exposing relation names and pair snapshots
 ;;       ```
 ;;     %
-(def (gerbil-ascent-evaluate-binary-program program)
+(def (binary-admission-reference-evaluate-binary-program program)
   (let* ((width (.ref program 'radix))
          (sources (.ref program 'relations))
          (rules (.ref program 'rules))
@@ -97,7 +97,8 @@
            (delta (make-vector count []))
            (all-index (make-vector count #f))
            (delta-index (make-vector count #f))
-           (admitted (make-vector count #f))
+           (seen (make-vector count #f))
+           (pending-epochs (make-vector count #f))
            (indexed-rights (make-hash-table))
            (derived-heads (make-hash-table))
            (dense? (<= width 512))
@@ -115,25 +116,26 @@
           (if dense?
             (vector-set! index from (cons to (vector-ref index from)))
             (hash-put! index from (cons to (index-targets index from))))))
-      ;;; Intentional raw data record: one monotone admission ledger per
-      ;;; derived relation covers source, pending and committed pairs. Rules
-      ;;; read all/delta rows, so marking a pending pair cannot expose it early.
-      ;;; Sixteen bounded pair flags share one u16 word in dense domains.
-      (def (new-admitted)
-        (if dense? (make-u16vector (quotient (+ (* width width) 15) 16) 0)
-            (make-hash-table)))
-      (def (admitted? storage pair)
-        (if dense?
-          (let ((word (fxarithmetic-shift-right pair 4))
-                (mask (fxarithmetic-shift-left 1 (fxand pair 15))))
-            (not (fxzero? (fxand (u16vector-ref storage word) mask))))
-          (hash-get storage pair)))
-      (def (mark-admitted! storage pair)
-        (if dense?
-          (let ((word (fxarithmetic-shift-right pair 4))
-                (mask (fxarithmetic-shift-left 1 (fxand pair 15))))
-            (u16vector-set! storage word (fxior (u16vector-ref storage word) mask)))
-          (hash-put! storage pair #t)))
+      ;;; Intentional raw data record: one membership bit per possible pair
+      ;;; avoids object allocation in the semi-naive inner loop.
+      (def (new-seen)
+        (if dense? (make-u8vector (* width width) 0) (make-hash-table)))
+      (def (seen? storage pair)
+        (if dense? (= (u8vector-ref storage pair) 1)
+            (hash-get storage pair)))
+      (def (mark-seen! storage pair)
+        (if dense? (u8vector-set! storage pair 1)
+            (hash-put! storage pair #t)))
+      ;;; Intentional raw data record: epochs deduplicate pending pairs without
+      ;;; clearing a full dense table between fixed-point rounds.
+      (def (new-pending-epochs)
+        (if dense? (make-vector (* width width) 0) (make-hash-table)))
+      (def (pending-epoch storage pair)
+        (if dense? (vector-ref storage pair)
+            (hash-get storage pair)))
+      (def (mark-pending! storage pair epoch)
+        (if dense? (vector-set! storage pair epoch)
+            (hash-put! storage pair epoch)))
       (for-each
        (lambda (rule)
          (hash-put! derived-heads (.ref rule 'head) #t)
@@ -212,23 +214,24 @@
                        (vector-set! snapshots i (vector (append rows []) value))
                        value))))))))
       ;; Validation captures source rows once. Only the general evaluator needs
-      ;; admission ledgers and join indexes; build those after dispatch.
+      ;; membership, pending epochs, and join indexes; build those after dispatch.
       (def (initialize-general-state!)
         (let initialize ((i 0))
           (when (< i count)
             (let* ((name (vector-ref names i))
                    (rows (vector-ref all i))
                    (links (and (hash-get indexed-rights name) (new-index)))
-                   (present (and (hash-get derived-heads name) (new-admitted))))
+                   (present (and (hash-get derived-heads name) (new-seen))))
               ;; Replay indexed sources in the original fold order. Neighbor
               ;; order can affect filter callback traces in subsequent rounds.
               (when (or links present)
                 (for-each
                  (lambda (pair)
-                   (when present (mark-admitted! present pair))
+                   (when present (mark-seen! present pair))
                    (when links (index-add! links pair)))
                  (if links (reverse rows) rows)))
-              (vector-set! admitted i present)
+              (vector-set! seen i present)
+              (when present (vector-set! pending-epochs i (new-pending-epochs)))
               (vector-set! all-index i links)
               (vector-set! delta-index i links))
             (initialize (+ i 1)))))
@@ -240,7 +243,7 @@
                   (.ref (vector-ref source-vector source-position) 'pairs))
                  (allowance (min limit (- output-limit source-count)))
                  (closure-pairs
-                  (.ref (gerbil-ascent-relation-closure-bounded
+                  (.ref (binary-admission-reference-closure-bounded
                          source-set width allowance) 'pairs))
                  (results (make-vector count #f)))
             (let publish-sources ((i 0))
@@ -261,18 +264,19 @@
                                  (and (eq? kind 'filter) (.ref rule 'predicate)))))
                      rules))
             (initialize-general-state!)
-            (let (active? #t)
+            (let ((active? #t) (epoch 0))
               (until (not active?)
                 (let ((pending (make-vector count []))
                       (next (make-vector count []))
                       (next-index (make-vector count #f))
                       (pending-count 0))
+                  (set! epoch (+ epoch 1))
                   (def (emit! head pair)
-                    (unless (admitted? (vector-ref admitted head) pair)
-                      ;; Admission is permanent for this evaluation. A failed
-                      ;; budget aborts the query; no partially built result is
-                      ;; published. Pending rows still commit after all rules.
-                      (mark-admitted! (vector-ref admitted head) pair)
+                    (unless (or (seen? (vector-ref seen head) pair)
+                                (eqv? (pending-epoch
+                                       (vector-ref pending-epochs head) pair)
+                                      epoch))
+                      (mark-pending! (vector-ref pending-epochs head) pair epoch)
                       (set! pending-count (+ pending-count 1))
                       (when (> (+ derived-count pending-count) limit)
                         (error "ASCENT derived pair budget exceeded" limit))
@@ -333,6 +337,7 @@
                         (vector-set! next-index i (new-index)))
                       (for-each
                        (lambda (pair)
+                         (mark-seen! (vector-ref seen i) pair)
                          (set! active? #t)
                          (set! derived-count (+ derived-count 1))
                          (vector-set! all i (cons pair (vector-ref all i)))

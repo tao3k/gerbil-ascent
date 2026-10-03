@@ -1,0 +1,39 @@
+[ascent-test] START t/qualification/ascent-lattice-program-test.ss
+[test-lane] START parallel-semantics t/qualification/ascent-lattice-program-test.ss
+[test-lane] RUNNING parallel-semantics (5s)
+[test-lane] RUNNING parallel-semantics (10s)
+[test-lane] RUNNING parallel-semantics (15s)
+[test-lane] RUNNING parallel-semantics (20s)
+[test-lane] RUNNING parallel-semantics (25s)
+HARNESS ("t/qualification/ascent-lattice-program-test.ss")
+MODULE t/qualification/ascent-lattice-program-test.ss
+SUITE ASCENT lattice fixed point
+CASE recursive shortest paths replace weaker key values
+CASE-OK recursive shortest paths replace weaker key values
+CASE ordinary projection waits for lattice fixed point
+CASE-OK ordinary projection waits for lattice fixed point
+CASE timeout resumes across the lattice projection stratum
+CASE-OK timeout resumes across the lattice projection stratum
+CASE lattice projection feedback rejects a strict cycle
+CASE-OK lattice projection feedback rejects a strict cycle
+CASE empty and invalid lattice declarations
+CASE-OK empty and invalid lattice declarations
+CASE C4 lattice refinements validate joined values
+CASE-OK C4 lattice refinements validate joined values
+CASE session joins direct lattice source values
+CASE-OK session joins direct lattice source values
+CASE direct lattice append rejects before changing state
+CASE-OK direct lattice append rejects before changing state
+CASE mixed lattice source and rule updates match fresh fixed points
+CASE-OK mixed lattice source and rule updates match fresh fixed points
+CASE source replacement retracts lattice and derived contributions
+CASE-OK source replacement retracts lattice and derived contributions
+CASE lattice refinement updates a later negative stratum
+CASE-OK lattice refinement updates a later negative stratum
+SUITE-OK ASCENT lattice fixed point
+MODULE-OK t/qualification/ascent-lattice-program-test.ss
+HARNESS-OK ("t/qualification/ascent-lattice-program-test.ss")
+OK
+[test-lane] RUNNING parallel-semantics (30s)
+[test-lane] END parallel-semantics exit=0
+[ascent-test] PASS t/qualification/ascent-lattice-program-test.ss (33s)

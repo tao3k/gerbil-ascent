@@ -1,0 +1,22 @@
+[ascent-test] START t/qualification/ascent-module-program-test.ss
+[test-lane] START parallel-semantics t/qualification/ascent-module-program-test.ss
+[test-lane] RUNNING parallel-semantics (5s)
+[test-lane] RUNNING parallel-semantics (10s)
+[test-lane] RUNNING parallel-semantics (15s)
+HARNESS ("t/qualification/ascent-module-program-test.ss")
+MODULE t/qualification/ascent-module-program-test.ss
+SUITE ASCENT Gerbil module and lexical scope
+CASE reused module captures each caller origin
+CASE-OK reused module captures each caller origin
+CASE POO slot refinement creates a second input snapshot
+CASE-OK POO slot refinement creates a second input snapshot
+CASE C4 combines independent ASCENT declaration refinements
+CASE-OK C4 combines independent ASCENT declaration refinements
+SUITE-OK ASCENT Gerbil module and lexical scope
+MODULE-OK t/qualification/ascent-module-program-test.ss
+HARNESS-OK ("t/qualification/ascent-module-program-test.ss")
+OK
+[test-lane] RUNNING parallel-semantics (20s)
+[test-lane] RUNNING parallel-semantics (25s)
+[test-lane] END parallel-semantics exit=0
+[ascent-test] PASS t/qualification/ascent-module-program-test.ss (26s)

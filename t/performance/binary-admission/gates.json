@@ -1,0 +1,27 @@
+[
+  {
+    "name": "policy",
+    "exit": 0,
+    "seconds": 59.293564999999944
+  },
+  {
+    "name": "ascent-table-expression",
+    "exit": 0,
+    "seconds": 119.7604490829981
+  },
+  {
+    "name": "ascent-table-expression-membership",
+    "exit": 0,
+    "seconds": 26.943155000000843
+  },
+  {
+    "name": "ascent-reachability-closure",
+    "exit": 0,
+    "seconds": 26.36610916700738
+  },
+  {
+    "name": "ascent-binary-program",
+    "exit": 0,
+    "seconds": 22.720004542003153
+  }
+]

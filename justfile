@@ -29,9 +29,9 @@ test-file path:
     started=$SECONDS
     printf '[ascent-test] START %s\n' "{{ path }}"
     GERBIL_LOADPATH="{{ justfile_directory() }}${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" python3 tools/test_execution.py run --module "{{ path }}" -- timeout "${ASCENT_GXTEST_TIMEOUT:-120s}" gerbil {{ gerbil_test_runtime_options }} test -v 5 "{{ path }}" 2>&1 | tee "$output_file"
-    if grep -E 'ERROR (CHECK|CASE|HARNESS)|Heap overflow|Stack overflow' "$output_file" >/dev/null; then exit 1; fi
+    if grep -E 'ERROR (CHECK|CASE|HARNESS|MODULE)|Heap overflow|Stack overflow' "$output_file" >/dev/null; then exit 1; fi
     awk -f "{{ justfile_directory() }}/tools/assert-test-cases.awk" "$output_file"
-    grep -F 'MODULE-OK {{ path }}' "$output_file" >/dev/null
+    grep -Fx 'MODULE-OK {{ path }}' "$output_file" >/dev/null
     grep -F 'HARNESS-OK' "$output_file" >/dev/null
     grep -x 'OK' "$output_file" >/dev/null
     printf '[ascent-test] PASS %s (%ss)\n' "{{ path }}" "$((SECONDS - started))"

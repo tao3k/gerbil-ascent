@@ -1,0 +1,18 @@
+[ascent-test] START t/qualification/ascent-contract-union-test.ss
+[test-lane] START parallel-semantics t/qualification/ascent-contract-union-test.ss
+HARNESS ("t/qualification/ascent-contract-union-test.ss")
+MODULE t/qualification/ascent-contract-union-test.ss
+SUITE ASCENT native union classification
+CASE six clause prototypes retain full responsibility checks
+CASE-OK six clause prototypes retain full responsibility checks
+CASE overlapping prototypes retain ordered fallback admission
+CASE-OK overlapping prototypes retain ordered fallback admission
+CASE relation and lattice union rejects malformed responsibilities
+CASE-OK relation and lattice union rejects malformed responsibilities
+SUITE-OK ASCENT native union classification
+MODULE-OK t/qualification/ascent-contract-union-test.ss
+HARNESS-OK ("t/qualification/ascent-contract-union-test.ss")
+OK
+[test-lane] RUNNING parallel-semantics (5s)
+[test-lane] END parallel-semantics exit=0
+[ascent-test] PASS t/qualification/ascent-contract-union-test.ss (6s)

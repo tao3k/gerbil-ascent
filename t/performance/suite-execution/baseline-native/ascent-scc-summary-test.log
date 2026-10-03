@@ -1,0 +1,13 @@
+[ascent-test] START t/qualification/ascent-scc-summary-test.ss
+[test-lane] START parallel-semantics t/qualification/ascent-scc-summary-test.ss
+HARNESS ("t/qualification/ascent-scc-summary-test.ss")
+MODULE t/qualification/ascent-scc-summary-test.ss
+SUITE ASCENT rule dependency SCC summary
+CASE recursive pair and acyclic rules have distinct SCCs
+CASE-OK recursive pair and acyclic rules have distinct SCCs
+SUITE-OK ASCENT rule dependency SCC summary
+MODULE-OK t/qualification/ascent-scc-summary-test.ss
+HARNESS-OK ("t/qualification/ascent-scc-summary-test.ss")
+OK
+[test-lane] END parallel-semantics exit=0
+[ascent-test] PASS t/qualification/ascent-scc-summary-test.ss (4s)

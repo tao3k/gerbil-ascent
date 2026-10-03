@@ -198,10 +198,8 @@ def execute_modules(files, jobs, lane):
         save()
         return results
     with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as pool:
-        pending = set()
+        pending = {pool.submit(execute, path) for path in files}
         try:
-            for path in files:
-                pending.add(pool.submit(execute, path))
             while pending:
                 done, pending = concurrent.futures.wait(
                     pending, timeout=5, return_when=concurrent.futures.FIRST_COMPLETED)

@@ -219,3 +219,33 @@ copyright © 2026 tao3k team and Contributors and are licensed under
 `Apache-2.0 AND LGPL-2.1-or-later`, as stated in [LICENSE](LICENSE) and
 the source file SPDX headers. That project license does not change the
 upstream project's license or the papers' rights.
+
+## Test execution
+
+`just test` discovers qualification modules and runs two phases. The explicitly
+reviewed semantic modules in `tools/test_execution.py` run in separate Gerbil
+processes. Native `std/test` still executes each module's suites and Cases in
+order. After all parallel workers finish, exclusive modules run one at a time.
+New modules default to exclusive execution until reviewed.
+
+`GERBIL_BUILD_CORES` supplies the default concurrency through ASP's native
+builder capacity API; its native host CPU fallback applies when unset.
+`just test 2` overrides only test concurrency. The worker count is the smaller
+of configured capacity and the number of admitted modules. Each process keeps
+the existing 1 GiB heap limit and native Case profiles.
+
+Exclusive modules cover custom duration/GC profiles, timeout and timing tests,
+internal multithreading, and the large exhaustive operator/library fixtures.
+Builds and performance recipes use the same exclusive file lease, including
+nested calls. Cancellation sends TERM to active workers, escalates to KILL
+after a shared five-second grace period, and reaps them before returning.
+
+Per-module native logs, phase summaries, and a complete suite JSON receipt live
+under `.gerbil/test-execution/`. The suite checks exact discovered-module
+coverage and reports failure if any worker fails. `test-file` also requires
+nonempty native Cases, exact module completion, harness completion, and final
+`OK`, rejecting native error and overflow markers even on exit zero.
+`just test-serial` retains the older bounded batch path for comparisons.
+
+Measured full-suite comparisons and the admission rationale are recorded in
+[t/performance/suite-execution/README.org](t/performance/suite-execution/README.org).

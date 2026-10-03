@@ -1,0 +1,31 @@
+[ascent-test] START t/qualification/ascent-timeout-test.ss
+[test-lane] START exclusive t/qualification/ascent-timeout-test.ss
+HARNESS ("t/qualification/ascent-timeout-test.ss")
+MODULE t/qualification/ascent-timeout-test.ss
+SUITE ASCENT retained timeout
+CASE zero budget commits rounds and resumes
+CASE-OK zero budget commits rounds and resumes
+CASE source changes wait for partial fixed point
+CASE-OK source changes wait for partial fixed point
+CASE resumed recursion feeds a later negation stratum
+CASE-OK resumed recursion feeds a later negation stratum
+CASE lattice joins survive a partial round boundary
+CASE-OK lattice joins survive a partial round boundary
+CASE BYODS closure and downstream copy resume together
+CASE-OK BYODS closure and downstream copy resume together
+CASE replacement runs honor a zero timeout
+CASE-OK replacement runs honor a zero timeout
+CASE negated source appends honor a zero timeout
+CASE-OK negated source appends honor a zero timeout
+CASE lattice source appends honor a zero timeout
+CASE-OK lattice source appends honor a zero timeout
+CASE timeout duration validation leaves session usable
+CASE-OK timeout duration validation leaves session usable
+CASE failed resume restores the accepted source snapshot
+CASE-OK failed resume restores the accepted source snapshot
+SUITE-OK ASCENT retained timeout
+MODULE-OK t/qualification/ascent-timeout-test.ss
+HARNESS-OK ("t/qualification/ascent-timeout-test.ss")
+OK
+[test-lane] END exclusive exit=0
+[ascent-test] PASS t/qualification/ascent-timeout-test.ss (5s)

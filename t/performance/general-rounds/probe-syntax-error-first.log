@@ -1,6 +1,0 @@
-*** ERROR IN ##load -- Incomplete form, EOF reached
---- continuation backtrace:
-[0] ##primordial-exception-handler-hook                                                                                                                                     
-[1] ##load                                                                                                                                                                  
-[2] ##load                                                                                                                                                                  
-[3] gerbil/main#gxi-main                                                                                                                                                    

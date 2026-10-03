@@ -1,5 +1,0 @@
-[test-lane] START exclusive timeout
-... compile t/qualification/ascent-strata-fixture
-... execute compile job (compile-file /private/tmp/ascent-test-scheduling-gerbil/lib/gerbil-ascent/t/qualification/ascent-strata-fixture~0.scm)
-... execute compile job (compile-file /private/tmp/ascent-test-scheduling-gerbil/lib/gerbil-ascent/t/qualification/ascent-strata-fixture.scm)
-[test-lane] END exclusive exit=0

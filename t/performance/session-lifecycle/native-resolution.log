@@ -1,7 +1,0 @@
-*** ERROR IN gx#core-expand-import%__% -- 
-*** ERROR IN "t/performance/result-publication/module-resolution.ss"@3.9-3.72
---- Syntax Error: cannot find library module
---- Context: 
- at expand
- at top
-... form:   :gerbil-ascent/t/qualification/ascent-result-reference-evaluate

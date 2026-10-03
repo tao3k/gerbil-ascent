@@ -1,8 +1,0 @@
-*** ERROR IN __with-lock -- 
-*** ERROR IN "table/expression.ss"@310.61-310.65
---- Syntax Error: Reference to unbound identifier
---- Context: 
- at expand
- at gerbil-ascent/table/expression
-... form:   (%#ref from)
-... detail: from at "table/expression.ss"@310.61-310.65

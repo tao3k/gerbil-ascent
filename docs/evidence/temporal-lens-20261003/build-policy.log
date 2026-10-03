@@ -1,8 +1,0 @@
-ASP_GERBIL_SCHEME_POLICY=1 GERBIL_BUILD_CORES="${GERBIL_BUILD_CORES:-$(getconf NPROCESSORS_ONLN)}" gerbil build
-[asp-gerbil-scheme-policy] START selected modules=37
-[asp-gerbil-scheme-policy] COMPLETE findings=0 errors=0
-... compile temporal/lens
-... execute compile job (compile-file /private/tmp/ascent-plan-audit-20261002/.gerbil/lib/gerbil-ascent/temporal/lens~0.scm)
-... execute compile job (compile-file /private/tmp/ascent-plan-audit-20261002/.gerbil/lib/gerbil-ascent/temporal/lens.scm)
-... build in current directory
-*** WARNING module std/net/request is DEPRECATED and will be removed in the future

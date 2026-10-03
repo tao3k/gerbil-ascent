@@ -1,8 +1,0 @@
-/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/set-emit/lib/gerbil-ascent/program/evaluate.ssi
-/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/set-emit/lib/gerbil-ascent/t/qualification/ascent-set-emit-reference-evaluate.ssi
-*** ERROR IN ##read-datum-or-eof -- Datum or EOF expected
---- continuation backtrace:
-[0] ##primordial-exception-handler-hook                                                                                                                                     
-[1] ##read-datum-or-eof                                                                                                                                                     
-[2] gerbil/main#gxi-main                                                                                                                                                    
-[3] gerbil/main#gxi-main                                                                                                                                                    

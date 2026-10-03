@@ -1,5 +1,0 @@
-[test-lane] START exclusive timeout
-... compile table/storage
-... execute compile job (compile-file /private/tmp/ascent-batch-control/lib/gerbil-ascent/table/storage~0.scm)
-... execute compile job (compile-file /private/tmp/ascent-batch-control/lib/gerbil-ascent/table/storage.scm)
-[test-lane] END exclusive exit=0

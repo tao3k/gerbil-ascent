@@ -1,6 +1,0 @@
-... compile table/expression
-... compile t/performance/distance-rows/reference
-... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/distance-rows/lib/gerbil-ascent/table/expression~0.scm)
-... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/distance-rows/lib/gerbil-ascent/table/expression.scm)
-... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/distance-rows/lib/gerbil-ascent/t/performance/distance-rows/reference~0.scm)
-... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/distance-rows/lib/gerbil-ascent/t/performance/distance-rows/reference.scm)

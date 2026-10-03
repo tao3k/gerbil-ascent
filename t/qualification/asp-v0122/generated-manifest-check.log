@@ -1,5 +1,0 @@
-Traceback (most recent call last):
-  File "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/t/qualification/asp-v0122/qualify.py", line 71, in <module>
-    assert not subprocess.check_output(['git', '-C', str(package_root/package), 'status', '--porcelain'])
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-AssertionError

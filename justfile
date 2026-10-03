@@ -594,6 +594,9 @@ _workspace-benchmark:
     if grep -E 'ERROR|Heap overflow|Stack overflow' "$log" >/dev/null; then exit 1; fi
     grep -x 'OK' "$log" >/dev/null
 
+ordered-relations-benchmark:
+    python3 tools/test_execution.py run -- python3 t/performance/ordered-relations/qualify.py
+
 materialization-benchmark:
     python3 tools/test_execution.py run -- just _materialization-benchmark
 

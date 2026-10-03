@@ -11,60 +11,14 @@
         (only-in :clan/poo/trie UIntTrieSet)
         (only-in :clan/poo/support/base until))
 
-(export gerbil-ascent-table-expression-prototype
-        gerbil-ascent-relation-closure-bounded)
+(export ordered-relations-reference-prototype
+        ordered-relations-reference-closure-bounded)
 
 ;; : (-> DenseTargets DenseBase (-> UInt Void) Void)
 (def (visit-source-row targets base consume)
   (unless (null? targets)
     (visit-source-row (cdr targets) base consume)
     (consume (fx+ base (car targets)))))
-
-;;; Dense relations store sixteen pair admissions per word. Only occupied
-;;; words are retained for publication: sorting those word indices and walking
-;;; their set bits yields canonical rows without sorting or copying every pair.
-;;; The bounded words fit fixnums on both 32-bit and 64-bit Gambit runtimes.
-;; : (-> Radix DensePairBitmap)
-(def (pair-bitmap radix)
-  (let (limit (* radix radix))
-    (vector (make-u16vector (quotient (+ limit 15) 16) 0) [] limit)))
-
-;; : (-> DensePairBitmap UInt Boolean)
-(def (pair-bitmap-contains? bitmap pair)
-  (let ((word (fxarithmetic-shift-right pair 4))
-        (mask (fxarithmetic-shift-left 1 (fxand pair 15))))
-    (not (fxzero? (fxand (u16vector-ref (vector-ref bitmap 0) word) mask)))))
-
-;; : (-> DensePairBitmap UInt Boolean)
-(def (pair-bitmap-admit! bitmap pair)
-  ;; Keep padding in the final word outside the declared finite relation.
-  (unless (and (fixnum? pair) (fx<= 0 pair) (fx< pair (vector-ref bitmap 2)))
-    (error "Ascent table pair exceeds the declared radix" pair))
-  (let* ((words (vector-ref bitmap 0))
-         (word (fxarithmetic-shift-right pair 4))
-         (mask (fxarithmetic-shift-left 1 (fxand pair 15)))
-         (previous (u16vector-ref words word)))
-    (if (fxzero? (fxand previous mask))
-      (begin
-        (when (fxzero? previous)
-          (vector-set! bitmap 1 (cons word (vector-ref bitmap 1))))
-        (u16vector-set! words word (fxior previous mask))
-        #t)
-      #f)))
-
-;; : (-> DensePairBitmap EncodedRows)
-(def (pair-bitmap-rows bitmap)
-  (let ((words (vector-ref bitmap 0)) (rows []))
-    (for-each
-     (lambda (word)
-       (let loop ((remaining (u16vector-ref words word)))
-         (unless (fxzero? remaining)
-           (let* ((bit (fx- (integer-length remaining) 1))
-                  (mask (fxarithmetic-shift-left 1 bit)))
-             (set! rows (cons (fx+ (fxarithmetic-shift-left word 4) bit) rows))
-             (loop (fx- remaining mask))))))
-     (list-sort > (vector-ref bitmap 1)))
-    rows))
 
 ;; : (-> UIntTrieSet Radix IndexedSource)
 (def (relation-view pairs radix)
@@ -124,12 +78,14 @@
 ;; : (-> SourceVisitor NeighborVisitor Radix Boolean (Maybe NeighborRows) PairProjection)
 (def (relation-projection visit-source neighbors-of radix include-source? native-neighbors)
   (let* ((dense? (<= radix 512))
-         (bits (and dense? (pair-bitmap radix)))
+         (bits (and dense? (make-u8vector (* radix radix) 0)))
          (sparse (and (not dense?) (make-hash-table)))
          (unique []))
     (def (add-pair! pair)
       (if dense?
-        (pair-bitmap-admit! bits pair)
+        (when (= (u8vector-ref bits pair) 0)
+          (u8vector-set! bits pair 1)
+          (set! unique (cons pair unique)))
         (unless (hash-get sparse pair)
           (hash-put! sparse pair #t)
           (set! unique (cons pair unique)))))
@@ -147,9 +103,9 @@
     (.o (contains?
          (lambda (pair)
            (and (exact-integer? pair) (<= 0 pair) (< pair (* radix radix))
-                (if dense? (pair-bitmap-contains? bits pair)
+                (if dense? (= (u8vector-ref bits pair) 1)
                     (hash-get sparse pair)))))
-        (pairs (if dense? (pair-bitmap-rows bits) (list-sort < unique))))))
+        (pairs (list-sort < unique)))))
 
 ;; : (forall (a) (-> SourceVisitor (-> UInt (-> UInt Void) a) UInt Boolean (Maybe NeighborRows) EncodedRows))
 ;; : (-> SourceVisitor NeighborVisitor Radix Boolean (Maybe NeighborRows) EncodedRows)
@@ -181,20 +137,22 @@
              (not (and (exact-integer? max-pairs) (>= max-pairs 0))))
     (error "invalid ASCENT closure pair budget" max-pairs))
   (let* ((dense? (<= radix 512))
-         (bits (and dense? (pair-bitmap radix)))
+         (bits (and dense? (make-u8vector (* radix radix) 0)))
          (sparse (and (not dense?) (make-hash-table)))
          (frontier [])
          (all [])
          (count 0))
     (def (add-pair! pair)
       (if dense?
-        (if (pair-bitmap-admit! bits pair)
+        (if (= (u8vector-ref bits pair) 1)
+          #f
           (begin
             (when (and max-pairs (>= count max-pairs))
               (error "ASCENT derived pair budget exceeded" max-pairs))
+            (u8vector-set! bits pair 1)
             (set! count (+ count 1))
-            #t)
-          #f)
+            (set! all (cons pair all))
+            #t))
         (if (hash-get sparse pair)
           #f
           (begin
@@ -223,15 +181,15 @@
                        (set! next (cons candidate next)))))))))
          frontier)
         (set! frontier next)))
-    (.o (pairs (if dense? (pair-bitmap-rows bits) (list-sort < all)))
+    (.o (pairs (list-sort < all))
         (contains?
          (lambda (pair)
            (and (exact-integer? pair) (<= 0 pair) (< pair (* radix radix))
-                (if dense? (pair-bitmap-contains? bits pair)
+                (if dense? (= (u8vector-ref bits pair) 1)
                     (hash-get sparse pair))))))))
 
 ;; : (-> UIntTrieSet Radix Nat PairProjection)
-(def (gerbil-ascent-relation-closure-bounded source radix max-pairs)
+(def (ordered-relations-reference-closure-bounded source radix max-pairs)
   (let (view (relation-view source radix))
     (relation-closure (vector-ref view 0) (vector-ref view 2) radix max-pairs (vector-ref view 1))))
 
@@ -243,11 +201,6 @@
 (def (relation-shortest-distance-projection visit-source neighbors-of radix native-neighbors)
   (let* ((dense? (<= radix 512))
          (distances (and dense? (make-vector (* radix radix) #f)))
-         ;; Distance storage already decides membership. Small outputs retain
-         ;; their list instead of allocating a second domain-sized container.
-         (bitmap-threshold (and dense? (max 16 (quotient (* radix radix) 64))))
-         (bits #f)
-         (discovered-count 0)
          (sparse (and (not dense?) (make-hash-table)))
          (frontier [])
          (discovered []))
@@ -258,16 +211,7 @@
         (if (and previous (<= previous depth))
           #f
           (begin
-            (unless previous
-              (if bits
-                (pair-bitmap-admit! bits pair)
-                (begin
-                  (set! discovered (cons pair discovered))
-                  (set! discovered-count (+ discovered-count 1))
-                  (when (and dense? (= discovered-count bitmap-threshold))
-                    (set! bits (pair-bitmap radix))
-                    (for-each (lambda (known) (pair-bitmap-admit! bits known)) discovered)
-                    (set! discovered [])))))
+            (unless previous (set! discovered (cons pair discovered)))
             (if dense? (vector-set! distances pair depth)
                 (hash-put! sparse pair depth))
             #t))))
@@ -291,7 +235,7 @@
                        (set! next (cons candidate next)))))))))
          frontier)
         (set! frontier next)))
-    (.o (pairs (if bits (pair-bitmap-rows bits) (list-sort < discovered)))
+    (.o (pairs (list-sort < discovered))
         (distance-of
          (lambda (pair)
            (and (exact-integer? pair) (<= 0 pair) (< pair (* radix radix))
@@ -308,7 +252,7 @@
 ;;; This signature describes extending source slots with .mix, not a direct
 ;;; Scheme call of the prototype value.
 ;; : (-> RelationSourceSlots RelationExpressionSlots)
-(def gerbil-ascent-table-expression-prototype
+(def ordered-relations-reference-prototype
   (.o (:: self [] source-pairs radix)
       (indexed-source (relation-view source-pairs radix))
       (right-index (vector-ref (.ref self 'indexed-source) 2))

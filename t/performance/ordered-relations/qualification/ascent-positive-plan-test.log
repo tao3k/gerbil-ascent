@@ -1,0 +1,34 @@
+[ascent-test] START t/qualification/ascent-positive-plan-test.ss
+[test-lane] START exclusive t/qualification/ascent-positive-plan-test.ss
+[test-lane] RUNNING exclusive (5s)
+HARNESS ("t/qualification/ascent-positive-plan-test.ss")
+MODULE t/qualification/ascent-positive-plan-test.ss
+SUITE Complete positive rule slot plans
+CASE all 512 directed three-node graphs match independent reachability
+[test-lane] RUNNING exclusive (10s)
+CASE-OK all 512 directed three-node graphs match independent reachability
+CASE failed candidates and repeated variables never expose stale slots
+CASE-OK failed candidates and repeated variables never expose stale slots
+CASE wildcards zero-arity atoms and literal heads preserve ordered outputs
+CASE-OK wildcards zero-arity atoms and literal heads preserve ordered outputs
+CASE indexed fanout and multiple heads retain exact key and callback order
+CASE-OK indexed fanout and multiple heads retain exact key and callback order
+CASE custom output expansion observes the same candidates and pending snapshots
+CASE-OK custom output expansion observes the same candidates and pending snapshots
+CASE retained appends replacements and zero-timeout runs preserve snapshots
+CASE-OK retained appends replacements and zero-timeout runs preserve snapshots
+CASE wide rules read numeric slots without a fixed variable limit
+CASE-OK wide rules read numeric slots without a fixed variable limit
+CASE compiled emission preserves derived and output budget errors
+CASE-OK compiled emission preserves derived and output budget errors
+CASE cached plans never share frames across concurrent engines
+CASE-OK cached plans never share frames across concurrent engines
+CASE unsupported callback clauses preserve callback traces
+CASE-OK unsupported callback clauses preserve callback traces
+SUITE-OK Complete positive rule slot plans
+MODULE-OK t/qualification/ascent-positive-plan-test.ss
+HARNESS-OK ("t/qualification/ascent-positive-plan-test.ss")
+OK
+[test-lane] RUNNING exclusive (15s)
+[test-lane] END exclusive exit=0
+[ascent-test] PASS t/qualification/ascent-positive-plan-test.ss (16s)

@@ -112,6 +112,35 @@
              (new (expression gerbil-ascent-table-expression-prototype source 513)))
         (check-equal? (.ref new 'closure-pairs) (iota 512 1))
         (check-equal? (.ref new 'at-most-two-hop-pairs) (.ref old 'at-most-two-hop-pairs))))
+    (poo-flow-test-case "ordered relation words preserve boundaries membership and exact closure budgets"
+      (for-each
+       (lambda (radix)
+         (let* ((limit (* radix radix))
+                (edges (list 0 1 15 16 (- radix 1) radix (+ radix 1) (- limit 2) (- limit 1)))
+                (source (.call UIntTrieSet .<-list edges))
+                (old (expression ascent-materialization-reference-prototype source radix))
+                (new (expression gerbil-ascent-table-expression-prototype source radix))
+                (closure (.ref old 'closure-pairs)))
+           (for-each
+            (lambda (slot) (check-equal? (.ref new slot) (.ref old slot)))
+            '(two-hop-pairs at-most-two-hop-pairs closure-pairs shortest-distance-pairs))
+           (for-each
+            (lambda (pair)
+              (check-equal? ((.ref new 'shortest-distance-of) pair)
+                            ((.ref old 'shortest-distance-of) pair))
+              (check-equal? ((.ref new 'closure-contains?) pair)
+                            ((.ref old 'closure-contains?) pair))
+              (check-equal? ((.ref new 'at-most-two-hop-contains?) pair)
+                            ((.ref old 'at-most-two-hop-contains?) pair)))
+            (append closure (list -1 limit (+ limit 15) 3/2)))
+           (check-equal?
+            (.ref (gerbil-ascent-relation-closure-bounded source radix (length closure)) 'pairs)
+            closure)
+           (check-equal?
+            (outcome (lambda ()
+                       (gerbil-ascent-relation-closure-bounded source radix (- (length closure) 1))))
+            "ASCENT derived pair budget exceeded")))
+       '(5 16 17 31 32 33 511 512 513)))
     (poo-flow-test-case "bounded closure retains exact failures across empty dense and sparse snapshots"
       (for-each
        (lambda (radix)

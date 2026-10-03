@@ -647,3 +647,46 @@ All original fixtures, 1000-sample counts, timing and memory budgets remain
 unchanged. This is one full local SS pass, not remote CI or a repeated
 whole-suite stability qualification. The raw log and suite source manifest
 are retained alongside the paired receipts.
+
+** Source-order Set batch admission
+
+The batch-admission slice compares against the exact function from committed
+=a76305a=, with only an exported name change. Unique-prefix detection now
+uses one insertion and private table cardinality rather than hashing each
+row twice. On the first duplicate the private table is cleared and reused
+for source-order admission. A direct recursive fallback replaces the
+mutable accumulator and per-row closure. Accepted row/key identities and
+unique whole-log spine sharing are preserved; the public API is unchanged.
+
+Two final compiled comparisons pass 1000 alternating pairs per shape and
+20 warmups, with independent ordered-row/membership goldens outside timing.
+The 10000-row duplicate workloads (one or 16 distinct values) improve
+1.66--1.68x with 970/972 and 975/976 strict wins, exceeding the unchanged
+>=900 gate. The unique control improves about 1.38x; existing-membership
+controls retain median nonregression. These are batch-admission kernel
+results, not a public ten-thousand-append session speedup claim. The earlier
+candidates that failed control medians are retained with their raw samples.
+
+Finite validation covers 3282 log/prefix/sharing/initial-membership
+configurations against independent list goldens, including row identities,
+membership-key identities and table ownership. Additional Cases cover
+nullary/heterogeneous rows, large duplicate logs and unique spine sharing.
+The complete final-source qualification suite passes 41 modules and
+319 Cases. Build and policy pass (37 modules, findings=0, errors=0).
+Every native module has =MODULE-OK=, =HARNESS-OK=, final =OK= and exit 0.
+Logs and source hashes are [[file:../t/performance/set-batch/README.org][retained here]].
+Remote CI remains unrun.
+
+The two complete SS attempts are not passes: the first stops at rule-clauses
+(p95=1.208 ms versus 1 ms; a focused repeat passes at 484 us), and the second
+stops at BYODS trrel (p95=1.223 ms versus 1 ms). The unchanged original
+=a76305a= storage module, loaded from a verified private control library,
+also fails trrel at p95=1.362 ms. These separate diagnostics do not establish
+a matched timing causation. Both workloads use non-session engines and do
+not invoke the changed staged Set batch function. Remaining SS entries were
+collected individually: nine pass, while Fibonacci (1.101 ms), eqrel
+(1.047 ms) and table-expression (2.901 ms) exceed their original time gates.
+All original fixtures and limits remain unchanged. The qualified batch
+kernel and complete semantic suite are distinct from unresolved whole-SS
+tail stability. Failed receipts and corrected baseline loading evidence
+are retained; remote CI remains unrun.

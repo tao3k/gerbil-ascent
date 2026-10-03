@@ -501,3 +501,16 @@ set-size-benchmark:
 _set-size-benchmark:
     timeout 90s gxi {{ gerbil_test_runtime_options }} tools/build-set-size-benchmark.ss
     GERBIL_LOADPATH="$ASCENT_SET_SIZE_LIB${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" timeout 150s gxi {{ gerbil_test_runtime_options }} t/performance/set-size-benchmark.ss
+
+set-batch-benchmark:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    mkdir -p .gerbil/set-batch
+    export ASCENT_SET_BATCH_LIB="{{ justfile_directory() }}/.gerbil/set-batch/lib"
+    export ASCENT_SET_BATCH_RECEIPT="${ASCENT_SET_BATCH_RECEIPT:-{{ justfile_directory() }}/.gerbil/set-batch/receipt.sexp}"
+    shasum -a 256 table/storage.ss t/qualification/ascent-set-batch-reference.ss t/performance/set-batch-benchmark.ss tools/build-set-batch-benchmark.ss > "$ASCENT_SET_BATCH_RECEIPT.sources"
+    python3 tools/test_execution.py run -- just _set-batch-benchmark
+
+_set-batch-benchmark:
+    timeout 90s gxi {{ gerbil_test_runtime_options }} tools/build-set-batch-benchmark.ss
+    GERBIL_LOADPATH="$ASCENT_SET_BATCH_LIB${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" timeout 150s gxi {{ gerbil_test_runtime_options }} t/performance/set-batch-benchmark.ss

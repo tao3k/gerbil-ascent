@@ -1,0 +1,16 @@
+{
+  "ascent-byods-trrel": {
+    "native_exit": 0,
+    "gate_pass": false,
+    "p50Ns": 455000,
+    "p95Ns": 1362000,
+    "maxNs": 4556000
+  },
+  "ascent-rule-clauses": {
+    "native_exit": 0,
+    "gate_pass": true,
+    "summary": [
+      "[gerbil-ascent-benchmark] ascent-rule-clauses p95=793us semanticEquivalent=#t"
+    ]
+  }
+}

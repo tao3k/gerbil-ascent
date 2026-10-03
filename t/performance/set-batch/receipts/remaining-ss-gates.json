@@ -1,0 +1,86 @@
+{
+  "ascent-binary-program": {
+    "gate_pass": true,
+    "summaries": [
+      "[gerbil-ascent-benchmark] ascent-binary-program p95=486us"
+    ]
+  },
+  "ascent-byods-eqrel": {
+    "gate_pass": false,
+    "summaries": [],
+    "errors": [
+      "ASCENT BYODS eqrel exceeded the benchmark budget"
+    ],
+    "p50Ns": 383000,
+    "p95Ns": 1047000,
+    "maxNs": 9040000
+  },
+  "ascent-derived-aggregate": {
+    "gate_pass": true,
+    "summaries": [
+      "[gerbil-ascent-benchmark] ascent-derived-aggregate p95=272us semanticEquivalent=#t"
+    ]
+  },
+  "ascent-indexed-joins": {
+    "gate_pass": true,
+    "summaries": [
+      "[gerbil-ascent-benchmark] ascent-indexed-joins p95=1.416ms semanticEquivalent=#t"
+    ]
+  },
+  "ascent-mutual-recursive-heads": {
+    "gate_pass": true,
+    "summaries": [
+      "[gerbil-ascent-benchmark] ascent-mutual-recursive-heads p95=674us semanticEquivalent=#t"
+    ]
+  },
+  "ascent-product-session": {
+    "gate_pass": true,
+    "summaries": [
+      "[gerbil-ascent-benchmark] ascent-product-session p95=1.305ms semanticEquivalent=#t"
+    ]
+  },
+  "ascent-reachability-closure": {
+    "gate_pass": true,
+    "summaries": [
+      "[gerbil-ascent-benchmark] ascent-reachability-closure p95=330us pairs=190 semanticEquivalent=#t"
+    ]
+  },
+  "ascent-shortest-candidates": {
+    "gate_pass": true,
+    "summaries": [
+      "[gerbil-ascent-benchmark] ascent-shortest-candidates p95=1.393ms"
+    ]
+  },
+  "ascent-table-expression-membership": {
+    "gate_pass": true,
+    "summaries": [
+      "[gerbil-ascent-benchmark] ascent-membership baseline-p95=1.517ms candidate-p95=340us semanticEquivalent=#t"
+    ]
+  },
+  "ascent-table-expression": {
+    "gate_pass": false,
+    "summaries": [],
+    "errors": [
+      "ASCENT relation projection exceeded the benchmark budget"
+    ],
+    "p50Ns": 1052000,
+    "p95Ns": 2901000,
+    "maxNs": 39529000
+  },
+  "ascent-upstream-examples": {
+    "gate_pass": false,
+    "summaries": [],
+    "errors": [
+      "ASCENT Fibonacci exceeded the benchmark budget"
+    ],
+    "p50Ns": 311000,
+    "p95Ns": 1101000,
+    "maxNs": 24749000
+  },
+  "ascent-var-points-to": {
+    "gate_pass": true,
+    "summaries": [
+      "[gerbil-ascent-benchmark] ascent-var-points-to p95=591us semanticEquivalent=#t"
+    ]
+  }
+}

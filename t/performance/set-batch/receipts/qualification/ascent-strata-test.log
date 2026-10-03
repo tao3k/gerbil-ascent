@@ -1,0 +1,17 @@
+[ascent-test] START t/qualification/ascent-strata-test.ss
+[test-lane] START parallel-semantics t/qualification/ascent-strata-test.ss
+HARNESS ("t/qualification/ascent-strata-test.ss")
+MODULE t/qualification/ascent-strata-test.ss
+SUITE ASCENT SCC stratification
+CASE strict incoming edges lift every member of a positive SCC
+CASE-OK strict incoming edges lift every member of a positive SCC
+CASE all three-node graphs preserve minimum strata and cycle diagnostics
+CASE-OK all three-node graphs preserve minimum strata and cycle diagnostics
+CASE empty declarations and duplicate edges retain their strata
+CASE-OK empty declarations and duplicate edges retain their strata
+SUITE-OK ASCENT SCC stratification
+MODULE-OK t/qualification/ascent-strata-test.ss
+HARNESS-OK ("t/qualification/ascent-strata-test.ss")
+OK
+[test-lane] END parallel-semantics exit=0
+[ascent-test] PASS t/qualification/ascent-strata-test.ss (3s)

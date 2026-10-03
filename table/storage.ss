@@ -70,33 +70,36 @@
 ;;     %
 (def (gerbil-ascent-set-batch-admit! source-log count seen share-source?)
   (def (admit present)
-    (let ((source-order
-           (let collect ((cursor source-log) (left count) (ordered []))
-             (if (= left 0)
-               ordered
-               (collect (cdr cursor) (fx- left 1)
-                        (cons (car cursor) ordered)))))
-          (accepted []))
-      (for-each
-       (lambda (row)
-         (unless (hash-get present row)
-           (hash-put! present row #t)
-           (set! accepted (cons row accepted))))
-       source-order)
-      (values accepted present)))
-  (if (and share-source? (= (hash-length seen) 0))
-    (let (present (make-hash-table size: count))
-      (let scan ((cursor source-log) (left count) (unique? #t))
-        (if (= left 0)
-          (if (and unique? (null? cursor))
-            (values source-log present)
-            (admit (make-hash-table size: count)))
-          (let (row (car cursor))
+    (let (source-order
+          (let collect ((cursor source-log) (left count) (ordered []))
+            (if (= left 0) ordered
+              (collect (cdr cursor) (fx- left 1)
+                       (cons (car cursor) ordered)))))
+      (let deduplicate ((remaining source-order) (accepted []))
+        (if (null? remaining)
+          (values accepted present)
+          (let (row (car remaining))
             (if (hash-get present row)
-              (scan (cdr cursor) (fx- left 1) #f)
+              (deduplicate (cdr remaining) accepted)
               (begin
                 (hash-put! present row #t)
-                (scan (cdr cursor) (fx- left 1) unique?)))))))
+                (deduplicate (cdr remaining) (cons row accepted)))))))))
+  (if (and share-source? (= (hash-length seen) 0))
+    (let (present (make-hash-table size: count))
+      ;; Clear the private uniqueness table before source-order admission:
+      ;; its newest-row keys must not replace first-accepted row identities.
+      (let scan ((cursor source-log) (left count) (next-size 1))
+        (if (= left 0)
+          (if (null? cursor)
+            (values source-log present)
+            (begin (hash-clear! present) (admit present)))
+          (begin
+            ;; One insertion and its cardinality reveal a duplicate without
+            ;; hashing every unique row a second time for a membership probe.
+            (hash-put! present (car cursor) #t)
+            (if (= (hash-length present) next-size)
+              (scan (cdr cursor) (fx- left 1) (fx+ next-size 1))
+              (begin (hash-clear! present) (admit present)))))))
     (admit seen)))
 
 ;;; Extension must return a bounded batch before the evaluator commits rows;

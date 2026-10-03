@@ -1,0 +1,4 @@
+2726ded59615dab3cee059dd3081db4f869e2def27071bd74521d6f0202eced1  table/storage.ss
+95990ed0c739c19ab8e5af06c5ba8f7acd0a19e9ac28afc568bdd0566220280a  t/qualification/ascent-set-batch-reference.ss
+1f1a258d02aa0d4baea74df5affcc62f798b150c28bd1396c4f89ca83ba91998  t/performance/set-batch-benchmark.ss
+f79ebb264b28135506cf1a5f02d526bef014d63852b15aa36072576bca12b18e  tools/build-set-batch-benchmark.ss

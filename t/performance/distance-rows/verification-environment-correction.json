@@ -1,0 +1,6 @@
+{
+  "first_audit_gerbil_path": "unset; selected default user profile",
+  "expected_gerbil_path": "/private/tmp/ascent-test-scheduling-gerbil",
+  "corrected_audit": "all sources, artifacts and dependencies match",
+  "dependency_changes": false
+}

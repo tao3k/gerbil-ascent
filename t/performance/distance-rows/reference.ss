@@ -11,8 +11,8 @@
         (only-in :clan/poo/trie UIntTrieSet)
         (only-in :clan/poo/support/base until))
 
-(export gerbil-ascent-table-expression-prototype
-        gerbil-ascent-relation-closure-bounded)
+(export distance-rows-reference-prototype
+        distance-rows-reference-closure-bounded)
 
 ;; : (-> DenseTargets DenseBase (-> UInt Void) Void)
 (def (visit-source-row targets base consume)
@@ -119,17 +119,6 @@
     (let (pair (+ base (car targets)))
       (distance-targets (cdr targets) base depth
                        (if (improve! pair depth) (cons pair next) next) improve!))))
-
-;; : (-> [UInt] UInt DistanceRow Nat [UInt] (-> UInt Void) [UInt])
-(def (distance-row-targets targets base row depth next discover!)
-  (if (null? targets) next
-    (let* ((target (car targets)) (previous (vector-ref row target)))
-      (if (and previous (<= previous depth))
-        (distance-row-targets (cdr targets) base row depth next discover!)
-        (let (pair (+ base target))
-          (unless previous (discover! pair))
-          (vector-set! row target depth)
-          (distance-row-targets (cdr targets) base row depth (cons pair next) discover!))))))
 
 ;; : (forall (a) (-> SourceVisitor (-> UInt (-> UInt Void) a) UInt Boolean (Maybe NeighborRows) PairProjection))
 ;; : (-> SourceVisitor NeighborVisitor Radix Boolean (Maybe NeighborRows) PairProjection)
@@ -242,7 +231,7 @@
                     (hash-get sparse pair))))))))
 
 ;; : (-> UIntTrieSet Radix Nat PairProjection)
-(def (gerbil-ascent-relation-closure-bounded source radix max-pairs)
+(def (distance-rows-reference-closure-bounded source radix max-pairs)
   (let (view (relation-view source radix))
     (relation-closure (vector-ref view 0) (vector-ref view 2) radix max-pairs (vector-ref view 1))))
 
@@ -253,10 +242,7 @@
 ;; : (-> SourceVisitor NeighborVisitor Radix (Maybe NeighborRows) DistanceProjection)
 (def (relation-shortest-distance-projection visit-source neighbors-of radix native-neighbors)
   (let* ((dense? (<= radix 512))
-         ;; Allocate a distance row only after this origin reaches a pair.
-         ;; Boxed depths preserve the general callback path without introducing
-         ;; a new numeric bound; sparse domains retain their hash storage.
-         (distances (and dense? (make-vector radix #f)))
+         (distances (and dense? (make-vector (* radix radix) #f)))
          ;; Distance storage already decides membership. Small outputs retain
          ;; their list instead of allocating a second domain-sized container.
          (bitmap-threshold (and dense? (max 16 (quotient (* radix radix) 64))))
@@ -266,35 +252,24 @@
          (frontier [])
          (discovered []))
     (def (lookup-distance pair)
-      (if dense?
-        (let (row (vector-ref distances (quotient pair radix)))
-          (and row (vector-ref row (modulo pair radix))))
-        (hash-get sparse pair)))
-    (def (discover! pair)
-      (if bits
-        (pair-bitmap-admit! bits pair)
-        (begin
-          (set! discovered (cons pair discovered))
-          (set! discovered-count (+ discovered-count 1))
-          (when (and dense? (= discovered-count bitmap-threshold))
-            (set! bits (pair-bitmap radix))
-            (for-each (lambda (known) (pair-bitmap-admit! bits known)) discovered)
-            (set! discovered [])))))
+      (if dense? (vector-ref distances pair) (hash-get sparse pair)))
     (def (improve! pair depth)
-      (let* ((from (and dense? (quotient pair radix)))
-             (to (and dense? (modulo pair radix)))
-             (row (and dense? (vector-ref distances from)))
-             (previous (if dense? (and row (vector-ref row to)) (hash-get sparse pair))))
+      (let (previous (lookup-distance pair))
         (if (and previous (<= previous depth))
           #f
           (begin
-            (unless previous (discover! pair))
-            (if dense?
-              (let (present (or row (let (new (make-vector radix #f))
-                                     (vector-set! distances from new)
-                                     new)))
-                (vector-set! present to depth))
-              (hash-put! sparse pair depth))
+            (unless previous
+              (if bits
+                (pair-bitmap-admit! bits pair)
+                (begin
+                  (set! discovered (cons pair discovered))
+                  (set! discovered-count (+ discovered-count 1))
+                  (when (and dense? (= discovered-count bitmap-threshold))
+                    (set! bits (pair-bitmap radix))
+                    (for-each (lambda (known) (pair-bitmap-admit! bits known)) discovered)
+                    (set! discovered [])))))
+            (if dense? (vector-set! distances pair depth)
+                (hash-put! sparse pair depth))
             #t))))
     (visit-source
            (lambda (pair)
@@ -304,18 +279,11 @@
       (let (next [])
         (for-each
          (lambda (pair)
-           (let* ((from (quotient pair radix))
+           (let ((from (quotient pair radix))
                  (via (modulo pair radix))
-                 (depth (if dense?
-                          (vector-ref (vector-ref distances from) via)
-                          (lookup-distance pair))))
+                 (depth (lookup-distance pair)))
              (if native-neighbors
-               (if dense?
-                 ;; Every frontier origin already owns a seeded row. Native
-                 ;; targets are finite, so row addressing needs no pair decode.
-                 (set! next (distance-row-targets (native-neighbors via) (* from radix)
-                                                 (vector-ref distances from) (+ depth 1) next discover!))
-                 (set! next (distance-targets (native-neighbors via) (* from radix) (+ depth 1) next improve!)))
+               (set! next (distance-targets (native-neighbors via) (* from radix) (+ depth 1) next improve!))
                (neighbors-of via
                  (lambda (to)
                    (let (candidate (+ (* from radix) to))
@@ -340,7 +308,7 @@
 ;;; This signature describes extending source slots with .mix, not a direct
 ;;; Scheme call of the prototype value.
 ;; : (-> RelationSourceSlots RelationExpressionSlots)
-(def gerbil-ascent-table-expression-prototype
+(def distance-rows-reference-prototype
   (.o (:: self [] source-pairs radix)
       (indexed-source (relation-view source-pairs radix))
       (right-index (vector-ref (.ref self 'indexed-source) 2))

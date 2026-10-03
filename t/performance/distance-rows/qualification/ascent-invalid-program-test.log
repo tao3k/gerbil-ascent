@@ -1,0 +1,18 @@
+[ascent-test] START t/qualification/ascent-invalid-program-test.ss
+[test-lane] START parallel-semantics t/qualification/ascent-invalid-program-test.ss
+[test-lane] RUNNING parallel-semantics (5s)
+[test-lane] RUNNING parallel-semantics (10s)
+[test-lane] RUNNING parallel-semantics (15s)
+[test-lane] RUNNING parallel-semantics (20s)
+HARNESS ("t/qualification/ascent-invalid-program-test.ss")
+MODULE t/qualification/ascent-invalid-program-test.ss
+SUITE ASCENT invalid program admission
+CASE dependency and safety errors have distinct causes
+CASE-OK dependency and safety errors have distinct causes
+SUITE-OK ASCENT invalid program admission
+MODULE-OK t/qualification/ascent-invalid-program-test.ss
+HARNESS-OK ("t/qualification/ascent-invalid-program-test.ss")
+OK
+[test-lane] RUNNING parallel-semantics (25s)
+[test-lane] END parallel-semantics exit=0
+[ascent-test] PASS t/qualification/ascent-invalid-program-test.ss (28s)

@@ -1,0 +1,21 @@
+{
+  "sources": {
+    "table/expression.ss": "7a6401e145b0a0a86c574c0fae92d1c47df96f79bf2cfd211004b5055414099e",
+    "t/performance/distance-rows/benchmark.ss": "ec58558d2bf367027a96293211e1789ea473613ce5286f0a5b1b91f609853fef",
+    "t/performance/distance-rows/build.ss": "51bc176d5e052c86f44ca6f18268939c759fcfed4b3f464a99f7a14c31618e0e",
+    "t/performance/distance-rows/oracle.ss": "136ec46187f535f0e4b128728ea688ccda2b2c212e5fd0c5f0eb4a681cc3a086",
+    "t/performance/distance-rows/reference.ss": "d55dc53e01c640b39254c4288fb95ebe896726cbfa1349e3ea390ab1592eebad",
+    "t/performance/distance-rows/collect-suite.py": "1d3275f1ca11c51fff5a20304d495a93a348828f9d77101115b95650886d8908",
+    "t/performance/distance-rows/gates.py": "89f50db9dbb25da3e641cc1cb9aa49b34819aae09f22dbe76d3bd5c47293452b",
+    "t/performance/distance-rows/qualify.py": "736d454424bec3761078880e8d4579a242f6b3aac929a106ef1c833e8d5dedbd",
+    "t/performance/distance-rows/recheck-gates.py": "d8f25a32c1cf31584d2fcbb1ddd9be7bf3b6d390596e4d7f86b02936473f11a3",
+    "t/performance/distance-rows/report.py": "294388bb6f1ee0c325a366923f8886e03f26be87a619308facd5d8f2496a0b6b",
+    "t/performance/distance-rows/run-suite.py": "645def6bb10aae029db7aadb25f13a610b679186b03e491272fa0c2147921b46"
+  },
+  "paired_artifacts_verified": true,
+  "production_artifacts_verified": true,
+  "gerbil_path": "/private/tmp/ascent-test-scheduling-gerbil",
+  "dependencies_verified": 299,
+  "modules": 48,
+  "cases": 373
+}

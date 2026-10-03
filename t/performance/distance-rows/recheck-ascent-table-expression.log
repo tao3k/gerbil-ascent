@@ -1,0 +1,56 @@
+python3 tools/test_execution.py run -- python3 tools/performance_execution.py "ascent-table-expression"
+[native-performance] REUSE verified snapshot /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/t/performance/distance-rows/production-snapshot.json
+[ascent-ss] START ascent-table-expression (1000 samples)
+[ascent-test] START t/performance/ascent-scenario-performance-test.ss
+[test-lane] RUNNING exclusive (5s)
+[test-lane] RUNNING exclusive (5s)
+HARNESS ("t/performance/ascent-scenario-performance-test.ss")
+MODULE t/performance/ascent-scenario-performance-test.ss
+SUITE ASCENT SS scenario
+CASE bounded scenario
+NATIVE-MODULES-OK
+[test-lane] RUNNING exclusive (10s)
+[ascent-ss] RUNNING ascent-table-expression (10s)
+[test-lane] RUNNING exclusive (10s)
+[test-lane] RUNNING exclusive (15s)
+[test-lane] RUNNING exclusive (15s)
+[test-lane] RUNNING exclusive (20s)
+[ascent-ss] RUNNING ascent-table-expression (20s)
+[test-lane] RUNNING exclusive (20s)
+[test-lane] RUNNING exclusive (25s)
+[test-lane] RUNNING exclusive (25s)
+[test-lane] RUNNING exclusive (30s)
+[ascent-ss] RUNNING ascent-table-expression (30s)
+[test-lane] RUNNING exclusive (30s)
+[test-lane] RUNNING exclusive (35s)
+[test-lane] RUNNING exclusive (35s)
+[test-lane] RUNNING exclusive (40s)
+[ascent-ss] RUNNING ascent-table-expression (40s)
+[test-lane] RUNNING exclusive (40s)
+[test-lane] RUNNING exclusive (45s)
+[test-lane] RUNNING exclusive (45s)
+[test-lane] RUNNING exclusive (50s)
+[ascent-ss] RUNNING ascent-table-expression (50s)
+[test-lane] RUNNING exclusive (50s)
+[test-lane] RUNNING exclusive (55s)
+[test-lane] RUNNING exclusive (55s)
+[test-lane] RUNNING exclusive (60s)
+[ascent-ss] RUNNING ascent-table-expression (60s)
+[test-lane] RUNNING exclusive (60s)
+[test-lane] RUNNING exclusive (65s)
+[test-lane] RUNNING exclusive (65s)
+[test-lane] RUNNING exclusive (70s)
+[ascent-ss] RUNNING ascent-table-expression (70s)
+[test-lane] RUNNING exclusive (70s)
+[test-lane] RUNNING exclusive (75s)
+[gerbil-ascent-benchmark] ascent-table-expression baseline-p95=204.574ms candidate-p95=914us semanticEquivalent=#t
+CASE-OK bounded scenario
+SUITE-OK ASCENT SS scenario
+MODULE-OK t/performance/ascent-scenario-performance-test.ss
+HARNESS-OK ("t/performance/ascent-scenario-performance-test.ss")
+OK
+[test-lane] RUNNING exclusive (75s)
+[test-lane] END exclusive exit=0
+[ascent-test] PASS t/performance/ascent-scenario-performance-test.ss (76s)
+[ascent-ss] PASS ascent-table-expression (76s)
+[test-lane] END exclusive exit=0

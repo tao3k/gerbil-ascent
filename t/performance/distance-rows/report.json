@@ -1,0 +1,282 @@
+{
+  "warmups": 20,
+  "samples": 1000,
+  "allocation_qualified": false,
+  "results": [
+    {
+      "name": "complete-16",
+      "primary": false,
+      "timing_qualified": false,
+      "runs": [
+        {
+          "repetitions": 1,
+          "old-p50-ns": 69000,
+          "new-p50-ns": 67000,
+          "old-p95-ns": 208000,
+          "new-p95-ns": 201000,
+          "time-paired-wins": 731,
+          "primary": false
+        },
+        {
+          "repetitions": 1,
+          "old-p50-ns": 68000,
+          "new-p50-ns": 67000,
+          "old-p95-ns": 495000,
+          "new-p95-ns": 465000,
+          "time-paired-wins": 731,
+          "primary": false
+        }
+      ]
+    },
+    {
+      "name": "complete-fanout-32",
+      "primary": false,
+      "timing_qualified": false,
+      "runs": [
+        {
+          "repetitions": 1,
+          "old-p50-ns": 1168000,
+          "new-p50-ns": 979000,
+          "old-p95-ns": 24225000,
+          "new-p95-ns": 15730000,
+          "time-paired-wins": 752,
+          "primary": false
+        },
+        {
+          "repetitions": 1,
+          "old-p50-ns": 1213000,
+          "new-p50-ns": 1015000,
+          "old-p95-ns": 23248000,
+          "new-p95-ns": 20854000,
+          "time-paired-wins": 723,
+          "primary": false
+        }
+      ]
+    },
+    {
+      "name": "distance-chain-32",
+      "primary": false,
+      "timing_qualified": false,
+      "runs": [
+        {
+          "repetitions": 1,
+          "old-p50-ns": 51000,
+          "new-p50-ns": 51000,
+          "old-p95-ns": 141000,
+          "new-p95-ns": 142000,
+          "time-paired-wins": 464,
+          "primary": false
+        },
+        {
+          "repetitions": 1,
+          "old-p50-ns": 51000,
+          "new-p50-ns": 51000,
+          "old-p95-ns": 130000,
+          "new-p95-ns": 128000,
+          "time-paired-wins": 479,
+          "primary": false
+        }
+      ]
+    },
+    {
+      "name": "distance-chain-128",
+      "primary": false,
+      "timing_qualified": false,
+      "runs": [
+        {
+          "repetitions": 1,
+          "old-p50-ns": 453000,
+          "new-p50-ns": 445000,
+          "old-p95-ns": 13643000,
+          "new-p95-ns": 10807000,
+          "time-paired-wins": 623,
+          "primary": false
+        },
+        {
+          "repetitions": 1,
+          "old-p50-ns": 444000,
+          "new-p50-ns": 439000,
+          "old-p95-ns": 13414000,
+          "new-p95-ns": 12719000,
+          "time-paired-wins": 667,
+          "primary": false
+        }
+      ]
+    },
+    {
+      "name": "closure-chain-32",
+      "primary": false,
+      "timing_qualified": false,
+      "runs": [
+        {
+          "repetitions": 1,
+          "old-p50-ns": 43000,
+          "new-p50-ns": 43000,
+          "old-p95-ns": 109000,
+          "new-p95-ns": 109000,
+          "time-paired-wins": 295,
+          "primary": false
+        },
+        {
+          "repetitions": 1,
+          "old-p50-ns": 44000,
+          "new-p50-ns": 44000,
+          "old-p95-ns": 175000,
+          "new-p95-ns": 163000,
+          "time-paired-wins": 373,
+          "primary": false
+        }
+      ]
+    },
+    {
+      "name": "projection-256",
+      "primary": false,
+      "timing_qualified": false,
+      "runs": [
+        {
+          "repetitions": 1,
+          "old-p50-ns": 299000,
+          "new-p50-ns": 298000,
+          "old-p95-ns": 5113000,
+          "new-p95-ns": 5077000,
+          "time-paired-wins": 451,
+          "primary": false
+        },
+        {
+          "repetitions": 1,
+          "old-p50-ns": 302000,
+          "new-p50-ns": 302000,
+          "old-p95-ns": 5101000,
+          "new-p95-ns": 5580000,
+          "time-paired-wins": 427,
+          "primary": false
+        }
+      ]
+    },
+    {
+      "name": "empty-distances-512",
+      "primary": true,
+      "timing_qualified": true,
+      "runs": [
+        {
+          "repetitions": 1,
+          "old-p50-ns": 111000,
+          "new-p50-ns": 15000,
+          "old-p95-ns": 3501000,
+          "new-p95-ns": 62000,
+          "time-paired-wins": 986,
+          "primary": true
+        },
+        {
+          "repetitions": 1,
+          "old-p50-ns": 111000,
+          "new-p50-ns": 16000,
+          "old-p95-ns": 854000,
+          "new-p95-ns": 72000,
+          "time-paired-wins": 984,
+          "primary": true
+        }
+      ]
+    },
+    {
+      "name": "sparse-distances-512",
+      "primary": true,
+      "timing_qualified": true,
+      "runs": [
+        {
+          "repetitions": 1,
+          "old-p50-ns": 112000,
+          "new-p50-ns": 18000,
+          "old-p95-ns": 2010000,
+          "new-p95-ns": 72000,
+          "time-paired-wins": 984,
+          "primary": true
+        },
+        {
+          "repetitions": 1,
+          "old-p50-ns": 113000,
+          "new-p50-ns": 19000,
+          "old-p95-ns": 5714000,
+          "new-p95-ns": 97000,
+          "time-paired-wins": 978,
+          "primary": true
+        }
+      ]
+    },
+    {
+      "name": "single-origin-512",
+      "primary": true,
+      "timing_qualified": true,
+      "runs": [
+        {
+          "repetitions": 1,
+          "old-p50-ns": 113000,
+          "new-p50-ns": 19000,
+          "old-p95-ns": 373000,
+          "new-p95-ns": 64000,
+          "time-paired-wins": 985,
+          "primary": true
+        },
+        {
+          "repetitions": 1,
+          "old-p50-ns": 115000,
+          "new-p50-ns": 21000,
+          "old-p95-ns": 1848000,
+          "new-p95-ns": 106000,
+          "time-paired-wins": 981,
+          "primary": true
+        }
+      ]
+    },
+    {
+      "name": "empty-distances-513",
+      "primary": false,
+      "timing_qualified": false,
+      "runs": [
+        {
+          "repetitions": 1,
+          "old-p50-ns": 14000,
+          "new-p50-ns": 14000,
+          "old-p95-ns": 49000,
+          "new-p95-ns": 49000,
+          "time-paired-wins": 314,
+          "primary": false
+        },
+        {
+          "repetitions": 1,
+          "old-p50-ns": 15000,
+          "new-p50-ns": 15000,
+          "old-p95-ns": 55000,
+          "new-p95-ns": 59000,
+          "time-paired-wins": 345,
+          "primary": false
+        }
+      ]
+    },
+    {
+      "name": "sparse-distances-513",
+      "primary": false,
+      "timing_qualified": false,
+      "runs": [
+        {
+          "repetitions": 1,
+          "old-p50-ns": 17000,
+          "new-p50-ns": 17000,
+          "old-p95-ns": 56000,
+          "new-p95-ns": 55000,
+          "time-paired-wins": 334,
+          "primary": false
+        },
+        {
+          "repetitions": 1,
+          "old-p50-ns": 17000,
+          "new-p50-ns": 17000,
+          "old-p95-ns": 54000,
+          "new-p95-ns": 54000,
+          "time-paired-wins": 319,
+          "primary": false
+        }
+      ]
+    }
+  ]
+}

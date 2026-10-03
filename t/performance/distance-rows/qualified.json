@@ -1,0 +1,28 @@
+{
+  "sources": {
+    "table/expression.ss": "7a6401e145b0a0a86c574c0fae92d1c47df96f79bf2cfd211004b5055414099e",
+    "t/qualification/ascent-materialization-test.ss": "4a8875013b7893309dfc6aacff6abd47f99220442f9cbbf2dcce4a3cea9d5f0f",
+    "justfile": "924cdf716439763cb79fe2eb725b6f14e48a1b9d39896a0882d1ab1ad416caaf",
+    "t/performance/distance-rows/benchmark.ss": "ec58558d2bf367027a96293211e1789ea473613ce5286f0a5b1b91f609853fef",
+    "t/performance/distance-rows/build.ss": "51bc176d5e052c86f44ca6f18268939c759fcfed4b3f464a99f7a14c31618e0e",
+    "t/performance/distance-rows/oracle.ss": "136ec46187f535f0e4b128728ea688ccda2b2c212e5fd0c5f0eb4a681cc3a086",
+    "t/performance/distance-rows/reference.ss": "d55dc53e01c640b39254c4288fb95ebe896726cbfa1349e3ea390ab1592eebad",
+    "t/performance/distance-rows/qualify.py": "736d454424bec3761078880e8d4579a242f6b3aac929a106ef1c833e8d5dedbd"
+  },
+  "artifacts": {
+    "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/distance-rows/lib/static/gerbil-ascent__t__performance__distance-rows__reference.scm": "5c7b382b53b195c8c83e0249e06acb69a1d7169d0a14d2d3de6bf477f0f3a3a0",
+    "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/distance-rows/lib/static/gerbil-ascent__table__expression.scm": "224916af1ad9682d065df40e23937e3cfab744a2c52f34fc68da17e3aa1c013e",
+    "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/distance-rows/lib/gerbil-ascent/table/expression.o1": "559709ca92e54eb95b002a6f7ac095f5ca80e77f3ece3ade7a9a11012e45540d",
+    "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/distance-rows/lib/gerbil-ascent/table/expression~0.o1": "b373c0d53f7a7d4a0f0e4ff3f322bf322d67e5518dd434eadff063a7744c27c9",
+    "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/distance-rows/lib/gerbil-ascent/table/expression.scm": "1645cb27d67dd4aef4af0a71647cf228e96afb44ca66120d2a9bcbe978f79e25",
+    "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/distance-rows/lib/gerbil-ascent/table/expression~0.scm": "224916af1ad9682d065df40e23937e3cfab744a2c52f34fc68da17e3aa1c013e",
+    "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/distance-rows/lib/gerbil-ascent/table/expression.ssxi.ss": "f200ff24f1ce7c6d6c41b0435d47b80bb00cc51e83ece2eeefe775563c5a3b72",
+    "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/distance-rows/lib/gerbil-ascent/table/expression.ssi": "b0e768521e237abbbe2aeab6d909b1686ed567d7d0db37eb28a079fb1d89e8eb",
+    "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/distance-rows/lib/gerbil-ascent/t/performance/distance-rows/reference.ssxi.ss": "321507cac03bda6eddd7d2340e57d6643d3b8add7788734b519cc09996e01715",
+    "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/distance-rows/lib/gerbil-ascent/t/performance/distance-rows/reference.o1": "c9b791f22d0d8b9f62fd6f822059398cef60ddf4ae404585c9e595f050184175",
+    "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/distance-rows/lib/gerbil-ascent/t/performance/distance-rows/reference~0.o1": "27139556675b614f0582fa0f9e55db12d5adf86d90f13791756291fdeddd073a",
+    "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/distance-rows/lib/gerbil-ascent/t/performance/distance-rows/reference~0.scm": "5c7b382b53b195c8c83e0249e06acb69a1d7169d0a14d2d3de6bf477f0f3a3a0",
+    "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/distance-rows/lib/gerbil-ascent/t/performance/distance-rows/reference.ssi": "61fb3c2c22954b9b80da2b06dab110b54025465c0c3e7e4524399b39a2984ea1",
+    "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/distance-rows/lib/gerbil-ascent/t/performance/distance-rows/reference.scm": "11bd1715733349552633b482e08b505764c74a0d20c312223cd91d173a36b643"
+  }
+}

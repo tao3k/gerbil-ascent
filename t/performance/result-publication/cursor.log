@@ -1,0 +1,161 @@
+python3 tools/test_execution.py run -- just _result-benchmark
+[test-lane] START exclusive just
+... compile program/result
+[test-lane] RUNNING exclusive (5s)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/result-publication/lib/gerbil-ascent/program/result~0.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/result-publication/lib/gerbil-ascent/program/result.scm)
+... compile program/evaluate
+[test-lane] RUNNING exclusive (10s)
+[test-lane] RUNNING exclusive (15s)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/result-publication/lib/gerbil-ascent/program/evaluate~0.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/result-publication/lib/gerbil-ascent/program/evaluate.scm)
+[test-lane] RUNNING exclusive (20s)
+[test-lane] RUNNING exclusive (25s)
+CASE recursive-chain-16 samples=1000 repetitions=1
+PROGRESS recursive-chain-16 100/1000
+PROGRESS recursive-chain-16 200/1000
+PROGRESS recursive-chain-16 300/1000
+PROGRESS recursive-chain-16 400/1000
+PROGRESS recursive-chain-16 500/1000
+PROGRESS recursive-chain-16 600/1000
+PROGRESS recursive-chain-16 700/1000
+PROGRESS recursive-chain-16 800/1000
+PROGRESS recursive-chain-16 900/1000
+PROGRESS recursive-chain-16 1000/1000
+RESULT recursive-chain-16 old-p50-bytes=24224 new-p50-bytes=24432 paired-wins=0/1000
+CASE recursive-chain-256 samples=1000 repetitions=1
+PROGRESS recursive-chain-256 100/1000
+PROGRESS recursive-chain-256 200/1000
+PROGRESS recursive-chain-256 300/1000
+PROGRESS recursive-chain-256 400/1000
+PROGRESS recursive-chain-256 500/1000
+PROGRESS recursive-chain-256 600/1000
+PROGRESS recursive-chain-256 700/1000
+PROGRESS recursive-chain-256 800/1000
+PROGRESS recursive-chain-256 900/1000
+PROGRESS recursive-chain-256 1000/1000
+RESULT recursive-chain-256 old-p50-bytes=195712 new-p50-bytes=195920 paired-wins=7/1000
+CASE recursive-chain-1024 samples=1000 repetitions=1
+[test-lane] RUNNING exclusive (30s)
+PROGRESS recursive-chain-1024 100/1000
+PROGRESS recursive-chain-1024 200/1000
+PROGRESS recursive-chain-1024 300/1000
+PROGRESS recursive-chain-1024 400/1000
+PROGRESS recursive-chain-1024 500/1000
+[test-lane] RUNNING exclusive (35s)
+PROGRESS recursive-chain-1024 600/1000
+PROGRESS recursive-chain-1024 700/1000
+PROGRESS recursive-chain-1024 800/1000
+PROGRESS recursive-chain-1024 900/1000
+PROGRESS recursive-chain-1024 1000/1000
+RESULT recursive-chain-1024 old-p50-bytes=712096 new-p50-bytes=712304 paired-wins=1/1000
+CASE indexed-fanout-50-1 samples=1000 repetitions=1
+[test-lane] RUNNING exclusive (40s)
+PROGRESS indexed-fanout-50-1 100/1000
+PROGRESS indexed-fanout-50-1 200/1000
+PROGRESS indexed-fanout-50-1 300/1000
+PROGRESS indexed-fanout-50-1 400/1000
+PROGRESS indexed-fanout-50-1 500/1000
+PROGRESS indexed-fanout-50-1 600/1000
+PROGRESS indexed-fanout-50-1 700/1000
+PROGRESS indexed-fanout-50-1 800/1000
+PROGRESS indexed-fanout-50-1 900/1000
+PROGRESS indexed-fanout-50-1 1000/1000
+RESULT indexed-fanout-50-1 old-p50-bytes=86528 new-p50-bytes=86736 paired-wins=7/1000
+CASE indexed-fanout-100-100 samples=1000 repetitions=1
+[test-lane] RUNNING exclusive (45s)
+PROGRESS indexed-fanout-100-100 100/1000
+[test-lane] RUNNING exclusive (50s)
+PROGRESS indexed-fanout-100-100 200/1000
+[test-lane] RUNNING exclusive (55s)
+PROGRESS indexed-fanout-100-100 300/1000
+[test-lane] RUNNING exclusive (60s)
+PROGRESS indexed-fanout-100-100 400/1000
+[test-lane] RUNNING exclusive (65s)
+PROGRESS indexed-fanout-100-100 500/1000
+[test-lane] RUNNING exclusive (70s)
+[test-lane] RUNNING exclusive (75s)
+PROGRESS indexed-fanout-100-100 600/1000
+[test-lane] RUNNING exclusive (80s)
+PROGRESS indexed-fanout-100-100 700/1000
+[test-lane] RUNNING exclusive (85s)
+PROGRESS indexed-fanout-100-100 800/1000
+PROGRESS indexed-fanout-100-100 900/1000
+[test-lane] RUNNING exclusive (90s)
+PROGRESS indexed-fanout-100-100 1000/1000
+RESULT indexed-fanout-100-100 old-p50-bytes=8970240 new-p50-bytes=8970448 paired-wins=70/1000
+CASE indexed-wide-40-256 samples=1000 repetitions=1
+PROGRESS indexed-wide-40-256 100/1000
+PROGRESS indexed-wide-40-256 200/1000
+PROGRESS indexed-wide-40-256 300/1000
+[test-lane] RUNNING exclusive (95s)
+PROGRESS indexed-wide-40-256 400/1000
+PROGRESS indexed-wide-40-256 500/1000
+PROGRESS indexed-wide-40-256 600/1000
+PROGRESS indexed-wide-40-256 700/1000
+PROGRESS indexed-wide-40-256 800/1000
+PROGRESS indexed-wide-40-256 900/1000
+PROGRESS indexed-wide-40-256 1000/1000
+RESULT indexed-wide-40-256 old-p50-bytes=1695824 new-p50-bytes=1696032 paired-wins=13/1000
+CASE source-only samples=1000 repetitions=1
+PROGRESS source-only 100/1000
+PROGRESS source-only 200/1000
+PROGRESS source-only 300/1000
+PROGRESS source-only 400/1000
+PROGRESS source-only 500/1000
+PROGRESS source-only 600/1000
+PROGRESS source-only 700/1000
+PROGRESS source-only 800/1000
+PROGRESS source-only 900/1000
+PROGRESS source-only 1000/1000
+RESULT source-only old-p50-bytes=12592 new-p50-bytes=12736 paired-wins=5/1000
+CASE retained-append-16 samples=1000 repetitions=1
+PROGRESS retained-append-16 100/1000
+PROGRESS retained-append-16 200/1000
+PROGRESS retained-append-16 300/1000
+PROGRESS retained-append-16 400/1000
+PROGRESS retained-append-16 500/1000
+PROGRESS retained-append-16 600/1000
+PROGRESS retained-append-16 700/1000
+PROGRESS retained-append-16 800/1000
+[test-lane] RUNNING exclusive (100s)
+PROGRESS retained-append-16 900/1000
+PROGRESS retained-append-16 1000/1000
+RESULT retained-append-16 old-p50-bytes=319008 new-p50-bytes=320400 paired-wins=25/1000
+CASE retained-append-64 samples=1000 repetitions=1
+PROGRESS retained-append-64 100/1000
+PROGRESS retained-append-64 200/1000
+PROGRESS retained-append-64 300/1000
+PROGRESS retained-append-64 400/1000
+PROGRESS retained-append-64 500/1000
+PROGRESS retained-append-64 600/1000
+PROGRESS retained-append-64 700/1000
+PROGRESS retained-append-64 800/1000
+PROGRESS retained-append-64 900/1000
+PROGRESS retained-append-64 1000/1000
+RESULT retained-append-64 old-p50-bytes=789696 new-p50-bytes=794160 paired-wins=70/1000
+CASE retained-static-4096-8 samples=1000 repetitions=1
+PROGRESS retained-static-4096-8 100/1000
+PROGRESS retained-static-4096-8 200/1000
+PROGRESS retained-static-4096-8 300/1000
+PROGRESS retained-static-4096-8 400/1000
+PROGRESS retained-static-4096-8 500/1000
+PROGRESS retained-static-4096-8 600/1000
+PROGRESS retained-static-4096-8 700/1000
+PROGRESS retained-static-4096-8 800/1000
+PROGRESS retained-static-4096-8 900/1000
+PROGRESS retained-static-4096-8 1000/1000
+RESULT retained-static-4096-8 old-p50-bytes=2481904 new-p50-bytes=909856 paired-wins=973/1000
+*** ERROR IN for-each -- 
+*** ERROR IN ? [Error]: positive plan failed matched allocation admission
+--- irritants: (name . recursive-chain-16) 
+--- continuation backtrace:
+[0] error                                                                                                                                                                   
+[1] for-each                                                                                                                                                                
+[2] (interaction)                                                                                                                                                           "t/performance/result-benchmark.ss"@221:3-226:93                                                                                                                             (for-each (lambda (#:receipt2034) (if (if (<= (cdr (assq 'new-p50-bytes #:receipt2034)) (cdr (assq 'old-p50-bytes #:receipt2034))) (let ((#:$e2036 (not (cdr (assq ...
+[3] ##load                                                                                                                                                                  
+[4] ##load                                                                                                                                                                  
+[5] gerbil/main#gxi-main                                                                                                                                                    
+error: recipe `_result-benchmark` failed with exit code 70
+[test-lane] END exclusive exit=70
+error: recipe `result-benchmark` failed on line 633 with exit code 70

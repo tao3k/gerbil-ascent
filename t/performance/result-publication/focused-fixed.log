@@ -1,0 +1,23 @@
+[ascent-test] START t/qualification/ascent-result-publication-test.ss
+[test-lane] WAIT exclusive (5s)
+[test-lane] WAIT exclusive (10s)
+[test-lane] WAIT exclusive (15s)
+[test-lane] START exclusive t/qualification/ascent-result-publication-test.ss
+[test-lane] RUNNING exclusive (5s)
+HARNESS ("t/qualification/ascent-result-publication-test.ss")
+MODULE t/qualification/ascent-result-publication-test.ss
+SUITE Persistent result publication
+CASE unchanged relations share ordered rows while changed history remains intact
+CASE-OK unchanged relations share ordered rows while changed history remains intact
+CASE clean reruns duplicate appends and source replacement preserve publication metadata
+CASE-OK clean reruns duplicate appends and source replacement preserve publication metadata
+CASE engines sharing analysis keep publication caches independent
+CASE-OK engines sharing analysis keep publication caches independent
+CASE unknown relation errors and rule timing metadata remain exact
+CASE-OK unknown relation errors and rule timing metadata remain exact
+SUITE-OK Persistent result publication
+MODULE-OK t/qualification/ascent-result-publication-test.ss
+HARNESS-OK ("t/qualification/ascent-result-publication-test.ss")
+OK
+[test-lane] END exclusive exit=0
+[ascent-test] PASS t/qualification/ascent-result-publication-test.ss (26s)

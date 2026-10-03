@@ -1,0 +1,21 @@
+[test-lane] START exclusive bash
+... compile program/result
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/result-publication/lib/gerbil-ascent/program/result~0.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/result-publication/lib/gerbil-ascent/program/result.scm)
+... compile program/evaluate
+[test-lane] RUNNING exclusive (5s)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/result-publication/lib/gerbil-ascent/program/evaluate~0.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/result-publication/lib/gerbil-ascent/program/evaluate.scm)
+[test-lane] RUNNING exclusive (10s)
+CASE recursive-chain-16 samples=20 repetitions=1
+RESULT recursive-chain-16 old-p50-bytes=40464 new-p50-bytes=40464 paired-wins=0/20
+CASE recursive-chain-256 samples=20 repetitions=1
+RESULT recursive-chain-256 old-p50-bytes=211952 new-p50-bytes=211952 paired-wins=0/20
+CASE source-only samples=20 repetitions=1
+RESULT source-only old-p50-bytes=28784 new-p50-bytes=28784 paired-wins=0/20
+CASE retained-append-16 samples=20 repetitions=1
+RESULT retained-append-16 old-p50-bytes=335312 new-p50-bytes=328240 paired-wins=19/20
+CASE retained-static-4096-8 samples=20 repetitions=1
+RESULT retained-static-4096-8 old-p50-bytes=2498176 new-p50-bytes=926112 paired-wins=20/20
+OK
+[test-lane] END exclusive exit=0

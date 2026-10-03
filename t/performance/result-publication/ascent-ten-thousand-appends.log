@@ -1,0 +1,71 @@
+[ascent-ss] START ascent-ten-thousand-appends (1000 samples)
+[ascent-test] START t/performance/ascent-scenario-performance-test.ss
+[test-lane] START exclusive t/performance/ascent-scenario-performance-test.ss
+HARNESS ("t/performance/ascent-scenario-performance-test.ss")
+MODULE t/performance/ascent-scenario-performance-test.ss
+SUITE ASCENT SS scenario
+CASE bounded scenario
+[test-lane] RUNNING exclusive (5s)
+[ascent-ss] RUNNING ascent-ten-thousand-appends (10s)
+[test-lane] RUNNING exclusive (10s)
+[test-lane] RUNNING exclusive (15s)
+[ascent-ss] RUNNING ascent-ten-thousand-appends (20s)
+[test-lane] RUNNING exclusive (20s)
+[test-lane] RUNNING exclusive (25s)
+[ascent-ss] RUNNING ascent-ten-thousand-appends (30s)
+[test-lane] RUNNING exclusive (30s)
+[test-lane] RUNNING exclusive (35s)
+[ascent-ss] RUNNING ascent-ten-thousand-appends (40s)
+[test-lane] RUNNING exclusive (40s)
+[test-lane] RUNNING exclusive (45s)
+[gerbil-ascent-benchmark] ascent-ten-thousand-appends p95=104.996ms
+(p50-ns 25026000 p95-ns 104996000 max-ns 366140000 over-50ms 238)
+ERROR CASE bounded scenario
+
+*** ERROR IN ? [Error]: ASCENT ten-thousand-append latency exceeded the unchanged 50 ms bound
+--- continuation backtrace:
+[0] error                                                                                                                                                                   
+[1] (interaction)                                                                                                                                                           "t/scenarios/performance/ascent-ten-thousand-appends/scenario.ss"@58:5-58:84                                                                                                 (error "ASCENT ten-thousand-append latency exceeded the unchanged 50 ms bound")
+[2] ##load                                                                                                                                                                  
+[3] ##load                                                                                                                                                                  
+[4] core/observability/debug#call-with-poo-flow-debug-memory-case-watchdog__%                                                                                               
+[5] ##call-with-values                                                                                                                                                      
+[6] std/test/base#__test-case!                                                                                                                                                                                                                                                                                                                           ((let () (declare (not safe)) (##unchecked-structure-ref _%tc499784%_ '6 '#f '#f)))
+[7] std/test/base#__test-suite!                                                                                                                                                                                                                                                                                                                          (##call-with-current-continuation __tmp242471)
+[8] std/test/base#__test-suite!                                                                                                                                                                                                                                                                                                                          (##for-each __tmp242470 __tmp242469)
+[9] std/test/base#__test-suite!                                                                                                                                                                                                                                                                                                                          (##for-each __tmp242470 __tmp242469)
+...
+[13] std/test/base#__test-harness!                                                                                                                                                                                                                                                                                                                       (##call-with-current-continuation __tmp242457)
+[14] std/test/base#__test-harness!                                                                                                                                                                                                                                                                                                                       (##for-each __tmp242456 __tmp242455)
+[15] std/test/base#__test-harness!                                                                                                                                                                                                                                                                                                                       (##for-each __tmp242456 __tmp242455)
+[16] gerbil/tools/gxtest#gxtest-main                                                                                                                                        
+SUITE-OK ASCENT SS scenario
+MODULE-OK t/performance/ascent-scenario-performance-test.ss
+HARNESS-OK ("t/performance/ascent-scenario-performance-test.ss")
+ERROR HARNESS (t/performance/ascent-scenario-performance-test.ss)
+at HARNESS ("t/performance/ascent-scenario-performance-test.ss")
+at MODULE t/performance/ascent-scenario-performance-test.ss
+at SUITE ASCENT SS scenario
+at CASE bounded scenario
+
+*** ERROR IN ? [Error]: ASCENT ten-thousand-append latency exceeded the unchanged 50 ms bound
+--- continuation backtrace:
+[0] error                                                                                                                                                                   
+[1] (interaction)                                                                                                                                                           "t/scenarios/performance/ascent-ten-thousand-appends/scenario.ss"@58:5-58:84                                                                                                 (error "ASCENT ten-thousand-append latency exceeded the unchanged 50 ms bound")
+[2] ##load                                                                                                                                                                  
+[3] ##load                                                                                                                                                                  
+[4] core/observability/debug#call-with-poo-flow-debug-memory-case-watchdog__%                                                                                               
+[5] ##call-with-values                                                                                                                                                      
+[6] std/test/base#__test-case!                                                                                                                                                                                                                                                                                                                           ((let () (declare (not safe)) (##unchecked-structure-ref _%tc499784%_ '6 '#f '#f)))
+[7] std/test/base#__test-suite!                                                                                                                                                                                                                                                                                                                          (##call-with-current-continuation __tmp242471)
+[8] std/test/base#__test-suite!                                                                                                                                                                                                                                                                                                                          (##for-each __tmp242470 __tmp242469)
+[9] std/test/base#__test-suite!                                                                                                                                                                                                                                                                                                                          (##for-each __tmp242470 __tmp242469)
+...
+[13] std/test/base#__test-harness!                                                                                                                                                                                                                                                                                                                       (##call-with-current-continuation __tmp242457)
+[14] std/test/base#__test-harness!                                                                                                                                                                                                                                                                                                                       (##for-each __tmp242456 __tmp242455)
+[15] std/test/base#__test-harness!                                                                                                                                                                                                                                                                                                                       (##for-each __tmp242456 __tmp242455)
+[16] gerbil/tools/gxtest#gxtest-main                                                                                                                                        
+[test-lane] END exclusive exit=0
+error: recipe `test-file` failed with exit code 1
+[ascent-ss] FAIL ascent-ten-thousand-appends (50s, exit=1)
+error: recipe `performance-scenario` failed with exit code 1

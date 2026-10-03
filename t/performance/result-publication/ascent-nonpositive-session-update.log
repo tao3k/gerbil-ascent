@@ -1,0 +1,19 @@
+[ascent-ss] START ascent-nonpositive-session-update (1000 samples)
+[ascent-test] START t/performance/ascent-scenario-performance-test.ss
+[test-lane] START exclusive t/performance/ascent-scenario-performance-test.ss
+HARNESS ("t/performance/ascent-scenario-performance-test.ss")
+MODULE t/performance/ascent-scenario-performance-test.ss
+SUITE ASCENT SS scenario
+CASE bounded scenario
+[test-lane] RUNNING exclusive (5s)
+[ascent-ss] RUNNING ascent-nonpositive-session-update (10s)
+[test-lane] RUNNING exclusive (10s)
+[gerbil-ascent-benchmark] ascent-nonpositive-session-update p95=978us semanticEquivalent=#t
+CASE-OK bounded scenario
+SUITE-OK ASCENT SS scenario
+MODULE-OK t/performance/ascent-scenario-performance-test.ss
+HARNESS-OK ("t/performance/ascent-scenario-performance-test.ss")
+OK
+[test-lane] END exclusive exit=0
+[ascent-test] PASS t/performance/ascent-scenario-performance-test.ss (12s)
+[ascent-ss] PASS ascent-nonpositive-session-update (13s)

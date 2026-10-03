@@ -1,0 +1,25 @@
+python3 tools/test_execution.py run -- just _check-policy
+[test-lane] START exclusive just
+ASP_GERBIL_SCHEME_POLICY=1 GERBIL_BUILD_CORES="${GERBIL_BUILD_CORES:-$(getconf NPROCESSORS_ONLN)}" gerbil build
+[asp-gerbil-scheme-policy] START selected modules=41
+[test-lane] RUNNING exclusive (5s)
+[asp-gerbil-scheme-policy] error GERBIL-SCHEME-MOD-R002 program/evaluate.ss: program/evaluate.ss carries 1000 effective lines and 3 definitions
+[asp-gerbil-scheme-policy] COMPLETE findings=1 errors=1
+*** ERROR IN asp-gerbil-scheme/src/build-api/package-spec#asp-gerbil-scheme-package-policy-native-spec -- 
+*** ERROR IN ? [Error]: ASP Gerbil Scheme policy rejected build
+--- irritants: 1 
+--- continuation backtrace:
+[0] error                                                                                                                                                                   
+[1] asp-gerbil-scheme/src/build-api/package-spec#asp-gerbil-scheme-package-policy-native-spec                                                                               
+[2] main                                                                                                                                                                    "build.ss"@59:18-59:44                                                                                                                                                       (gerbil-ascent-build-spec)
+*** WARNING module std/net/request is DEPRECATED and will be removed in the future
+... build in current directory
+*** ERROR IN std/misc/process#run-process__% -- 
+*** ERROR IN "misc/process.ss"@25.35-25.46 [ProcessError]: process exited with non-zero status
+--- irritants: "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/build.ss" 17920 (path: "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/build.ss" arguments: ("compile") environment: #f directory: #f stdin-redirection: #t stdout-redirection: #f stderr-redirection: #f pseudo-terminal: #f show-console: #f) 
+--- continuation backtrace:
+[0] raise                                                                                                                                                                   
+[1] std/misc/process#run-process__%                                                                                                                                                                                                                                                                                                                      ((if (procedure? _%check-status716621%_) _%check-status716621%_ std/misc/process#check-process-success) _%status716638%_ _%settings716631%_)
+error: recipe `_check-policy` failed on line 21 with exit code 70
+[test-lane] END exclusive exit=70
+error: recipe `check-policy` failed on line 18 with exit code 70

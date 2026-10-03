@@ -628,3 +628,23 @@ _index-lifecycle-benchmark:
     test "$(grep -c '^RESULT ' "$log")" -eq 7
     if grep -E 'ERROR|Heap overflow|Stack overflow' "$log" >/dev/null; then exit 1; fi
     grep -x 'OK' "$log" >/dev/null
+
+result-benchmark:
+    python3 tools/test_execution.py run -- just _result-benchmark
+
+_result-benchmark:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    export ASCENT_RESULT_LIB="{{ justfile_directory() }}/.gerbil/result-publication/lib"
+    export ASCENT_RESULT_RECEIPT="${ASCENT_RESULT_RECEIPT:-{{ justfile_directory() }}/.gerbil/result-publication/receipt.sexp}"
+    mkdir -p .gerbil/result-publication
+    shasum -a 256 program/result.ss program/evaluate.ss program/positive.ss program/analysis.ss table/access.ss table/funs.ss table/storage.ss t/qualification/ascent-result-reference-evaluate.ss t/performance/result-benchmark.ss tools/build-result-benchmark.ss > "$ASCENT_RESULT_RECEIPT.sources"
+    timeout 150s gxi {{ gerbil_test_runtime_options }} tools/build-result-benchmark.ss
+    log="$(mktemp)"
+    trap 'rm -f "$log"' EXIT
+    GERBIL_LOADPATH="$ASCENT_RESULT_LIB${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" timeout 30s gxi {{ gerbil_test_runtime_options }} t/performance/result-publication/module-resolution.ss > "$ASCENT_RESULT_RECEIPT.modules"
+    test "$(grep -c '/.gerbil/result-publication/lib/.*\.ssi$' "$ASCENT_RESULT_RECEIPT.modules")" -eq 3
+    GERBIL_LOADPATH="$ASCENT_RESULT_LIB${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" timeout 180s gxi {{ gerbil_test_runtime_options }} t/performance/result-benchmark.ss 2>&1 | tee "$log"
+    test "$(grep -c '^RESULT ' "$log")" -eq 10
+    if grep -E 'ERROR|Heap overflow|Stack overflow' "$log" >/dev/null; then exit 1; fi
+    grep -x 'OK' "$log" >/dev/null

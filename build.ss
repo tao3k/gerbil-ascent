@@ -33,6 +33,7 @@
     "program/analysis"
     "program/summary"
     "program/admission"
+    "program/result"
     "program/evaluate"
     "program/session"
     "program/interface"

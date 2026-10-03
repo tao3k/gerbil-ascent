@@ -1,0 +1,122 @@
+[
+  {
+    "name": "recursive-chain-16",
+    "old-p50-bytes": 40496,
+    "new-p50-bytes": 40496,
+    "paired-wins": 8,
+    "old-p50-ns": 20000,
+    "new-p50-ns": 20000,
+    "old-p95-ns": 24000,
+    "new-p95-ns": 24000,
+    "time-paired-wins": 339,
+    "speed_ratio": 1.0
+  },
+  {
+    "name": "recursive-chain-256",
+    "old-p50-bytes": 211984,
+    "new-p50-bytes": 211984,
+    "paired-wins": 8,
+    "old-p50-ns": 232000,
+    "new-p50-ns": 233000,
+    "old-p95-ns": 723000,
+    "new-p95-ns": 691000,
+    "time-paired-wins": 444,
+    "speed_ratio": 0.9957081545064378
+  },
+  {
+    "name": "recursive-chain-1024",
+    "old-p50-bytes": 728368,
+    "new-p50-bytes": 728368,
+    "paired-wins": 3,
+    "old-p50-ns": 898000,
+    "new-p50-ns": 898000,
+    "old-p95-ns": 3858000,
+    "new-p95-ns": 2754000,
+    "time-paired-wins": 477,
+    "speed_ratio": 1.0
+  },
+  {
+    "name": "indexed-fanout-50-1",
+    "old-p50-bytes": 102912,
+    "new-p50-bytes": 102912,
+    "paired-wins": 8,
+    "old-p50-ns": 84000,
+    "new-p50-ns": 84000,
+    "old-p95-ns": 248000,
+    "new-p95-ns": 224000,
+    "time-paired-wins": 427,
+    "speed_ratio": 1.0
+  },
+  {
+    "name": "indexed-fanout-100-100",
+    "old-p50-bytes": 8986624,
+    "new-p50-bytes": 8986624,
+    "paired-wins": 67,
+    "old-p50-ns": 12752000,
+    "new-p50-ns": 12796000,
+    "old-p95-ns": 47623000,
+    "new-p95-ns": 53395000,
+    "time-paired-wins": 533,
+    "speed_ratio": 0.9965614254454517
+  },
+  {
+    "name": "indexed-wide-40-256",
+    "old-p50-bytes": 1712208,
+    "new-p50-bytes": 1712208,
+    "paired-wins": 17,
+    "old-p50-ns": 1709000,
+    "new-p50-ns": 1710000,
+    "old-p95-ns": 5879000,
+    "new-p95-ns": 6762000,
+    "time-paired-wins": 474,
+    "speed_ratio": 0.9994152046783625
+  },
+  {
+    "name": "source-only",
+    "old-p50-bytes": 28752,
+    "new-p50-bytes": 28752,
+    "paired-wins": 5,
+    "old-p50-ns": 6000,
+    "new-p50-ns": 6000,
+    "old-p95-ns": 6000,
+    "new-p95-ns": 6000,
+    "time-paired-wins": 290,
+    "speed_ratio": 1.0
+  },
+  {
+    "name": "retained-append-16",
+    "old-p50-bytes": 335280,
+    "new-p50-bytes": 328208,
+    "paired-wins": 982,
+    "old-p50-ns": 111000,
+    "new-p50-ns": 110000,
+    "old-p95-ns": 354000,
+    "new-p95-ns": 338000,
+    "time-paired-wins": 605,
+    "speed_ratio": 1.009090909090909
+  },
+  {
+    "name": "retained-append-64",
+    "old-p50-bytes": 805968,
+    "new-p50-bytes": 626864,
+    "paired-wins": 944,
+    "old-p50-ns": 251000,
+    "new-p50-ns": 243000,
+    "old-p95-ns": 837000,
+    "new-p95-ns": 763000,
+    "time-paired-wins": 923,
+    "speed_ratio": 1.0329218106995885
+  },
+  {
+    "name": "retained-static-4096-8",
+    "old-p50-bytes": 2498176,
+    "new-p50-bytes": 926112,
+    "paired-wins": 970,
+    "old-p50-ns": 628000,
+    "new-p50-ns": 588000,
+    "old-p95-ns": 2278000,
+    "new-p95-ns": 1680000,
+    "time-paired-wins": 895,
+    "speed_ratio": 1.0680272108843538
+  }
+]

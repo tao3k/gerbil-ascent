@@ -7,17 +7,15 @@
 (import (only-in :clan/poo/object .o .ref object?)
         (only-in :clan/poo/mop validate)
         (only-in :std/iter for iter Iterator &Iterator-next!)
-        (only-in "admission.ss" gerbil-ascent-initialize-source-row!)
-        (only-in "result.ss" gerbil-ascent-publication-cache
-                 gerbil-ascent-publish-rows gerbil-ascent-snapshot-rows gerbil-ascent-snapshot-sizes)
-        (only-in "planning.ss" gerbil-ascent-prepare-rule)
-        (only-in "positive.ss" gerbil-ascent-positive-plan
+        (only-in :gerbil-ascent/program/admission gerbil-ascent-initialize-source-row!)
+        (only-in :gerbil-ascent/program/planning gerbil-ascent-prepare-rule)
+        (only-in :gerbil-ascent/program/positive gerbil-ascent-positive-plan
                  gerbil-ascent-run-positive-plan! gerbil-ascent-index-key
                  gerbil-ascent-emit-heads!)
-        (only-in "types.ss" GerbilAscentSessionContract)
-        (only-in "analysis.ss" gerbil-ascent-program-analysis
+        (only-in :gerbil-ascent/program/types GerbilAscentSessionContract)
+        (only-in :gerbil-ascent/program/analysis gerbil-ascent-program-analysis
                  gerbil-ascent-program-schema)
-        (only-in "funs.ss" gerbil-ascent-rule-strata
+        (only-in :gerbil-ascent/program/funs gerbil-ascent-rule-strata
                  gerbil-ascent-lattice-feeds-relation?
                  gerbil-ascent-delta-positions
                  gerbil-ascent-lattice-key
@@ -34,13 +32,13 @@
                  gerbil-ascent-set-storage-provider)
         (only-in :clan/poo/support/base until))
 
-(export gerbil-ascent-evaluate-program gerbil-ascent-make-engine)
+(export ascent-result-reference-evaluate-program ascent-result-reference-make-engine)
 
 (def Session. (.ref GerbilAscentSessionContract 'proto))
 
 ;;; One engine owns all mutable row buffers and indexes. Reused immutable
 ;;; analysis/schema values never share evaluation-local relation state.
-;; gerbil-ascent-make-engine
+;; ascent-result-reference-make-engine
 ;;   : (-> Program Boolean (Maybe Analysis) (Maybe Schema) Boolean Engine)
 ;;   | doc m%
 ;;       Construct a stratified evaluator for a program and an optional
@@ -49,11 +47,11 @@
 ;;       # Examples
 ;;
 ;;       ```scheme
-;;       (gerbil-ascent-make-engine program #f)
+;;       (ascent-result-reference-make-engine program #f)
 ;;       ;; => an engine with one fresh evaluation state
 ;;       ```
 ;;     %
-(def (gerbil-ascent-make-engine program session? (analysis-override #f)
+(def (ascent-result-reference-make-engine program session? (analysis-override #f)
                                 (schema-override #f)
                                 (measure-rule-times? #f)
                                 (plan-error #f))
@@ -746,10 +744,7 @@
                   (vector-set! pending-lattice-keys index [])
                   (hash-clear! (vector-ref pending-seen index)))
                 (commit (+ index 1))))
-            (when (and active?
-                       (if (vector? deadline) (vector-ref deadline 0) deadline)
-                       (>= (current-jiffy)
-                           (if (vector? deadline) (vector-ref deadline 0) deadline)))
+            (when (and active? deadline (>= (current-jiffy) deadline))
               (set! resume-stratum stratum)
               (set! resume-round round)
               (set! complete? #f)
@@ -762,9 +757,7 @@
            (set! dirty? #f)
            (set! materialized-dirty? #f))
          (let (snapshots
-               (if (vector? deadline)
-                 (gerbil-ascent-publish-rows all deadline)
-                 (vector-map (lambda (rows) (reverse rows)) all)))
+               (vector-map (lambda (rows) (reverse rows)) all))
            (set! last-result
              (.o (relation-names (vector->list names))
                  (finished complete?)
@@ -775,17 +768,20 @@
                               (quotient (* ticks 1000000000)
                                         (jiffies-per-second)))
                             (vector->list rule-ticks))))
-                 (relation-sizes (lambda () (gerbil-ascent-snapshot-sizes names snapshots)))
+                 (relation-sizes
+                  (lambda ()
+                    (map (lambda (name rows)
+                           (cons name (length rows)))
+                         (vector->list names) (vector->list snapshots))))
                  (rows-of (lambda (name)
-                            (gerbil-ascent-snapshot-rows
-                             (vector-ref snapshots (position-of name)))))))))
+                            (vector-ref snapshots (position-of name))))))))
          last-result))
         (def (run!)
           (if recompute-from-source?
             last-result
             (run-retained!)))
         (if session?
-          (let (published (gerbil-ascent-publication-cache count))
+          (let ()
             (def (source-rows-at index)
               (or (vector-ref source-overrides index)
                   (append (vector-ref source-originals index)
@@ -843,7 +839,7 @@
                   (let* ((replacement
                           (append (source-rows-at index) (list row)))
                          (candidate (source-program-with index replacement))
-                         (result ((gerbil-ascent-make-engine
+                         (result ((ascent-result-reference-make-engine
                                    candidate #f analysis schema
                                    measure-rule-times?))))
                     (set! source-count (+ source-count 1))
@@ -951,7 +947,7 @@
                   (when (> next-count input-limit)
                     (error "ASCENT session input fact budget exceeded"))
                   (let* ((candidate (source-program-with index rows))
-                         (result ((gerbil-ascent-make-engine
+                         (result ((ascent-result-reference-make-engine
                                    candidate #f analysis schema
                                    measure-rule-times?))))
                     (set! source-count next-count)
@@ -960,29 +956,25 @@
                     (set! recompute-from-source? #t)
                     (set! dirty? #f)
                     (set! last-result result)))))
-            (def (run-session!)
-              (if recompute-from-source? last-result
-                (begin (vector-set! published 0 #f) (run-retained! published))))
             (def (run-timeout! duration-nanoseconds)
+
               (unless (and (exact-integer? duration-nanoseconds)
                            (>= duration-nanoseconds 0))
                 (error "invalid ASCENT timeout in nanoseconds"
                        duration-nanoseconds))
               (if recompute-from-source?
                 last-result
-                (begin
-                  (vector-set! published 0
-                    (+ (current-jiffy)
-                       (quotient (* duration-nanoseconds (jiffies-per-second))
-                                 1000000000)))
-                  (run-retained! published))))
+                (run-retained!
+                 (+ (current-jiffy)
+                    (quotient (* duration-nanoseconds (jiffies-per-second))
+                              1000000000)))))
           (validate GerbilAscentSessionContract
                     (.o (:: @ Session.)
                         (.append-source!
                          (if single-set-source?
                            append-single-set-source! append-source!))
                         (.replace-source! replace-source!)
-                        (.run run-session!)
+                        (.run run!)
                         (.run-timeout run-timeout!)
                         (.analysis analysis)
                         (.schema schema)
@@ -992,8 +984,8 @@
           run!)))))
 
 ;; : (-> Program EvaluationResult)
-(def (gerbil-ascent-evaluate-program program
+(def (ascent-result-reference-evaluate-program program
                                       measure-rule-times?: (measure-rule-times? #f))
   (unless (boolean? measure-rule-times?)
     (error "invalid ASCENT rule timing option" measure-rule-times?))
-  ((gerbil-ascent-make-engine program #f #f #f measure-rule-times?)))
+  ((ascent-result-reference-make-engine program #f #f #f measure-rule-times?)))

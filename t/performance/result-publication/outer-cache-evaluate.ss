@@ -9,7 +9,7 @@
         (only-in :std/iter for iter Iterator &Iterator-next!)
         (only-in "admission.ss" gerbil-ascent-initialize-source-row!)
         (only-in "result.ss" gerbil-ascent-publication-cache
-                 gerbil-ascent-publish-rows gerbil-ascent-snapshot-rows gerbil-ascent-snapshot-sizes)
+                 gerbil-ascent-publish-rows)
         (only-in "planning.ss" gerbil-ascent-prepare-rule)
         (only-in "positive.ss" gerbil-ascent-positive-plan
                  gerbil-ascent-run-positive-plan! gerbil-ascent-index-key
@@ -81,6 +81,7 @@
            (positions (vector-ref schema 4))
            (all (make-vector count []))
            (delta (make-vector count []))
+           (published (and session? (gerbil-ascent-publication-cache count)))
            (all-version (make-vector count 0))
            (delta-version (make-vector count 0))
            (all-size (make-vector count 0))
@@ -746,10 +747,7 @@
                   (vector-set! pending-lattice-keys index [])
                   (hash-clear! (vector-ref pending-seen index)))
                 (commit (+ index 1))))
-            (when (and active?
-                       (if (vector? deadline) (vector-ref deadline 0) deadline)
-                       (>= (current-jiffy)
-                           (if (vector? deadline) (vector-ref deadline 0) deadline)))
+            (when (and active? deadline (>= (current-jiffy) deadline))
               (set! resume-stratum stratum)
               (set! resume-round round)
               (set! complete? #f)
@@ -762,9 +760,7 @@
            (set! dirty? #f)
            (set! materialized-dirty? #f))
          (let (snapshots
-               (if (vector? deadline)
-                 (gerbil-ascent-publish-rows all deadline)
-                 (vector-map (lambda (rows) (reverse rows)) all)))
+               (gerbil-ascent-publish-rows all published))
            (set! last-result
              (.o (relation-names (vector->list names))
                  (finished complete?)
@@ -775,17 +771,20 @@
                               (quotient (* ticks 1000000000)
                                         (jiffies-per-second)))
                             (vector->list rule-ticks))))
-                 (relation-sizes (lambda () (gerbil-ascent-snapshot-sizes names snapshots)))
+                 (relation-sizes
+                  (lambda ()
+                    (map (lambda (name rows)
+                           (cons name (length rows)))
+                         (vector->list names) (vector->list snapshots))))
                  (rows-of (lambda (name)
-                            (gerbil-ascent-snapshot-rows
-                             (vector-ref snapshots (position-of name)))))))))
+                            (vector-ref snapshots (position-of name))))))))
          last-result))
         (def (run!)
           (if recompute-from-source?
             last-result
             (run-retained!)))
         (if session?
-          (let (published (gerbil-ascent-publication-cache count))
+          (let ()
             (def (source-rows-at index)
               (or (vector-ref source-overrides index)
                   (append (vector-ref source-originals index)
@@ -960,29 +959,25 @@
                     (set! recompute-from-source? #t)
                     (set! dirty? #f)
                     (set! last-result result)))))
-            (def (run-session!)
-              (if recompute-from-source? last-result
-                (begin (vector-set! published 0 #f) (run-retained! published))))
             (def (run-timeout! duration-nanoseconds)
+
               (unless (and (exact-integer? duration-nanoseconds)
                            (>= duration-nanoseconds 0))
                 (error "invalid ASCENT timeout in nanoseconds"
                        duration-nanoseconds))
               (if recompute-from-source?
                 last-result
-                (begin
-                  (vector-set! published 0
-                    (+ (current-jiffy)
-                       (quotient (* duration-nanoseconds (jiffies-per-second))
-                                 1000000000)))
-                  (run-retained! published))))
+                (run-retained!
+                 (+ (current-jiffy)
+                    (quotient (* duration-nanoseconds (jiffies-per-second))
+                              1000000000)))))
           (validate GerbilAscentSessionContract
                     (.o (:: @ Session.)
                         (.append-source!
                          (if single-set-source?
                            append-single-set-source! append-source!))
                         (.replace-source! replace-source!)
-                        (.run run-session!)
+                        (.run run!)
                         (.run-timeout run-timeout!)
                         (.analysis analysis)
                         (.schema schema)

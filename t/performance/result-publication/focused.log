@@ -1,0 +1,25 @@
+[ascent-test] START t/qualification/ascent-result-publication-test.ss
+[test-lane] START exclusive t/qualification/ascent-result-publication-test.ss
+HARNESS ("t/qualification/ascent-result-publication-test.ss")
+MODULE t/qualification/ascent-result-publication-test.ss
+ERROR MODULE t/qualification/ascent-result-publication-test.ss
+
+*** ERROR IN ?
+--- Syntax Error: error reading module
+--- Context: 
+... form:   ... detail: "Incomplete form, EOF reached\n"
+... detail: (line: 12 col: 0)
+"/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/t/qualification/ascent-result-publication-test.ss"
+HARNESS-OK ("t/qualification/ascent-result-publication-test.ss")
+ERROR HARNESS (t/qualification/ascent-result-publication-test.ss)
+at HARNESS ("t/qualification/ascent-result-publication-test.ss")
+at MODULE t/qualification/ascent-result-publication-test.ss
+
+*** ERROR IN ?
+--- Syntax Error: error reading module
+--- Context: 
+... form:   ... detail: "Incomplete form, EOF reached\n"
+... detail: (line: 12 col: 0)
+"/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/t/qualification/ascent-result-publication-test.ss"
+[test-lane] END exclusive exit=0
+error: recipe `test-file` failed with exit code 1

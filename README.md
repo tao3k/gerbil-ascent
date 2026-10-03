@@ -272,6 +272,13 @@ validation and callback order. Full-solve allocation measurements, timing limits
 and native qualification are recorded in the
 [index lifecycle report](t/performance/index-lifecycle/README.org).
 
+Retained engines now publish persistent row views on demand. Unchanged
+relations reuse their ordered view, while unread intermediate results avoid
+copying row headers. Historical results remain stable after later appends,
+replacement and timeout resume. Public row reads still return ordinary lists.
+Complete-output allocation measurements and timing limits are recorded in the
+[result publication report](t/performance/result-publication/README.org).
+
 ## Bounded relation execution
 
 Composition, delta steps, closure and shortest distances share a prepared

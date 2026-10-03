@@ -178,3 +178,4 @@ SUITE-OK finite temporal lens integrated gate
 MODULE-OK t/qualification/ascent-temporal-lens-test.ss
 HARNESS-OK ("t/qualification/ascent-temporal-lens-test.ss")
 OK
+*** WARNING module std/net/request is DEPRECATED and will be removed in the future

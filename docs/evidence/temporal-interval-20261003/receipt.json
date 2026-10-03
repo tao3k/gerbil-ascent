@@ -10,7 +10,8 @@
   "model_calls": 0,
   "scope": "finite uncertainty about one valid-time point; no source authentication or general interval algebra",
   "files": {
-    "qualification.log": "38b212b96550274cb494c6d5bc39366c81180a4aa83bf3122c001606d75f9830",
+    "qualification.log": "36ebeed6f9727c42e90d915802db6f0984ec4d733dce0ee71eed30d859a6926a",
     "clean-build.log": "d0ff95dff327b9ab6cc97f9cd21be09ed82a88a33d8062e6ccfc21a4bd089f2c"
-  }
+  },
+  "local_environment_admission": "gerbil env launches a separately heap-fenced Gerbil child; qualification passes with GERBIL_PATH/GERBIL_LOADPATH unset"
 }

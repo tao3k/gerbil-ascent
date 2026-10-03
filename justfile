@@ -391,7 +391,7 @@ test-temporal:
     set -euo pipefail
     log="$(mktemp)"
     trap 'rm -f "$log"' EXIT
-    GERBIL_LOADPATH="{{ justfile_directory() }}${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" timeout 120s gerbil {{ gerbil_test_runtime_options }} t/harness/temporal-test.ss 2>&1 | tee "$log"
+    GERBIL_LOADPATH="{{ justfile_directory() }}${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" timeout 120s gerbil {{ gerbil_test_runtime_options }} env gerbil {{ gerbil_test_runtime_options }} t/harness/temporal-test.ss 2>&1 | tee "$log"
     if grep -E 'ERROR (CHECK|CASE|HARNESS|MODULE)|Heap overflow|Stack overflow' "$log" >/dev/null; then exit 1; fi
     grep -F 'MODULE-OK t/qualification/ascent-temporal-lens-test.ss' "$log" >/dev/null
     grep -F 'HARNESS-OK' "$log" >/dev/null

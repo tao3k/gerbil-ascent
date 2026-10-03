@@ -18,6 +18,7 @@ test-file path:
     #!/usr/bin/env bash
     set -euo pipefail
     test -f "{{ path }}"
+    if [[ "{{ path }}" == t/qualification/ascent-temporal-lens-test.ss ]]; then exec just test-temporal; fi
     output_file="$(mktemp)"
     trap 'rm -f "$output_file"' EXIT
     GERBIL_LOADPATH="{{ justfile_directory() }}${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" timeout "${ASCENT_GXTEST_TIMEOUT:-120s}" gerbil {{ gerbil_test_runtime_options }} test -v 5 "{{ path }}" 2>&1 | tee "$output_file"
@@ -51,7 +52,11 @@ test:
     }
     batch=()
     for file in "${files[@]}"; do
-        if [[ "$file" == t/qualification/ascent-reasoning-library-test.ss ||
+        if [[ "$file" == t/qualification/ascent-temporal-lens-test.ss ]]; then
+            if ((${#batch[@]})); then run_batch "${batch[@]}"; batch=(); fi
+            just test-temporal
+            qualified+=("$file")
+        elif [[ "$file" == t/qualification/ascent-reasoning-library-test.ss ||
               "$file" == t/qualification/scheme-library-contract-test.ss ||
               "$file" == t/qualification/scheme-operator-test.ss ||
               "$file" == t/qualification/scheme-operator-retained-test.ss ]]; then
@@ -379,3 +384,15 @@ timed-rows:
 # Matched finite temporal metadata cost; no speedup claim or added threshold.
 temporal-scale:
     @timeout 90s gerbil {{ gerbil_test_runtime_options }} t/qualification/ascent-temporal-scale-output.ss
+
+# Visible import progress for the composed temporal proof dependency graph.
+test-temporal:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    log="$(mktemp)"
+    trap 'rm -f "$log"' EXIT
+    GERBIL_LOADPATH="{{ justfile_directory() }}${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" timeout 120s gerbil {{ gerbil_test_runtime_options }} t/harness/temporal-test.ss 2>&1 | tee "$log"
+    if grep -E 'ERROR (CHECK|CASE|HARNESS|MODULE)|Heap overflow|Stack overflow' "$log" >/dev/null; then exit 1; fi
+    grep -F 'MODULE-OK t/qualification/ascent-temporal-lens-test.ss' "$log" >/dev/null
+    grep -F 'HARNESS-OK' "$log" >/dev/null
+    grep -x 'OK' "$log" >/dev/null

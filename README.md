@@ -247,6 +247,15 @@ nonempty native Cases, exact module completion, harness completion, and final
 `OK`, rejecting native error and overflow markers even on exit zero.
 `just test-serial` retains the older bounded batch path for comparisons.
 
+`just performance` and `just performance-scenario NAME` build the complete
+production module inventory into a private native library before sampling.
+All production imports must resolve to that library; nested scenarios reuse
+the verified snapshot under the same exclusive lease. Source, fixture,
+dependency and native artifact changes reject the receipt. Compilation is
+outside the scenario timer. Functional fixtures keep their source lookup
+by default. The execution-mode diagnosis and original SS results are recorded
+in the [native qualification report](t/performance/session-lifecycle/README.org).
+
 Measured full-suite comparisons and the admission rationale are recorded in
 [t/performance/suite-execution/README.org](t/performance/suite-execution/README.org).
 

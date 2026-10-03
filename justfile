@@ -28,7 +28,7 @@ test-file path:
     trap 'rm -f "$output_file"' EXIT
     started=$SECONDS
     printf '[ascent-test] START %s\n' "{{ path }}"
-    GERBIL_LOADPATH="{{ justfile_directory() }}${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" python3 tools/test_execution.py run --module "{{ path }}" -- timeout "${ASCENT_GXTEST_TIMEOUT:-120s}" gerbil {{ gerbil_test_runtime_options }} test -v 5 "{{ path }}" 2>&1 | tee "$output_file"
+    GERBIL_LOADPATH="${ASCENT_TEST_LIBRARY:+$ASCENT_TEST_LIBRARY:}{{ justfile_directory() }}${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" python3 tools/test_execution.py run --module "{{ path }}" -- timeout "${ASCENT_GXTEST_TIMEOUT:-120s}" gerbil {{ gerbil_test_runtime_options }} test -v 5 "{{ path }}" 2>&1 | tee "$output_file"
     if grep -E 'ERROR (CHECK|CASE|HARNESS|MODULE)|Heap overflow|Stack overflow' "$output_file" >/dev/null; then exit 1; fi
     awk -f "{{ justfile_directory() }}/tools/assert-test-cases.awk" "$output_file"
     grep -Fx 'MODULE-OK {{ path }}' "$output_file" >/dev/null
@@ -236,6 +236,9 @@ _strata-benchmark:
 
 # Run one unchanged SS fixture through the native qualification harness.
 performance-scenario name:
+    python3 tools/test_execution.py run -- python3 tools/performance_execution.py "{{ name }}"
+
+_performance-scenario name:
     #!/usr/bin/env bash
     set -euo pipefail
     name="{{ name }}"
@@ -256,7 +259,7 @@ performance-scenario name:
 
 # ASCENT owns its 1000-sample SS receipts using ASP's benchmark profile.
 performance:
-    python3 tools/test_execution.py run -- just _performance
+    python3 tools/test_execution.py run -- python3 tools/performance_execution.py suite
 
 _performance:
     #!/usr/bin/env bash
@@ -299,11 +302,11 @@ _performance:
     run_scenario ascent-derived-aggregate
     run_scenario ascent-indexed-joins
     run_scenario ascent-byods-eqrel
-    run_case ascent-binary-program just test-file t/performance/ascent-binary-program-performance-test.ss
+    run_case ascent-binary-program just performance-scenario ascent-binary-program
     run_scenario ascent-reachability-closure
     run_scenario ascent-table-expression
     run_scenario ascent-table-expression-membership
-    run_case ascent-shortest-candidates just test-file t/performance/ascent-shortest-candidates-performance-test.ss
+    run_case ascent-shortest-candidates just performance-scenario ascent-shortest-candidates
 ascent-pairs:
     @timeout 90s gerbil {{ gerbil_test_runtime_options }} t/qualification/ascent-binary-program-pairs.ss
 

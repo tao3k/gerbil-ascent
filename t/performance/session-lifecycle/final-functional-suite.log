@@ -1,0 +1,152 @@
+python3 tools/test_execution.py suite --jobs "auto"
+[test-suite] PLAN parallel=33 exclusive=15 jobs=12
+[parallel-test] PLAN configured-jobs=12 workers=12 modules=33
+[parallel-test] RUNNING remaining=33 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/parallel-1791009063374289000
+[parallel-test] RUNNING remaining=33 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/parallel-1791009063374289000
+[parallel-test] END t/qualification/ascent-closure-candidates-test.ss exit=0 log=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/parallel-1791009063374289000/ascent-closure-candidates-test.log
+[parallel-test] RUNNING remaining=32 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/parallel-1791009063374289000
+[parallel-test] RUNNING remaining=32 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/parallel-1791009063374289000
+[parallel-test] END t/qualification/ascent-binary-program-test.ss exit=0 log=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/parallel-1791009063374289000/ascent-binary-program-test.log
+[parallel-test] RUNNING remaining=31 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/parallel-1791009063374289000
+[parallel-test] END t/qualification/ascent-binding-test.ss exit=0 log=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/parallel-1791009063374289000/ascent-binding-test.log
+[parallel-test] RUNNING remaining=30 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/parallel-1791009063374289000
+[parallel-test] END t/qualification/ascent-contract-union-test.ss exit=0 log=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/parallel-1791009063374289000/ascent-contract-union-test.log
+[parallel-test] RUNNING remaining=29 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/parallel-1791009063374289000
+[parallel-test] END t/qualification/ascent-byods-index-test.ss exit=0 log=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/parallel-1791009063374289000/ascent-byods-index-test.log
+[parallel-test] RUNNING remaining=28 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/parallel-1791009063374289000
+[parallel-test] END t/qualification/ascent-aggregate-program-test.ss exit=0 log=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/parallel-1791009063374289000/ascent-aggregate-program-test.log
+[parallel-test] RUNNING remaining=27 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/parallel-1791009063374289000
+[parallel-test] END t/qualification/ascent-binding-program-test.ss exit=0 log=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/parallel-1791009063374289000/ascent-binding-program-test.log
+[parallel-test] RUNNING remaining=26 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/parallel-1791009063374289000
+[parallel-test] END t/qualification/ascent-index-program-test.ss exit=0 log=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/parallel-1791009063374289000/ascent-index-program-test.log
+[parallel-test] RUNNING remaining=25 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/parallel-1791009063374289000
+[parallel-test] END t/qualification/ascent-lattice-program-test.ss exit=0 log=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/parallel-1791009063374289000/ascent-lattice-program-test.log
+[parallel-test] RUNNING remaining=24 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/parallel-1791009063374289000
+[parallel-test] END t/qualification/ascent-invalid-program-test.ss exit=0 log=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/parallel-1791009063374289000/ascent-invalid-program-test.log
+[parallel-test] RUNNING remaining=23 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/parallel-1791009063374289000
+[parallel-test] END t/qualification/ascent-request-projection-test.ss exit=0 log=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/parallel-1791009063374289000/ascent-request-projection-test.log
+[parallel-test] RUNNING remaining=22 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/parallel-1791009063374289000
+[parallel-test] END t/qualification/ascent-module-program-test.ss exit=0 log=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/parallel-1791009063374289000/ascent-module-program-test.log
+[parallel-test] RUNNING remaining=21 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/parallel-1791009063374289000
+[parallel-test] END t/qualification/ascent-byods-invariants-test.ss exit=0 log=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/parallel-1791009063374289000/ascent-byods-invariants-test.log
+[parallel-test] RUNNING remaining=20 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/parallel-1791009063374289000
+[parallel-test] END t/qualification/ascent-poo-primitives-test.ss exit=0 log=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/parallel-1791009063374289000/ascent-poo-primitives-test.log
+[parallel-test] RUNNING remaining=19 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/parallel-1791009063374289000
+[parallel-test] END t/qualification/ascent-positive-nonmembership-test.ss exit=0 log=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/parallel-1791009063374289000/ascent-positive-nonmembership-test.log
+[parallel-test] RUNNING remaining=18 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/parallel-1791009063374289000
+[parallel-test] END t/qualification/ascent-multi-frontier-test.ss exit=0 log=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/parallel-1791009063374289000/ascent-multi-frontier-test.log
+[parallel-test] RUNNING remaining=17 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/parallel-1791009063374289000
+[parallel-test] END t/qualification/ascent-positive-provenance-test.ss exit=0 log=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/parallel-1791009063374289000/ascent-positive-provenance-test.log
+[parallel-test] RUNNING remaining=16 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/parallel-1791009063374289000
+[parallel-test] END t/qualification/ascent-scc-summary-test.ss exit=0 log=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/parallel-1791009063374289000/ascent-scc-summary-test.log
+[parallel-test] RUNNING remaining=15 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/parallel-1791009063374289000
+[parallel-test] RUNNING remaining=15 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/parallel-1791009063374289000
+[parallel-test] END t/qualification/ascent-set-batch-test.ss exit=0 log=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/parallel-1791009063374289000/ascent-set-batch-test.log
+[parallel-test] RUNNING remaining=14 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/parallel-1791009063374289000
+[parallel-test] END t/qualification/ascent-finite-evidence-test.ss exit=0 log=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/parallel-1791009063374289000/ascent-finite-evidence-test.log
+[parallel-test] RUNNING remaining=13 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/parallel-1791009063374289000
+[parallel-test] END t/qualification/ascent-set-emit-test.ss exit=0 log=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/parallel-1791009063374289000/ascent-set-emit-test.log
+[parallel-test] RUNNING remaining=12 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/parallel-1791009063374289000
+[parallel-test] END t/qualification/ascent-set-size-test.ss exit=0 log=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/parallel-1791009063374289000/ascent-set-size-test.log
+[parallel-test] RUNNING remaining=11 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/parallel-1791009063374289000
+[parallel-test] END t/qualification/ascent-set-source-test.ss exit=0 log=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/parallel-1791009063374289000/ascent-set-source-test.log
+[parallel-test] RUNNING remaining=10 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/parallel-1791009063374289000
+[parallel-test] END t/qualification/ascent-size-test.ss exit=0 log=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/parallel-1791009063374289000/ascent-size-test.log
+[parallel-test] RUNNING remaining=9 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/parallel-1791009063374289000
+[parallel-test] END t/qualification/ascent-source-admission-test.ss exit=0 log=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/parallel-1791009063374289000/ascent-source-admission-test.log
+[parallel-test] RUNNING remaining=8 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/parallel-1791009063374289000
+[parallel-test] END t/qualification/ascent-strata-test.ss exit=0 log=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/parallel-1791009063374289000/ascent-strata-test.log
+[parallel-test] RUNNING remaining=7 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/parallel-1791009063374289000
+[parallel-test] END t/qualification/ascent-table-expression-test.ss exit=0 log=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/parallel-1791009063374289000/ascent-table-expression-test.log
+[parallel-test] RUNNING remaining=6 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/parallel-1791009063374289000
+[parallel-test] END t/qualification/scheme-native-integration-test.ss exit=0 log=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/parallel-1791009063374289000/scheme-native-integration-test.log
+[parallel-test] RUNNING remaining=5 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/parallel-1791009063374289000
+[parallel-test] END t/qualification/ascent-syntax-test.ss exit=0 log=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/parallel-1791009063374289000/ascent-syntax-test.log
+[parallel-test] RUNNING remaining=4 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/parallel-1791009063374289000
+[parallel-test] END t/qualification/scheme-native-reduction-test.ss exit=0 log=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/parallel-1791009063374289000/scheme-native-reduction-test.log
+[parallel-test] RUNNING remaining=3 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/parallel-1791009063374289000
+[parallel-test] END t/qualification/scheme-native-language-test.ss exit=0 log=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/parallel-1791009063374289000/scheme-native-language-test.log
+[parallel-test] RUNNING remaining=2 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/parallel-1791009063374289000
+[parallel-test] END t/qualification/ascent-stratified-proof-test.ss exit=0 log=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/parallel-1791009063374289000/ascent-stratified-proof-test.log
+[parallel-test] RUNNING remaining=1 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/parallel-1791009063374289000
+[parallel-test] RUNNING remaining=1 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/parallel-1791009063374289000
+[parallel-test] RUNNING remaining=1 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/parallel-1791009063374289000
+[parallel-test] END t/qualification/scheme-relational-test.ss exit=0 log=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/parallel-1791009063374289000/scheme-relational-test.log
+[exclusive-test] PLAN configured-jobs=1 workers=1 modules=15
+[exclusive-test] RUNNING remaining=15 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791009139158974000
+[exclusive-test] RUNNING remaining=15 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791009139158974000
+[exclusive-test] END t/qualification/ascent-eqrel-program-test.ss exit=0 log=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791009139158974000/ascent-eqrel-program-test.log
+[exclusive-test] RUNNING remaining=14 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791009139158974000
+[exclusive-test] RUNNING remaining=14 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791009139158974000
+[exclusive-test] RUNNING remaining=14 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791009139158974000
+[exclusive-test] END t/qualification/ascent-index-lifecycle-test.ss exit=0 log=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791009139158974000/ascent-index-lifecycle-test.log
+[exclusive-test] RUNNING remaining=13 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791009139158974000
+[exclusive-test] RUNNING remaining=13 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791009139158974000
+[exclusive-test] RUNNING remaining=13 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791009139158974000
+[exclusive-test] END t/qualification/ascent-materialization-test.ss exit=0 log=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791009139158974000/ascent-materialization-test.log
+[exclusive-test] RUNNING remaining=12 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791009139158974000
+[exclusive-test] RUNNING remaining=12 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791009139158974000
+[exclusive-test] RUNNING remaining=12 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791009139158974000
+[exclusive-test] END t/qualification/ascent-mutual-program-test.ss exit=0 log=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791009139158974000/ascent-mutual-program-test.log
+[exclusive-test] RUNNING remaining=11 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791009139158974000
+[exclusive-test] RUNNING remaining=11 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791009139158974000
+[exclusive-test] END t/qualification/ascent-observability-test.ss exit=0 log=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791009139158974000/ascent-observability-test.log
+[exclusive-test] RUNNING remaining=10 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791009139158974000
+[exclusive-test] RUNNING remaining=10 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791009139158974000
+[exclusive-test] RUNNING remaining=10 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791009139158974000
+[exclusive-test] RUNNING remaining=10 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791009139158974000
+[exclusive-test] RUNNING remaining=10 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791009139158974000
+[exclusive-test] END t/qualification/ascent-positive-plan-test.ss exit=0 log=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791009139158974000/ascent-positive-plan-test.log
+[exclusive-test] RUNNING remaining=9 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791009139158974000
+[exclusive-test] RUNNING remaining=9 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791009139158974000
+[exclusive-test] RUNNING remaining=9 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791009139158974000
+[exclusive-test] RUNNING remaining=9 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791009139158974000
+[exclusive-test] END t/qualification/ascent-reasoning-library-test.ss exit=0 log=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791009139158974000/ascent-reasoning-library-test.log
+[exclusive-test] RUNNING remaining=8 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791009139158974000
+[exclusive-test] RUNNING remaining=8 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791009139158974000
+[exclusive-test] RUNNING remaining=8 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791009139158974000
+[exclusive-test] END t/qualification/ascent-result-publication-test.ss exit=0 log=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791009139158974000/ascent-result-publication-test.log
+[exclusive-test] RUNNING remaining=7 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791009139158974000
+[exclusive-test] RUNNING remaining=7 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791009139158974000
+[exclusive-test] RUNNING remaining=7 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791009139158974000
+[exclusive-test] RUNNING remaining=7 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791009139158974000
+[exclusive-test] END t/qualification/ascent-rule-program-test.ss exit=0 log=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791009139158974000/ascent-rule-program-test.log
+[exclusive-test] RUNNING remaining=6 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791009139158974000
+[exclusive-test] RUNNING remaining=6 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791009139158974000
+[exclusive-test] RUNNING remaining=6 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791009139158974000
+[exclusive-test] END t/qualification/ascent-timeout-test.ss exit=0 log=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791009139158974000/ascent-timeout-test.log
+[exclusive-test] RUNNING remaining=5 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791009139158974000
+[exclusive-test] RUNNING remaining=5 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791009139158974000
+[exclusive-test] RUNNING remaining=5 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791009139158974000
+[exclusive-test] END t/qualification/ascent-timing-test.ss exit=0 log=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791009139158974000/ascent-timing-test.log
+[exclusive-test] RUNNING remaining=4 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791009139158974000
+[exclusive-test] RUNNING remaining=4 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791009139158974000
+[exclusive-test] RUNNING remaining=4 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791009139158974000
+[exclusive-test] END t/qualification/ascent-workspace-test.ss exit=0 log=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791009139158974000/ascent-workspace-test.log
+[exclusive-test] RUNNING remaining=3 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791009139158974000
+[exclusive-test] RUNNING remaining=3 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791009139158974000
+[exclusive-test] RUNNING remaining=3 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791009139158974000
+[exclusive-test] RUNNING remaining=3 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791009139158974000
+[exclusive-test] END t/qualification/scheme-library-contract-test.ss exit=0 log=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791009139158974000/scheme-library-contract-test.log
+[exclusive-test] RUNNING remaining=2 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791009139158974000
+[exclusive-test] RUNNING remaining=2 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791009139158974000
+[exclusive-test] RUNNING remaining=2 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791009139158974000
+[exclusive-test] RUNNING remaining=2 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791009139158974000
+[exclusive-test] RUNNING remaining=2 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791009139158974000
+[exclusive-test] RUNNING remaining=2 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791009139158974000
+[exclusive-test] RUNNING remaining=2 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791009139158974000
+[exclusive-test] RUNNING remaining=2 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791009139158974000
+[exclusive-test] RUNNING remaining=2 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791009139158974000
+[exclusive-test] RUNNING remaining=2 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791009139158974000
+[exclusive-test] END t/qualification/scheme-operator-retained-test.ss exit=0 log=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791009139158974000/scheme-operator-retained-test.log
+[exclusive-test] RUNNING remaining=1 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791009139158974000
+[exclusive-test] RUNNING remaining=1 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791009139158974000
+[exclusive-test] RUNNING remaining=1 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791009139158974000
+[exclusive-test] RUNNING remaining=1 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791009139158974000
+[exclusive-test] RUNNING remaining=1 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791009139158974000
+[exclusive-test] RUNNING remaining=1 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791009139158974000
+[exclusive-test] RUNNING remaining=1 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791009139158974000
+[exclusive-test] RUNNING remaining=1 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791009139158974000
+[exclusive-test] RUNNING remaining=1 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791009139158974000
+[exclusive-test] END t/qualification/scheme-operator-test.ss exit=0 log=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791009139158974000/scheme-operator-test.log
+[test-suite] END modules=48 failed=0 receipt=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/suite-1791009414634736000.json

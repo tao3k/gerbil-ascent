@@ -1,0 +1,10 @@
+*** ERROR IN gx#core-import-module__% -- No such file or directory
+(path-normalize ":gerbil-ascent/table/expression")
+--- continuation backtrace:
+[0] ##primordial-exception-handler-hook                                                                                                                                     
+[1] gx#core-import-module__%                                                                                                                                                
+[2] gx#import-module__%                                                                                                                                                     
+[3] (interaction)                                                                                                                                                           ".gerbil/performance-execution/snapshot-anzb92l2/resolution.ss"@2:36-2:88                                                                                                    (gx#import-module ":gerbil-ascent/table/expression")
+[4] ##load                                                                                                                                                                  
+[5] ##load                                                                                                                                                                  
+[6] gerbil/main#gxi-main                                                                                                                                                    

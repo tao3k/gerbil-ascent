@@ -1,0 +1,97 @@
+[
+  {
+    "name": "ascent-byods-trrel",
+    "exit": 0,
+    "seconds": 75.75229525000032
+  },
+  {
+    "name": "ascent-session-update",
+    "exit": 0,
+    "seconds": 22.503354167005455
+  },
+  {
+    "name": "ascent-ten-thousand-appends",
+    "exit": 0,
+    "seconds": 25.194902834002278
+  },
+  {
+    "name": "ascent-nonpositive-session-update",
+    "exit": 0,
+    "seconds": 22.105627707998792
+  },
+  {
+    "name": "ascent-rule-clauses",
+    "exit": 0,
+    "seconds": 17.655785874994763
+  },
+  {
+    "name": "ascent-var-points-to",
+    "exit": 0,
+    "seconds": 18.11374991699995
+  },
+  {
+    "name": "ascent-upstream-examples",
+    "exit": 0,
+    "seconds": 22.51808075000008
+  },
+  {
+    "name": "ascent-product-session",
+    "exit": 0,
+    "seconds": 19.52759091599728
+  },
+  {
+    "name": "ascent-mutual-recursive-heads",
+    "exit": 0,
+    "seconds": 17.270745875001012
+  },
+  {
+    "name": "ascent-derived-aggregate",
+    "exit": 0,
+    "seconds": 16.443849125003908
+  },
+  {
+    "name": "ascent-indexed-joins",
+    "exit": 0,
+    "seconds": 16.81393895799556
+  },
+  {
+    "name": "ascent-byods-eqrel",
+    "exit": 0,
+    "seconds": 18.217982500005746
+  },
+  {
+    "name": "ascent-binary-program",
+    "exit": 0,
+    "seconds": 17.414490167000622
+  },
+  {
+    "name": "ascent-reachability-closure",
+    "exit": 0,
+    "seconds": 16.710320291000244
+  },
+  {
+    "name": "ascent-table-expression",
+    "exit": 1,
+    "seconds": 95.3821160830048
+  },
+  {
+    "name": "ascent-table-expression-membership",
+    "exit": 0,
+    "seconds": 25.204646416001196
+  },
+  {
+    "name": "ascent-shortest-candidates",
+    "exit": 0,
+    "seconds": 21.734992917001364
+  },
+  {
+    "name": "complete-first",
+    "exit": 0,
+    "seconds": 18.75600595799915
+  },
+  {
+    "name": "complete-repeat",
+    "exit": 0,
+    "seconds": 17.75319195799966
+  }
+]

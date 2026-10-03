@@ -1,0 +1,37 @@
+SAMPLE 0
+open bytes=500368 ns=245000
+initial bytes=19840 ns=30000
+append-public bytes=6402080 ns=30118000
+solve bytes=1508288 ns=3430000
+demand bytes=498032 ns=108000
+SAMPLE 1
+open bytes=441568 ns=248000
+initial bytes=19840 ns=21000
+append-public bytes=6402080 ns=24182000
+solve bytes=1508288 ns=3247000
+demand bytes=498032 ns=106000
+SAMPLE 2
+open bytes=441568 ns=224000
+initial bytes=19840 ns=20000
+append-public bytes=6402080 ns=50727000
+solve bytes=1508288 ns=13685000
+demand bytes=498032 ns=114000
+SAMPLE 3
+open bytes=441568 ns=591000
+initial bytes=19840 ns=71000
+append-public bytes=6402080 ns=14811000
+solve bytes=1508288 ns=3376000
+demand bytes=498032 ns=105000
+SAMPLE 4
+open bytes=441568 ns=227000
+initial bytes=19840 ns=21000
+append-public bytes=6402080 ns=17534000
+solve bytes=1508288 ns=6605000
+demand bytes=498032 ns=112000
+SAMPLE 5
+open bytes=441568 ns=237000
+initial bytes=19840 ns=24000
+append-public bytes=6402080 ns=62599000
+solve bytes=1508288 ns=8005000
+demand bytes=498032 ns=107000
+OK

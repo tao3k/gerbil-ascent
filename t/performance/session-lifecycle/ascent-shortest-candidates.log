@@ -1,0 +1,25 @@
+python3 tools/test_execution.py run -- python3 tools/performance_execution.py "ascent-shortest-candidates"
+[native-performance] REUSE verified snapshot /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/performance-execution/snapshot-n74pemwa/snapshot.json
+[ascent-test] START t/performance/ascent-shortest-candidates-performance-test.ss
+[test-lane] RUNNING exclusive (5s)
+HARNESS ("t/performance/ascent-shortest-candidates-performance-test.ss")
+MODULE t/performance/ascent-shortest-candidates-performance-test.ss
+SUITE ASCENT Scheme shortest candidates performance
+CASE twenty-node chain stays within the standard fixture
+[test-lane] RUNNING exclusive (5s)
+NATIVE-MODULES-OK
+[test-lane] RUNNING exclusive (10s)
+[test-lane] RUNNING exclusive (10s)
+[test-lane] RUNNING exclusive (15s)
+[test-lane] RUNNING exclusive (15s)
+[gerbil-ascent-benchmark] ascent-shortest-candidates p95=62us
+CASE-OK twenty-node chain stays within the standard fixture
+SUITE-OK ASCENT Scheme shortest candidates performance
+MODULE-OK t/performance/ascent-shortest-candidates-performance-test.ss
+HARNESS-OK ("t/performance/ascent-shortest-candidates-performance-test.ss")
+OK
+[test-lane] RUNNING exclusive (20s)
+[test-lane] RUNNING exclusive (20s)
+[test-lane] END exclusive exit=0
+[ascent-test] PASS t/performance/ascent-shortest-candidates-performance-test.ss (21s)
+[test-lane] END exclusive exit=0

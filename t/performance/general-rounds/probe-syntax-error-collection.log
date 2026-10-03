@@ -1,0 +1,30 @@
+[test-lane] START exclusive python3
+[general-rounds] START build
+[test-lane] RUNNING exclusive (5s)
+[general-rounds] RUNNING build
+[test-lane] RUNNING exclusive (10s)
+[general-rounds] RUNNING build
+[test-lane] RUNNING exclusive (15s)
+{'name': 'build', 'exit': 0, 'seconds': 15.109299582996755}
+[general-rounds] START oracle
+[test-lane] RUNNING exclusive (20s)
+[general-rounds] RUNNING oracle
+[test-lane] RUNNING exclusive (25s)
+[general-rounds] RUNNING oracle
+{'name': 'oracle', 'exit': 0, 'seconds': 13.207252332998905}
+[general-rounds] START first
+Traceback (most recent call last):
+  File "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/t/performance/general-rounds/qualify.py", line 91, in <module>
+    run(name, ['timeout', '480s', 'gxi', '-:max-heap=1G,debug=q', str(root / 'benchmark.ss')], 14)
+    ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/t/performance/general-rounds/qualify.py", line 72, in run
+    assert not status, log[-3000:]
+           ^^^^^^^^^^
+AssertionError: *** ERROR IN ##load -- Incomplete form, EOF reached
+--- continuation backtrace:
+[0] ##primordial-exception-handler-hook                                                                                                                                     
+[1] ##load                                                                                                                                                                  
+[2] ##load                                                                                                                                                                  
+[3] gerbil/main#gxi-main                                                                                                                                                    
+
+[test-lane] END exclusive exit=1

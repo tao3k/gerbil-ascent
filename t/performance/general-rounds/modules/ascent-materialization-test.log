@@ -1,0 +1,26 @@
+[ascent-test] START t/qualification/ascent-materialization-test.ss
+[test-lane] START exclusive t/qualification/ascent-materialization-test.ss
+[test-lane] RUNNING exclusive (5s)
+[test-lane] RUNNING exclusive (10s)
+HARNESS ("t/qualification/ascent-materialization-test.ss")
+MODULE t/qualification/ascent-materialization-test.ss
+SUITE Complete persistent relation materialization
+CASE all 512 graphs match independent composition closure and shortest distance
+CASE-OK all 512 graphs match independent composition closure and shortest distance
+CASE demanded snapshots remain independent after source withdrawal and replacement
+CASE-OK demanded snapshots remain independent after source withdrawal and replacement
+CASE public neighbor overrides retain ordered callback traces and external composition
+CASE-OK public neighbor overrides retain ordered callback traces and external composition
+CASE high fanout retains complete dense closure and sparse ordered source visitation
+CASE-OK high fanout retains complete dense closure and sparse ordered source visitation
+CASE ordered relation words preserve boundaries membership and exact closure budgets
+CASE-OK ordered relation words preserve boundaries membership and exact closure budgets
+CASE bounded closure retains exact failures across empty dense and sparse snapshots
+CASE-OK bounded closure retains exact failures across empty dense and sparse snapshots
+SUITE-OK Complete persistent relation materialization
+MODULE-OK t/qualification/ascent-materialization-test.ss
+HARNESS-OK ("t/qualification/ascent-materialization-test.ss")
+OK
+[test-lane] RUNNING exclusive (15s)
+[test-lane] END exclusive exit=0
+[ascent-test] PASS t/qualification/ascent-materialization-test.ss (20s)

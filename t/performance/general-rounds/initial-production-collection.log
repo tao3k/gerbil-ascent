@@ -1,0 +1,63 @@
+START production
+RUNNING production
+RUNNING production
+RUNNING production
+RUNNING production
+RUNNING production
+RUNNING production
+RUNNING production
+RUNNING production
+RUNNING production
+RUNNING production
+RUNNING production
+RUNNING production
+RUNNING production
+RUNNING production
+RUNNING production
+RUNNING production
+RUNNING production
+RUNNING production
+RUNNING production
+RUNNING production
+RUNNING production
+RUNNING production
+RUNNING production
+RUNNING production
+RUNNING production
+RUNNING production
+RUNNING production
+RUNNING production
+RUNNING production
+RUNNING production
+RUNNING production
+RUNNING production
+RUNNING production
+RUNNING production
+RUNNING production
+RUNNING production
+RUNNING production
+RUNNING production
+RUNNING production
+RUNNING production
+RUNNING production
+RUNNING production
+RUNNING production
+RUNNING production
+RUNNING production
+RUNNING production
+RUNNING production
+RUNNING production
+RUNNING production
+RUNNING production
+RUNNING production
+RUNNING production
+RUNNING production
+RUNNING production
+{'name': 'production', 'exit': 1, 'seconds': 273.9177675420069}
+Traceback (most recent call last):
+  File "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/t/performance/general-rounds/production.py", line 101, in <module>
+    assert run('production', ['python3', 'tools/test_execution.py', 'run', '--',
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        'python3', str(Path(__file__).resolve()), '--production'])['exit'] == 0
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError

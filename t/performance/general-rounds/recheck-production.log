@@ -1,0 +1,50 @@
+[test-lane] START exclusive python3
+[native-performance] REUSE verified snapshot /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/t/performance/general-rounds/production-snapshot.json
+START recheck-ascent-table-expression
+[test-lane] RUNNING exclusive (5s)
+RUNNING recheck-ascent-table-expression
+[test-lane] RUNNING exclusive (10s)
+RUNNING recheck-ascent-table-expression
+[test-lane] RUNNING exclusive (15s)
+RUNNING recheck-ascent-table-expression
+[test-lane] RUNNING exclusive (20s)
+RUNNING recheck-ascent-table-expression
+[test-lane] RUNNING exclusive (25s)
+RUNNING recheck-ascent-table-expression
+[test-lane] RUNNING exclusive (30s)
+RUNNING recheck-ascent-table-expression
+[test-lane] RUNNING exclusive (35s)
+RUNNING recheck-ascent-table-expression
+[test-lane] RUNNING exclusive (40s)
+RUNNING recheck-ascent-table-expression
+[test-lane] RUNNING exclusive (45s)
+RUNNING recheck-ascent-table-expression
+[test-lane] RUNNING exclusive (50s)
+RUNNING recheck-ascent-table-expression
+[test-lane] RUNNING exclusive (55s)
+RUNNING recheck-ascent-table-expression
+[test-lane] RUNNING exclusive (60s)
+RUNNING recheck-ascent-table-expression
+[test-lane] RUNNING exclusive (65s)
+RUNNING recheck-ascent-table-expression
+[test-lane] RUNNING exclusive (70s)
+RUNNING recheck-ascent-table-expression
+[test-lane] RUNNING exclusive (75s)
+RUNNING recheck-ascent-table-expression
+[test-lane] RUNNING exclusive (80s)
+RUNNING recheck-ascent-table-expression
+[test-lane] RUNNING exclusive (85s)
+RUNNING recheck-ascent-table-expression
+[test-lane] RUNNING exclusive (90s)
+RUNNING recheck-ascent-table-expression
+[test-lane] RUNNING exclusive (95s)
+RUNNING recheck-ascent-table-expression
+[test-lane] RUNNING exclusive (100s)
+RUNNING recheck-ascent-table-expression
+[test-lane] RUNNING exclusive (105s)
+RUNNING recheck-ascent-table-expression
+[test-lane] RUNNING exclusive (110s)
+RUNNING recheck-ascent-table-expression
+[test-lane] RUNNING exclusive (115s)
+{'name': 'recheck-ascent-table-expression', 'exit': 1, 'seconds': 114.96103649999714}
+[test-lane] END exclusive exit=1

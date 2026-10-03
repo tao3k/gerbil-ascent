@@ -224,6 +224,31 @@
            (check-equal? (.call UIntTrieSet .list<- original) '(10 11 19))
            (check-exception (get-set 'missing) true)))
        '(#f #t)))
+    (test-case "a dormant indexed right becomes active after several rounds"
+      (let* ((calls '())
+             (result (evaluate
+                      (list (relation 'seed '(10)) (relation 'left '(1))
+                            (relation 'stage1 '()) (relation 'stage2 '())
+                            (relation 'live '()) (relation 'out '()) (relation 'selected '()))
+                      (list (gerbil-ascent-binary-copy-rule 'stage1 'seed)
+                            (gerbil-ascent-binary-copy-rule 'stage2 'stage1)
+                            (gerbil-ascent-binary-copy-rule 'live 'stage2)
+                            (gerbil-ascent-binary-join-rule 'out 'left 'live)
+                            (gerbil-ascent-binary-filter-rule 'selected 'out
+                             (lambda (from to) (set! calls (cons (list from to) calls)) #t))))))
+        (check-equal? (.ref result 'evaluation-path) 'semi-naive)
+        (check-equal? (pairs result 'out) '(2))
+        (check-equal? (pairs result 'selected) '(2))
+        (check-equal? calls '((0 2)))
+        (check-equal? (pairs result 'seed) '(10))))
+    (test-case "filter callbacks complete the delta before a budget error"
+      (let (calls '())
+        (check-exception
+         (evaluate (list (relation 'source '(1 2 3)) (relation 'out '()))
+                   (list (gerbil-ascent-binary-filter-rule 'out 'source
+                          (lambda (from to) (set! calls (cons (list from to) calls)) #t))) 1)
+         true)
+        (check-equal? calls '((0 1) (0 2) (0 3)))))
     (test-case "invalid declarations and pair budget fail"
       (check-exception
        (evaluate (list (relation 'edge '(10)) (relation 'edge '())) '()) true)

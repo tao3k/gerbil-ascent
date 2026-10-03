@@ -12,29 +12,29 @@
         (only-in :clan/poo/trie UIntTrieSet)
         (only-in :clan/poo/support/base until)
         (only-in :std/list/list filter)
-        (only-in :gerbil-ascent/table/expression
-                 gerbil-ascent-relation-closure-bounded))
+        (only-in :gerbil-ascent/t/performance/general-rounds/reference-expression
+                 general-rounds-reference-closure-bounded))
 
-(export gerbil-ascent-binary-relation
-        gerbil-ascent-binary-copy-rule
-        gerbil-ascent-binary-filter-rule
-        gerbil-ascent-binary-join-rule
-        gerbil-ascent-evaluate-binary-program)
+(export general-rounds-reference-binary-relation
+        general-rounds-reference-binary-copy-rule
+        general-rounds-reference-binary-filter-rule
+        general-rounds-reference-binary-join-rule
+        general-rounds-reference-evaluate-binary-program)
 
-(def (gerbil-ascent-binary-relation relation-name source-set)
+(def (general-rounds-reference-binary-relation relation-name source-set)
   (.o (name relation-name) (pairs source-set)))
 
-(def (gerbil-ascent-binary-copy-rule head-name body-name)
+(def (general-rounds-reference-binary-copy-rule head-name body-name)
   (.o (kind 'copy) (head head-name) (left body-name)))
 
 ;;; The guard is a pure Scheme predicate over decoded (from, to) endpoints.
-(def (gerbil-ascent-binary-filter-rule head-name body-name guard)
+(def (general-rounds-reference-binary-filter-rule head-name body-name guard)
   (unless (procedure? guard)
     (error "ASCENT binary filter requires a predicate"))
   (.o (kind 'filter) (head head-name) (left body-name)
       (predicate guard)))
 
-(def (gerbil-ascent-binary-join-rule head-name left-name right-name)
+(def (general-rounds-reference-binary-join-rule head-name left-name right-name)
   (.o (kind 'join) (head head-name)
       (left left-name) (right right-name)))
 
@@ -62,7 +62,7 @@
 ;;; Dense arrays handle bounded small domains; sparse hash indexes avoid
 ;;; allocating a quadratic domain when radix is large. Both paths publish
 ;;; the same canonical relation rows and POO result interface.
-;; gerbil-ascent-evaluate-binary-program
+;; general-rounds-reference-evaluate-binary-program
 ;;   : (-> BinaryProgram BinaryResult)
 ;;   | doc m%
 ;;       Evaluate finite copy, filter, and join rules to their fixed point.
@@ -70,11 +70,11 @@
 ;;       # Examples
 ;;
 ;;       ```scheme
-;;       (gerbil-ascent-evaluate-binary-program program)
+;;       (general-rounds-reference-evaluate-binary-program program)
 ;;       ;; => a result exposing relation names and pair snapshots
 ;;       ```
 ;;     %
-(def (gerbil-ascent-evaluate-binary-program program)
+(def (general-rounds-reference-evaluate-binary-program program)
   (let* ((width (.ref program 'radix))
          (sources (.ref program 'relations))
          (rules (.ref program 'rules))
@@ -243,7 +243,7 @@
                   (.ref (vector-ref source-vector source-position) 'pairs))
                  (allowance (min limit (- output-limit source-count)))
                  (closure-pairs
-                  (.ref (gerbil-ascent-relation-closure-bounded
+                  (.ref (general-rounds-reference-closure-bounded
                          source-set width allowance) 'pairs))
                  (results (make-vector count #f)))
             (let publish-sources ((i 0))
@@ -253,16 +253,7 @@
                 (publish-sources (+ i 1))))
             (vector-set! results head-position closure-pairs)
             (publish-result results 'transitive-closure))
-          (let (instructions
-                ;; Evaluation-local positional instructions retain declaration
-                ;; order. Resolve immutable rule slots once, outside the rounds.
-                (map (lambda (rule)
-                       (let (kind (.ref rule 'kind))
-                         (vector kind (position-of (.ref rule 'head))
-                                 (position-of (.ref rule 'left))
-                                 (and (eq? kind 'join) (position-of (.ref rule 'right)))
-                                 (and (eq? kind 'filter) (.ref rule 'predicate)))))
-                     rules))
+          (begin
             (initialize-general-state!)
             (let ((active? #t) (epoch 0))
               (until (not active?)
@@ -271,6 +262,11 @@
                       (next-index (make-vector count #f))
                       (pending-count 0))
                   (set! epoch (+ epoch 1))
+                  (let initialize ((i 0))
+                    (when (< i count)
+                      (when (vector-ref all-index i)
+                        (vector-set! next-index i (new-index)))
+                      (initialize (+ i 1))))
                   (def (emit! head pair)
                     (unless (or (seen? (vector-ref seen head) pair)
                                 (eqv? (pending-epoch
@@ -297,9 +293,9 @@
                      left-pairs))
                   (for-each
                    (lambda (rule)
-                     (let ((kind (vector-ref rule 0))
-                           (head (vector-ref rule 1))
-                           (left (vector-ref rule 2)))
+                     (let ((kind (.ref rule 'kind))
+                           (head (position-of (.ref rule 'head)))
+                           (left (position-of (.ref rule 'left))))
                        (case kind
                          ((copy)
                           (for-each (lambda (pair) (emit! head pair))
@@ -310,7 +306,7 @@
                            (filter
                             (lambda (pair)
                               (let (accepted?
-                                    ((vector-ref rule 4)
+                                    ((.ref rule 'predicate)
                                      (quotient pair width)
                                      (modulo pair width)))
                                 (unless (boolean? accepted?)
@@ -318,23 +314,17 @@
                                 accepted?))
                             (vector-ref delta left))))
                          ((join)
-                          (let (right (vector-ref rule 3))
+                          (let (right (position-of (.ref rule 'right)))
                             (unless (null? (vector-ref delta left))
                               (compose! head (vector-ref delta left)
                                         (vector-ref all-index right)))
                             (unless (null? (vector-ref delta right))
                               (compose! head (vector-ref all left)
                                         (vector-ref delta-index right))))))))
-                   instructions)
+                   rules)
                   (set! active? #f)
                   (let commit ((i 0))
                     (when (< i count)
-                      ;; Only relations with newly committed rows need an index
-                      ;; for the next delta. Unchanged right inputs retain their
-                      ;; all-index and have an empty delta with no delta-index.
-                      (when (and (pair? (vector-ref pending i))
-                                 (vector-ref all-index i))
-                        (vector-set! next-index i (new-index)))
                       (for-each
                        (lambda (pair)
                          (mark-seen! (vector-ref seen i) pair)

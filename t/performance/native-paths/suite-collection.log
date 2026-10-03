@@ -1,0 +1,77 @@
+[native-paths] SUITE RUNNING
+[native-paths] SUITE RUNNING
+[native-paths] SUITE RUNNING
+[native-paths] SUITE RUNNING
+[native-paths] SUITE RUNNING
+[native-paths] SUITE RUNNING
+[native-paths] SUITE RUNNING
+[native-paths] SUITE RUNNING
+[native-paths] SUITE RUNNING
+[native-paths] SUITE RUNNING
+[native-paths] SUITE RUNNING
+[native-paths] SUITE RUNNING
+[native-paths] SUITE RUNNING
+[native-paths] SUITE RUNNING
+[native-paths] SUITE RUNNING
+[native-paths] SUITE RUNNING
+[native-paths] SUITE RUNNING
+[native-paths] SUITE RUNNING
+[native-paths] SUITE RUNNING
+[native-paths] SUITE RUNNING
+[native-paths] SUITE RUNNING
+[native-paths] SUITE RUNNING
+[native-paths] SUITE RUNNING
+[native-paths] SUITE RUNNING
+[native-paths] SUITE RUNNING
+[native-paths] SUITE RUNNING
+[native-paths] SUITE RUNNING
+[native-paths] SUITE RUNNING
+[native-paths] SUITE RUNNING
+[native-paths] SUITE RUNNING
+[native-paths] SUITE RUNNING
+[native-paths] SUITE RUNNING
+[native-paths] SUITE RUNNING
+[native-paths] SUITE RUNNING
+[native-paths] SUITE RUNNING
+[native-paths] SUITE RUNNING
+[native-paths] SUITE RUNNING
+[native-paths] SUITE RUNNING
+[native-paths] SUITE RUNNING
+[native-paths] SUITE RUNNING
+[native-paths] SUITE RUNNING
+[native-paths] SUITE RUNNING
+[native-paths] SUITE RUNNING
+[native-paths] SUITE RUNNING
+[native-paths] SUITE RUNNING
+[native-paths] SUITE RUNNING
+[native-paths] SUITE RUNNING
+[native-paths] SUITE RUNNING
+[native-paths] SUITE RUNNING
+[native-paths] SUITE RUNNING
+[native-paths] SUITE RUNNING
+[native-paths] SUITE RUNNING
+[native-paths] SUITE RUNNING
+[native-paths] SUITE RUNNING
+[native-paths] SUITE RUNNING
+[native-paths] SUITE RUNNING
+[native-paths] SUITE RUNNING
+[native-paths] SUITE RUNNING
+[native-paths] SUITE RUNNING
+[native-paths] SUITE RUNNING
+[native-paths] SUITE RUNNING
+[native-paths] SUITE RUNNING
+[native-paths] SUITE RUNNING
+[native-paths] SUITE RUNNING
+[native-paths] SUITE RUNNING
+[native-paths] SUITE RUNNING
+[native-paths] SUITE RUNNING
+[native-paths] SUITE RUNNING
+[native-paths] SUITE RUNNING
+[native-paths] SUITE RUNNING
+[native-paths] SUITE RUNNING
+suite exit 124 seconds 360.37146554100036
+Traceback (most recent call last):
+  File "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/t/performance/native-paths/run-suite.py", line 29, in <module>
+    assert status == 0, 'functional suite failed; preserved raw log'
+           ^^^^^^^^^^^
+AssertionError: functional suite failed; preserved raw log

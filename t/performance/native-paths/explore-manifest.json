@@ -1,0 +1,43 @@
+{
+  "sources": {
+    "t/performance/native-paths/explore.ss": "90fc468a3a8fac478cab85a03682342e98143a5c707d2bd053453c619d832c14",
+    "t/performance/native-paths/reference.ss": "afe6ef589bf5de4694c9e772f7ca25caf455b157b7f85e050ab366fc1fdc1e7f",
+    "t/performance/native-paths/explore-expression.txt": "bd2b8a8338c63f9cac77998302fdf626880c310d13dfb1ac6e16af623125cb5e",
+    "t/performance/native-paths/explore-oracle.txt": "c4f9d0fea4bb6955bb8a86eda40beb1ec3d9d80e172525b401c925e0d2aa828f"
+  },
+  "artifacts": {
+    ".gerbil/native-paths/lib/static/gerbil-ascent__table__expression.scm": "8040bc953917634016c75986a9f3e1964e6d4ff640d5777684cf252e77f5b553",
+    ".gerbil/native-paths/lib/static/gerbil-ascent__t__performance__native-paths__reference.scm": "bf246c0e714c319dc679dee8126ef8908297ee6597bc8401ea97340365508861",
+    ".gerbil/native-paths/lib/gerbil-ascent/table/expression.o1": "559709ca92e54eb95b002a6f7ac095f5ca80e77f3ece3ade7a9a11012e45540d",
+    ".gerbil/native-paths/lib/gerbil-ascent/table/expression~0.o1": "be061fa696810482c3db343fd90a8d067279a9bf7797c6d68db679371e888606",
+    ".gerbil/native-paths/lib/gerbil-ascent/table/expression.scm": "1645cb27d67dd4aef4af0a71647cf228e96afb44ca66120d2a9bcbe978f79e25",
+    ".gerbil/native-paths/lib/gerbil-ascent/table/expression~0.scm": "8040bc953917634016c75986a9f3e1964e6d4ff640d5777684cf252e77f5b553",
+    ".gerbil/native-paths/lib/gerbil-ascent/table/expression.ssxi.ss": "f455165631e38336c86156fead277284cb8303c009a954857290b62afc90edb7",
+    ".gerbil/native-paths/lib/gerbil-ascent/table/expression.ssi": "acaad447ee3af5e97bb177c9a17765e1c7233843fe5fe11175d5e6daf282c067",
+    ".gerbil/native-paths/lib/gerbil-ascent/t/performance/native-paths/reference.ssxi.ss": "0f27e6cff7d141efa284d6d8d8e5f9a006d940944a5488603c475dfb8b8e89d8",
+    ".gerbil/native-paths/lib/gerbil-ascent/t/performance/native-paths/reference.o1": "e80fd0e6f860dc78e3008ca3887de822334b8dd75fb29abf2ce23b93e0ef1e59",
+    ".gerbil/native-paths/lib/gerbil-ascent/t/performance/native-paths/reference~0.o1": "bbdbab647b048effe8316be0d1de3c866b0cc7b5b42e4d12b7d0db3fd822e7d8",
+    ".gerbil/native-paths/lib/gerbil-ascent/t/performance/native-paths/reference~0.scm": "bf246c0e714c319dc679dee8126ef8908297ee6597bc8401ea97340365508861",
+    ".gerbil/native-paths/lib/gerbil-ascent/t/performance/native-paths/reference.ssi": "7a0677acfb16f208a9e38b063e1fc0ad75c44f69db4bb5210c0fb6b2cd3259e5",
+    ".gerbil/native-paths/lib/gerbil-ascent/t/performance/native-paths/reference.scm": "920d9f0cc59bccabb9944191d8611b5d30695c0882950aa749c661876199e5cf"
+  },
+  "samples": 200,
+  "qualification": false,
+  "description": "Initial row propagation, before complete-domain early termination",
+  "artifact_archive": {
+    ".gerbil/native-paths/lib/static/gerbil-ascent__table__expression.scm": ".gerbil/native-paths/explore-lib/static/gerbil-ascent__table__expression.scm",
+    ".gerbil/native-paths/lib/static/gerbil-ascent__t__performance__native-paths__reference.scm": ".gerbil/native-paths/explore-lib/static/gerbil-ascent__t__performance__native-paths__reference.scm",
+    ".gerbil/native-paths/lib/gerbil-ascent/table/expression.o1": ".gerbil/native-paths/explore-lib/gerbil-ascent/table/expression.o1",
+    ".gerbil/native-paths/lib/gerbil-ascent/table/expression~0.o1": ".gerbil/native-paths/explore-lib/gerbil-ascent/table/expression~0.o1",
+    ".gerbil/native-paths/lib/gerbil-ascent/table/expression.scm": ".gerbil/native-paths/explore-lib/gerbil-ascent/table/expression.scm",
+    ".gerbil/native-paths/lib/gerbil-ascent/table/expression~0.scm": ".gerbil/native-paths/explore-lib/gerbil-ascent/table/expression~0.scm",
+    ".gerbil/native-paths/lib/gerbil-ascent/table/expression.ssxi.ss": ".gerbil/native-paths/explore-lib/gerbil-ascent/table/expression.ssxi.ss",
+    ".gerbil/native-paths/lib/gerbil-ascent/table/expression.ssi": ".gerbil/native-paths/explore-lib/gerbil-ascent/table/expression.ssi",
+    ".gerbil/native-paths/lib/gerbil-ascent/t/performance/native-paths/reference.ssxi.ss": ".gerbil/native-paths/explore-lib/gerbil-ascent/t/performance/native-paths/reference.ssxi.ss",
+    ".gerbil/native-paths/lib/gerbil-ascent/t/performance/native-paths/reference.o1": ".gerbil/native-paths/explore-lib/gerbil-ascent/t/performance/native-paths/reference.o1",
+    ".gerbil/native-paths/lib/gerbil-ascent/t/performance/native-paths/reference~0.o1": ".gerbil/native-paths/explore-lib/gerbil-ascent/t/performance/native-paths/reference~0.o1",
+    ".gerbil/native-paths/lib/gerbil-ascent/t/performance/native-paths/reference~0.scm": ".gerbil/native-paths/explore-lib/gerbil-ascent/t/performance/native-paths/reference~0.scm",
+    ".gerbil/native-paths/lib/gerbil-ascent/t/performance/native-paths/reference.ssi": ".gerbil/native-paths/explore-lib/gerbil-ascent/t/performance/native-paths/reference.ssi",
+    ".gerbil/native-paths/lib/gerbil-ascent/t/performance/native-paths/reference.scm": ".gerbil/native-paths/explore-lib/gerbil-ascent/t/performance/native-paths/reference.scm"
+  }
+}

@@ -1,0 +1,124 @@
+[test-lane] START exclusive python3
+[native-paths] START build
+[test-lane] RUNNING exclusive (5s)
+[native-paths] RUNNING build
+{'name': 'build', 'exit': 0, 'seconds': 5.247740292004892}
+[native-paths] START oracle
+[test-lane] RUNNING exclusive (10s)
+[native-paths] RUNNING oracle
+[test-lane] RUNNING exclusive (15s)
+[native-paths] RUNNING oracle
+[test-lane] RUNNING exclusive (20s)
+[native-paths] RUNNING oracle
+[test-lane] RUNNING exclusive (25s)
+[native-paths] RUNNING oracle
+{'name': 'oracle', 'exit': 0, 'seconds': 24.27300945899333}
+[native-paths] START first
+[test-lane] RUNNING exclusive (30s)
+[native-paths] RUNNING first
+[test-lane] RUNNING exclusive (35s)
+[native-paths] RUNNING first
+[test-lane] RUNNING exclusive (40s)
+[native-paths] RUNNING first
+[test-lane] RUNNING exclusive (45s)
+[native-paths] RUNNING first
+[test-lane] RUNNING exclusive (50s)
+[native-paths] RUNNING first
+[test-lane] RUNNING exclusive (55s)
+[native-paths] RUNNING first
+[test-lane] RUNNING exclusive (60s)
+[native-paths] RUNNING first
+[test-lane] RUNNING exclusive (65s)
+[native-paths] RUNNING first
+[test-lane] RUNNING exclusive (70s)
+[native-paths] RUNNING first
+[test-lane] RUNNING exclusive (75s)
+[native-paths] RUNNING first
+[test-lane] RUNNING exclusive (80s)
+[native-paths] RUNNING first
+[test-lane] RUNNING exclusive (85s)
+[native-paths] RUNNING first
+[test-lane] RUNNING exclusive (90s)
+[native-paths] RUNNING first
+[test-lane] RUNNING exclusive (95s)
+[native-paths] RUNNING first
+[test-lane] RUNNING exclusive (100s)
+[native-paths] RUNNING first
+[test-lane] RUNNING exclusive (105s)
+[native-paths] RUNNING first
+[test-lane] RUNNING exclusive (110s)
+[native-paths] RUNNING first
+[test-lane] RUNNING exclusive (115s)
+[native-paths] RUNNING first
+[test-lane] RUNNING exclusive (120s)
+[native-paths] RUNNING first
+[test-lane] RUNNING exclusive (125s)
+[native-paths] RUNNING first
+[test-lane] RUNNING exclusive (130s)
+{'name': 'first', 'exit': 0, 'seconds': 103.845182457997}
+[native-paths] START repeat
+[test-lane] RUNNING exclusive (135s)
+[native-paths] RUNNING repeat
+[test-lane] RUNNING exclusive (140s)
+[native-paths] RUNNING repeat
+[test-lane] RUNNING exclusive (145s)
+[native-paths] RUNNING repeat
+[test-lane] RUNNING exclusive (150s)
+[native-paths] RUNNING repeat
+[test-lane] RUNNING exclusive (155s)
+[native-paths] RUNNING repeat
+[test-lane] RUNNING exclusive (160s)
+[native-paths] RUNNING repeat
+[test-lane] RUNNING exclusive (165s)
+[native-paths] RUNNING repeat
+[test-lane] RUNNING exclusive (170s)
+[native-paths] RUNNING repeat
+[test-lane] RUNNING exclusive (175s)
+[native-paths] RUNNING repeat
+[test-lane] RUNNING exclusive (180s)
+[native-paths] RUNNING repeat
+[test-lane] RUNNING exclusive (185s)
+[native-paths] RUNNING repeat
+[test-lane] RUNNING exclusive (190s)
+[native-paths] RUNNING repeat
+[test-lane] RUNNING exclusive (195s)
+[native-paths] RUNNING repeat
+[test-lane] RUNNING exclusive (200s)
+[native-paths] RUNNING repeat
+[test-lane] RUNNING exclusive (205s)
+[native-paths] RUNNING repeat
+[test-lane] RUNNING exclusive (210s)
+[native-paths] RUNNING repeat
+[test-lane] RUNNING exclusive (215s)
+[native-paths] RUNNING repeat
+[test-lane] RUNNING exclusive (220s)
+[native-paths] RUNNING repeat
+[test-lane] RUNNING exclusive (225s)
+[native-paths] RUNNING repeat
+[test-lane] RUNNING exclusive (230s)
+[native-paths] RUNNING repeat
+[test-lane] RUNNING exclusive (235s)
+[native-paths] RUNNING repeat
+[test-lane] RUNNING exclusive (240s)
+[native-paths] RUNNING repeat
+[test-lane] RUNNING exclusive (245s)
+[native-paths] RUNNING repeat
+[test-lane] RUNNING exclusive (250s)
+[native-paths] RUNNING repeat
+[test-lane] RUNNING exclusive (255s)
+[native-paths] RUNNING repeat
+[test-lane] RUNNING exclusive (260s)
+[native-paths] RUNNING repeat
+[test-lane] RUNNING exclusive (265s)
+[native-paths] RUNNING repeat
+[test-lane] RUNNING exclusive (270s)
+[native-paths] RUNNING repeat
+[test-lane] RUNNING exclusive (275s)
+[native-paths] RUNNING repeat
+[test-lane] RUNNING exclusive (280s)
+[native-paths] RUNNING repeat
+[test-lane] RUNNING exclusive (285s)
+[native-paths] RUNNING repeat
+[test-lane] RUNNING exclusive (290s)
+{'name': 'repeat', 'exit': 0, 'seconds': 158.7416108329926}
+[test-lane] END exclusive exit=0

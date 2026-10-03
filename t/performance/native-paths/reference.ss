@@ -11,11 +11,8 @@
         (only-in :clan/poo/trie UIntTrieSet)
         (only-in :clan/poo/support/base until))
 
-(export gerbil-ascent-table-expression-prototype
-        gerbil-ascent-relation-closure-bounded)
-
-;; A provenance marker for the private prepared view, not a global result cache.
-(def native-path-view-tag (list 'native-path-view))
+(export native-paths-reference-prototype
+        native-paths-reference-closure-bounded)
 
 ;; : (-> DenseTargets DenseBase (-> UInt Void) Void)
 (def (visit-source-row targets base consume)
@@ -96,8 +93,7 @@
        ;; arbitrarily large radix, and no unbounded reverse-row recursion.
        (relation-source-visitor pairs))
      (lambda (source) (vector-ref index source))
-     (lambda (source consume) (for-each consume (vector-ref index source)))
-     native-path-view-tag)))
+     (lambda (source consume) (for-each consume (vector-ref index source))))))
 
 ;; : (-> UIntTrieSet SourceVisitor)
 (def (relation-source-visitor pairs)
@@ -246,7 +242,7 @@
                     (hash-get sparse pair))))))))
 
 ;; : (-> UIntTrieSet Radix Nat PairProjection)
-(def (gerbil-ascent-relation-closure-bounded source radix max-pairs)
+(def (native-paths-reference-closure-bounded source radix max-pairs)
   (let (view (relation-view source radix))
     (relation-closure (vector-ref view 0) (vector-ref view 2) radix max-pairs (vector-ref view 1))))
 
@@ -333,121 +329,6 @@
            (and (exact-integer? pair) (<= 0 pair) (< pair (* radix radix))
                 (lookup-distance pair)))))))
 
-;;; Whole-row path propagation is confined to canonical, dense snapshots.
-;;; The general pair frontier remains authoritative for callbacks and sparse
-;;; graphs. Selection and analysis are both owned by the demanded expression.
-;; : (-> IndexedSource NeighborVisitor Radix (Maybe PathRows))
-(def (build-native-path-layout view neighbors radix)
-  (and (<= 32 radix 128)
-       (= (vector-length view) 4)
-       (eq? (vector-ref view 3) native-path-view-tag)
-       (eq? neighbors (vector-ref view 2))
-       (let ((targets (vector-ref view 1)) (minimum (quotient (+ (* radix 3) 3) 4)))
-         ;; Reject low-degree graphs before allocating a second representation.
-         (and (let check ((from 0))
-                (or (= from radix)
-                    (and (>= (length (targets from)) minimum) (check (+ from 1)))))
-              (let (rows (make-vector radix 0))
-                (let sources ((from 0))
-                  (when (< from radix)
-                    (let bits ((rest (targets from)) (mask 0))
-                      (if (null? rest)
-                        (vector-set! rows from mask)
-                        (bits (cdr rest) (bitwise-ior mask (arithmetic-shift 1 (car rest))))))
-                    (sources (+ from 1))))
-                rows)))))
-
-;; : (-> UIntMask PathRows UIntMask UIntMask)
-(def (path-expand mask adjacency full)
-  (let (expanded 0)
-    (let chunks ((remaining mask) (offset 0))
-      (unless (or (zero? remaining) (= expanded full))
-        (let bits ((word (bitwise-and remaining 65535)))
-          (unless (or (fxzero? word) (= expanded full))
-            (let (bit (fx- (integer-length word) 1))
-              (set! expanded (bitwise-ior expanded (vector-ref adjacency (fx+ offset bit))))
-              (bits (fx- word (fxarithmetic-shift-left 1 bit))))))
-        (chunks (arithmetic-shift remaining -16) (fx+ offset 16))))
-    expanded))
-
-;; : (-> UIntMask DistanceRow Nat Void)
-(def (path-label! mask distances depth)
-  (let chunks ((remaining mask) (offset 0))
-    (unless (zero? remaining)
-      (let bits ((word (bitwise-and remaining 65535)))
-        (unless (fxzero? word)
-          (let (bit (fx- (integer-length word) 1))
-            (vector-set! distances (fx+ offset bit) depth)
-            (bits (fx- word (fxarithmetic-shift-left 1 bit))))))
-      (chunks (arithmetic-shift remaining -16) (fx+ offset 16)))))
-
-;; : (-> PathRows (Maybe UInt) Boolean PathAnalysis)
-(def (compute-native-path-analysis adjacency max-pairs distances?)
-  (when (and max-pairs (not (and (exact-integer? max-pairs) (>= max-pairs 0))))
-    (error "invalid ASCENT closure pair budget" max-pairs))
-  (let* ((radix (vector-length adjacency)) (full (- (arithmetic-shift 1 radix) 1))
-         (rows (make-vector radix 0))
-         (distances (and distances? (make-vector radix #f))) (count 0))
-    (def (admit! mask)
-      (set! count (+ count (bit-count mask)))
-      (when (and max-pairs (> count max-pairs))
-        (error "ASCENT derived pair budget exceeded" max-pairs)))
-    ;; Count all actual source edges before admitting derived pairs.
-    (let seed ((from 0))
-      (when (< from radix)
-        (admit! (vector-ref adjacency from))
-        (seed (+ from 1))))
-    (let sources ((from 0))
-      (when (< from radix)
-        (let* ((seed (vector-ref adjacency from))
-               (distance (and distances? (not (zero? seed)) (make-vector radix #f))))
-          (when distance (vector-set! distances from distance))
-          ;; Positive paths start at outgoing edges, never a reflexive identity.
-          (let levels ((frontier seed) (seen seed) (depth 1))
-            (when distance (path-label! frontier distance depth))
-            ;; Fully covered origins cannot discover another positive pair.
-            (if (or (zero? frontier) (= seen full))
-              (vector-set! rows from seen)
-              (let (next (bitwise-and (path-expand frontier adjacency full) (bitwise-not seen)))
-                (admit! next)
-                (levels next (bitwise-ior seen next) (+ depth 1)))))
-          (sources (+ from 1)))))
-    (vector rows distances)))
-
-;; : (-> PathRows Radix EncodedRows)
-(def (path-pairs rows radix)
-  (let (pairs [])
-    (let sources ((from (- radix 1)))
-      (when (>= from 0)
-        (let* ((mask (vector-ref rows from)) (base (* from radix)))
-          (let chunks ((block (quotient (- (integer-length mask) 1) 16)))
-            (when (and (not (zero? mask)) (>= block 0))
-              (let bits ((word (bitwise-and (arithmetic-shift mask (- (* block 16))) 65535)))
-                (unless (fxzero? word)
-                  (let (bit (fx- (integer-length word) 1))
-                    (set! pairs (cons (+ base (* block 16) bit) pairs))
-                    (bits (fx- word (fxarithmetic-shift-left 1 bit))))))
-              (chunks (- block 1)))))
-        (sources (- from 1))))
-    pairs))
-
-;; : (-> PathRows Radix PairProjection)
-(def (path-projection rows radix)
-  (.o (pairs (path-pairs rows radix))
-      (contains? (lambda (pair)
-                   (and (exact-integer? pair) (<= 0 pair) (< pair (* radix radix))
-                        (bit-set? (modulo pair radix) (vector-ref rows (quotient pair radix))))))))
-
-;; : (-> PathAnalysis Radix DistanceProjection)
-(def (path-distance-projection analysis radix)
-  (let (distances (vector-ref analysis 1))
-    ;; Publish separately from closure: mutable public lists must not alias.
-    (.o (pairs (path-pairs (vector-ref analysis 0) radix))
-        (distance-of (lambda (pair)
-                       (and (exact-integer? pair) (<= 0 pair) (< pair (* radix radix))
-                            (let (row (vector-ref distances (quotient pair radix)))
-                              (and row (vector-ref row (modulo pair radix))))))))))
-
 ;; : (-> RelationExpression (-> SourceVisitor NeighborVisitor (Maybe NeighborRows) Result) Result)
 ;; : (forall (a) (-> RelationExpression (-> SourceVisitor NeighborVisitor (Maybe NeighborRows) a) a))
 (def (with-relation-view self consume)
@@ -459,13 +340,10 @@
 ;;; This signature describes extending source slots with .mix, not a direct
 ;;; Scheme call of the prototype value.
 ;; : (-> RelationSourceSlots RelationExpressionSlots)
-(def gerbil-ascent-table-expression-prototype
+(def native-paths-reference-prototype
   (.o (:: self [] source-pairs radix)
       (indexed-source (relation-view source-pairs radix))
       (right-index (vector-ref (.ref self 'indexed-source) 2))
-      (native-path-layout (build-native-path-layout (.ref self 'indexed-source) (.ref self 'right-index) radix))
-      (native-path-analysis (let (layout (.ref self 'native-path-layout))
-                              (and layout (compute-native-path-analysis layout #f #t))))
       (compose-left
        (lambda (left-pairs)
          (with-relation-view self
@@ -481,30 +359,21 @@
               (if (eq? frontier source-pairs) visit-source (relation-source-visitor frontier))
               accumulated neighbors radix native-neighbors)))))
       (closure-projection
-       (let (layout (and (exact-integer? radix) (<= 32 radix 128) (.ref self 'native-path-layout)))
-         (if layout
-           (path-projection (vector-ref (.ref self 'native-path-analysis) 0) radix)
-           (with-relation-view self
-             (lambda (visit-source neighbors native-neighbors)
-               (relation-closure visit-source neighbors radix #f native-neighbors))))))
+       (with-relation-view self
+         (lambda (visit-source neighbors native-neighbors)
+           (relation-closure visit-source neighbors radix #f native-neighbors))))
       (closure-bounded
        (lambda (max-pairs)
-         (let (layout (and (exact-integer? radix) (<= 32 radix 128) (.ref self 'native-path-layout)))
-           (if layout
-             (path-projection (vector-ref (compute-native-path-analysis layout max-pairs #f) 0) radix)
-             (with-relation-view self
-               (lambda (visit-source neighbors native-neighbors)
-                 (relation-closure visit-source neighbors radix max-pairs native-neighbors)))))))
+         (with-relation-view self
+           (lambda (visit-source neighbors native-neighbors)
+             (relation-closure visit-source neighbors radix max-pairs native-neighbors)))))
       (closure-pairs (.ref (.ref self 'closure-projection) 'pairs))
       (closure-contains? (.ref (.ref self 'closure-projection) 'contains?))
       (closure-set (.call UIntTrieSet .<-list (.ref self 'closure-pairs)))
       (shortest-distance-projection
-       (let (layout (and (exact-integer? radix) (<= 32 radix 128) (.ref self 'native-path-layout)))
-         (if layout
-           (path-distance-projection (.ref self 'native-path-analysis) radix)
-           (with-relation-view self
-             (lambda (visit-source neighbors native-neighbors)
-               (relation-shortest-distance-projection visit-source neighbors radix native-neighbors))))))
+       (with-relation-view self
+         (lambda (visit-source neighbors native-neighbors)
+           (relation-shortest-distance-projection visit-source neighbors radix native-neighbors))))
       (shortest-distance-pairs (.ref (.ref self 'shortest-distance-projection) 'pairs))
       (shortest-distance-of (.ref (.ref self 'shortest-distance-projection) 'distance-of))
       (two-hop-pairs ((.ref self 'compose-left) source-pairs))

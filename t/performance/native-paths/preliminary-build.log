@@ -1,0 +1,12 @@
+[test-lane] START exclusive timeout
+... compile table/expression
+... compile t/performance/native-paths/reference
+[test-lane] RUNNING exclusive (5s)
+[test-lane] RUNNING exclusive (10s)
+[test-lane] RUNNING exclusive (15s)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/native-paths/lib/gerbil-ascent/table/expression~0.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/native-paths/lib/gerbil-ascent/table/expression.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/native-paths/lib/gerbil-ascent/t/performance/native-paths/reference~0.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/native-paths/lib/gerbil-ascent/t/performance/native-paths/reference.scm)
+[test-lane] RUNNING exclusive (20s)
+[test-lane] END exclusive exit=0

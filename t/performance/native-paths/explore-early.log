@@ -1,0 +1,490 @@
+[test-lane] START exclusive timeout
+NATIVE-MODULE-OK /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/native-paths/lib/gerbil-ascent/table/expression.ssi
+NATIVE-MODULE-OK /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/native-paths/lib/gerbil-ascent/t/performance/native-paths/reference.ssi
+CASE complete-16 samples=200 repetitions=1
+PROGRESS complete-16 10/200
+PROGRESS complete-16 20/200
+PROGRESS complete-16 30/200
+PROGRESS complete-16 40/200
+PROGRESS complete-16 50/200
+PROGRESS complete-16 60/200
+PROGRESS complete-16 70/200
+PROGRESS complete-16 80/200
+PROGRESS complete-16 90/200
+PROGRESS complete-16 100/200
+PROGRESS complete-16 110/200
+PROGRESS complete-16 120/200
+PROGRESS complete-16 130/200
+PROGRESS complete-16 140/200
+PROGRESS complete-16 150/200
+PROGRESS complete-16 160/200
+PROGRESS complete-16 170/200
+PROGRESS complete-16 180/200
+PROGRESS complete-16 190/200
+PROGRESS complete-16 200/200
+RESULT complete-16 old-p50-ns=69000 new-p50-ns=68000
+CASE complete-degree-16-32 samples=200 repetitions=1
+PROGRESS complete-degree-16-32 10/200
+PROGRESS complete-degree-16-32 20/200
+PROGRESS complete-degree-16-32 30/200
+PROGRESS complete-degree-16-32 40/200
+PROGRESS complete-degree-16-32 50/200
+PROGRESS complete-degree-16-32 60/200
+PROGRESS complete-degree-16-32 70/200
+PROGRESS complete-degree-16-32 80/200
+PROGRESS complete-degree-16-32 90/200
+PROGRESS complete-degree-16-32 100/200
+PROGRESS complete-degree-16-32 110/200
+PROGRESS complete-degree-16-32 120/200
+PROGRESS complete-degree-16-32 130/200
+PROGRESS complete-degree-16-32 140/200
+PROGRESS complete-degree-16-32 150/200
+PROGRESS complete-degree-16-32 160/200
+PROGRESS complete-degree-16-32 170/200
+PROGRESS complete-degree-16-32 180/200
+PROGRESS complete-degree-16-32 190/200
+PROGRESS complete-degree-16-32 200/200
+RESULT complete-degree-16-32 old-p50-ns=525000 new-p50-ns=527000
+CASE complete-degree-23-32 samples=200 repetitions=1
+PROGRESS complete-degree-23-32 10/200
+PROGRESS complete-degree-23-32 20/200
+[test-lane] RUNNING exclusive (5s)
+PROGRESS complete-degree-23-32 30/200
+PROGRESS complete-degree-23-32 40/200
+PROGRESS complete-degree-23-32 50/200
+PROGRESS complete-degree-23-32 60/200
+PROGRESS complete-degree-23-32 70/200
+PROGRESS complete-degree-23-32 80/200
+PROGRESS complete-degree-23-32 90/200
+PROGRESS complete-degree-23-32 100/200
+PROGRESS complete-degree-23-32 110/200
+PROGRESS complete-degree-23-32 120/200
+PROGRESS complete-degree-23-32 130/200
+PROGRESS complete-degree-23-32 140/200
+PROGRESS complete-degree-23-32 150/200
+PROGRESS complete-degree-23-32 160/200
+PROGRESS complete-degree-23-32 170/200
+PROGRESS complete-degree-23-32 180/200
+PROGRESS complete-degree-23-32 190/200
+PROGRESS complete-degree-23-32 200/200
+RESULT complete-degree-23-32 old-p50-ns=714000 new-p50-ns=717000
+CASE complete-degree-24-32 samples=200 repetitions=1
+PROGRESS complete-degree-24-32 10/200
+PROGRESS complete-degree-24-32 20/200
+PROGRESS complete-degree-24-32 30/200
+PROGRESS complete-degree-24-32 40/200
+PROGRESS complete-degree-24-32 50/200
+PROGRESS complete-degree-24-32 60/200
+PROGRESS complete-degree-24-32 70/200
+PROGRESS complete-degree-24-32 80/200
+PROGRESS complete-degree-24-32 90/200
+PROGRESS complete-degree-24-32 100/200
+PROGRESS complete-degree-24-32 110/200
+PROGRESS complete-degree-24-32 120/200
+PROGRESS complete-degree-24-32 130/200
+PROGRESS complete-degree-24-32 140/200
+PROGRESS complete-degree-24-32 150/200
+PROGRESS complete-degree-24-32 160/200
+PROGRESS complete-degree-24-32 170/200
+PROGRESS complete-degree-24-32 180/200
+PROGRESS complete-degree-24-32 190/200
+PROGRESS complete-degree-24-32 200/200
+RESULT complete-degree-24-32 old-p50-ns=734000 new-p50-ns=422000
+CASE complete-degree-31-32 samples=200 repetitions=1
+PROGRESS complete-degree-31-32 10/200
+PROGRESS complete-degree-31-32 20/200
+PROGRESS complete-degree-31-32 30/200
+PROGRESS complete-degree-31-32 40/200
+PROGRESS complete-degree-31-32 50/200
+PROGRESS complete-degree-31-32 60/200
+PROGRESS complete-degree-31-32 70/200
+PROGRESS complete-degree-31-32 80/200
+PROGRESS complete-degree-31-32 90/200
+PROGRESS complete-degree-31-32 100/200
+PROGRESS complete-degree-31-32 110/200
+PROGRESS complete-degree-31-32 120/200
+PROGRESS complete-degree-31-32 130/200
+PROGRESS complete-degree-31-32 140/200
+PROGRESS complete-degree-31-32 150/200
+PROGRESS complete-degree-31-32 160/200
+PROGRESS complete-degree-31-32 170/200
+PROGRESS complete-degree-31-32 180/200
+PROGRESS complete-degree-31-32 190/200
+PROGRESS complete-degree-31-32 200/200
+RESULT complete-degree-31-32 old-p50-ns=940000 new-p50-ns=545000
+CASE complete-degree-48-64 samples=200 repetitions=1
+PROGRESS complete-degree-48-64 10/200
+PROGRESS complete-degree-48-64 20/200
+PROGRESS complete-degree-48-64 30/200
+PROGRESS complete-degree-48-64 40/200
+PROGRESS complete-degree-48-64 50/200
+PROGRESS complete-degree-48-64 60/200
+PROGRESS complete-degree-48-64 70/200
+PROGRESS complete-degree-48-64 80/200
+PROGRESS complete-degree-48-64 90/200
+[test-lane] RUNNING exclusive (10s)
+PROGRESS complete-degree-48-64 100/200
+PROGRESS complete-degree-48-64 110/200
+PROGRESS complete-degree-48-64 120/200
+PROGRESS complete-degree-48-64 130/200
+PROGRESS complete-degree-48-64 140/200
+PROGRESS complete-degree-48-64 150/200
+PROGRESS complete-degree-48-64 160/200
+PROGRESS complete-degree-48-64 170/200
+PROGRESS complete-degree-48-64 180/200
+PROGRESS complete-degree-48-64 190/200
+PROGRESS complete-degree-48-64 200/200
+RESULT complete-degree-48-64 old-p50-ns=4336000 new-p50-ns=2095000
+CASE complete-degree-63-64 samples=200 repetitions=1
+PROGRESS complete-degree-63-64 10/200
+PROGRESS complete-degree-63-64 20/200
+PROGRESS complete-degree-63-64 30/200
+PROGRESS complete-degree-63-64 40/200
+PROGRESS complete-degree-63-64 50/200
+PROGRESS complete-degree-63-64 60/200
+[test-lane] RUNNING exclusive (15s)
+PROGRESS complete-degree-63-64 70/200
+PROGRESS complete-degree-63-64 80/200
+PROGRESS complete-degree-63-64 90/200
+PROGRESS complete-degree-63-64 100/200
+PROGRESS complete-degree-63-64 110/200
+PROGRESS complete-degree-63-64 120/200
+PROGRESS complete-degree-63-64 130/200
+PROGRESS complete-degree-63-64 140/200
+PROGRESS complete-degree-63-64 150/200
+PROGRESS complete-degree-63-64 160/200
+PROGRESS complete-degree-63-64 170/200
+PROGRESS complete-degree-63-64 180/200
+PROGRESS complete-degree-63-64 190/200
+PROGRESS complete-degree-63-64 200/200
+RESULT complete-degree-63-64 old-p50-ns=6933000 new-p50-ns=2927000
+[test-lane] RUNNING exclusive (20s)
+CASE complete-degree-96-128 samples=200 repetitions=1
+PROGRESS complete-degree-96-128 10/200
+[test-lane] RUNNING exclusive (25s)
+PROGRESS complete-degree-96-128 20/200
+PROGRESS complete-degree-96-128 30/200
+PROGRESS complete-degree-96-128 40/200
+PROGRESS complete-degree-96-128 50/200
+PROGRESS complete-degree-96-128 60/200
+[test-lane] RUNNING exclusive (30s)
+PROGRESS complete-degree-96-128 70/200
+PROGRESS complete-degree-96-128 80/200
+PROGRESS complete-degree-96-128 90/200
+PROGRESS complete-degree-96-128 100/200
+PROGRESS complete-degree-96-128 110/200
+PROGRESS complete-degree-96-128 120/200
+[test-lane] RUNNING exclusive (35s)
+PROGRESS complete-degree-96-128 130/200
+PROGRESS complete-degree-96-128 140/200
+PROGRESS complete-degree-96-128 150/200
+PROGRESS complete-degree-96-128 160/200
+PROGRESS complete-degree-96-128 170/200
+[test-lane] RUNNING exclusive (40s)
+PROGRESS complete-degree-96-128 180/200
+PROGRESS complete-degree-96-128 190/200
+[test-lane] RUNNING exclusive (45s)
+PROGRESS complete-degree-96-128 200/200
+RESULT complete-degree-96-128 old-p50-ns=48085000 new-p50-ns=17288000
+CASE complete-degree-127-128 samples=200 repetitions=1
+[test-lane] RUNNING exclusive (50s)
+PROGRESS complete-degree-127-128 10/200
+[test-lane] RUNNING exclusive (55s)
+PROGRESS complete-degree-127-128 20/200
+[test-lane] RUNNING exclusive (60s)
+PROGRESS complete-degree-127-128 30/200
+PROGRESS complete-degree-127-128 40/200
+[test-lane] RUNNING exclusive (65s)
+PROGRESS complete-degree-127-128 50/200
+PROGRESS complete-degree-127-128 60/200
+[test-lane] RUNNING exclusive (70s)
+PROGRESS complete-degree-127-128 70/200
+[test-lane] RUNNING exclusive (75s)
+PROGRESS complete-degree-127-128 80/200
+PROGRESS complete-degree-127-128 90/200
+PROGRESS complete-degree-127-128 100/200
+[test-lane] RUNNING exclusive (80s)
+PROGRESS complete-degree-127-128 110/200
+PROGRESS complete-degree-127-128 120/200
+[test-lane] RUNNING exclusive (85s)
+PROGRESS complete-degree-127-128 130/200
+PROGRESS complete-degree-127-128 140/200
+[test-lane] RUNNING exclusive (90s)
+PROGRESS complete-degree-127-128 150/200
+PROGRESS complete-degree-127-128 160/200
+[test-lane] RUNNING exclusive (95s)
+PROGRESS complete-degree-127-128 170/200
+[test-lane] RUNNING exclusive (100s)
+PROGRESS complete-degree-127-128 180/200
+PROGRESS complete-degree-127-128 190/200
+[test-lane] RUNNING exclusive (105s)
+PROGRESS complete-degree-127-128 200/200
+RESULT complete-degree-127-128 old-p50-ns=149983000 new-p50-ns=60794000
+CASE closure-fanout-32 samples=200 repetitions=1
+PROGRESS closure-fanout-32 10/200
+PROGRESS closure-fanout-32 20/200
+PROGRESS closure-fanout-32 30/200
+PROGRESS closure-fanout-32 40/200
+PROGRESS closure-fanout-32 50/200
+PROGRESS closure-fanout-32 60/200
+PROGRESS closure-fanout-32 70/200
+PROGRESS closure-fanout-32 80/200
+PROGRESS closure-fanout-32 90/200
+PROGRESS closure-fanout-32 100/200
+PROGRESS closure-fanout-32 110/200
+PROGRESS closure-fanout-32 120/200
+PROGRESS closure-fanout-32 130/200
+PROGRESS closure-fanout-32 140/200
+PROGRESS closure-fanout-32 150/200
+PROGRESS closure-fanout-32 160/200
+PROGRESS closure-fanout-32 170/200
+PROGRESS closure-fanout-32 180/200
+PROGRESS closure-fanout-32 190/200
+PROGRESS closure-fanout-32 200/200
+RESULT closure-fanout-32 old-p50-ns=613000 new-p50-ns=327000
+CASE distance-fanout-32 samples=200 repetitions=1
+PROGRESS distance-fanout-32 10/200
+PROGRESS distance-fanout-32 20/200
+PROGRESS distance-fanout-32 30/200
+PROGRESS distance-fanout-32 40/200
+PROGRESS distance-fanout-32 50/200
+PROGRESS distance-fanout-32 60/200
+PROGRESS distance-fanout-32 70/200
+PROGRESS distance-fanout-32 80/200
+PROGRESS distance-fanout-32 90/200
+PROGRESS distance-fanout-32 100/200
+PROGRESS distance-fanout-32 110/200
+PROGRESS distance-fanout-32 120/200
+PROGRESS distance-fanout-32 130/200
+PROGRESS distance-fanout-32 140/200
+PROGRESS distance-fanout-32 150/200
+PROGRESS distance-fanout-32 160/200
+PROGRESS distance-fanout-32 170/200
+PROGRESS distance-fanout-32 180/200
+PROGRESS distance-fanout-32 190/200
+PROGRESS distance-fanout-32 200/200
+RESULT distance-fanout-32 old-p50-ns=430000 new-p50-ns=340000
+CASE distance-then-closure-32 samples=200 repetitions=1
+PROGRESS distance-then-closure-32 10/200
+PROGRESS distance-then-closure-32 20/200
+PROGRESS distance-then-closure-32 30/200
+PROGRESS distance-then-closure-32 40/200
+PROGRESS distance-then-closure-32 50/200
+PROGRESS distance-then-closure-32 60/200
+PROGRESS distance-then-closure-32 70/200
+PROGRESS distance-then-closure-32 80/200
+PROGRESS distance-then-closure-32 90/200
+PROGRESS distance-then-closure-32 100/200
+PROGRESS distance-then-closure-32 110/200
+[test-lane] RUNNING exclusive (110s)
+PROGRESS distance-then-closure-32 120/200
+PROGRESS distance-then-closure-32 130/200
+PROGRESS distance-then-closure-32 140/200
+PROGRESS distance-then-closure-32 150/200
+PROGRESS distance-then-closure-32 160/200
+PROGRESS distance-then-closure-32 170/200
+PROGRESS distance-then-closure-32 180/200
+PROGRESS distance-then-closure-32 190/200
+PROGRESS distance-then-closure-32 200/200
+RESULT distance-then-closure-32 old-p50-ns=755000 new-p50-ns=354000
+CASE distance-chain-32 samples=200 repetitions=1
+PROGRESS distance-chain-32 10/200
+PROGRESS distance-chain-32 20/200
+PROGRESS distance-chain-32 30/200
+PROGRESS distance-chain-32 40/200
+PROGRESS distance-chain-32 50/200
+PROGRESS distance-chain-32 60/200
+PROGRESS distance-chain-32 70/200
+PROGRESS distance-chain-32 80/200
+PROGRESS distance-chain-32 90/200
+PROGRESS distance-chain-32 100/200
+PROGRESS distance-chain-32 110/200
+PROGRESS distance-chain-32 120/200
+PROGRESS distance-chain-32 130/200
+PROGRESS distance-chain-32 140/200
+PROGRESS distance-chain-32 150/200
+PROGRESS distance-chain-32 160/200
+PROGRESS distance-chain-32 170/200
+PROGRESS distance-chain-32 180/200
+PROGRESS distance-chain-32 190/200
+PROGRESS distance-chain-32 200/200
+RESULT distance-chain-32 old-p50-ns=51000 new-p50-ns=52000
+CASE distance-chain-128 samples=200 repetitions=1
+PROGRESS distance-chain-128 10/200
+PROGRESS distance-chain-128 20/200
+PROGRESS distance-chain-128 30/200
+PROGRESS distance-chain-128 40/200
+PROGRESS distance-chain-128 50/200
+PROGRESS distance-chain-128 60/200
+PROGRESS distance-chain-128 70/200
+PROGRESS distance-chain-128 80/200
+PROGRESS distance-chain-128 90/200
+PROGRESS distance-chain-128 100/200
+PROGRESS distance-chain-128 110/200
+PROGRESS distance-chain-128 120/200
+PROGRESS distance-chain-128 130/200
+PROGRESS distance-chain-128 140/200
+PROGRESS distance-chain-128 150/200
+PROGRESS distance-chain-128 160/200
+PROGRESS distance-chain-128 170/200
+PROGRESS distance-chain-128 180/200
+PROGRESS distance-chain-128 190/200
+PROGRESS distance-chain-128 200/200
+RESULT distance-chain-128 old-p50-ns=441000 new-p50-ns=438000
+CASE closure-chain-32 samples=200 repetitions=1
+PROGRESS closure-chain-32 10/200
+PROGRESS closure-chain-32 20/200
+PROGRESS closure-chain-32 30/200
+PROGRESS closure-chain-32 40/200
+PROGRESS closure-chain-32 50/200
+PROGRESS closure-chain-32 60/200
+PROGRESS closure-chain-32 70/200
+PROGRESS closure-chain-32 80/200
+PROGRESS closure-chain-32 90/200
+PROGRESS closure-chain-32 100/200
+PROGRESS closure-chain-32 110/200
+PROGRESS closure-chain-32 120/200
+PROGRESS closure-chain-32 130/200
+PROGRESS closure-chain-32 140/200
+PROGRESS closure-chain-32 150/200
+PROGRESS closure-chain-32 160/200
+PROGRESS closure-chain-32 170/200
+PROGRESS closure-chain-32 180/200
+PROGRESS closure-chain-32 190/200
+PROGRESS closure-chain-32 200/200
+RESULT closure-chain-32 old-p50-ns=43000 new-p50-ns=44000
+CASE projection-256 samples=200 repetitions=1
+PROGRESS projection-256 10/200
+PROGRESS projection-256 20/200
+PROGRESS projection-256 30/200
+PROGRESS projection-256 40/200
+PROGRESS projection-256 50/200
+PROGRESS projection-256 60/200
+PROGRESS projection-256 70/200
+PROGRESS projection-256 80/200
+PROGRESS projection-256 90/200
+PROGRESS projection-256 100/200
+PROGRESS projection-256 110/200
+PROGRESS projection-256 120/200
+PROGRESS projection-256 130/200
+PROGRESS projection-256 140/200
+PROGRESS projection-256 150/200
+PROGRESS projection-256 160/200
+PROGRESS projection-256 170/200
+PROGRESS projection-256 180/200
+PROGRESS projection-256 190/200
+PROGRESS projection-256 200/200
+RESULT projection-256 old-p50-ns=301000 new-p50-ns=300000
+CASE empty-distances-64 samples=200 repetitions=1
+PROGRESS empty-distances-64 10/200
+PROGRESS empty-distances-64 20/200
+PROGRESS empty-distances-64 30/200
+PROGRESS empty-distances-64 40/200
+PROGRESS empty-distances-64 50/200
+PROGRESS empty-distances-64 60/200
+PROGRESS empty-distances-64 70/200
+PROGRESS empty-distances-64 80/200
+PROGRESS empty-distances-64 90/200
+PROGRESS empty-distances-64 100/200
+PROGRESS empty-distances-64 110/200
+PROGRESS empty-distances-64 120/200
+PROGRESS empty-distances-64 130/200
+PROGRESS empty-distances-64 140/200
+PROGRESS empty-distances-64 150/200
+PROGRESS empty-distances-64 160/200
+PROGRESS empty-distances-64 170/200
+PROGRESS empty-distances-64 180/200
+PROGRESS empty-distances-64 190/200
+PROGRESS empty-distances-64 200/200
+RESULT empty-distances-64 old-p50-ns=17000 new-p50-ns=17000
+CASE empty-distances-512 samples=200 repetitions=1
+PROGRESS empty-distances-512 10/200
+PROGRESS empty-distances-512 20/200
+PROGRESS empty-distances-512 30/200
+PROGRESS empty-distances-512 40/200
+PROGRESS empty-distances-512 50/200
+PROGRESS empty-distances-512 60/200
+PROGRESS empty-distances-512 70/200
+PROGRESS empty-distances-512 80/200
+PROGRESS empty-distances-512 90/200
+PROGRESS empty-distances-512 100/200
+PROGRESS empty-distances-512 110/200
+PROGRESS empty-distances-512 120/200
+PROGRESS empty-distances-512 130/200
+PROGRESS empty-distances-512 140/200
+PROGRESS empty-distances-512 150/200
+PROGRESS empty-distances-512 160/200
+PROGRESS empty-distances-512 170/200
+PROGRESS empty-distances-512 180/200
+PROGRESS empty-distances-512 190/200
+PROGRESS empty-distances-512 200/200
+RESULT empty-distances-512 old-p50-ns=48000 new-p50-ns=49000
+CASE sparse-distances-512 samples=200 repetitions=1
+PROGRESS sparse-distances-512 10/200
+PROGRESS sparse-distances-512 20/200
+PROGRESS sparse-distances-512 30/200
+PROGRESS sparse-distances-512 40/200
+PROGRESS sparse-distances-512 50/200
+PROGRESS sparse-distances-512 60/200
+PROGRESS sparse-distances-512 70/200
+PROGRESS sparse-distances-512 80/200
+PROGRESS sparse-distances-512 90/200
+PROGRESS sparse-distances-512 100/200
+PROGRESS sparse-distances-512 110/200
+PROGRESS sparse-distances-512 120/200
+PROGRESS sparse-distances-512 130/200
+PROGRESS sparse-distances-512 140/200
+PROGRESS sparse-distances-512 150/200
+PROGRESS sparse-distances-512 160/200
+PROGRESS sparse-distances-512 170/200
+PROGRESS sparse-distances-512 180/200
+PROGRESS sparse-distances-512 190/200
+PROGRESS sparse-distances-512 200/200
+RESULT sparse-distances-512 old-p50-ns=19000 new-p50-ns=19000
+CASE empty-distances-513 samples=200 repetitions=1
+PROGRESS empty-distances-513 10/200
+PROGRESS empty-distances-513 20/200
+PROGRESS empty-distances-513 30/200
+PROGRESS empty-distances-513 40/200
+PROGRESS empty-distances-513 50/200
+PROGRESS empty-distances-513 60/200
+PROGRESS empty-distances-513 70/200
+PROGRESS empty-distances-513 80/200
+PROGRESS empty-distances-513 90/200
+PROGRESS empty-distances-513 100/200
+PROGRESS empty-distances-513 110/200
+PROGRESS empty-distances-513 120/200
+PROGRESS empty-distances-513 130/200
+PROGRESS empty-distances-513 140/200
+PROGRESS empty-distances-513 150/200
+PROGRESS empty-distances-513 160/200
+PROGRESS empty-distances-513 170/200
+PROGRESS empty-distances-513 180/200
+PROGRESS empty-distances-513 190/200
+PROGRESS empty-distances-513 200/200
+RESULT empty-distances-513 old-p50-ns=14000 new-p50-ns=15000
+CASE sparse-distances-513 samples=200 repetitions=1
+PROGRESS sparse-distances-513 10/200
+PROGRESS sparse-distances-513 20/200
+PROGRESS sparse-distances-513 30/200
+PROGRESS sparse-distances-513 40/200
+PROGRESS sparse-distances-513 50/200
+PROGRESS sparse-distances-513 60/200
+PROGRESS sparse-distances-513 70/200
+PROGRESS sparse-distances-513 80/200
+PROGRESS sparse-distances-513 90/200
+PROGRESS sparse-distances-513 100/200
+PROGRESS sparse-distances-513 110/200
+PROGRESS sparse-distances-513 120/200
+PROGRESS sparse-distances-513 130/200
+PROGRESS sparse-distances-513 140/200
+PROGRESS sparse-distances-513 150/200
+PROGRESS sparse-distances-513 160/200
+PROGRESS sparse-distances-513 170/200
+PROGRESS sparse-distances-513 180/200
+PROGRESS sparse-distances-513 190/200
+PROGRESS sparse-distances-513 200/200
+RESULT sparse-distances-513 old-p50-ns=17000 new-p50-ns=17000
+OK
+[test-lane] RUNNING exclusive (115s)
+[test-lane] END exclusive exit=0

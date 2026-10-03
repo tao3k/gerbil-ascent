@@ -1,0 +1,231 @@
+[test-lane] START exclusive python3
+[native-performance] BUILD modules=41 library=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/performance-execution/snapshot-qegx6j2d/lib
+[test-lane] RUNNING exclusive (5s)
+... compile table/expression
+... compile table/funs
+... compile table/eqrel
+... compile table/trrel
+... compile program/aggregators
+... compile program/graph
+... compile program/analysis
+... compile program/admission
+... compile program/result
+... compile candidate/closure
+... compile candidate/types
+... compile interface/request
+[test-lane] RUNNING exclusive (10s)
+[test-lane] RUNNING exclusive (15s)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/performance-execution/snapshot-qegx6j2d/lib/gerbil-ascent/table/expression~0.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/performance-execution/snapshot-qegx6j2d/lib/gerbil-ascent/table/expression.scm)
+... compile core/binary-program
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/performance-execution/snapshot-qegx6j2d/lib/gerbil-ascent/table/funs~0.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/performance-execution/snapshot-qegx6j2d/lib/gerbil-ascent/table/funs.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/performance-execution/snapshot-qegx6j2d/lib/gerbil-ascent/table/eqrel~0.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/performance-execution/snapshot-qegx6j2d/lib/gerbil-ascent/table/eqrel.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/performance-execution/snapshot-qegx6j2d/lib/gerbil-ascent/program/aggregators~0.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/performance-execution/snapshot-qegx6j2d/lib/gerbil-ascent/program/aggregators.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/performance-execution/snapshot-qegx6j2d/lib/gerbil-ascent/table/trrel~0.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/performance-execution/snapshot-qegx6j2d/lib/gerbil-ascent/table/trrel.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/performance-execution/snapshot-qegx6j2d/lib/gerbil-ascent/program/graph~0.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/performance-execution/snapshot-qegx6j2d/lib/gerbil-ascent/program/graph.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/performance-execution/snapshot-qegx6j2d/lib/gerbil-ascent/program/analysis~0.scm)
+... compile table/provider
+... compile table/storage
+... compile program/funs
+... compile program/summary
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/performance-execution/snapshot-qegx6j2d/lib/gerbil-ascent/program/analysis.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/performance-execution/snapshot-qegx6j2d/lib/gerbil-ascent/program/admission~0.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/performance-execution/snapshot-qegx6j2d/lib/gerbil-ascent/program/admission.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/performance-execution/snapshot-qegx6j2d/lib/gerbil-ascent/program/result~0.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/performance-execution/snapshot-qegx6j2d/lib/gerbil-ascent/program/result.scm)
+... compile program/positive
+... compile table/interface
+... compile program/types
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/performance-execution/snapshot-qegx6j2d/lib/gerbil-ascent/candidate/closure~0.scm)
+... compile table/access
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/performance-execution/snapshot-qegx6j2d/lib/gerbil-ascent/candidate/closure.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/performance-execution/snapshot-qegx6j2d/lib/gerbil-ascent/candidate/types~0.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/performance-execution/snapshot-qegx6j2d/lib/gerbil-ascent/candidate/types.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/performance-execution/snapshot-qegx6j2d/lib/gerbil-ascent/interface/request~0.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/performance-execution/snapshot-qegx6j2d/lib/gerbil-ascent/interface/request.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/performance-execution/snapshot-qegx6j2d/lib/gerbil-ascent/candidate/types~1.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/performance-execution/snapshot-qegx6j2d/lib/gerbil-ascent/core/binary-program~0.scm)
+... compile program/objects
+[test-lane] RUNNING exclusive (20s)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/performance-execution/snapshot-qegx6j2d/lib/gerbil-ascent/core/binary-program.scm)
+... compile program/planning
+... compile program/scheme-checked
+... compile program/syntax
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/performance-execution/snapshot-qegx6j2d/lib/gerbil-ascent/table/provider~0.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/performance-execution/snapshot-qegx6j2d/lib/gerbil-ascent/program/funs~0.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/performance-execution/snapshot-qegx6j2d/lib/gerbil-ascent/program/funs.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/performance-execution/snapshot-qegx6j2d/lib/gerbil-ascent/table/storage~0.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/performance-execution/snapshot-qegx6j2d/lib/gerbil-ascent/table/storage.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/performance-execution/snapshot-qegx6j2d/lib/gerbil-ascent/table/provider.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/performance-execution/snapshot-qegx6j2d/lib/gerbil-ascent/program/summary~0.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/performance-execution/snapshot-qegx6j2d/lib/gerbil-ascent/program/summary.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/performance-execution/snapshot-qegx6j2d/lib/gerbil-ascent/program/positive~0.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/performance-execution/snapshot-qegx6j2d/lib/gerbil-ascent/program/positive.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/performance-execution/snapshot-qegx6j2d/lib/gerbil-ascent/table/interface.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/performance-exe[test-lane] RUNNING exclusive (25s)
+[test-lane] RUNNING exclusive (30s)
+cution/snapshot-qegx6j2d/lib/gerbil-ascent/table/access~0.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/performance-execution/snapshot-qegx6j2d/lib/gerbil-ascent/table/access.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/performance-execution/snapshot-qegx6j2d/lib/gerbil-ascent/program/types~0.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/performance-execution/snapshot-qegx6j2d/lib/gerbil-ascent/program/types.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/performance-execution/snapshot-qegx6j2d/lib/gerbil-ascent/program/objects~0.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/performance-execution/snapshot-qegx6j2d/lib/gerbil-ascent/program/objects.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/performance-execution/snapshot-qegx6j2d/lib/gerbil-ascent/program/planning~0.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/performance-execution/snapshot-qegx6j2d/lib/gerbil-ascent/program/planning.scm)
+... compile program/evaluate
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/performance-execution/snapshot-qegx6j2d/lib/gerbil-ascent/program/syntax.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/performance-execution/snapshot-qegx6j2d/lib/gerbil-ascent/program/scheme-checked~0.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/performance-execution/snapshot-qegx6j2d/lib/gerbil-ascent/program/scheme-checked.scm)
+... compile program/operator
+... compile candidate/program
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/performance-execution/snapshot-qegx6j2d/lib/gerbil-ascent/program/evaluate~0.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/performance-execution/snapshot-qegx6j2d/lib/gerbil-ascent/program/evaluate.scm)
+... compile program/session
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/performance-execution/snapshot-qegx6j2d/lib/gerbil-ascent/program/operator~0.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/performance-execution/snapshot-qegx6j2d/lib/gerbil-ascent/program/operator.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/performance-execution/snapshot-qegx6j2d/lib/gerbil-ascent/program/syntax~1.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/performance-execution/snapshot-qegx6j2d/lib/gerbil-ascent/program/operator~1.scm)
+... compile program/operator-change
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/performance-execution/snapshot-qegx6j2d/lib/gerbil-ascent/candidate/program~0.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/performance-execution/snapshot-qegx6j2d/lib/gerbil-ascent/candidate/program.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/performance-execution/snapshot-qegx6j2d/lib/gerbil-ascent/program/session~0.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/performance-execution/snapshot-qegx6j2d/lib/gerbil-ascent/program/session.scm)
+... compile candidate/funs
+... compile program/scheme-admission
+[test-lane] RUNNING exclusive (35s)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/performance-execution/snapshot-qegx6j2d/lib/gerbil-ascent/program/operator-change~0.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/performance-execution/snapshot-qegx6j2d/lib/gerbil-ascent/program/operator-change.scm)
+... compile candidate/provenance
+... compile candidate/finite-evidence
+... compile program/scheme-language
+... compile program/operator-session
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/performance-execution/snapshot-qegx6j2d/lib/gerbil-ascent/candidate/funs~0.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/performance-execution/snapshot-qegx6j2d/lib/gerbil-ascent/candidate/funs.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/performance-execution/snapshot-qegx6j2d/lib/gerbil-ascent/program/scheme-admission~0.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/performance-execution/snapshot-qegx6j2d/lib/gerbil-ascent/program/scheme-admission.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/performance-execution/snapshot-qegx6j2d/lib/gerbil-ascent/program/scheme-admission~1.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/performance-execution/snapshot-qegx6j2d/lib/gerbil-ascent/candidate/provenance~0.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/performance-execution/snapshot-qegx6j2d/lib/gerbil-ascent/candidate/provenance.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/performance-execution/snapshot-qegx6j2d/lib/gerbil-ascent/candidate/provenance~1.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/performance-execution/snapshot-qegx6j2d/lib/gerbil-ascent/candidate/finite-evidence~0.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/performance-execution/snapshot-qegx6j2d/lib/gerbil-ascent/candidate/finite-evidence.scm)
+... compile candidate/nonmembership
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/performance-execution/snapshot-qegx6j2d/lib/gerbil-ascent/program/scheme-language.scm)
+... compile candidate/stratified-proof
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/performance-execution/snapshot-qegx6j2d/lib/gerbil-ascent/program/operator-session~0.scm)
+... compile program/interface
+[test-lane] RUNNING exclusive (40s)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/performance-execution/snapshot-qegx6j2d/lib/gerbil-ascent/program/operator-session.scm)
+... compile candidate/stratified-producer
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/performance-execution/snapshot-qegx6j2d/lib/gerbil-ascent/program/operator-session~1.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/performance-execution/snapshot-qegx6j2d/lib/gerbil-ascent/candidate/finite-evidence~1.scm)
+... compile candidate/reasoning
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/performance-execution/snapshot-qegx6j2d/lib/gerbil-ascent/candidate/nonmembership~0.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/performance-execution/snapshot-qegx6j2d/lib/gerbil-ascent/candidate/nonmembership.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/performance-execution/snapshot-qegx6j2d/lib/gerbil-ascent/candidate/nonmembership~1.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/performance-execution/snapshot-qegx6j2d/lib/gerbil-ascent/program/scheme-language~1.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/performance-execution/snapshot-qegx6j2d/lib/gerbil-ascent/program/interface.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/perform[test-lane] RUNNING exclusive (45s)
+[test-lane] RUNNING exclusive (50s)
+[test-lane] RUNNING exclusive (55s)
+[test-lane] RUNNING exclusive (60s)
+[test-lane] RUNNING exclusive (65s)
+[test-lane] RUNNING exclusive (70s)
+[test-lane] RUNNING exclusive (75s)
+[test-lane] RUNNING exclusive (80s)
+[test-lane] RUNNING exclusive (85s)
+ance-execution/snapshot-qegx6j2d/lib/gerbil-ascent/candidate/stratified-proof~0.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/performance-execution/snapshot-qegx6j2d/lib/gerbil-ascent/candidate/stratified-proof.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/performance-execution/snapshot-qegx6j2d/lib/gerbil-ascent/candidate/stratified-producer~0.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/performance-execution/snapshot-qegx6j2d/lib/gerbil-ascent/candidate/stratified-producer.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/performance-execution/snapshot-qegx6j2d/lib/gerbil-ascent/candidate/reasoning~0.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/performance-execution/snapshot-qegx6j2d/lib/gerbil-ascent/candidate/reasoning.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/performance-execution/snapshot-qegx6j2d/lib/gerbil-ascent/candidate/reasoning~1.scm)
+[test-lane] RUNNING exclusive (90s)
+[test-lane] RUNNING exclusive (95s)
+[test-lane] RUNNING exclusive (100s)
+[native-performance] VERIFIED modules=41 receipt=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/performance-execution/snapshot-qegx6j2d/snapshot.json
+[native-paths] START policy
+[test-lane] RUNNING exclusive (105s)
+[native-paths] RUNNING policy
+[test-lane] RUNNING exclusive (110s)
+[native-paths] RUNNING policy
+[test-lane] RUNNING exclusive (115s)
+[native-paths] RUNNING policy
+[test-lane] RUNNING exclusive (120s)
+[native-paths] RUNNING policy
+[test-lane] RUNNING exclusive (125s)
+[native-paths] RUNNING policy
+[test-lane] RUNNING exclusive (130s)
+[native-paths] RUNNING policy
+[test-lane] RUNNING exclusive (135s)
+[native-paths] RUNNING policy
+[test-lane] RUNNING exclusive (140s)
+[native-paths] RUNNING policy
+{'name': 'policy', 'exit': 0, 'seconds': 41.39700458299194}
+[native-paths] START ascent-table-expression
+[test-lane] RUNNING exclusive (145s)
+[native-paths] RUNNING ascent-table-expression
+[test-lane] RUNNING exclusive (150s)
+[native-paths] RUNNING ascent-table-expression
+[test-lane] RUNNING exclusive (155s)
+[native-paths] RUNNING ascent-table-expression
+[test-lane] RUNNING exclusive (160s)
+[native-paths] RUNNING ascent-table-expression
+[test-lane] RUNNING exclusive (165s)
+[native-paths] RUNNING ascent-table-expression
+[test-lane] RUNNING exclusive (170s)
+[native-paths] RUNNING ascent-table-expression
+[test-lane] RUNNING exclusive (175s)
+[native-paths] RUNNING ascent-table-expression
+[test-lane] RUNNING exclusive (180s)
+[native-paths] RUNNING ascent-table-expression
+[test-lane] RUNNING exclusive (185s)
+[native-paths] RUNNING ascent-table-expression
+[test-lane] RUNNING exclusive (190s)
+[native-paths] RUNNING ascent-table-expression
+[test-lane] RUNNING exclusive (195s)
+[native-paths] RUNNING ascent-table-expression
+[test-lane] RUNNING exclusive (200s)
+[native-paths] RUNNING ascent-table-expression
+[test-lane] RUNNING exclusive (205s)
+[native-paths] RUNNING ascent-table-expression
+[test-lane] RUNNING exclusive (210s)
+[native-paths] RUNNING ascent-table-expression
+[test-lane] RUNNING exclusive (215s)
+[native-paths] RUNNING ascent-table-expression
+[test-lane] RUNNING exclusive (220s)
+[native-paths] RUNNING ascent-table-expression
+[test-lane] RUNNING exclusive (225s)
+[native-paths] RUNNING ascent-table-expression
+[test-lane] RUNNING exclusive (230s)
+[native-paths] RUNNING ascent-table-expression
+[test-lane] RUNNING exclusive (235s)
+{'name': 'ascent-table-expression', 'exit': 0, 'seconds': 95.24644316599006}
+[native-paths] START ascent-table-expression-membership
+[test-lane] RUNNING exclusive (240s)
+[native-paths] RUNNING ascent-table-expression-membership
+[test-lane] RUNNING exclusive (245s)
+[native-paths] RUNNING ascent-table-expression-membership
+[test-lane] RUNNING exclusive (250s)
+[native-paths] RUNNING ascent-table-expression-membership
+[test-lane] RUNNING exclusive (255s)
+[native-paths] RUNNING ascent-table-expression-membership
+[test-lane] RUNNING exclusive (260s)
+[native-paths] RUNNING ascent-table-expression-membership
+[test-lane] RUNNING exclusive (265s)
+{'name': 'ascent-table-expression-membership', 'exit': 0, 'seconds': 26.037022208009148}
+[native-paths] START ascent-reachability-closure
+[test-lane] RUNNING exclusive (270s)
+[native-paths] RUNNING ascent-reachability-closure
+[test-lane] RUNNING exclusive (275s)
+[native-paths] RUNNING ascent-reachability-closure
+[test-lane] RUNNING exclusive (280s)
+[native-paths] RUNNING ascent-reachability-closure
+{'name': 'ascent-reachability-closure', 'exit': 0, 'seconds': 16.074775125001906}
+[test-lane] END exclusive exit=0

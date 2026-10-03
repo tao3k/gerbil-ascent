@@ -1,0 +1,23 @@
+[ascent-test] START t/qualification/scheme-operator-retained-test.ss
+[test-lane] START exclusive t/qualification/scheme-operator-retained-test.ss
+[test-lane] RUNNING exclusive (5s)
+[test-lane] RUNNING exclusive (10s)
+HARNESS ("t/qualification/scheme-operator-retained-test.ss")
+MODULE t/qualification/scheme-operator-retained-test.ss
+SUITE retained first-class relational operators
+CASE all finite graphs survive append, duplicate and withdrawal
+[test-lane] RUNNING exclusive (15s)
+PROGRESS retained graphs 2/64
+PROGRESS retained graphs 4/64
+PROGRESS retained graphs 6/64
+PROGRESS retained graphs 8/64
+[test-lane] RUNNING exclusive (20s)
+PROGRESS retained graphs 10/64
+PROGRESS retained graphs 12/64
+PROGRESS retained graphs 14/64
+PROGRESS retained graphs 16/64
+PROGRESS retained graphs 18/64
+PROGRESS retained graphs 20/64
+[test-lane] RUNNING exclusive (25s)
+PROGRESS retained graphs 22/64
+error: recipe `test-file` was terminated by signal 15

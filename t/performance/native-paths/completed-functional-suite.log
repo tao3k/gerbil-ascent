@@ -1,0 +1,28 @@
+COMPLETING ['t/qualification/scheme-operator-retained-test.ss', 't/qualification/scheme-operator-test.ss']
+[exclusive-test] PLAN configured-jobs=1 workers=1 modules=2
+[exclusive-test] RUNNING remaining=2 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791022194881896000
+[exclusive-test] RUNNING remaining=2 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791022194881896000
+[exclusive-test] RUNNING remaining=2 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791022194881896000
+[exclusive-test] RUNNING remaining=2 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791022194881896000
+[exclusive-test] RUNNING remaining=2 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791022194881896000
+[exclusive-test] RUNNING remaining=2 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791022194881896000
+[exclusive-test] RUNNING remaining=2 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791022194881896000
+[exclusive-test] RUNNING remaining=2 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791022194881896000
+[exclusive-test] RUNNING remaining=2 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791022194881896000
+[exclusive-test] RUNNING remaining=2 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791022194881896000
+[exclusive-test] RUNNING remaining=2 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791022194881896000
+[exclusive-test] END t/qualification/scheme-operator-retained-test.ss exit=0 log=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791022194881896000/scheme-operator-retained-test.log
+[exclusive-test] RUNNING remaining=1 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791022194881896000
+[exclusive-test] RUNNING remaining=1 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791022194881896000
+[exclusive-test] RUNNING remaining=1 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791022194881896000
+[exclusive-test] RUNNING remaining=1 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791022194881896000
+[exclusive-test] RUNNING remaining=1 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791022194881896000
+[exclusive-test] RUNNING remaining=1 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791022194881896000
+[exclusive-test] RUNNING remaining=1 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791022194881896000
+[exclusive-test] RUNNING remaining=1 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791022194881896000
+[exclusive-test] RUNNING remaining=1 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791022194881896000
+[exclusive-test] RUNNING remaining=1 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791022194881896000
+[exclusive-test] RUNNING remaining=1 logs=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791022194881896000
+[exclusive-test] END t/qualification/scheme-operator-test.ss exit=0 log=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/test-execution/exclusive-1791022194881896000/scheme-operator-test.log
+[test-suite] END modules=48 failed=0 receipt=/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/t/performance/native-paths/completed-suite.json
+verified modules 48 cases 373

@@ -79,8 +79,8 @@ failure was not stably reproduced by this pair. These controls do not establish
 whole-inventory tail closure or erase the failed batch.
 
 [[file:remaining-ss/summary.json][Continuation]] passed ten subsequent entries, then failed table-expression:
-median 951 us, p95 2.072 ms, max 40.923 ms versus the original 1.05 ms
-regression budget. Its semantic gate completed; the typed failure is the time
+median 951 us, p95 2.072 ms, max 40.923 ms versus the original 2 ms
+admission limit (=max_total=). The 1.05 ms =regression_budget= field is metadata. Its semantic gate completed; the typed failure is the time
 gate. No cause attribution is established by these observations.
 [[file:final-ss/summary.json][Final two entries]] record membership and shortest-candidates separately; both passed. Across
 the 17 original inventory entries, 15 passed and two failed their initial

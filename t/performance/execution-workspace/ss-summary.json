@@ -9,8 +9,9 @@
     "p50_ns": 952000,
     "p95_ns": 2532000,
     "max_ns": 10992000,
-    "limit_ns": 1050000,
+    "limit_ns": 2000000,
     "reason": "ASCENT relation projection exceeded the benchmark budget",
-    "source_and_fixture_unchanged": true
+    "source_and_fixture_unchanged": true,
+    "regression_budget_ns": 1050000
   }
 }

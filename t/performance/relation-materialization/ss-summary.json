@@ -1,0 +1,20 @@
+{
+  "table_expression": {
+    "status": "pass",
+    "candidate_p95_ns": 948000,
+    "baseline_p95_ns": 40799000,
+    "native_admission_limit_ns": 2000000,
+    "regression_metadata_ns": 1050000
+  },
+  "membership": {
+    "status": "pass",
+    "candidate_p95_ns": 191000,
+    "baseline_p95_ns": 1023000
+  },
+  "closure": {
+    "status": "pass",
+    "p95_ns": 193000,
+    "pairs": 190
+  },
+  "original_full_17_inventory_rerun": false
+}

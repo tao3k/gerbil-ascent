@@ -264,3 +264,12 @@ including performance limits and failed original SS gates, are recorded in
 The subsequent [execution workspace qualification](t/performance/execution-workspace/README.org)
 compares the complete recursive and retained execution paths with the preceding
 commit, including latency limits and original SS gate results.
+
+## Bounded relation execution
+
+Composition, delta steps, closure and shortest distances share a prepared
+relation view. Dense source traversal and direct neighbor loops reuse its
+private adjacency; sparse sources retain native UIntTrieSet traversal. Public
+neighbor overrides and immutable snapshot behavior remain covered by native
+qualification. Matched gains, small-input costs, and the original SS gate
+results are recorded in the [relation execution report](t/performance/relation-materialization/README.org).

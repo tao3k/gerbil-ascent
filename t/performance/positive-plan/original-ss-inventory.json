@@ -137,7 +137,8 @@
     "p50_ns": 951000,
     "p95_ns": 2072000,
     "max_ns": 40923000,
-    "limit_ns": 1050000
+    "limit_ns": 2000000,
+    "regression_budget_ns": 1050000
   },
   "all_original_ss_passed": false
 }

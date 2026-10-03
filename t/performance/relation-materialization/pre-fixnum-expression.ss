@@ -14,11 +14,11 @@
 (export gerbil-ascent-table-expression-prototype
         gerbil-ascent-relation-closure-bounded)
 
-;; : (-> DenseTargets DenseBase (-> UInt Void) Void)
+;; : (-> [UInt] UInt (-> UInt Void) Void)
 (def (visit-source-row targets base consume)
   (unless (null? targets)
     (visit-source-row (cdr targets) base consume)
-    (consume (fx+ base (car targets)))))
+    (consume (+ base (car targets)))))
 
 ;; : (-> UIntTrieSet Radix IndexedSource)
 (def (relation-view pairs radix)
@@ -36,13 +36,11 @@
     ;; neighbor list by traversal, without copying or publishing the vector.
     (vector
      (if (<= radix 512)
-       ;; Radix <= 512 proves source, target and encoded base fit fixnums.
-       ;; Keep generic arithmetic and the native fold for unbounded sparse keys.
        (lambda (consume)
          (let visit ((source 0))
-           (when (fx< source radix)
-             (visit-source-row (vector-ref index source) (fx* source radix) consume)
-             (visit (fx+ source 1)))))
+           (when (< source radix)
+             (visit-source-row (vector-ref index source) (* source radix) consume)
+             (visit (+ source 1)))))
        ;; Sparse domains retain the native fold: no scan proportional to an
        ;; arbitrarily large radix, and no unbounded reverse-row recursion.
        (relation-source-visitor pairs))

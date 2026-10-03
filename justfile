@@ -590,3 +590,21 @@ _workspace-benchmark:
     test "$(grep -c '^RESULT ' "$log")" -eq 9
     if grep -E 'ERROR|Heap overflow|Stack overflow' "$log" >/dev/null; then exit 1; fi
     grep -x 'OK' "$log" >/dev/null
+
+materialization-benchmark:
+    python3 tools/test_execution.py run -- just _materialization-benchmark
+
+_materialization-benchmark:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    export ASCENT_MATERIALIZATION_LIB="{{ justfile_directory() }}/.gerbil/relation-materialization/lib"
+    export ASCENT_MATERIALIZATION_RECEIPT="${ASCENT_MATERIALIZATION_RECEIPT:-{{ justfile_directory() }}/.gerbil/relation-materialization/receipt.sexp}"
+    mkdir -p .gerbil/relation-materialization
+    shasum -a 256 table/expression.ss t/qualification/ascent-materialization-reference.ss t/performance/materialization-benchmark.ss tools/build-materialization-benchmark.ss > "$ASCENT_MATERIALIZATION_RECEIPT.sources"
+    timeout 150s gxi {{ gerbil_test_runtime_options }} tools/build-materialization-benchmark.ss
+    log="$(mktemp)"
+    trap 'rm -f "$log"' EXIT
+    GERBIL_LOADPATH="$ASCENT_MATERIALIZATION_LIB${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" timeout 180s gxi {{ gerbil_test_runtime_options }} t/performance/materialization-benchmark.ss 2>&1 | tee "$log"
+    test "$(grep -c '^RESULT ' "$log")" -eq 8
+    if grep -E 'ERROR|Heap overflow|Stack overflow' "$log" >/dev/null; then exit 1; fi
+    grep -x 'OK' "$log" >/dev/null

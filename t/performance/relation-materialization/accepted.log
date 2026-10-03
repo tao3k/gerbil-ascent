@@ -1,0 +1,106 @@
+python3 tools/test_execution.py run -- just _materialization-benchmark
+[test-lane] START exclusive just
+... compile table/expression
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/relation-materialization/lib/gerbil-ascent/table/expression~0.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/relation-materialization/lib/gerbil-ascent/table/expression.scm)
+[test-lane] RUNNING exclusive (5s)
+CASE cold-projection-256 samples=1000 repetitions=1
+PROGRESS cold-projection-256 100/1000
+PROGRESS cold-projection-256 200/1000
+PROGRESS cold-projection-256 300/1000
+PROGRESS cold-projection-256 400/1000
+PROGRESS cold-projection-256 500/1000
+PROGRESS cold-projection-256 600/1000
+PROGRESS cold-projection-256 700/1000
+PROGRESS cold-projection-256 800/1000
+PROGRESS cold-projection-256 900/1000
+PROGRESS cold-projection-256 1000/1000
+RESULT cold-projection-256 old-p50-bytes=307472 new-p50-bytes=242944 paired-wins=996/1000
+CASE complete-snapshot-16 samples=1000 repetitions=1
+PROGRESS complete-snapshot-16 100/1000
+PROGRESS complete-snapshot-16 200/1000
+PROGRESS complete-snapshot-16 300/1000
+PROGRESS complete-snapshot-16 400/1000
+PROGRESS complete-snapshot-16 500/1000
+PROGRESS complete-snapshot-16 600/1000
+PROGRESS complete-snapshot-16 700/1000
+PROGRESS complete-snapshot-16 800/1000
+PROGRESS complete-snapshot-16 900/1000
+PROGRESS complete-snapshot-16 1000/1000
+RESULT complete-snapshot-16 old-p50-bytes=271088 new-p50-bytes=181168 paired-wins=998/1000
+CASE complete-fanout-32 samples=1000 repetitions=1
+PROGRESS complete-fanout-32 100/1000
+PROGRESS complete-fanout-32 200/1000
+[test-lane] RUNNING exclusive (10s)
+PROGRESS complete-fanout-32 300/1000
+PROGRESS complete-fanout-32 400/1000
+PROGRESS complete-fanout-32 500/1000
+PROGRESS complete-fanout-32 600/1000
+PROGRESS complete-fanout-32 700/1000
+PROGRESS complete-fanout-32 800/1000
+PROGRESS complete-fanout-32 900/1000
+PROGRESS complete-fanout-32 1000/1000
+RESULT complete-fanout-32 old-p50-bytes=1057392 new-p50-bytes=586544 paired-wins=991/1000
+CASE closure-chain-32 samples=1000 repetitions=1
+PROGRESS closure-chain-32 100/1000
+PROGRESS closure-chain-32 200/1000
+PROGRESS closure-chain-32 300/1000
+PROGRESS closure-chain-32 400/1000
+PROGRESS closure-chain-32 500/1000
+PROGRESS closure-chain-32 600/1000
+PROGRESS closure-chain-32 700/1000
+PROGRESS closure-chain-32 800/1000
+PROGRESS closure-chain-32 900/1000
+PROGRESS closure-chain-32 1000/1000
+RESULT closure-chain-32 old-p50-bytes=215264 new-p50-bytes=128960 paired-wins=998/1000
+CASE distance-chain-32 samples=1000 repetitions=1
+PROGRESS distance-chain-32 100/1000
+PROGRESS distance-chain-32 200/1000
+PROGRESS distance-chain-32 300/1000
+PROGRESS distance-chain-32 400/1000
+PROGRESS distance-chain-32 500/1000
+PROGRESS distance-chain-32 600/1000
+PROGRESS distance-chain-32 700/1000
+PROGRESS distance-chain-32 800/1000
+PROGRESS distance-chain-32 900/1000
+PROGRESS distance-chain-32 1000/1000
+RESULT distance-chain-32 old-p50-bytes=238288 new-p50-bytes=159392 paired-wins=998/1000
+CASE sparse-projection-513 samples=1000 repetitions=1
+PROGRESS sparse-projection-513 100/1000
+PROGRESS sparse-projection-513 200/1000
+PROGRESS sparse-projection-513 300/1000
+PROGRESS sparse-projection-513 400/1000
+PROGRESS sparse-projection-513 500/1000
+PROGRESS sparse-projection-513 600/1000
+PROGRESS sparse-projection-513 700/1000
+PROGRESS sparse-projection-513 800/1000
+PROGRESS sparse-projection-513 900/1000
+PROGRESS sparse-projection-513 1000/1000
+RESULT sparse-projection-513 old-p50-bytes=57144 new-p50-bytes=57896 paired-wins=0/1000
+CASE external-compose-256 samples=1000 repetitions=1
+PROGRESS external-compose-256 100/1000
+PROGRESS external-compose-256 200/1000
+PROGRESS external-compose-256 300/1000
+PROGRESS external-compose-256 400/1000
+PROGRESS external-compose-256 500/1000
+PROGRESS external-compose-256 600/1000
+PROGRESS external-compose-256 700/1000
+PROGRESS external-compose-256 800/1000
+PROGRESS external-compose-256 900/1000
+PROGRESS external-compose-256 1000/1000
+RESULT external-compose-256 old-p50-bytes=144928 new-p50-bytes=145184 paired-wins=5/1000
+CASE cold-index-256 samples=1000 repetitions=1
+PROGRESS cold-index-256 100/1000
+PROGRESS cold-index-256 200/1000
+PROGRESS cold-index-256 300/1000
+PROGRESS cold-index-256 400/1000
+PROGRESS cold-index-256 500/1000
+[test-lane] RUNNING exclusive (15s)
+PROGRESS cold-index-256 600/1000
+PROGRESS cold-index-256 700/1000
+PROGRESS cold-index-256 800/1000
+PROGRESS cold-index-256 900/1000
+PROGRESS cold-index-256 1000/1000
+RESULT cold-index-256 old-p50-bytes=63312 new-p50-bytes=63920 paired-wins=1/1000
+OK
+[test-lane] END exclusive exit=0

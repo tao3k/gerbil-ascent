@@ -1,0 +1,37 @@
+[
+  {
+    "name": "final-policy",
+    "exit": 0,
+    "seconds": 21.157746290999057
+  },
+  {
+    "name": "final-suite",
+    "exit": 0,
+    "seconds": 137.39165858300112
+  },
+  {
+    "name": "final-first",
+    "exit": 0,
+    "seconds": 15.612114916999417
+  },
+  {
+    "name": "final-repeat",
+    "exit": 0,
+    "seconds": 12.128227958004572
+  },
+  {
+    "name": "final-table-expression",
+    "exit": 0,
+    "seconds": 26.86018891599815
+  },
+  {
+    "name": "final-membership",
+    "exit": 0,
+    "seconds": 7.606237042004068
+  },
+  {
+    "name": "final-closure",
+    "exit": 0,
+    "seconds": 4.86887983300403
+  }
+]

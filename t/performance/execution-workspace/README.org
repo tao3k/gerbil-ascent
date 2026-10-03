@@ -113,7 +113,8 @@ run unchanged after the final semantic suite; their outcomes are [[file:ss-summa
 
 - Nonpositive Session update: passed, p95 683 us versus the unchanged 1 ms budget.
 - Table-expression: failed its time gate; median 952 us, p95 2.532 ms,
-  max 10.992 ms versus the unchanged 1.05 ms regression budget.
+  max 10.992 ms versus the unchanged 2 ms admission limit (=max_total=).
+  The 1.05 ms =regression_budget= field is metadata, not the native admission predicate.
   Semantic equality and pair count checks completed before the typed error.
 
 The table-expression failure remains unresolved. Its production source, scenario

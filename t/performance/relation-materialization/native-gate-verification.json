@@ -1,0 +1,16 @@
+{
+  "dependency_source": "/private/tmp/ascent-test-scheduling-gerbil/pkg/github.com/tao3k/asp-gerbil-scheme/src/benchmark/gate.ss",
+  "sha256": "9640865a6677122410322ecdebf56f101316040b080bbe6d42a271428843aeb0",
+  "receipt_builder_lines": [
+    158,
+    181
+  ],
+  "predicate_lines": [
+    218,
+    219
+  ],
+  "admission_rule": "p95_ns <= duration(max_total); benchmark-receipt-pass? checks status=pass",
+  "table_expression_max_total_ns": 2000000,
+  "table_expression_regression_metadata_ns": 1050000,
+  "fixture_unchanged": true
+}

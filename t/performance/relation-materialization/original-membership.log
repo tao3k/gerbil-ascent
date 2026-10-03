@@ -1,0 +1,33 @@
+[ascent-ss] START ascent-table-expression-membership (1000 samples)
+[ascent-test] START t/performance/ascent-scenario-performance-test.ss
+[test-lane] WAIT exclusive (5s)
+[ascent-ss] RUNNING ascent-table-expression-membership (10s)
+[test-lane] WAIT exclusive (10s)
+[test-lane] WAIT exclusive (15s)
+[ascent-ss] RUNNING ascent-table-expression-membership (20s)
+[test-lane] WAIT exclusive (20s)
+[test-lane] WAIT exclusive (25s)
+[ascent-ss] RUNNING ascent-table-expression-membership (30s)
+[test-lane] WAIT exclusive (30s)
+[test-lane] WAIT exclusive (35s)
+[ascent-ss] RUNNING ascent-table-expression-membership (40s)
+[test-lane] WAIT exclusive (40s)
+[test-lane] WAIT exclusive (46s)
+[ascent-ss] RUNNING ascent-table-expression-membership (50s)
+[test-lane] WAIT exclusive (51s)
+[test-lane] START exclusive t/performance/ascent-scenario-performance-test.ss
+HARNESS ("t/performance/ascent-scenario-performance-test.ss")
+MODULE t/performance/ascent-scenario-performance-test.ss
+SUITE ASCENT SS scenario
+CASE bounded scenario
+[test-lane] RUNNING exclusive (5s)
+[ascent-ss] RUNNING ascent-table-expression-membership (60s)
+[gerbil-ascent-benchmark] ascent-membership baseline-p95=1.568ms candidate-p95=434us semanticEquivalent=#t
+CASE-OK bounded scenario
+SUITE-OK ASCENT SS scenario
+MODULE-OK t/performance/ascent-scenario-performance-test.ss
+HARNESS-OK ("t/performance/ascent-scenario-performance-test.ss")
+OK
+[test-lane] END exclusive exit=0
+[ascent-test] PASS t/performance/ascent-scenario-performance-test.ss (63s)
+[ascent-ss] PASS ascent-table-expression-membership (63s)

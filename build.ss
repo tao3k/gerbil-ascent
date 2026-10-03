@@ -48,6 +48,7 @@
     "candidate/stratified-proof"
     "candidate/stratified-producer"
     "candidate/reasoning"
+    "temporal/lens"
     "interface/request"))
 
 (asp-gerbil-scheme-package-spec!

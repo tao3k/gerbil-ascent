@@ -4,7 +4,7 @@
 //! Finite interaction of generators, guards, bindings, negation and aggregation.
 
 use super::common::scheme_output;
-use ascent::aggregators::count;
+use ascent::aggregators::{count, sum};
 use ascent::ascent;
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -227,6 +227,190 @@ fn model_study_negation_count_matches_finite_expectations() {
     assert_eq!(rows(&edges, &[(1, 3)]), blocked);
     assert_eq!(rows(&edges, &[]), unblocked);
     assert_eq!(rows(&[(1, 2), (1, 2), (2, 3)], &[]), unblocked);
+}
+
+// Same four source states as the Scheme public Library contract. Rust is
+// rebuilt for each state: retained deletion is not a Rust oracle guarantee.
+#[test]
+fn support_withdrawal_matches_public_library_contract() {
+    let phases: &[(&[Edge], &[Edge], u32)] = &[
+        (&[(0, 1), (1, 2), (0, 2)], &[(0, 1), (0, 2), (1, 2)], 20),
+        (&[(0, 1), (1, 2)], &[(0, 1), (0, 2), (1, 2)], 20),
+        (&[(0, 1)], &[(0, 1)], 8),
+        (&[(0, 2)], &[(0, 2)], 12),
+    ];
+    for &(edges, expected_path, expected_total) in phases {
+        ascent! {
+            relation edge(u32, u32);
+            relation blocked(u32, u32);
+            relation weight(u32, u32);
+            relation root(u32);
+            relation path(u32, u32);
+            relation allowed(u32, u32);
+            relation weighted(u32, u32);
+            relation summary(u32, u32);
+
+            path(x, y) <-- edge(x, y);
+            path(x, z) <-- path(x, y), edge(y, z);
+            allowed(x, y) <-- path(x, y), !blocked(x, y);
+            weighted(x, v) <-- allowed(x, y), weight(y, w),
+                if *w % 2 == 0, let v = *w + *w;
+            summary(r, n) <-- root(r), agg n = sum(v) in weighted(r, v);
+        }
+        let mut program = AscentProgram {
+            edge: edges.to_vec(),
+            weight: vec![(0, 2), (1, 4), (2, 6)],
+            root: vec![(0,)],
+            ..AscentProgram::default()
+        };
+        program.run();
+        let expected = expected_path.iter().copied().collect::<BTreeSet<_>>();
+        assert_eq!(program.path.into_iter().collect::<BTreeSet<_>>(), expected);
+        assert_eq!(
+            program.allowed.into_iter().collect::<BTreeSet<_>>(),
+            expected
+        );
+        let expected_weighted = expected_path
+            .iter()
+            .map(|&(from, to)| (from, 2 * [2, 4, 6][to as usize]))
+            .collect::<BTreeSet<_>>();
+        assert_eq!(
+            program.weighted.into_iter().collect::<BTreeSet<_>>(),
+            expected_weighted
+        );
+        assert_eq!(
+            program.summary.into_iter().collect::<BTreeSet<_>>(),
+            BTreeSet::from([(0, expected_total)])
+        );
+    }
+    let scheme = scheme_output("support-study-reference", "");
+    let expected = [
+        "0\tcomplete\t((0 20))\tvalid\tvalid\ttask-shape\t()",
+        "1\tcomplete\t((0 20))\tvalid\tvalid\ttask-shape\t()",
+        "2\tcomplete\t((0 8))\tvalid\tvalid\ttask-shape\t()",
+        "3\tcomplete\t((0 12))\tvalid\tvalid\ttask-shape\t()",
+        "stale\tcomplete\t((0 20))\tinvalid\tinvalid\ttask-shape\t()",
+        "END",
+    ];
+    assert_eq!(scheme.lines().collect::<Vec<_>>(), expected);
+    // Native validity of a hypothetical fact does not satisfy this task.
+    let outside = scheme_output("support-study-hypothetical", "");
+    for (generation, (line, total)) in outside.lines().take(4).zip([20, 20, 20, 12]).enumerate() {
+        assert_eq!(
+            line,
+            format!("{generation}\tcomplete\t((0 {total}))\tvalid\tvalid\toutside-task-shape\t()")
+        );
+    }
+    assert_eq!(outside.lines().count(), 6);
+    assert_eq!(outside.lines().last(), Some("END"));
+}
+
+// Frozen support states plus independent negation/guard/set-sum discriminators.
+#[test]
+fn support_discriminators_match_public_library_contract() {
+    let edges: &[Edge] = &[(0, 1), (1, 2), (0, 2)];
+    type SupportCase<'a> = (&'a [Edge], &'a [Edge], &'a [Edge], u32);
+    let cases: &[SupportCase<'_>] = &[
+        (edges, &[], &[(0, 2), (1, 4), (2, 6)], 20),
+        (&[(0, 1), (1, 2)], &[], &[(0, 2), (1, 4), (2, 6)], 20),
+        (&[(0, 1)], &[], &[(0, 2), (1, 4), (2, 6)], 8),
+        (&[(0, 2)], &[], &[(0, 2), (1, 4), (2, 6)], 12),
+        (edges, &[(0, 2)], &[(0, 2), (1, 4), (2, 6)], 8),
+        (edges, &[], &[(0, 2), (1, 3), (2, 6)], 12),
+        (edges, &[], &[(0, 2), (1, 4), (2, 4)], 8),
+    ];
+    let mut expected_lines = Vec::new();
+    for (generation, &(edges, blocked, weights, total)) in cases.iter().enumerate() {
+        ascent! {
+            relation edge(u32, u32);
+            relation blocked(u32, u32);
+            relation weight(u32, u32);
+            relation root(u32);
+            relation path(u32, u32);
+            relation allowed(u32, u32);
+            relation weighted(u32, u32);
+            relation summary(u32, u32);
+            path(x, y) <-- edge(x, y);
+            path(x, z) <-- path(x, y), edge(y, z);
+            allowed(x, y) <-- path(x, y), !blocked(x, y);
+            weighted(x, v) <-- allowed(x, y), weight(y, w),
+                if *w % 2 == 0, let v = *w + *w;
+            summary(r, n) <-- root(r), agg n = sum(v) in weighted(r, v);
+        }
+        let mut program = AscentProgram {
+            edge: edges.to_vec(),
+            blocked: blocked.to_vec(),
+            weight: weights.to_vec(),
+            root: vec![(0,)],
+            ..AscentProgram::default()
+        };
+        program.run();
+        let mut closure = [[false; 3]; 3];
+        for &(x, y) in edges {
+            closure[x as usize][y as usize] = true;
+        }
+        for via in 0..3 {
+            for from in 0..3 {
+                for to in 0..3 {
+                    closure[from][to] |= closure[from][via] && closure[via][to];
+                }
+            }
+        }
+        let path = (0..3)
+            .flat_map(|x| (0..3).map(move |y| (x, y)))
+            .filter(|&(x, y)| closure[x as usize][y as usize])
+            .collect::<BTreeSet<Edge>>();
+        let allowed = path
+            .iter()
+            .copied()
+            .filter(|edge| !blocked.contains(edge))
+            .collect::<BTreeSet<_>>();
+        let weighted = allowed
+            .iter()
+            .flat_map(|&(x, y)| {
+                weights
+                    .iter()
+                    .filter(move |&&(node, value)| node == y && value % 2 == 0)
+                    .map(move |&(_, value)| (x, 2 * value))
+            })
+            .collect::<BTreeSet<_>>();
+        assert_eq!(program.path.into_iter().collect::<BTreeSet<_>>(), path);
+        assert_eq!(
+            program.allowed.into_iter().collect::<BTreeSet<_>>(),
+            allowed
+        );
+        assert_eq!(
+            program.weighted.into_iter().collect::<BTreeSet<_>>(),
+            weighted
+        );
+        assert_eq!(
+            weighted
+                .iter()
+                .filter(|&&(x, _)| x == 0)
+                .map(|&(_, value)| value)
+                .sum::<u32>(),
+            total
+        );
+        assert_eq!(
+            program.summary.into_iter().collect::<BTreeSet<_>>(),
+            BTreeSet::from([(0, total)])
+        );
+        expected_lines.push(format!(
+            "{generation}\tcomplete\t((0 {total}))\tvalid\tvalid\ttask-shape\t()"
+        ));
+        eprintln!("RUST-DISCRIMINATOR-PROGRESS {generation}");
+    }
+    expected_lines.extend([
+        "stale\tcomplete\t((0 20))\tinvalid\tinvalid\ttask-shape\t()".into(),
+        "END".into(),
+    ]);
+    assert_eq!(
+        scheme_output("support-discriminator-reference", "")
+            .lines()
+            .map(str::to_owned)
+            .collect::<Vec<_>>(),
+        expected_lines
+    );
 }
 
 #[test]

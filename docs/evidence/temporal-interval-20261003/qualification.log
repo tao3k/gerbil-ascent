@@ -1,0 +1,181 @@
+IMPORT :gerbil-ascent/table/expression
+IMPORT-OK :gerbil-ascent/table/expression
+IMPORT :gerbil-ascent/table/funs
+IMPORT-OK :gerbil-ascent/table/funs
+IMPORT :gerbil-ascent/table/eqrel
+IMPORT-OK :gerbil-ascent/table/eqrel
+IMPORT :gerbil-ascent/table/trrel
+IMPORT-OK :gerbil-ascent/table/trrel
+IMPORT :gerbil-ascent/table/provider
+IMPORT-OK :gerbil-ascent/table/provider
+IMPORT :gerbil-ascent/table/storage
+IMPORT-OK :gerbil-ascent/table/storage
+IMPORT :gerbil-ascent/table/interface
+IMPORT-OK :gerbil-ascent/table/interface
+IMPORT :gerbil-ascent/program/types
+IMPORT-OK :gerbil-ascent/program/types
+IMPORT :gerbil-ascent/program/objects
+IMPORT-OK :gerbil-ascent/program/objects
+IMPORT :gerbil-ascent/program/aggregators
+IMPORT-OK :gerbil-ascent/program/aggregators
+IMPORT :gerbil-ascent/program/syntax
+IMPORT-OK :gerbil-ascent/program/syntax
+IMPORT :gerbil-ascent/program/planning
+IMPORT-OK :gerbil-ascent/program/planning
+IMPORT :gerbil-ascent/program/scheme-checked
+IMPORT-OK :gerbil-ascent/program/scheme-checked
+IMPORT :gerbil-ascent/program/scheme-admission
+IMPORT-OK :gerbil-ascent/program/scheme-admission
+IMPORT :gerbil-ascent/program/scheme-language
+IMPORT-OK :gerbil-ascent/program/scheme-language
+IMPORT :gerbil-ascent/program/operator
+IMPORT-OK :gerbil-ascent/program/operator
+IMPORT :gerbil-ascent/program/operator-change
+IMPORT-OK :gerbil-ascent/program/operator-change
+IMPORT :gerbil-ascent/program/operator-session
+IMPORT-OK :gerbil-ascent/program/operator-session
+IMPORT :gerbil-ascent/program/funs
+IMPORT-OK :gerbil-ascent/program/funs
+IMPORT :gerbil-ascent/program/analysis
+IMPORT-OK :gerbil-ascent/program/analysis
+IMPORT :gerbil-ascent/program/summary
+IMPORT-OK :gerbil-ascent/program/summary
+IMPORT :gerbil-ascent/program/evaluate
+IMPORT-OK :gerbil-ascent/program/evaluate
+IMPORT :gerbil-ascent/program/session
+IMPORT-OK :gerbil-ascent/program/session
+IMPORT :gerbil-ascent/program/interface
+IMPORT-OK :gerbil-ascent/program/interface
+IMPORT :gerbil-ascent/core/binary-program
+IMPORT-OK :gerbil-ascent/core/binary-program
+IMPORT :gerbil-ascent/candidate/closure
+IMPORT-OK :gerbil-ascent/candidate/closure
+IMPORT :gerbil-ascent/candidate/types
+IMPORT-OK :gerbil-ascent/candidate/types
+IMPORT :gerbil-ascent/candidate/program
+IMPORT-OK :gerbil-ascent/candidate/program
+IMPORT :gerbil-ascent/candidate/funs
+IMPORT-OK :gerbil-ascent/candidate/funs
+IMPORT :gerbil-ascent/candidate/provenance
+IMPORT-OK :gerbil-ascent/candidate/provenance
+IMPORT :gerbil-ascent/candidate/nonmembership
+IMPORT-OK :gerbil-ascent/candidate/nonmembership
+IMPORT :gerbil-ascent/candidate/finite-evidence
+IMPORT-OK :gerbil-ascent/candidate/finite-evidence
+IMPORT :gerbil-ascent/candidate/stratified-proof
+IMPORT-OK :gerbil-ascent/candidate/stratified-proof
+IMPORT :gerbil-ascent/candidate/stratified-producer
+IMPORT-OK :gerbil-ascent/candidate/stratified-producer
+IMPORT :gerbil-ascent/candidate/reasoning
+IMPORT-OK :gerbil-ascent/candidate/reasoning
+IMPORT :gerbil-ascent/temporal/lens
+IMPORT-OK :gerbil-ascent/temporal/lens
+IMPORT :gerbil-ascent/interface/request
+IMPORT-OK :gerbil-ascent/interface/request
+IMPORT :gerbil/tools/gxtest
+IMPORT-OK :gerbil/tools/gxtest
+HARNESS ("t/qualification/ascent-temporal-lens-test.ss")
+MODULE t/qualification/ascent-temporal-lens-test.ss
+SUITE finite temporal lens integrated gate
+CASE interval uncertainty, independent point enumeration and receipt binding
+TEMPORAL-INTERVAL 0
+TEMPORAL-INTERVAL 1
+TEMPORAL-INTERVAL 2
+TEMPORAL-INTERVAL 3
+TEMPORAL-INTERVAL 4
+CASE-OK interval uncertainty, independent point enumeration and receipt binding
+CASE dual supports, last withdrawal and immutable generations
+CASE-OK dual supports, last withdrawal and immutable generations
+CASE late knowledge and half-open valid window remain independent
+CASE-OK late knowledge and half-open valid window remain independent
+CASE missing parents, open cuts and unknown time never prove absence
+CASE-OK missing parents, open cuts and unknown time never prove absence
+CASE cycle/order/clock/generation failures preserve accepted answer
+CASE-OK cycle/order/clock/generation failures preserve accepted answer
+CASE concurrent events, isolated hypothetical sources and detached data
+CASE-OK concurrent events, isolated hypothetical sources and detached data
+CASE POO extension cannot relabel an equal-output native receipt
+CASE-OK POO extension cannot relabel an equal-output native receipt
+CASE native receipt tampering cannot pass lens verification
+CASE-OK native receipt tampering cannot pass lens verification
+CASE independent cut knowledge and window cross product
+TEMPORAL-CUT 0
+TEMPORAL-CUT 1
+TEMPORAL-CUT 2
+TEMPORAL-CUT 3
+TEMPORAL-CUT 4
+TEMPORAL-CUT 5
+TEMPORAL-CUT 6
+TEMPORAL-CUT 7
+CASE-OK independent cut knowledge and window cross product
+CASE all 64 ordered four-node graphs under both source orders
+TEMPORAL-GRAPH 0
+TEMPORAL-GRAPH 1
+TEMPORAL-GRAPH 2
+TEMPORAL-GRAPH 3
+TEMPORAL-GRAPH 4
+TEMPORAL-GRAPH 5
+TEMPORAL-GRAPH 6
+TEMPORAL-GRAPH 7
+TEMPORAL-GRAPH 8
+TEMPORAL-GRAPH 9
+TEMPORAL-GRAPH 10
+TEMPORAL-GRAPH 11
+TEMPORAL-GRAPH 12
+TEMPORAL-GRAPH 13
+TEMPORAL-GRAPH 14
+TEMPORAL-GRAPH 15
+TEMPORAL-GRAPH 16
+TEMPORAL-GRAPH 17
+TEMPORAL-GRAPH 18
+TEMPORAL-GRAPH 19
+TEMPORAL-GRAPH 20
+TEMPORAL-GRAPH 21
+TEMPORAL-GRAPH 22
+TEMPORAL-GRAPH 23
+TEMPORAL-GRAPH 24
+TEMPORAL-GRAPH 25
+TEMPORAL-GRAPH 26
+TEMPORAL-GRAPH 27
+TEMPORAL-GRAPH 28
+TEMPORAL-GRAPH 29
+TEMPORAL-GRAPH 30
+TEMPORAL-GRAPH 31
+TEMPORAL-GRAPH 32
+TEMPORAL-GRAPH 33
+TEMPORAL-GRAPH 34
+TEMPORAL-GRAPH 35
+TEMPORAL-GRAPH 36
+TEMPORAL-GRAPH 37
+TEMPORAL-GRAPH 38
+TEMPORAL-GRAPH 39
+TEMPORAL-GRAPH 40
+TEMPORAL-GRAPH 41
+TEMPORAL-GRAPH 42
+TEMPORAL-GRAPH 43
+TEMPORAL-GRAPH 44
+TEMPORAL-GRAPH 45
+TEMPORAL-GRAPH 46
+TEMPORAL-GRAPH 47
+TEMPORAL-GRAPH 48
+TEMPORAL-GRAPH 49
+TEMPORAL-GRAPH 50
+TEMPORAL-GRAPH 51
+TEMPORAL-GRAPH 52
+TEMPORAL-GRAPH 53
+TEMPORAL-GRAPH 54
+TEMPORAL-GRAPH 55
+TEMPORAL-GRAPH 56
+TEMPORAL-GRAPH 57
+TEMPORAL-GRAPH 58
+TEMPORAL-GRAPH 59
+TEMPORAL-GRAPH 60
+TEMPORAL-GRAPH 61
+TEMPORAL-GRAPH 62
+TEMPORAL-GRAPH 63
+CASE-OK all 64 ordered four-node graphs under both source orders
+SUITE-OK finite temporal lens integrated gate
+MODULE-OK t/qualification/ascent-temporal-lens-test.ss
+HARNESS-OK ("t/qualification/ascent-temporal-lens-test.ss")
+OK
+*** WARNING module std/net/request is DEPRECATED and will be removed in the future

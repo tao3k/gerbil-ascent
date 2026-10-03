@@ -120,10 +120,13 @@ native guard withheld. Its JSON observations measured that interface,
 not Scheme reading. A separate nine-call pilot sent three actual Gerbil
 calling programs, with no JSON observation. Native regrading accepted
 8/9 answer shapes and found 0/9 exact row sets. The model did not see
-the imported ASCENT implementation. These small, repeated inputs do
-not isolate Scheme literacy, the library contract, or tool use. The
-next model gate must freeze those controls and a candidate-to-receipt
-repair score before further calls.
+the imported ASCENT implementation. A later five-call source-question
+run did show the pinned ASCENT implementation and recorded three exact
+answers, one correct diagnostic with a wrong answer shape, and one
+=complete= versus =valid= verifier confusion. These small studies do
+not isolate general Scheme literacy or model-to-Library tool use. The
+next experiment and its three separate semantic, evidence and model
+checks are specified in [[file:llm-reasoning-library-plan.org::*Integrated ASCENT, Rust and model gate][the integrated gate]].
 
 * Mainline execution order
 
@@ -145,6 +148,17 @@ observation to its model runner. This establishes a *same-input bounded
 vertical case*, not complete Rust API parity or general model benefit.
 The [[file:replication-checklist.org][historical Rust replication gate]]
 remains open on its separately listed families and scale cases.
+
+The support-withdrawal corpus adds four matching Scheme/Rust source
+states with totals =20,20,8,12=. It covers alternate support, last
+support, replacement and stale receipt rejection despite equal query
+answers. Scheme direct/fragment/candidate and retained sessions share
+an independent finite model; Rust runs fresh programs and checks all
+intermediate relation sets. See [[file:llm-reasoning-library-plan.org::*Integrated ASCENT, Rust and model gate][the integrated gate]] for exact
+inputs and the completed four-call model comparison. Both final model
+candidates failed admission; this establishes a recorded model-input
+boundary, while the native and Rust corpus remains qualified. This does not qualify
+incremental deletion performance or exhaustive provenance.
 
 1. *Bounded candidate evidence through the public receipt.* A caller may
    request finite stratified evidence with an explicit fourth
@@ -188,3 +202,14 @@ remains open on its separately listed families and scale cases.
 
 An exact-head local and Ubuntu gate is required for a release candidate;
 passing one focused module does not complete this sequence.
+
+* Candidate description and semantic discriminators
+
+=candidate-language-description= returns a fresh inert syntax projection from
+=candidate/program.ss=. Admission and description share operator/reducer
+registries; the projection is not schema admission or task-intent verification.
+The native description test checks admitted forms, wrong arities/shapes,
+located binding failures and detached values. The public contract's seven-state
+study corpus includes blocked, odd original weights and distinct-value sums.
+Three native-valid wrong-rule candidates must fail intended output comparison.
+See [[file:llm-reasoning-library-plan.org][the integrated plan]] for ownership, repair controls and evidence retention.

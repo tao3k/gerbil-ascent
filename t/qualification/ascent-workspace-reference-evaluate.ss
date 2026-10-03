@@ -7,15 +7,15 @@
 (import (only-in :clan/poo/object .o .ref object?)
         (only-in :clan/poo/mop validate)
         (only-in :std/iter for iter Iterator &Iterator-next!)
-        (only-in "admission.ss" gerbil-ascent-initialize-source-row!)
-        (only-in "planning.ss" gerbil-ascent-prepare-rule)
-        (only-in "positive.ss" gerbil-ascent-positive-plan
+        (only-in :gerbil-ascent/program/admission gerbil-ascent-initialize-source-row!)
+        (only-in :gerbil-ascent/program/planning gerbil-ascent-prepare-rule)
+        (only-in :gerbil-ascent/t/qualification/ascent-workspace-reference-positive gerbil-ascent-positive-plan
                  gerbil-ascent-run-positive-plan! gerbil-ascent-index-key
                  gerbil-ascent-emit-heads!)
-        (only-in "types.ss" GerbilAscentSessionContract)
-        (only-in "analysis.ss" gerbil-ascent-program-analysis
+        (only-in :gerbil-ascent/program/types GerbilAscentSessionContract)
+        (only-in :gerbil-ascent/t/qualification/ascent-workspace-reference-analysis gerbil-ascent-program-analysis
                  gerbil-ascent-program-schema)
-        (only-in "funs.ss" gerbil-ascent-rule-strata
+        (only-in :gerbil-ascent/program/funs gerbil-ascent-rule-strata
                  gerbil-ascent-lattice-feeds-relation?
                  gerbil-ascent-delta-positions
                  gerbil-ascent-lattice-key
@@ -34,13 +34,13 @@
                  gerbil-ascent-set-storage-provider)
         (only-in :clan/poo/support/base until))
 
-(export gerbil-ascent-evaluate-program gerbil-ascent-make-engine)
+(export ascent-workspace-reference-evaluate-program ascent-workspace-reference-make-engine)
 
 (def Session. (.ref GerbilAscentSessionContract 'proto))
 
 ;;; One engine owns all mutable row buffers and indexes. Reused immutable
 ;;; analysis/schema values never share evaluation-local relation state.
-;; gerbil-ascent-make-engine
+;; ascent-workspace-reference-make-engine
 ;;   : (-> Program Boolean (Maybe Analysis) (Maybe Schema) Boolean Engine)
 ;;   | doc m%
 ;;       Construct a stratified evaluator for a program and an optional
@@ -49,11 +49,11 @@
 ;;       # Examples
 ;;
 ;;       ```scheme
-;;       (gerbil-ascent-make-engine program #f)
+;;       (ascent-workspace-reference-make-engine program #f)
 ;;       ;; => an engine with one fresh evaluation state
 ;;       ```
 ;;     %
-(def (gerbil-ascent-make-engine program session? (analysis-override #f)
+(def (ascent-workspace-reference-make-engine program session? (analysis-override #f)
                                 (schema-override #f)
                                 (measure-rule-times? #f)
                                 (plan-error #f))
@@ -332,13 +332,11 @@
               (vector-map
                (lambda (rules)
                  (map (lambda (rule)
-                        (let (plan (gerbil-ascent-positive-plan rule))
-                          (vector (vector-ref rule 0) (vector-ref rule 1)
-                                  (vector-ref rule 2) (vector-ref rule 3)
-                                  (list->vector
-                                   (prunable-prefix (vector-ref rule 1)))
-                                  plan
-                                  (and plan (make-vector (vector-ref plan 2) #f)))))
+                        (vector (vector-ref rule 0) (vector-ref rule 1)
+                                (vector-ref rule 2) (vector-ref rule 3)
+                                (list->vector
+                                 (prunable-prefix (vector-ref rule 1)))
+                                (gerbil-ascent-positive-plan rule)))
                       rules))
                (vector-ref analysis 4)))
              (highest-stratum (- (vector-length active-by-stratum) 1))
@@ -426,14 +424,34 @@
                (set! dirty? #f)))))
         (def (run-retained! (deadline #f))
          (when dirty? (flush-staged-set-rows!))
-         ;; One invocation owns the complete round workspace. Clearing slots
-         ;; after commit releases pending state while delta keeps its row spine.
          (let (complete? #t)
          (when dirty?
-         (let ((pending (make-vector count []))
-               (pending-seen (make-vector count #f))
-               (pending-lattice-keys (make-vector count []))
-               (pending-count 0))
+         (call/cc
+          (lambda (return)
+         (let evaluate-stratum ((stratum (or resume-stratum 0)))
+          (when (<= stratum highest-stratum)
+            (let ((active-rules (vector-ref active-by-stratum stratum))
+                  (active? #t) (round (if resume-stratum resume-round 0)))
+              (unless resume-stratum
+              (let reset-delta ((index 0))
+                (when (< index count)
+                  (vector-set! delta index
+                    (if (= (vector-ref strata index) stratum)
+                      (if (or first-run? (> stratum 0))
+                        (vector-ref all index)
+                        (vector-ref delta index))
+                      []))
+                  (vector-set! delta-size index
+                    (length (vector-ref delta index)))
+                  (vector-set! delta-version index
+                    (+ 1 (vector-ref delta-version index)))
+                  (reset-delta (+ index 1)))))
+          (until (not active?)
+          (set! round (+ round 1))
+          (let ((pending (make-vector count []))
+                (pending-seen (make-vector count #f))
+                (pending-lattice-keys (make-vector count []))
+                (pending-count 0))
             (def (admit-stored! index pending-table stored)
               (unless (and (list? stored)
                            (= (length stored) (vector-ref arity index)))
@@ -610,29 +628,6 @@
                                   (cons (cons (vector-ref clause 1) value)
                                         environment)
                                   consume)))))))
-         (call/cc
-          (lambda (return)
-         (let evaluate-stratum ((stratum (or resume-stratum 0)))
-          (when (<= stratum highest-stratum)
-            (let ((active-rules (vector-ref active-by-stratum stratum))
-                  (active? #t) (round (if resume-stratum resume-round 0)))
-              (unless resume-stratum
-              (let reset-delta ((index 0))
-                (when (< index count)
-                  (vector-set! delta index
-                    (if (= (vector-ref strata index) stratum)
-                      (if (or first-run? (> stratum 0))
-                        (vector-ref all index)
-                        (vector-ref delta index))
-                      []))
-                  (vector-set! delta-size index
-                    (length (vector-ref delta index)))
-                  (vector-set! delta-version index
-                    (+ 1 (vector-ref delta-version index)))
-                  (reset-delta (+ index 1)))))
-          (until (not active?)
-          (set! round (+ round 1))
-          (set! pending-count 0)
             (for-each
              (lambda (rule)
                (let ((started (and rule-ticks (current-jiffy)))
@@ -640,13 +635,12 @@
                      (body (vector-ref rule 1))
                      (positions (vector-ref rule 2))
                      (prunable (vector-ref rule 4))
-                     (positive-plan (vector-ref rule 5))
-                     (frame (vector-ref rule 6)))
+                     (positive-plan (vector-ref rule 5)))
                  (if (null? positions)
                    (when (and (= round 1) first-run?)
                      (if positive-plan
                        (gerbil-ascent-run-positive-plan!
-                        positive-plan frame -1 indexed-rows emit-row!)
+                        positive-plan -1 indexed-rows emit-row!)
                        (visit-body body -1 0 []
                          (lambda (environment)
                            (gerbil-ascent-emit-heads! heads environment emit-row!)))))
@@ -657,7 +651,7 @@
                      ;; position without emitting the same join repeatedly.
                      (if positive-plan
                        (gerbil-ascent-run-positive-plan!
-                        positive-plan frame -1 indexed-rows emit-row!)
+                        positive-plan -1 indexed-rows emit-row!)
                        (visit-body body -1 0 []
                          (lambda (environment)
                            (gerbil-ascent-emit-heads! heads environment emit-row!))))
@@ -670,7 +664,7 @@
                                           (vector-ref prunable delta-at)) 0))
                           (if positive-plan
                             (gerbil-ascent-run-positive-plan!
-                             positive-plan frame delta-at indexed-rows emit-row!)
+                             positive-plan delta-at indexed-rows emit-row!)
                             (visit-body body delta-at 0 []
                               (lambda (environment)
                                 (gerbil-ascent-emit-heads! heads environment emit-row!))))))
@@ -747,19 +741,15 @@
                   (vector-set! delta-size index batch-size)
                   (vector-set! delta-version index
                     (+ 1 (vector-ref delta-version index))))
-                (when (pair? (vector-ref pending index))
-                  (vector-set! pending index [])
-                  (vector-set! pending-lattice-keys index [])
-                  (hash-clear! (vector-ref pending-seen index)))
                 (commit (+ index 1))))
             (when (and active? deadline (>= (current-jiffy) deadline))
               (set! resume-stratum stratum)
               (set! resume-round round)
               (set! complete? #f)
-              (return #f)))
+              (return #f))))
             (set! resume-stratum #f)
             (set! resume-round 0)
-            (evaluate-stratum (+ stratum 1))))))))
+            (evaluate-stratum (+ stratum 1)))))))
          (when complete?
            (set! first-run? #f)
            (set! dirty? #f)
@@ -847,7 +837,7 @@
                   (let* ((replacement
                           (append (source-rows-at index) (list row)))
                          (candidate (source-program-with index replacement))
-                         (result ((gerbil-ascent-make-engine
+                         (result ((ascent-workspace-reference-make-engine
                                    candidate #f analysis schema
                                    measure-rule-times?))))
                     (set! source-count (+ source-count 1))
@@ -955,7 +945,7 @@
                   (when (> next-count input-limit)
                     (error "ASCENT session input fact budget exceeded"))
                   (let* ((candidate (source-program-with index rows))
-                         (result ((gerbil-ascent-make-engine
+                         (result ((ascent-workspace-reference-make-engine
                                    candidate #f analysis schema
                                    measure-rule-times?))))
                     (set! source-count next-count)
@@ -992,8 +982,8 @@
           run!)))))
 
 ;; : (-> Program EvaluationResult)
-(def (gerbil-ascent-evaluate-program program
+(def (ascent-workspace-reference-evaluate-program program
                                       measure-rule-times?: (measure-rule-times? #f))
   (unless (boolean? measure-rule-times?)
     (error "invalid ASCENT rule timing option" measure-rule-times?))
-  ((gerbil-ascent-make-engine program #f #f #f measure-rule-times?)))
+  ((ascent-workspace-reference-make-engine program #f #f #f measure-rule-times?)))

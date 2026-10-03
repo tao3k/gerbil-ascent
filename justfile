@@ -572,3 +572,21 @@ _positive-plan-benchmark:
     test "$(grep -c '^RESULT ' "$log")" -eq 7
     if grep -E 'ERROR|Heap overflow|Stack overflow' "$log" >/dev/null; then exit 1; fi
     grep -x 'OK' "$log" >/dev/null
+
+workspace-benchmark:
+    python3 tools/test_execution.py run -- just _workspace-benchmark
+
+_workspace-benchmark:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    export ASCENT_WORKSPACE_LIB="{{ justfile_directory() }}/.gerbil/execution-workspace/lib"
+    export ASCENT_WORKSPACE_RECEIPT="${ASCENT_WORKSPACE_RECEIPT:-{{ justfile_directory() }}/.gerbil/execution-workspace/receipt.sexp}"
+    mkdir -p .gerbil/execution-workspace
+    shasum -a 256 program/positive.ss program/evaluate.ss program/analysis.ss t/qualification/ascent-workspace-reference-analysis.ss t/qualification/ascent-workspace-reference-positive.ss t/qualification/ascent-workspace-reference-evaluate.ss t/performance/workspace-benchmark.ss tools/build-workspace-benchmark.ss > "$ASCENT_WORKSPACE_RECEIPT.sources"
+    timeout 150s gxi {{ gerbil_test_runtime_options }} tools/build-workspace-benchmark.ss
+    log="$(mktemp)"
+    trap 'rm -f "$log"' EXIT
+    GERBIL_LOADPATH="$ASCENT_WORKSPACE_LIB${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" timeout 180s gxi {{ gerbil_test_runtime_options }} t/performance/workspace-benchmark.ss 2>&1 | tee "$log"
+    test "$(grep -c '^RESULT ' "$log")" -eq 9
+    if grep -E 'ERROR|Heap overflow|Stack overflow' "$log" >/dev/null; then exit 1; fi
+    grep -x 'OK' "$log" >/dev/null

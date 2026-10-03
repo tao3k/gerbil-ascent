@@ -253,9 +253,14 @@ Measured full-suite comparisons and the admission rationale are recorded in
 ## Positive rule execution
 
 The evaluator compiles supported complete positive rules into cached numeric
-slot plans. Each traversal owns its variable frame and uses the existing index
-and output admission boundaries. Rules with callbacks retain the general
-interpreter. One-shot engines allocate Session update closures only when a
+slot plans. Each engine owns its variable frames and uses the existing index
+and output admission boundaries. Dirty fixed-point runs reuse their pending
+vectors, deduplication tables and interpreter closures across rounds. Rules
+with callbacks retain the general interpreter. One-shot engines allocate Session update closures only when a
 Session is requested. Qualification and matched complete-solve measurements,
 including performance limits and failed original SS gates, are recorded in
 [t/performance/positive-plan/README.org](t/performance/positive-plan/README.org).
+
+The subsequent [execution workspace qualification](t/performance/execution-workspace/README.org)
+compares the complete recursive and retained execution paths with the preceding
+commit, including latency limits and original SS gate results.

@@ -3,8 +3,8 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 ;;; Private positive-rule execution plans. Plans are immutable and shared;
-;;; each engine owns its variable frames, including nested/concurrent solves.
-(import (only-in "funs.ss" gerbil-ascent-expression-value gerbil-ascent-head-row))
+;;; each invocation owns its variable frame, including nested/concurrent solves.
+(import (only-in :gerbil-ascent/program/funs gerbil-ascent-expression-value gerbil-ascent-head-row))
 (export gerbil-ascent-positive-plan gerbil-ascent-compile-positive-plan gerbil-ascent-run-positive-plan!
         gerbil-ascent-index-key gerbil-ascent-emit-heads!)
 
@@ -111,20 +111,20 @@
 ;;; The engine supplies row/index access and the authoritative output admission
 ;;; function. This runner changes binding representation, not fact admission.
 ;; gerbil-ascent-run-positive-plan!
-;;   : (-> PositivePlan Frame Integer RowsAccess EmitRow Void)
+;;   : (-> PositivePlan Integer RowsAccess EmitRow Void)
 ;;   | doc m%
-;;       Execute one positive traversal using the engine-local reusable frame. The engine supplies index access and output admission.
+;;       Execute one positive traversal with an invocation-local frame. The engine supplies index access and output admission.
 ;;
 ;;       # Examples
 ;;
 ;;       ```scheme
-;;       (gerbil-ascent-run-positive-plan! plan frame -1 rows-access emit-row!)
+;;       (gerbil-ascent-run-positive-plan! plan -1 rows-access emit-row!)
 ;;       ;; => void after admitting the matching heads
 ;;       ```
 ;;     %
-(def (gerbil-ascent-run-positive-plan! plan frame delta-at rows-access emit-row!)
+(def (gerbil-ascent-run-positive-plan! plan delta-at rows-access emit-row!)
   (visit-positive-atoms! (vector-ref plan 1) (vector-ref plan 0)
-                        frame
+                        (make-vector (vector-ref plan 2) #f)
                         delta-at 0 rows-access emit-row!))
 
 ;;; Recursion passes the frame explicitly; no closure is allocated per pivot.

@@ -1,0 +1,22 @@
+[
+  {
+    "name": "policy-final",
+    "exit": 0,
+    "seconds": 60.584486250001646
+  },
+  {
+    "name": "full-suite-final",
+    "exit": 0,
+    "seconds": 155.48926354200375
+  },
+  {
+    "name": "nonpositive-ss",
+    "exit": 0,
+    "seconds": 8.025867500000459
+  },
+  {
+    "name": "table-expression-ss",
+    "exit": 1,
+    "seconds": 30.971479417006776
+  }
+]

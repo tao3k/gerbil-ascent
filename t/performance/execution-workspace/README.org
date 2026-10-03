@@ -1,0 +1,143 @@
+#+TITLE: Complete fixed-point execution workspace qualification
+
+* One execution lifecycle change
+
+Baseline =674c68c= already compiled supported complete positive rules into slot
+plans. This change addresses the whole fixed-point round loop: pending vectors,
+lattice key events, deduplication tables and interpreter/admission closures are
+created once per dirty fixed-point invocation and reused across rounds and
+strata. Each engine also owns its numeric variable frames and reuses them across
+pivots and Session updates. Mutable frames remain outside all shared caches.
+
+This removes allocation proportional to recursive round count, rather than
+adding another per-row special case. Empty/clean invocations do not construct
+the round workspace. Compiled and generic rules share the same admission and
+commit logic, including custom storage and indexes, lattice refinement,
+budgets, timeout/resume, stratification and rule timing.
+
+* Lifetime and safety argument
+
+Every admitted slot read follows a fresh write on its candidate path; failed
+candidates and later invocations cannot read a stale slot. Immutable analysis
+and plan caches retain their original layout. Engine-local active rules alone
+carry a seventh slot containing the frame. Distinct engines never share it.
+
+After each nonempty commit, pending vector slots and lattice key events are
+cleared and the private deduplication table is reset. Delta keeps the committed
+row list, and custom Provider callbacks retain their original all/pending row
+spines. No list spine or published snapshot is mutated. Empty commits avoid
+redundant clearing. Each invocation's workspace is lexical: exceptions discard
+uncommitted workspace automatically; timeout returns only after commit, with
+resume position retained. An aborted invocation cannot publish its pending rows
+in a later invocation.
+
+* Exact reference and semantic checks
+
+[[file:reference-verification.json][Reference verification]] pins the full previous commit. Frozen analysis is
+unchanged; frozen positive execution only relocates its funs import; frozen
+engine only relocates imports and alpha-renames its two public functions. Both
+versions are compiled with the same native std/make build into an isolated lib.
+[[file:module-resolution.log][SSI resolution]] proves both loaded evaluator paths and both positive modules.
+
+The existing positive qualification exercises all 512 directed three-node
+graphs, custom index/storage callbacks, budget errors, wide variables, concurrent
+engines and fallback rules. Three new native Cases test 16 sustained timeout /
+append / replacement cycles with duplicate heads and old snapshots; 64-round
+custom storage with exact retained all/pending callback traces; and complete
+generic guarded fixed points with exact callback order for four graph sizes.
+[[file:suite-coverage.json][Final exact-source suite]] passed all 45 modules and 358 native Cases.
+All native completion markers and absence of native error/overflow markers are
+verified, not merely process exit status. [[file:policy-final.log][Final policy]] selected 39 modules,
+with zero findings and zero errors. Suite wall time was 155.489 seconds,
+including waiting for the exclusive repeat benchmark; this is not a suite
+speed comparison.
+
+* Matched complete workloads
+
+The seven preceding complete-solve workloads remain, with two complete retained
+Session workloads added: initialize, append-and-run 16 or 64 times, then check
+an independent ordered closure. Each workload has 20 warmups and 1000
+alternating old/new pairs. Both use the same heap and no forced per-sample GC.
+Allocation uses Gambit process-statistics slot 7 cumulative allocated bytes.
+All workloads require non-increasing median allocation; primary workloads also
+require at least 900 strict paired byte wins. The preceding timing claim gate
+is retained: a lower median and at least 900 strict paired time wins.
+
+[[file:final.sexp][First final raw receipt]] records the fixed production source. Its summary:
+
+| Workload | Old bytes | New bytes | Reduction | Byte wins | Old / new median (ms) | Strict time wins |
+|---------+-----------+-----------+-----------+-----------+-----------------------+------------------|
+| recursive-chain-16 | 46912 | 24224 | 48.36% | 996/1000 | 0.018 / 0.016 | 948/1000 |
+| recursive-chain-256 | 583968 | 208000 | 64.38% | 992/1000 | 0.298 / 0.259 | 885/1000 |
+| recursive-chain-1024 | 2267616 | 761152 | 66.43% | 981/1000 | 1.192 / 1.027 | 826/1000 |
+| indexed-fanout-50-1 | 89568 | 88960 | 0.68% | 997/1000 | 0.087 / 0.087 | 344/1000 |
+| indexed-fanout-100-100 | 9450848 | 9450240 | 0.01% | 930/1000 | 12.613 / 12.690 | 451/1000 |
+| indexed-wide-40-256 | 1708720 | 1708112 | 0.04% | 986/1000 | 1.973 / 1.973 | 478/1000 |
+| source-only | 12624 | 12592 | 0.25% | 996/1000 | 0.002 / 0.002 | 135/1000 |
+| retained-append-16 | 328816 | 319008 | 2.98% | 971/1000 | 0.105 / 0.105 | 386/1000 |
+| retained-append-64 | 831760 | 792768 | 4.69% | 953/1000 | 0.252 / 0.256 | 213/1000 |
+
+The 256/1024-node chain median allocation falls by about 64/66%. The first final
+run's chain medians decrease by about 13%, but strict timing wins are 885/1000
+and 826/1000, below the timing claim gate. These medians do not establish a
+qualified uniform speedup. Join latency is approximately unchanged; the
+64-append Session median is about 1.6% higher in this run. Retained allocations
+fall by about 3-5%. All raw samples and p95 statistics remain in the receipts.
+
+[[file:repeat.sexp][Repeat final raw receipt]] uses the exact same source manifest. Allocation
+medians are identical in the important chain workloads. Repeat medians are:
+16-node chain 18 -> 16 us (907 strict wins); 256-node chain 295 -> 257 us
+(945 wins); 1024-node chain 1.170 -> 1.016 ms (915 wins). Both long-chain
+medians are about 13% lower across final runs, but the first run's paired gate
+is not met. Only the 16-node timing result satisfies that gate in both final
+runs. Large fanout repeat median is 10.692 -> 10.909 ms (about 2% higher),
+and 64-append repeat median is 251 -> 252 us. No uniform latency improvement
+is claimed. The change retains the whole recursive allocation reduction while
+reporting these CPU limits.
+
+* Qualification boundary and retained iterations
+
+=initial.sexp= records the first workspace form, before skipping redundant
+empty-table resets. =qualified.sexp= is an intermediate form despite its filename;
+it is not the final qualification. Their exact evaluator snapshots are retained
+as =initial-evaluate.ss= and =qualified-evaluate.ss=. The final version also
+keeps workspace construction inside the dirty branch, preserving clean-run
+allocation behavior. Only final and repeat receipts qualify the fixed source.
+The initial whole-suite run overlapped these edits and is retained as diagnostic
+output; it is excluded from the final exact-source qualification.
+
+The previous original SS inventory had two time-gate failures. This change does
+not alter the table-expression algorithm, its fixture, thresholds, GC policy,
+heap fence or test scheduling. The two formerly failing original entries are
+run unchanged after the final semantic suite; their outcomes are [[file:ss-summary.json][recorded independently]]:
+
+- Nonpositive Session update: passed, p95 683 us versus the unchanged 1 ms budget.
+- Table-expression: failed its time gate; median 952 us, p95 2.532 ms,
+  max 10.992 ms versus the unchanged 1.05 ms regression budget.
+  Semantic equality and pair count checks completed before the typed error.
+
+The table-expression failure remains unresolved. Its production source, scenario
+and benchmark fixture are byte-identical to the preceding commit. No root-cause
+attribution follows from this qualification.
+A targeted result does not prove that all 17 original SS entries passed one
+uninterrupted batch.
+
+* Reproduction
+
+From the repository root with the same pinned dependencies:
+
+#+begin_src sh
+GERBIL_PATH=/private/tmp/ascent-test-scheduling-gerbil GERBIL_BUILD_CORES=12 \
+  just check-policy
+GERBIL_PATH=/private/tmp/ascent-test-scheduling-gerbil GERBIL_BUILD_CORES=12 \
+  just test
+GERBIL_PATH=/private/tmp/ascent-test-scheduling-gerbil GERBIL_BUILD_CORES=12 \
+  ASCENT_WORKSPACE_RECEIPT=/private/tmp/execution-workspace.sexp \
+  just workspace-benchmark
+#+end_src
+
+The benchmark holds the existing exclusive lease, uses bounded native build
+and run timeouts, and rejects native errors and overflows even on exit zero.
+Its receipt source manifest and =qualified.sources= bind the exact source.
+=qualify.py= reproduces the final policy, functional suite and two targeted
+original SS entries, recording independent outcomes without relaxing gates.

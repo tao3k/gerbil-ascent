@@ -428,9 +428,8 @@
          (when dirty? (flush-staged-set-rows!))
          ;; One invocation owns the complete round workspace. Clearing slots
          ;; after commit releases pending state while delta keeps its row spine.
-         (let (complete? #t)
-         (when dirty?
-         (let ((pending (make-vector count []))
+         (let ((complete? #t)
+               (pending (make-vector count []))
                (pending-seen (make-vector count #f))
                (pending-lattice-keys (make-vector count []))
                (pending-count 0))
@@ -610,6 +609,7 @@
                                   (cons (cons (vector-ref clause 1) value)
                                         environment)
                                   consume)))))))
+         (when dirty?
          (call/cc
           (lambda (return)
          (let evaluate-stratum ((stratum (or resume-stratum 0)))
@@ -759,7 +759,7 @@
               (return #f)))
             (set! resume-stratum #f)
             (set! resume-round 0)
-            (evaluate-stratum (+ stratum 1))))))))
+            (evaluate-stratum (+ stratum 1)))))))
          (when complete?
            (set! first-run? #f)
            (set! dirty? #f)

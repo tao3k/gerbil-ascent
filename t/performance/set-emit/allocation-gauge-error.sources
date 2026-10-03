@@ -1,0 +1,4 @@
+a0f31f932a23dd3791ad8321ecbc5b7629a6b38ccb5d6ac86186bff99715c5b8  program/evaluate.ss
+55724a8a30e6800ae60d93e46c610f020397f1b5b8647b9bbe990fd10956f82c  t/qualification/ascent-set-emit-reference-evaluate.ss
+4f4b9dd6820f605c7fd931df695ed2a45f608ea7a8eeb38339c8d0dbd0a8fc27  t/performance/set-emit-allocation.ss
+ab0f3069ea2ede05c2578879640b100353deba809fb996a8cbe05447e63878fb  tools/build-set-emit-benchmark.ss

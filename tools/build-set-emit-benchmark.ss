@@ -1,0 +1,6 @@
+(import (only-in :std/make make))
+(make '("program/evaluate" "t/qualification/ascent-set-emit-reference-evaluate")
+      srcdir: (current-directory)
+      libdir: (getenv "ASCENT_SET_EMIT_LIB")
+      build-deps: ".gerbil/set-emit/build-deps")
+(exit 0)

@@ -1,0 +1,76 @@
+[test-lane] START exclusive just
+timeout 90s gxi -:max-heap=1G,debug=q tools/build-set-emit-benchmark.ss
+GERBIL_LOADPATH="$ASCENT_SET_EMIT_LIB${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" timeout 150s gxi -:max-heap=1G,debug=q t/performance/set-emit-allocation.ss
+[test-lane] RUNNING exclusive (5s)
+CASE recursive-chain-16 samples=1000 repetitions=20
+PROGRESS recursive-chain-16 100/1000
+PROGRESS recursive-chain-16 200/1000
+PROGRESS recursive-chain-16 300/1000
+PROGRESS recursive-chain-16 400/1000
+PROGRESS recursive-chain-16 500/1000
+[test-lane] RUNNING exclusive (10s)
+PROGRESS recursive-chain-16 600/1000
+PROGRESS recursive-chain-16 700/1000
+PROGRESS recursive-chain-16 800/1000
+PROGRESS recursive-chain-16 900/1000
+PROGRESS recursive-chain-16 1000/1000
+RESULT recursive-chain-16 old-p50-bytes=48480 new-p50-bytes=47984 paired-wins=936/1000
+CASE recursive-chain-256 samples=1000 repetitions=1
+PROGRESS recursive-chain-256 100/1000
+PROGRESS recursive-chain-256 200/1000
+PROGRESS recursive-chain-256 300/1000
+PROGRESS recursive-chain-256 400/1000
+PROGRESS recursive-chain-256 500/1000
+PROGRESS recursive-chain-256 600/1000
+PROGRESS recursive-chain-256 700/1000
+PROGRESS recursive-chain-256 800/1000
+PROGRESS recursive-chain-256 900/1000
+PROGRESS recursive-chain-256 1000/1000
+RESULT recursive-chain-256 old-p50-bytes=644640 new-p50-bytes=636464 paired-wins=996/1000
+CASE recursive-chain-1024 samples=1000 repetitions=1
+PROGRESS recursive-chain-1024 100/1000
+PROGRESS recursive-chain-1024 200/1000
+PROGRESS recursive-chain-1024 300/1000
+[test-lane] RUNNING exclusive (15s)
+PROGRESS recursive-chain-1024 400/1000
+PROGRESS recursive-chain-1024 500/1000
+PROGRESS recursive-chain-1024 600/1000
+PROGRESS recursive-chain-1024 700/1000
+PROGRESS recursive-chain-1024 800/1000
+PROGRESS recursive-chain-1024 900/1000
+PROGRESS recursive-chain-1024 1000/1000
+RESULT recursive-chain-1024 old-p50-bytes=2512704 new-p50-bytes=2479952 paired-wins=978/1000
+CASE emissions-10000-distinct-10000 samples=1000 repetitions=1
+[test-lane] RUNNING exclusive (20s)
+PROGRESS emissions-10000-distinct-10000 100/1000
+PROGRESS emissions-10000-distinct-10000 200/1000
+PROGRESS emissions-10000-distinct-10000 300/1000
+[test-lane] RUNNING exclusive (25s)
+PROGRESS emissions-10000-distinct-10000 400/1000
+[test-lane] RUNNING exclusive (30s)
+PROGRESS emissions-10000-distinct-10000 500/1000
+PROGRESS emissions-10000-distinct-10000 600/1000
+[test-lane] RUNNING exclusive (35s)
+PROGRESS emissions-10000-distinct-10000 700/1000
+PROGRESS emissions-10000-distinct-10000 800/1000
+[test-lane] RUNNING exclusive (40s)
+PROGRESS emissions-10000-distinct-10000 900/1000
+PROGRESS emissions-10000-distinct-10000 1000/1000
+RESULT emissions-10000-distinct-10000 old-p50-bytes=5475712 new-p50-bytes=4995728 paired-wins=952/1000
+CASE emissions-10000-distinct-16 samples=1000 repetitions=1
+[test-lane] RUNNING exclusive (45s)
+PROGRESS emissions-10000-distinct-16 100/1000
+PROGRESS emissions-10000-distinct-16 200/1000
+PROGRESS emissions-10000-distinct-16 300/1000
+PROGRESS emissions-10000-distinct-16 400/1000
+[test-lane] RUNNING exclusive (50s)
+PROGRESS emissions-10000-distinct-16 500/1000
+PROGRESS emissions-10000-distinct-16 600/1000
+PROGRESS emissions-10000-distinct-16 700/1000
+[test-lane] RUNNING exclusive (55s)
+PROGRESS emissions-10000-distinct-16 800/1000
+PROGRESS emissions-10000-distinct-16 900/1000
+PROGRESS emissions-10000-distinct-16 1000/1000
+RESULT emissions-10000-distinct-16 old-p50-bytes=1939968 new-p50-bytes=1459984 paired-wins=1000/1000
+OK
+[test-lane] END exclusive exit=0

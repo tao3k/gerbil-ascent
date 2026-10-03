@@ -514,3 +514,29 @@ set-batch-benchmark:
 _set-batch-benchmark:
     timeout 90s gxi {{ gerbil_test_runtime_options }} tools/build-set-batch-benchmark.ss
     GERBIL_LOADPATH="$ASCENT_SET_BATCH_LIB${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" timeout 150s gxi {{ gerbil_test_runtime_options }} t/performance/set-batch-benchmark.ss
+
+set-emit-benchmark:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    mkdir -p .gerbil/set-emit
+    export ASCENT_SET_EMIT_LIB="{{ justfile_directory() }}/.gerbil/set-emit/lib"
+    export ASCENT_SET_EMIT_RECEIPT="${ASCENT_SET_EMIT_RECEIPT:-{{ justfile_directory() }}/.gerbil/set-emit/receipt.sexp}"
+    shasum -a 256 program/evaluate.ss t/qualification/ascent-set-emit-reference-evaluate.ss t/performance/set-emit-benchmark.ss tools/build-set-emit-benchmark.ss > "$ASCENT_SET_EMIT_RECEIPT.sources"
+    python3 tools/test_execution.py run -- just _set-emit-benchmark
+
+_set-emit-benchmark:
+    timeout 90s gxi {{ gerbil_test_runtime_options }} tools/build-set-emit-benchmark.ss
+    GERBIL_LOADPATH="$ASCENT_SET_EMIT_LIB${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" timeout 400s gxi {{ gerbil_test_runtime_options }} t/performance/set-emit-benchmark.ss
+
+set-emit-allocation:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    mkdir -p .gerbil/set-emit
+    export ASCENT_SET_EMIT_LIB="{{ justfile_directory() }}/.gerbil/set-emit/lib"
+    export ASCENT_SET_EMIT_ALLOCATION_RECEIPT="${ASCENT_SET_EMIT_ALLOCATION_RECEIPT:-{{ justfile_directory() }}/.gerbil/set-emit/allocation.sexp}"
+    shasum -a 256 program/evaluate.ss t/qualification/ascent-set-emit-reference-evaluate.ss t/performance/set-emit-allocation.ss tools/build-set-emit-benchmark.ss > "$ASCENT_SET_EMIT_ALLOCATION_RECEIPT.sources"
+    python3 tools/test_execution.py run -- just _set-emit-allocation
+
+_set-emit-allocation:
+    timeout 90s gxi {{ gerbil_test_runtime_options }} tools/build-set-emit-benchmark.ss
+    GERBIL_LOADPATH="$ASCENT_SET_EMIT_LIB${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" timeout 150s gxi {{ gerbil_test_runtime_options }} t/performance/set-emit-allocation.ss

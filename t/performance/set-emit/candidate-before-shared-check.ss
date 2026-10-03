@@ -634,18 +634,6 @@
                 (pending-seen (make-vector count #f))
                 (pending-lattice-keys (make-vector count []))
                 (pending-count 0))
-            (def (admit-stored! index pending-table stored)
-              (unless (and (list? stored)
-                           (= (length stored) (vector-ref arity index)))
-                (error "invalid ASCENT storage provider row" stored))
-              (let (check (vector-ref field-checkers index))
-                (when check (check stored)))
-              (unless (or (hash-get (vector-ref seen index) stored)
-                          (hash-get pending-table stored))
-                (hash-put! pending-table stored #t)
-                (set! pending-count (+ pending-count 1))
-                (vector-set! pending index
-                  (cons stored (vector-ref pending index)))))
             (def (emit! atom environment)
               (let* ((index (vector-ref atom 0))
                      (row (gerbil-ascent-head-row
@@ -681,7 +669,18 @@
                            gerbil-ascent-set-storage-provider)
                     ;; The built-in extension is exactly (list row). Preserve
                     ;; validation order without allocating that temporary list.
-                    (admit-stored! index pending-table row)
+                    (begin
+                      (unless (and (list? row)
+                                   (= (length row) (vector-ref arity index)))
+                        (error "invalid ASCENT storage provider row" row))
+                      (let (check (vector-ref field-checkers index))
+                        (when check (check row)))
+                      (unless (or (hash-get (vector-ref seen index) row)
+                                  (hash-get pending-table row))
+                        (hash-put! pending-table row #t)
+                        (set! pending-count (+ pending-count 1))
+                        (vector-set! pending index
+                          (cons row (vector-ref pending index)))))
                     (let (expanded
                           ((vector-ref storage-extensions index)
                            (vector-ref storage-states index)
@@ -694,7 +693,18 @@
                         (error "ASCENT storage provider returned non-list rows"))
                       (for-each
                        (lambda (stored)
-                         (admit-stored! index pending-table stored))
+                         (unless (and (list? stored)
+                                      (= (length stored)
+                                         (vector-ref arity index)))
+                           (error "invalid ASCENT storage provider row" stored))
+                         (let (check (vector-ref field-checkers index))
+                           (when check (check stored)))
+                         (unless (or (hash-get (vector-ref seen index) stored)
+                                     (hash-get pending-table stored))
+                           (hash-put! pending-table stored #t)
+                           (set! pending-count (+ pending-count 1))
+                           (vector-set! pending index
+                             (cons stored (vector-ref pending index)))))
                        expanded))))
                 (when (> (+ derived-count pending-count) derived-limit)
                   (error "ASCENT derived fact budget exceeded"))

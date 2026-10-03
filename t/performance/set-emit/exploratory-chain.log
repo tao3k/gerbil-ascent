@@ -1,0 +1,64 @@
+[test-lane] START exclusive just
+timeout 90s gxi -:max-heap=1G,debug=q tools/build-set-emit-benchmark.ss
+... compile program/evaluate
+... compile t/qualification/ascent-set-emit-reference-evaluate
+[test-lane] RUNNING exclusive (5s)
+[test-lane] RUNNING exclusive (10s)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/set-emit/lib/gerbil-ascent/t/qualification/ascent-set-emit-reference-evaluate~0.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/set-emit/lib/gerbil-ascent/t/qualification/ascent-set-emit-reference-evaluate.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/set-emit/lib/gerbil-ascent/program/evaluate~0.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/set-emit/lib/gerbil-ascent/program/evaluate.scm)
+GERBIL_LOADPATH="$ASCENT_SET_EMIT_LIB${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" timeout 150s gxi -:max-heap=1G,debug=q t/performance/set-emit-benchmark.ss
+[test-lane] RUNNING exclusive (15s)
+[test-lane] RUNNING exclusive (20s)
+CASE recursive-chain-16 samples=1000 repetitions=1
+PROGRESS recursive-chain-16 100/1000
+PROGRESS recursive-chain-16 200/1000
+PROGRESS recursive-chain-16 300/1000
+PROGRESS recursive-chain-16 400/1000
+PROGRESS recursive-chain-16 500/1000
+PROGRESS recursive-chain-16 600/1000
+PROGRESS recursive-chain-16 700/1000
+PROGRESS recursive-chain-16 800/1000
+PROGRESS recursive-chain-16 900/1000
+PROGRESS recursive-chain-16 1000/1000
+RESULT recursive-chain-16 old-p50-ns=20000 new-p50-ns=20000 paired-wins=331/1000
+CASE recursive-chain-256 samples=1000 repetitions=1
+PROGRESS recursive-chain-256 100/1000
+PROGRESS recursive-chain-256 200/1000
+PROGRESS recursive-chain-256 300/1000
+PROGRESS recursive-chain-256 400/1000
+PROGRESS recursive-chain-256 500/1000
+PROGRESS recursive-chain-256 600/1000
+PROGRESS recursive-chain-256 700/1000
+PROGRESS recursive-chain-256 800/1000
+PROGRESS recursive-chain-256 900/1000
+PROGRESS recursive-chain-256 1000/1000
+RESULT recursive-chain-256 old-p50-ns=331000 new-p50-ns=331000 paired-wins=531/1000
+CASE recursive-chain-1024 samples=1000 repetitions=1
+PROGRESS recursive-chain-1024 100/1000
+[test-lane] RUNNING exclusive (25s)
+PROGRESS recursive-chain-1024 200/1000
+PROGRESS recursive-chain-1024 300/1000
+PROGRESS recursive-chain-1024 400/1000
+PROGRESS recursive-chain-1024 500/1000
+PROGRESS recursive-chain-1024 600/1000
+PROGRESS recursive-chain-1024 700/1000
+PROGRESS recursive-chain-1024 800/1000
+PROGRESS recursive-chain-1024 900/1000
+[test-lane] RUNNING exclusive (30s)
+PROGRESS recursive-chain-1024 1000/1000
+RESULT recursive-chain-1024 old-p50-ns=1319000 new-p50-ns=1314000 paired-wins=588/1000
+*** ERROR IN for-each -- 
+*** ERROR IN ? [Error]: size optimization failed matched admission
+--- irritants: (name . recursive-chain-1024) 
+--- continuation backtrace:
+[0] error                                                                                                                                                                   
+[1] for-each                                                                                                                                                                
+[2] (interaction)                                                                                                                                                           "t/performance/set-emit-benchmark.ss"@94:3-101:13                                                                                                                            (for-each (lambda (#:receipt1911) (if (if (<= (cdr (assq 'new-p50-ns #:receipt1911)) (cdr (assq 'old-p50-ns #:receipt1911))) (let ((#:$e1913 (not (cdr (assq 'requi...
+[3] ##load                                                                                                                                                                  
+[4] ##load                                                                                                                                                                  
+[5] gerbil/main#gxi-main                                                                                                                                                    
+error: recipe `_set-emit-benchmark` failed on line 529 with exit code 70
+[test-lane] END exclusive exit=70
+error: recipe `set-emit-benchmark` failed with exit code 70

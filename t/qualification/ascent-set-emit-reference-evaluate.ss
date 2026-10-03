@@ -7,11 +7,11 @@
 (import (only-in :clan/poo/object .o .ref object?)
         (only-in :clan/poo/mop validate)
         (only-in :std/iter for iter Iterator &Iterator-next!)
-        (only-in "planning.ss" gerbil-ascent-prepare-rule)
-        (only-in "types.ss" GerbilAscentSessionContract)
-        (only-in "analysis.ss" gerbil-ascent-program-analysis
+        (only-in :gerbil-ascent/program/planning gerbil-ascent-prepare-rule)
+        (only-in :gerbil-ascent/program/types GerbilAscentSessionContract)
+        (only-in :gerbil-ascent/program/analysis gerbil-ascent-program-analysis
                  gerbil-ascent-program-schema)
-        (only-in "funs.ss" gerbil-ascent-rule-strata
+        (only-in :gerbil-ascent/program/funs gerbil-ascent-rule-strata
                  gerbil-ascent-lattice-feeds-relation?
                  gerbil-ascent-delta-positions
                  gerbil-ascent-lattice-key
@@ -31,13 +31,13 @@
                  gerbil-ascent-set-storage-provider)
         (only-in :clan/poo/support/base until))
 
-(export gerbil-ascent-evaluate-program gerbil-ascent-make-engine)
+(export ascent-set-emit-reference-evaluate-program ascent-set-emit-reference-make-engine)
 
 (def Session. (.ref GerbilAscentSessionContract 'proto))
 
 ;;; One engine owns all mutable row buffers and indexes. Reused immutable
 ;;; analysis/schema values never share evaluation-local relation state.
-;; gerbil-ascent-make-engine
+;; ascent-set-emit-reference-make-engine
 ;;   : (-> Program Boolean (Maybe Analysis) (Maybe Schema) Boolean Engine)
 ;;   | doc m%
 ;;       Construct a stratified evaluator for a program and an optional
@@ -46,11 +46,11 @@
 ;;       # Examples
 ;;
 ;;       ```scheme
-;;       (gerbil-ascent-make-engine program #f)
+;;       (ascent-set-emit-reference-make-engine program #f)
 ;;       ;; => an engine with one fresh evaluation state
 ;;       ```
 ;;     %
-(def (gerbil-ascent-make-engine program session? (analysis-override #f)
+(def (ascent-set-emit-reference-make-engine program session? (analysis-override #f)
                                 (schema-override #f)
                                 (measure-rule-times? #f)
                                 (plan-error #f))
@@ -438,7 +438,7 @@
               (let* ((replacement
                       (append (source-rows-at index) (list row)))
                      (candidate (source-program-with index replacement))
-                     (result ((gerbil-ascent-make-engine
+                     (result ((ascent-set-emit-reference-make-engine
                                candidate #f analysis schema
                                measure-rule-times?))))
                 (set! source-count (+ source-count 1))
@@ -546,7 +546,7 @@
               (when (> next-count input-limit)
                 (error "ASCENT session input fact budget exceeded"))
               (let* ((candidate (source-program-with index rows))
-                     (result ((gerbil-ascent-make-engine
+                     (result ((ascent-set-emit-reference-make-engine
                                candidate #f analysis schema
                                measure-rule-times?))))
                 (set! source-count next-count)
@@ -634,18 +634,6 @@
                 (pending-seen (make-vector count #f))
                 (pending-lattice-keys (make-vector count []))
                 (pending-count 0))
-            (def (admit-stored! index pending-table stored)
-              (unless (and (list? stored)
-                           (= (length stored) (vector-ref arity index)))
-                (error "invalid ASCENT storage provider row" stored))
-              (let (check (vector-ref field-checkers index))
-                (when check (check stored)))
-              (unless (or (hash-get (vector-ref seen index) stored)
-                          (hash-get pending-table stored))
-                (hash-put! pending-table stored #t)
-                (set! pending-count (+ pending-count 1))
-                (vector-set! pending index
-                  (cons stored (vector-ref pending index)))))
             (def (emit! atom environment)
               (let* ((index (vector-ref atom 0))
                      (row (gerbil-ascent-head-row
@@ -677,25 +665,31 @@
                       (hash-put! pending-table key merged)
                       (vector-set! pending-lattice-keys index
                         (cons key (vector-ref pending-lattice-keys index)))))
-                  (if (eq? (vector-ref storage-providers index)
-                           gerbil-ascent-set-storage-provider)
-                    ;; The built-in extension is exactly (list row). Preserve
-                    ;; validation order without allocating that temporary list.
-                    (admit-stored! index pending-table row)
-                    (let (expanded
-                          ((vector-ref storage-extensions index)
-                           (vector-ref storage-states index)
-                           (vector-ref all index)
-                           (vector-ref pending index) row
-                           (- output-limit
-                              (+ source-materialized-count
-                                 derived-count pending-count))))
-                      (unless (list? expanded)
-                        (error "ASCENT storage provider returned non-list rows"))
-                      (for-each
-                       (lambda (stored)
-                         (admit-stored! index pending-table stored))
-                       expanded))))
+                  (let (expanded
+                        ((vector-ref storage-extensions index)
+                         (vector-ref storage-states index)
+                         (vector-ref all index)
+                         (vector-ref pending index) row
+                         (- output-limit
+                            (+ source-materialized-count
+                               derived-count pending-count))))
+                    (unless (list? expanded)
+                      (error "ASCENT storage provider returned non-list rows"))
+                    (for-each
+                     (lambda (stored)
+                       (unless (and (list? stored)
+                                    (= (length stored)
+                                       (vector-ref arity index)))
+                         (error "invalid ASCENT storage provider row" stored))
+                       (let (check (vector-ref field-checkers index))
+                         (when check (check stored)))
+                       (unless (or (hash-get (vector-ref seen index) stored)
+                                   (hash-get pending-table stored))
+                         (hash-put! pending-table stored #t)
+                         (set! pending-count (+ pending-count 1))
+                         (vector-set! pending index
+                           (cons stored (vector-ref pending index)))))
+                     expanded)))
                 (when (> (+ derived-count pending-count) derived-limit)
                   (error "ASCENT derived fact budget exceeded"))
                 (when (> (+ source-materialized-count
@@ -987,8 +981,8 @@
           run!)))))
 
 ;; : (-> Program EvaluationResult)
-(def (gerbil-ascent-evaluate-program program
+(def (ascent-set-emit-reference-evaluate-program program
                                       measure-rule-times?: (measure-rule-times? #f))
   (unless (boolean? measure-rule-times?)
     (error "invalid ASCENT rule timing option" measure-rule-times?))
-  ((gerbil-ascent-make-engine program #f #f #f measure-rule-times?)))
+  ((ascent-set-emit-reference-make-engine program #f #f #f measure-rule-times?)))

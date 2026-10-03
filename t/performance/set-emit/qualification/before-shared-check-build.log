@@ -1,0 +1,31 @@
+[test-lane] START exclusive just
+python3 tools/test_execution.py run -- just _build
+GERBIL_BUILD_CORES="${GERBIL_BUILD_CORES:-$(getconf NPROCESSORS_ONLN)}" gerbil build
+[test-lane] RUNNING exclusive (5s)
+... compile program/evaluate
+... execute compile job (compile-file /private/tmp/ascent-test-scheduling-gerbil/lib/gerbil-ascent/program/evaluate~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-test-scheduling-gerbil/lib/gerbil-ascent/program/evaluate.scm)
+... compile program/session
+... execute compile job (compile-file /private/tmp/ascent-test-scheduling-gerbil/lib/gerbil-ascent/program/session~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-test-scheduling-gerbil/lib/gerbil-ascent/program/session.scm)
+... compile program/scheme-admission
+... execute compile job (compile-file /private/tmp/ascent-test-scheduling-gerbil/lib/gerbil-ascent/program/scheme-admission~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-test-scheduling-gerbil/lib/gerbil-ascent/program/scheme-admission.scm)
+... execute compile job (compile-file /private/tmp/ascent-test-scheduling-gerbil/lib/gerbil-ascent/program/scheme-admission~1.scm)
+... compile program/scheme-language
+... compile program/operator-session
+... execute compile job (compile-file /private/tmp/ascent-test-scheduling-gerbil/lib/gerbil-ascent/program/scheme-language.scm)
+... execute compile job (compile-file /private/tmp/ascent-test-scheduling-gerbil/lib/gerbil-ascent/program/operator-session~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-test-scheduling-gerbil/lib/gerbil-ascent/program/operator-session.scm)
+... execute compile job (compile-file /private/tmp/ascent-test-scheduling-gerbil/lib/gerbil-ascent/program/operator-session~1.scm)
+... execute compile job (compile-file /private/tmp/ascent-test-scheduling-gerbil/lib/gerbil-ascent/program/scheme-language~1.scm)
+... compile candidate/reasoning
+... compile program/interface
+[test-lane] RUNNING exclusive (10s)
+... execute compile job (compile-file /private/tmp/ascent-test-scheduling-gerbil/lib/gerbil-ascent/candidate/reasoning~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-test-scheduling-gerbil/lib/gerbil-ascent/candidate/reasoning.scm)
+... execute compile job (compile-file /private/tmp/ascent-test-scheduling-gerbil/lib/gerbil-ascent/program/interface.scm)
+... execute compile job (compile-file /private/tmp/ascent-test-scheduling-gerbil/lib/gerbil-ascent/candidate/reasoning~1.scm)
+... build in current directory
+*** WARNING module std/net/request is DEPRECATED and will be removed in the future
+[test-lane] END exclusive exit=0

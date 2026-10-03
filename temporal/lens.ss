@@ -2,7 +2,7 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-;;; Boundary: finite point-time projection, followed by the existing admitted engine.
+;;; Boundary: finite bounded-time projection, followed by the existing admitted engine.
 ;;; Invariant: open cuts have no complete evidence or definitive absence.
 ;;; Source-owned identities and closure declarations confer no authority.
 (import (only-in :std/crypto/digest sha256)
@@ -15,7 +15,7 @@
                  reasoning-verify-finite-receipt
                  reasoning-verify-stratified-receipt))
 
-(export temporal-lens temporal-source temporal-solve temporal-fork temporal-scope
+(export temporal-interval temporal-window-verdict temporal-lens temporal-source temporal-solve temporal-fork temporal-scope
         temporal-lens? temporal-source? temporal-answer?
         temporal-projection temporal-status temporal-rows temporal-frontier
         temporal-receipt temporal-evidence-verdicts temporal-verify temporal-compare)
@@ -72,9 +72,55 @@
 ;; : (forall (a) (-> (TemporalValue a) a))
 ;; : (-> TemporalValue DetachedDatum)
 (def (temporal-projection x)
-  (unless (or (temporal-lens? x) (temporal-source? x) (temporal-answer? x))
+  (unless (or (temporal-lens? x) (temporal-source? x) (temporal-answer? x)
+              (kind? x 'ascent.temporal-interval.v1))
     (error "expected ASCENT temporal value"))
   ((.ref x 'projection)))
+
+;;; Closed bounds describe uncertainty about one valid-time point, not event
+;;; duration. unknown lower means 0; unknown upper means no finite bound.
+;; : (-> Endpoint Endpoint TemporalInterval)
+;; : (-> LowerBound UpperBound Interval)
+(def (temporal-interval lower upper)
+  (let (data (list 'between lower upper))
+    (unless (valid-time? data) (error "invalid temporal interval"))
+    (value-object 'ascent.temporal-interval.v1 data)))
+;; : (-> SchemeValue Boolean)
+;; : (-> ValidTimeDatum WellFormed)
+(def (valid-time? value)
+  (or (position? value) (eq? value 'unknown)
+      (and (list? value) (= (length value) 3) (eq? (car value) 'between)
+           (or (position? (cadr value)) (eq? (cadr value) 'unknown))
+           (or (position? (caddr value)) (eq? (caddr value) 'unknown))
+           (or (eq? (cadr value) 'unknown) (eq? (caddr value) 'unknown)
+               (<= (cadr value) (caddr value))))))
+;; : (-> SchemeValue ValidTimeDatum)
+;; : (-> ValidTimeInput CheckedDatum)
+(def (valid-time-data value)
+  (let (data (if (kind? value 'ascent.temporal-interval.v1)
+              (temporal-projection value) value))
+    (unless (valid-time? data) (error "invalid valid time"))
+    data))
+;; : (-> ValidTimeDatum Nat)
+;; : (-> CheckedDatum LowerBound)
+(def (time-lower value)
+  (cond ((position? value) value) ((eq? value 'unknown) 0)
+        ((eq? (cadr value) 'unknown) 0) (else (cadr value))))
+;; : (-> ValidTimeDatum (Maybe Nat))
+;; : (-> CheckedDatum UpperBoundOrFalse)
+(def (time-upper value)
+  (cond ((position? value) value) ((eq? value 'unknown) #f)
+        ((eq? (caddr value) 'unknown) #f) (else (caddr value))))
+;; : (-> SchemeValue Nat Nat Symbol)
+;; : (-> ValidTimeInput Start End ThreeValuedVerdict)
+(def (temporal-window-verdict value start end)
+  (unless (and (position? start) (position? end) (< start end))
+    (error "invalid temporal window"))
+  (let* ((data (valid-time-data value)) (lower (time-lower data))
+         (upper (time-upper data)))
+    (cond ((or (>= lower end) (and upper (< upper start))) 'false)
+          ((and upper (<= start lower) (< upper end)) 'true)
+          (else 'unknown))))
 
 ;;; Positions are exact nonnegative values in one caller-declared clock.
 ;;; Window is half-open. horizon counts edges from the selected root.
@@ -89,16 +135,17 @@
   (value-object 'ascent.temporal-lens.v1
                 (list generation clock start end as-of cut (list-sort id<? members) horizon closed?)))
 
-;;; Events: (event-id valid-position-or-unknown knowledge-position).
+;;; Events: (event-id valid-time knowledge-position). Interval POO values
+;;; are captured as canonical inert bounds and included in native binding.
 ;;; Parents: (parent-id child-id), a distinct source-owned order relation.
 ;; : (forall (id) (-> id Nat id (List Datum) (List (Pair id id)) TemporalSource))
 ;; : (-> SourceId Generation Clock Events ParentEdges Source)
 (def (temporal-source identity generation clock events parents)
   (unless (and (id? identity) (position? generation) (id? clock)
-               (bounded-list? events 256) (bounded-list? parents 512)
+               (and (list? events) (<= (length events) 256)) (bounded-list? parents 512)
                (andmap (lambda (e)
                          (and (list? e) (= (length e) 3) (id? (car e))
-                              (or (position? (cadr e)) (eq? (cadr e) 'unknown))
+                              (valid-time? (valid-time-data (cadr e)))
                               (position? (caddr e)))) events)
                (unique? (map car events))
                (andmap (lambda (e)
@@ -108,7 +155,8 @@
     (error "invalid temporal source"))
   (value-object 'ascent.temporal-source.v1
                 (list identity generation clock
-                      (list-sort (lambda (a b) (id<? (car a) (car b))) events)
+                      (list-sort (lambda (a b) (id<? (car a) (car b)))
+                                 (map (lambda (e) (list (car e) (valid-time-data (cadr e)) (caddr e))) events))
                       (list-sort row<? parents))))
 
 ;;; Binding boundary: native evidence includes the full temporal coordinates,
@@ -165,15 +213,22 @@
        (let (event (assq id events))
          (cond ((not event) (open! 'missing-event id))
                ((> (caddr event) as-of) (open! 'knowledge-unavailable id))
-               ((eq? (cadr event) 'unknown) (open! 'unknown-valid-time id)))))
+               ((eq? (temporal-window-verdict (cadr event) start end) 'unknown)
+                (open! 'unknown-valid-time id)))))
      members)
     (for-each
      (lambda (edge)
        (unless (memq (car edge) members) (open! 'missing-parent edge))
        (let ((from (assq (car edge) events)) (to (assq (cadr edge) events)))
-         (when (and from to (position? (cadr from)) (position? (cadr to))
-                    (> (cadr from) (cadr to)))
-           (reject! 'order-violation)))) cut-edges)
+         (when (and from to)
+           (let ((lower-from (time-lower (cadr from)))
+                 (upper-from (time-upper (cadr from)))
+                 (lower-to (time-lower (cadr to)))
+                 (upper-to (time-upper (cadr to))))
+             (cond ((and upper-to (> lower-from upper-to))
+                    (reject! 'order-violation))
+                   ((not (and upper-from (<= upper-from lower-to)))
+                    (open! 'unknown-parent-order edge))))))) cut-edges)
     ;; Parent closure and cycles are checked even outside the valid window.
     (for-each (lambda (e)
                 (when (memq (car e) (reachable (cadr e) cut-edges))
@@ -181,8 +236,7 @@
     (let* ((eligible (filter
                       (lambda (e)
                         (and (memq (car e) members) (<= (caddr e) as-of)
-                             (position? (cadr e))
-                             (<= start (cadr e)) (< (cadr e) end))) events))
+                             (eq? (temporal-window-verdict (cadr e) start end) 'true))) events))
            (ids (map car eligible))
            (edges (filter (lambda (e) (and (memq (car e) ids)
                                            (memq (cadr e) ids))) cut-edges))

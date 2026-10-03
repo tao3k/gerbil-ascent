@@ -1,0 +1,16 @@
+{
+  "schema": "ascent.temporal-interval-qualification.v1",
+  "base_head": "891cfb9454f726784209d6becd7805b98fbf2b97",
+  "native_clean_rebuild": true,
+  "cases": 10,
+  "finite_bound_window_model_checks": 300,
+  "ordered_graph_solves": 128,
+  "cut_knowledge_window_checks": 128,
+  "watchdog_seconds": 5,
+  "model_calls": 0,
+  "scope": "finite uncertainty about one valid-time point; no source authentication or general interval algebra",
+  "files": {
+    "qualification.log": "38b212b96550274cb494c6d5bc39366c81180a4aa83bf3122c001606d75f9830",
+    "clean-build.log": "d0ff95dff327b9ab6cc97f9cd21be09ed82a88a33d8062e6ccfc21a4bd089f2c"
+  }
+}

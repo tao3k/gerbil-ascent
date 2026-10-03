@@ -511,3 +511,12 @@ window changes. A POO extension cannot relabel an old receipt; solve/verify,
 fork and compare all retain actual native evidence checks. The ninth
 qualification case tests that binding explicitly. This is content integrity,
 not source-owner authority.
+
+* Next executed gate: bounded point uncertainty
+
+The native temporal lens now accepts closed uncertainty bounds and exposes a
+three-valued window judgment. The same integrated qualification keeps the
+existing graph/cut/knowledge/withdrawal/fork receipt gates and adds independent
+point enumeration plus uncertain parent-order and metadata-binding checks.
+POO owns the explicit identity/dual-axis exchange. MRR temporal source admission
+and source authentication remain open; no paid model call is added.

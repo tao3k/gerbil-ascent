@@ -285,7 +285,7 @@ Qualification: nine cases passed with =MODULE-OK=, =HARNESS-OK= and final
 remain five seconds. Rust Ascent has no oracle for the temporal lens; the
 independent finite models, not historical Rust parity, test this new contract.
 
-Remaining gates: interval endpoints and overlaps with uncertainty; general
+Remaining gates: event-duration endpoints and overlaps; general
 fragment/temporal-operator composition; explicit POO/MRR clock/cut/source
 admission bridge; configurable/expired budgets and Provider update failures;
 canonical labelled support projection beyond the retained native evidence;
@@ -311,3 +311,32 @@ committed qualification/scale and build-policy receipts reflect this hardened
 implementation; the earlier local samples remain in the task evidence folder
 as historical runs. Temporal scale includes the coordinate hash construction,
 while the plain baseline binds its projected rows without temporal metadata.
+
+* Bounded point uncertainty extension (2026-10-03)
+
+=temporal-interval= constructs a POO value with closed bounds for one unknown
+valid-time point, not a duration. Exact points remain accepted unchanged.
+The source captures a detached =(between lower upper)= datum; unknown lower
+means the nonnegative domain starts at zero, unknown upper means no finite
+upper bound. Reversed finite bounds fail construction.
+
+=temporal-window-verdict= returns =true= when every possible point lies inside
+the half-open window, =false= when none lies inside, =unknown= otherwise.
+Sources use this same judgment. Uncertain window membership or uncertain
+parent order opens the frontier; known reversed parent order rejects the cut.
+All cut parent edges are checked, including edges outside the window. No
+partial result produces a native receipt. Native content binding includes the
+original bounds, so equal graph rows cannot conceal coordinate relabeling.
+
+The integrated gate now has 10 cases. The interval case checks 300 finite
+bound/window combinations against independent discrete point enumeration,
+then checks unknown endpoints, reversed construction, complete recursive
+reachability, overlapping parent bounds, half-open crossing, late knowledge
+and equal-output coordinate changes. Earlier graph/cut/withdrawal/fork/tamper
+cases remain in the same gate.
+
+The POO consumer adds an explicit owner-supplied identity and dual-axis bridge.
+Source authentication and canonical MRR temporal admission remain separate
+requirements. This extension does not admit generic temporal operators or
+event-duration overlap algebra; independent uncertain endpoint bounds are a
+conservative model and cannot represent correlated clock constraints.

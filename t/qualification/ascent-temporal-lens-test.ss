@@ -6,7 +6,7 @@
         (only-in :std/error Error?)
         (only-in :std/test check-equal? check-exception test-suite test-case)
         (only-in :gerbil-ascent/temporal/lens
-                 temporal-lens temporal-source temporal-solve temporal-fork temporal-scope temporal-projection
+                 temporal-interval temporal-window-verdict temporal-lens temporal-source temporal-solve temporal-fork temporal-scope temporal-projection
                  temporal-status temporal-rows temporal-frontier temporal-verify
                  temporal-compare temporal-receipt temporal-evidence-verdicts)
         (only-in :gerbil-ascent/candidate/reasoning reasoning-receipt-status reasoning-receipt-rows))
@@ -49,6 +49,56 @@
 
 (def ascent-temporal-lens-test
   (test-suite "finite temporal lens integrated gate"
+    (test-case "interval uncertainty, independent point enumeration and receipt binding"
+      ;; Enumerate every possible point independently for each finite bound.
+      (for-each
+       (lambda (lower)
+         (for-each
+          (lambda (upper)
+            (for-each
+             (lambda (start)
+               (for-each
+                (lambda (end)
+                  (let* ((points (iota (+ 1 (- upper lower)) lower))
+                         (inside (filter (lambda (p) (and (<= start p) (< p end))) points))
+                         (expected (cond ((null? inside) 'false)
+                                         ((= (length inside) (length points)) 'true)
+                                         (else 'unknown))))
+                    (check-equal? (temporal-window-verdict
+                                   (temporal-interval lower upper) start end) expected)))
+                (iota (- 6 start) (+ start 1))))
+             (iota 5)))
+          (iota (- 5 lower) lower))
+         (displayln "TEMPORAL-INTERVAL " lower) (force-output))
+       (iota 5))
+      (check-equal? (temporal-window-verdict (temporal-interval 'unknown 2) 0 3) 'true)
+      (check-equal? (temporal-window-verdict (temporal-interval 5 'unknown) 0 5) 'false)
+      (check-equal? (temporal-window-verdict (temporal-interval 2 'unknown) 0 5) 'unknown)
+      (check-exception (temporal-interval 3 2) Error?)
+      (let* ((l (lens 0 9 '(a b c) 8 #t 0 8))
+             (s (source 0 '((a b) (b c))
+                        (list '(a 0 0) (list 'b (temporal-interval 1 2) 1)
+                              (list 'c (temporal-interval 3 4) 2))))
+             (answer (temporal-solve l s 'a)))
+        (check-complete answer '((a b) (a c)))
+        (check-equal? (temporal-evidence-verdicts answer) '(valid valid))
+        (check-equal? (temporal-verify l s 'a answer) 'valid)
+        ;; Equal graph/rows, changed interval coordinates still invalidate evidence.
+        (check-equal? (temporal-verify l
+                        (source 0 '((a b) (b c)) '((a 0 0) (b (between 1 1) 1) (c (between 3 4) 2)))
+                        'a answer) 'invalid)
+        (for-each
+         (lambda (es)
+           (let (open (temporal-solve l (source 0 '((a b) (b c)) es) 'a))
+             (check-equal? (temporal-status open) 'partial)
+             (check-equal? (temporal-rows open) [])
+             (check-equal? (temporal-receipt open) #f)))
+         '(((a 0 0) (b (between 1 3) 1) (c (between 2 4) 2))
+           ((a 0 0) (b (between 1 2) 1) (c (between 3 8) 2))
+           ((a 0 0) (b (between 1 2) 1) (c (between 3 4) 10))))
+        (check-equal? (temporal-status
+                       (temporal-solve l (source 0 '((a b) (b c))
+                         '((a 0 0) (b (between 5 6) 1) (c (between 3 4) 2))) 'a)) 'rejected)))
     (test-case "dual supports, last withdrawal and immutable generations"
       (let* ((l0 (lens 0)) (s0 (source 0 dual))
              (a0 (temporal-solve l0 s0 'a))

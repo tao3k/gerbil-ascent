@@ -540,3 +540,16 @@ set-emit-allocation:
 _set-emit-allocation:
     timeout 90s gxi {{ gerbil_test_runtime_options }} tools/build-set-emit-benchmark.ss
     GERBIL_LOADPATH="$ASCENT_SET_EMIT_LIB${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" timeout 150s gxi {{ gerbil_test_runtime_options }} t/performance/set-emit-allocation.ss
+
+set-source-allocation:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    mkdir -p .gerbil/set-source
+    export ASCENT_SET_SOURCE_LIB="{{ justfile_directory() }}/.gerbil/set-source/lib"
+    export ASCENT_SET_SOURCE_ALLOCATION_RECEIPT="${ASCENT_SET_SOURCE_ALLOCATION_RECEIPT:-{{ justfile_directory() }}/.gerbil/set-source/allocation.sexp}"
+    shasum -a 256 program/evaluate.ss program/admission.ss t/qualification/ascent-set-source-reference-evaluate.ss t/performance/set-source-allocation.ss tools/build-set-source-benchmark.ss > "$ASCENT_SET_SOURCE_ALLOCATION_RECEIPT.sources"
+    python3 tools/test_execution.py run -- just _set-source-allocation
+
+_set-source-allocation:
+    timeout 90s gxi {{ gerbil_test_runtime_options }} tools/build-set-source-benchmark.ss
+    GERBIL_LOADPATH="$ASCENT_SET_SOURCE_LIB${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" timeout 150s gxi {{ gerbil_test_runtime_options }} t/performance/set-source-allocation.ss

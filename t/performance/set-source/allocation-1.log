@@ -1,0 +1,114 @@
+[test-lane] START exclusive just
+timeout 90s gxi -:max-heap=1G,debug=q tools/build-set-source-benchmark.ss
+... compile program/admission
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/set-source/lib/gerbil-ascent/program/admission~0.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/set-source/lib/gerbil-ascent/program/admission.scm)
+... compile program/evaluate
+[test-lane] RUNNING exclusive (5s)
+[test-lane] RUNNING exclusive (10s)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/set-source/lib/gerbil-ascent/program/evaluate~0.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/set-source/lib/gerbil-ascent/program/evaluate.scm)
+GERBIL_LOADPATH="$ASCENT_SET_SOURCE_LIB${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" timeout 150s gxi -:max-heap=1G,debug=q t/performance/set-source-allocation.ss
+[test-lane] RUNNING exclusive (15s)
+CASE recursive-chain-16 samples=1000 repetitions=20
+PROGRESS recursive-chain-16 100/1000
+PROGRESS recursive-chain-16 200/1000
+PROGRESS recursive-chain-16 300/1000
+PROGRESS recursive-chain-16 400/1000
+PROGRESS recursive-chain-16 500/1000
+PROGRESS recursive-chain-16 600/1000
+PROGRESS recursive-chain-16 700/1000
+PROGRESS recursive-chain-16 800/1000
+PROGRESS recursive-chain-16 900/1000
+PROGRESS recursive-chain-16 1000/1000
+RESULT recursive-chain-16 old-p50-bytes=47984 new-p50-bytes=47168 paired-wins=938/1000
+CASE recursive-chain-256 samples=1000 repetitions=1
+PROGRESS recursive-chain-256 100/1000
+PROGRESS recursive-chain-256 200/1000
+PROGRESS recursive-chain-256 300/1000
+PROGRESS recursive-chain-256 400/1000
+PROGRESS recursive-chain-256 500/1000
+PROGRESS recursive-chain-256 600/1000
+PROGRESS recursive-chain-256 700/1000
+PROGRESS recursive-chain-256 800/1000
+PROGRESS recursive-chain-256 900/1000
+PROGRESS recursive-chain-256 1000/1000
+RESULT recursive-chain-256 old-p50-bytes=636464 new-p50-bytes=624128 paired-wins=995/1000
+CASE recursive-chain-1024 samples=1000 repetitions=1
+PROGRESS recursive-chain-1024 100/1000
+[test-lane] RUNNING exclusive (20s)
+PROGRESS recursive-chain-1024 200/1000
+PROGRESS recursive-chain-1024 300/1000
+PROGRESS recursive-chain-1024 400/1000
+PROGRESS recursive-chain-1024 500/1000
+PROGRESS recursive-chain-1024 600/1000
+PROGRESS recursive-chain-1024 700/1000
+PROGRESS recursive-chain-1024 800/1000
+PROGRESS recursive-chain-1024 900/1000
+PROGRESS recursive-chain-1024 1000/1000
+RESULT recursive-chain-1024 old-p50-bytes=2479952 new-p50-bytes=2430752 paired-wins=979/1000
+CASE sources-0-distinct-1 samples=1000 repetitions=20
+PROGRESS sources-0-distinct-1 100/1000
+PROGRESS sources-0-distinct-1 200/1000
+PROGRESS sources-0-distinct-1 300/1000
+PROGRESS sources-0-distinct-1 400/1000
+PROGRESS sources-0-distinct-1 500/1000
+PROGRESS sources-0-distinct-1 600/1000
+PROGRESS sources-0-distinct-1 700/1000
+PROGRESS sources-0-distinct-1 800/1000
+PROGRESS sources-0-distinct-1 900/1000
+PROGRESS sources-0-distinct-1 1000/1000
+RESULT sources-0-distinct-1 old-p50-bytes=11296 new-p50-bytes=11296 paired-wins=51/1000
+CASE sources-1-distinct-1 samples=1000 repetitions=20
+[test-lane] RUNNING exclusive (25s)
+PROGRESS sources-1-distinct-1 100/1000
+PROGRESS sources-1-distinct-1 200/1000
+PROGRESS sources-1-distinct-1 300/1000
+PROGRESS sources-1-distinct-1 400/1000
+PROGRESS sources-1-distinct-1 500/1000
+PROGRESS sources-1-distinct-1 600/1000
+PROGRESS sources-1-distinct-1 700/1000
+PROGRESS sources-1-distinct-1 800/1000
+PROGRESS sources-1-distinct-1 900/1000
+PROGRESS sources-1-distinct-1 1000/1000
+RESULT sources-1-distinct-1 old-p50-bytes=11440 new-p50-bytes=11392 paired-wins=938/1000
+CASE sources-2-distinct-1 samples=1000 repetitions=20
+PROGRESS sources-2-distinct-1 100/1000
+PROGRESS sources-2-distinct-1 200/1000
+PROGRESS sources-2-distinct-1 300/1000
+PROGRESS sources-2-distinct-1 400/1000
+PROGRESS sources-2-distinct-1 500/1000
+PROGRESS sources-2-distinct-1 600/1000
+PROGRESS sources-2-distinct-1 700/1000
+PROGRESS sources-2-distinct-1 800/1000
+PROGRESS sources-2-distinct-1 900/1000
+PROGRESS sources-2-distinct-1 1000/1000
+RESULT sources-2-distinct-1 old-p50-bytes=11584 new-p50-bytes=11488 paired-wins=943/1000
+CASE sources-10000-distinct-10000 samples=1000 repetitions=1
+PROGRESS sources-10000-distinct-10000 100/1000
+PROGRESS sources-10000-distinct-10000 200/1000
+PROGRESS sources-10000-distinct-10000 300/1000
+PROGRESS sources-10000-distinct-10000 400/1000
+PROGRESS sources-10000-distinct-10000 500/1000
+PROGRESS sources-10000-distinct-10000 600/1000
+PROGRESS sources-10000-distinct-10000 700/1000
+[test-lane] RUNNING exclusive (30s)
+PROGRESS sources-10000-distinct-10000 800/1000
+PROGRESS sources-10000-distinct-10000 900/1000
+PROGRESS sources-10000-distinct-10000 1000/1000
+RESULT sources-10000-distinct-10000 old-p50-bytes=2503424 new-p50-bytes=2023424 paired-wins=986/1000
+CASE sources-10000-distinct-16 samples=1000 repetitions=1
+PROGRESS sources-10000-distinct-16 100/1000
+PROGRESS sources-10000-distinct-16 200/1000
+PROGRESS sources-10000-distinct-16 300/1000
+PROGRESS sources-10000-distinct-16 400/1000
+PROGRESS sources-10000-distinct-16 500/1000
+PROGRESS sources-10000-distinct-16 600/1000
+PROGRESS sources-10000-distinct-16 700/1000
+PROGRESS sources-10000-distinct-16 800/1000
+[test-lane] RUNNING exclusive (35s)
+PROGRESS sources-10000-distinct-16 900/1000
+PROGRESS sources-10000-distinct-16 1000/1000
+RESULT sources-10000-distinct-16 old-p50-bytes=1454400 new-p50-bytes=974400 paired-wins=982/1000
+OK
+[test-lane] END exclusive exit=0

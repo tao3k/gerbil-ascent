@@ -1,0 +1,5 @@
+29abc722ea4b77d3749030d7e2cb4e8b0430e4b678083ea0aa7b746775c287df  program/evaluate.ss
+5b1e36800e4c27d60b6e3a26908c59743ed1885ad80178ff8138de44c8fd56c9  program/admission.ss
+33050ef0d352cef5ea78fc28cd4eeceecc338a128e10e85006cef36c015ea136  t/qualification/ascent-set-source-reference-evaluate.ss
+a5f23651a550c69c1331f425edb993bb3e7cef110506ff00bd2bd8ac1b20eca2  t/performance/set-source-allocation.ss
+f03bc304e9364cf937c16fcf79d7ce26c42d2412a3cb7981f3773c31f8c417fc  tools/build-set-source-benchmark.ss

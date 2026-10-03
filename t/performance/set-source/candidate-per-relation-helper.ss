@@ -7,7 +7,6 @@
 (import (only-in :clan/poo/object .o .ref object?)
         (only-in :clan/poo/mop validate)
         (only-in :std/iter for iter Iterator &Iterator-next!)
-        (only-in "admission.ss" gerbil-ascent-initialize-source-row!)
         (only-in "planning.ss" gerbil-ascent-prepare-rule)
         (only-in "types.ss" GerbilAscentSessionContract)
         (only-in "analysis.ss" gerbil-ascent-program-analysis
@@ -204,6 +203,16 @@
               (vector-set! storage-states index
                 (gerbil-ascent-storage-make-state
                  (vector-ref storage-providers index))))
+            (def (admit-source! stored)
+              (unless (and (list? stored) (= (length stored) width))
+                (error "invalid ASCENT storage provider row" stored))
+              (let (check (vector-ref field-checkers index))
+                (when check (check stored)))
+              (hash-put! present stored #t)
+              (set! source-materialized-count (+ source-materialized-count 1))
+              (when (> source-materialized-count output-limit)
+                (error "ASCENT source fact budget exceeded"))
+              (vector-set! all index (cons stored (vector-ref all index))))
             (for-each
              (lambda (row)
                (unless (and (list? row) (= (length row) width))
@@ -231,28 +240,19 @@
                      (set! source-materialized-count
                        (+ source-materialized-count 1)))
                    (set! lattice-events (cons key lattice-events)))
-                 ;; Initial duplicates remain rows; the exact built-in Set
-                 ;; extension only wraps this row in a temporary list.
+                 ;; Preserve initial duplicates; only the exact built-in Set
+                 ;; extension can bypass its single-row temporary list.
                  (if (eq? (vector-ref storage-providers index)
                           gerbil-ascent-set-storage-provider)
-                   (set! source-materialized-count
-                     (gerbil-ascent-initialize-source-row! row width
-                       (vector-ref field-checkers index) present all index
-                       source-materialized-count output-limit))
-                   (let (materialized
-                         ((vector-ref storage-extensions index)
-                          (vector-ref storage-states index)
-                          (vector-ref all index) [] row
-                          (- output-limit source-materialized-count)))
-                     (unless (list? materialized)
-                       (error "ASCENT storage provider returned non-list rows"))
-                     (for-each
-                      (lambda (stored)
-                        (set! source-materialized-count
-                          (gerbil-ascent-initialize-source-row! stored width
-                            (vector-ref field-checkers index) present all index
-                            source-materialized-count output-limit)))
-                      materialized)))))
+                   (admit-source! row)
+                 (let (materialized
+                       ((vector-ref storage-extensions index)
+                        (vector-ref storage-states index)
+                        (vector-ref all index) [] row
+                        (- output-limit source-materialized-count)))
+                   (unless (list? materialized)
+                     (error "ASCENT storage provider returned non-list rows"))
+                   (for-each admit-source! materialized)))))
              rows)
             (when (eq? kind 'lattice)
               (let ((keyed (vector-ref lattice-rows index))

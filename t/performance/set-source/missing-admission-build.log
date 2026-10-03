@@ -1,0 +1,19 @@
+[test-lane] START exclusive just
+timeout 90s gxi -:max-heap=1G,debug=q tools/build-set-source-benchmark.ss
+... compile program/evaluate
+[test-lane] RUNNING exclusive (5s)
+[test-lane] RUNNING exclusive (10s)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/set-source/lib/gerbil-ascent/program/evaluate~0.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/set-source/lib/gerbil-ascent/program/evaluate.scm)
+GERBIL_LOADPATH="$ASCENT_SET_SOURCE_LIB${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" timeout 150s gxi -:max-heap=1G,debug=q t/performance/set-source-allocation.ss
+[test-lane] RUNNING exclusive (15s)
+*** ERROR IN gx#core-import-module__% -- 
+*** ERROR IN ".gerbil/set-source/lib/gerbil-ascent/program/evaluate.ssi"@19.13-19.45
+--- Syntax Error: cannot find library module
+--- Context: 
+ at expand
+ at gerbil-ascent/program/evaluate
+... form:   :gerbil-ascent/program/admission
+error: recipe `_set-source-allocation` failed on line 555 with exit code 70
+[test-lane] END exclusive exit=70
+error: recipe `set-source-allocation` failed with exit code 70

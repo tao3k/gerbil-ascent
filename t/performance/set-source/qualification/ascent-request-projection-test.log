@@ -1,0 +1,15 @@
+[ascent-test] START t/qualification/ascent-request-projection-test.ss
+[test-lane] START parallel-semantics t/qualification/ascent-request-projection-test.ss
+HARNESS ("t/qualification/ascent-request-projection-test.ss")
+MODULE t/qualification/ascent-request-projection-test.ss
+SUITE ASCENT inert request projection
+CASE projects an opaque source identity without a receipt schema
+CASE-OK projects an opaque source identity without a receipt schema
+CASE rejects a zero evaluation bound
+CASE-OK rejects a zero evaluation bound
+SUITE-OK ASCENT inert request projection
+MODULE-OK t/qualification/ascent-request-projection-test.ss
+HARNESS-OK ("t/qualification/ascent-request-projection-test.ss")
+OK
+[test-lane] END parallel-semantics exit=0
+[ascent-test] PASS t/qualification/ascent-request-projection-test.ss (3s)

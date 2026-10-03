@@ -7,12 +7,11 @@
 (import (only-in :clan/poo/object .o .ref object?)
         (only-in :clan/poo/mop validate)
         (only-in :std/iter for iter Iterator &Iterator-next!)
-        (only-in "admission.ss" gerbil-ascent-initialize-source-row!)
-        (only-in "planning.ss" gerbil-ascent-prepare-rule)
-        (only-in "types.ss" GerbilAscentSessionContract)
-        (only-in "analysis.ss" gerbil-ascent-program-analysis
+        (only-in :gerbil-ascent/program/planning gerbil-ascent-prepare-rule)
+        (only-in :gerbil-ascent/program/types GerbilAscentSessionContract)
+        (only-in :gerbil-ascent/program/analysis gerbil-ascent-program-analysis
                  gerbil-ascent-program-schema)
-        (only-in "funs.ss" gerbil-ascent-rule-strata
+        (only-in :gerbil-ascent/program/funs gerbil-ascent-rule-strata
                  gerbil-ascent-lattice-feeds-relation?
                  gerbil-ascent-delta-positions
                  gerbil-ascent-lattice-key
@@ -32,13 +31,13 @@
                  gerbil-ascent-set-storage-provider)
         (only-in :clan/poo/support/base until))
 
-(export gerbil-ascent-evaluate-program gerbil-ascent-make-engine)
+(export ascent-set-source-reference-evaluate-program ascent-set-source-reference-make-engine)
 
 (def Session. (.ref GerbilAscentSessionContract 'proto))
 
 ;;; One engine owns all mutable row buffers and indexes. Reused immutable
 ;;; analysis/schema values never share evaluation-local relation state.
-;; gerbil-ascent-make-engine
+;; ascent-set-source-reference-make-engine
 ;;   : (-> Program Boolean (Maybe Analysis) (Maybe Schema) Boolean Engine)
 ;;   | doc m%
 ;;       Construct a stratified evaluator for a program and an optional
@@ -47,11 +46,11 @@
 ;;       # Examples
 ;;
 ;;       ```scheme
-;;       (gerbil-ascent-make-engine program #f)
+;;       (ascent-set-source-reference-make-engine program #f)
 ;;       ;; => an engine with one fresh evaluation state
 ;;       ```
 ;;     %
-(def (gerbil-ascent-make-engine program session? (analysis-override #f)
+(def (ascent-set-source-reference-make-engine program session? (analysis-override #f)
                                 (schema-override #f)
                                 (measure-rule-times? #f)
                                 (plan-error #f))
@@ -231,28 +230,27 @@
                      (set! source-materialized-count
                        (+ source-materialized-count 1)))
                    (set! lattice-events (cons key lattice-events)))
-                 ;; Initial duplicates remain rows; the exact built-in Set
-                 ;; extension only wraps this row in a temporary list.
-                 (if (eq? (vector-ref storage-providers index)
-                          gerbil-ascent-set-storage-provider)
-                   (set! source-materialized-count
-                     (gerbil-ascent-initialize-source-row! row width
-                       (vector-ref field-checkers index) present all index
-                       source-materialized-count output-limit))
-                   (let (materialized
-                         ((vector-ref storage-extensions index)
-                          (vector-ref storage-states index)
-                          (vector-ref all index) [] row
-                          (- output-limit source-materialized-count)))
-                     (unless (list? materialized)
-                       (error "ASCENT storage provider returned non-list rows"))
-                     (for-each
-                      (lambda (stored)
-                        (set! source-materialized-count
-                          (gerbil-ascent-initialize-source-row! stored width
-                            (vector-ref field-checkers index) present all index
-                            source-materialized-count output-limit)))
-                      materialized)))))
+                 (let (materialized
+                       ((vector-ref storage-extensions index)
+                        (vector-ref storage-states index)
+                        (vector-ref all index) [] row
+                        (- output-limit source-materialized-count)))
+                   (unless (list? materialized)
+                     (error "ASCENT storage provider returned non-list rows"))
+                   (for-each
+                    (lambda (stored)
+                      (unless (and (list? stored) (= (length stored) width))
+                        (error "invalid ASCENT storage provider row" stored))
+                      (let (check (vector-ref field-checkers index))
+                        (when check (check stored)))
+                      (hash-put! present stored #t)
+                      (set! source-materialized-count
+                        (+ source-materialized-count 1))
+                      (when (> source-materialized-count output-limit)
+                        (error "ASCENT source fact budget exceeded"))
+                      (vector-set! all index
+                        (cons stored (vector-ref all index))))
+                    materialized))))
              rows)
             (when (eq? kind 'lattice)
               (let ((keyed (vector-ref lattice-rows index))
@@ -440,7 +438,7 @@
               (let* ((replacement
                       (append (source-rows-at index) (list row)))
                      (candidate (source-program-with index replacement))
-                     (result ((gerbil-ascent-make-engine
+                     (result ((ascent-set-source-reference-make-engine
                                candidate #f analysis schema
                                measure-rule-times?))))
                 (set! source-count (+ source-count 1))
@@ -548,7 +546,7 @@
               (when (> next-count input-limit)
                 (error "ASCENT session input fact budget exceeded"))
               (let* ((candidate (source-program-with index rows))
-                     (result ((gerbil-ascent-make-engine
+                     (result ((ascent-set-source-reference-make-engine
                                candidate #f analysis schema
                                measure-rule-times?))))
                 (set! source-count next-count)
@@ -989,8 +987,8 @@
           run!)))))
 
 ;; : (-> Program EvaluationResult)
-(def (gerbil-ascent-evaluate-program program
+(def (ascent-set-source-reference-evaluate-program program
                                       measure-rule-times?: (measure-rule-times? #f))
   (unless (boolean? measure-rule-times?)
     (error "invalid ASCENT rule timing option" measure-rule-times?))
-  ((gerbil-ascent-make-engine program #f #f #f measure-rule-times?)))
+  ((ascent-set-source-reference-make-engine program #f #f #f measure-rule-times?)))

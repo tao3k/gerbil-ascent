@@ -1,0 +1,27 @@
+[ascent-test] START t/qualification/ascent-set-source-test.ss
+[test-lane] START exclusive t/qualification/ascent-set-source-test.ss
+HARNESS ("t/qualification/ascent-set-source-test.ss")
+MODULE t/qualification/ascent-set-source-test.ss
+ERROR MODULE t/qualification/ascent-set-source-test.ss
+
+*** ERROR IN "t/qualification/ascent-set-source-test.ss"@50.12-50.22
+--- Syntax Error: Reference to unbound identifier
+--- Context: 
+ at expand
+ at gerbil-ascent/t/qualification/ascent-set-source-test
+... form:   ... detail: append-map at "t/qualification/ascent-set-source-test.ss"@50.12-50.22
+(%#ref append-map)
+HARNESS-OK ("t/qualification/ascent-set-source-test.ss")
+ERROR HARNESS (t/qualification/ascent-set-source-test.ss)
+at HARNESS ("t/qualification/ascent-set-source-test.ss")
+at MODULE t/qualification/ascent-set-source-test.ss
+
+*** ERROR IN "t/qualification/ascent-set-source-test.ss"@50.12-50.22
+--- Syntax Error: Reference to unbound identifier
+--- Context: 
+ at expand
+ at gerbil-ascent/t/qualification/ascent-set-source-test
+... form:   ... detail: append-map at "t/qualification/ascent-set-source-test.ss"@50.12-50.22
+(%#ref append-map)
+[test-lane] END exclusive exit=0
+error: recipe `test-file` failed with exit code 1

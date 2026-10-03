@@ -1,0 +1,76 @@
+[ascent-test] START t/qualification/scheme-relational-test.ss
+[test-lane] START exclusive t/qualification/scheme-relational-test.ss
+HARNESS ("t/qualification/scheme-relational-test.ss")
+MODULE t/qualification/scheme-relational-test.ss
+SUITE Scheme relational finite positive gate
+CASE two fragment instances retain private identities
+CASE-OK two fragment instances retain private identities
+CASE assembled program rejects duplicate instance
+CASE-OK assembled program rejects duplicate instance
+CASE fragment export names are unique and instance scoped
+CASE-OK fragment export names are unique and instance scoped
+CASE fragment constructor freezes supplied export list
+CASE-OK fragment constructor freezes supplied export list
+CASE source handles must name local declarations
+CASE-OK source handles must name local declarations
+CASE admission and query isolate source and result rows
+CASE-OK admission and query isolate source and result rows
+CASE admission copies rows from a mutable Core declaration
+CASE-OK admission copies rows from a mutable Core declaration
+CASE session replaces exported sources with snapshots
+CASE-OK session replaces exported sources with snapshots
+CASE session append isolates caller row and rejects non-scalars
+CASE-OK session append isolates caller row and rejects non-scalars
+CASE session restores last completed solve on budget failure
+CASE-OK session restores last completed solve on budget failure
+CASE named program session replaces declared input
+CASE-OK named program session replaces declared input
+CASE named transaction updates recursion and negation
+CASE-OK named transaction updates recursion and negation
+CASE named program evaluates a source expression once
+CASE-OK named program evaluates a source expression once
+CASE admission rejects opaque host callbacks
+CASE-OK admission rejects opaque host callbacks
+CASE admission rebuilds a claimed checked operator
+CASE-OK admission rebuilds a claimed checked operator
+CASE whole-program admission rejects an absent import
+CASE-OK whole-program admission rejects an absent import
+CASE solve fails when closure exceeds its fact budget
+CASE-OK solve fails when closure exceeds its fact budget
+CASE checked where and compute match finite Scheme model
+CASE-OK checked where and compute match finite Scheme model
+CASE literal scalar clauses bind at native construction
+CASE-OK literal scalar clauses bind at native construction
+CASE constant guard and captured symbol stay stable
+CASE-OK constant guard and captured symbol stay stable
+CASE checked operator modes reject invalid uses
+CASE-OK checked operator modes reject invalid uses
+CASE recursive compute budget fails without a result
+CASE-OK recursive compute budget fails without a result
+CASE recursive closure equals independent graph model
+CASE-OK recursive closure equals independent graph model
+CASE all 64 simple directed graphs on three nodes
+NATIVE-CLOSURE-PROGRESS 8
+NATIVE-CLOSURE-PROGRESS 16
+NATIVE-CLOSURE-PROGRESS 24
+[test-lane] RUNNING exclusive (5s)
+NATIVE-CLOSURE-PROGRESS 32
+NATIVE-CLOSURE-PROGRESS 40
+NATIVE-CLOSURE-PROGRESS 48
+NATIVE-CLOSURE-PROGRESS 56
+NATIVE-CLOSURE-PROGRESS 64
+CASE-OK all 64 simple directed graphs on three nodes
+CASE new source snapshot does not mutate old result
+CASE-OK new source snapshot does not mutate old result
+CASE repeated variables and scalar literals
+CASE-OK repeated variables and scalar literals
+CASE source replacement retains scalar contract
+CASE-OK source replacement retains scalar contract
+CASE unsafe head, invalid source and budget fail
+CASE-OK unsafe head, invalid source and budget fail
+SUITE-OK Scheme relational finite positive gate
+MODULE-OK t/qualification/scheme-relational-test.ss
+HARNESS-OK ("t/qualification/scheme-relational-test.ss")
+OK
+[test-lane] END exclusive exit=0
+[ascent-test] PASS t/qualification/scheme-relational-test.ss (9s)

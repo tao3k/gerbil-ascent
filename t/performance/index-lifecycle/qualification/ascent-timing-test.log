@@ -1,0 +1,13 @@
+[ascent-test] START t/qualification/ascent-timing-test.ss
+[test-lane] START exclusive t/qualification/ascent-timing-test.ss
+HARNESS ("t/qualification/ascent-timing-test.ss")
+MODULE t/qualification/ascent-timing-test.ss
+SUITE ASCENT per-rule timing option
+CASE timed result and retained snapshots
+CASE-OK timed result and retained snapshots
+SUITE-OK ASCENT per-rule timing option
+MODULE-OK t/qualification/ascent-timing-test.ss
+HARNESS-OK ("t/qualification/ascent-timing-test.ss")
+OK
+[test-lane] END exclusive exit=0
+[ascent-test] PASS t/qualification/ascent-timing-test.ss (4s)

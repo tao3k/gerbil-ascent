@@ -1,0 +1,95 @@
+python3 tools/test_execution.py run -- just _check-policy
+[test-lane] START exclusive just
+ASP_GERBIL_SCHEME_POLICY=1 GERBIL_BUILD_CORES="${GERBIL_BUILD_CORES:-$(getconf NPROCESSORS_ONLN)}" gerbil build
+[asp-gerbil-scheme-policy] START selected modules=40
+[test-lane] RUNNING exclusive (5s)
+[asp-gerbil-scheme-policy] COMPLETE findings=0 errors=0
+[test-lane] RUNNING exclusive (10s)
+... compile table/funs
+... execute compile job (compile-file /private/tmp/ascent-test-scheduling-gerbil/lib/gerbil-ascent/table/funs~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-test-scheduling-gerbil/lib/gerbil-ascent/table/funs.scm)
+... compile table/provider
+... execute compile job (compile-file /private/tmp/ascent-test-scheduling-gerbil/lib/gerbil-ascent/table/provider~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-test-scheduling-gerbil/lib/gerbil-ascent/table/provider.scm)
+... compile table/access
+... compile table/interface
+... compile program/types
+... execute compile job (compile-file /private/tmp/ascent-test-scheduling-gerbil/lib/gerbil-ascent/table/access~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-test-scheduling-gerbil/lib/gerbil-ascent/table/access.scm)
+... execute compile job (compile-file /private/tmp/ascent-test-scheduling-gerbil/lib/gerbil-ascent/table/interface.scm)
+... execute compile job (compile-file /private/tmp/ascent-test-scheduling-gerbil/lib/gerbil-ascent/program/types~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-test-scheduling-gerbil/lib/gerbil-ascent/program/types.scm)
+... compile program/objects
+... execute compile job (compile-file /private/tmp/ascent-test-scheduling-gerbil/lib/gerbil-ascent/program/objects~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-test-scheduling-gerbil/lib/gerbil-ascent/program/objects.scm)
+... compile program/planning
+... compile program/scheme-checked
+... compile program/syntax
+[test-lane] RUNNING exclusive (15s)
+... execute compile job (compile-file /private/tmp/ascent-test-scheduling-gerbil/lib/gerbil-ascent/program/planning~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-test-scheduling-gerbil/lib/gerbil-ascent/program/planning.scm)
+... compile program/evaluate
+... execute compile job (compile-file /private/tmp/ascent-test-scheduling-gerbil/lib/gerbil-ascent/program/scheme-checked~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-test-scheduling-gerbil/lib/gerbil-ascent/program/scheme-checked.scm)
+... execute compile job (compile-file /private/tmp/ascent-test-scheduling-gerbil/lib/gerbil-ascent/program/syntax.scm)
+... compile program/operator
+... compile candidate/program
+... execute compile job (compile-file /private/tmp/ascent-test-scheduling-gerbil/lib/gerbil-ascent/program/syntax~1.scm)
+... execute compile job (compile-file /private/tmp/ascent-test-scheduling-gerbil/lib/gerbil-ascent/program/evaluate~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-test-scheduling-gerbil/lib/gerbil-ascent/program/evaluate.scm)
+... execute compile job (compile-file /private/tmp/ascent-test-scheduling-gerbil/lib/gerbil-ascent/program/operator~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-test-scheduling-gerbil/lib/gerbil-ascent/program/operator.scm)
+... execute compile job (compile-file /private/tmp/ascent-test-scheduling-gerbil/lib/gerbil-ascent/candidate/program~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-test-scheduling-gerbil/lib/gerbil-ascent/candidate/program.scm)
+... compile program/session
+... compile candidate/funs
+... execute compile job (compile-file /private/tmp/ascent-test-scheduling-gerbil/lib/gerbil-ascent/program/operator~1.scm)
+... compile program/operator-change
+... execute compile job (compile-file /private/tmp/ascent-test-scheduling-gerbil/lib/gerbil-ascent/program/session~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-test-scheduling-gerbil/lib/gerbil-ascent/program/session.scm)
+... compile program/scheme-admission
+... execute compile job (compile-file /private/tmp/ascent-test-scheduling-gerbil/lib/gerbil-ascent/candidate/funs~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-test-scheduling-gerbil/lib/gerbil-ascent/candidate/funs.scm)
+... execute compile job (compile-file /private/tmp/ascent-test-scheduling-gerbil/lib/gerbil-ascent/program/operator-change~0.scm)
+... compile candidate/provenance
+... compile candidate/finite-evidence
+... execute compile job (compile-file /private/tmp/ascent-test-scheduling-gerbil/lib/gerbil-ascent/program/operator-change.scm)
+... execute compile job (compile-file /private/tmp/ascent-test-scheduling-gerbil/lib/gerbil-ascent/program/scheme-admission~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-test-scheduling-gerbil/lib/gerbil-ascent/program/scheme-admission.scm)
+... compile program/scheme-language
+... compile program/operator-session
+... compile candidate/stratified-proof
+... compile candidate/nonmembership
+[test-lane] RUNNING exclusive (20s)
+... execute compile job (compile-file /private/tmp/ascent-test-scheduling-gerbil/lib/gerbil-ascent/program/scheme-admission~1.scm)
+... execute compile job (compile-file /private/tmp/ascent-test-scheduling-gerbil/lib/gerbil-ascent/candidate/provenance~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-test-scheduling-gerbil/lib/gerbil-ascent/candidate/provenance.scm)
+... execute compile job (compile-file /private/tmp/ascent-test-scheduling-gerbil/lib/gerbil-ascent/candidate/finite-evidence~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-test-scheduling-gerbil/lib/gerbil-ascent/candidate/finite-evidence.scm)
+... execute compile job (compile-file /private/tmp/ascent-test-scheduling-gerbil/lib/gerbil-ascent/candidate/finite-evidence~1.scm)
+... execute compile job (compile-file /private/tmp/ascent-test-scheduling-gerbil/lib/gerbil-ascent/candidate/provenance~1.scm)
+... execute compile job (compile-file /private/tmp/ascent-test-scheduling-gerbil/lib/gerbil-ascent/program/scheme-language.scm)
+... execute compile job (compile-file /private/tmp/ascent-test-scheduling-gerbil/lib/gerbil-ascent/program/operator-session~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-test-scheduling-gerbil/lib/gerbil-ascent/program/operator-session.scm)
+... execute compile job (compile-file /private/tmp/ascent-test-scheduling-gerbil/lib/gerbil-ascent/candidate/stratified-proof~0.scm)
+... compile program/interface
+... compile candidate/stratified-producer
+... execute compile job (compile-file /private/tmp/ascent-test-scheduling-gerbil/lib/gerbil-ascent/candidate/stratified-proof.scm)
+... compile candidate/reasoning
+[test-lane] RUNNING exclusive (25s)
+[test-lane] RUNNING exclusive (30s)
+... execute compile job (compile-file /private/tmp/ascent-test-scheduling-gerbil/lib/gerbil-ascent/candidate/nonmembership~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-test-scheduling-gerbil/lib/gerbil-ascent/candidate/nonmembership.scm)
+... execute compile job (compile-file /private/tmp/ascent-test-scheduling-gerbil/lib/gerbil-ascent/program/operator-session~1.scm)
+... execute compile job (compile-file /private/tmp/ascent-test-scheduling-gerbil/lib/gerbil-ascent/program/scheme-language~1.scm)
+... execute compile job (compile-file /private/tmp/ascent-test-scheduling-gerbil/lib/gerbil-ascent/candidate/nonmembership~1.scm)
+... execute compile job (compile-file /private/tmp/ascent-test-scheduling-gerbil/lib/gerbil-ascent/program/interface.scm)
+... execute compile job (compile-file /private/tmp/ascent-test-scheduling-gerbil/lib/gerbil-ascent/candidate/stratified-producer~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-test-scheduling-gerbil/lib/gerbil-ascent/candidate/stratified-producer.scm)
+... execute compile job (compile-file /private/tmp/ascent-test-scheduling-gerbil/lib/gerbil-ascent/candidate/reasoning~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-test-scheduling-gerbil/lib/gerbil-ascent/candidate/reasoning.scm)
+... execute compile job (compile-file /private/tmp/ascent-test-scheduling-gerbil/lib/gerbil-ascent/candidate/reasoning~1.scm)
+[test-lane] RUNNING exclusive (35s)
+... build in current directory
+*** WARNING module std/net/request is DEPRECATED and will be removed in the future
+[test-lane] END exclusive exit=0

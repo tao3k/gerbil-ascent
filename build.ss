@@ -13,6 +13,7 @@
     "table/eqrel"
     "table/trrel"
     "table/provider"
+    "table/access"
     "table/storage"
     "table/interface"
     "program/types"

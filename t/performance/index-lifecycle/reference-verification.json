@@ -1,0 +1,20 @@
+{
+  "commit": "a7df78717bec49424a7d2673b6565e5a88b01c38",
+  "verified": true,
+  "source_hashes": {
+    "table/funs.ss": "5a7bc246087de98fcb5fe6df5252ea4e9905687df0e0098f9683d7f4983f2ff4",
+    "table/provider.ss": "f4447ac97f7b2d07070c2342c459c0980db366c2ec04a41b326b59eee1dd8b06",
+    "program/evaluate.ss": "17f525ce351d1b7d55d77cec051f036a89d353e2554694948304e653259e0ff0"
+  },
+  "reference_hashes": {
+    "ascent-index-reference-funs.ss": "5a7bc246087de98fcb5fe6df5252ea4e9905687df0e0098f9683d7f4983f2ff4",
+    "ascent-index-reference-evaluate.ss": "be1865049cd31c92029708d13c261dd7fa99a27178301c736dca5b8ab3926857",
+    "ascent-index-reference-provider.ss": "6edd8efb540b0beddf97ec89473f779ffee8c2fe302020c918c4b22321f89b06"
+  },
+  "adaptations": [
+    "evaluator relative imports relocated and two exports alpha renamed",
+    "canonical default build/extend redirected to frozen provider through original generic dispatch",
+    "provider default export alpha renamed and algorithm import relocated"
+  ],
+  "boundary": "Physical built-in algorithms are frozen; common analysis and positive execution remain unchanged. Custom receivers delegate to their original slots."
+}

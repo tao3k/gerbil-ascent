@@ -265,6 +265,13 @@ The subsequent [execution workspace qualification](t/performance/execution-works
 compares the complete recursive and retained execution paths with the preceding
 commit, including latency limits and original SS gate results.
 
+The built-in hash index now uses one physical access boundary for construction,
+incremental extension and lookup. Ordered keys traverse each row once, and
+bucket updates avoid temporary closures. Custom providers retain dispatch,
+validation and callback order. Full-solve allocation measurements, timing limits
+and native qualification are recorded in the
+[index lifecycle report](t/performance/index-lifecycle/README.org).
+
 ## Bounded relation execution
 
 Composition, delta steps, closure and shortest distances share a prepared

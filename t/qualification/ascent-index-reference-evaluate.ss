@@ -7,15 +7,15 @@
 (import (only-in :clan/poo/object .o .ref object?)
         (only-in :clan/poo/mop validate)
         (only-in :std/iter for iter Iterator &Iterator-next!)
-        (only-in "admission.ss" gerbil-ascent-initialize-source-row!)
-        (only-in "planning.ss" gerbil-ascent-prepare-rule)
-        (only-in "positive.ss" gerbil-ascent-positive-plan
+        (only-in :gerbil-ascent/program/admission gerbil-ascent-initialize-source-row!)
+        (only-in :gerbil-ascent/program/planning gerbil-ascent-prepare-rule)
+        (only-in :gerbil-ascent/program/positive gerbil-ascent-positive-plan
                  gerbil-ascent-run-positive-plan! gerbil-ascent-index-key
                  gerbil-ascent-emit-heads!)
-        (only-in "types.ss" GerbilAscentSessionContract)
-        (only-in "analysis.ss" gerbil-ascent-program-analysis
+        (only-in :gerbil-ascent/program/types GerbilAscentSessionContract)
+        (only-in :gerbil-ascent/program/analysis gerbil-ascent-program-analysis
                  gerbil-ascent-program-schema)
-        (only-in "funs.ss" gerbil-ascent-rule-strata
+        (only-in :gerbil-ascent/program/funs gerbil-ascent-rule-strata
                  gerbil-ascent-lattice-feeds-relation?
                  gerbil-ascent-delta-positions
                  gerbil-ascent-lattice-key
@@ -23,22 +23,36 @@
                  gerbil-ascent-joined-row
                  gerbil-ascent-expression-value
                  gerbil-ascent-bind-row)
-        (only-in :gerbil-ascent/table/access gerbil-ascent-physical-index-build
-                 gerbil-ascent-physical-index-extend! gerbil-ascent-physical-index-rows)
-        (only-in :gerbil-ascent/table/provider gerbil-ascent-hash-index-provider)
+        (only-in :gerbil-ascent/table/provider
+                 gerbil-ascent-hash-index-provider
+                 gerbil-ascent-index-provider-build
+                 gerbil-ascent-index-provider-extend!
+                 gerbil-ascent-index-provider-lookup)
         (only-in :gerbil-ascent/table/storage
                  gerbil-ascent-storage-make-state
                  gerbil-ascent-set-batch-admit!
                  gerbil-ascent-set-storage-provider)
         (only-in :clan/poo/support/base until))
 
-(export gerbil-ascent-evaluate-program gerbil-ascent-make-engine)
+(import (only-in :gerbil-ascent/t/qualification/ascent-index-reference-provider
+                 ascent-index-reference-hash-index-provider))
+;;; Preserve canonical identity in engine policy; redirect only default physical
+;;; algorithms to the frozen provider, retaining its original generic dispatch.
+(def (reference-provider-build provider rows columns)
+  (gerbil-ascent-index-provider-build
+   (if (eq? provider gerbil-ascent-hash-index-provider)
+     ascent-index-reference-hash-index-provider provider) rows columns))
+(def (reference-provider-extend! provider index rows columns)
+  (gerbil-ascent-index-provider-extend!
+   (if (eq? provider gerbil-ascent-hash-index-provider)
+     ascent-index-reference-hash-index-provider provider) index rows columns))
+(export ascent-index-reference-evaluate-program ascent-index-reference-make-engine)
 
 (def Session. (.ref GerbilAscentSessionContract 'proto))
 
 ;;; One engine owns all mutable row buffers and indexes. Reused immutable
 ;;; analysis/schema values never share evaluation-local relation state.
-;; gerbil-ascent-make-engine
+;; ascent-index-reference-make-engine
 ;;   : (-> Program Boolean (Maybe Analysis) (Maybe Schema) Boolean Engine)
 ;;   | doc m%
 ;;       Construct a stratified evaluator for a program and an optional
@@ -47,11 +61,11 @@
 ;;       # Examples
 ;;
 ;;       ```scheme
-;;       (gerbil-ascent-make-engine program #f)
+;;       (ascent-index-reference-make-engine program #f)
 ;;       ;; => an engine with one fresh evaluation state
 ;;       ```
 ;;     %
-(def (gerbil-ascent-make-engine program session? (analysis-override #f)
+(def (ascent-index-reference-make-engine program session? (analysis-override #f)
                                 (schema-override #f)
                                 (measure-rule-times? #f)
                                 (plan-error #f))
@@ -146,15 +160,21 @@
                    (lookup
                     (if (and entry (= (car entry) version))
                       (cdr entry)
-                      (let (built (gerbil-ascent-physical-index-build
-                                   (vector-ref index-providers index) rows columns))
+                      (let (built (reference-provider-build
+                                   (vector-ref index-providers index)
+                                   rows columns))
                         (hash-put! cache columns (cons version built))
                         built)))
                    (terms (vector-ref atom 1))
                    (key (gerbil-ascent-index-key
                          terms columns environment slot-terms)))
-              (gerbil-ascent-physical-index-rows
-               (vector-ref index-providers index) lookup key)))))
+              (let (matched
+                    (gerbil-ascent-index-provider-lookup
+                     (vector-ref index-providers index) lookup key))
+                (unless (list? matched)
+                  (error "ASCENT index provider returned non-list rows"
+                         matched))
+                matched)))))
       (def (advance-all-indexes! index new-rows)
         (let (cache (vector-ref all-indexes index))
           (when (and cache (pair? new-rows))
@@ -165,7 +185,7 @@
                  (when (= (car entry) version)
                    (hash-put! cache columns
                      (cons (+ version 1)
-                           (gerbil-ascent-physical-index-extend!
+                           (reference-provider-extend!
                             provider (cdr entry) new-rows columns)))))
                cache)))))
       (let initialize ((remaining relations) (index 0))
@@ -839,7 +859,7 @@
                   (let* ((replacement
                           (append (source-rows-at index) (list row)))
                          (candidate (source-program-with index replacement))
-                         (result ((gerbil-ascent-make-engine
+                         (result ((ascent-index-reference-make-engine
                                    candidate #f analysis schema
                                    measure-rule-times?))))
                     (set! source-count (+ source-count 1))
@@ -947,7 +967,7 @@
                   (when (> next-count input-limit)
                     (error "ASCENT session input fact budget exceeded"))
                   (let* ((candidate (source-program-with index rows))
-                         (result ((gerbil-ascent-make-engine
+                         (result ((ascent-index-reference-make-engine
                                    candidate #f analysis schema
                                    measure-rule-times?))))
                     (set! source-count next-count)
@@ -984,8 +1004,8 @@
           run!)))))
 
 ;; : (-> Program EvaluationResult)
-(def (gerbil-ascent-evaluate-program program
+(def (ascent-index-reference-evaluate-program program
                                       measure-rule-times?: (measure-rule-times? #f))
   (unless (boolean? measure-rule-times?)
     (error "invalid ASCENT rule timing option" measure-rule-times?))
-  ((gerbil-ascent-make-engine program #f #f #f measure-rule-times?)))
+  ((ascent-index-reference-make-engine program #f #f #f measure-rule-times?)))

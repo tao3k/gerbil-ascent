@@ -1,0 +1,86 @@
+[
+  {
+    "name": "recursive-chain-16",
+    "old-p50-bytes": 24224,
+    "new-p50-bytes": 24224,
+    "paired-wins": 5,
+    "old-p50-ns": 15000,
+    "new-p50-ns": 15000,
+    "old-p95-ns": 17000,
+    "new-p95-ns": 17000,
+    "time-paired-wins": 359,
+    "speed_ratio": 1.0
+  },
+  {
+    "name": "recursive-chain-256",
+    "old-p50-bytes": 208000,
+    "new-p50-bytes": 195712,
+    "paired-wins": 995,
+    "old-p50-ns": 262000,
+    "new-p50-ns": 229000,
+    "old-p95-ns": 727000,
+    "new-p95-ns": 683000,
+    "time-paired-wins": 879,
+    "speed_ratio": 1.1441048034934498
+  },
+  {
+    "name": "recursive-chain-1024",
+    "old-p50-bytes": 761248,
+    "new-p50-bytes": 712096,
+    "paired-wins": 995,
+    "old-p50-ns": 1036000,
+    "new-p50-ns": 898000,
+    "old-p95-ns": 3362000,
+    "new-p95-ns": 2809000,
+    "time-paired-wins": 854,
+    "speed_ratio": 1.153674832962138
+  },
+  {
+    "name": "indexed-fanout-50-1",
+    "old-p50-bytes": 88928,
+    "new-p50-bytes": 86528,
+    "paired-wins": 990,
+    "old-p50-ns": 89000,
+    "new-p50-ns": 80000,
+    "old-p95-ns": 273000,
+    "new-p95-ns": 231000,
+    "time-paired-wins": 916,
+    "speed_ratio": 1.1125
+  },
+  {
+    "name": "indexed-fanout-100-100",
+    "old-p50-bytes": 9450240,
+    "new-p50-bytes": 8970240,
+    "paired-wins": 935,
+    "old-p50-ns": 19971000,
+    "new-p50-ns": 20566000,
+    "old-p95-ns": 97347000,
+    "new-p95-ns": 102070000,
+    "time-paired-wins": 470,
+    "speed_ratio": 0.9710687542545949
+  },
+  {
+    "name": "indexed-wide-40-256",
+    "old-p50-bytes": 1708112,
+    "new-p50-bytes": 1695824,
+    "paired-wins": 993,
+    "old-p50-ns": 2298000,
+    "new-p50-ns": 1878000,
+    "old-p95-ns": 34304000,
+    "new-p95-ns": 34068000,
+    "time-paired-wins": 735,
+    "speed_ratio": 1.2236421725239617
+  },
+  {
+    "name": "source-only",
+    "old-p50-bytes": 12592,
+    "new-p50-bytes": 12592,
+    "paired-wins": 3,
+    "old-p50-ns": 2000,
+    "new-p50-ns": 2000,
+    "old-p95-ns": 9000,
+    "new-p95-ns": 9000,
+    "time-paired-wins": 199,
+    "speed_ratio": 1.0
+  }
+]

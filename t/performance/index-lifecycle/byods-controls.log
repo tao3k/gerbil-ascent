@@ -1,0 +1,10 @@
+[byods-control] START baseline
+[byods-control] RUNNING baseline
+[byods-control] RUNNING baseline
+{'name': 'baseline', 'exit': 0, 'passed': False, 'seconds': 12.905147666999255, 'resolved_engine': '/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/index-lifecycle/lib/gerbil-ascent/t/qualification/ascent-index-reference-evaluate.ssi', 'receipts': [], 'failed_p95_ns': [2259000, 2259000]}
+[byods-control] START current
+[byods-control] RUNNING current
+[byods-control] RUNNING current
+[byods-control] RUNNING current
+[byods-control] RUNNING current
+{'name': 'current', 'exit': 0, 'passed': False, 'seconds': 24.70034341700375, 'resolved_engine': '/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/index-lifecycle/lib/gerbil-ascent/program/evaluate.ssi', 'receipts': [], 'failed_p95_ns': [3963000, 3963000]}

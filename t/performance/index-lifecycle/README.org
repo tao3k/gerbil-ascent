@@ -1,0 +1,154 @@
+#+TITLE: Complete built-in index lifecycle qualification
+
+* Production scope
+
+The rule engine uses one physical access boundary for index build, incremental
+extension and lookup. Only the exact canonical built-in hash provider enters
+the trusted path. All other providers retain generic dispatch, lookup result
+validation and callback order. Proper-list bucket validation is avoided only
+for indexes constructed internally from admitted row snapshots.
+
+Index keys for strictly increasing columns are projected with a single forward
+row cursor, replacing repeated list-ref traversal from the row head. The
+selection is computed once per build/extension batch. Unordered and duplicate
+columns keep the original arbitrary-column projection. Bucket updates use
+hash-get/hash-put directly rather than allocating two update closures per row.
+Row order, append order, index versioning and the engine's admission boundary
+remain intact. No cache, size threshold, fact budget or provider contract changes.
+
+Physical access is in table/access.ss, registered as a production build module;
+the evaluator owns versions and relation state. Public provider APIs and source
+values retain their existing protocols.
+
+* Frozen reference and evidence boundaries
+
+The reference commit is recorded in baseline.txt. table/funs is an exact source
+copy. The reference provider changes only its default export name and physical
+algorithm import; its generic provider interface is unchanged. The evaluator
+changes export names and relative module imports, and redirects canonical
+built-in build/extension calls to that frozen provider through the original
+generic dispatcher. This keeps canonical provider identity for engine policy.
+Common analysis and positive-rule execution use unchanged shared production
+modules. Custom receivers delegate to their existing slots.
+
+verify-reference.py reconstructs and checks these transformations. Both
+versions are compiled natively into the same private library; each paired run
+records five verified .ssi module paths and source hashes. qualified.sources
+also pins the unchanged common modules and production build entrypoints.
+
+* Qualification method
+
+The seven complete-solve workloads retain the previous positive-plan probe's
+inputs, golden semantics, 20 warmups, 1000 alternating paired samples and gate
+classification. All workloads require non-increasing median allocation; primary
+ones require at least 900 strict paired allocation wins. A speed claim requires
+lower median time and at least 900 strict time wins in both final runs.
+Gambit cumulative process-statistics slot 7 measures allocated bytes. There is
+no forced per-sample GC. Samples, p95, win counts and raw receipts are retained.
+
+Four new native Cases check all 256 ordered subsets of eight columns plus
+unordered/duplicate columns and exact buckets after extension; crossing the
+31/32-row indexing threshold and retaining snapshots; exact build/extend/lookup
+traces from a custom superset provider; and the exact malformed-row error.
+
+* Final paired results
+
+| Complete solve | Old/new median bytes | Byte reduction | Median us first | Median us repeat | Strict time wins first/repeat |
+|-
+| recursive-chain-16 | 24224 / 24224 | 0.00% | 15 / 15 | 16 / 16 | 366 / 354 |
+| recursive-chain-256 | 207968 / 195680 | 5.91% | 262 / 230 | 264 / 231 | 883 / 847 |
+| recursive-chain-1024 | 761248 / 712096 | 6.46% | 1036 / 906 | 1045 / 906 | 796 / 775 |
+| indexed-fanout-50-1 | 88928 / 86528 | 2.70% | 88 / 79 | 87 / 79 | 951 / 959 |
+| indexed-fanout-100-100 | 9450240 / 8970240 | 5.08% | 12772 / 12711 | 12086 / 11898 | 542 / 573 |
+| indexed-wide-40-256 | 1708112 / 1695824 | 0.72% | 1988 / 1705 | 1998 / 1714 | 832 / 837 |
+| source-only | 12592 / 12592 | 0.00% | 2 / 2 | 2 / 2 | 172 / 152 |
+
+All seven allocation gates pass in both runs. Large recursive chains reduce
+allocation 5.91% (256 nodes) and 6.46% (1024 nodes); the complete 100x100
+fanout solve reduces allocation 5.08%. The 16-node and source-only controls
+retain exactly the same median allocation. No workload classification changed.
+
+Only indexed-fanout-50-1 meets the paired time claim gate in both runs:
+88 -> 79 us and 87 -> 79 us, approximately 1.10x. Other medians improve or
+remain equal, but do not reach 900 strict time wins in both runs. In particular,
+wide-40 repeat p95 increases 4.196 -> 4.953 ms, despite its improved median.
+This change does not claim uniform timing or tail-latency improvement.
+
+Native module paths are in first.sexp.modules and repeat.sexp.modules; all
+measured production files match qualified.sources. Detailed summaries are in
+first.json/repeat.json; first.sexp/repeat.sexp retain all raw samples.
+
+* Full functional suite and original SS outcome
+
+The exact frozen production source passes 47 modules and 367 native Cases.
+collect-suite.py checks complete discovered-module coverage, every native Case,
+module and harness completion, final OK and absence of error/overflow markers.
+All per-module logs and the suite receipt are retained. Final production policy
+checks 40 modules with zero findings and zero errors.
+
+The original uninterrupted SS batch fails its first BYODS trrel time gate.
+The continuation executes all 16 unexecuted entries independently, yielding
+8 passed and 9 failed entries across the 17-entry inventory. All observed
+failures are time-budget errors after the scenario's semantic checks. No
+fixture, threshold, sample count, GC profile or heap fence is changed. This
+is not complete original SS closure. original-ss-summary.json records each
+outcome and raw log path.
+
+| Failed original scenario | Observed p95 | Original bound |
+|--------------------------+--------------+----------------|
+| BYODS trrel | 1.548 ms | 1 ms |
+| Ten thousand appends | 127.844 ms | 50 ms |
+| Rule clauses | 1.293 ms | 1 ms |
+| Upstream Fibonacci | 1.054 ms | 1 ms |
+| Product Session | 3.719 ms | 2 ms |
+| Derived aggregate | 1.121 ms | 1 ms |
+| Indexed joins | 3.803 ms | 2 ms |
+| BYODS eqrel | 2.985 ms | 1 ms |
+| Table expression | 3.654 ms | 2 ms |
+
+An additional native BYODS old/new control verifies each loaded .ssi engine
+path. Both fail the same unchanged 1 ms gate: baseline p95 2.259 ms, current
+3.963 ms. These runs do not establish a cause for the original failures,
+prove absence of regressions, or turn a failed inventory into a pass. Their
+native process exit is zero, while Case and harness error markers correctly
+make the control runner fail. byods-controls.json retains this distinction.
+Native paired gains and original SS outcomes are separate evidence boundaries;
+no source/native timing equivalence or uniform tail improvement is claimed.
+
+* Intermediate diagnostics
+
+initial.sexp is excluded from final claims: its baseline adapter called frozen
+build/extend functions directly. The final reference retains the original
+generic dispatch through a frozen default provider. Initial benchmark input
+and classification were unchanged.
+
+focused.log retains a missing closing parenthesis in the new test fixture.
+focused-fixed.log ran only two Cases because the last two were accidentally
+nested. Both defects were fixed, and focused-complete.log verifies all four
+named native Cases, module/harness markers and final OK. The initial policy
+rejected an evaluator larger than 1000 lines; extracting the physical boundary
+into table/access.ss leaves final production policy with zero findings/errors.
+
+* Reproduction
+
+#+begin_src sh
+GERBIL_PATH=/private/tmp/ascent-test-scheduling-gerbil GERBIL_BUILD_CORES=12 \
+  just check-policy
+GERBIL_PATH=/private/tmp/ascent-test-scheduling-gerbil GERBIL_BUILD_CORES=12 \
+  python3 t/performance/index-lifecycle/qualify.py
+python3 t/performance/index-lifecycle/verify-reference.py
+GERBIL_PATH=/private/tmp/ascent-test-scheduling-gerbil GERBIL_BUILD_CORES=12 \
+  python3 t/performance/index-lifecycle/continue-ss.py
+python3 t/performance/index-lifecycle/collect-suite.py
+python3 t/performance/index-lifecycle/collect-ss.py
+#+end_src
+
+The qualifier runs two isolated native pairs, the complete functional suite and
+attempts the unchanged original SS inventory sequentially. After its first
+failure, continue-ss.py runs every remaining original entry independently.
+collect-ss.py records the combined outcomes; byods-controls.py runs the
+additional loaded-engine controls. Timing stages use the existing
+exclusive test lease, native timeouts and 1 GiB heap fence. Recipes require all
+seven RESULT markers and final OK and reject native errors and overflows even
+when the native runtime exits zero. summarize.py derives scalar JSON summaries
+while retaining all original samples in the S-expression receipts.

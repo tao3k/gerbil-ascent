@@ -1,0 +1,15 @@
+[ascent-test] START t/performance/ascent-binary-program-performance-test.ss
+[test-lane] START exclusive t/performance/ascent-binary-program-performance-test.ss
+HARNESS ("t/performance/ascent-binary-program-performance-test.ss")
+MODULE t/performance/ascent-binary-program-performance-test.ss
+SUITE ASCENT Scheme binary program performance
+CASE twenty-node chain within standard fixture
+[test-lane] RUNNING exclusive (5s)
+[gerbil-ascent-benchmark] ascent-binary-program p95=1.047ms
+CASE-OK twenty-node chain within standard fixture
+SUITE-OK ASCENT Scheme binary program performance
+MODULE-OK t/performance/ascent-binary-program-performance-test.ss
+HARNESS-OK ("t/performance/ascent-binary-program-performance-test.ss")
+OK
+[test-lane] END exclusive exit=0
+[ascent-test] PASS t/performance/ascent-binary-program-performance-test.ss (9s)

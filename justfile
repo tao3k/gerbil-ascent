@@ -608,3 +608,23 @@ _materialization-benchmark:
     test "$(grep -c '^RESULT ' "$log")" -eq 8
     if grep -E 'ERROR|Heap overflow|Stack overflow' "$log" >/dev/null; then exit 1; fi
     grep -x 'OK' "$log" >/dev/null
+
+index-lifecycle-benchmark:
+    python3 tools/test_execution.py run -- just _index-lifecycle-benchmark
+
+_index-lifecycle-benchmark:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    export ASCENT_INDEX_LIFECYCLE_LIB="{{ justfile_directory() }}/.gerbil/index-lifecycle/lib"
+    export ASCENT_INDEX_LIFECYCLE_RECEIPT="${ASCENT_INDEX_LIFECYCLE_RECEIPT:-{{ justfile_directory() }}/.gerbil/index-lifecycle/receipt.sexp}"
+    mkdir -p .gerbil/index-lifecycle
+    shasum -a 256 table/funs.ss table/access.ss table/provider.ss program/evaluate.ss program/positive.ss program/analysis.ss t/qualification/ascent-index-reference-funs.ss t/qualification/ascent-index-reference-provider.ss t/qualification/ascent-index-reference-evaluate.ss t/performance/index-lifecycle-benchmark.ss tools/build-index-lifecycle-benchmark.ss > "$ASCENT_INDEX_LIFECYCLE_RECEIPT.sources"
+    timeout 150s gxi {{ gerbil_test_runtime_options }} tools/build-index-lifecycle-benchmark.ss
+    log="$(mktemp)"
+    trap 'rm -f "$log"' EXIT
+    GERBIL_LOADPATH="$ASCENT_INDEX_LIFECYCLE_LIB${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" timeout 30s gxi {{ gerbil_test_runtime_options }} t/performance/index-lifecycle/module-resolution.ss > "$ASCENT_INDEX_LIFECYCLE_RECEIPT.modules"
+    test "$(grep -c '/.gerbil/index-lifecycle/lib/.*\.ssi$' "$ASCENT_INDEX_LIFECYCLE_RECEIPT.modules")" -eq 5
+    GERBIL_LOADPATH="$ASCENT_INDEX_LIFECYCLE_LIB${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" timeout 180s gxi {{ gerbil_test_runtime_options }} t/performance/index-lifecycle-benchmark.ss 2>&1 | tee "$log"
+    test "$(grep -c '^RESULT ' "$log")" -eq 7
+    if grep -E 'ERROR|Heap overflow|Stack overflow' "$log" >/dev/null; then exit 1; fi
+    grep -x 'OK' "$log" >/dev/null

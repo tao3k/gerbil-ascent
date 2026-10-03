@@ -1,0 +1,7 @@
+[test-lane] START exclusive timeout
+[test-lane] RUNNING exclusive (5s)
+[test-lane] RUNNING exclusive (10s)
+[test-lane] RUNNING exclusive (15s)
+*** ERROR IN ##structure-instance-of? -- Stack overflow
+[test-lane] RUNNING exclusive (20s)
+[test-lane] END exclusive exit=70

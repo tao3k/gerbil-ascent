@@ -1,3 +1,10 @@
+* Measurement correction: allocation qualification withdrawn
+The row propagation audit found 86 negative byte-counter deltas among 20,000
+observations in each saved run. Their runtime cause is unconfirmed. Historical
+allocation-saving qualification below and in report.json is withdrawn. Raw
+samples and original reports remain preserved; timing/output evidence is
+independent. See [[file:../row-propagation/README.md][row propagation measurement audit]].
+
 #+TITLE: Ordered publication across bounded relation kernels
 
 * Shared representation

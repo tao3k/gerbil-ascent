@@ -1,0 +1,960 @@
+{
+  "runs": [
+    "first",
+    "repeat"
+  ],
+  "warmups": 20,
+  "samples": 1000,
+  "allocation_qualified": false,
+  "allocation_limitation": "Negative process-statistics counter deltas observed; allocation claims withheld for the study.",
+  "negative_counter_deltas": {
+    "first": 152,
+    "repeat": 152
+  },
+  "previous_measurement_audit": {
+    "ordered-relations": {
+      "first_negative": 86,
+      "repeat_negative": 86,
+      "observations_per_run": 20000,
+      "allocation_qualification": "withdrawn"
+    }
+  },
+  "results": [
+    {
+      "name": "frontier-complete-32-degree-1",
+      "primary": false,
+      "counter_delta_decrease": true,
+      "allocation_qualified": false,
+      "timing_pass": false,
+      "runs": [
+        {
+          "repetitions": 1,
+          "old-p50-bytes": 362352,
+          "new-p50-bytes": 303520,
+          "old-p95-bytes": 362352,
+          "new-p95-bytes": 303520,
+          "paired-wins": 996,
+          "old-p50-ns": 119000,
+          "new-p50-ns": 387000,
+          "old-p95-ns": 593000,
+          "new-p95-ns": 8742000,
+          "time-paired-wins": 34,
+          "negative-counter-deltas": 6,
+          "primary": false
+        },
+        {
+          "repetitions": 1,
+          "old-p50-bytes": 362352,
+          "new-p50-bytes": 303520,
+          "old-p95-bytes": 362352,
+          "new-p95-bytes": 303520,
+          "paired-wins": 996,
+          "old-p50-ns": 114000,
+          "new-p50-ns": 384000,
+          "old-p95-ns": 330000,
+          "new-p95-ns": 2364000,
+          "time-paired-wins": 24,
+          "negative-counter-deltas": 6,
+          "primary": false
+        }
+      ]
+    },
+    {
+      "name": "frontier-complete-32-degree-2",
+      "primary": false,
+      "counter_delta_decrease": true,
+      "allocation_qualified": false,
+      "timing_pass": false,
+      "runs": [
+        {
+          "repetitions": 1,
+          "old-p50-bytes": 366320,
+          "new-p50-bytes": 273824,
+          "old-p95-bytes": 366320,
+          "new-p95-bytes": 273824,
+          "paired-wins": 996,
+          "old-p50-ns": 154000,
+          "new-p50-ns": 378000,
+          "old-p95-ns": 647000,
+          "new-p95-ns": 7211000,
+          "time-paired-wins": 36,
+          "negative-counter-deltas": 6,
+          "primary": false
+        },
+        {
+          "repetitions": 1,
+          "old-p50-bytes": 366320,
+          "new-p50-bytes": 273824,
+          "old-p95-bytes": 366320,
+          "new-p95-bytes": 273824,
+          "paired-wins": 996,
+          "old-p50-ns": 152000,
+          "new-p50-ns": 375000,
+          "old-p95-ns": 573000,
+          "new-p95-ns": 4582000,
+          "time-paired-wins": 39,
+          "negative-counter-deltas": 6,
+          "primary": false
+        }
+      ]
+    },
+    {
+      "name": "frontier-complete-32-degree-4",
+      "primary": false,
+      "counter_delta_decrease": true,
+      "allocation_qualified": false,
+      "timing_pass": false,
+      "runs": [
+        {
+          "repetitions": 1,
+          "old-p50-bytes": 375792,
+          "new-p50-bytes": 263584,
+          "old-p95-bytes": 375824,
+          "new-p95-bytes": 263616,
+          "paired-wins": 995,
+          "old-p50-ns": 216000,
+          "new-p50-ns": 391000,
+          "old-p95-ns": 1605000,
+          "new-p95-ns": 9826000,
+          "time-paired-wins": 48,
+          "negative-counter-deltas": 5,
+          "primary": false
+        },
+        {
+          "repetitions": 1,
+          "old-p50-bytes": 375792,
+          "new-p50-bytes": 263584,
+          "old-p95-bytes": 375824,
+          "new-p95-bytes": 263616,
+          "paired-wins": 995,
+          "old-p50-ns": 215000,
+          "new-p50-ns": 390000,
+          "old-p95-ns": 1119000,
+          "new-p95-ns": 4608000,
+          "time-paired-wins": 64,
+          "negative-counter-deltas": 5,
+          "primary": false
+        }
+      ]
+    },
+    {
+      "name": "frontier-complete-32-degree-8",
+      "primary": false,
+      "counter_delta_decrease": true,
+      "allocation_qualified": false,
+      "timing_pass": false,
+      "runs": [
+        {
+          "repetitions": 1,
+          "old-p50-bytes": 395536,
+          "new-p50-bytes": 267712,
+          "old-p95-bytes": 395536,
+          "new-p95-bytes": 267712,
+          "paired-wins": 995,
+          "old-p50-ns": 341000,
+          "new-p50-ns": 428000,
+          "old-p95-ns": 7105000,
+          "new-p95-ns": 9074000,
+          "time-paired-wins": 88,
+          "negative-counter-deltas": 6,
+          "primary": false
+        },
+        {
+          "repetitions": 1,
+          "old-p50-bytes": 395536,
+          "new-p50-bytes": 267712,
+          "old-p95-bytes": 395536,
+          "new-p95-bytes": 267712,
+          "paired-wins": 995,
+          "old-p50-ns": 338000,
+          "new-p50-ns": 425000,
+          "old-p95-ns": 1267000,
+          "new-p95-ns": 3931000,
+          "time-paired-wins": 68,
+          "negative-counter-deltas": 6,
+          "primary": false
+        }
+      ]
+    },
+    {
+      "name": "frontier-complete-32-degree-16",
+      "primary": false,
+      "counter_delta_decrease": true,
+      "allocation_qualified": false,
+      "timing_pass": false,
+      "runs": [
+        {
+          "repetitions": 1,
+          "old-p50-bytes": 432464,
+          "new-p50-bytes": 288192,
+          "old-p95-bytes": 432464,
+          "new-p95-bytes": 288192,
+          "paired-wins": 995,
+          "old-p50-ns": 599000,
+          "new-p50-ns": 506000,
+          "old-p95-ns": 14791000,
+          "new-p95-ns": 9100000,
+          "time-paired-wins": 865,
+          "negative-counter-deltas": 6,
+          "primary": false
+        },
+        {
+          "repetitions": 1,
+          "old-p50-bytes": 432464,
+          "new-p50-bytes": 288192,
+          "old-p95-bytes": 432464,
+          "new-p95-bytes": 288192,
+          "paired-wins": 995,
+          "old-p50-ns": 592000,
+          "new-p50-ns": 501000,
+          "old-p95-ns": 8132000,
+          "new-p95-ns": 4788000,
+          "time-paired-wins": 901,
+          "negative-counter-deltas": 6,
+          "primary": false
+        }
+      ]
+    },
+    {
+      "name": "frontier-complete-32-degree-31",
+      "primary": true,
+      "counter_delta_decrease": true,
+      "allocation_qualified": false,
+      "timing_pass": true,
+      "runs": [
+        {
+          "repetitions": 1,
+          "old-p50-bytes": 455504,
+          "new-p50-bytes": 288192,
+          "old-p95-bytes": 455504,
+          "new-p95-bytes": 288192,
+          "paired-wins": 997,
+          "old-p50-ns": 1101000,
+          "new-p50-ns": 637000,
+          "old-p95-ns": 33066000,
+          "new-p95-ns": 17487000,
+          "time-paired-wins": 902,
+          "negative-counter-deltas": 5,
+          "primary": true
+        },
+        {
+          "repetitions": 1,
+          "old-p50-bytes": 455504,
+          "new-p50-bytes": 288192,
+          "old-p95-bytes": 455504,
+          "new-p95-bytes": 288192,
+          "paired-wins": 997,
+          "old-p50-ns": 1087000,
+          "new-p50-ns": 630000,
+          "old-p95-ns": 8984000,
+          "new-p95-ns": 6160000,
+          "time-paired-wins": 915,
+          "negative-counter-deltas": 5,
+          "primary": true
+        }
+      ]
+    },
+    {
+      "name": "frontier-complete-fanout-64",
+      "primary": true,
+      "counter_delta_decrease": true,
+      "allocation_qualified": false,
+      "timing_pass": false,
+      "runs": [
+        {
+          "repetitions": 1,
+          "old-p50-bytes": 1571056,
+          "new-p50-bytes": 1413120,
+          "old-p95-bytes": 1571056,
+          "new-p95-bytes": 1413120,
+          "paired-wins": 980,
+          "old-p50-ns": 26811000,
+          "new-p50-ns": 2820000,
+          "old-p95-ns": 160613000,
+          "new-p95-ns": 92505000,
+          "time-paired-wins": 822,
+          "negative-counter-deltas": 0,
+          "primary": true
+        },
+        {
+          "repetitions": 1,
+          "old-p50-bytes": 1571056,
+          "new-p50-bytes": 1413120,
+          "old-p95-bytes": 1571056,
+          "new-p95-bytes": 1413120,
+          "paired-wins": 980,
+          "old-p50-ns": 9586000,
+          "new-p50-ns": 2761000,
+          "old-p95-ns": 103775000,
+          "new-p95-ns": 49864000,
+          "time-paired-wins": 892,
+          "negative-counter-deltas": 0,
+          "primary": true
+        }
+      ]
+    },
+    {
+      "name": "frontier-projection-256",
+      "primary": false,
+      "counter_delta_decrease": false,
+      "allocation_qualified": false,
+      "timing_pass": false,
+      "runs": [
+        {
+          "repetitions": 1,
+          "old-p50-bytes": 165696,
+          "new-p50-bytes": 570960,
+          "old-p95-bytes": 165696,
+          "new-p95-bytes": 571040,
+          "paired-wins": 6,
+          "old-p50-ns": 301000,
+          "new-p50-ns": 564000,
+          "old-p95-ns": 11181000,
+          "new-p95-ns": 18836000,
+          "time-paired-wins": 66,
+          "negative-counter-deltas": 6,
+          "primary": false
+        },
+        {
+          "repetitions": 1,
+          "old-p50-bytes": 165696,
+          "new-p50-bytes": 570960,
+          "old-p95-bytes": 165696,
+          "new-p95-bytes": 571040,
+          "paired-wins": 6,
+          "old-p50-ns": 302000,
+          "new-p50-ns": 568000,
+          "old-p95-ns": 11406000,
+          "new-p95-ns": 27521000,
+          "time-paired-wins": 81,
+          "negative-counter-deltas": 6,
+          "primary": false
+        }
+      ]
+    },
+    {
+      "name": "frontier-closure-chain-32",
+      "primary": false,
+      "counter_delta_decrease": false,
+      "allocation_qualified": false,
+      "timing_pass": false,
+      "runs": [
+        {
+          "repetitions": 1,
+          "old-p50-bytes": 107808,
+          "new-p50-bytes": 111216,
+          "old-p95-bytes": 107808,
+          "new-p95-bytes": 111216,
+          "paired-wins": 2,
+          "old-p50-ns": 44000,
+          "new-p50-ns": 67000,
+          "old-p95-ns": 140000,
+          "new-p95-ns": 228000,
+          "time-paired-wins": 38,
+          "negative-counter-deltas": 2,
+          "primary": false
+        },
+        {
+          "repetitions": 1,
+          "old-p50-bytes": 107808,
+          "new-p50-bytes": 111216,
+          "old-p95-bytes": 107808,
+          "new-p95-bytes": 111216,
+          "paired-wins": 2,
+          "old-p50-ns": 44000,
+          "new-p50-ns": 67000,
+          "old-p95-ns": 111000,
+          "new-p95-ns": 158000,
+          "time-paired-wins": 18,
+          "negative-counter-deltas": 2,
+          "primary": false
+        }
+      ]
+    },
+    {
+      "name": "frontier-distance-chain-32",
+      "primary": false,
+      "counter_delta_decrease": true,
+      "allocation_qualified": false,
+      "timing_pass": false,
+      "runs": [
+        {
+          "repetitions": 1,
+          "old-p50-bytes": 141184,
+          "new-p50-bytes": 135504,
+          "old-p95-bytes": 141184,
+          "new-p95-bytes": 135504,
+          "paired-wins": 999,
+          "old-p50-ns": 53000,
+          "new-p50-ns": 193000,
+          "old-p95-ns": 202000,
+          "new-p95-ns": 4729000,
+          "time-paired-wins": 26,
+          "negative-counter-deltas": 2,
+          "primary": false
+        },
+        {
+          "repetitions": 1,
+          "old-p50-bytes": 141184,
+          "new-p50-bytes": 135504,
+          "old-p95-bytes": 141184,
+          "new-p95-bytes": 135504,
+          "paired-wins": 999,
+          "old-p50-ns": 54000,
+          "new-p50-ns": 194000,
+          "old-p95-ns": 221000,
+          "new-p95-ns": 6953000,
+          "time-paired-wins": 28,
+          "negative-counter-deltas": 2,
+          "primary": false
+        }
+      ]
+    },
+    {
+      "name": "frontier-empty-distances-512",
+      "primary": false,
+      "counter_delta_decrease": true,
+      "allocation_qualified": false,
+      "timing_pass": true,
+      "runs": [
+        {
+          "repetitions": 1,
+          "old-p50-bytes": 2153824,
+          "new-p50-bytes": 61568,
+          "old-p95-bytes": 2153824,
+          "new-p95-bytes": 61568,
+          "paired-wins": 983,
+          "old-p50-ns": 111000,
+          "new-p50-ns": 23000,
+          "old-p95-ns": 537000,
+          "new-p95-ns": 69000,
+          "time-paired-wins": 991,
+          "negative-counter-deltas": 17,
+          "primary": false
+        },
+        {
+          "repetitions": 1,
+          "old-p50-bytes": 2153824,
+          "new-p50-bytes": 61568,
+          "old-p95-bytes": 2153824,
+          "new-p95-bytes": 61568,
+          "paired-wins": 983,
+          "old-p50-ns": 109000,
+          "new-p50-ns": 23000,
+          "old-p95-ns": 634000,
+          "new-p95-ns": 67000,
+          "time-paired-wins": 991,
+          "negative-counter-deltas": 17,
+          "primary": false
+        }
+      ]
+    },
+    {
+      "name": "frontier-sparse-distances-512",
+      "primary": false,
+      "counter_delta_decrease": true,
+      "allocation_qualified": false,
+      "timing_pass": true,
+      "runs": [
+        {
+          "repetitions": 1,
+          "old-p50-bytes": 2155040,
+          "new-p50-bytes": 66656,
+          "old-p95-bytes": 2155040,
+          "new-p95-bytes": 66656,
+          "paired-wins": 984,
+          "old-p50-ns": 113000,
+          "new-p50-ns": 27000,
+          "old-p95-ns": 552000,
+          "new-p95-ns": 90000,
+          "time-paired-wins": 985,
+          "negative-counter-deltas": 16,
+          "primary": false
+        },
+        {
+          "repetitions": 1,
+          "old-p50-bytes": 2155040,
+          "new-p50-bytes": 66656,
+          "old-p95-bytes": 2155040,
+          "new-p95-bytes": 66656,
+          "paired-wins": 984,
+          "old-p50-ns": 112000,
+          "new-p50-ns": 27000,
+          "old-p95-ns": 290000,
+          "new-p95-ns": 85000,
+          "time-paired-wins": 993,
+          "negative-counter-deltas": 16,
+          "primary": false
+        }
+      ]
+    },
+    {
+      "name": "warshall-complete-32-degree-1",
+      "primary": false,
+      "counter_delta_decrease": true,
+      "allocation_qualified": false,
+      "timing_pass": false,
+      "runs": [
+        {
+          "repetitions": 1,
+          "old-p50-bytes": 362320,
+          "new-p50-bytes": 304016,
+          "old-p95-bytes": 362320,
+          "new-p95-bytes": 304016,
+          "paired-wins": 996,
+          "old-p50-ns": 114000,
+          "new-p50-ns": 391000,
+          "old-p95-ns": 339000,
+          "new-p95-ns": 10416000,
+          "time-paired-wins": 20,
+          "negative-counter-deltas": 6,
+          "primary": false
+        },
+        {
+          "repetitions": 1,
+          "old-p50-bytes": 362320,
+          "new-p50-bytes": 304016,
+          "old-p95-bytes": 362320,
+          "new-p95-bytes": 304016,
+          "paired-wins": 996,
+          "old-p50-ns": 122000,
+          "new-p50-ns": 396000,
+          "old-p95-ns": 463000,
+          "new-p95-ns": 7784000,
+          "time-paired-wins": 31,
+          "negative-counter-deltas": 6,
+          "primary": false
+        }
+      ]
+    },
+    {
+      "name": "warshall-complete-32-degree-2",
+      "primary": false,
+      "counter_delta_decrease": true,
+      "allocation_qualified": false,
+      "timing_pass": false,
+      "runs": [
+        {
+          "repetitions": 1,
+          "old-p50-bytes": 366288,
+          "new-p50-bytes": 274320,
+          "old-p95-bytes": 366288,
+          "new-p95-bytes": 274320,
+          "paired-wins": 997,
+          "old-p50-ns": 154000,
+          "new-p50-ns": 388000,
+          "old-p95-ns": 2552000,
+          "new-p95-ns": 18374000,
+          "time-paired-wins": 49,
+          "negative-counter-deltas": 5,
+          "primary": false
+        },
+        {
+          "repetitions": 1,
+          "old-p50-bytes": 366288,
+          "new-p50-bytes": 274320,
+          "old-p95-bytes": 366288,
+          "new-p95-bytes": 274320,
+          "paired-wins": 997,
+          "old-p50-ns": 152000,
+          "new-p50-ns": 385000,
+          "old-p95-ns": 424000,
+          "new-p95-ns": 5311000,
+          "time-paired-wins": 28,
+          "negative-counter-deltas": 5,
+          "primary": false
+        }
+      ]
+    },
+    {
+      "name": "warshall-complete-32-degree-4",
+      "primary": false,
+      "counter_delta_decrease": true,
+      "allocation_qualified": false,
+      "timing_pass": false,
+      "runs": [
+        {
+          "repetitions": 1,
+          "old-p50-bytes": 375760,
+          "new-p50-bytes": 264080,
+          "old-p95-bytes": 375760,
+          "new-p95-bytes": 264080,
+          "paired-wins": 997,
+          "old-p50-ns": 217000,
+          "new-p50-ns": 400000,
+          "old-p95-ns": 7545000,
+          "new-p95-ns": 13907000,
+          "time-paired-wins": 62,
+          "negative-counter-deltas": 5,
+          "primary": false
+        },
+        {
+          "repetitions": 1,
+          "old-p50-bytes": 375760,
+          "new-p50-bytes": 264080,
+          "old-p95-bytes": 375760,
+          "new-p95-bytes": 264080,
+          "paired-wins": 997,
+          "old-p50-ns": 215000,
+          "new-p50-ns": 398000,
+          "old-p95-ns": 1887000,
+          "new-p95-ns": 5591000,
+          "time-paired-wins": 38,
+          "negative-counter-deltas": 5,
+          "primary": false
+        }
+      ]
+    },
+    {
+      "name": "warshall-complete-32-degree-8",
+      "primary": false,
+      "counter_delta_decrease": true,
+      "allocation_qualified": false,
+      "timing_pass": false,
+      "runs": [
+        {
+          "repetitions": 1,
+          "old-p50-bytes": 395472,
+          "new-p50-bytes": 268176,
+          "old-p95-bytes": 395472,
+          "new-p95-bytes": 268176,
+          "paired-wins": 995,
+          "old-p50-ns": 341000,
+          "new-p50-ns": 436000,
+          "old-p95-ns": 12856000,
+          "new-p95-ns": 15277000,
+          "time-paired-wins": 96,
+          "negative-counter-deltas": 5,
+          "primary": false
+        },
+        {
+          "repetitions": 1,
+          "old-p50-bytes": 395472,
+          "new-p50-bytes": 268176,
+          "old-p95-bytes": 395472,
+          "new-p95-bytes": 268176,
+          "paired-wins": 995,
+          "old-p50-ns": 340000,
+          "new-p50-ns": 436000,
+          "old-p95-ns": 5356000,
+          "new-p95-ns": 7104000,
+          "time-paired-wins": 82,
+          "negative-counter-deltas": 5,
+          "primary": false
+        }
+      ]
+    },
+    {
+      "name": "warshall-complete-32-degree-16",
+      "primary": false,
+      "counter_delta_decrease": true,
+      "allocation_qualified": false,
+      "timing_pass": false,
+      "runs": [
+        {
+          "repetitions": 1,
+          "old-p50-bytes": 432400,
+          "new-p50-bytes": 288656,
+          "old-p95-bytes": 432400,
+          "new-p95-bytes": 288656,
+          "paired-wins": 996,
+          "old-p50-ns": 600000,
+          "new-p50-ns": 514000,
+          "old-p95-ns": 18364000,
+          "new-p95-ns": 15275000,
+          "time-paired-wins": 863,
+          "negative-counter-deltas": 6,
+          "primary": false
+        },
+        {
+          "repetitions": 1,
+          "old-p50-bytes": 432400,
+          "new-p50-bytes": 288656,
+          "old-p95-bytes": 432400,
+          "new-p95-bytes": 288656,
+          "paired-wins": 996,
+          "old-p50-ns": 595000,
+          "new-p50-ns": 511000,
+          "old-p95-ns": 8538000,
+          "new-p95-ns": 7612000,
+          "time-paired-wins": 869,
+          "negative-counter-deltas": 6,
+          "primary": false
+        }
+      ]
+    },
+    {
+      "name": "warshall-complete-32-degree-31",
+      "primary": true,
+      "counter_delta_decrease": true,
+      "allocation_qualified": false,
+      "timing_pass": false,
+      "runs": [
+        {
+          "repetitions": 1,
+          "old-p50-bytes": 455440,
+          "new-p50-bytes": 288656,
+          "old-p95-bytes": 455440,
+          "new-p95-bytes": 288656,
+          "paired-wins": 994,
+          "old-p50-ns": 1098000,
+          "new-p50-ns": 645000,
+          "old-p95-ns": 20341000,
+          "new-p95-ns": 11938000,
+          "time-paired-wins": 894,
+          "negative-counter-deltas": 6,
+          "primary": true
+        },
+        {
+          "repetitions": 1,
+          "old-p50-bytes": 455440,
+          "new-p50-bytes": 288656,
+          "old-p95-bytes": 455440,
+          "new-p95-bytes": 288656,
+          "paired-wins": 994,
+          "old-p50-ns": 1098000,
+          "new-p50-ns": 646000,
+          "old-p95-ns": 33478000,
+          "new-p95-ns": 19905000,
+          "time-paired-wins": 880,
+          "negative-counter-deltas": 6,
+          "primary": true
+        }
+      ]
+    },
+    {
+      "name": "warshall-complete-fanout-64",
+      "primary": true,
+      "counter_delta_decrease": false,
+      "allocation_qualified": false,
+      "timing_pass": false,
+      "runs": [
+        {
+          "repetitions": 1,
+          "old-p50-bytes": 1571088,
+          "new-p50-bytes": 1610752,
+          "old-p95-bytes": 1571088,
+          "new-p95-bytes": 1610800,
+          "paired-wins": 1,
+          "old-p50-ns": 23500000,
+          "new-p50-ns": 2952000,
+          "old-p95-ns": 158857000,
+          "new-p95-ns": 84029000,
+          "time-paired-wins": 833,
+          "negative-counter-deltas": 0,
+          "primary": true
+        },
+        {
+          "repetitions": 1,
+          "old-p50-bytes": 1571088,
+          "new-p50-bytes": 1610752,
+          "old-p95-bytes": 1571088,
+          "new-p95-bytes": 1610800,
+          "paired-wins": 1,
+          "old-p50-ns": 26204000,
+          "new-p50-ns": 2961000,
+          "old-p95-ns": 182630000,
+          "new-p95-ns": 95147000,
+          "time-paired-wins": 823,
+          "negative-counter-deltas": 0,
+          "primary": true
+        }
+      ]
+    },
+    {
+      "name": "warshall-projection-256",
+      "primary": false,
+      "counter_delta_decrease": false,
+      "allocation_qualified": false,
+      "timing_pass": false,
+      "runs": [
+        {
+          "repetitions": 1,
+          "old-p50-bytes": 165728,
+          "new-p50-bytes": 570992,
+          "old-p95-bytes": 165728,
+          "new-p95-bytes": 571072,
+          "paired-wins": 4,
+          "old-p50-ns": 299000,
+          "new-p50-ns": 563000,
+          "old-p95-ns": 4027000,
+          "new-p95-ns": 8108000,
+          "time-paired-wins": 64,
+          "negative-counter-deltas": 6,
+          "primary": false
+        },
+        {
+          "repetitions": 1,
+          "old-p50-bytes": 165728,
+          "new-p50-bytes": 570992,
+          "old-p95-bytes": 165728,
+          "new-p95-bytes": 571072,
+          "paired-wins": 4,
+          "old-p50-ns": 299000,
+          "new-p50-ns": 564000,
+          "old-p95-ns": 12458000,
+          "new-p95-ns": 16846000,
+          "time-paired-wins": 68,
+          "negative-counter-deltas": 6,
+          "primary": false
+        }
+      ]
+    },
+    {
+      "name": "warshall-closure-chain-32",
+      "primary": false,
+      "counter_delta_decrease": true,
+      "allocation_qualified": false,
+      "timing_pass": true,
+      "runs": [
+        {
+          "repetitions": 1,
+          "old-p50-bytes": 107840,
+          "new-p50-bytes": 73328,
+          "old-p95-bytes": 107840,
+          "new-p95-bytes": 73328,
+          "paired-wins": 999,
+          "old-p50-ns": 43000,
+          "new-p50-ns": 40000,
+          "old-p95-ns": 116000,
+          "new-p95-ns": 111000,
+          "time-paired-wins": 949,
+          "negative-counter-deltas": 2,
+          "primary": false
+        },
+        {
+          "repetitions": 1,
+          "old-p50-bytes": 107840,
+          "new-p50-bytes": 73328,
+          "old-p95-bytes": 107840,
+          "new-p95-bytes": 73328,
+          "paired-wins": 999,
+          "old-p50-ns": 43000,
+          "new-p50-ns": 40000,
+          "old-p95-ns": 111000,
+          "new-p95-ns": 108000,
+          "time-paired-wins": 959,
+          "negative-counter-deltas": 2,
+          "primary": false
+        }
+      ]
+    },
+    {
+      "name": "warshall-distance-chain-32",
+      "primary": false,
+      "counter_delta_decrease": true,
+      "allocation_qualified": false,
+      "timing_pass": false,
+      "runs": [
+        {
+          "repetitions": 1,
+          "old-p50-bytes": 141184,
+          "new-p50-bytes": 135504,
+          "old-p95-bytes": 141184,
+          "new-p95-bytes": 135504,
+          "paired-wins": 998,
+          "old-p50-ns": 53000,
+          "new-p50-ns": 192000,
+          "old-p95-ns": 179000,
+          "new-p95-ns": 1175000,
+          "time-paired-wins": 22,
+          "negative-counter-deltas": 2,
+          "primary": false
+        },
+        {
+          "repetitions": 1,
+          "old-p50-bytes": 141184,
+          "new-p50-bytes": 135504,
+          "old-p95-bytes": 141184,
+          "new-p95-bytes": 135504,
+          "paired-wins": 998,
+          "old-p50-ns": 53000,
+          "new-p50-ns": 193000,
+          "old-p95-ns": 151000,
+          "new-p95-ns": 1830000,
+          "time-paired-wins": 18,
+          "negative-counter-deltas": 2,
+          "primary": false
+        }
+      ]
+    },
+    {
+      "name": "warshall-empty-distances-512",
+      "primary": false,
+      "counter_delta_decrease": true,
+      "allocation_qualified": false,
+      "timing_pass": true,
+      "runs": [
+        {
+          "repetitions": 1,
+          "old-p50-bytes": 2153824,
+          "new-p50-bytes": 61568,
+          "old-p95-bytes": 2153824,
+          "new-p95-bytes": 61568,
+          "paired-wins": 985,
+          "old-p50-ns": 111000,
+          "new-p50-ns": 23000,
+          "old-p95-ns": 245000,
+          "new-p95-ns": 69000,
+          "time-paired-wins": 991,
+          "negative-counter-deltas": 16,
+          "primary": false
+        },
+        {
+          "repetitions": 1,
+          "old-p50-bytes": 2153824,
+          "new-p50-bytes": 61568,
+          "old-p95-bytes": 2153824,
+          "new-p95-bytes": 61568,
+          "paired-wins": 985,
+          "old-p50-ns": 110000,
+          "new-p50-ns": 23000,
+          "old-p95-ns": 530000,
+          "new-p95-ns": 77000,
+          "time-paired-wins": 987,
+          "negative-counter-deltas": 16,
+          "primary": false
+        }
+      ]
+    },
+    {
+      "name": "warshall-sparse-distances-512",
+      "primary": false,
+      "counter_delta_decrease": true,
+      "allocation_qualified": false,
+      "timing_pass": true,
+      "runs": [
+        {
+          "repetitions": 1,
+          "old-p50-bytes": 2155040,
+          "new-p50-bytes": 66656,
+          "old-p95-bytes": 2155040,
+          "new-p95-bytes": 66656,
+          "paired-wins": 984,
+          "old-p50-ns": 113000,
+          "new-p50-ns": 26000,
+          "old-p95-ns": 239000,
+          "new-p95-ns": 87000,
+          "time-paired-wins": 978,
+          "negative-counter-deltas": 16,
+          "primary": false
+        },
+        {
+          "repetitions": 1,
+          "old-p50-bytes": 2155040,
+          "new-p50-bytes": 66656,
+          "old-p95-bytes": 2155040,
+          "new-p95-bytes": 66656,
+          "paired-wins": 984,
+          "old-p50-ns": 113000,
+          "new-p50-ns": 27000,
+          "old-p95-ns": 3653000,
+          "new-p95-ns": 98000,
+          "time-paired-wins": 982,
+          "negative-counter-deltas": 16,
+          "primary": false
+        }
+      ]
+    }
+  ]
+}

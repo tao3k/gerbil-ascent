@@ -122,6 +122,8 @@ def run(args):
         raise ValueError('missing command')
     shared = args.module is not None and canonical_module(args.module) in PARALLEL_MODULES
     lane = 'parallel-semantics' if shared else 'exclusive'
+    # Keep the shared lock inode stable for existing build/performance leases.
+    # Runtime logs and receipts are stored separately under the ignored cache.
     directory = ROOT / '.gerbil/test-execution'
     directory.mkdir(parents=True, exist_ok=True)
     lock_path = directory / 'lane.lock'
@@ -181,7 +183,7 @@ def stop_child(child, deadline=None):
 
 def execute_modules(files, jobs, lane):
     """One lifecycle for both phases; each module retains its native process."""
-    receipts = ROOT / '.gerbil/test-execution' / f'{lane}-{time.time_ns()}'
+    receipts = ROOT / '.cache/ascent/test-execution' / f'{lane}-{time.time_ns()}'
     receipts.mkdir(parents=True)
     children = set()
     children_gate = threading.Lock()
@@ -283,7 +285,7 @@ def suite(args):
     results += execute_modules(exclusive, 1, 'exclusive')
     completed = sorted(row['module'] for row in results)
     failed = completed != files or any(row['exit'] != 0 for row in results)
-    receipt = ROOT / '.gerbil/test-execution' / f'suite-{time.time_ns()}.json'
+    receipt = ROOT / '.cache/ascent/test-execution' / f'suite-{time.time_ns()}.json'
     receipt.write_text(json.dumps(dict(
         configured_jobs=args.jobs, requested=files, failed=failed,
         seconds=time.monotonic()-started,

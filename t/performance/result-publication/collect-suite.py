@@ -3,7 +3,8 @@ import json
 import re
 import shutil
 from pathlib import Path
-root = Path(__file__).resolve().parent
+repository = Path(__file__).resolve().parents[3]
+root = repository / '.cache/ascent' / Path(__file__).resolve().parent.relative_to(repository)
 match = re.search(r'\[test-suite\] END modules=(\d+) failed=0 receipt=(\S+)', (root/'final-suite.log').read_text())
 assert match, 'missing completed suite receipt'
 receipt = json.loads(Path(match[2]).read_text())
@@ -16,6 +17,8 @@ coverage = []
 for result in receipt['results']:
     assert result['exit'] == 0
     log = Path(result['log'])
+    if not log.exists() and log.is_relative_to(repository):
+        log = repository / '.cache/ascent' / log.relative_to(repository)
     text = log.read_text()
     cases = re.findall(r'^CASE-OK (.+)$',text,re.M)
     assert cases and len(cases) == len(re.findall(r'^CASE (.+)$',text,re.M)), result['module']

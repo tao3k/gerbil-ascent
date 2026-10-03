@@ -5,3 +5,4 @@ manifest.ss
 # Generated execution logs stay local.
 *.log
 *.log.license
+.cache/

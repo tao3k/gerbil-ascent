@@ -41,7 +41,7 @@ GERBIL_BUILD_CORES=12 python3 tools/test_execution.py parallel \
 #+end_src
 
 The pool records per-module logs, exit codes and durations under
-=.gerbil/test-execution/=. It preserves failures and cancellation and never
+=.cache/ascent/test-execution/=. It preserves failures and cancellation and never
 interprets a progress heartbeat as a successful Case. Module deadlines and
 Case budgets are unchanged. Concurrent scheduling reduces queueing; it does
 not shorten the graph enumeration performed by an individual module.
@@ -58,6 +58,14 @@ the first failure is recorded as well. The host reported high load, but the
 receipt does not attribute the duration failures to host load as a proven cause.
 
 Source hashes, per-module durations, native markers, the failing module log and
-unit results are retained under =t/performance/suite-execution/module-admission/=.
+unit results are local cache artifacts. The tracked summary is
+=t/performance/suite-execution/module-admission/receipt.json=.
 These results verify parallel semantic admission and exclusive gating. They are
 not a controlled speedup measurement or remote CI evidence.
+
+* Local runtime artifacts
+All scheduler logs/receipts live under =.cache/ascent/test-execution/=. Temporary
+Just logs use =.cache/ascent/tmp/=. Performance collectors read and write under
+=.cache/ascent/t/performance/<study>/=, keeping their executable sources in =t/=.
+The cache and generated log suffixes are ignored by Git. Code and concise
+validation summaries may be committed; raw execution logs stay local.

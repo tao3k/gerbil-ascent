@@ -25,7 +25,8 @@ test-file path:
     set -euo pipefail
     test -f "{{ path }}"
     if [[ "{{ path }}" == t/qualification/ascent-temporal-lens-test.ss ]]; then exec just test-temporal; fi
-    output_file="$(mktemp)"
+    mkdir -p "{{ justfile_directory() }}/.cache/ascent/tmp"
+    output_file="$(mktemp "{{ justfile_directory() }}/.cache/ascent/tmp/case.XXXXXX")"
     trap 'rm -f "$output_file"' EXIT
     started=$SECONDS
     printf '[ascent-test] START %s\n' "{{ path }}"
@@ -51,7 +52,8 @@ test-serial:
     set -euo pipefail
     files=(t/qualification/*-test.ss)
     qualified=()
-    output_file="$(mktemp)"
+    mkdir -p "{{ justfile_directory() }}/.cache/ascent/tmp"
+    output_file="$(mktemp "{{ justfile_directory() }}/.cache/ascent/tmp/case.XXXXXX")"
     trap 'rm -f "$output_file"' EXIT
     export GERBIL_LOADPATH="{{ justfile_directory() }}${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}"
     # Reset Gerbil between bounded batches. The exhaustive operator modules
@@ -103,7 +105,8 @@ _test-quick:
     #!/usr/bin/env bash
     set -euo pipefail
     export GERBIL_LOADPATH="{{ justfile_directory() }}${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}"
-    output_file="$(mktemp)"
+    mkdir -p "{{ justfile_directory() }}/.cache/ascent/tmp"
+    output_file="$(mktemp "{{ justfile_directory() }}/.cache/ascent/tmp/case.XXXXXX")"
     trap 'rm -f "$output_file"' EXIT
     timeout "${ASCENT_GXTEST_TIMEOUT:-120s}" gerbil {{ gerbil_test_runtime_options }} test -v 3 \
         t/qualification/ascent-finite-evidence-test.ss \
@@ -136,7 +139,8 @@ admission-copy-benchmark:
 _admission-copy-benchmark:
     #!/usr/bin/env bash
     set -euo pipefail
-    output_file="$(mktemp)"
+    mkdir -p "{{ justfile_directory() }}/.cache/ascent/tmp"
+    output_file="$(mktemp "{{ justfile_directory() }}/.cache/ascent/tmp/case.XXXXXX")"
     trap 'rm -f "$output_file"' EXIT
     export GERBIL_LOADPATH="{{ justfile_directory() }}${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}"
     printf '[admission-copy] START three matched row-copy cases\n'
@@ -165,7 +169,8 @@ operator-change-probe:
 _operator-change-probe:
     #!/usr/bin/env bash
     set -euo pipefail
-    output_file="$(mktemp)"
+    mkdir -p "{{ justfile_directory() }}/.cache/ascent/tmp"
+    output_file="$(mktemp "{{ justfile_directory() }}/.cache/ascent/tmp/case.XXXXXX")"
     trap 'rm -f "$output_file"' EXIT
     export GERBIL_LOADPATH="{{ justfile_directory() }}${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}"
     timeout 90s gerbil {{ gerbil_test_runtime_options }} env gxi t/performance/scheme-operator-change-probe.ss 2>&1 | tee "$output_file"
@@ -180,7 +185,8 @@ operator-retained-probe:
 _operator-retained-probe:
     #!/usr/bin/env bash
     set -euo pipefail
-    output_file="$(mktemp)"
+    mkdir -p "{{ justfile_directory() }}/.cache/ascent/tmp"
+    output_file="$(mktemp "{{ justfile_directory() }}/.cache/ascent/tmp/case.XXXXXX")"
     trap 'rm -f "$output_file"' EXIT
     export GERBIL_LOADPATH="{{ justfile_directory() }}${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}"
     timeout 120s gerbil {{ gerbil_test_runtime_options }} env gxi t/performance/scheme-operator-retained-probe.ss 2>&1 | tee "$output_file"
@@ -205,7 +211,8 @@ _binding-benchmark:
     mkdir -p "$ASCENT_BINDING_BENCH_LIB"
     shasum -a 256 program/graph.ss program/funs.ss program/objects.ss program/evaluate.ss program/analysis.ss program/planning.ss t/qualification/ascent-binding-reference-fixture.ss t/qualification/ascent-binding-reference-evaluate.ss t/qualification/ascent-index-program-fixture.ss t/performance/binding-benchmark.ss tools/build-binding-benchmark.ss > "$ASCENT_BINDING_RECEIPT.sources"
     started=$SECONDS
-    log="$(mktemp)"
+    mkdir -p "{{ justfile_directory() }}/.cache/ascent/tmp"
+    log="$(mktemp "{{ justfile_directory() }}/.cache/ascent/tmp/run.XXXXXX")"
     (while sleep 10; do printf '[binding-benchmark] RUNNING (%ss)\n' "$((SECONDS - started))"; done) &
     progress_pid=$!
     trap 'kill "$progress_pid" 2>/dev/null || true; wait "$progress_pid" 2>/dev/null || true; rm -f "$log"' EXIT
@@ -228,7 +235,8 @@ _strata-benchmark:
     mkdir -p "$ASCENT_STRATA_BENCH_LIB"
     shasum -a 256 program/graph.ss program/funs.ss t/qualification/ascent-strata-fixture.ss t/performance/strata-benchmark.ss tools/build-strata-benchmark.ss > "$ASCENT_STRATA_RECEIPT.sources"
     started=$SECONDS
-    log="$(mktemp)"
+    mkdir -p "{{ justfile_directory() }}/.cache/ascent/tmp"
+    log="$(mktemp "{{ justfile_directory() }}/.cache/ascent/tmp/run.XXXXXX")"
     (while sleep 10; do printf '[strata-benchmark] RUNNING (%ss)\n' "$((SECONDS - started))"; done) &
     progress_pid=$!
     trap 'kill "$progress_pid" 2>/dev/null || true; wait "$progress_pid" 2>/dev/null || true; rm -f "$log"' EXIT
@@ -595,7 +603,8 @@ _positive-plan-benchmark:
     mkdir -p .gerbil/positive-plan
     shasum -a 256 program/positive.ss program/evaluate.ss program/analysis.ss t/qualification/ascent-positive-plan-reference-analysis.ss t/qualification/ascent-positive-plan-reference-evaluate.ss t/performance/positive-plan-benchmark.ss tools/build-positive-plan-benchmark.ss > "$ASCENT_POSITIVE_PLAN_RECEIPT.sources"
     timeout 150s gxi {{ gerbil_test_runtime_options }} tools/build-positive-plan-benchmark.ss
-    log="$(mktemp)"
+    mkdir -p "{{ justfile_directory() }}/.cache/ascent/tmp"
+    log="$(mktemp "{{ justfile_directory() }}/.cache/ascent/tmp/run.XXXXXX")"
     trap 'rm -f "$log"' EXIT
     GERBIL_LOADPATH="$ASCENT_POSITIVE_PLAN_LIB${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" timeout 180s gxi {{ gerbil_test_runtime_options }} t/performance/positive-plan-benchmark.ss 2>&1 | tee "$log"
     test "$(grep -c '^RESULT ' "$log")" -eq 7
@@ -613,7 +622,8 @@ _workspace-benchmark:
     mkdir -p .gerbil/execution-workspace
     shasum -a 256 program/positive.ss program/evaluate.ss program/analysis.ss t/qualification/ascent-workspace-reference-analysis.ss t/qualification/ascent-workspace-reference-positive.ss t/qualification/ascent-workspace-reference-evaluate.ss t/performance/workspace-benchmark.ss tools/build-workspace-benchmark.ss > "$ASCENT_WORKSPACE_RECEIPT.sources"
     timeout 150s gxi {{ gerbil_test_runtime_options }} tools/build-workspace-benchmark.ss
-    log="$(mktemp)"
+    mkdir -p "{{ justfile_directory() }}/.cache/ascent/tmp"
+    log="$(mktemp "{{ justfile_directory() }}/.cache/ascent/tmp/run.XXXXXX")"
     trap 'rm -f "$log"' EXIT
     GERBIL_LOADPATH="$ASCENT_WORKSPACE_LIB${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" timeout 180s gxi {{ gerbil_test_runtime_options }} t/performance/workspace-benchmark.ss 2>&1 | tee "$log"
     test "$(grep -c '^RESULT ' "$log")" -eq 9
@@ -634,7 +644,8 @@ _materialization-benchmark:
     mkdir -p .gerbil/relation-materialization
     shasum -a 256 table/expression.ss t/qualification/ascent-materialization-reference.ss t/performance/materialization-benchmark.ss tools/build-materialization-benchmark.ss > "$ASCENT_MATERIALIZATION_RECEIPT.sources"
     timeout 150s gxi {{ gerbil_test_runtime_options }} tools/build-materialization-benchmark.ss
-    log="$(mktemp)"
+    mkdir -p "{{ justfile_directory() }}/.cache/ascent/tmp"
+    log="$(mktemp "{{ justfile_directory() }}/.cache/ascent/tmp/run.XXXXXX")"
     trap 'rm -f "$log"' EXIT
     GERBIL_LOADPATH="$ASCENT_MATERIALIZATION_LIB${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" timeout 180s gxi {{ gerbil_test_runtime_options }} t/performance/materialization-benchmark.ss 2>&1 | tee "$log"
     test "$(grep -c '^RESULT ' "$log")" -eq 8
@@ -652,7 +663,8 @@ _index-lifecycle-benchmark:
     mkdir -p .gerbil/index-lifecycle
     shasum -a 256 table/funs.ss table/access.ss table/provider.ss program/evaluate.ss program/positive.ss program/analysis.ss t/qualification/ascent-index-reference-funs.ss t/qualification/ascent-index-reference-provider.ss t/qualification/ascent-index-reference-evaluate.ss t/performance/index-lifecycle-benchmark.ss tools/build-index-lifecycle-benchmark.ss > "$ASCENT_INDEX_LIFECYCLE_RECEIPT.sources"
     timeout 150s gxi {{ gerbil_test_runtime_options }} tools/build-index-lifecycle-benchmark.ss
-    log="$(mktemp)"
+    mkdir -p "{{ justfile_directory() }}/.cache/ascent/tmp"
+    log="$(mktemp "{{ justfile_directory() }}/.cache/ascent/tmp/run.XXXXXX")"
     trap 'rm -f "$log"' EXIT
     GERBIL_LOADPATH="$ASCENT_INDEX_LIFECYCLE_LIB${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" timeout 30s gxi {{ gerbil_test_runtime_options }} t/performance/index-lifecycle/module-resolution.ss > "$ASCENT_INDEX_LIFECYCLE_RECEIPT.modules"
     test "$(grep -c '/.gerbil/index-lifecycle/lib/.*\.ssi$' "$ASCENT_INDEX_LIFECYCLE_RECEIPT.modules")" -eq 5
@@ -672,7 +684,8 @@ _result-benchmark:
     mkdir -p .gerbil/result-publication
     shasum -a 256 program/result.ss program/evaluate.ss program/positive.ss program/analysis.ss table/access.ss table/funs.ss table/storage.ss t/qualification/ascent-result-reference-evaluate.ss t/performance/result-benchmark.ss tools/build-result-benchmark.ss > "$ASCENT_RESULT_RECEIPT.sources"
     timeout 150s gxi {{ gerbil_test_runtime_options }} tools/build-result-benchmark.ss
-    log="$(mktemp)"
+    mkdir -p "{{ justfile_directory() }}/.cache/ascent/tmp"
+    log="$(mktemp "{{ justfile_directory() }}/.cache/ascent/tmp/run.XXXXXX")"
     trap 'rm -f "$log"' EXIT
     GERBIL_LOADPATH="$ASCENT_RESULT_LIB${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" timeout 30s gxi {{ gerbil_test_runtime_options }} t/performance/result-publication/module-resolution.ss > "$ASCENT_RESULT_RECEIPT.modules"
     test "$(grep -c '/.gerbil/result-publication/lib/.*\.ssi$' "$ASCENT_RESULT_RECEIPT.modules")" -eq 3
@@ -692,7 +705,8 @@ test-temporal:
 _test-temporal:
     #!/usr/bin/env bash
     set -euo pipefail
-    log="$(mktemp)"
+    mkdir -p "{{ justfile_directory() }}/.cache/ascent/tmp"
+    log="$(mktemp "{{ justfile_directory() }}/.cache/ascent/tmp/run.XXXXXX")"
     trap 'rm -f "$log"' EXIT
     GERBIL_LOADPATH="{{ justfile_directory() }}${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" timeout 120s gerbil {{ gerbil_test_runtime_options }} env gerbil {{ gerbil_test_runtime_options }} t/harness/temporal-test.ss 2>&1 | tee "$log"
     if grep -E 'ERROR (CHECK|CASE|HARNESS|MODULE)|Heap overflow|Stack overflow' "$log" >/dev/null; then exit 1; fi

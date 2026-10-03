@@ -2,7 +2,8 @@
 import json
 from pathlib import Path
 import re
-root=Path(__file__).resolve().parent
+repository = Path(__file__).resolve().parents[3]
+root = repository / '.cache/ascent' / Path(__file__).resolve().parent.relative_to(repository)
 results=[dict(name='ascent-byods-trrel',exit=1,log='original-ss.log')]
 remaining=json.loads((root/'remaining-ss/summary.json').read_text())
 assert len(remaining)==16,'remaining original inventory incomplete'

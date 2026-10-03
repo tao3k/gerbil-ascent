@@ -102,7 +102,7 @@ class SchedulingTest(unittest.TestCase):
                                  '--jobs', '2'], env=environment,
                                 capture_output=True, text=True, timeout=5)
         self.assertEqual(result.returncode, 1)
-        logs = list((self.root / '.gerbil/test-execution').glob('parallel-*/*.log'))
+        logs = list((self.root / '.cache/ascent/test-execution').glob('parallel-*/*.log'))
         self.assertEqual(len(logs), len(scheduler.PARALLEL_MODULES))
         self.assertTrue(all('worker fixture' in path.read_text() for path in logs))
 
@@ -149,7 +149,7 @@ class SchedulingTest(unittest.TestCase):
         result = subprocess.run([sys.executable, '-c', self.loader, 'suite', '--jobs', '12'],
                                 env=environment, capture_output=True, text=True, timeout=5)
         self.assertEqual(result.returncode, 0, result.stderr)
-        receipts = list((self.root / '.gerbil/test-execution').glob('suite-*.json'))
+        receipts = list((self.root / '.cache/ascent/test-execution').glob('suite-*.json'))
         self.assertEqual(len(receipts), 1)
         summary = json.loads(receipts[0].read_text())
         self.assertFalse(summary['failed'])
@@ -181,7 +181,7 @@ class SchedulingTest(unittest.TestCase):
         self.assertLess(time.monotonic()-began, 8)
         with self.assertRaises(ProcessLookupError):
             os.kill(int((self.root / 'worker-pid').read_text()), 0)
-        receipts = list((self.root / '.gerbil/test-execution').glob('parallel-*/summary.json'))
+        receipts = list((self.root / '.cache/ascent/test-execution').glob('parallel-*/summary.json'))
         self.assertEqual(len(receipts), 1)
         self.assertTrue(json.loads(receipts[0].read_text())['cancelled'])
 

@@ -1,0 +1,29 @@
+[ascent-test] START t/qualification/ascent-byods-invariants-test.ss
+[test-lane] START parallel-semantics t/qualification/ascent-byods-invariants-test.ss
+[test-lane] RUNNING parallel-semantics (5s)
+[test-lane] RUNNING parallel-semantics (10s)
+[test-lane] RUNNING parallel-semantics (15s)
+[test-lane] RUNNING parallel-semantics (20s)
+HARNESS ("t/qualification/ascent-byods-invariants-test.ss")
+MODULE t/qualification/ascent-byods-invariants-test.ss
+SUITE ASCENT BYODS exhaustive three-node invariants
+CASE all directed edge subsets preserve closure and insertion order independence
+CASE-OK all directed edge subsets preserve closure and insertion order independence
+CASE four-node sparse subsets preserve larger merges
+CASE-OK four-node sparse subsets preserve larger merges
+CASE eight-node cycles and bridges preserve closure
+CASE-OK eight-node cycles and bridges preserve closure
+CASE four-node edges close across every two-producer partition
+[test-lane] RUNNING parallel-semantics (25s)
+CASE-OK four-node edges close across every two-producer partition
+CASE eight-node producer partitions retain complete joins
+CASE-OK eight-node producer partitions retain complete joins
+CASE grouped storage isolates two interleaved edge sets
+[test-lane] RUNNING parallel-semantics (30s)
+CASE-OK grouped storage isolates two interleaved edge sets
+SUITE-OK ASCENT BYODS exhaustive three-node invariants
+MODULE-OK t/qualification/ascent-byods-invariants-test.ss
+HARNESS-OK ("t/qualification/ascent-byods-invariants-test.ss")
+OK
+[test-lane] END parallel-semantics exit=0
+[ascent-test] PASS t/qualification/ascent-byods-invariants-test.ss (34s)

@@ -1,0 +1,26 @@
+[ascent-test] START t/qualification/scheme-library-contract-test.ss
+[test-lane] START exclusive t/qualification/scheme-library-contract-test.ss
+HARNESS ("t/qualification/scheme-library-contract-test.ss")
+MODULE t/qualification/scheme-library-contract-test.ss
+SUITE native and candidate common semantic contract
+CASE eight diagnostic graphs share one finite model
+CONTRACT-PROGRESS 0
+CONTRACT-PROGRESS 1
+CONTRACT-PROGRESS 3
+[test-lane] RUNNING exclusive (5s)
+CONTRACT-PROGRESS 7
+CONTRACT-PROGRESS 24
+CONTRACT-PROGRESS 31
+CONTRACT-PROGRESS 47
+CONTRACT-PROGRESS 63
+CASE-OK eight diagnostic graphs share one finite model
+CASE multi-source withdrawal and failed transaction are atomic
+CASE-OK multi-source withdrawal and failed transaction are atomic
+CASE resource exhaustion is never a completed answer
+CASE-OK resource exhaustion is never a completed answer
+SUITE-OK native and candidate common semantic contract
+MODULE-OK t/qualification/scheme-library-contract-test.ss
+HARNESS-OK ("t/qualification/scheme-library-contract-test.ss")
+OK
+[test-lane] END exclusive exit=0
+[ascent-test] PASS t/qualification/scheme-library-contract-test.ss (9s)

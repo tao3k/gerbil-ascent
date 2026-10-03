@@ -1,0 +1,33 @@
+[ascent-test] START t/qualification/ascent-binding-program-test.ss
+[test-lane] START parallel-semantics t/qualification/ascent-binding-program-test.ss
+[test-lane] RUNNING parallel-semantics (5s)
+[test-lane] RUNNING parallel-semantics (10s)
+[test-lane] RUNNING parallel-semantics (15s)
+[test-lane] RUNNING parallel-semantics (20s)
+HARNESS ("t/qualification/ascent-binding-program-test.ss")
+MODULE t/qualification/ascent-binding-program-test.ss
+SUITE ASCENT prepared binding across mixed rule clauses
+CASE all mixed-program relations match raw binding and goldens
+PROGRAM-BINDING-PARITY edge rows=4
+PROGRAM-BINDING-PARITY node rows=3
+PROGRAM-BINDING-PARITY labelled rows=3
+PROGRAM-BINDING-PARITY cycle rows=1
+PROGRAM-BINDING-PARITY hot rows=1
+PROGRAM-BINDING-PARITY selected rows=1
+PROGRAM-BINDING-PARITY choice rows=6
+PROGRAM-BINDING-PARITY generated rows=3
+PROGRAM-BINDING-PARITY dependent rows=3
+PROGRAM-BINDING-PARITY successor rows=3
+PROGRAM-BINDING-PARITY blocked rows=1
+PROGRAM-BINDING-PARITY allowed rows=2
+PROGRAM-BINDING-PARITY denied rows=1
+PROGRAM-BINDING-PARITY safe-reach rows=3
+PROGRAM-BINDING-PARITY reach rows=4
+CASE-OK all mixed-program relations match raw binding and goldens
+SUITE-OK ASCENT prepared binding across mixed rule clauses
+MODULE-OK t/qualification/ascent-binding-program-test.ss
+HARNESS-OK ("t/qualification/ascent-binding-program-test.ss")
+OK
+[test-lane] RUNNING parallel-semantics (25s)
+[test-lane] END parallel-semantics exit=0
+[ascent-test] PASS t/qualification/ascent-binding-program-test.ss (29s)

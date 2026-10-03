@@ -1,0 +1,271 @@
+... compile src/build-api/native-import-closure.ss
+... compile src/testing/discovery-runner.ss
+... compile src/parser/parse-workers.ss
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/build-api/native-import-closure~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/build-api/native-import-closure.scm)
+... compile src/testing/source-admission.ss
+... compile src/build-api/package-spec.ss
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/testing/discovery-runner~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/testing/discovery-runner.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/parser/parse-workers~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/parser/parse-workers.scm)
+... compile src/parser/test-source-scope.ss
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/testing/discovery-runner~1.scm)
+... compile testing-runner-api.ss
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/testing/source-admission~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/testing/source-admission.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/build-api/package-spec~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/build-api/package-spec.scm)
+... compile testing-source-admission-api.ss
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/build-api/package-spec~1.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/parser/test-source-scope~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/parser/test-source-scope.scm)
+... compile building-api.ss
+... compile src/build-api/source-bootstrap.ss
+... compile src/parser/core.ss
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/testing-runner-api.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/testing-source-admission-api.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/building-api.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/build-api/source-bootstrap.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/parser/core~0.scm)
+... compile src/parser/facade.ss
+... compile src/snapshot/support.ss
+... compile src/package-manager/core.ss
+... compile src/protocol/registry.ss
+... compile src/parser/language-projection.ss
+... compile src/policy/agent-list-growth.ss
+... compile src/policy/agent-style-destructuring-signals.ss
+... compile src/policy/agent-style-gerbil-signal-support.ss
+... compile src/policy/agent-string-growth.ss
+... compile src/policy/agent-alist-access.ss
+... compile src/policy/agent-anonymous-pair.ss
+... compile src/policy/agent-list-random-access.ss
+... compile src/policy/agent-build.ss
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/parser/core.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/parser/facade.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/snapshot/support~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/snapshot/support.scm)
+... compile src/policy/agent-macro-io.ss
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/package-manager/core~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/package-manager/core.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/protocol/registry~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/protocol/registry.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/parser/language-projection~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/parser/language-projection.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/policy/agent-style-destructuring-signals~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/policy/agent-style-destructuring-signals.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/policy/agent-list-growth~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/policy/agent-list-growth.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/policy/agent-style-gerbil-signal-support~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/policy/agent-string-growth~0.scm)
+... compile src/policy/agent-poo-loop-support.ss
+... compile src/policy/agent-source-scope.ss
+... compile src/policy/agent-style-message.ss
+... compile src/policy/dependency-adapter-profile.ss
+... compile src/policy/agent-style-performance-signals.ss
+... compile src/policy/agent-basic-loop-support.ss
+... compile src/policy/agent-support.ss
+... compile src/policy/modularity.ss
+... compile src/language/capability.ss
+... compile src/protocol/function-quality-facts.ss
+... compile src/protocol/quality-shape-facts.ss
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/policy/agent-string-growth.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/policy/agent-style-gerbil-signal-support.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/policy/agent-alist-access~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/policy/agent-alist-access.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/policy/agent-anonymous-pair~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/policy/agent-anonymous-pair.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/policy/agent-list-random-access~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/policy/agent-build~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/policy/agent-build.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/policy/agent-list-random-access.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/policy/agent-macro-io~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/policy/agent-macro-io.scm)
+... compile src/parser/query.ss
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/policy/agent-poo-loop-support~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/policy/agent-poo-loop-support.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/policy/agent-style-message~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/policy/agent-style-message.scm)
+... compile src/policy/agent-package-build-system.ss
+... compile src/policy/agent-poo-object-literal.ss
+... compile src/policy/repair-calibration.ss
+... compile src/commands/guide.ss
+... compile src/snapshot/parser.ss
+... compile src/package-manager/facade.ss
+... compile src/policy/agent-style-gerbil-macro-signals.ss
+... compile src/policy/gerbil-utils-source.ss
+... compile src/policy/agent-style-gerbil-boundary-signals.ss
+... compile src/policy/agent-style-docs.ss
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/policy/agent-source-scope~0.scm)
+... compile src/policy/agent-import.ss
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/policy/agent-source-scope.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/policy/dependency-adapter-profile~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/policy/dependency-adapter-profile.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/policy/agent-style-performance-signals~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/policy/agent-style-performance-signals.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/policy/agent-basic-loop-support~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/policy/agent-basic-loop-support.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/policy/agent-support~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/policy/agent-support.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/language/capability~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/language/capability.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/policy/modularity~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/policy/modularity.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/protocol/function-quality-facts~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/protocol/function-quality-facts.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/protocol/quality-shape-facts~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/protocol/quality-shape-facts.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/parser/query~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/parser/query.scm)
+... compile src/policy/agent-comment.ss
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/policy/agent-poo-object-literal~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/policy/agent-poo-object-literal.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/policy/agent-package-build-system~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/policy/agent-package-build-system.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/policy/repair-calibration~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/policy/repair-calibration.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/snapshot/parser~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/commands/guide~0.scm)
+... compile src/policy/agent-dependency-adapter.ss
+... compile src/language/facade.ss
+... compile src/protocol/structural-facts.ss
+... compile src/policy/agent-poo-loop-performance.ss
+... compile src/policy/agent-build-runtime.ss
+... compile src/extensions/poo-inheritance.ss
+... compile src/policy/agent-style-gerbil-signals.ss
+... compile src/policy/agent-style-shape.ss
+... compile src/policy/agent-macro-protocol.ss
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/commands/guide.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/package-manager/facade.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/snapshot/parser.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/policy/agent-style-gerbil-macro-signals~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/policy/agent-style-gerbil-macro-signals.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/policy/agent-style-gerbil-boundary-signals~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/policy/agent-style-gerbil-boundary-signals.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/policy/agent-style-docs~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/policy/agent-style-docs.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/policy/gerbil-utils-source~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/policy/gerbil-utils-source.scm)
+... compile src/policy/agent-poo.ss
+... compile src/extensions/poo.ss
+... compile src/protocol/structural-index.ss
+... compile src/macro-governance/admission.ss
+... compile src/policy/agent-style-quality.ss
+... compile src/policy/agent-style-details.ss
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/policy/agent-import~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/policy/agent-import.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/commands/guide~1.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/policy/agent-comment~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/policy/agent-comment.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/policy/agent-dependency-adapter~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/policy/agent-dependency-adapter.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/language/facade.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/policy/agent-build-runtime~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/policy/agent-build-runtime.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/policy/agent-poo-loop-performance~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/policy/agent-poo-loop-performance.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/extensions/poo-inheritance~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/extensions/poo-inheritance.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/protocol/structural-facts~0.scm)
+... compile src/policy/agent-basic.ss
+... compile src/commands/projection.ss
+... compile src/macro-governance/facade.ss
+... compile src/extensions/core.ss
+... compile src/policy/agent-style.ss
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/protocol/structural-facts.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/policy/agent-macro-protocol~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/policy/agent-macro-protocol.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/policy/agent-style-shape~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/policy/agent-style-shape.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/policy/agent-style-gerbil-signals~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/policy/agent-style-gerbil-signals.scm)
+... compile src/policy/streaming.ss
+... compile src/extensions/facade.ss
+... compile src/policy/agent.ss
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/policy/agent-poo~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/policy/agent-poo.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/protocol/structural-index~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/protocol/structural-index.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/extensions/poo~0.scm)
+... compile src/snapshot/core.ss
+... compile src/protocol/json.ss
+... compile src/policy/core.ss
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/extensions/poo.scm)
+... compile src/snapshot/graph.ss
+... compile src/policy/gxtest-runtime.ss
+... compile src/build-api/policy-runner.ss
+... compile src/policy/facade.ss
+... compile src/commands/info.ss
+... compile src/commands/fmt.ss
+... compile src/runtime/provider-semantic-evidence.ss
+... compile src/commands/agent.ss
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/macro-governance/admission~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/macro-governance/admission.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/policy/agent-style-quality~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/policy/agent-style-quality.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/policy/agent-style-details~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/policy/agent-style-details.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/commands/projection.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/commands/projection~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/policy/agent-basic~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/policy/agent-basic.scm)
+... compile src/snapshot/facade.ss
+... compile src/scenario/policy.ss
+... compile src/policy/gxtest-report.ss
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/macro-governance/facade.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/extensions/core~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/extensions/core.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/policy/agent-style~0.scm)
+... compile src/policy/gxtest.ss
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/policy/agent-style.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/policy/streaming~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/policy/streaming.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/extensions/facade.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/policy/agent~0.scm)
+... compile policy-api.ss
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/policy/agent.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/snapshot/core~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/snapshot/core.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/policy/core~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/policy/core.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/protocol/json~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/protocol/json.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/snapshot/graph~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/snapshot/graph.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/build-api/policy-runner~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/build-api/policy-runner.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/policy/gxtest-runtime~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/policy/gxtest-runtime.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/policy/facade.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/commands/info~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/commands/info.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/runtime/provider-semantic-evidence~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/runtime/provider-semantic-evidence.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/commands/fmt~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/commands/fmt.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/commands/agent~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/commands/agent.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/snapshot/facade.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/scenario/policy~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/scenario/policy.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/policy/gxtest-report~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/policy/gxtest-report.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/policy/gxtest~0.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/policy/gxtest.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/policy/gxtest~1.scm)
+... execute compile job (compile-file /private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/policy-api.scm)
+... fetching github.com/tao3k/poo-flow-core
+... checking out e85fd45303b208b23e5957fd316e7004994109a4
+... pulling
+... fetching github.com/tao3k/gerbil-poo
+... checking out 099b381588360a8a49fd772f666a1a00351366f5
+... pulling
+... build github.com/tao3k/gerbil-poo
+... build github.com/tao3k/poo-flow-core
+... fetching github.com/tao3k/asp-gerbil-scheme
+... checking out v0.1.2.2
+... fetching github.com/tao3k/gerbil-poo
+... checking out 099b381588360a8a49fd772f666a1a00351366f5
+... pulling
+... build github.com/tao3k/asp-gerbil-scheme
+... tagging packages

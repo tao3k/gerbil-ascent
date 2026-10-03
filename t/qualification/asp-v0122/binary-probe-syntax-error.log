@@ -1,0 +1,9 @@
+/private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/building-api.o2
+/private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/build-api/package-spec.o2
+/private/tmp/ascent-asp-v0122-gerbil/lib/asp-gerbil-scheme/src/build-api/native-import-closure.o2
+*** ERROR IN ##read-datum-or-eof -- Datum or EOF expected
+--- continuation backtrace:
+[0] ##primordial-exception-handler-hook                                                                                                                                     
+[1] ##read-datum-or-eof                                                                                                                                                     
+[2] gerbil/main#gxi-main                                                                                                                                                    
+[3] gerbil/main#gxi-main                                                                                                                                                    

@@ -1,0 +1,20 @@
+[ascent-test] START t/qualification/ascent-index-lifecycle-test.ss
+[test-lane] START exclusive t/qualification/ascent-index-lifecycle-test.ss
+HARNESS ("t/qualification/ascent-index-lifecycle-test.ss")
+MODULE t/qualification/ascent-index-lifecycle-test.ss
+SUITE Complete index lifecycle
+CASE all ordered subsets and arbitrary columns preserve keys and bucket order
+CASE-OK all ordered subsets and arbitrary columns preserve keys and bucket order
+CASE default index crosses threshold and extends without changing retained snapshots
+CASE-OK default index crosses threshold and extends without changing retained snapshots
+CASE custom build extend lookup traces and superset candidates remain identical
+CASE-OK custom build extend lookup traces and superset candidates remain identical
+CASE custom improper lookup rows retain the exact error boundary
+CASE-OK custom improper lookup rows retain the exact error boundary
+SUITE-OK Complete index lifecycle
+MODULE-OK t/qualification/ascent-index-lifecycle-test.ss
+HARNESS-OK ("t/qualification/ascent-index-lifecycle-test.ss")
+OK
+[test-lane] RUNNING exclusive (5s)
+[test-lane] END exclusive exit=0
+[ascent-test] PASS t/qualification/ascent-index-lifecycle-test.ss (7s)

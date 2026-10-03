@@ -1,0 +1,26 @@
+python3 tools/test_execution.py run -- just _check-policy
+ASP_GERBIL_SCHEME_POLICY=1 GERBIL_BUILD_CORES="${GERBIL_BUILD_CORES:-$(getconf NPROCESSORS_ONLN)}" gerbil build
+[test-lane] RUNNING exclusive (5s)
+[asp-gerbil-scheme-policy] START selected modules=41
+[test-lane] RUNNING exclusive (10s)
+[test-lane] RUNNING exclusive (15s)
+[test-lane] RUNNING exclusive (20s)
+[test-lane] RUNNING exclusive (25s)
+[test-lane] RUNNING exclusive (30s)
+[test-lane] RUNNING exclusive (35s)
+[test-lane] RUNNING exclusive (40s)
+[test-lane] RUNNING exclusive (45s)
+[test-lane] RUNNING exclusive (50s)
+[test-lane] RUNNING exclusive (55s)
+[test-lane] RUNNING exclusive (60s)
+[test-lane] RUNNING exclusive (65s)
+[test-lane] RUNNING exclusive (70s)
+[test-lane] RUNNING exclusive (75s)
+[test-lane] RUNNING exclusive (80s)
+[test-lane] RUNNING exclusive (85s)
+[asp-gerbil-scheme-policy] COMPLETE findings=0 errors=0
+[test-lane] RUNNING exclusive (90s)
+... build in current directory
+*** WARNING module std/net/request is DEPRECATED and will be removed in the future
+[test-lane] RUNNING exclusive (95s)
+[test-lane] END exclusive exit=0

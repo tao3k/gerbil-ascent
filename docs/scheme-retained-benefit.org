@@ -49,6 +49,8 @@ Shared-host interference remains possible even with counterbalancing.
 
 The first accepted 60-pair run reports the following wall-time medians. CPU
 medians track them closely; every raw pair is retained in the evidence receipt.
+The [[file:evidence/scheme-retained-benefit-20261004/receipt.json][receipt]] binds source 004a349 and the accepted native artifact,
+all raw distributions, the 125-Case rerun and five unchanged Rust differentials.
 
 | Condition | Fresh wall median (microseconds) | Retained wall median (microseconds) | Retained / fresh median |
 |-----------+---------------------------------+------------------------------------+-------------------------|

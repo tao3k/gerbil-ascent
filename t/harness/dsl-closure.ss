@@ -27,7 +27,16 @@
 (import (only-in :gerbil-ascent/t/qualification/scheme-stratified-provenance-test
                  scheme-stratified-provenance-test))
 
+(import (only-in :gerbil-ascent/t/qualification/scheme-model-closure-test
+                 scheme-model-closure-test model-closure-compute model-closure-score))
+
 (def (main . args)
+  (match args
+    (["--study-compute" id] (model-closure-compute id) (exit 0))
+    (["--study-score" id path] (model-closure-score id path) (exit 0))
+    (else (run-suites args))))
+
+(def (run-suites args)
   (let* ((entries
           (list
                 (cons "t/qualification/scheme-closure-contract-test.ss" scheme-closure-contract-test)
@@ -35,6 +44,7 @@
                 (cons "t/qualification/scheme-higher-order-test.ss" scheme-higher-order-test)
                 (cons "t/qualification/scheme-session-deletion-test.ss" scheme-session-deletion-test)
                 (cons "t/qualification/scheme-stratified-provenance-test.ss" scheme-stratified-provenance-test)
+                (cons "t/qualification/scheme-model-closure-test.ss" scheme-model-closure-test)
                 (cons "t/qualification/scheme-operator-test.ss" scheme-operator-test)
                 (cons "t/qualification/scheme-library-contract-test.ss" scheme-library-contract-test)
                 (cons "t/qualification/scheme-operator-retained-test.ss" scheme-operator-retained-test)

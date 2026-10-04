@@ -60,6 +60,7 @@
       (case (.ref clause 'ascent-clause-kind)
         ((atom negation) (pure-terms? (.ref clause 'terms)))
         ((aggregate) (and (pure-terms? (.ref clause 'terms))
+                          (not (.ref clause 'output-pattern))
                           (relational-stable-procedure? (.ref clause 'aggregate))))
         ((guard) (relational-stable-procedure? (.ref clause 'predicate)))
         ((binding) (relational-stable-procedure? (.ref clause 'compute)))

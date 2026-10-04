@@ -21,10 +21,21 @@
         relational-typed-select-eq relational-typed-flatmap relational-typed-fix
         relational-typed-term? relational-typed-term-type relational-typed-compile)
 
+;; Relation fields hold arity/domain; arrow fields hold input/output types.
+;; : (forall (a b) (-> Symbol a b (Type (Variant a b))))
+;; : (-> TypeKind TypeLeft TypeRight FiniteType)
 (defstruct relational-type (kind left right))
+;; : (forall (a c d) (-> (Type a) Symbol [(Term c)] d (Term a)))
+;; : (-> FiniteType TermKind Children TermData TypedTerm)
 (defstruct relational-typed-term (type kind inputs data))
+;; Lexical bindings use descriptor identity, never source-name equality.
+;; : (forall (a b c d) (-> (Term a) (Term b) [(Pair (Term c) d)] (Closure a b)))
+;; : (-> ParameterTerm BodyTerm LexicalEnvironment ReifiedClosure)
 (defstruct typed-closure (parameter body environment))
 
+;; Own the domain spine; its scalar elements have stable equality and hashing.
+;; : (forall (a) (-> Integer [a] (Type [a])))
+;; : (-> Arity FiniteScalarDomain FiniteRelationType)
 (def (relational-relation-type arity atoms)
   (unless (and (exact-integer? arity) (<= 0 arity 128)
                (list? atoms) (<= (length atoms) 4096)
@@ -32,11 +43,17 @@
     (error "invalid finite relation type"))
   (make-relational-type 'relation arity (delete-duplicates/hash (map values atoms))))
 
+;; : (forall (a b) (-> (Type a) (Type b) (Type (-> a b))))
+;; : (-> FiniteType FiniteType FiniteArrowType)
 (def (relational-arrow-type input output)
   (unless (and (relational-type? input) (relational-type? output))
     (error "invalid finite arrow type"))
   (make-relational-type 'arrow input output))
 
+;; Relation equality compares domain membership, independent of atom order.
+;; Type candidates are untrusted inputs; non-descriptors compare false.
+;; : (forall (a b) (-> a b Boolean))
+;; : (-> TypeCandidate TypeCandidate Boolean)
 (def (relational-type=? left right)
   (and (relational-type? left) (relational-type? right)
        (eq? (relational-type-kind left) (relational-type-kind right))
@@ -52,6 +69,8 @@
          (else #f))))
 
 ;;; Symbolic cardinalities avoid constructing enormous powerset/function spaces.
+;; : (forall (a) (-> (Type a) SExpression))
+;; : (-> FiniteType SymbolicCardinality)
 (def (type-cardinality type)
   (case (relational-type-kind type)
     ((relation) (list 'expt 2 (list 'expt (length (relational-type-right type))
@@ -60,6 +79,8 @@
                   (type-cardinality (relational-type-left type))))
     (else (error "unknown finite type"))))
 
+;; : (forall (a) (-> (Type a) SExpression))
+;; : (-> FiniteType SymbolicHeight)
 (def (relational-type-height-expression type)
   (unless (relational-type? type) (error "expected finite type"))
   (case (relational-type-kind type)
@@ -68,22 +89,31 @@
                   (relational-type-height-expression (relational-type-right type))))
     (else (error "unknown finite type"))))
 
+;; : (forall (a) (-> (Term [a]) (Type [a])))
+;; : (-> TypedRelationTerm FiniteRelationType)
 (def (relation-term-type term)
   (unless (and (relational-typed-term? term)
                (eq? (relational-type-kind (relational-typed-term-type term)) 'relation))
     (error "expected a typed relation"))
   (relational-typed-term-type term))
 
+;; : (forall (a b) (-> (Type [a]) (Type [b]) Boolean))
+;; : (-> FiniteRelationType FiniteRelationType Boolean)
 (def (same-domain? left right)
   (relational-type=? (relational-relation-type 0 (relational-type-right left))
                      (relational-relation-type 0 (relational-type-right right))))
 
+;; : (forall (a) (-> (Type [a]) [[a]] Void))
+;; : (-> FiniteRelationType Rows Void)
 (def (check-domain! type rows)
   (for-each (lambda (row)
               (for-each (lambda (atom)
                           (unless (member atom (relational-type-right type))
                             (error "typed relation value outside declared domain" atom))) row)) rows))
 
+;; Freeze caller-owned row spines and check every atom against the domain.
+;; : (forall (a) (-> Symbol (Type [a]) [[a]] (Term [a])))
+;; : (-> SourceName FiniteRelationType Rows TypedRelationTerm)
 (def (relational-typed-source name type rows)
   (unless (and (symbol? name) (relational-type? type)
                (eq? (relational-type-kind type) 'relation))
@@ -92,6 +122,9 @@
     (check-domain! type owned)
     (make-relational-typed-term type 'source [] (vector name owned))))
 
+;; Invoke the builder once. Retain its descriptor and binder, not the callback.
+;; : (forall (a b) (-> (Type a) (-> (Term a) (Term b)) (Term (-> a b))))
+;; : (-> FiniteType DescriptorBuilder TypedFunctionTerm)
 (def (relational-typed-function input builder)
   (unless (and (relational-type? input) (procedure? builder))
     (error "invalid typed function builder"))
@@ -101,6 +134,8 @@
     (make-relational-typed-term (relational-arrow-type input (relational-typed-term-type body))
                                 'function (list body) parameter)))
 
+;; : (forall (a b) (-> (Term (-> a b)) (Term a) (Term b)))
+;; : (-> TypedFunctionTerm TypedTerm TypedTerm)
 (def (relational-typed-apply function argument)
   (unless (and (relational-typed-term? function) (relational-typed-term? argument)
                (eq? (relational-type-kind (relational-typed-term-type function)) 'arrow)
@@ -110,11 +145,15 @@
   (make-relational-typed-term (relational-type-right (relational-typed-term-type function))
                               'apply (list function argument) #f))
 
+;; : (forall (a) (-> (Term [a]) (Term [a]) (Term [a])))
+;; : (-> TypedRelationTerm TypedRelationTerm TypedRelationTerm)
 (def (relational-typed-union left right)
   (let ((lt (relation-term-type left)) (rt (relation-term-type right)))
     (unless (relational-type=? lt rt) (error "typed union signature mismatch"))
     (make-relational-typed-term lt 'union (list left right) #f)))
 
+;; : (forall (a) (-> (Term [a]) (Term [a]) Integer Integer (Term [a])))
+;; : (-> TypedRelationTerm TypedRelationTerm Column Column TypedRelationTerm)
 (def (relational-typed-join left right left-key right-key)
   (let ((lt (relation-term-type left)) (rt (relation-term-type right)))
     (unless (and (same-domain? lt rt)
@@ -126,6 +165,8 @@
                                (relational-type-right lt))
      'join (list left right) (vector left-key right-key))))
 
+;; : (forall (a) (-> (Term [a]) [Integer] (Term [a])))
+;; : (-> TypedRelationTerm Columns TypedRelationTerm)
 (def (relational-typed-project input columns)
   (let (type (relation-term-type input))
     (unless (and (list? columns)
@@ -136,6 +177,8 @@
      (relational-relation-type (length columns) (relational-type-right type))
      'project (list input) (map values columns))))
 
+;; : (forall (a) (-> (Term [a]) Integer a (Term [a])))
+;; : (-> TypedRelationTerm Column Scalar TypedRelationTerm)
 (def (relational-typed-select-eq input column value)
   (let (type (relation-term-type input))
     (unless (and (exact-integer? column) (<= 0 column) (< column (relational-type-left type))
@@ -143,6 +186,8 @@
       (error "typed selection outside declared domain/signature"))
     (make-relational-typed-term type 'select-eq (list input) (vector column value))))
 
+;; : (forall (a b) (-> (Term [a]) (Type [b]) [(Tuple [a] [b])] (Term [b])))
+;; : (-> TypedRelationTerm FiniteRelationType FiniteMapping TypedRelationTerm)
 (def (relational-typed-flatmap input output-type entries)
   (let ((it (relation-term-type input)))
     (unless (and (relational-type? output-type)
@@ -154,6 +199,8 @@
       (check-domain! output-type (map (lambda (row) (list-tail row width)) table))
       (make-relational-typed-term output-type 'flatmap (list input) (vector width table)))))
 
+;; : (forall (a) (-> (Term (-> a a)) (Term a)))
+;; : (-> TypedEndofunctionTerm TypedTerm)
 (def (relational-typed-fix function)
   (unless (and (relational-typed-term? function)
                (eq? (relational-type-kind (relational-typed-term-type function)) 'arrow))
@@ -167,6 +214,15 @@
 ;;; Normalization is a compiler phase with a real expansion budget. Every
 ;;; source is rechecked; lexical parameter lookup rejects escaped captures.
 ;;; Functions are data closures, and application is beta lowering into one IR.
+;; Every invocation owns its counters, source tables and domain accumulator.
+;; Revalidate the complete descriptor graph before lowering. Count every type,
+;; term and lowering visit; shared nodes do not grant a budget exemption.
+;; Preserve lexical environments by reifying functions as closures. Relation
+;; fixed points lower to IR; function fixed points use the conservative finite
+;; height with saturating arithmetic, never sample-based early termination.
+;; ExpansionLimit is optional at the call site and defaults to 10000.
+;; : (forall (a p n) (-> (Term [a]) Integer Integer Integer Integer (Values p n)))
+;; : (-> TypedRelationTerm InputLimit DerivedLimit OutputLimit ExpansionLimit (Values Program OutputName))
 (def (relational-typed-compile term input-limit derived-limit output-limit (expansion-limit 10000))
   (relation-term-type term)
   (unless (and (exact-integer? expansion-limit) (> expansion-limit 0))

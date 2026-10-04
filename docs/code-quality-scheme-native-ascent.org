@@ -1760,3 +1760,75 @@ function-valued fixed points, and =scheme-session-deletion-test= passes 12 Cases
 including 64 graphs and 192 successive withdrawals. Both retain native,
 module/harness/final success markers and exit 0. The 57-module/488-Case receipt
 above precedes this integration; it is not relabeled as an integrated full run.
+
+* Study: compiler phase contracts and higher-order normalization
+
+This study reads the installed Gerbil compiler Scheme directly, rather than
+inferring quality from an optimization result. Three concrete structures matter:
+
+- =compiler/optimize-top.ss:21-86= declares separate visitors for top-level
+  types, declarations, expression types, complete type collection and mutators.
+  The operation determines the visitor, while the AST representation stays
+  shared. ASCENT already separates descriptor validation from lowering inside
+  =relational-typed-compile=; the appropriate improvement is to state their
+  different obligations, rather than introduce another visitor framework.
+- =compiler/optimize-base.ss:15-29,492-503= names optimizer, local and path
+  contexts separately. Type lookup searches path facts, then local facts, then
+  the optimizer table; alias resolution delegates to this lookup. The mutable
+  optimizer tables are fresh in the optimizer-info constructor. ASCENT's
+  compile counters, source tables and domain accumulator likewise belong to
+  one invocation. Reified closure environments use descriptor identity and
+  lexical bindings; source-name equality cannot replace that relation.
+- =compiler/optimize-top.ss:182-194,213-268= still visits an expression when its
+  binding type is already known. Lambda and let handling establish the local
+  environment around the body traversal. Known metadata therefore does not
+  authorize skipping traversal or changing scope. In ASCENT, validation,
+  lowering visits and conservative finite-height expansion keep their original
+  budget charges even when source lowering reuses an existing source node.
+
+The complete =program/higher-order.ss= owner now carries adjacent polymorphic
+and domain signatures for all 21 definitions, including its three representation
+constructors. Comments state the distinct relation/arrow field meanings, source
+spine ownership, builder-once construction, identity-based lexical bindings and
+full graph validation before lowering. These signatures describe runtime checked
+contracts; they do not install a static type checker or change function bodies.
+Removing comment lines from the module yields exactly the previous source bytes.
+
+Two independent native regression Cases specify domain publication order across
+three successive compiles and the existing flatmap normalization budget boundary:
+limit five rejects and limit six accepts. They include false and character atoms
+and retain all previous closure, domain, native Session and rollback tests.
+
+A separate candidate replaced repeated accumulated-domain copy/deduplication
+with an invocation-owned table of each atom's latest position and representative,
+then sorted only at publication. Inspecting =std/list/list.ss:21-30= was necessary:
+=delete-duplicates/hash= keeps the latest occurrence by default, so first-seen
+insertion order would silently change observable domain declarations. The candidate
+passes all 17 native higher-order Cases, including the new order and budget goldens.
+
+The frozen native reference is =bf7b75e=. Whole =relational-typed-compile= calls
+are timed; descriptors are constructed outside timing, and published finite
+domains and source-handle count are checked afterwards. The intended fixtures
+use domain widths/depths 2/0, 2/16, 128/16 and 512/32, each with 1000 alternating
+pairs and explicit GC every 20 pairs outside timing. Both normalizers resolve to
+native =.ssi= files. The completed 2/0 control has median old/new 1126/1134
+jiffies, 445 strict wins and p95 57595/155971. Wall-clock tails vary substantially;
+no causal CPU or allocation conclusion is drawn from them. The 2/16 fixture reaches
+100 pairs before the unchanged 180-second deadline, and the invocation exits 124.
+The remaining fixtures are not measured. No sample count or deadline is relaxed.
+This evidence does not justify the extra collector and sorting machinery; the
+candidate is removed completely. Production execution remains unchanged.
+All candidate source, build output and raw diagnostics remain in ignored
+=.cache/ascent/domain-collection/=. The committed work is module-wide contract
+clarification, independently specified regression tests and this compiler study.
+
+After removing the candidate, all 17 higher-order Cases pass again with native,
+module/harness/final success markers and exit 0. The final selected library policy
+audit has =findings=0=, =errors=0= and exit 0, closing the earlier higher-order
+contract warning. Parser-owned diagnostics identified signature prose being
+concatenated into contracts and a malformed multiline optional-arity declaration.
+Explanations now precede complete signatures; the normalization signature states
+its full parameter list, with the default expansion limit explained separately.
+The representation contracts retain explicit type-variable relationships rather
+than =Any= placeholders. Final comment-stripped source still matches =bf7b75e=.
+No full-suite or application performance result is claimed for this study.

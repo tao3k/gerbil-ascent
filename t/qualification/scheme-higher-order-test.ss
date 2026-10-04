@@ -49,6 +49,32 @@
 
 (def scheme-higher-order-test
   (test-suite "Finite positive higher-order descriptors"
+    (test-case "normalization publishes the latest domain order without leaking between compiles"
+      (let* ((input-type (relational-relation-type 1 '(a b)))
+             (source (relational-typed-source 'source input-type '((a)))))
+        (for-each
+         (lambda (output-domain mapped expected)
+           (let-values (((program output)
+                         (relational-typed-compile
+                          (relational-typed-flatmap
+                           source (relational-relation-type 1 output-domain)
+                           (list (list '(a) (list mapped)))) 32 256 512)))
+             (let (relation (find (lambda (relation) (eq? (.ref relation 'name) output))
+                                 (.ref program 'relations)))
+               (check-equal? (vector-ref (.ref relation 'checked-domain) 1)
+                             (list expected)))))
+         '((b c) (z b) (b c)) '(c z c) '((c a b) (z a b) (c a b)))))
+    (test-case "domain collection retains the exact normalization budget boundary"
+      (let* ((type (relational-relation-type 1 '(#f #\x)))
+             (source (relational-typed-source 'source type '((#f))))
+             (term (relational-typed-flatmap source type '(((#f) (#\x))))))
+        (check-equal?
+         (with-catch error-message
+           (lambda () (relational-typed-compile term 32 256 512 5) 'accepted))
+         "typed normalization budget exceeded")
+        (let-values (((program output) (relational-typed-compile term 32 256 512 6)))
+          (check-equal? (symbol? output) #t)
+          (check-equal? (pair? (.ref program 'relations)) #t))))
     (test-case "a function accepts a function and returns a closure over a finite fix"
       (let* ((edge (relational-typed-source 'edge r2 '((1 2) (2 3))))
              (seed (relational-typed-source 'seed r2 '((0 1))))

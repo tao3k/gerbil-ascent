@@ -40,3 +40,6 @@ three-node graphs, duplicate sources, recursive cycles, wildcard negation,
 empty queries/groups, exact reductions, missing-edge and cycle tampering,
 source-generation changes and independent resource caps. Runtime deadlines,
 heap fences and genuine progress requirements remain unchanged.
+
+The [[file:evidence/scheme-stratified-closure-20261004/receipt.json][source-bound receipt]] records both seven-Case Suites, raw logs,
+independent corpora, fixed bounds and excluded failed runs.

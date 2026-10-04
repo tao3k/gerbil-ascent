@@ -1,0 +1,314 @@
+HARNESS Scheme DSL closure
+MODULE t/qualification/scheme-session-deletion-test.ss
+SUITE Native dependency invalidation and source withdrawal
+CASE deletion skips an independent component and restores all rules for later append
+ERROR CHECK (.ref updated 'evaluation-path) "t/qualification/scheme-session-deletion-test.ss"@72.23-72.54
+
+*** ERROR IN "t/qualification/scheme-session-deletion-test.ss"@72.23-72.54 [TestError]: result does not match expectation
+--- irritants: (.ref updated 'evaluation-path) test: (.ref updated 'evaluation-path) result: stratified-semi-naive expectation: stratified-dependency-invalidation 
+--- continuation backtrace:
+[0] raise                                                                                                                                                                   
+[1] gerbil-ascent__t__qualification__scheme-session-deletion-test#                                                                                                          
+[2] std/test/base#__test-do-check!                                                                                                                                          
+[3] std/test/base#__test-check!                                                                                                                                             
+[4] gerbil-ascent__t__qualification__scheme-session-deletion-test#                                                                                                          
+[5] std/test/base#__test-case!                                                                                                                                              
+[6] std/test/base#__test-suite!                                                                                                                                             
+[7] std/test/base#__test-suite!                                                                                                                                             
+[8] std/test/base#__test-suite!                                                                                                                                             
+[9] std/test/base#__test-module!                                                                                                                                            
+...
+[12] std/test/base#__test-harness!                                                                                                                                          
+[13] std/test/base#__test-harness!                                                                                                                                          
+[14] std/test/base#__test-harness!                                                                                                                                          
+[15] gerbil-ascent/t/harness/dsl-closure#main                                                                                                                               
+CASE removing all base support eliminates a recursive cycle
+CASE-OK removing all base support eliminates a recursive cycle
+CASE negation and aggregate dependencies invalidate lower-stratum changes
+CASE-OK negation and aggregate dependencies invalidate lower-stratum changes
+CASE lattice replacement retracts an old maximum and preserves independent final rows
+ERROR CHECK (and (memq 'best (.ref result 'reused-relations)) #t) "t/qualification/scheme-session-deletion-test.ss"@109.25-109.78
+
+*** ERROR IN "t/qualification/scheme-session-deletion-test.ss"@109.25-109.78 [TestError]: result does not match expectation
+--- irritants: (and (memq 'best (.ref result 'reused-relations)) #t) test: (and (memq 'best (.ref result 'reused-relations)) #t) result: #f expectation: #t 
+--- continuation backtrace:
+[0] raise                                                                                                                                                                   
+[1] gerbil-ascent__t__qualification__scheme-session-deletion-test#                                                                                                          
+[2] std/test/base#__test-do-check!                                                                                                                                          
+[3] std/test/base#__test-check!                                                                                                                                             
+[4] gerbil-ascent__t__qualification__scheme-session-deletion-test#                                                                                                          
+[5] std/test/base#__test-case!                                                                                                                                              
+[6] std/test/base#__test-suite!                                                                                                                                             
+[7] std/test/base#__test-suite!                                                                                                                                             
+[8] std/test/base#__test-suite!                                                                                                                                             
+[9] std/test/base#__test-module!                                                                                                                                            
+...
+[12] std/test/base#__test-harness!                                                                                                                                          
+[13] std/test/base#__test-harness!                                                                                                                                          
+[14] std/test/base#__test-harness!                                                                                                                                          
+[15] gerbil-ascent/t/harness/dsl-closure#main                                                                                                                               
+CASE failed prospective deletion transaction retains completed state
+CASE-OK failed prospective deletion transaction retains completed state
+CASE a forged descriptor cannot authorize an opaque callback for result reuse
+CASE-OK a forged descriptor cannot authorize an opaque callback for result reuse
+CASE all 64 three-node graphs and 192 successive withdrawals agree with fresh closure
+DELETE-CHECKED initial 0
+DELETE-CHECKED initial 1
+DELETE-CHECKED withdrawal 1 1
+DELETE-CHECKED initial 2
+DELETE-CHECKED withdrawal 2 1
+DELETE-CHECKED initial 3
+DELETE-CHECKED withdrawal 3 1
+DELETE-CHECKED withdrawal 3 2
+DELETE-CHECKED initial 4
+DELETE-CHECKED withdrawal 4 1
+DELETE-CHECKED initial 5
+DELETE-CHECKED withdrawal 5 1
+DELETE-CHECKED withdrawal 5 2
+DELETE-CHECKED initial 6
+DELETE-CHECKED withdrawal 6 1
+DELETE-CHECKED withdrawal 6 2
+DELETE-CHECKED initial 7
+DELETE-CHECKED withdrawal 7 1
+DELETE-CHECKED withdrawal 7 2
+DELETE-CHECKED withdrawal 7 3
+DELETE-CHECKED initial 8
+DELETE-CHECKED withdrawal 8 1
+DELETE-CHECKED initial 9
+DELETE-CHECKED withdrawal 9 1
+DELETE-CHECKED withdrawal 9 2
+DELETE-CHECKED initial 10
+DELETE-CHECKED withdrawal 10 1
+DELETE-CHECKED withdrawal 10 2
+DELETE-CHECKED initial 11
+DELETE-CHECKED withdrawal 11 1
+DELETE-CHECKED withdrawal 11 2
+DELETE-CHECKED withdrawal 11 3
+DELETE-CHECKED initial 12
+DELETE-CHECKED withdrawal 12 1
+DELETE-CHECKED withdrawal 12 2
+DELETE-CHECKED initial 13
+DELETE-CHECKED withdrawal 13 1
+DELETE-CHECKED withdrawal 13 2
+DELETE-CHECKED withdrawal 13 3
+DELETE-CHECKED initial 14
+DELETE-CHECKED withdrawal 14 1
+DELETE-CHECKED withdrawal 14 2
+DELETE-CHECKED withdrawal 14 3
+DELETE-CHECKED initial 15
+DELETE-CHECKED withdrawal 15 1
+DELETE-CHECKED withdrawal 15 2
+DELETE-CHECKED withdrawal 15 3
+DELETE-CHECKED withdrawal 15 4
+DELETE-CHECKED initial 16
+DELETE-CHECKED withdrawal 16 1
+DELETE-CHECKED initial 17
+DELETE-CHECKED withdrawal 17 1
+DELETE-CHECKED withdrawal 17 2
+DELETE-CHECKED initial 18
+DELETE-CHECKED withdrawal 18 1
+DELETE-CHECKED withdrawal 18 2
+DELETE-CHECKED initial 19
+DELETE-CHECKED withdrawal 19 1
+DELETE-CHECKED withdrawal 19 2
+DELETE-CHECKED withdrawal 19 3
+DELETE-CHECKED initial 20
+DELETE-CHECKED withdrawal 20 1
+DELETE-CHECKED withdrawal 20 2
+DELETE-CHECKED initial 21
+DELETE-CHECKED withdrawal 21 1
+DELETE-CHECKED withdrawal 21 2
+DELETE-CHECKED withdrawal 21 3
+DELETE-CHECKED initial 22
+DELETE-CHECKED withdrawal 22 1
+DELETE-CHECKED withdrawal 22 2
+DELETE-CHECKED withdrawal 22 3
+DELETE-CHECKED initial 23
+DELETE-CHECKED withdrawal 23 1
+DELETE-CHECKED withdrawal 23 2
+DELETE-CHECKED withdrawal 23 3
+DELETE-CHECKED withdrawal 23 4
+DELETE-CHECKED initial 24
+DELETE-CHECKED withdrawal 24 1
+DELETE-CHECKED withdrawal 24 2
+DELETE-CHECKED initial 25
+DELETE-CHECKED withdrawal 25 1
+DELETE-CHECKED withdrawal 25 2
+DELETE-CHECKED withdrawal 25 3
+DELETE-CHECKED initial 26
+DELETE-CHECKED withdrawal 26 1
+DELETE-CHECKED withdrawal 26 2
+DELETE-CHECKED withdrawal 26 3
+DELETE-CHECKED initial 27
+DELETE-CHECKED withdrawal 27 1
+DELETE-CHECKED withdrawal 27 2
+DELETE-CHECKED withdrawal 27 3
+DELETE-CHECKED withdrawal 27 4
+DELETE-CHECKED initial 28
+DELETE-CHECKED withdrawal 28 1
+DELETE-CHECKED withdrawal 28 2
+DELETE-CHECKED withdrawal 28 3
+DELETE-CHECKED initial 29
+DELETE-CHECKED withdrawal 29 1
+DELETE-CHECKED withdrawal 29 2
+DELETE-CHECKED withdrawal 29 3
+DELETE-CHECKED withdrawal 29 4
+DELETE-CHECKED initial 30
+DELETE-CHECKED withdrawal 30 1
+DELETE-CHECKED withdrawal 30 2
+DELETE-CHECKED withdrawal 30 3
+DELETE-CHECKED withdrawal 30 4
+DELETE-CHECKED initial 31
+DELETE-CHECKED withdrawal 31 1
+DELETE-CHECKED withdrawal 31 2
+DELETE-CHECKED withdrawal 31 3
+DELETE-CHECKED withdrawal 31 4
+DELETE-CHECKED withdrawal 31 5
+DELETE-CHECKED initial 32
+DELETE-CHECKED withdrawal 32 1
+DELETE-CHECKED initial 33
+DELETE-CHECKED withdrawal 33 1
+DELETE-CHECKED withdrawal 33 2
+DELETE-CHECKED initial 34
+DELETE-CHECKED withdrawal 34 1
+DELETE-CHECKED withdrawal 34 2
+DELETE-CHECKED initial 35
+DELETE-CHECKED withdrawal 35 1
+DELETE-CHECKED withdrawal 35 2
+DELETE-CHECKED withdrawal 35 3
+DELETE-CHECKED initial 36
+DELETE-CHECKED withdrawal 36 1
+DELETE-CHECKED withdrawal 36 2
+DELETE-CHECKED initial 37
+DELETE-CHECKED withdrawal 37 1
+DELETE-CHECKED withdrawal 37 2
+DELETE-CHECKED withdrawal 37 3
+DELETE-CHECKED initial 38
+DELETE-CHECKED withdrawal 38 1
+DELETE-CHECKED withdrawal 38 2
+DELETE-CHECKED withdrawal 38 3
+DELETE-CHECKED initial 39
+DELETE-CHECKED withdrawal 39 1
+DELETE-CHECKED withdrawal 39 2
+DELETE-CHECKED withdrawal 39 3
+DELETE-CHECKED withdrawal 39 4
+DELETE-CHECKED initial 40
+DELETE-CHECKED withdrawal 40 1
+DELETE-CHECKED withdrawal 40 2
+DELETE-CHECKED initial 41
+DELETE-CHECKED withdrawal 41 1
+DELETE-CHECKED withdrawal 41 2
+DELETE-CHECKED withdrawal 41 3
+DELETE-CHECKED initial 42
+DELETE-CHECKED withdrawal 42 1
+DELETE-CHECKED withdrawal 42 2
+DELETE-CHECKED withdrawal 42 3
+DELETE-CHECKED initial 43
+DELETE-CHECKED withdrawal 43 1
+DELETE-CHECKED withdrawal 43 2
+DELETE-CHECKED withdrawal 43 3
+DELETE-CHECKED withdrawal 43 4
+DELETE-CHECKED initial 44
+DELETE-CHECKED withdrawal 44 1
+DELETE-CHECKED withdrawal 44 2
+DELETE-CHECKED withdrawal 44 3
+DELETE-CHECKED initial 45
+DELETE-CHECKED withdrawal 45 1
+DELETE-CHECKED withdrawal 45 2
+DELETE-CHECKED withdrawal 45 3
+DELETE-CHECKED withdrawal 45 4
+DELETE-CHECKED initial 46
+DELETE-CHECKED withdrawal 46 1
+DELETE-CHECKED withdrawal 46 2
+DELETE-CHECKED withdrawal 46 3
+DELETE-CHECKED withdrawal 46 4
+DELETE-CHECKED initial 47
+DELETE-CHECKED withdrawal 47 1
+DELETE-CHECKED withdrawal 47 2
+DELETE-CHECKED withdrawal 47 3
+DELETE-CHECKED withdrawal 47 4
+DELETE-CHECKED withdrawal 47 5
+DELETE-CHECKED initial 48
+DELETE-CHECKED withdrawal 48 1
+DELETE-CHECKED withdrawal 48 2
+DELETE-CHECKED initial 49
+DELETE-CHECKED withdrawal 49 1
+DELETE-CHECKED withdrawal 49 2
+DELETE-CHECKED withdrawal 49 3
+DELETE-CHECKED initial 50
+DELETE-CHECKED withdrawal 50 1
+DELETE-CHECKED withdrawal 50 2
+DELETE-CHECKED withdrawal 50 3
+DELETE-CHECKED initial 51
+DELETE-CHECKED withdrawal 51 1
+DELETE-CHECKED withdrawal 51 2
+DELETE-CHECKED withdrawal 51 3
+DELETE-CHECKED withdrawal 51 4
+DELETE-CHECKED initial 52
+DELETE-CHECKED withdrawal 52 1
+DELETE-CHECKED withdrawal 52 2
+DELETE-CHECKED withdrawal 52 3
+DELETE-CHECKED initial 53
+DELETE-CHECKED withdrawal 53 1
+DELETE-CHECKED withdrawal 53 2
+DELETE-CHECKED withdrawal 53 3
+DELETE-CHECKED withdrawal 53 4
+DELETE-CHECKED initial 54
+DELETE-CHECKED withdrawal 54 1
+DELETE-CHECKED withdrawal 54 2
+DELETE-CHECKED withdrawal 54 3
+DELETE-CHECKED withdrawal 54 4
+DELETE-CHECKED initial 55
+DELETE-CHECKED withdrawal 55 1
+DELETE-CHECKED withdrawal 55 2
+DELETE-CHECKED withdrawal 55 3
+DELETE-CHECKED withdrawal 55 4
+DELETE-CHECKED withdrawal 55 5
+DELETE-CHECKED initial 56
+DELETE-CHECKED withdrawal 56 1
+DELETE-CHECKED withdrawal 56 2
+DELETE-CHECKED withdrawal 56 3
+DELETE-CHECKED initial 57
+DELETE-CHECKED withdrawal 57 1
+DELETE-CHECKED withdrawal 57 2
+DELETE-CHECKED withdrawal 57 3
+DELETE-CHECKED withdrawal 57 4
+DELETE-CHECKED initial 58
+DELETE-CHECKED withdrawal 58 1
+DELETE-CHECKED withdrawal 58 2
+DELETE-CHECKED withdrawal 58 3
+DELETE-CHECKED withdrawal 58 4
+DELETE-CHECKED initial 59
+DELETE-CHECKED withdrawal 59 1
+DELETE-CHECKED withdrawal 59 2
+DELETE-CHECKED withdrawal 59 3
+DELETE-CHECKED withdrawal 59 4
+DELETE-CHECKED withdrawal 59 5
+DELETE-CHECKED initial 60
+DELETE-CHECKED withdrawal 60 1
+DELETE-CHECKED withdrawal 60 2
+DELETE-CHECKED withdrawal 60 3
+DELETE-CHECKED withdrawal 60 4
+DELETE-CHECKED initial 61
+DELETE-CHECKED withdrawal 61 1
+DELETE-CHECKED withdrawal 61 2
+DELETE-CHECKED withdrawal 61 3
+DELETE-CHECKED withdrawal 61 4
+DELETE-CHECKED withdrawal 61 5
+DELETE-CHECKED initial 62
+DELETE-CHECKED withdrawal 62 1
+DELETE-CHECKED withdrawal 62 2
+DELETE-CHECKED withdrawal 62 3
+DELETE-CHECKED withdrawal 62 4
+DELETE-CHECKED withdrawal 62 5
+DELETE-CHECKED initial 63
+DELETE-CHECKED withdrawal 63 1
+DELETE-CHECKED withdrawal 63 2
+DELETE-CHECKED withdrawal 63 3
+DELETE-CHECKED withdrawal 63 4
+DELETE-CHECKED withdrawal 63 5
+DELETE-CHECKED withdrawal 63 6
+CASE-OK all 64 three-node graphs and 192 successive withdrawals agree with fresh closure
+SUITE-OK Native dependency invalidation and source withdrawal
+MODULE-OK t/qualification/scheme-session-deletion-test.ss
+HARNESS-OK Scheme DSL closure

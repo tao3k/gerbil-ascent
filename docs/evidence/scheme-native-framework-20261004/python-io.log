@@ -1,0 +1,10 @@
+test_frozen_input_limit_rejects_before_dispatch (test_model_context.ProviderByteContext.test_frozen_input_limit_rejects_before_dispatch) ... ok
+test_request_context_difference_is_only_real_computed_feedback (test_model_context.ProviderByteContext.test_request_context_difference_is_only_real_computed_feedback) ... ok
+test_child_failure_propagates (test_supervision.BuildActivity.test_child_failure_propagates) ... ok
+test_cpu_work_can_continue_without_output (test_supervision.BuildActivity.test_cpu_work_can_continue_without_output) ... ok
+test_sleeping_child_is_stopped (test_supervision.BuildActivity.test_sleeping_child_is_stopped) ... ok
+
+----------------------------------------------------------------------
+Ran 5 tests in 6.907s
+
+OK

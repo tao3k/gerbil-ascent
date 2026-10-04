@@ -1,0 +1,74 @@
+HARNESS ("t/qualification/scheme-artifact-test.ss")
+MODULE t/qualification/scheme-artifact-test.ss
+SUITE Scheme native artifact publication
+CASE completed build beyond 180 seconds is accepted
+DSL-SOURCE-FROZEN
+DSL-ARTIFACT-STAGED f67bea1e29bf7fa00d04549495d9d5d3bf5fc92aa36a59fc471f792d6c8b153c
+DSL-ARTIFACT-BOUND f67bea1e29bf7fa00d04549495d9d5d3bf5fc92aa36a59fc471f792d6c8b153c
+DSL-ARTIFACT-VERIFIED f67bea1e29bf7fa00d04549495d9d5d3bf5fc92aa36a59fc471f792d6c8b153c
+ERROR CASE completed build beyond 180 seconds is accepted
+(Argument 2) STRING expected
+(setenv "ASCENT_DSL_BUILD_TOKEN" #f)
+--- continuation backtrace:
+[0] __with-exception-handler                                                                                                                                                
+[1] #<procedure #13>                                                                                                                                                        "t/qualification/scheme-artifact-test.ss"@26:7-26:46                                                                                                                         (setenv "ASCENT_DSL_BUILD_TOKEN" #:token2624)
+[2] std/test/base#__test-case!                                                                                                                                                                                                                                                                                                                           ((let () (declare (not safe)) (##unchecked-structure-ref _%tc499784%_ '6 '#f '#f)))
+[3] std/test/base#__test-suite!                                                                                                                                                                                                                                                                                                                          (##call-with-current-continuation __tmp242471)
+[4] std/test/base#__test-suite!                                                                                                                                                                                                                                                                                                                          (##for-each __tmp242470 __tmp242469)
+[5] std/test/base#__test-suite!                                                                                                                                                                                                                                                                                                                          (##for-each __tmp242470 __tmp242469)
+[6] std/test/base#__test-module!                                                                                                                                                                                                                                                                                                                         (##call-with-current-continuation __tmp242464)
+[7] std/test/base#__test-module!                                                                                                                                                                                                                                                                                                                         (##for-each __tmp242463 __tmp242462)
+[8] std/test/base#__test-module!                                                                                                                                                                                                                                                                                                                         (##for-each __tmp242463 __tmp242462)
+[9] std/test/base#__test-harness!                                                                                                                                                                                                                                                                                                                        (##call-with-current-continuation __tmp242457)
+...
+[13] (interaction)                                                                                                                                                          "t/harness/gxtest.ss"@7:7-7:46                                                                                                                                               (apply gerbil/tools/gxtest#main (cddr (command-line)))
+[14] ##load                                                                                                                                                                 
+[15] ##load                                                                                                                                                                 
+[16] gerbil/main#gxi-main                                                                                                                                                   
+CASE staged failed compiler cannot be accepted
+DSL-SOURCE-FROZEN
+DSL-ARTIFACT-STAGED f67bea1e29bf7fa00d04549495d9d5d3bf5fc92aa36a59fc471f792d6c8b153c
+CASE-OK staged failed compiler cannot be accepted
+CASE other run cannot publish
+DSL-SOURCE-FROZEN
+DSL-ARTIFACT-STAGED f67bea1e29bf7fa00d04549495d9d5d3bf5fc92aa36a59fc471f792d6c8b153c
+CASE-OK other run cannot publish
+CASE changed source cannot stage or publish
+DSL-SOURCE-FROZEN
+DSL-ARTIFACT-STAGED f67bea1e29bf7fa00d04549495d9d5d3bf5fc92aa36a59fc471f792d6c8b153c
+CASE-OK changed source cannot stage or publish
+CASE changed binary cannot publish or be used
+DSL-SOURCE-FROZEN
+DSL-ARTIFACT-STAGED f67bea1e29bf7fa00d04549495d9d5d3bf5fc92aa36a59fc471f792d6c8b153c
+DSL-SOURCE-FROZEN
+DSL-ARTIFACT-STAGED aafdfc31ddac0d4f215fa32b66ecb28832ad80192e0ca58bb65dd5ca8d299529
+DSL-ARTIFACT-BOUND aafdfc31ddac0d4f215fa32b66ecb28832ad80192e0ca58bb65dd5ca8d299529
+CASE-OK changed binary cannot publish or be used
+CASE future build identity cannot freeze
+CASE-OK future build identity cannot freeze
+SUITE-OK Scheme native artifact publication
+MODULE-OK t/qualification/scheme-artifact-test.ss
+HARNESS-OK ("t/qualification/scheme-artifact-test.ss")
+ERROR HARNESS (t/qualification/scheme-artifact-test.ss)
+at HARNESS ("t/qualification/scheme-artifact-test.ss")
+at MODULE t/qualification/scheme-artifact-test.ss
+at SUITE Scheme native artifact publication
+at CASE completed build beyond 180 seconds is accepted
+(Argument 2) STRING expected
+(setenv "ASCENT_DSL_BUILD_TOKEN" #f)
+--- continuation backtrace:
+[0] __with-exception-handler                                                                                                                                                
+[1] #<procedure #13>                                                                                                                                                        "t/qualification/scheme-artifact-test.ss"@26:7-26:46                                                                                                                         (setenv "ASCENT_DSL_BUILD_TOKEN" #:token2624)
+[2] std/test/base#__test-case!                                                                                                                                                                                                                                                                                                                           ((let () (declare (not safe)) (##unchecked-structure-ref _%tc499784%_ '6 '#f '#f)))
+[3] std/test/base#__test-suite!                                                                                                                                                                                                                                                                                                                          (##call-with-current-continuation __tmp242471)
+[4] std/test/base#__test-suite!                                                                                                                                                                                                                                                                                                                          (##for-each __tmp242470 __tmp242469)
+[5] std/test/base#__test-suite!                                                                                                                                                                                                                                                                                                                          (##for-each __tmp242470 __tmp242469)
+[6] std/test/base#__test-module!                                                                                                                                                                                                                                                                                                                         (##call-with-current-continuation __tmp242464)
+[7] std/test/base#__test-module!                                                                                                                                                                                                                                                                                                                         (##for-each __tmp242463 __tmp242462)
+[8] std/test/base#__test-module!                                                                                                                                                                                                                                                                                                                         (##for-each __tmp242463 __tmp242462)
+[9] std/test/base#__test-harness!                                                                                                                                                                                                                                                                                                                        (##call-with-current-continuation __tmp242457)
+...
+[13] (interaction)                                                                                                                                                          "t/harness/gxtest.ss"@7:7-7:46                                                                                                                                               (apply gerbil/tools/gxtest#main (cddr (command-line)))
+[14] ##load                                                                                                                                                                 
+[15] ##load                                                                                                                                                                 
+[16] gerbil/main#gxi-main                                                                                                                                                   

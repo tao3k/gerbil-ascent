@@ -1,0 +1,42 @@
+[build-activity] cpu-advance=0.070s processes=2
+[build-activity] cpu-advance=0.110s processes=2
+[build-activity] cpu-advance=0.070s processes=2
+[build-activity] cpu-advance=0.070s processes=2
+[build-activity] cpu-advance=0.120s processes=2
+[build-activity] cpu-advance=0.120s processes=2
+[build-activity] cpu-advance=0.090s processes=2
+[build-activity] cpu-advance=0.170s processes=2
+[build-activity] cpu-advance=0.090s processes=2
+[build-activity] cpu-advance=0.120s processes=2
+[build-activity] cpu-advance=0.120s processes=2
+[build-activity] cpu-advance=0.110s processes=2
+[build-activity] cpu-advance=0.150s processes=2
+[build-activity] cpu-advance=0.120s processes=2
+[build-activity] cpu-advance=0.130s processes=2
+[build-activity] cpu-advance=0.080s processes=2
+[build-activity] cpu-advance=0.140s processes=2
+[build-activity] cpu-advance=0.080s processes=2
+[build-activity] cpu-advance=0.120s processes=2
+[build-activity] cpu-advance=0.140s processes=2
+[build-activity] cpu-advance=0.130s processes=2
+*** ERROR IN std/io/util#call-with-buffered-writer -- 
+*** ERROR IN "io/util.ss"@147.25-147.50 [ContractViolation]: contract violation
+--- irritants: call-with-buffered-writer expectation: "BufferedWriter, Writer, output port, 'string, 'u8vector, 'stdout, file path, #f, or #t" #<HashTable #13 object: #<hash-table #14 count: 2 free: 6 hash: #<procedure #15 equal?-hash> test: #<procedure #16 equal?> seed: 158937669 lock: #f> clear!: #<procedure #17 raw-table-clear!> copy: #<procedure #18> delete!: #<procedure #19 raw-table-delete!> for-each: #<procedure #20 raw-table-for-each> length: #<procedure #21 &raw-table-count> new: #<procedure #22> ref: #<procedure #23 raw-table-ref> set!: #<procedure #24 raw-table-set!> update!: #<procedure #25 raw-table-update!>> 
+--- continuation backtrace:
+[0] raise                                                                                                                                                                   
+[1] std/io/util#call-with-buffered-writer                                                                                                                                                                                                                                                                                                                (raise __tmp278198)
+[2] #<procedure #26>                                                                                                                                                        "t/harness/artifact.ss"@19:19-19:41                                                                                                                                          (std/encoding/json/util#write-json #:value1954 #:out1956)
+[3] ##call-with-output-file                                                                                                                                                 
+[4] gerbil-ascent/t/harness/artifact#artifact-main                                                                                                                          "t/harness/artifact.ss"@48:9-48:72                                                                                                                                           (gerbil-ascent/t/harness/artifact#save-json #:run-path1901 (let ((#:ht1915 (make-hash-table size: 2))) (hash-put! #:ht1915 "token" #:token1907) (hash-put! #:ht1915...
+[5] #<procedure #27>                                                                                                                                                        "t/harness/run.ss"@153:9-153:33                                                                                                                                              (gerbil-ascent/t/harness/artifact#artifact-main "freeze")
+[6] main                                                                                                                                                                                                                                                                                                                                                 (#:$%try-match23502592)
+[build-activity] cpu-advance=0.160s processes=2
+[build-activity] cpu-advance=0.160s processes=2
+[build-activity] cpu-advance=0.140s processes=2
+[build-activity] cpu-advance=0.120s processes=2
+[build-activity] cpu-advance=0.050s processes=2
+[build-activity] cpu-advance=0.120s processes=2
+[build-activity] cpu-advance=0.080s processes=2
+[build-activity] cpu-advance=0.090s processes=2
+[build-activity] cpu-advance=0.070s processes=2
+error: recipe `build-dsl-closure` failed with exit code 70

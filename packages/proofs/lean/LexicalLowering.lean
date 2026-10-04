@@ -73,6 +73,15 @@ def Compiled : Signature → Type 1
   | .relation row => RelationalIR row
   | .arrow input output => Compiled input → Compiled output
 
+/-- The native typed compiler materializes a bare source root with all columns
+    in order. The concrete index/list correspondence is in RowRepresentation;
+    this theorem establishes the relational IR law, including nullary rows. -/
+theorem identity_projection_preserves_meaning (input : RelationalIR row) :
+    interpret (.project id input) = interpret input := by
+  funext result
+  apply propext
+  simp [interpret]
+
 def denote : Expression context t → Environment Meaning context → Meaning t
   | .source rows, _ => rows
   | .parameter index, env => lookup index env
@@ -155,6 +164,24 @@ theorem lowering_preserves_meaning (expression : Expression context t)
 theorem closed_relation_lowering (expression : Expression [] (.relation row)) :
     interpret (lower expression PUnit.unit) = denote expression PUnit.unit :=
   lowering_preserves_meaning expression PUnit.unit PUnit.unit trivial
+
+/-- Match higher-order.ss's source-root branch, leaving computed roots intact. -/
+def materializeSourceRoot (input : RelationalIR row) : RelationalIR row :=
+  match input with
+  | .source rows => .project id (.source rows)
+  | other => other
+
+theorem source_root_materialization_preserves_meaning (input : RelationalIR row) :
+    interpret (materializeSourceRoot input) = interpret input := by
+  cases input <;> simp only [materializeSourceRoot]
+  exact identity_projection_preserves_meaning _
+
+theorem closed_materialized_relation_lowering
+    (expression : Expression [] (.relation row)) :
+    interpret (materializeSourceRoot (lower expression PUnit.unit)) =
+      denote expression PUnit.unit := by
+  exact (source_root_materialization_preserves_meaning
+    (lower expression PUnit.unit)).trans (closed_relation_lowering expression)
 
 def compiledBottom : (t : Signature) → Compiled t
   | .relation _ => .source (fun _ => False)

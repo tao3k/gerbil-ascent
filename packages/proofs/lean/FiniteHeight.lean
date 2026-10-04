@@ -718,6 +718,52 @@ theorem row_encoding_rank_strict {α : Type} [DecidableEq α]
       rw [hi]
       simp [present]
 
+/-- Checked column indices for the Scheme identity projection `(iota arity)`.
+    The row length is checked before any native list-ref is permitted. -/
+def identityColumns (arity : Nat) : List (Fin arity) := List.finRange arity
+
+theorem identity_columns_are_iota (arity : Nat) :
+    (identityColumns arity).map Fin.val = List.range arity := by
+  apply List.ext_getElem
+  · simp [identityColumns]
+  · intro i h₁ h₂
+    simp [identityColumns]
+
+def projectIdentity {α : Type} (row : List α) : List α :=
+  (identityColumns row.length).map row.get
+
+theorem identity_projection_preserves_tuple {α : Type} (row : List α) :
+    projectIdentity row = row := by
+  apply List.ext_getElem
+  · simp [projectIdentity, identityColumns]
+  · intro i h₁ h₂
+    simp [projectIdentity, identityColumns, List.get_eq_getElem]
+
+/-- Derived materialization denotes membership, while its source occurrence
+    list remains separate. This is not a budget or native hashing theorem. -/
+def materializeIdentity {α : Type} [DecidableEq α]
+    (rows : List (List α)) : List (List α) :=
+  (rows.map projectIdentity).eraseDups
+
+theorem identity_materialization_membership {α : Type} [DecidableEq α]
+    (rows : List (List α)) (row : List α) :
+    row ∈ materializeIdentity rows ↔ row ∈ rows := by
+  simp [materializeIdentity, identity_projection_preserves_tuple]
+
+theorem identity_materialization_encoding {α : Type} [DecidableEq α]
+    (domain : List α) (arity : Nat) (rows : List (List α)) :
+    encode domain arity (materializeIdentity rows) = encode domain arity rows := by
+  apply (encode_equal_iff domain arity _ _).mpr
+  intro row _
+  exact identity_materialization_membership rows row
+
+theorem identity_materialization_admitted {α : Type} [DecidableEq α]
+    (domain : List α) (arity : Nat) (rows : List (List α))
+    (valid : ∀ row ∈ rows, admitted domain arity row) :
+    ∀ row ∈ materializeIdentity rows, admitted domain arity row := by
+  intro row member
+  exact valid row ((identity_materialization_membership rows row).mp member)
+
 end RowRepresentation
 
 end Ascent

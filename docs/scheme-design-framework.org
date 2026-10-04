@@ -87,6 +87,14 @@ checked mutation now belongs to =program/scheme-session.ss=; the public facade
 keeps its existing exports. Formal sources are byte-identical to the checked
 parent receipt; source/binary binding is independently refreshed.
 
+The [[file:scheme-compiler-proof-bridge.org][source-root materialization refinement]] adds eight Lean theorems connecting
+ordered checked columns, complete tuple reconstruction, set membership,
+encoding and admission to the source-only IR branch and closed lexical lowering.
+Its [[file:evidence/scheme-identity-materialization-20261005/receipt.json][acceptance receipt]] separates the current 33-Case higher-order rerun from
+the historical 109-Case qualification. It establishes this mathematical step;
+the native rule emitter, equality/hash implementation and exact per-term domains
+still require their own correspondence proofs. TLA lifecycle behavior is unchanged.
+
 * Model interface policy
 
 Why might an invocation contain text? Actual source, the user's task and a

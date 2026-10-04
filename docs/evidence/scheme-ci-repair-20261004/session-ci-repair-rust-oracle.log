@@ -1,0 +1,112 @@
+   Compiling unicode-ident v1.0.26
+   Compiling quote v1.0.47
+   Compiling proc-macro2 v1.0.107
+   Compiling cfg-if v1.0.5
+   Compiling serde_core v1.0.229
+   Compiling crossbeam-utils v0.8.23
+   Compiling libc v0.2.189
+   Compiling crossbeam-epoch v0.9.21
+   Compiling shlex v2.0.1
+   Compiling crossbeam-deque v0.8.8
+   Compiling find-msvc-tools v0.1.13
+   Compiling memchr v2.8.3
+   Compiling zerocopy v0.8.57
+   Compiling cc v1.4.7
+   Compiling version_check v0.9.5
+   Compiling rayon-core v1.13.0
+   Compiling either v1.18.0
+   Compiling ahash v0.8.12
+   Compiling typenum v1.20.1
+   Compiling paste v1.0.15
+   Compiling hashbrown v0.17.1
+   Compiling constant_time_eq v0.4.2
+   Compiling parking_lot_core v0.9.12
+   Compiling syn v2.0.119
+   Compiling once_cell v1.21.4
+   Compiling blake3 v1.8.7
+   Compiling arrayvec v0.7.8
+   Compiling equivalent v1.0.2
+   Compiling indexmap v2.14.2
+   Compiling hybrid-array v0.4.15
+   Compiling syn v3.0.6
+   Compiling aho-corasick v1.1.5
+   Compiling zmij v1.0.23
+   Compiling smallvec v1.16.1
+   Compiling winnow v1.0.4
+   Compiling rayon v1.12.0
+   Compiling serde v1.0.229
+   Compiling allocator-api2 v0.2.21
+   Compiling fixedbitset v0.4.2
+   Compiling scopeguard v1.2.0
+   Compiling regex-syntax v0.8.11
+   Compiling lock_api v0.4.14
+   Compiling petgraph v0.6.5
+   Compiling toml_parser v1.1.3+spec-1.1.0
+   Compiling crypto-common v0.2.2
+   Compiling block-buffer v0.12.1
+   Compiling regex-automata v0.4.18
+   Compiling serde_spanned v1.1.1
+   Compiling toml_datetime v1.1.1+spec-1.1.0
+   Compiling ascent_base v0.8.0
+   Compiling itertools v0.13.0
+   Compiling lazy_static v1.5.0
+   Compiling serde_derive v1.0.229
+   Compiling serde_json v1.0.151
+   Compiling const-oid v0.10.2
+   Compiling toml_writer v1.1.2+spec-1.1.0
+   Compiling duplicate v2.0.1
+   Compiling syn v1.0.109
+   Compiling toml v1.1.6+spec-1.1.0
+   Compiling digest v0.11.3
+   Compiling semver v1.0.28
+   Compiling cpufeatures v0.3.1
+   Compiling asp-rust-build-support v0.1.0 (https://github.com/tao3k/asp-rust?rev=2419414ee5379bad89506496e3eaab928df68daf#2419414e)
+   Compiling bstr v1.13.1
+   Compiling instant v0.1.13
+   Compiling itoa v1.0.18
+   Compiling boxcar v0.1.0
+   Compiling convert_case v0.4.0
+   Compiling rustc-hash v2.1.3
+   Compiling log v0.4.34
+   Compiling asp-rust v0.1.2 (https://github.com/tao3k/asp-rust?rev=2419414ee5379bad89506496e3eaab928df68daf#2419414e)
+   Compiling sha2 v0.11.0
+   Compiling hashbrown v0.14.5
+   Compiling derive-syn-parse v0.2.0
+   Compiling derive_more v0.99.20
+   Compiling globset v0.4.20
+   Compiling regex v1.13.1
+   Compiling dashmap v5.5.3
+   Compiling ascent_macro v0.8.0
+   Compiling cargo_toml v1.0.1
+   Compiling ascent v0.8.0
+   Compiling ascent-byods-rels v0.8.0
+   Compiling gerbil-ascent-oracle v0.1.0 (/Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/rust/ascent-oracle)
+WARNING: In Ascent rules, use `|` as the disjunction token instead of `||`
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 3m 53s
+     Running tests/integration/main.rs (rust/ascent-oracle/target/debug/deps/scheme_parity-4c9859fa7dc81b67)
+
+running 63 tests
+test clause_composition::model_study_negation_count_matches_finite_expectations ... ok
+test byods_lattice_timeout::retained_eqrel_lattice_updates_timeout_and_failure_recovery ... FAILED
+test byods_session::retained_two_producer_byods_matches_fresh_rust_and_closure_model ... ok
+test arity_repetition::arities_repeated_variables_and_self_loops_match_model_in_both_rule_orders ... ok
+test clause_composition::composed_clauses_match_model_at_1000_source_rows ... ok
+test byods_lattice_timeout::eqrel_lattice_negative_aggregate_matches_1000_disjoint_pairs ... ok
+test clause_composition::support_discriminators_match_public_library_contract ... ok
+test grouped_eqrel_session::grouped_eqrel_retained_updates_match_single_producer_rust_and_model ... ok
+test clause_composition::clause_composition_matches_rust_scheme_and_independent_model ... ok
+test byods_lattice_timeout::eqrel_lattice_negative_aggregate_matches_all_three_node_graphs ... ok
+test clause_composition::composed_clauses_match_model_at_10000_source_rows ... ok
+test byods_lattice_timeout::eqrel_lattice_negative_aggregate_matches_10000_disjoint_pairs ... ok
+test aggregation::aggregate_over_recursive_closure_matches_ascent has been running for over 60 seconds
+test aggregation::builtin_and_custom_aggregators_match_ascent has been running for over 60 seconds
+test clause_composition::support_withdrawal_matches_public_library_contract has been running for over 60 seconds
+test composed_corpus::composed_nonpositive_sessions_match_fresh_fixed_points has been running for over 60 seconds
+test divisibility_lattice::divisibility_join_feeds_negative_and_aggregate_strata ... ok
+test clause_composition::support_withdrawal_matches_public_library_contract ... ok
+test composed_corpus::composed_three_and_four_node_corpus_matches_rust_ascent has been running for over 60 seconds
+test invalid_program::invalid_program_admission_matches_or_records_rust_differences ... ok
+error: test failed, to rerun pass `--test scheme_parity`
+
+Caused by:
+  process didn't exit successfully: `/Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/rust/ascent-oracle/target/debug/deps/scheme_parity-4c9859fa7dc81b67 --skip 'byods::'` (signal: 2, SIGINT: terminal interrupt signal)

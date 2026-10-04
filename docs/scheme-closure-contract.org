@@ -66,11 +66,17 @@ statuses retain their owning APIs; they are not interchangeable.
 
 * Updates and evidence
 
-Positive insertion may reuse the existing Session. Source replacement and
-withdrawal compute a prospective snapshot and publish only after completion.
-Multi-source transactions preserve the last completed result after failure.
-This is atomic recomputation, not an incremental deletion algorithm.
-Do not claim deletion work savings without a matched recomputation experiment.
+Positive insertion may reuse the existing Session. Single-source replacement
+preserves committed-round timeout and replay semantics. Explicit batch
+replacement/withdrawal computes a prospective snapshot and publishes only after
+completion; failure preserves the last completed result and admitted source.
+For checked native programs, replacement invalidates the transitive downstream
+dependency closure and rederives affected components, reusing independent
+completed relations. Opaque providers and callbacks require full recomputation.
+The grounded DRed support kernel is a separate facility; it does not replace
+the Session evaluator. See the native deletion contract for independent graph
+and status discriminators. Skipped rule work does not establish a wall-time
+benefit; that requires a matched recomputation experiment.
 
 Why-Not means ground absence in an exact completed finite model, under its
 source/program/query binding. It is not a claim that the real world has no
@@ -90,7 +96,7 @@ an absence or a completed proof. A founded witness is not all provenance.
 | Replacement/withdrawal and failed transaction | Fresh-model equivalence and old snapshot stability | scheme-operator-retained-test.ss |
 | Finite evidence and ground absence | Binding changes, tampering and exhausted bounds cannot verify | ascent-finite-evidence-test.ss, ascent-positive-nonmembership-test.ss |
 
-Build the known seven-Suite AOT entry with =just build-dsl-closure=, then run
+Build the known twelve-Suite AOT entry with =just build-dsl-closure=, then run
 =just check-dsl-closure=. Compilation uses the same std/make Library/currentness
 owner; the compiler output-dir option makes its current static output take precedence over an older
 installed ASCENT. Native execution uses std/test's TestModule/TestHarness,

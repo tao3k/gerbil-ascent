@@ -1,0 +1,16 @@
+test_changed_binary_cannot_be_used (tools.test_dsl_artifact.ArtifactPublication.test_changed_binary_cannot_be_used) ... ok
+test_changed_source_cannot_publish (tools.test_dsl_artifact.ArtifactPublication.test_changed_source_cannot_publish) ... ok
+test_completed_publication_is_accepted (tools.test_dsl_artifact.ArtifactPublication.test_completed_publication_is_accepted) ... ok
+test_expired_build_cannot_stage (tools.test_dsl_artifact.ArtifactPublication.test_expired_build_cannot_stage) ... ok
+test_other_run_cannot_publish (tools.test_dsl_artifact.ArtifactPublication.test_other_run_cannot_publish) ... ok
+test_staged_failed_compilation_is_not_accepted (tools.test_dsl_artifact.ArtifactPublication.test_staged_failed_compilation_is_not_accepted) ... ok
+test_conflicting_explicit_data_is_rejected_without_private_truth (tools.test_model_closure_study.ByteTransport.test_conflicting_explicit_data_is_rejected_without_private_truth) ... ok
+test_frozen_input_limit_rejects_before_dispatch (tools.test_model_closure_study.ByteTransport.test_frozen_input_limit_rejects_before_dispatch) ... ok
+test_literal_assertions_and_quotes_are_inert (tools.test_model_closure_study.ByteTransport.test_literal_assertions_and_quotes_are_inert) ... ok
+test_request_context_difference_is_only_real_computed_feedback (tools.test_model_closure_study.ByteTransport.test_request_context_difference_is_only_real_computed_feedback) ... ok
+test_size_and_nesting_are_bounded (tools.test_model_closure_study.ByteTransport.test_size_and_nesting_are_bounded) ... ok
+
+----------------------------------------------------------------------
+Ran 11 tests in 8.754s
+
+OK

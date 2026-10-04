@@ -13,8 +13,10 @@ positive operator IR; no second query interpreter is authoritative.
 
 Fixed points operate on relation endofunctions. Function-valued fixed points
 and function equality are not admitted. This is a stated language boundary,
-not a claim of termination for arbitrary Scheme procedures. The user has been
-asked whether function-valued fixed points are also required.
+not a claim of termination for arbitrary Scheme procedures. The requested
+full closure therefore still requires an explicit function-valued fixed-point
+semantics, admission/lowering implementation and independent qualification;
+relation fixed-point evidence cannot discharge that obligation.
 
 * Native finite domains
 

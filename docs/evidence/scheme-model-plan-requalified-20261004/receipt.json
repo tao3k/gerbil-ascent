@@ -1,12 +1,12 @@
 {
-  "artifactSha256": "b461e2969bd78dda79d52b7d3a0d4188f52613cf62395cf0e2412faa39858918",
+  "artifactSha256": "af54bf52ea09c0513e86da9ec614477e1b8bda57f25eb90f29fccb13c7f85503",
   "compilerImportRoots": 8,
   "completedCompilerImports": 3573,
   "modelCalls": 0,
   "nativeScorerControls": 10,
   "nativeTasks": 24,
   "offlineValidationExitStatus": 0,
-  "planSha256": "594b9442da7af3fb190ab5b317725397f0081c558187d0ee31ec8b7c6bae8936",
+  "planSha256": "bd7aba6a2eaf22251bb7771a7c0edddada636d6a64cdc2359e149fd6470339f5",
   "priceVerification": {
     "date": "2026-10-04",
     "peakInputUsdPerMillion": 0.3,
@@ -17,8 +17,8 @@
   "reconstruction": "ASCENT module bytes at sourceHead; lowered core/types and unchanged task bytes here; plan cases contain complete module closure and source/task/input hashes. No private expected datum in model context.",
   "schema": "ascent.model-plan-native-preflight",
   "sourceFiles": 38,
-  "sourceHead": "5c8987d1c773789ba5d111ed0812dae86beff23c",
+  "sourceHead": "e732b2b76e558257fb70bfff75ea108e7e0f2a3a",
   "status": "prepared; new fee and source-exfiltration authorization pending",
-  "supersedesPlanSha256": "0c00e978caaa12f45cbe1408e56a98e1360dbf612a62e32f8fa5691e2b253f8b",
+  "supersedesPlanSha256": "594b9442da7af3fb190ab5b317725397f0081c558187d0ee31ec8b7c6bae8936",
   "version": 1
 }

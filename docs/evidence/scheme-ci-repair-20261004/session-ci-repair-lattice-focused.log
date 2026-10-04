@@ -1,0 +1,17 @@
+
+running 1 test
+
+thread 'byods_lattice_timeout::retained_eqrel_lattice_updates_timeout_and_failure_recovery' (3902770) panicked at tests/integration/byods_lattice_timeout.rs:184:5:
+assertion `left == right` failed
+  left: "1\ttimeout\t1\t1\t1"
+ right: "1\ttimeout\t0\t0\t1"
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test byods_lattice_timeout::retained_eqrel_lattice_updates_timeout_and_failure_recovery ... FAILED
+
+failures:
+
+failures:
+    byods_lattice_timeout::retained_eqrel_lattice_updates_timeout_and_failure_recovery
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 74 filtered out; finished in 0.85s
+

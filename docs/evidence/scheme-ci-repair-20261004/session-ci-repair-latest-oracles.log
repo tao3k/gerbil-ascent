@@ -1,0 +1,4 @@
+
+running 4 tests
+test byods_lattice_timeout::eqrel_lattice_negative_aggregate_matches_10000_disjoint_pairs ... ok
+test byods_lattice_timeout::eqrel_lattice_negative_aggregate_matches_1000_disjoint_pairs ... 

@@ -1,33 +1,33 @@
 [
   {
     "control": "literal",
+    "readable": true,
     "nativeDatum": "2",
-    "correct": true,
-    "readable": true
+    "correct": true
   },
   {
     "control": "quote",
-    "correct": true,
     "readable": true,
-    "nativeDatum": "2"
+    "nativeDatum": "2",
+    "correct": true
   },
   {
     "control": "assertion",
+    "readable": true,
     "nativeDatum": "2",
-    "correct": true,
-    "readable": true
+    "correct": true
   },
   {
     "control": "quoted-assertion",
+    "readable": true,
     "nativeDatum": "2",
-    "correct": true,
-    "readable": true
+    "correct": true
   },
   {
     "control": "wrong",
-    "nativeDatum": "2",
     "correct": false,
-    "readable": true
+    "readable": true,
+    "nativeDatum": "2"
   },
   {
     "control": "executable",
@@ -43,9 +43,9 @@
   },
   {
     "control": "reader-label",
-    "correct": false,
     "readable": false,
-    "nativeDatum": "2"
+    "nativeDatum": "2",
+    "correct": false
   },
   {
     "control": "deep",
@@ -55,8 +55,8 @@
   },
   {
     "control": "oversize",
+    "readable": false,
     "nativeDatum": "2",
-    "correct": false,
-    "readable": false
+    "correct": false
   }
 ]

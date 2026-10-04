@@ -125,3 +125,18 @@ successful parent command finalizes it after the compiler exits. Exact entry
 object locks are recovered under the existing exclusive build lane. Failure
 controls reject staged-only, foreign-run, expired, changed-source and changed
 binary artifacts. This is a byte-publication guarantee, not a semantic proof.
+
+* Latest integrated acceptance
+
+The [[file:evidence/scheme-ci-repair-20261004/receipt.json][integrated repair receipt]] binds source =e732b2b= to a compiler-exit-zero
+artifact built in 149.4 seconds. All twelve native Suites / 121 Cases, the five
+original Rust differentials (including 512 graphs in four configurations),
+and eleven byte/publication controls passed under unchanged limits. Historical
+failures and interrupted exploratory runs remain explicitly excluded.
+
+Runtime head =e8e833d= passed all checks in [[https://github.com/tao3k/gerbil-ascent/actions/runs/37184330679][its GitHub CI run]]. The submitted
+evidence/import-progress head requires its own CI result. The model plan has
+24 native tasks, eight actual compiler import roots and ten scorer controls;
+zero new paid model calls have been made. Native acceptance does not close
+R1 compiler refinement, R4 other provenance algebras, R5 measured runtime
+benefit or R6 real-model benefit, and does not authorize R7 integration.

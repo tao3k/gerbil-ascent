@@ -1,0 +1,40 @@
+
+running 1 test
+test byods_lattice_timeout::retained_eqrel_lattice_updates_timeout_and_failure_recovery ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 74 filtered out; finished in 0.53s
+
+
+running 1 test
+test byods_session::retained_two_producer_byods_matches_fresh_rust_and_closure_model ... iterating TrRelIndNone. 3 tuples
+iterating TrRelIndNone. 6 tuples
+iterating TrRelIndNone. 12 tuples
+iterating TrRelIndNone. 5 tuples
+iterating TrRelIndNone. 6 tuples
+iterating TrRelIndNone. 6 tuples
+iterating TrRelIndNone. 2 tuples
+iterating TrRelIndNone. 4 tuples
+iterating TrRelIndNone. 4 tuples
+iterating TrRelIndNone. 1 tuples
+ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 74 filtered out; finished in 0.58s
+
+
+running 1 test
+test grouped_eqrel_session::grouped_eqrel_retained_updates_match_single_producer_rust_and_model ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 74 filtered out; finished in 0.58s
+
+
+running 1 test
+test multi_source_session::retained_multi_source_updates_match_fresh_rust_and_finite_model ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 74 filtered out; finished in 0.33s
+
+
+running 1 test
+test arity_repetition::arities_repeated_variables_and_self_loops_match_model_in_both_rule_orders ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 74 filtered out; finished in 7.96s
+

@@ -149,9 +149,9 @@ source withdrawal changes that total, while a hypothetical candidate
 edge changes only its own attempt. An old receipt does not bind to the
 new generation, and a mutated proposal does not bind to its receipt.
 This is a fixed scripted caller, not evidence that an LLM can discover
-or repair a rule. [[file:research/agent-inference/logic-lm-ll23.org][Logic-LM]] uses solver errors for formalization repair;
-[[file:research/agent-inference/linc-li23.org][LINC]] distinguishes parse failures and semantic errors. Neither paper
-establishes this Library's model usefulness or source authority.
+or repair a rule. The [[file:research/agent-inference/2026-logic-ai-screen.org][code-anchored research screen]] separates raw model
+proposals, accepted program meaning and independently checked results;
+the scripted transcript establishes only the native boundary.
 
 * Code map and intended seam
 :PROPERTIES:
@@ -220,9 +220,8 @@ edge a user intended.
 | [[file:research/scheme-dsl/datafun-f16.org][Datafun F16]] and [[file:research/scheme-dsl/datafun-s20.org][S20]] | Monotonicity and higher-order delta need a typed semantic account | Treat pointwise Scheme functions as declared adapters; defer verified higher-order change semantics | A hidden mutable read changes closure under the same admitted program |
 | [[file:research/scheme-dsl/flix-f20.org][Flix F20]] and [[file:research/scheme-dsl/flix-l25.org][L25]] | First-class constraints and composition make library reuse plausible | Try Scheme-built fragment values with fresh private relation handles | Two fragment instances capture each other's private relations |
 | [[file:research/agent-inference/datalogbench-db26.org][DatalogBench DB26]] | Recursive programs can compile yet be semantically wrong | Test complete outputs and near-miss joins, not compile rate alone | Wrong recursive join passes the independent model corpus |
-| [[file:research/agent-inference/logic-lm-ll23.org][Logic-LM LL23]] and [[file:research/agent-inference/linc-li23.org][LINC LI23]] | Formalization and solver feedback are distinct | Separate =inspect= diagnostics from =solve= observations | A valid but wrong formalization is reported as verified intent |
+| [[file:research/agent-inference/matlogic-ml26.org][LLM-MatLogic ML26]] | A valid executable graph constraint can still carry the wrong scope | Keep source snapshot, branch scope and witness visible before final-answer projection | A scoped exclusion is treated as a global absence claim |
 | [[file:research/agent-inference/pug-p18.org][PUG P18]] | Why/Why-Not needs explicit provenance semantics | Start with positive path witness and finite graph absence; defer general provenance | One support is presented as a complete explanation |
-| [[file:research/agent-inference/ircot-i23.org][IRCoT I23]] and [[file:research/agent-inference/react-a23.org][ReAct A23]] | External observations can drive another model step | Return concise typed evidence for a caller-controlled retry | Library silently schedules or authorizes a model action |
 
 The table maps papers to hypotheses; it does not transfer their proofs
 or benchmark scores to this implementation.
@@ -337,9 +336,8 @@ algorithm is admitted without matched output and cost receipts.
 [[file:research/agent-inference/pug-p18.org][PUG]] motivates explicit
 Why/Why-Not scope, while the finite closure above justifies absence only
 inside its supplied closed snapshot.
-[[file:research/agent-inference/datalogbench-db26.org][DatalogBench]] and
-[[file:research/agent-inference/logic-lm-ll23.org][Logic-LM]] motivate
-execution scoring and separate diagnostic feedback; their published
+[[file:research/agent-inference/datalogbench-db26.org][DatalogBench]] motivates
+execution scoring and separate diagnostic feedback; its published
 model scores do not transfer to this Library.
 
 The public contract now fixes four source states over nodes =0,1,2=,

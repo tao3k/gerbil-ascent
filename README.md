@@ -53,36 +53,44 @@ benchmark suite. See `just --list` for focused checks.
 
 ## Papers studied
 
-This list brings together the primary papers in the
+This list brings together the papers examined in the
 [related-work matrix](docs/related-work-matrix.org),
 [Scheme DSL readings](docs/research/scheme-dsl/index.org),
 [agent inference readings](docs/research/agent-inference/index.org), and
 [temporal study](docs/temporal-causality-module-design.org).
 The [code-anchored research screen](docs/research/agent-inference/2026-logic-ai-screen.org)
-connects the core Datalog papers to real graph tasks and this implementation.
+ranked them by the question each can test in this implementation. Recent
+model papers lead the inference section; older PL work remains central where
+it supplies a precise language, fixed-point or incremental-evaluation law.
 
-### Real graph reasoning and Datalog synthesis (2026 first)
+### Model reasoning and executable inference: current evidence
 
-- [LLM-MatLogic: Executable Exchange Contracts for Knowledge-Graph Query Answering with Scoped Negation](https://proceedings.mlr.press/v306/miao26e.html) (2026)
-- [DatalogBench: Evaluating Large Language Models on Text-to-Datalog Synthesis](https://arxiv.org/abs/2609.37233) (2026)
-- [IRIS: LLM-Assisted Static Analysis for Detecting Security Vulnerabilities](https://proceedings.iclr.cc/paper_files/paper/2025/file/582d4e27fa24168f3af1f4582655034b-Paper-Conference.pdf) (2025)
+- [LLM-MatLogic: Executable Exchange Contracts for Knowledge-Graph Query Answering with Scoped Negation](https://proceedings.mlr.press/v306/miao26e.html) (ICML 2026) — real KG questions; scope and witness correctness.
+- [DatalogBench: Evaluating Large Language Models on Text-to-Datalog Synthesis](https://arxiv.org/abs/2609.37233) (2026 preprint) — generated recursive rules checked by execution, with preprint and dialect limits.
+- [IRIS: LLM-Assisted Static Analysis for Detecting Security Vulnerabilities](https://proceedings.iclr.cc/paper_files/paper/2025/file/582d4e27fa24168f3af1f4582655034b-Paper-Conference.pdf) (ICLR 2025) — real-code candidate specifications and CodeQL results; adjacent language and high false-alert cost.
 
-### Relational languages and evaluation
+[BRINK](https://aclanthology.org/2026.eacl-long.114/) (EACL 2026) is a
+useful incomplete-KG evaluation comparator, not a semantic oracle: it
+removes observed facts while preserving rule-body paths, but its rules are
+mined with confidence thresholds rather than established as universal laws.
 
-- [Seamless Deductive Inference via Macros](https://doi.org/10.1145/3497776.3517779) (2022)
-- [Bring Your Own Data Structures to Datalog](https://doi.org/10.1145/3622840) (2023)
+### Relational languages and evaluation: semantic foundations
+
+- [Datafun: a Functional Datalog](https://doi.org/10.1145/3022670.2951948) (2016) — monotonicity and finite-height fixed points.
+- [Seminaïve Evaluation for a Higher-Order Functional Language](https://doi.org/10.1145/3371090) (2020) — change semantics for higher-order rules.
+- [Bring Your Own Data Structures to Datalog](https://doi.org/10.1145/3622840) (2023) — concrete/delta semantics for specialized relations.
+- [Seamless Deductive Inference via Macros](https://doi.org/10.1145/3497776.3517779) (2022) — the Rust Ascent language and comparison baseline.
+- [Flix: A Design for Language-Integrated Datalog](https://doi.org/10.1145/3763126) (2025) — first-class program and private predicate boundaries.
+- [FlowLog: Efficient and Extensible Datalog via Incrementality](https://www.vldb.org/pvldb/vol19/p361-zhao.pdf) (PVLDB 2025; VLDB 2026) — recursive plan and incremental engine experiments.
+- [Scallop: A Language for Neurosymbolic Programming](https://doi.org/10.1145/3591280) (2023) — weighted and differentiable semantics for a separate training path.
 - [Soufflé: On Synthesis of Program Analyzers](https://souffle-lang.github.io/pdf/cav16.pdf) (2016)
 - [Differential dataflow](https://www.cidrdb.org/cidr2013/Papers/CIDR13_Paper111.pdf) (2013)
 - [DBSP: Automatic Incremental View Maintenance for Rich Query Languages](https://www.vldb.org/pvldb/vol16/p1601-budiu.pdf) (2023)
 - [Optimised Maintenance of Datalog Materialisations](https://doi.org/10.1609/aaai.v32i1.11554) (2018)
-- [Datafun: a Functional Datalog](https://doi.org/10.1145/3022670.2951948) (2016)
 - [Better Together: Unifying Datalog and Equality Saturation](https://doi.org/10.1145/3591239) (2023)
 - [Formulog: Datalog for SMT-Based Static Analysis](https://doi.org/10.1145/3428209) (2020)
 - [µKanren: A Minimal Functional Core for Relational Programming](https://www.schemeworkshop.org/2013/papers/HemannMuKanren2013.pdf) (2013)
 - [Fixpoints for the Masses: Programming with First-Class Datalog Constraints](https://plg.uwaterloo.ca/~olhotak/pubs/oopsla20c.pdf) (2020)
-- [Seminaïve Evaluation for a Higher-Order Functional Language](https://doi.org/10.1145/3371090) (2020)
-- [Flix: A Design for Language-Integrated Datalog](https://doi.org/10.1145/3763126) (2025)
-- [FlowLog: Efficient and Extensible Datalog via Incrementality](https://www.vldb.org/pvldb/vol19/p361-zhao.pdf) (PVLDB 2025; VLDB 2026)
 - [Datalog with First-Class Facts](https://www.vldb.org/pvldb/vol18/p651-micinski.pdf) (PVLDB 2024; VLDB 2025)
 
 ### Provenance and time
@@ -93,16 +101,6 @@ connects the core Datalog papers to real graph tasks and this implementation.
 - [Provenance for Large-scale Datalog](https://arxiv.org/abs/1907.05045) (2019)
 - [Dedalus: Datalog in Time and Space](https://www2.eecs.berkeley.edu/Pubs/TechRpts/2009/EECS-2009-173.html) (2009)
 - [Causes and Explanations: A Structural-Model Approach. Part I: Causes](https://doi.org/10.1093/bjps/axi147) (2005)
-
-### Model reasoning and inference
-
-- [Logic-LM: Empowering Large Language Models with Symbolic Solvers for Faithful Logical Reasoning](https://aclanthology.org/2023.findings-emnlp.248/) (2023)
-- [LINC: A Neurosymbolic Approach for Logical Reasoning by Combining Language Models with First-Order Logic Provers](https://aclanthology.org/2023.emnlp-main.313/) (2023)
-- [Call Me When Necessary: LLMs can Efficiently and Faithfully Reason over Structured Environments](https://aclanthology.org/2024.findings-acl.254/) (2024)
-- [Interleaving Retrieval with Chain-of-Thought Reasoning for Knowledge-Intensive Multi-Step Questions](https://aclanthology.org/2023.acl-long.557/) (2023)
-- [ReAct: Synergizing Reasoning and Acting in Language Models](https://arxiv.org/abs/2210.03629) (2023)
-- [Tree of Thoughts: Deliberate Problem Solving with Large Language Models](https://papers.nips.cc/paper_files/paper/2023/hash/271db9922b8d1f4dd7aaef84ed5ac703-Abstract-Conference.html) (2023)
-- [Scallop: A Language for Neurosymbolic Programming](https://doi.org/10.1145/3591280) (2023)
 
 ## Credits
 

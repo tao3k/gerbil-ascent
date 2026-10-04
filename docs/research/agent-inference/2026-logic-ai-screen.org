@@ -57,6 +57,19 @@ identity contract. This is a research seam, not current ASCENT support.
 
 * Screened but not promoted
 
+- [[https://aclanthology.org/2026.eacl-long.114/][BRINK]] (EACL 2026) is a useful *evaluation design* for incomplete
+  real KGs: it deletes a direct fact while retaining an alternate rule
+  body on FB15k-237 and Wikidata5m, and distinguishes retrieval from
+  answer errors. It is not a rule-truth oracle for ASCENT. Its AMIE3
+  rules use confidence 0.3 and PCA confidence 0.4 thresholds; those are
+  empirical correlations, not universally valid implications. Use a
+  separately admitted rule set and exact snapshot to test deletion and
+  witness behavior.
+- [[https://aclanthology.org/2026.acl-long.1230/][FOLX-KG]] (ACL 2026) has a worthwhile finite-KG comparison/counting
+  semantics test, but its 43,821 DBpedia-based claims come from logical
+  templates and LLM rewriting. Its own limitation notes that incomplete
+  KGs can change universal and counting claims. It cannot establish
+  real-world truth or current ASCENT support for these operators.
 - [[https://arxiv.org/html/2606.24965][Project Auto-World]] and its [[https://papers.neurips.cc/paper_files/paper/2025/hash/167856a2bb094d44872c4a992bad49d0-Abstract-Datasets_and_Benchmarks_Track.html][NoRA predecessor]] offer finite off-path stress
   generators, but their main tasks are synthetic. NoRA also contains
   ASP answer-set cases. Neither substitutes for the real-KG and

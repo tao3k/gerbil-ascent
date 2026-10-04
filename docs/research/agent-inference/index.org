@@ -36,13 +36,7 @@ contract; they are lower priority than its executable Scheme fixture.
 | FL25 | [[https://www.vldb.org/pvldb/vol19/p361-zhao.pdf][FlowLog, PVLDB 2025 / VLDB 2026]] | [[file:../scheme-dsl/flowlog-fl25.org][reading]] | Which plan/physical choices preserve a recursive result while reducing work on real graphs? |
 | B23 | [[https://kmicinski.com/assets/byods.pdf][BYODS, OOPSLA 2023]] | [[file:../scheme-dsl/byods-b23.org][reading]] | Do specialized relation Providers expose every new fact through delta? |
 | IR25 | [[https://proceedings.iclr.cc/paper_files/paper/2025/file/582d4e27fa24168f3af1f4582655034b-Paper-Conference.pdf][IRIS, ICLR 2025]] | [[file:2026-logic-ai-screen.org][core screen]] | Does a generated source/sink specification improve real-code analysis without hiding false alerts? |
-| LL23 | [[https://aclanthology.org/2023.findings-emnlp.248/][Logic-LM, EMNLP Findings]] | [[file:logic-lm-ll23.org][reading]] | Which solver diagnostics make a bounded repair loop useful? |
-| LI23 | [[https://aclanthology.org/2023.emnlp-main.313/][LINC, EMNLP]] | [[file:linc-li23.org][reading]] | Does valid formalization preserve the intended source meaning? |
-| R24 | [[https://aclanthology.org/2024.findings-acl.254/][Readi, ACL Findings]] | [[file:readi-r24.org][reading]] | Can a stuck graph path get compact, local feedback? |
 | P18 | [[https://arxiv.org/abs/1808.05752][PUG extended paper]] | [[file:pug-p18.org][reading]] | What is a bounded why/why-not explanation? |
-| I23 | [[https://aclanthology.org/2023.acl-long.557/][IRCoT, ACL]] | [[file:ircot-i23.org][reading]] | When should a missing premise trigger more search? |
-| A23 | [[https://arxiv.org/abs/2210.03629][ReAct, ICLR]] | [[file:react-a23.org][reading]] | How can a model caller use tool observations in its next turn? |
-| T23 | [[https://papers.nips.cc/paper_files/paper/2023/hash/271db9922b8d1f4dd7aaef84ed5ac703-Abstract-Conference.html][Tree of Thoughts, NeurIPS]] | [[file:tot-t23.org][reading]] | How can test-time search explore non-Datalog reasoning branches? |
 | S23 | [[https://doi.org/10.1145/3591280][Scallop, PLDI]] | [[file:scallop-s23.org][reading]] | What extra semantics would a differentiable training integration require? |
 | Serve | [[https://docs.sglang.io/docs/advanced_features/tool_parser][SGLang]] / [[https://docs.vllm.ai/en/latest/features/tool_calling/][vLLM]] official docs | [[file:serving-sglang-vllm.org][interface study]] | How does a deployed model call and observe the Library? |
 
@@ -62,18 +56,15 @@ A later revision is a separate experimental condition, not evidence
 that the model understood the rule on its first attempt. The general
 workflow can use =observe -> propose -> check -> explain -> choose
 another step or stop=. This is our synthesis, not an API these papers
-jointly prescribe. LL23 and LI23 support separating language
-formalization from symbolic execution; DB26 shows that repair of syntax
-and declarations can still leave recursive semantic errors.  R24
-motivates local feedback at the point where a graph plan gets stuck.
+jointly prescribe. DB26 shows that fixing syntax and declarations can
+still leave recursive semantic errors; ML26 shows that executable
+constraints can also be specified with the wrong scope.
 P18 shows why explanations are a separate query over provenance rather
 than a natural-language retelling of the returned row.
-I23 and A23 place that feedback in an external model/tool loop: a gap can
-lead to another source-bound search, then a revised proposal.  No
-model retraining or modification to its learned reward mechanism is
-claimed.  T23 adds bounded exploration of multiple hypotheses beyond
-relational deduction.  The Library supplies evidence and checks at
-inference time; model judgment remains distinct from a checker result.
+The Library supplies evidence and checks at inference time; model
+judgment remains distinct from a checker result. Preserve the raw first
+proposal before evaluating any optional follow-up attempt. No model
+retraining or modification to its learned reward mechanism is claimed.
 
 #+NAME: agent-library-contract-draft
 | Stage | Library input | Library output | Limit of the claim |
@@ -168,12 +159,7 @@ Start with the [[file:2026-logic-ai-screen.org][core screen]] and [[file:matlogi
 scope and witnesses, then [[file:datalogbench-db26.org][DB26]] for generated rule correctness. Read
 [[file:../scheme-dsl/byods-b23.org][B23]] and [[file:../scheme-dsl/flowlog-fl25.org][FL25]] beside the Scheme Provider, planner and Session
 code, followed by the [[file:../scheme-dsl/datafun-f16.org][F16]]/[[file:../scheme-dsl/datafun-s20.org][S20]] functional boundary. The
-older [[file:ircot-i23.org][I23]], [[file:react-a23.org][A23]] and
-[[file:tot-t23.org][T23]] provide deployment-time workflow background.  Read
-[[file:logic-lm-ll23.org][LL23]] and [[file:linc-li23.org][LI23]] for
-formalization/solver feedback and its limits.  Read
-[[file:readi-r24.org][R24]] for graph interaction and
-[[file:pug-p18.org][P18]] for explanation semantics.  [[file:scallop-s23.org][S23]]
+[[file:pug-p18.org][P18]] gives the separate explanation semantics; [[file:scallop-s23.org][S23]]
 frames the optional training-framework question.
 For an actual deployed-model interface, read
 [[file:serving-sglang-vllm.org][SGLang/vLLM serving research]].

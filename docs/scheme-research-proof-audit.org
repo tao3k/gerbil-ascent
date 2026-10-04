@@ -229,7 +229,7 @@ receipt and CI observations above retain their historical source boundaries.
 | Binder/descriptor identity | =program/operator.ss= and =program/higher-order.ss=: lexical binding and environment-sensitive interpretation | Renaming a bound display name preserves observations; sharing a descriptor across different bindings must not reuse the wrong interpretation. Structural equality alone cannot key an environment-dependent result |
 | Private predicate identity | =program/objects.ss=: generative fragment construction and composition | Repeated constructors with equal printed names stay independent. A bijective private rename preserves exported rows; composition must check the assembled dependency graph |
 | Certificate program identity | =candidate/program-identity.ss=: ordered wire projection of relations, facts, rules, query terms and limits | Semantic equivalence does not imply identical fingerprints. Reordering must preserve its documented wire meaning; verification binds the supplied program, not a canonical equivalence class |
-| Row membership | Native relation tables and =program/result.ss=: observations of relational closure | Compare complete row sets using the admitted scalar equality. Results must remain stable after later Session updates; persistent root sharing does not prove deep immutability of arbitrary host values |
+| Row membership | Derived relation tables and returned typed output: set observations; raw native source observations retain ordered occurrences | Compare complete typed result sets using admitted scalar equality, separately from raw source counts. Results must remain stable after later Session updates; persistent root sharing does not prove deep immutability of arbitrary host values |
 | Source occurrence | =candidate/provenance-graph.ss=: distinct frozen source positions supporting a row | Removing one of two identical occurrences leaves membership; removing the last founded support removes the row. Selectors retain original positions; derived rows never enter the source log |
 | Source authority | Caller/POO boundary, outside certificate hashing | A verified certificate establishes consistency with supplied inputs. It does not establish origin, freshness or completeness of those inputs |
 
@@ -317,3 +317,10 @@ This advances the type/value package for relation rows. Runtime scalar decoding
 and equality/hash equivalence, captured closures and actual step preservation
 remain required; neither the abstract lawful-equality model nor native samples
 close those universal obligations.
+
+The native discriminators exposed and repaired two concrete gaps: a bare-source
+typed result leaked occurrence multiplicity, and the named Session constructor
+rejected a program containing a readonly derived output. Typed compilation now
+materializes the source result as a derived set; checked named Session mutations
+continue to use only admitted source handles. Complete result membership,
+source occurrence counts and actual materialization budgets are separate checks.

@@ -74,6 +74,13 @@ complete tuple enumeration, faithful encoding for admitted rows, duplicate/union
 laws and rank/height correspondence. Native scalar equality/hash conformance
 and actual descriptor/step refinement keep their separate R1 obligations.
 
+Its [[file:evidence/scheme-row-representation-20261004/receipt.json][source-bound acceptance]] covers 109 Cases across six native modules,
+16 new Lean laws and the existing TLA controls. A bare-source typed result now
+receives an explicit derived set view; raw source occurrences and budgets remain
+observable. Named checked Sessions accept derived query relations and restrict
+mutation to admitted source handles. Rejected duplicate-result and Session
+constructor artifacts remain failures, not acceptance evidence.
+
 * Model interface policy
 
 Why might an invocation contain text? Actual source, the user's task and a

@@ -1,0 +1,133 @@
+{
+  "schema": 1,
+  "sourceBase": "3abb8bcbe13061e10e9d3deb311a64ce9e0adad7",
+  "qualifiedCommit": "fa521d4e6d69a84cf4aacb7154afd86ac2f9e727",
+  "sourceReconstruction": {
+    "patch": "source-snapshot.patch",
+    "patchSHA256": "5e887bbceae14ef6f445ce4881a124eff16e371ea2fccd9b65c7d898ee2a2f06",
+    "scope": "Scheme implementation, native qualification and Lean proof changes",
+    "applyOptions": [
+      "--unidiff-zero"
+    ]
+  },
+  "native": {
+    "artifactSHA256": "c06700ad1b2bf46d297d751e4251c718ed12ee342a85a6bc1135f419b7331e9f",
+    "sourceCount": 361,
+    "sourceMapSHA256": "e8cf18b106327f9246fe0e287f0eec1cc727e04e0483b613119c8f8f00be3b65",
+    "sourceMapEncoding": "UTF-8 JSON, sorted keys, compact separators",
+    "buildElapsedSeconds": 191.30443811416626,
+    "buildClock": "unix",
+    "compilerExit": 0,
+    "qualificationExit": 0,
+    "qualifiedModules": [
+      "scheme-higher-order",
+      "scheme-model-closure",
+      "scheme-operator",
+      "scheme-operator-retained",
+      "scheme-library-contract",
+      "scheme-session-deletion"
+    ],
+    "counts": {
+      "cases": 109,
+      "suites": 6,
+      "modules": 6,
+      "harnesses": 6,
+      "finalOK": 6
+    },
+    "bounds": {
+      "maxHeap": "1G",
+      "outputSilenceSeconds": 5,
+      "moduleSeconds": 120,
+      "buildSilenceAndCPUIdleSeconds": 60,
+      "buildTotalDeadline": null
+    },
+    "newCases": 6,
+    "buildCores": 2
+  },
+  "formal": {
+    "exit": 0,
+    "lean": "leanprover/lean4:v4.34.1",
+    "filesSHA256": {
+      "packages/proofs/lean/CappedArithmetic.lean": "72dc9c97c05b32f9b43c71730045e8ec802f830785a22d8a412a4be063c65217",
+      "packages/proofs/lean/DescriptorScope.lean": "941cd693cc238d5c732b4c70187af837bf76d0e81dd80d2fa5da3b6337ce2d2d",
+      "packages/proofs/lean/FiniteHeight.lean": "31b5b4eed52ce82b12b874cefe685a017bb160fbfbe6e6fd467027e93d0ca6cf",
+      "packages/proofs/lean/FiniteOperators.lean": "4d181fe6799b13f1e5e98e0d3a708bed6e668061821365162df79442f819c69d",
+      "packages/proofs/lean/LexicalLowering.lean": "200fef213c1c5ec37be040beba4b9e774ca00a72fbb84efd5a220c3335427f52",
+      "packages/proofs/lean/PositiveNonmembership.lean": "053d50736e8509d80a1faf58a81b4f11a63f5fd3d695718e9c7d5e90ed451484",
+      "packages/proofs/lean/RecursiveLowering.lean": "cf0997a5154d92b29b12e2bf90e006ec6a4e06eb788b07132076473e9ea26f99",
+      "packages/proofs/lean/SessionPublication.lean": "2e65f46352bcf76d4c3ca8a2bd49deb06fbb1bb71032ff7d89aa9eb914dc942a"
+    },
+    "newTheorems": 16,
+    "normalTlaModels": 2,
+    "expectedCounterexamples": [
+      "AtomicSnapshot: early publication",
+      "NoStaleCommit: stale publication"
+    ],
+    "tlcJarSHA256": "936a262061c914694dfd669a543be24573c45d5aa0ff20a8b96b23d01e050e88"
+  },
+  "implementation": {
+    "owners": [
+      "program/higher-order.ss",
+      "program/scheme-admission.ss",
+      "packages/proofs/lean/FiniteHeight.lean",
+      "t/qualification/scheme-higher-order-test.ss"
+    ],
+    "repair": "Materialize a bare source result through an identity projection; typed output is a derived set, source occurrence observations and budgets are retained; named checked Sessions use declared source arities as mutation authority and permit readonly derived query relations",
+    "proved": "Generic lawful-equality list admission, complete tuple enumeration, encoding faithfulness for admitted rows, duplicate/union/nullary laws and rank bounds/monotonicity/strict progress",
+    "remaining": [
+      "Native scalar decoder and universal Gerbil equality/hash correspondence",
+      "Typed closure/capture interpretation and actual compiler-step preservation",
+      "Native memo/rule/delta and transaction refinement, including typed term domains versus compiled pooled schema envelopes",
+      "General provenance valuations and measured benefit"
+    ]
+  },
+  "developmentAttemptsExcluded": {
+    "failedBuilds": [
+      {
+        "exit": 70,
+        "cause": "New tests initially passed an output name to the four-argument typed compiler; corrected to the existing compile/admit/solve helper"
+      }
+    ],
+    "failedMainProofInvocations": 2,
+    "excludedProbe": "Exploratory lemma-name probe exited 1; not a formal check",
+    "rejectedNativeQualification": {
+      "artifactSHA256": "23a36d90ff77edd7320a066db3cb067d63362620bf36472013d15a10a0b0a0dc",
+      "compilerExit": 0,
+      "buildElapsedSeconds": 284.7167649269104,
+      "qualificationExit": 1,
+      "caseErrors": 2,
+      "finalOK": 0,
+      "causes": [
+        "Typed bare source returned eight duplicate occurrence rows instead of four members",
+        "Repeated nullary source returned two empty tuples instead of one member"
+      ],
+      "resolution": "Explicit derived set output, followed by latest-PR rebase, rebuild and integrated qualification"
+    }
+  },
+  "modelCalls": 0,
+  "performanceClaim": null,
+  "logsPublished": false,
+  "additionalExcludedAttempts": {
+    "integratedArtifact": {
+      "artifactSHA256": "bda7d7ca2caa28b6cf24f867dc30081ec4cf47b434e51c87c2e64288968dba9c",
+      "compilerExit": 0,
+      "buildElapsedSeconds": 383.9749128818512,
+      "qualificationExit": 1,
+      "caseErrors": 2,
+      "finalOK": 0,
+      "cause": "Named Session constructor required every relation to be a source; derived typed output rejected two existing retained Cases",
+      "resolution": "Use admitted source-only arities for mutation authority; allow derived query relations"
+    },
+    "resourceFailedBuild": {
+      "exit": 70,
+      "cause": "Gambit subprocess creation returned Resource temporarily unavailable during C-object compilation with four build workers",
+      "qualified": false,
+      "retryBuildCores": 2
+    },
+    "cancelledSupersededBuild": {
+      "exit": 143,
+      "cause": "Latest PR analysis-layer update appeared immediately before build; stopped only own process tree and rebased before final rebuild",
+      "qualified": false
+    }
+  }
+}

@@ -78,10 +78,24 @@
          (let* ((atoms
                  (map (lambda (clause)
                         (let* ((atom (vector-ref clause 1))
-                               (terms (map lower (vector-ref atom 1))))
+                               (terms (map lower (vector-ref atom 1)))
+                               (columns (vector-ref atom 2)))
                           (vector atom terms
-                                  (map (lambda (column) (list-ref terms column))
-                                       (vector-ref atom 2))))) body))
+                                  ;; Full ordered wide keys need no positional
+                                  ;; reads. Copy the spine, retaining action
+                                  ;; identity without aliasing the term list.
+                                  (match columns
+                                    ([] [])
+                                    ([column] (list (list-ref terms column)))
+                                    (else
+                                     (if (and (>= (length columns) 128)
+                                              (let loop ((xs terms) (ks columns) (n 0))
+                                                (if (null? xs)
+                                                  (null? ks)
+                                                  (and (pair? ks) (= (car ks) n)
+                                                       (loop (cdr xs) (cdr ks) (+ n 1))))))
+                                       (map (lambda (term) term) terms)
+                                       (map (lambda (column) (list-ref terms column)) columns))))))) body))
                 (outputs
                  (map (lambda (head)
                         (vector head

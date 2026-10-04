@@ -61,14 +61,14 @@
                          (vector-ref compiled 2) columns) #t)))
             (list [] (list (- width 1)) (iota width)
                   (reverse (iota width)) (append (iota width) (iota width))))))
-       '(7 8 9 32 128)))
+       '(7 8 9 32 127 128 129 512)))
     (poo-flow-test-case "wide slot keys preserve literals repeats wildcards and unsupported callbacks"
       (let* ((terms (map (lambda (n)
                           (case (modulo n 3)
                             ((0) '(variable . x))
                             ((1) '(literal . #f))
-                            (else '(wildcard . #f)))) (iota 64)))
-             (columns (filter (lambda (n) (= (modulo n 3) 1)) (iota 64)))
+                            (else '(wildcard . #f)))) (iota 384)))
+             (columns (filter (lambda (n) (= (modulo n 3) 1)) (iota 384)))
              (body (list (vector 'atom (vector 0 terms columns))))
              (heads (list (vector 1 '((variable . x) (literal . #f)))))
              (plan (gerbil-ascent-compile-positive-plan heads body))
@@ -79,9 +79,14 @@
                  (case (modulo n 3)
                    ((0) (cons (if (zero? n) 'fresh 'bound) 0))
                    ((1) '(literal . #f))
-                   (else '(wildcard . #f)))) (iota 64)))
+                   (else '(wildcard . #f)))) (iota 384)))
         (check-equal? (vector-ref compiled 2)
                       (map (lambda (_) '(literal . #f)) columns))
+        (let* ((full (gerbil-ascent-compile-positive-plan heads
+                       (list (vector 'atom (vector 0 terms (iota 384))))))
+               (full-atom (car (vector-ref full 1))))
+          (check-equal? (vector-ref full-atom 2) (vector-ref compiled 1))
+          (check-equal? (eq? (vector-ref full-atom 1) (vector-ref full-atom 2)) #f))
         (check-equal?
          (gerbil-ascent-compile-positive-plan heads
            (list (vector 'atom (vector 0 '((expression . #f)) '(0))))) #f)))
@@ -112,7 +117,7 @@
              (check-equal? calls old-calls)
              (check-equal? (rows new 'out) (rows old 'out))
              (check-equal? (rows new 'out) (list (reverse row))))))
-       '(7 8 9 64)))
+       '(7 8 9 64 127 128 129)))
     (poo-flow-test-case "all 512 directed three-node graphs match independent reachability"
       (let (pairs (apply append (map (lambda (x) (map (lambda (y) (list x y)) '(0 1 2))) '(0 1 2))))
         (for-each

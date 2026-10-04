@@ -352,7 +352,7 @@ and keep the general behavior outside that boundary. Gerbil's call optimizer
 does not implement ASCENT column selection or prove its cost model.
 
 After applicability checks in =program/positive.ss=, all atom terms have been
-lowered to ordered slot actions. The current compiler selects every indexed
+lowered to ordered slot actions. The baseline compiler selects every indexed
 column with =list-ref=, repeatedly scanning prefixes. For an atom with =W=
 terms and =K= selected columns, selection can cost =O(W*K)=; a full ordered
 composite key costs =O(W^2)=. A temporary vector permits =O(W+K)= selection,
@@ -412,6 +412,136 @@ oracle groups and the combined native-and-oracle CI check. This slice changes
 only this test module and the research note; production bytes match that
 baseline. The full suite and SS scenarios were not rerun for the test-only
 slice, and no new performance improvement is claimed.
+
+* Feature: linear selection for full ordered wide slot keys
+
+The preceding vector experiment is historical. Rechecking the installed
+=optimize-call.ss:43-80= explains a measurement seam: known procedures in
+another module can receive a different call transform from procedures in the
+current module. This does not prove the earlier regression's cause; its GC
+protocol also changed. A valid comparison must keep both call boundaries
+identical before evaluating the selection algorithm.
+
+Two full copies of =program/positive.ss= at =0958e03= were compiled as separate
+exported modules with =:std/make=, its default optimization enabled and the
+same canonical =program/funs= import. The probe imports both exports and
+asserts that both resolve to native =.ssi= files. =std/make.ss:239-287= builds
+explicitly declared modules; both copies and the probe are declared together,
+so a helper's mere presence in the source tree is not treated as native proof.
+An unchanged/unchanged calibration gave reference/control medians (jiffies)
+=5/5=, =466/464=, =164/164=, =1290/1284= and =647/642= for narrow,
+single-column width 512, full width 128, full width 512 and 64-of-512 keys.
+
+All runs retain 1000 alternating pairs per shape, eight complete positive-plan
+compilations per sample and collection every 20 pairs outside the intervals.
+Each sample checks its full plan against the frozen reference outside timing.
+The original wide-target gate remains at least 900 strict wins and a
+nonregressing median; controls require a nonregressing median. The probe's
+semantic assertions are separate from this acceptance decision.
+
+The calibrated general vector candidate still failed: the single-column
+control was =472/474= and the 64-of-512 target had only 874 strict wins.
+Restricting vector selection to at least 128 columns restored the controls,
+but the 512-column target won only 895 times. Neither candidate was accepted.
+Their source, native artifacts and logs are ignored under
+=.cache/ascent/slot-calibration/=; no fixture-specific build interface is added.
+
+The accepted specialization verifies that a key with at least 128 columns
+selects exactly every lowered action once, in source order. A named tail loop
+checks the column/term suffixes and numeric position without allocating an
+index list. It then copies the term-list spine with an explicit one-argument identity function; the action
+objects stay shared, but the two list spines remain distinct as before.
+Full-key selection is =O(W)= instead of repeated =list-ref='s =O(W^2)=.
+Short, partial, reverse and duplicated selections retain the generic selector.
+The conservative 128-column boundary is the measured target boundary, not
+an assumed universal crossover. No temporary vector or new scratch state is
+retained in the cached plan, and all callback-bearing clauses retain their
+existing fallback.
+
+An earlier sequential-copy candidate used =map values=. It passed one run
+(128 columns =159/107=, 951 wins; 512 columns =1233/468=, 911 wins),
+but its repeat failed (512 columns =1233/446=, 863 wins; the single-column
+control =423/424=). It was rejected. Generated Scheme distinguishes the
+=##map values= call from an explicit one-argument identity lambda; this is a
+concrete compiler seam, not proof that =values= caused the observed jitter.
+
+The next copy variant used an explicit identity lambda. Its first run met
+the gates (128 columns =163/111=, 906 wins; 512 columns =1276/480=,
+900 wins), but its repeat's single-column control failed =465/469= before
+any subsequent build began. It was also rejected. Results from the tail of
+that failed run are not acceptance evidence, because preparation of the next
+candidate overlapped its remaining shapes.
+
+The final variant uses native =match= for empty and singleton keys. An empty
+key returns its empty action list directly; a singleton performs one
+=list-ref= and creates its one-element list directly. This removes captured
+selector closures visible in the original generated Scheme. It still lowers
+all body terms, including nonindexed terms, before key selection. Larger keys
+use the checked full-ordered specialization or the unchanged generic selector.
+
+The cardinality-specialized native module's first run gave reference/candidate
+medians =165/112= at width 128 with 929 strict wins and =1282/488= at width
+512 with 909. Control medians were =5/5=, =471/466= and =651/645=.
+These measure complete positive slot-plan compilation, including applicability,
+body actions, key selection and head actions, not complete engine construction
+or solve time. Concurrent Rust/Clang work was observed on the host; timing
+variation is recorded rather than attributed solely to any Scheme expression.
+
+The confirmation imports the actual =:gerbil-ascent/program/positive= export,
+resolved explicitly to =.cache/ascent/native-library/lib/.../positive.ssi=.
+Generated Scheme names the reference export and that production export as the
+two call targets. The confirmation gives =161/108= at width 128 with 937
+strict wins and =1237/465= at width 512 with 904. Controls remain
+=5/5=, =453/448= and =615/609=. Both cardinality-specialized runs meet
+the unchanged gates. Across them, complete compilation medians decrease about
+32-33% at width 128 and 62% at width 512. These bounded measurements do not
+establish an engine or full-solve speedup.
+
+The existing 13-Case qualification module now covers 127/128/129 and 512-column
+boundaries, forward/reverse/duplicated selections, exact action identity and
+separate list spines. A 384-term mixed key covers repeated variables, =#f=
+literals, wildcards and a 128-column partial selection; a full mixed key checks
+copy semantics. Real Joins at 127/128/129 columns preserve custom provider key
+traces and ordered rows against the independent evaluator. Callback rejection,
+512-graph enumeration, session updates and concurrent-frame checks remain.
+
+With the pinned cache SDK and =GERBIL_BUILD_CORES=12=, =just check-policy=
+passes all 42 selected modules with =findings=0=, =errors=0= and exit 0.
+=just test= passes 52 modules and 418 Cases, scheduled as 49 parallel modules
+and three exclusive modules. All 52 logs contain =NATIVE-MODULES-OK=,
+=MODULE-OK=, =HARNESS-OK=, final =OK=; the whole invocation exits 0.
+
+#+begin_src sh
+just check-policy
+just test
+just performance
+#+end_src
+
+All original 17 SS scenarios were attempted with their original fixtures,
+1000-sample counts, Case budgets and module deadlines. Fourteen pass, including
+all semantic assertions. Three local gates remain open:
+- =ascent-product-session=: original 2ms limit; current p95 =4.524ms=,
+  isolated repeat =8.264ms= (medians =245us= and =239us=). A separate native
+  library copied the same qualified modules and replaced only =positive= with
+  the frozen original implementation, under its actual canonical module id.
+  Its native resolution check passes, but this reference also fails: p95
+  =12.809ms=, median =236us=, 1000 samples. This comparison does not establish
+  a stable full-solve regression or improvement, nor close the time gate.
+- =ascent-byods-eqrel=: p95 =1.013ms= exceeds the original 1ms limit;
+  median =105us=, 1000 samples. No passing receipt is claimed.
+- =ascent-table-expression=: the original 180-second module deadline expires
+  while the 1000-sample persistent-trie reference is still running, before
+  candidate timing starts. That frozen reference imports only POO object,
+  number and trie libraries and never calls ASCENT's slot compiler.
+
+The first suite stops on the product failure; remaining scenarios are inspected
+through the existing native =_performance-scenario= entrypoint, retaining each
+original module timeout. Failures propagate as nonzero exits. There is no
+claim that =just performance= or the complete local performance gate passes.
+Raw failures and the reference-library source remain in ignored
+=.cache/ascent/slot-calibration/=. New commits contain source, Unit Tests and
+this research note, not raw logs. =build.ss=, scheduling, original performance
+limits and original sample counts are not changed by this optimization.
 
 * Feature: explicit SCC traversal state shared by both graph consumers
 

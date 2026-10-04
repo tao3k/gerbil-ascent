@@ -13,16 +13,18 @@ The fresh native engine still validates materialized rows and all fact budgets.
 
 =program/admission.ss= owns replacement shape/type checks for both the atomic
 and retained paths. Invalid row diagnostics are identical before any state
-publication. =program/update-selection.ss= owns eligibility, dependency closure
-and selected native plans; the evaluator owns reuse capsules, mutable row/index
-state and execution. =program/result.ss= freezes publication observations.
+publication. =program/update-selection.ss= owns eligibility and dependency
+closure; =program/reuse.ss= admits private completed-result capsules and owns
+rule activation metadata. The evaluator owns mutable row/index state and
+execution. =program/result.ss= freezes publication observations.
 
 Every single-source replacement keeps the original committed-round execution
 contract, including a zero-duration query of pending work. Explicit batch
 replacement owns prospective atomic publication and checked native dependency
 invalidation; the retained operator facade uses that batch path. Recovery of an
-accepted source snapshot also restores a completed result before declaring the
-Session clean. The original timeout Suite and Rust BYODS lattice fixture check
+accepted source snapshot retains a separate committed result, preserving its
+identity across failed partial runs before declaring the Session clean.
+The original timeout Suite and Rust BYODS lattice fixture check
 exact partial/resumed/full statuses; matching final rows alone is insufficient.
 
 The unchanged retained and 512-graph arity differential fixtures are compiled

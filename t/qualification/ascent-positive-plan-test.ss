@@ -10,7 +10,7 @@
                  gerbil-ascent-rule gerbil-ascent-guard)
         (only-in :gerbil-ascent/program/evaluate
                  gerbil-ascent-evaluate-program gerbil-ascent-make-engine)
-        (only-in :gerbil-ascent/program/positive gerbil-ascent-compile-positive-plan
+        (only-in :gerbil-ascent/core/positive-plan gerbil-ascent-compile-positive-plan
                  gerbil-ascent-run-positive-plan!)
         (only-in :gerbil-ascent/program/reuse gerbil-ascent-activate-rules)
         (only-in :gerbil-ascent/program/update-selection gerbil-ascent-update-active-plans)

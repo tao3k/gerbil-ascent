@@ -175,7 +175,7 @@ _binding-benchmark:
     export ASCENT_BINDING_BENCH_LIB="{{ justfile_directory() }}/.gerbil/binding-benchmark/lib"
     export ASCENT_BINDING_RECEIPT="${ASCENT_BINDING_RECEIPT:-{{ justfile_directory() }}/.gerbil/binding-benchmark/receipt.sexp}"
     mkdir -p "$ASCENT_BINDING_BENCH_LIB"
-    shasum -a 256 program/graph.ss program/funs.ss program/objects.ss program/evaluate.ss program/analysis.ss program/planning.ss t/qualification/ascent-binding-reference-fixture.ss t/qualification/ascent-binding-reference-evaluate.ss t/qualification/ascent-index-program-fixture.ss t/performance/binding-benchmark.ss tools/build-binding-benchmark.ss > "$ASCENT_BINDING_RECEIPT.sources"
+    shasum -a 256 core/dependency-graph.ss core/rule-semantics.ss program/objects.ss program/evaluate.ss program/analysis.ss program/planning.ss t/qualification/ascent-binding-reference-fixture.ss t/qualification/ascent-binding-reference-evaluate.ss t/qualification/ascent-index-program-fixture.ss t/performance/binding-benchmark.ss tools/build-binding-benchmark.ss > "$ASCENT_BINDING_RECEIPT.sources"
     started=$SECONDS
     mkdir -p "{{ justfile_directory() }}/.cache/ascent/tmp"
     log="$(mktemp "{{ justfile_directory() }}/.cache/ascent/tmp/run.XXXXXX")"
@@ -199,7 +199,7 @@ _strata-benchmark:
     export ASCENT_STRATA_BENCH_LIB="{{ justfile_directory() }}/.gerbil/strata-benchmark/lib"
     export ASCENT_STRATA_RECEIPT="${ASCENT_STRATA_RECEIPT:-{{ justfile_directory() }}/.gerbil/strata-benchmark/receipt.sexp}"
     mkdir -p "$ASCENT_STRATA_BENCH_LIB"
-    shasum -a 256 program/graph.ss program/funs.ss t/qualification/ascent-strata-fixture.ss t/performance/strata-benchmark.ss tools/build-strata-benchmark.ss > "$ASCENT_STRATA_RECEIPT.sources"
+    shasum -a 256 core/dependency-graph.ss core/rule-semantics.ss t/qualification/ascent-strata-fixture.ss t/performance/strata-benchmark.ss tools/build-strata-benchmark.ss > "$ASCENT_STRATA_RECEIPT.sources"
     started=$SECONDS
     mkdir -p "{{ justfile_directory() }}/.cache/ascent/tmp"
     log="$(mktemp "{{ justfile_directory() }}/.cache/ascent/tmp/run.XXXXXX")"
@@ -575,7 +575,7 @@ _positive-plan-benchmark:
     export ASCENT_POSITIVE_PLAN_LIB="{{ justfile_directory() }}/.gerbil/positive-plan/lib"
     export ASCENT_POSITIVE_PLAN_RECEIPT="${ASCENT_POSITIVE_PLAN_RECEIPT:-{{ justfile_directory() }}/.gerbil/positive-plan/receipt.sexp}"
     mkdir -p .gerbil/positive-plan
-    shasum -a 256 program/positive.ss program/evaluate.ss program/analysis.ss t/qualification/ascent-positive-plan-reference-analysis.ss t/qualification/ascent-positive-plan-reference-evaluate.ss t/performance/positive-plan-benchmark.ss tools/build-positive-plan-benchmark.ss > "$ASCENT_POSITIVE_PLAN_RECEIPT.sources"
+    shasum -a 256 core/positive-plan.ss program/evaluate.ss program/analysis.ss t/qualification/ascent-positive-plan-reference-analysis.ss t/qualification/ascent-positive-plan-reference-evaluate.ss t/performance/positive-plan-benchmark.ss tools/build-positive-plan-benchmark.ss > "$ASCENT_POSITIVE_PLAN_RECEIPT.sources"
     timeout 150s gxi {{ gerbil_test_runtime_options }} tools/build-positive-plan-benchmark.ss
     mkdir -p "{{ justfile_directory() }}/.cache/ascent/tmp"
     log="$(mktemp "{{ justfile_directory() }}/.cache/ascent/tmp/run.XXXXXX")"
@@ -594,7 +594,7 @@ _workspace-benchmark:
     export ASCENT_WORKSPACE_LIB="{{ justfile_directory() }}/.gerbil/execution-workspace/lib"
     export ASCENT_WORKSPACE_RECEIPT="${ASCENT_WORKSPACE_RECEIPT:-{{ justfile_directory() }}/.gerbil/execution-workspace/receipt.sexp}"
     mkdir -p .gerbil/execution-workspace
-    shasum -a 256 program/positive.ss program/evaluate.ss program/analysis.ss t/qualification/ascent-workspace-reference-analysis.ss t/qualification/ascent-workspace-reference-positive.ss t/qualification/ascent-workspace-reference-evaluate.ss t/performance/workspace-benchmark.ss tools/build-workspace-benchmark.ss > "$ASCENT_WORKSPACE_RECEIPT.sources"
+    shasum -a 256 core/positive-plan.ss program/evaluate.ss program/analysis.ss t/qualification/ascent-workspace-reference-analysis.ss t/qualification/ascent-workspace-reference-positive.ss t/qualification/ascent-workspace-reference-evaluate.ss t/performance/workspace-benchmark.ss tools/build-workspace-benchmark.ss > "$ASCENT_WORKSPACE_RECEIPT.sources"
     timeout 150s gxi {{ gerbil_test_runtime_options }} tools/build-workspace-benchmark.ss
     mkdir -p "{{ justfile_directory() }}/.cache/ascent/tmp"
     log="$(mktemp "{{ justfile_directory() }}/.cache/ascent/tmp/run.XXXXXX")"
@@ -635,7 +635,7 @@ _index-lifecycle-benchmark:
     export ASCENT_INDEX_LIFECYCLE_LIB="{{ justfile_directory() }}/.gerbil/index-lifecycle/lib"
     export ASCENT_INDEX_LIFECYCLE_RECEIPT="${ASCENT_INDEX_LIFECYCLE_RECEIPT:-{{ justfile_directory() }}/.gerbil/index-lifecycle/receipt.sexp}"
     mkdir -p .gerbil/index-lifecycle
-    shasum -a 256 table/funs.ss table/access.ss table/provider.ss program/evaluate.ss program/positive.ss program/analysis.ss t/qualification/ascent-index-reference-funs.ss t/qualification/ascent-index-reference-provider.ss t/qualification/ascent-index-reference-evaluate.ss t/performance/index-lifecycle-benchmark.ss tools/build-index-lifecycle-benchmark.ss > "$ASCENT_INDEX_LIFECYCLE_RECEIPT.sources"
+    shasum -a 256 table/funs.ss table/access.ss table/provider.ss program/evaluate.ss core/positive-plan.ss program/analysis.ss t/qualification/ascent-index-reference-funs.ss t/qualification/ascent-index-reference-provider.ss t/qualification/ascent-index-reference-evaluate.ss t/performance/index-lifecycle-benchmark.ss tools/build-index-lifecycle-benchmark.ss > "$ASCENT_INDEX_LIFECYCLE_RECEIPT.sources"
     timeout 150s gxi {{ gerbil_test_runtime_options }} tools/build-index-lifecycle-benchmark.ss
     mkdir -p "{{ justfile_directory() }}/.cache/ascent/tmp"
     log="$(mktemp "{{ justfile_directory() }}/.cache/ascent/tmp/run.XXXXXX")"
@@ -656,7 +656,7 @@ _result-benchmark:
     export ASCENT_RESULT_LIB="{{ justfile_directory() }}/.gerbil/result-publication/lib"
     export ASCENT_RESULT_RECEIPT="${ASCENT_RESULT_RECEIPT:-{{ justfile_directory() }}/.gerbil/result-publication/receipt.sexp}"
     mkdir -p .gerbil/result-publication
-    shasum -a 256 program/result.ss program/evaluate.ss program/positive.ss program/analysis.ss table/access.ss table/funs.ss table/storage.ss t/qualification/ascent-result-reference-evaluate.ss t/performance/result-benchmark.ss tools/build-result-benchmark.ss > "$ASCENT_RESULT_RECEIPT.sources"
+    shasum -a 256 program/result.ss program/evaluate.ss core/positive-plan.ss program/analysis.ss table/access.ss table/funs.ss table/storage.ss t/qualification/ascent-result-reference-evaluate.ss t/performance/result-benchmark.ss tools/build-result-benchmark.ss > "$ASCENT_RESULT_RECEIPT.sources"
     timeout 150s gxi {{ gerbil_test_runtime_options }} tools/build-result-benchmark.ss
     mkdir -p "{{ justfile_directory() }}/.cache/ascent/tmp"
     log="$(mktemp "{{ justfile_directory() }}/.cache/ascent/tmp/run.XXXXXX")"

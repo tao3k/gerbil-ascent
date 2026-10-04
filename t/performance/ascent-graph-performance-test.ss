@@ -3,7 +3,7 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 (import (only-in :std/test test-suite test-case check-equal?)
-        (only-in :gerbil-ascent/program/graph gerbil-ascent-graph-components)
+        (only-in :gerbil-ascent/core/dependency-graph gerbil-ascent-graph-components)
         (only-in :gerbil-ascent/t/performance/native-library assert-native-library!))
 (export ascent-graph-performance-test)
 

@@ -5,7 +5,7 @@
 ;;; Pure planning over private lowered rule vectors. These functions do not
 ;;; retain relation state and are shared by the serial execution path.
 (import (only-in :std/list/list butlast)
-        (only-in "graph.ss" gerbil-ascent-graph-components))
+        (only-in "dependency-graph.ss" gerbil-ascent-graph-components))
 
 (export gerbil-ascent-rule-strata
         gerbil-ascent-lattice-feeds-relation?

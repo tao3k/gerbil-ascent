@@ -3,7 +3,7 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 ;;; Frozen relaxation oracle from commit 74f0046. Qualification and matched
-;;; planning benchmarks use it; runtime evaluation uses program/funs.ss.
+;;; planning benchmarks use it; runtime evaluation uses core/rule-semantics.ss.
 (export ascent-reference-rule-strata ascent-strata-rule-plans)
 
 (def (ascent-strata-rule-plans edges)

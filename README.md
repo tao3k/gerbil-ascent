@@ -12,11 +12,22 @@ Each top-level directory is a Gerbil module namespace:
 
 | Namespace | Current responsibility |
 | --- | --- |
-| `:gerbil-ascent/program/*` | Typed POO rule declarations and stratified evaluation |
-| `:gerbil-ascent/core/*` | Indexed binary evaluation path |
+| `:gerbil-ascent/program/*` | POO declarations, language compilation, admission and Session coordination |
+| `:gerbil-ascent/core/*` | Dependency graph algorithms, lowered rule semantics, positive execution plans and bounded binary evaluation |
 | `:gerbil-ascent/table/*` | Binary relation indexes and projections |
 | `:gerbil-ascent/candidate/*` | Bounded inert candidate evaluation and selected support projection |
 | `:gerbil-ascent/interface/*` | Inert request projection |
+
+The generic core kernels consume dense adjacency or private lowered rule data.
+They do not import program declarations, POO contracts or Session lifecycle code.
+`program/planning.ss`, `program/summary.ss` and `program/evaluate.ss` adapt those
+kernels to admitted programs. Physical row indexes and storage providers belong
+to `table/`; caller-facing request projection belongs to `interface/`.
+
+The internal modules formerly named `program/graph`, `program/funs` and
+`program/positive` now live at `core/dependency-graph`, `core/rule-semantics` and
+`core/positive-plan`. Imports migrate directly; the public `program/interface`
+entry point and exported function names retain their existing behavior.
 
 `program/interface.ss` exports the native
 [`relational-program` and `relational-fragment` forms](docs/scheme-relational-language-design.org)

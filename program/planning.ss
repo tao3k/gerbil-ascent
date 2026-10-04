@@ -6,9 +6,9 @@
 ;;; The passed atom-plan resolves names and arities against one program schema.
 (import (only-in "objects.ss" gerbil-ascent-clause-plan
                  gerbil-ascent-bound-membership)
-        (only-in "funs.ss" gerbil-ascent-rule-strata
+        (only-in :gerbil-ascent/core/rule-semantics gerbil-ascent-rule-strata
                  gerbil-ascent-delta-positions)
-        (only-in "positive.ss" gerbil-ascent-prepare-rule-activations)
+        (only-in :gerbil-ascent/core/positive-plan gerbil-ascent-prepare-rule-activations)
         (only-in :clan/poo/object .ref))
 
 (export gerbil-ascent-prepare-rule gerbil-ascent-prepare-program)

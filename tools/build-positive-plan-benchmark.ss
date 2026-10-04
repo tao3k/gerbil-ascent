@@ -1,5 +1,5 @@
 (import (only-in :std/make make))
-(make '("program/positive" "program/evaluate"
+(make '("core/positive-plan" "program/evaluate"
         "t/qualification/ascent-positive-plan-reference-analysis"
         "t/qualification/ascent-positive-plan-reference-evaluate")
       srcdir: (current-directory)

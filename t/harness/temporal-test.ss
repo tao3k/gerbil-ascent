@@ -30,7 +30,7 @@
    :gerbil-ascent/program/operator
    :gerbil-ascent/program/operator-change
    :gerbil-ascent/program/operator-session
-   :gerbil-ascent/program/funs
+   :gerbil-ascent/core/rule-semantics
    :gerbil-ascent/program/analysis
    :gerbil-ascent/program/summary
    :gerbil-ascent/program/evaluate

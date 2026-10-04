@@ -6,7 +6,7 @@
 ;;; reuse capsules, mutable rows, budget accounting and atomic publication.
 (import (only-in :clan/poo/object .ref)
         (only-in "scheme-checked.ss" relational-stable-procedure?)
-        (only-in "positive.ss" gerbil-ascent-positive-plan)
+        (only-in :gerbil-ascent/core/positive-plan gerbil-ascent-positive-plan)
         (only-in :gerbil-ascent/table/storage gerbil-ascent-set-storage-provider))
 (export gerbil-ascent-update-eligible? gerbil-ascent-update-selection
         gerbil-ascent-update-active-plans)

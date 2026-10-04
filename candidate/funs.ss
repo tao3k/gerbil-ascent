@@ -3,7 +3,7 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 ;;; Pure operations over inspected candidate data. The native planner uses
-;;; program/funs.ss over its different, lowered rule representation.
+;;; core/rule-semantics.ss over its different, lowered rule representation.
 (import (only-in :gerbil-ascent/candidate/types
                  reasoning-snapshot-relations reasoning-candidate-relations)
         (only-in :gerbil-ascent/candidate/program candidate-variable?))

@@ -9,13 +9,13 @@
         (only-in :std/iter for iter Iterator &Iterator-next!)
         (only-in :gerbil-ascent/program/admission gerbil-ascent-initialize-source-row!)
         (only-in :gerbil-ascent/program/planning gerbil-ascent-prepare-rule)
-        (only-in :gerbil-ascent/program/positive gerbil-ascent-positive-plan
+        (only-in :gerbil-ascent/core/positive-plan gerbil-ascent-positive-plan
                  gerbil-ascent-run-positive-plan! gerbil-ascent-index-key
                  gerbil-ascent-emit-heads!)
         (only-in :gerbil-ascent/program/types GerbilAscentSessionContract)
         (only-in :gerbil-ascent/t/qualification/ascent-positive-plan-reference-analysis gerbil-ascent-program-analysis
                  gerbil-ascent-program-schema)
-        (only-in :gerbil-ascent/program/funs gerbil-ascent-rule-strata
+        (only-in :gerbil-ascent/core/rule-semantics gerbil-ascent-rule-strata
                  gerbil-ascent-lattice-feeds-relation?
                  gerbil-ascent-delta-positions
                  gerbil-ascent-lattice-key

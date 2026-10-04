@@ -14,7 +14,7 @@
                  gerbil-ascent-publish-rows gerbil-ascent-snapshot-rows gerbil-ascent-snapshot-sizes
                  gerbil-ascent-result-observation)
         (only-in "planning.ss" gerbil-ascent-prepare-program)
-        (only-in "positive.ss" gerbil-ascent-run-positive-plan! gerbil-ascent-index-key
+        (only-in :gerbil-ascent/core/positive-plan gerbil-ascent-run-positive-plan! gerbil-ascent-index-key
                  gerbil-ascent-index-key/terms
                  gerbil-ascent-emit-heads!)
         (only-in "types.ss" GerbilAscentSessionContract)
@@ -23,7 +23,7 @@
                  native-reuse-result native-reuse-affected)
         (only-in "analysis.ss" gerbil-ascent-program-analysis
                  gerbil-ascent-program-schema)
-        (only-in "funs.ss" gerbil-ascent-lattice-feeds-relation?
+        (only-in :gerbil-ascent/core/rule-semantics gerbil-ascent-lattice-feeds-relation?
                  gerbil-ascent-lattice-key
                  gerbil-ascent-lattice-value
                  gerbil-ascent-joined-row

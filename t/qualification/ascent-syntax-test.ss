@@ -28,7 +28,7 @@
                  gerbil-ascent-session-append-source!
                  gerbil-ascent-session-run)
         (only-in :gerbil-ascent/program/syntax ascent ascent-fragment)
-        (only-in :gerbil-ascent/program/funs gerbil-ascent-bind-row))
+        (only-in :gerbil-ascent/core/rule-semantics gerbil-ascent-bind-row))
 
 (export ascent-syntax-test)
 

@@ -6,7 +6,7 @@
         (only-in :clan/poo/object .o .ref)
         (only-in :gerbil-ascent/program/analysis gerbil-ascent-program-schema)
         (only-in :gerbil-ascent/program/planning gerbil-ascent-prepare-program)
-        (only-in :gerbil-ascent/program/positive gerbil-ascent-index-key/terms)
+        (only-in :gerbil-ascent/core/positive-plan gerbil-ascent-index-key/terms)
         (only-in :gerbil-ascent/t/qualification/ascent-index-reference-evaluate
                  ascent-index-reference-evaluate-program)
         (only-in :core/observability/testing-case

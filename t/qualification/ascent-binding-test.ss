@@ -5,7 +5,7 @@
 (import (only-in :std/test check-equal? test-suite)
         (only-in :std/list/list append-map)
         (only-in :core/observability/testing-case poo-flow-test-case)
-        (only-in :gerbil-ascent/program/funs gerbil-ascent-bind-row)
+        (only-in :gerbil-ascent/core/rule-semantics gerbil-ascent-bind-row)
         (only-in :gerbil-ascent/t/qualification/ascent-binding-reference-fixture
                  ascent-reference-bind-row ascent-binding-atom-plan))
 (export ascent-binding-test)

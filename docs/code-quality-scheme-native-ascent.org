@@ -1832,3 +1832,56 @@ its full parameter list, with the default expansion limit explained separately.
 The representation contracts retain explicit type-variable relationships rather
 than =Any= placeholders. Final comment-stripped source still matches =bf7b75e=.
 No full-suite or application performance result is claimed for this study.
+
+* Study: core kernel ownership and program coordination
+
+The installed compiler's =optimize-top.ss:244-268= defines a small local
+=collect-e= handler inside =collect-type-let-values%=. Its outer traversal owns
+binding order and the body environment; the helper owns one binding's type
+collection. =optimize-xform.ss:202-223= similarly separates body/let traversal
+from reference matching. The transferable structure is an explicit algorithm
+owner and an adapter that supplies scope and traversal, rather than a generic
+"core" bucket containing unrelated public interfaces.
+
+ASCENT previously put only the specialized binary evaluator in =core/=, while
+generic graph, rule-semantics and positive-plan algorithms lived alongside POO
+declarations, language compilation and Session coordination in =program/=.
+The three generic kernels consume private numeric/vector/list data and have no
+POO declaration or Session dependencies. They now belong to a coherent core layer:
+
+| Module | Responsibility | State owner |
+|--------+----------------+-------------|
+| =core/dependency-graph= | Dense-ID SCC traversal | Each traversal |
+| =core/rule-semantics= | Stratification, row binding, expression/head semantics | Caller environment and local traversal |
+| =core/positive-plan= | Immutable positive plans and ordered slot execution | Shared immutable plans; fresh frames per engine |
+| =core/binary-program= | Existing bounded binary evaluator | Each evaluation |
+| =program/planning= | Validate POO declarations and adapt them to lowered plans | One admitted schema/Analysis |
+| =program/evaluate= | Coordinate admitted sources, providers and fixed-point execution | One engine |
+| =program/session= | Update transaction and retained result lifecycle | One Session |
+| =table/*= | Physical indexes and storage providers | Evaluator-owned storage |
+
+Imports migrate directly to the new module identities. No compatibility wrapper
+or second algorithm copy remains in =program/=. The public =program/interface=
+entry point and exported function names remain unchanged. Build entries, native
+qualification references, temporal imports and executable benchmark module paths
+are updated together. Existing frozen local performance implementations and
+historical evidence retain their original internal source structure.
+
+The dependency-graph file is byte-identical to the former graph module.
+Rule-semantics and positive-plan are byte-identical after their sole sibling
+import substitutions. The change adds no cache, layout field, budget exception,
+callback or scheduling policy. Generic core imports have no reverse dependency
+on =program/=. Core organization follows algorithm and state ownership; it does
+not imply that every application rule, public declaration or proof adapter is a
+core concern. No performance improvement is claimed from namespace migration.
+
+The complete native =just test= invocation passes 57 modules and 490 Cases,
+with 53 parallel modules, four exclusive modules and 12 workers. Every module
+log has native, module, harness and final success markers; no Case errors or
+budget exceptions are present, and the invocation exits 0. Generated core =.ssi=
+files confirm =positive-plan -> rule-semantics -> dependency-graph= imports.
+The selected library-source policy audit exits 0 with =findings=0= and
+=errors=0=. Original Case budgets and module timeouts remain unchanged.
+All logs stay in ignored =.cache/ascent/core-ownership/=. This is a namespace
+and responsibility refactor; no new SS or AOT performance qualification is
+asserted from the semantic suite or the existing pre-migration measurements.

@@ -5,7 +5,7 @@
 (import (only-in :std/test check-equal? test-suite)
         (only-in :core/observability/testing-case poo-flow-test-case)
         (only-in :clan/poo/object .ref)
-        (only-in :gerbil-ascent/program/graph gerbil-ascent-graph-components)
+        (only-in :gerbil-ascent/core/dependency-graph gerbil-ascent-graph-components)
         (only-in :gerbil-ascent/t/qualification/ascent-graph-fixture
                  ascent-reference-graph-components)
         (only-in :gerbil-ascent/program/interface

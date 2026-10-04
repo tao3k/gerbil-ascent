@@ -5,7 +5,7 @@
 ;;; Static rule dependency SCCs. This is declaration metadata, independent of
 ;;; source rows and of the evaluator's (possibly coarser) strata.
 (import (only-in :clan/poo/object .o .ref)
-        (only-in "graph.ss" gerbil-ascent-graph-components)
+        (only-in :gerbil-ascent/core/dependency-graph gerbil-ascent-graph-components)
         (only-in :std/list/list append-map delete-duplicates/hash))
 
 (export gerbil-ascent-program-summary)

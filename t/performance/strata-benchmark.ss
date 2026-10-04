@@ -5,7 +5,7 @@
 ;;; Matched planning only: prebuilt lowered rules, compiled old and new
 ;;; algorithms, alternating sample order, equal minimum strata per sample.
 ;;; Rule construction, POO admission, and fixed-point execution are excluded.
-(import (only-in :gerbil-ascent/program/funs gerbil-ascent-rule-strata)
+(import (only-in :gerbil-ascent/core/rule-semantics gerbil-ascent-rule-strata)
         (only-in :gerbil-ascent/t/qualification/ascent-strata-fixture
                  ascent-reference-rule-strata ascent-strata-rule-plans))
 

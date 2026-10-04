@@ -7,7 +7,7 @@
 ;;; Both engines and row binders use identical optimizing compilation.
 ;;; The private output directory also keeps installed candidate artifacts
 ;;; out of the comparison until the experiment has earned retention.
-(make '("program/graph" "program/funs" "program/objects" "program/evaluate"
+(make '("core/dependency-graph" "core/rule-semantics" "program/objects" "program/evaluate"
         "t/qualification/ascent-binding-reference-fixture"
         "t/qualification/ascent-binding-reference-evaluate"
         "t/qualification/ascent-index-program-fixture")

@@ -7,7 +7,7 @@
 ;;; Compile both current planning and the frozen oracle into one isolated
 ;;; output directory with identical optimizing std/make settings. This avoids
 ;;; stale installed candidate code and interpreted/compiled timing confounds.
-(make '("program/graph" "program/funs" "t/qualification/ascent-strata-fixture")
+(make '("core/dependency-graph" "core/rule-semantics" "t/qualification/ascent-strata-fixture")
       srcdir: (current-directory)
       libdir: (getenv "ASCENT_STRATA_BENCH_LIB")
       build-deps: ".gerbil/strata-benchmark/build-deps")

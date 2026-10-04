@@ -4,7 +4,7 @@
 
 (import (only-in :std/test check-equal? test-suite)
         (only-in :core/observability/testing-case poo-flow-test-case)
-        (only-in :gerbil-ascent/program/funs gerbil-ascent-rule-strata)
+        (only-in :gerbil-ascent/core/rule-semantics gerbil-ascent-rule-strata)
         (only-in :gerbil-ascent/t/qualification/ascent-strata-fixture
                  ascent-reference-rule-strata ascent-strata-rule-plans))
 (export ascent-strata-test)

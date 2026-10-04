@@ -5,7 +5,7 @@
 ;;; Paired, compiled binding and warm-declaration fixed-point evaluation.
 ;;; Program construction and result checks are outside each timed span.
 (import (only-in :clan/poo/object .ref)
-        (only-in :gerbil-ascent/program/funs gerbil-ascent-bind-row)
+        (only-in :gerbil-ascent/core/rule-semantics gerbil-ascent-bind-row)
         (only-in :gerbil-ascent/program/objects
                  gerbil-ascent-relation gerbil-ascent-variable
                  gerbil-ascent-atom gerbil-ascent-rule gerbil-ascent-program)

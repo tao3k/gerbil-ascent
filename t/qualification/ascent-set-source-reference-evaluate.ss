@@ -11,7 +11,7 @@
         (only-in :gerbil-ascent/program/types GerbilAscentSessionContract)
         (only-in :gerbil-ascent/t/qualification/ascent-positive-plan-reference-analysis gerbil-ascent-program-analysis
                  gerbil-ascent-program-schema)
-        (only-in :gerbil-ascent/program/funs gerbil-ascent-rule-strata
+        (only-in :gerbil-ascent/core/rule-semantics gerbil-ascent-rule-strata
                  gerbil-ascent-lattice-feeds-relation?
                  gerbil-ascent-delta-positions
                  gerbil-ascent-lattice-key

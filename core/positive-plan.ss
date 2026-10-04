@@ -4,7 +4,7 @@
 
 ;;; Private positive-rule execution plans. Plans are immutable and shared;
 ;;; each engine owns its variable frames, including nested/concurrent solves.
-(import (only-in "funs.ss" gerbil-ascent-expression-value gerbil-ascent-head-row))
+(import (only-in "rule-semantics.ss" gerbil-ascent-expression-value gerbil-ascent-head-row))
 (export gerbil-ascent-prepare-rule-activations gerbil-ascent-positive-plan gerbil-ascent-compile-positive-plan gerbil-ascent-run-positive-plan!
         gerbil-ascent-index-key gerbil-ascent-index-key/terms gerbil-ascent-emit-heads!)
 

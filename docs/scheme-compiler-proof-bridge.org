@@ -226,3 +226,9 @@ normalization theorem qualify the actual compiler's accepted grammar.
 Native differential qualification, implementation refinement, performance and
 real-model comprehension remain separate gates in the [[file:scheme-research-proof-audit.org][research plan]]. No provider
 call or new model accuracy/benefit claim belongs to this compiler-proof slice.
+
+The descriptor receipt also records rebase onto =a093838= (binary kernel
+separation and coding-style documentation). The rebuilt source-bound artifact
+passed the same four native modules and all 58 Cases. Proof source hashes are
+unchanged from the successful formal gate. This is focused qualification,
+not a claim that all native modules or model experiments were rerun.

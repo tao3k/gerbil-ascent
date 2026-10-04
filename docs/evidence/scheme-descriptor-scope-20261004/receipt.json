@@ -87,5 +87,37 @@
     "reason": "Preflight prototype superseded before native qualification by owned-row snapshot implementation"
   },
   "modelCalls": 0,
-  "performanceClaim": null
+  "performanceClaim": null,
+  "rebasedVerification": {
+    "sourceCommit": "4412371f682d39aeed54c9e8b0fd12b6fccb2d57",
+    "upstreamCommit": "a09383826339da053567f61394ed06f6bd5e45e8",
+    "artifactSHA256": "9d6860c8ea741b6940d0aedba2603ef434cd021c49410077cba7932a3311b74e",
+    "sourceCount": 355,
+    "sourceMapSHA256": "ac56b420e8e7a9b0c4fea0900a4c0f85035fe0a1e545ce14b2d9a22c63533b80",
+    "sourceMapEncoding": "UTF-8 JSON, sorted keys, compact separators",
+    "buildElapsedSeconds": 332.02969908714294,
+    "compilerExit": 0,
+    "qualificationExit": 0,
+    "counts": {
+      "cases": 58,
+      "suites": 4,
+      "modules": 4,
+      "harnesses": 4,
+      "finalOK": 4
+    },
+    "qualifiedModules": [
+      "scheme-operator",
+      "scheme-operator-retained",
+      "scheme-library-contract",
+      "scheme-higher-order"
+    ],
+    "bounds": {
+      "maxHeap": "1G",
+      "outputSilenceSeconds": 5,
+      "moduleSeconds": 120,
+      "buildSilenceAndCPUIdleSeconds": 60,
+      "buildTotalDeadline": null
+    },
+    "formalFilesUnchanged": true
+  }
 }

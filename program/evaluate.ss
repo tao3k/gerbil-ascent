@@ -29,11 +29,11 @@
                  gerbil-ascent-joined-row
                  gerbil-ascent-expression-value
                  gerbil-ascent-bind-row)
-        (only-in :gerbil-ascent/table/provider gerbil-ascent-hash-index-provider)
+        (only-in :gerbil-ascent/table/provider gerbil-ascent-canonical-hash-index-provider?)
         (only-in :gerbil-ascent/table/storage
                  gerbil-ascent-storage-make-state
                  gerbil-ascent-set-batch-admit!
-                 gerbil-ascent-set-storage-provider)
+                 gerbil-ascent-canonical-set-storage-provider?)
         (only-in :clan/poo/support/base until))
 
 (export gerbil-ascent-evaluate-program gerbil-ascent-make-engine
@@ -182,8 +182,8 @@
                    (set! lattice-events (cons key lattice-events)))
                  ;; Initial duplicates remain rows; the exact built-in Set
                  ;; extension only wraps this row in a temporary list.
-                 (if (eq? (vector-ref storage-providers index)
-                          gerbil-ascent-set-storage-provider)
+                 (if (gerbil-ascent-canonical-set-storage-provider?
+                      (vector-ref storage-providers index))
                    (set! source-materialized-count
                      ;; With no field callback, nothing can invalidate the
                      ;; shape checked above. Exact Set storage returns row.
@@ -306,8 +306,8 @@
              (single-set-source?
               (and positive-rules? (= count 1)
                    (not (vector-ref lattice-joins 0))
-                   (eq? (vector-ref storage-providers 0)
-                        gerbil-ascent-set-storage-provider)))
+                   (gerbil-ascent-canonical-set-storage-provider?
+                    (vector-ref storage-providers 0))))
              (source-originals
               (and session?
                    (list->vector
@@ -423,8 +423,8 @@
                       (hash-put! pending-table key merged)
                       (vector-set! pending-lattice-keys index
                         (cons key (vector-ref pending-lattice-keys index)))))
-                  (if (eq? (vector-ref storage-providers index)
-                           gerbil-ascent-set-storage-provider)
+                  (if (gerbil-ascent-canonical-set-storage-provider?
+                       (vector-ref storage-providers index))
                     ;; The built-in extension is exactly (list row). Preserve
                     ;; validation order without allocating that temporary list.
                     (admit-stored! index pending-table row)
@@ -685,10 +685,10 @@
                     ;; retain the row spine. Other Providers keep the recount.
                     (vector-set! all-size index
                       (if (and (not (vector-ref lattice-joins index))
-                               (eq? (vector-ref storage-providers index)
-                                    gerbil-ascent-set-storage-provider)
-                               (eq? (vector-ref index-providers index)
-                                    gerbil-ascent-hash-index-provider))
+                               (gerbil-ascent-canonical-set-storage-provider?
+                                (vector-ref storage-providers index))
+                               (gerbil-ascent-canonical-hash-index-provider?
+                                (vector-ref index-providers index)))
                         (+ (vector-ref all-size index) batch-size)
                         (length (vector-ref all index)))))
                   (vector-set! delta index (vector-ref pending index))
@@ -781,8 +781,8 @@
               (let* ((index (position-of name))
                      (width (vector-ref arity index))
                      (built-in-set?
-                      (eq? (vector-ref storage-providers index)
-                           gerbil-ascent-set-storage-provider)))
+                      (gerbil-ascent-canonical-set-storage-provider?
+                       (vector-ref storage-providers index))))
                 (unless (and (list? row) (= (length row) width))
                   (error "invalid ASCENT session source row" name row))
                 (let (check (vector-ref field-checkers index))

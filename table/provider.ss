@@ -14,6 +14,7 @@
 
 (export GerbilAscentIndexProviderContract
         gerbil-ascent-hash-index-provider
+        gerbil-ascent-canonical-hash-index-provider?
         gerbil-ascent-index-provider-build
         gerbil-ascent-index-provider-extend!
         gerbil-ascent-index-provider-lookup)
@@ -49,10 +50,30 @@
 
 ;;; The default hash provider preserves row buckets in relation order and
 ;;; remains replaceable at declaration time without changing rule syntax.
-(def gerbil-ascent-hash-index-provider
+(def +canonical-hash-index-provider+
   (validate GerbilAscentIndexProviderContract
             (.o (:: @ IndexProvider.)
                 (.build-index gerbil-ascent-index-build)
                 (.extend-index! gerbil-ascent-index-extend!)
                 (.lookup-index
                  (lambda (index key) (or (hash-get index key) []))))))
+
+(def gerbil-ascent-hash-index-provider +canonical-hash-index-provider+)
+
+;;; The exported default can be rebound. Native representation admission uses
+;;; the private, module-initialized receiver, never a caller's new default.
+;; gerbil-ascent-canonical-hash-index-provider?
+;;   : (-> IndexProviderCandidate Boolean)
+;;   | doc m%
+;;       Recognize the privately retained receiver validated at module load.
+;;       Rebinding the exported default does not grant native representation.
+;;
+;;       # Examples
+;;
+;;       ```scheme
+;;       (gerbil-ascent-canonical-hash-index-provider? gerbil-ascent-hash-index-provider)
+;;       ;; => #t for the original exported default
+;;       ```
+;;     %
+(def (gerbil-ascent-canonical-hash-index-provider? value)
+  (eq? value +canonical-hash-index-provider+))

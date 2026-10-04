@@ -66,6 +66,126 @@ These results establish local copy/validation cost, not an end-to-end
 speedup for a retained solve. A broader runtime performance claim
 requires a matched complete workload on an uncontended machine.
 
+* Study: owned finite mapping construction and canonical receivers
+
+The installed Gerbil =2591dcd= compiler's
+=compile.ss:1446-1469= constructs a private accumulator in
+=generate-meta-define-values%= and uses =reverse!= on that accumulator,
+while the incoming syntax stays untouched. =base.ss:147-174= returns
+already interned runtime identifiers directly and only constructs/caches
+identifiers when the admitted binding shape requires it. These are ownership
+and representation decisions, rather than a blanket preference for mutation
+or another wrapper around every value.
+
+Applying that distinction to =program/scheme-checked.ss= removes two
+redundant ownership copies along the finite mapping path. The input row is
+checked without making an intermediate copy: =append= itself copies its
+spine. The output row is checked while making a fresh copy, and becomes the
+private tail of the combined row. =relational-finite-view= then gives these
+fresh rows to a private source constructor without copying them again.
+The ordinary public =relational-source= still copies caller-owned rows.
+Shape admission remains before scalar checks, and the closed scalar
+predicate has no user callbacks. A failed copy can allocate private temporary
+pairs but never returns them or mutates the original row.
+
+The same admitted-identity idea applies to =program/types.ss=. The exact
+hash Index Provider and set Storage Provider are already validated by their
+own module initializers (=table/provider.ss:53= and =table/storage.ss:112=).
+Their relation-slot predicates now accept those exact objects directly.
+Derived and custom objects still run the original full receiver contract.
+There is no mutable admission cache, callback suppression for custom receivers,
+or new exported constructor that lets callers claim ownership.
+
+A live =gxi= probe confirms that imported exported bindings can be reassigned.
+Comparing against the mutable exported default is therefore not a stable
+admission fact. Provider modules now retain the originally validated object
+privately and export a pure canonical-identity predicate. Relation contracts,
+physical indexing, evaluator Set shortcuts, session append admission and
+reuse selection use that predicate. Existing exported defaults retain their
+constructor role. A dedicated native Case rebinds both defaults to false,
+checks rejection of false receivers, and extends/queries an existing physical
+index through its retained original receiver; it restores both bindings in
+the finally clause. Derived and custom objects still have distinct identities.
+
+=t/qualification/scheme-finite-mapping-test.ss= compares all input/output
+width pairs from zero through four, duplicate order, shared input/output
+aliases, caller mutations, invalid signatures, malformed/cyclic lists,
+scalar rejection and receiver admission against the old boundaries.
+=just performance-finite-mapping= builds both frozen and current implementations
+as native modules and checks their resolution paths. The frozen copy, finite
+row, source and view definitions come from =541d5b5=; a Scheme-reader audit
+checks all five forms against that source revision. Scenario and library
+paths are explicit =main= arguments, and logs remain in ignored =.cache=.
+
+Each construction scenario uses 128 entries, widths one or eight, ten calls
+per sample and 100 alternating old/new pairs. Ordered row parity is checked
+outside every timed interval. Gates are at least 20% lower allocation,
+10% lower median CPU cost and 75/100 CPU wins for the optimized cases;
+the ordinary source control requires equal allocation and at most 5% CPU
+regression. Wall time is diagnostic from the start. The canonical receiver
+scenario compares the two original slot predicates with the current ones
+through the same public =element?= protocol.
+
+The complete-view reference freezes the original Core contracts and four
+constructor/helper definitions as well as the checked functions. Otherwise
+sharing modified Core constructors would hide the admission change in both
+variants. The ordinary-source control deliberately shares current Core to
+check the unchanged public ownership boundary; receiver cost is also measured
+separately through frozen slot predicates. Native compilation includes these
+reference modules explicitly, rather than leaving one side interpreted.
+No complete solve, rollback, tail-latency or application speedup follows
+from these construction measurements.
+
+The first non-fused copy attempt fails its narrow-row CPU gate (74/100 wins,
+about 4% lower median CPU despite 25% less allocation). Fusing scalar checks
+with output copying passes the row kernels but the original complete-view
+trial fails: allocation drops only 8.3%, CPU drops about 9.7%, and only
+55/100 CPU pairs improve. These failures remain recorded; gates are unchanged.
+The subsequent shared-Core probe still fails the view gate after canonical
+admission changes (12.5% less allocation, 7.8% lower CPU, 60/100 wins).
+It isolates the copy change under faster common admission; it does not
+measure the complete before/after batch. Its negative result remains separate
+from the corrected frozen-Core comparison.
+
+The corrected native comparison completes five scenarios, all 100 pairs,
+with final OK and coordinator exit 0. Per-call medians are:
+
+| Boundary          | Bytes old/new       | CPU us old/new | CPU wins |
+|-------------------+---------------------+----------------+----------|
+| Narrow row graph  | 24651.2 / 18507.2   | 9.7 / 8.5      |   90/100 |
+| Wide row graph    | 153675.2 / 104523.2 | 27.5 / 23.0    |   90/100 |
+| Full finite view  | 1854907.2 / 1073979.2 | 733.0 / 472.5 |  81/100 |
+| Source copy control | 479499.2 / 479499.2 | 177.7 / 176.1 | 53/100 |
+| Canonical receiver slots | 387659.2 / 74027.2 | 141.8 / 26.9 | 99/100 |
+
+Full view construction allocates 42.1% less and has 35.5% lower median
+CPU cost after privately retaining canonical identities. The source control
+has 0.9% lower median CPU cost and identical allocation, within its original
+5% limit. The isolated receiver check shows why
+the complete path needed Core admission as well as fewer copies. These
+measurements use one collector before warmup and natural GC during batches;
+they include constructor contracts and exclude module startup and solving.
+
+The final native module qualification passes 67 Cases across finite mapping
+(7), higher order (33), native integration (1), index program (9), index
+lifecycle (5), and timeout/session restoration (12). Every module and the
+coordinator exit 0 under the existing deadlines. The nine changed production
+modules pass the Scheme policy scan with zero findings and zero errors.
+The batch is rebased over =8bc844c=; its incoming changes do not alter these
+production modules. The test harness registers the finite-mapping Suite and
+all three frozen reference modules for ordinary native execution and static
+linkage. Test registration remains in =t/harness/=.
+
+The static artifact is built and source-verified, then both registered Suites
+pass in AOT execution (7 finite-mapping Cases and 5 index-lifecycle Cases),
+with final MODULE-OK, HARNESS-OK and OK. Initial AOT attempts expose a missing
+default-prefix dependency and a stale isolated-SDK =clan/poo/table.o= whose
+symbol names disagree with its current =table.ssi=. Recompiling that dependency
+inside the ignored SDK cache repairs the link; no workaround import is added
+to production. Failed attempts and the successful build/run receipts remain
+under ignored =.cache/ascent/finite-mapping/=. These are local qualification
+results; current-head GitHub CI is a separate gate.
+
 * Feature: execution and evidence
 
 The stateful engine is in =program/evaluate.ss=; =program/analysis.ss=

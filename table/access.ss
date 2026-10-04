@@ -5,7 +5,7 @@
 ;;; Physical index access owned by one engine. Only the canonical built-in
 ;;; provider has trusted hash buckets; every other receiver keeps dispatch.
 (import (only-in "funs.ss" gerbil-ascent-index-build gerbil-ascent-index-extend!)
-        (only-in "provider.ss" gerbil-ascent-hash-index-provider
+        (only-in "provider.ss" gerbil-ascent-canonical-hash-index-provider?
                  gerbil-ascent-index-provider-build gerbil-ascent-index-provider-extend!
                  gerbil-ascent-index-provider-lookup))
 (export gerbil-ascent-physical-index-build gerbil-ascent-physical-index-extend!
@@ -31,7 +31,7 @@
 
 ;; : (-> IndexProvider Rows Columns Index)
 (def (gerbil-ascent-physical-index-build provider rows columns)
-  (if (eq? provider gerbil-ascent-hash-index-provider)
+  (if (gerbil-ascent-canonical-hash-index-provider? provider)
     (if (and (pair? columns) (null? (cdr columns)))
       (extend-scalar-index!
        (make-hash-table) (reverse rows) (car columns))
@@ -40,7 +40,7 @@
 
 ;; : (-> IndexProvider Index Rows Columns Index)
 (def (gerbil-ascent-physical-index-extend! provider index rows columns)
-  (if (eq? provider gerbil-ascent-hash-index-provider)
+  (if (gerbil-ascent-canonical-hash-index-provider? provider)
     (if (and (pair? columns) (null? (cdr columns)))
       (extend-scalar-index! index rows (car columns))
       (gerbil-ascent-index-extend! index rows columns))
@@ -48,7 +48,7 @@
 
 ;; : (-> IndexProvider Index Key Rows)
 (def (gerbil-ascent-physical-index-rows provider index key)
-  (if (eq? provider gerbil-ascent-hash-index-provider)
+  (if (gerbil-ascent-canonical-hash-index-provider? provider)
     (if (and (pair? key) (null? (cdr key)))
       (gerbil-ascent-physical-index-single-rows index (car key))
       (or (hash-get index key) []))

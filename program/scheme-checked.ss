@@ -37,11 +37,29 @@
   (or (exact-integer? value) (boolean? value)
       (symbol? value) (char? value)))
 
-(def (relational-copy-row row arity)
-  (unless (and (list? row) (= (length row) arity)
-               (andmap relational-scalar? row))
+;;; Shape admission precedes scalar checks, including improper/cyclic lists.
+;; : (-> Row Arity Row)
+(def (relational-check-row-shape! row arity)
+  (unless (and (list? row) (= (length row) arity))
     (error "relational row has wrong arity or non-scalar value" row))
-  (map identity row))
+  row)
+
+;;; Validation does not transfer ownership. append's input needs validation
+;;; alone; its output is checked while copying into an independently owned tail.
+;; : (-> Row Arity Row)
+(def (relational-check-row! row arity)
+  (relational-check-row-shape! row arity)
+  (unless (andmap relational-scalar? row)
+    (error "relational row has wrong arity or non-scalar value" row))
+  row)
+
+(def (relational-copy-row row arity)
+  (relational-check-row-shape! row arity)
+  (map (lambda (value)
+         (unless (relational-scalar? value)
+           (error "relational row has wrong arity or non-scalar value" row))
+         value)
+       row))
 
 (def (relational-copy-rows rows arity)
   (unless (and (exact-integer? arity) (<= 0 arity) (list? rows))
@@ -60,18 +78,26 @@
    (lambda (entry)
      (unless (and (list? entry) (= (length entry) 2))
        (error "finite view entry needs input and output rows" entry))
-     (append (relational-copy-row (car entry) input-arity)
-             (relational-copy-row (cadr entry) output-arity)))
+     ;; append copies the input spine itself. The output is copied once and
+     ;; becomes the private tail; neither half retains caller-owned pairs.
+     (let (input (relational-check-row! (car entry) input-arity))
+       (append input (relational-copy-row (cadr entry) output-arity))))
    entries))
 
 ;;; Restrict sources and results to immutable scalar atoms. Computed exact
 ;;; integers can grow beyond the source domain; budgets stop such a solve as
 ;;; failure and must never be read as evidence of completed closure.
 (def (relational-source name arity rows)
+  (relational-owned-source name arity (relational-copy-rows rows arity)))
+
+;;; Private constructor for rows freshly copied by this module. Core admission
+;;; still checks field predicates; only the redundant ownership copy is skipped.
+;; : (-> SourceName Arity OwnedScalarRows Relation)
+(def (relational-owned-source name arity rows)
   ;; Retain the scalar restriction on later source replacement and on
   ;; derived rows.  The relation constructor already checks every row.
   (gerbil-ascent-relation
-   name arity (relational-copy-rows rows arity)
+   name arity rows
    gerbil-ascent-hash-index-provider
    gerbil-ascent-set-storage-provider
    (make-list arity relational-scalar?)))
@@ -160,7 +186,7 @@
     (error "finite view label must be a symbol" label))
   (let (handle (gensym 'view))
     (gerbil-ascent-fragment
-     (list (relational-source
+     (list (relational-owned-source
             handle (+ input-arity output-arity)
             (relational-finite-rows input-arity output-arity entries)))
      [] (list (cons label handle)) (list handle))))

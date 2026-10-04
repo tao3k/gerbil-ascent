@@ -115,6 +115,11 @@
                               "t/qualification/ascent-index-reference-provider"
                               "t/qualification/ascent-positive-plan-reference-analysis"
                               "t/qualification/ascent-index-reference-evaluate")
+                            [])
+                          (if (member "t/qualification/scheme-finite-mapping-test.ss" tests)
+                            '("t/performance/finite-mapping/reference-types"
+                              "t/performance/finite-mapping/reference-objects"
+                              "t/performance/finite-mapping/reference")
                             []))))
     (call-with-output-file [path: module-file truncate: #t]
       (lambda (out) (write modules out) (newline out)))
@@ -166,6 +171,7 @@
            "t/qualification/scheme-provenance-graph-test.ss"
            "t/qualification/scheme-higher-order-test.ss"
            "t/qualification/ascent-index-lifecycle-test.ss"
+           "t/qualification/scheme-finite-mapping-test.ss"
     "t/qualification/scheme-session-deletion-test.ss"
     "t/qualification/ascent-timeout-test.ss"
     "t/qualification/scheme-stratified-provenance-test.ss"

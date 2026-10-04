@@ -10,7 +10,7 @@
         (only-in "update-selection.ss" gerbil-ascent-update-eligible?)
         (only-in "evaluate.ss" gerbil-ascent-make-engine gerbil-ascent-make-updated-engine)
         (only-in :gerbil-ascent/table/storage
-                 gerbil-ascent-set-storage-provider))
+                 gerbil-ascent-canonical-set-storage-provider?))
 
 (export gerbil-ascent-open-session
         gerbil-ascent-session-append-source!
@@ -43,8 +43,8 @@
           (list->vector
            (map (lambda (relation)
                   (or (eq? (.ref relation 'storage-kind) 'lattice)
-                      (eq? (.ref relation 'storage-provider)
-                           gerbil-ascent-set-storage-provider)))
+                      (gerbil-ascent-canonical-set-storage-provider?
+                       (.ref relation 'storage-provider))))
                 relations)))
          (direct-appends?
           (andmap (lambda (safe?) safe?)

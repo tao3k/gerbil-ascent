@@ -10,9 +10,9 @@
                  PooFlowNativeObjectContract.
                  poo-flow-predicate-contract)
         (only-in :gerbil-ascent/table/provider
-                 GerbilAscentIndexProviderContract gerbil-ascent-canonical-hash-index-provider?)
+                 GerbilAscentIndexProviderContract)
         (only-in :gerbil-ascent/table/storage
-                 GerbilAscentStorageProviderContract gerbil-ascent-canonical-set-storage-provider?))
+                 GerbilAscentStorageProviderContract))
 
 (export GerbilAscentRelationContract
         GerbilAscentLatticeContract
@@ -49,16 +49,11 @@
 (def +provider+
   (slot-contract 'ascent/index-provider
                  (lambda (value)
-                   ;; This exact receiver was validated when its module loaded.
-                   ;; Derived/custom objects have another identity and retain
-                   ;; the complete receiver contract, including missing slots.
-                   (or (gerbil-ascent-canonical-hash-index-provider? value)
-                       (element? GerbilAscentIndexProviderContract value)))))
+                   (element? GerbilAscentIndexProviderContract value))))
 (def +storage-provider+
   (slot-contract 'ascent/storage-provider
                  (lambda (value)
-                   (or (gerbil-ascent-canonical-set-storage-provider? value)
-                       (element? GerbilAscentStorageProviderContract value)))))
+                   (element? GerbilAscentStorageProviderContract value))))
 (def +term-kind+
   (slot-contract 'ascent/term-kind
                  (lambda (value)

@@ -96,6 +96,18 @@ _performance-scalar-index:
         timeout 90s gxi {{ gerbil_test_runtime_options }} -e '(add-load-path! (path-expand ".cache/ascent/native-library/lib"))' :gerbil-ascent/t/performance/scalar-index-benchmark "$scenario" "$library"
     done
 
+performance-finite-mapping:
+    {{ test_runner }} run -- just _performance-finite-mapping
+
+_performance-finite-mapping:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    library="{{ justfile_directory() }}/.cache/ascent/native-library/lib"
+    gxi {{ gerbil_test_runtime_options }} -e '(add-load-path! (path-expand ".cache/ascent/native-library/lib"))' -e '(import :std/make)' -e '(make ["table/provider" "table/storage" "table/access" "program/types" "program/objects" "program/scheme-checked" "program/index" "program/evaluate" "program/session" "program/update-selection" "t/performance/finite-mapping/reference-types" "t/performance/finite-mapping/reference-objects" "t/performance/finite-mapping/reference" "t/performance/finite-mapping-benchmark"] srcdir: (current-directory) libdir: (path-expand ".cache/ascent/native-library/lib") build-deps: (path-expand ".cache/ascent/native-library/build-deps"))'
+    for scenario in narrow-rows wide-rows wide-view source-control canonical-provider; do
+        timeout 90s gxi {{ gerbil_test_runtime_options }} -e '(add-load-path! (path-expand ".cache/ascent/native-library/lib"))' :gerbil-ascent/t/performance/finite-mapping-benchmark "$scenario" "$library"
+    done
+
 test-quick:
     {{ test_runner }} test-quick
 
@@ -736,11 +748,11 @@ check-dsl-closure:
     mkdir -p .cache/ascent/tmp
     output_file="$(mktemp .cache/ascent/tmp/dsl.XXXXXX)"
     trap 'rm -f "$output_file"' EXIT
-    for module in scheme-closure-contract scheme-artifact scheme-provenance-graph scheme-higher-order scheme-session-deletion ascent-timeout scheme-stratified-provenance scheme-model-closure scheme-operator scheme-library-contract scheme-operator-retained ascent-finite-evidence ascent-positive-nonmembership; do
+    for module in scheme-closure-contract scheme-artifact scheme-provenance-graph scheme-higher-order ascent-index-lifecycle scheme-finite-mapping scheme-session-deletion ascent-timeout scheme-stratified-provenance scheme-model-closure scheme-operator scheme-library-contract scheme-operator-retained ascent-finite-evidence ascent-positive-nonmembership; do
         PYTHONPATH="{{ justfile_directory() }}/python/src" python3 -m ascent_test_support.supervision -- timeout "${ASCENT_GXTEST_TIMEOUT:-120s}" .cache/ascent/native-library/dsl-closure {{ gerbil_test_runtime_options }} "t/qualification/$module-test.ss" 2>&1 | tee -a "$output_file"
     done
     if grep -E 'ERROR (CHECK|CASE|HARNESS|MODULE)|Heap overflow|Stack overflow' "$output_file" >/dev/null; then exit 1; fi
     awk -f tools/assert-test-cases.awk "$output_file"
-    test "$(grep -c '^MODULE-OK ' "$output_file")" -eq 13
-    test "$(grep -c '^HARNESS-OK ' "$output_file")" -eq 13
-    test "$(grep -cx 'OK' "$output_file")" -eq 13
+    test "$(grep -c '^MODULE-OK ' "$output_file")" -eq 15
+    test "$(grep -c '^HARNESS-OK ' "$output_file")" -eq 15
+    test "$(grep -cx 'OK' "$output_file")" -eq 15

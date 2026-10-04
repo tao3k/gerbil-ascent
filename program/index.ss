@@ -9,7 +9,7 @@
         (only-in :gerbil-ascent/table/access gerbil-ascent-physical-index-build
                  gerbil-ascent-physical-index-extend! gerbil-ascent-physical-index-rows
                  gerbil-ascent-physical-index-single-rows)
-        (only-in :gerbil-ascent/table/provider gerbil-ascent-hash-index-provider))
+        (only-in :gerbil-ascent/table/provider gerbil-ascent-canonical-hash-index-provider?))
 (export gerbil-ascent-make-row-indexes row-indexes-rows row-indexes-advance!)
 
 (defstruct row-indexes (rows advance!))
@@ -59,7 +59,7 @@
                    (provider (vector-ref index-providers index)))
               ;; Only this trusted representation consumes a scalar. Custom
               ;; receivers retain list keys, callbacks and their lookup order.
-              (if (and (eq? provider gerbil-ascent-hash-index-provider)
+              (if (and (gerbil-ascent-canonical-hash-index-provider? provider)
                        (null? (cdr columns)))
                 (gerbil-ascent-physical-index-single-rows
                  lookup (gerbil-ascent-index-value

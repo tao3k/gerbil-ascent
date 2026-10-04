@@ -7,7 +7,7 @@
 (import (only-in :clan/poo/object .ref)
         (only-in "scheme-checked.ss" relational-stable-procedure?)
         (only-in :gerbil-ascent/core/positive-plan gerbil-ascent-positive-plan)
-        (only-in :gerbil-ascent/table/storage gerbil-ascent-set-storage-provider))
+        (only-in :gerbil-ascent/table/storage gerbil-ascent-canonical-set-storage-provider?))
 (export gerbil-ascent-update-eligible? gerbil-ascent-update-selection
         gerbil-ascent-update-active-plans)
 
@@ -41,8 +41,8 @@
   (and (andmap (lambda (relation)
                  (if (eq? (.ref relation 'storage-kind) 'lattice)
                    (relational-stable-procedure? (.ref relation 'join))
-                   (eq? (.ref relation 'storage-provider)
-                        gerbil-ascent-set-storage-provider)))
+                   (gerbil-ascent-canonical-set-storage-provider?
+                    (.ref relation 'storage-provider))))
                (.ref candidate 'relations))
        (andmap (lambda (rule)
                  (and (andmap (lambda (head) (pure-terms? (.ref head 'terms)))

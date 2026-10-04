@@ -20,6 +20,7 @@
 
 (export GerbilAscentStorageProviderContract
         gerbil-ascent-set-storage-provider
+        gerbil-ascent-canonical-set-storage-provider?
         gerbil-ascent-eqrel-storage-provider
         gerbil-ascent-trrel-storage-provider
         gerbil-ascent-trrel-uf-storage-provider
@@ -108,12 +109,31 @@
 (.defgeneric (gerbil-ascent-storage-extend provider state all pending row budget)
   slot: .extend-rows)
 
-(def gerbil-ascent-set-storage-provider
+(def +canonical-set-storage-provider+
   (validate GerbilAscentStorageProviderContract
             (.o (:: @ StorageProvider.)
                 (.make-state (lambda () #f))
                 (.extend-rows
                  (lambda (_state _all _pending row _budget) (list row))))))
+
+(def gerbil-ascent-set-storage-provider +canonical-set-storage-provider+)
+
+;;; Keep trusted representation identity independent of the exported default.
+;; gerbil-ascent-canonical-set-storage-provider?
+;;   : (-> StorageProviderCandidate Boolean)
+;;   | doc m%
+;;       Recognize the privately retained Set receiver validated at module load.
+;;       Derived/custom receivers retain their normal checked dispatch.
+;;
+;;       # Examples
+;;
+;;       ```scheme
+;;       (gerbil-ascent-canonical-set-storage-provider? gerbil-ascent-set-storage-provider)
+;;       ;; => #t for the original exported default
+;;       ```
+;;     %
+(def (gerbil-ascent-canonical-set-storage-provider? value)
+  (eq? value +canonical-set-storage-provider+))
 
 (def gerbil-ascent-eqrel-storage-provider
   (validate GerbilAscentStorageProviderContract

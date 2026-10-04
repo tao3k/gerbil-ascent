@@ -343,6 +343,76 @@ Case budgets, fixture thresholds and original sample counts are unchanged.
 parallel list in =t/harness/run.ss=. These local receipts do not establish
 remote CI closure.
 
+* Research: rejected positional selection during positive slot compilation
+
+=optimize-call.ss:43= resolves known procedure types before selecting a
+specialized call path; unknown or nullable types retain the generic transform.
+The transferable lesson is to specialize from an established representation
+and keep the general behavior outside that boundary. Gerbil's call optimizer
+does not implement ASCENT column selection or prove its cost model.
+
+After applicability checks in =program/positive.ss=, all atom terms have been
+lowered to ordered slot actions. The current compiler selects every indexed
+column with =list-ref=, repeatedly scanning prefixes. For an atom with =W=
+terms and =K= selected columns, selection can cost =O(W*K)=; a full ordered
+composite key costs =O(W^2)=. A temporary vector permits =O(W+K)= selection,
+but introduces allocation and branch costs on the complete compilation path.
+A candidate used a vector when =K>=8=, retaining list selection for short
+keys and later specializing empty/singleton keys with native =match=.
+
+The experiment measured complete slot compilation, including applicability,
+slot allocation, body actions, key selection and head actions. The reference
+compiler was frozen from =53980e4= and compiled inside the benchmark unit;
+the candidate used the production export. Each shape retained 1000 alternating
+pairs of eight compilations, with input construction and exact plan comparison
+outside the intervals. Wide targets required 900 strict wins and nonregressing
+medians; controls required nonregressing medians.
+
+With collection every 20 pairs, the first candidate's 128-column target had
+reference/candidate medians =176/122= jiffies and 940 strict wins. The
+512-column target had =1388/542= but only 884 wins, and the 64-of-512 target
+had =668/512= but only 800. The one-column control regressed =502/521=.
+After removing a local selector call, medians were =169/117=, =1360/516=
+and =669/499= with =924/917/864= wins; the one-column control remained
+=484/486=. Neither version qualified.
+
+Collecting before every batch exceeded the native 120-second deadline,
+including an isolated narrow shape, and is discarded. Collecting once per
+pair completed the isolated narrow shape with =13/16= median jiffies and
+503 wins, still failing its gate. Wide shapes were not rerun under this
+last protocol after the control failed. The candidate and its experimental
+performance module were removed from the tracked tree. Source snapshots,
+patches and raw logs remain under ignored =.cache/ascent/slot-selection/=.
+
+These results do not establish a stable production slowdown or a full-solve
+speedup: GC protocols differ, and the frozen local reference and production
+export have different module call boundaries. Future work should first
+calibrate the unchanged production export under an identical call boundary
+and retain a bounded benchmark protocol. Reduced asymptotic selection cost
+alone is insufficient evidence to replace the existing implementation.
+
+Three retained Cases strengthen the existing positive-plan qualification.
+They assert independently specified fresh/bound slot sequences, slot counts,
+forward/reverse/duplicated key order, action identity, repeated variables,
+literals, wildcards and callback rejection at 7/8/9/32/128-column widths.
+The real composite Join compares custom provider key traces and ordered
+output rows against the existing independent evaluator, including =#f=.
+There is no copied slot compiler in the retained tests. Production code,
+build entrypoints, scheduling, original deadlines and sample counts remain
+unchanged by this research slice.
+
+#+begin_src sh
+just test-file t/qualification/ascent-positive-plan-test.ss
+#+end_src
+
+The retained positive-plan module passes all 13 Cases in the pinned native
+cache SDK with =GERBIL_BUILD_CORES=12=, including =MODULE-OK=, =HARNESS-OK=,
+final =OK= and exit 0. The baseline =53980e4= has green Scheme, both Rust
+oracle groups and the combined native-and-oracle CI check. This slice changes
+only this test module and the research note; production bytes match that
+baseline. The full suite and SS scenarios were not rerun for the test-only
+slice, and no new performance improvement is claimed.
+
 * Feature: explicit SCC traversal state shared by both graph consumers
 
 The installed compiler's =optimize-top.ss:703= (=extract-keyword-args=)

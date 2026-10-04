@@ -10,6 +10,7 @@
                  gerbil-ascent-rule gerbil-ascent-guard)
         (only-in :gerbil-ascent/program/evaluate
                  gerbil-ascent-evaluate-program gerbil-ascent-make-engine)
+        (only-in :gerbil-ascent/program/positive gerbil-ascent-compile-positive-plan)
         (only-in :gerbil-ascent/table/storage gerbil-ascent-set-storage-provider)
         (only-in :gerbil-ascent/table/provider gerbil-ascent-hash-index-provider)
         (only-in :gerbil-ascent/t/qualification/ascent-positive-plan-reference-evaluate
@@ -36,6 +37,82 @@
      32 64 96)))
 (def ascent-positive-plan-test
   (test-suite "Complete positive rule slot plans"
+    (poo-flow-test-case "positional slot selection preserves all key orders and action identity"
+      (for-each
+       (lambda (width)
+         (let* ((terms (map (lambda (_) (cons 'variable (gensym 'slot))) (iota width)))
+                (head (vector 2 terms))
+                (source (vector 0 terms [])))
+           (for-each
+            (lambda (columns)
+              (let* ((atom (vector 1 terms columns))
+                     (body (list (vector 'atom source) (vector 'atom atom)))
+                     (new (gerbil-ascent-compile-positive-plan (list head) body))
+                     (compiled (cadr (vector-ref new 1))))
+                (check-equal? (vector-ref new 2) width)
+                (check-equal? (vector-ref (car (vector-ref new 1)) 1)
+                              (map (cut cons 'fresh <>) (iota width)))
+                (check-equal? (vector-ref compiled 1)
+                              (map (cut cons 'bound <>) (iota width)))
+                (check-equal? (vector-ref compiled 2) (map (cut cons 'bound <>) columns))
+                (check-equal?
+                 (andmap (lambda (action column)
+                           (eq? action (list-ref (vector-ref compiled 1) column)))
+                         (vector-ref compiled 2) columns) #t)))
+            (list [] (list (- width 1)) (iota width)
+                  (reverse (iota width)) (append (iota width) (iota width))))))
+       '(7 8 9 32 128)))
+    (poo-flow-test-case "wide slot keys preserve literals repeats wildcards and unsupported callbacks"
+      (let* ((terms (map (lambda (n)
+                          (case (modulo n 3)
+                            ((0) '(variable . x))
+                            ((1) '(literal . #f))
+                            (else '(wildcard . #f)))) (iota 64)))
+             (columns (filter (lambda (n) (= (modulo n 3) 1)) (iota 64)))
+             (body (list (vector 'atom (vector 0 terms columns))))
+             (heads (list (vector 1 '((variable . x) (literal . #f)))))
+             (plan (gerbil-ascent-compile-positive-plan heads body))
+             (compiled (car (vector-ref plan 1))))
+        (check-equal? (vector-ref plan 2) 1)
+        (check-equal? (vector-ref compiled 1)
+          (map (lambda (n)
+                 (case (modulo n 3)
+                   ((0) (cons (if (zero? n) 'fresh 'bound) 0))
+                   ((1) '(literal . #f))
+                   (else '(wildcard . #f)))) (iota 64)))
+        (check-equal? (vector-ref compiled 2)
+                      (map (lambda (_) '(literal . #f)) columns))
+        (check-equal?
+         (gerbil-ascent-compile-positive-plan heads
+           (list (vector 'atom (vector 0 '((expression . #f)) '(0))))) #f)))
+    (poo-flow-test-case "wide composite joins preserve provider keys and output rows"
+      (for-each
+       (lambda (width)
+         (let* ((variables (map (lambda (_) (v (gensym 'join))) (iota width)))
+                (row (cons #f (cdr (iota width))))
+                (calls [])
+                (provider
+                 (.o (:: @ gerbil-ascent-hash-index-provider)
+                     (.lookup-index
+                      (lambda (table key)
+                        (set! calls (cons key calls))
+                        ((.ref gerbil-ascent-hash-index-provider '.lookup-index) table key)))))
+                (p (gerbil-ascent-program
+                    (list (gerbil-ascent-relation 'left width (list row))
+                          (gerbil-ascent-relation 'right width (list row) provider)
+                          (gerbil-ascent-relation 'out width []))
+                    (list (gerbil-ascent-rule
+                           (list (gerbil-ascent-atom 'out (reverse variables)))
+                           (list (gerbil-ascent-atom 'left variables)
+                                 (gerbil-ascent-atom 'right variables)))) 8 8 16))
+                (old (ascent-positive-plan-reference-evaluate-program p))
+                (old-calls calls))
+           (set! calls [])
+           (let (new (gerbil-ascent-evaluate-program p))
+             (check-equal? calls old-calls)
+             (check-equal? (rows new 'out) (rows old 'out))
+             (check-equal? (rows new 'out) (list (reverse row))))))
+       '(7 8 9 64)))
     (poo-flow-test-case "all 512 directed three-node graphs match independent reachability"
       (let (pairs (apply append (map (lambda (x) (map (lambda (y) (list x y)) '(0 1 2))) '(0 1 2))))
         (for-each

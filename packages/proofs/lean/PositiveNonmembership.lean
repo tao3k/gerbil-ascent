@@ -133,4 +133,23 @@ theorem deletion_restricted_model {α : Type u}
   · intro hx
     exact restrictedFull row hx
 
+/-- Changing only positive input facts preserves closure inclusion. This does
+    not apply to stratified negation: deleting an input can add a negated row. -/
+theorem closure_input_included {α : Type u}
+    {small large : Relation α} {step : Relation α → Relation α}
+    (inputs : Included small large) :
+    Included (LeastClosure small step) (LeastClosure large step) := by
+  intro row derived candidate closed
+  exact derived candidate ⟨fun x hx => closed.1 x (inputs x hx), closed.2⟩
+
+/-- A positive deletion cannot introduce a previously absent consequence.
+    This is a semantic prerequisite, not a DRed implementation theorem. -/
+theorem deletion_preserves_absence {α : Type u}
+    {remaining original : Relation α} {step : Relation α → Relation α}
+    {target : α} (deletion : Included remaining original)
+    (absent : ¬ LeastClosure original step target) :
+    ¬ LeastClosure remaining step target := by
+  intro derived
+  exact absent (closure_input_included deletion target derived)
+
 end Ascent

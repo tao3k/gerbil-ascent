@@ -88,3 +88,9 @@ incremental deletion performance.
 
 [[file:dbsp-b22.org][DBSP note]]; [[file:reflection.org][research reflection]];
 [[file:../../scheme-relational-language-design.org][Scheme language design]].
+
+* Current implementation reconciliation (2026-10-04)
+
+Native checked Session replacement now invalidates and fully rederives affected dependency components, reusing independent completed components. Opaque callbacks/providers still fully recompute. The founded support kernel is separate; this is not DRedc or a deletion speedup receipt.
+
+See the [[file:../../scheme-research-proof-audit.org][research/proof audit]] for the current transfer obligations and ordered exit gates. Earlier experiments retain their original source and cost boundaries.

@@ -241,4 +241,21 @@ theorem bottom_iterate_le_fixed {α : Type} (le : α → α → Prop)
   | succ n ih =>
     simpa only [iterateStep, fixed] using mono (iterateStep step bottom n) value ih
 
+/-- Combines full-height stationarity and leastness. The caller must supply
+    bounded rank and strict progress for the admitted semantics, rather than
+    treating a runtime budget or a sampled function table as that proof. -/
+theorem bounded_bottom_least_fixed {α : Type} (le : α → α → Prop)
+    (step : α → α) (bottom : α) (rank : α → Nat) (height : Nat)
+    (least : ∀ x, le bottom x)
+    (mono : ∀ x y, le x y → le (step x) (step y))
+    (bounded : ∀ n, rank (iterateStep step bottom n) ≤ height)
+    (progress : ∀ n, step (iterateStep step bottom n) ≠ iterateStep step bottom n →
+      rank (iterateStep step bottom n) < rank (iterateStep step bottom (n + 1))) :
+    step (iterateStep step bottom height) = iterateStep step bottom height ∧
+      ∀ value, step value = value → le (iterateStep step bottom height) value := by
+  constructor
+  · exact bounded_orbit_height_fixed step bottom rank height bounded progress
+  · intro value fixed
+    exact bottom_iterate_le_fixed le step bottom value least mono fixed height
+
 end Ascent

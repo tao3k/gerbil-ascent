@@ -73,3 +73,9 @@ admitted.
 * Related notes
 
 [[file:index.org][Research index]]; [[file:../../scheme-relational-dsl-design.org][Scheme DSL proposal]].
+
+* Current implementation reconciliation (2026-10-04)
+
+Nested admitted monotone arrows and finite-height function-valued fix now lower to the native positive IR. This is not the paper's function-change transformation. Lean proves abstract order/rank laws; concrete compiler preservation and general higher-order delta optimization remain open.
+
+See the [[file:../../scheme-research-proof-audit.org][research/proof audit]] for the current transfer obligations and ordered exit gates. Earlier experiments retain their original source and cost boundaries.

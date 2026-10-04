@@ -174,3 +174,9 @@ dependency does not pass this gate.
 
 [[file:../../scheme-relational-dsl-design.org][Scheme relational DSL proposal]];
 [[file:../../rust-parity.org][bounded Rust parity matrix]].
+
+* Current implementation reconciliation (2026-10-04)
+
+The generic dependency, positive-plan and rule-semantics owners have moved to =core/dependency-graph.ss=, =core/positive-plan.ss= and =core/rule-semantics.ss=. Earlier references to =program/funs.ss= describe the historical layout.
+
+See the [[file:../../scheme-research-proof-audit.org][research/proof audit]] for the current transfer obligations and ordered exit gates. Earlier experiments retain their original source and cost boundaries.

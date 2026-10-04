@@ -85,3 +85,9 @@ admission, evaluation, and reading a snapshot are separate operations.
 * Related notes
 
 [[file:index.org][Research index]]; [[file:../../scheme-relational-dsl-design.org][Scheme DSL proposal]].
+
+* Current implementation reconciliation (2026-10-04)
+
+Fresh private identities and explicit construct/admit/solve/query boundaries are implemented in the checked subset. The earlier statement that name-based includes lack generativity is historical; the general static typing/effect and compiler-refinement obligations remain open.
+
+See the [[file:../../scheme-research-proof-audit.org][research/proof audit]] for the current transfer obligations and ordered exit gates. Earlier experiments retain their original source and cost boundaries.

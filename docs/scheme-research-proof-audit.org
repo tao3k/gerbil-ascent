@@ -1,0 +1,107 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+#+TITLE: Scheme framework research, proof audit and implementation sequence
+#+DATE: 2026-10-04
+#+STATUS: audited plan; abstract contracts checked; implementation refinement open
+
+* Audit decision
+
+The [[file:research/scheme-dsl/index.org][DSL source ledger]] contains eight papers: A22, F16, H13, F20,
+S20 and L25 concern the language/kernel; H18 and B22 add deletion and
+incremental-maintenance constraints. These are distinct from the separate
+[[file:research/agent-inference/index.org][agent-inference collection]]. The next step is to connect paper assumptions
+to admitted Scheme IR and observable transactions. Adding syntax, quoting a
+paper or passing an abstract proof is insufficient for design closure.
+
+The current checked subset has a coherent division: Scheme constructs program
+values; admission exposes domains, lexical captures and dependencies; the native
+core owns evaluation; retained Sessions own source/result publication; bounded
+evidence binds a specific program and snapshot. No paper establishes the safety
+of arbitrary host closures. Therefore unrestricted callback admission, silent
+domain clamping and hidden dependencies are excluded from the checked subset.
+Trusted host construction remains outside the proof boundary.
+
+Audit baseline: GitHub PR #1 head =bb4f58a826ac37e85974c66ce504ba1a7c7b57da=.
+The 13-Suite / 138-Case receipt binds native source =0e1141e=; its later
+documentation child does not expand that semantic scope. Historical negative
+performance results and the failed three-arm measurement remain failures or
+negative evidence. They do not become benefit claims through this proof audit.
+
+* Paper-to-code-to-proof obligations
+
+Primary sources were re-opened on 2026-10-04. Section locators are retained in
+the individual notes. The following transfer decisions are our design synthesis,
+not results the authors established for Gerbil.
+
+| Paper and primary source | Transfer and current implementation | Remaining proof and discriminator |
+|--------------------------+-------------------------------------+-----------------------------------|
+| [[https://thomas.gilray.org/pdf/seamless-deductive.pdf][A22 Ascent]], §3–4 | Visible atoms, modes, SCCs and indexes: =program/planning.ss=, =core/dependency-graph.ss=, =core/rule-semantics.ss= | Relate admitted atoms and selected delta plans to the immediate-consequence operator; complete rows, strata and timeout statuses must agree with the pinned oracle |
+| [[https://www.cl.cam.ac.uk/~nk480/datafun.pdf][F16 Datafun]], §4–5 | Discrete/stable captures versus monotone recursive inputs; finite domains: =program/scheme-checked.ss= and =program/higher-order.ss= | Prove descriptor typing and domain/cardinality laws supply Lean rank premises. Finite output per call and fact budgets are not termination proofs; reject successor escape and increasing one-key lattice |
+| [[https://www.schemeworkshop.org/2013/papers/HemannMuKanren2013.pdf][H13 µKanren]], §3–5 | Small semantic kernel with Scheme constructors/macros above it: =program/interface.ss= | Scope/hygiene and expanded-IR preservation. Do not transfer stream interleaving/fairness into bottom-up saturation; cyclic answer sets do not prove search equivalence |
+| [[https://plg.uwaterloo.ca/~olhotak/pubs/oopsla20c.pdf][F20 first-class constraints]], typing/composition/stratification | Assemble inert fragments, check the whole dependency graph: =program/scheme-admission.ss= | Mechanize assembled schema and strict negative-edge validation; two valid fragments forming a negative cycle must reject. Current runtime admission is weaker than Flix static typing |
+| [[https://www.rntz.net/files/seminaive-datafun.pdf][S20 higher-order semi-naive]], §5 and correctness development | Admitted typed arrows lower to positive operator IR: =program/higher-order.ss= and =program/operator.ss= | Existing lowering does not implement the paper's typed function-change translation. Prove current lowering first; then define an insertion-only change action and semantic preservation before optimizing function deltas |
+| [[https://plg.uwaterloo.ca/~olhotak/pubs/oopsla25b.pdf][L25 Flix design]], §3.7–3.9 / §4 | Fresh private predicate identities, explicit construct/admit/solve/query: =program/objects.ss=, =program/result.ss= | Alpha-renaming/generativity and lexical substitution theorem; repeated constructors and reordered composition must preserve public observations. Purity alone does not establish totality |
+| [[https://ojs.aaai.org/index.php/AAAI/article/view/11554][H18 DRedc]], §3–4 | Multi-support and founded recursion matter: [[file:scheme-support-graph-design.org][support graph]]; native Session uses [[file:scheme-session-deletion-design.org][affected-component rederivation]] | Current Session is not DRedc. Prove source logs exclude derived facts; support completeness and founded rederivation before finer maintenance. Retain last-support, two-path, unrooted-cycle and failed-update cases |
+| [[https://arxiv.org/abs/2203.16684][B22 DBSP]], recursive incremental circuits | Separate retained update cost from full reconstruction: =program/session.ss=, =program/reuse.ss= | No signed-weight stream algebra or derivative circuit exists here. Match initialization, admission, invalidation, solve and publication costs; full semantics first, then work/time/allocation measurements |
+
+* Formal coverage and what this patch adds
+
+| Artifact | Checked statement | Uncovered implementation obligation |
+|----------+-------------------+-------------------------------------|
+| [[file:../packages/proofs/lean/FiniteOperators.lean][FiniteOperators]] | Positive primitives, pointwise nested arrows, application and relation least-fixed-point laws | Concrete descriptor validation, lexical environments, compiler branch correctness and native plan execution |
+| [[file:../packages/proofs/lean/FiniteHeight.lean][FiniteHeight]] | Boolean/table ranks, bounded stationarity; new =bounded_bottom_least_fixed= combines full-height stationarity with leastness | Concrete nested type cardinality, rank strictness, saturating budget admission and complete finite-domain enumeration |
+| [[file:../packages/proofs/lean/PositiveNonmembership.lean][PositiveNonmembership]] | Closed-model absence and restricted deletion; new input-inclusion and deletion-preserves-absence lemmas | Executable certificate coverage, exact source/program binding, founded support reconstruction |
+| [[file:../packages/proofs/lean/SessionPublication.lean][SessionPublication]] | For arbitrary natural-number generations: stale/incomplete work preserves the snapshot; qualified completion publishes a consistent source/result pair | Solver qualification is an explicit premise; the imperative Gerbil implementation still needs a refinement relation |
+| [[file:../packages/proofs/tla/PositiveNonmembershipSession.tla][Certificate lifecycle]] | In explored states, no stale published/used certificate across source swaps | Exact program/query identity, replay of concrete rule instances, consumer ownership and nonfinite liveness |
+| [[file:../packages/proofs/tla/SessionTransaction.tla][Transaction publication]] | In explored states, atomic source/result pairing, no stale commit and abort preservation; early/stale fault variants must produce counterexamples | ResultOf is a symbolic two-row surrogate, not a rule solver. Transaction interruption and all concrete mutation locations need Scheme-to-model mapping |
+
+Generation has no maximum in either protocol's =Init/Next/Spec=. It ranges over
+=Nat= and can keep increasing. =ExplorationDepth= and =ExplorationBound= exist
+only for TLC state-space exploration; configuration values do not limit runtime
+or constitute an all-generations theorem. Repeated source cuts are allowed,
+so a stale job cannot become current merely because source bytes return to an
+earlier value (ABA). Lean publication theorems quantify over all natural-number
+generations, but still prove the abstract publication function, not Gerbil.
+
+Safety is not liveness. Neither TLA model claims a solver eventually finishes,
+or a transaction eventually wins against continuous competing publication.
+A fairness/termination claim needs an explicit scheduling assumption and a
+separate proof. Abort preservation is encoded as a required action contract;
+model checking does not establish that native exceptions implement it.
+
+Previously GitHub's =formal= job ran Lean only. It now executes the common
+[[file:../packages/proofs/check.sh][proof gate]], including both TLA models and the two intentional faults. TLC is
+pinned to the official 1.7.4 jar and verified by SHA256. The gate accepts
+=ASCENT_PROOF_EXPLORATION_DEPTH= independently of protocol semantics; GitHub
+uses 4, the default exploration configuration uses 2. Counterexample checks
+require both TLC's violation exit code and the expected violated property;
+parse/tool crashes cannot count as successful fault detection.
+
+* Ordered implementation plan and exit conditions
+
+| Order | Work package / owner | Concrete next deliverable | Exit condition |
+|-------+----------------------+---------------------------+----------------|
+| 1 | Compiler semantics: =program/higher-order.ss= | Formal descriptor AST and environment interpretation matching actual source/variable/lambda/apply/fix/union/join/project/select/map branches; per-phase relation to normalized positive IR | Structural typing, substitution and lowering preservation proven for the stated subset; source-domain/cardinality lemmas discharge finite-height premises; native phase discriminators still pass |
+| 2 | Transactions: Session/admission/reuse/update-selection | Map accepted logs, pending sources, private engines and frozen results to formal state; record every publication and failure point, including single-source partial/resume and explicit atomic batches | Native interruption/domain/budget/stale controls preserve the specified visible state; reused relations equal fresh solve. Do not force the single-source pending-work API into the batch atomic model |
+| 3 | Evidence algebra: support graph / stratified provenance | Specify complete finite alternative graph versus one founded witness; define negative/group observations and stratum-relative replay | Independent finite enumeration, cycles, tamper, size exhaustion and duplicate supports pass; absence only from a completed closed model. Arbitrary semiring valuation and lattice history require separately specified algebras |
+| 4 | Optimization and benefit: native evaluator / Session | First diagnose the failed retained measurement's first expensive stage with actual stage output and profiling; then matched solve-only/fresh-update/retained receipts | All groups pass existing semantic/progress gates; lifecycle operation counts plus CPU/wall/allocation distributions recorded. A negative result closes the measurement question, not a positive-benefit claim |
+| 5 | Actual model comprehension: native scoring + Python byte transport | Freeze current Scheme source/tasks after compiler and publication stabilization; discriminate raw acceptance, semantics, reasoning and genuine post-response feedback | Paid calls require new exact-source authorization; every timeout/raw rejection stays in denominator; no semantic Prompt, answer-prefill, repair or truth-guided extraction. No historical score transfers to this source |
+| 6 | MRR Rust binding | Byte/status/ABI conformance against the accepted native grammar and publication contract | Native, model and architecture gates reviewed first; Rust must preserve bounded/unsupported/failure versus completed/absence. No semantic authority migrates into transport |
+
+Steps 1–3 can make independent progress, but compiler proof claims must bind
+the same admitted grammar and proof assumptions used by transaction/evidence
+tests. Optimization changes require renewed semantic qualification. S20-style
+function-delta work follows current lowering preservation; a general DBSP
+conversion is not a shortcut around the deletion contract.
+
+* Closure report requirements
+
+For each work package publish: exact source identity, admitted grammar, paper
+premise used, theorem/model identifier, executable discriminator, raw outcome,
+counterexample controls, cost boundary and remaining obligations. Abstract Lean
+success, bounded TLC success, native semantic qualification, remote CI and real
+model benefit are separate entries. No new real-model call belongs to this audit.
+
+The [[file:scheme-design-framework.org][acceptance matrix]] remains the closure authority. This plan refines R1–R7;
+it does not mark them all closed. The [[file:evidence/scheme-proof-audit-20261004/formal.log][formal run]] records this patch's proof and
+model-checker results; its receipt identifies the checked files and toolchain.

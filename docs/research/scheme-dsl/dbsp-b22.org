@@ -69,3 +69,9 @@ gate regardless of timing. If matched lifecycle cost is not lower on a
 target workload, retain the semantic API without a performance claim.
 
 [[file:datafun-s20.org][Datafun S20]]; [[file:e4-retained-session.org][local retained receipt]].
+
+* Current implementation reconciliation (2026-10-04)
+
+Checked native Sessions now use dependency invalidation and affected-component rederivation; full prospective recomputation remains the opaque-provider fallback. This does not implement signed DBSP streams. The latest three-arm lifecycle measurement failed its progress gate; historical timings do not establish positive net benefit.
+
+See the [[file:../../scheme-research-proof-audit.org][research/proof audit]] for the current transfer obligations and ordered exit gates. Earlier experiments retain their original source and cost boundaries.

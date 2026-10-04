@@ -169,3 +169,7 @@ ascending-orbit lemma, requires independent CI. Concrete compiler refinement,
 other provenance algebras, controlled runtime benefit, real-model benefit and
 subsequent MRR Rust integration remain open. The former model-plan digest
 cannot authorize a changed source payload; zero new model calls were made.
+
+* Research and proof synchronization (2026-10-04)
+
+The [[file:scheme-research-proof-audit.org][research/proof audit]] maps all eight DSL sources to current implementation, formal premises and falsifiable exit gates. It prioritizes compiler preservation, transaction refinement and finite evidence algebra before optimization, paid model validation and MRR integration. Unbounded protocol generations are distinct from finite TLC exploration; abstract proofs do not certify the Scheme compiler.

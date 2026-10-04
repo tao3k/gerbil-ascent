@@ -6,7 +6,7 @@
 \* completeness belong to the caller/POO Temporal model.
 EXTENDS Naturals, Integers, TLC
 
-CONSTANT MaxGeneration
+CONSTANT ExplorationDepth
 
 Cuts == {<<a, b>> : a \in 0..1, b \in 0..1}
 NoCut == <<-1, -1>>
@@ -36,7 +36,6 @@ Init ==
 \* Replacing multiple source relations is one visible generation change.
 \* A computation that began on an older cut may finish, but cannot publish.
 SwapSources ==
-  /\ generation < MaxGeneration
   /\ \E nextCut \in Cuts :
        /\ nextCut # sourceCut
        /\ sourceCut' = nextCut
@@ -105,17 +104,20 @@ Next ==
 Spec == Init /\ [][Next]_vars
 
 TypeOK ==
-  /\ generation \in 0..MaxGeneration
+  /\ generation \in Nat
   /\ sourceCut \in Cuts
   /\ phase \in {"idle", "working"}
-  /\ workingGeneration \in {NoGeneration} \cup 0..MaxGeneration
+  /\ workingGeneration \in {NoGeneration} \cup Nat
   /\ workingCut \in {NoCut} \cup Cuts
-  /\ certificateGeneration \in {NoGeneration} \cup 0..MaxGeneration
+  /\ certificateGeneration \in {NoGeneration} \cup Nat
   /\ certificateCut \in {NoCut} \cup Cuts
   /\ certificateStatus \in {"none", "bounded", "valid"}
-  /\ usedGeneration \in {NoGeneration} \cup 0..MaxGeneration
+  /\ usedGeneration \in {NoGeneration} \cup Nat
   /\ usedCut \in {NoCut} \cup Cuts
   /\ used \in BOOLEAN
+
+\* TLC-only exploration constraint. The protocol itself has unbounded generations.
+ExplorationBound == generation <= ExplorationDepth
 
 NoStalePublished ==
   certificateStatus = "valid" =>

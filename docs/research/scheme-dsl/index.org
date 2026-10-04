@@ -123,3 +123,7 @@ check and does not gain a persistent cache. Deletion-aware change and a
 general typed higher-order calculus remain separate research
 obligations. Match lifecycle cost, larger scale and allocation receipts
 before any broad performance conclusion.
+
+* Research and proof synchronization (2026-10-04)
+
+The [[file:../../scheme-research-proof-audit.org][research/proof audit]] maps all eight DSL sources to current implementation, formal premises and falsifiable exit gates. It prioritizes compiler preservation, transaction refinement and finite evidence algebra before optimization, paid model validation and MRR integration. Unbounded protocol generations are distinct from finite TLC exploration; abstract proofs do not certify the Scheme compiler.

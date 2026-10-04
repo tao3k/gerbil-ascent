@@ -1,0 +1,75 @@
+---- MODULE SessionTransaction ----
+\* SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+\* SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+\* Publication protocol, not a Datalog evaluator or a Gerbil refinement proof.
+EXTENDS Naturals, Integers, TLC
+CONSTANTS ExplorationDepth, Mutation
+Cuts == {<<a, b>> : a \in 0..1, b \in 0..1}
+\* Two symbolic result rows stand for a completed solve of a source cut.
+ResultOf(cut) == {i \in 1..2 : cut[i] = 1}
+VARIABLES generation, source, result, phase, base, pending, candidate, complete
+vars == <<generation, source, result, phase, base, pending, candidate, complete>>
+Init ==
+  /\ generation = 0
+  /\ source = <<0, 0>>
+  /\ result = ResultOf(source)
+  /\ phase = "idle"
+  /\ base = -1
+  /\ pending = source
+  /\ candidate = {}
+  /\ complete = FALSE
+Begin ==
+  /\ phase = "idle"
+  /\ \E cut \in Cuts : pending' = cut
+  /\ base' = generation
+  /\ phase' = "solving"
+  /\ candidate' = {}
+  /\ complete' = FALSE
+  /\ UNCHANGED <<generation, source, result>>
+Solve ==
+  /\ phase = "solving"
+  /\ candidate' = ResultOf(pending)
+  /\ complete' = TRUE
+  /\ phase' = "ready"
+  /\ UNCHANGED <<generation, source, result, base, pending>>
+\* Another publication may race a prospective solve. Old work cannot commit.
+ExternalCommit ==
+  /\ \E cut \in Cuts : /\ source' = cut /\ result' = ResultOf(cut)
+  /\ generation' = generation + 1
+  /\ UNCHANGED <<phase, base, pending, candidate, complete>>
+Commit ==
+  /\ phase = "ready"
+  /\ complete
+  /\ base = generation \/ Mutation = "stale"
+  /\ generation' = generation + 1
+  /\ source' = pending
+  /\ result' = candidate
+  /\ phase' = "idle"
+  /\ UNCHANGED <<base, pending, candidate, complete>>
+\* Domain/budget/unsupported failures and cancellation discard private work.
+Abort ==
+  /\ phase # "idle"
+  /\ phase' = "idle"
+  /\ complete' = FALSE
+  /\ candidate' = {}
+  /\ UNCHANGED <<generation, source, result, base, pending>>
+EarlyPublish ==
+  /\ Mutation = "early"
+  /\ phase = "solving"
+  /\ source' = pending
+  /\ UNCHANGED <<generation, result, phase, base, pending, candidate, complete>>
+Next == Begin \/ Solve \/ Commit \/ Abort \/ ExternalCommit \/ EarlyPublish
+Spec == Init /\ [][Next]_vars
+TypeOK ==
+  /\ generation \in Nat
+  /\ source \in Cuts /\ pending \in Cuts
+  /\ result \subseteq 1..2 /\ candidate \subseteq 1..2
+  /\ base \in {-1} \cup Nat
+  /\ phase \in {"idle", "solving", "ready"}
+  /\ complete \in BOOLEAN
+\* TLC-only exploration constraint. Spec does not reference this bound.
+ExplorationBound == generation <= ExplorationDepth
+AtomicSnapshot == result = ResultOf(source)
+NoStaleCommit == [][Commit => base = generation]_vars
+AbortPreservesSnapshot == [][Abort => UNCHANGED <<generation, source, result>>]_vars
+====

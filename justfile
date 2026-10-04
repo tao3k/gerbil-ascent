@@ -122,10 +122,7 @@ _admission-copy-benchmark:
 check-nonmembership-formal:
     #!/usr/bin/env bash
     set -euo pipefail
-    lean packages/proofs/lean/PositiveNonmembership.lean
-    model_dir="$(mktemp -d)"
-    trap 'rm -rf "$model_dir"' EXIT
-    "${TLC_BIN:-tlc}" -config packages/proofs/tla/PositiveNonmembershipSession.cfg -metadir "$model_dir" packages/proofs/tla/PositiveNonmembershipSession.tla
+    bash packages/proofs/check.sh
 
 # Matched finite-operator research probe; every sample checks independent
 # closure before reporting cost. This is separate from the SS suite.

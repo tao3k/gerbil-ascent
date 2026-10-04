@@ -447,3 +447,7 @@ a claim that a particular backend is already superior.
 Subsequent algorithm work requires independent semantic and performance
 evidence on recursive, multi-support, update-heavy workloads.  The first
 slice's success is a control-plane result, not algorithm parity.
+
+* Research and proof synchronization (2026-10-04)
+
+The [[file:scheme-research-proof-audit.org][research/proof audit]] maps all eight DSL sources to current implementation, formal premises and falsifiable exit gates. It prioritizes compiler preservation, transaction refinement and finite evidence algebra before optimization, paid model validation and MRR integration. Unbounded protocol generations are distinct from finite TLC exploration; abstract proofs do not certify the Scheme compiler.

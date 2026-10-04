@@ -63,6 +63,65 @@
 
 (def ascent-binding-test
   (test-suite "ASCENT checked row binding specialization"
+    (poo-flow-test-case "wide scopes preserve fresh names, repeats and index eligibility"
+      (for-each
+       (lambda (width)
+         (let* ((names (map (lambda (_) (gensym 'scope)) (iota width)))
+                (calls 0)
+                (terms
+                 (append (map (cut cons 'variable <>) names)
+                         (list (cons 'variable (car names))
+                               (cons 'expression
+                                 (vector names
+                                   (lambda values
+                                     (set! calls (+ calls 1)) (length values))))
+                               '(literal . #f))))
+                (row (append (iota width) (list 0 width #f)))
+                (plan (ascent-binding-atom-plan terms [])))
+           (check-equal? calls 0)
+           (check-equal? (vector-ref plan 2) (list (+ width 2)))
+           (check-equal? (length (filter (lambda (term)
+                                         (eq? (car term) 'fresh-variable))
+                                       (vector-ref plan 3))) width)
+           (check-binding terms (list row) [])
+           (check-equal? calls 2)
+           (let (environment (map cons names (iota width)))
+             (check-binding terms (list row) environment)
+             (check-equal? (vector-ref (ascent-binding-atom-plan terms names) 2)
+                           (iota (+ width 3))))))
+       '(31 32 33 128)))
+    (poo-flow-test-case "wide expression diagnostics retain priority over pattern collisions"
+      (let* ((calls 0)
+             (names (map (lambda (_) (gensym 'diagnostic)) (iota 32)))
+             (pattern (cons 'pattern (vector '(x) (lambda (_) '(0)))))
+             (terms
+              (append (list pattern
+                            (cons 'expression
+                              (vector '(missing)
+                                (lambda (_) (set! calls (+ calls 1)) 0))))
+                      (map (cut cons 'variable <>) names))))
+        (check-equal? (outcome (lambda () (ascent-binding-atom-plan terms '(x))))
+                      '(error "unbound ASCENT clause variable"))
+        (check-equal? calls 0)
+        (check-equal?
+         (outcome
+          (lambda ()
+            (ascent-binding-atom-plan
+             (cons pattern (map (cut cons 'variable <>) names)) '(x))))
+         '(error "ASCENT pattern variable already bound"))))
+    (poo-flow-test-case "wide pattern outputs keep duplicate detection and output order"
+      (let* ((names (map (lambda (_) (gensym 'pattern)) (iota 64)))
+             (values (iota 64))
+             (term (cons 'pattern (vector names (lambda (_) values)))))
+        (check-binding (list term (cons 'variable (car names))) '((0 0)) [])
+        (check-equal?
+         (outcome
+          (lambda ()
+            (ascent-binding-atom-plan
+             (list (cons 'pattern
+                     (vector (append names (list (car names))) (lambda (_) []))))
+             [])))
+         '(error "ASCENT pattern variable already bound"))))
     (poo-flow-test-case "nullary terms retain existing environments"
       (finite-bindings 0))
     (poo-flow-test-case "all unary terms preserve bindings and rejection"

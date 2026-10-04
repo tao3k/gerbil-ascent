@@ -38,6 +38,7 @@
         gerbil-ascent-negation
         gerbil-ascent-aggregate
         gerbil-ascent-clause-plan
+        gerbil-ascent-bound-membership
         gerbil-ascent-rule
         gerbil-ascent-fragment
         gerbil-ascent-program)
@@ -60,10 +61,54 @@
 (.defgeneric (gerbil-ascent-clause-plan clause atom-plan bound)
   slot: .plan)
 
-(def (require-bound names bound)
+;; : (-> (List Symbol) NameIndex)
+(def (name-index names)
+  (let (index (make-hash-table-eq))
+    (for-each (cut hash-put! index <> #t) names)
+    index))
+
+;; : (forall (a) (-> (List a) Boolean))
+(def (wide-scope? names)
+  ;; A bounded predicate stops at the 32nd pair without materializing a list.
+  (def (enough? remaining left)
+    (and (pair? remaining)
+         (or (fx= left 1) (enough? (cdr remaining) (fx- left 1)))))
+  (enough? names 32))
+
+;;; Admission-local lookup: small scopes retain list membership. Repeated
+;;; reads amortize one symbol index; its snapshot never changes the bound list
+;;; passed to an open clause planner, and never survives in an execution plan.
+;; gerbil-ascent-bound-membership
+;;   : (forall (name) (-> (List name) (-> name Boolean)))
+;;   : (-> BoundNames BoundPredicate)
+;;   | doc m%
+;;       Resolve admitted names by identity in a private scope snapshot.
+;;       Repeated queries share one lazily constructed index.
+;;
+;;       # Examples
+;;
+;;       ```scheme
+;;       ((gerbil-ascent-bound-membership '(x y)) 'x)
+;;       ;; => #t
+;;       ```
+;;     %
+(def (gerbil-ascent-bound-membership names)
+  (if (not (wide-scope? names))
+    (lambda (name) (and (memq name names) #t))
+    (let ((index #f) (reads 0))
+      (lambda (name)
+        (if index
+          (hash-get index name)
+          (begin
+            (set! reads (fx+ reads 1))
+            (if (fx= reads 32)
+              (begin (set! index (name-index names)) (hash-get index name))
+              (and (memq name names) #t))))))))
+
+(def (require-bound names bound?)
   (for-each
    (lambda (name)
-     (unless (memq name bound)
+     (unless (bound? name)
        (error "unbound ASCENT clause variable" name)))
    names))
 
@@ -72,41 +117,44 @@
        (vector-ref (cdr term) 0)))
 
 (def (indexed-atom plan bound)
-  (let loop ((terms (vector-ref plan 1)) (column 0)
-             (columns []) (seen-bound bound) (bindings []) (key-terms []))
-    (if (null? terms)
-      (vector (vector-ref plan 0) (vector-ref plan 1)
-              (reverse columns) (reverse bindings) (reverse key-terms))
-      (let* ((term (car terms))
-             (kind (car term))
-             (inputs (and (eq? kind 'expression)
-                          (vector-ref (cdr term) 0))))
-        (when inputs (require-bound inputs seen-bound))
-        (let (indexed?
-              (or (eq? kind 'literal)
-                  (and (eq? kind 'variable) (memq (cdr term) bound))
-                  (and inputs
-                       (andmap (lambda (name) (memq name bound)) inputs))))
-          (loop (cdr terms) (+ column 1)
-                (if indexed?
-                  (cons column columns)
-                  columns)
-                (cond
-                 ((eq? kind 'variable) (cons (cdr term) seen-bound))
-                 ((eq? kind 'pattern)
-                  (append (pattern-outputs term) seen-bound))
-                 (else seen-bound))
-                ;; Admission establishes which names can already occur in the
-                ;; environment. Only a first variable occurrence can skip assq;
-                ;; repeats and names introduced by a pattern still compare.
-                (cons (if (and (eq? kind 'variable)
-                               (not (memq (cdr term) seen-bound)))
-                        (cons 'fresh-variable (cdr term))
-                        term)
-                      bindings)
-                ;; Bind column positions to their immutable term descriptors
-                ;; once. Values and expression callbacks remain row-time work.
-                (if indexed? (cons term key-terms) key-terms)))))))
+  (let* ((wide? (wide-scope? (vector-ref plan 1)))
+         (prior? (gerbil-ascent-bound-membership bound))
+         (seen-bound (if wide? (name-index bound) bound)))
+    (def (seen? name)
+      (if wide? (hash-get seen-bound name) (memq name seen-bound)))
+    (let loop ((terms (vector-ref plan 1)) (column 0)
+               (columns []) (bindings []) (key-terms []))
+      (if (null? terms)
+        (vector (vector-ref plan 0) (vector-ref plan 1)
+                (reverse columns) (reverse bindings) (reverse key-terms))
+        (let* ((term (car terms))
+               (kind (car term))
+               (inputs (and (eq? kind 'expression) (vector-ref (cdr term) 0))))
+          (when inputs (require-bound inputs seen?))
+          (let* ((indexed?
+                  (or (eq? kind 'literal)
+                      (and (eq? kind 'variable) (prior? (cdr term)))
+                      (and inputs (andmap prior? inputs))))
+                 ;; Read freshness before extending the row-local scope.
+                 ;; Same-atom repeats and pattern names still compare values.
+                 (binding
+                  (if (and (eq? kind 'variable) (not (seen? (cdr term))))
+                    (cons 'fresh-variable (cdr term)) term)))
+            (case kind
+              ((variable)
+               (if wide?
+                 (hash-put! seen-bound (cdr term) #t)
+                 (set! seen-bound (cons (cdr term) seen-bound))))
+              ((pattern)
+               (if wide?
+                 (for-each (cut hash-put! seen-bound <> #t) (pattern-outputs term))
+                 (set! seen-bound (append (pattern-outputs term) seen-bound)))))
+            ;; The result contains descriptors only. Scratch indexes and their
+            ;; lookup closures are never retained by the immutable plan.
+            (loop (cdr terms) (+ column 1)
+                  (if indexed? (cons column columns) columns)
+                  (cons binding bindings)
+                  (if indexed? (cons term key-terms) key-terms))))))))
 
 (def (atom-clause-plan clause atom-plan bound)
   (let* ((plan (indexed-atom (atom-plan clause) bound))
@@ -131,13 +179,14 @@
     (vector (vector 'atom plan) next-bound 1)))
 
 (def (negation-clause-plan clause atom-plan bound)
-  (let (plan (indexed-atom (atom-plan clause) bound))
+  (let ((plan (indexed-atom (atom-plan clause) bound))
+        (bound? (gerbil-ascent-bound-membership bound)))
     (for-each
      (lambda (term)
        (when (eq? (car term) 'pattern)
          (error "ASCENT pattern cannot bind in negation"))
        (when (and (eq? (car term) 'variable)
-                  (not (memq (cdr term) bound)))
+                  (not (bound? (cdr term))))
          (error "unsafe ASCENT negation variable" (cdr term))))
      (vector-ref plan 1))
     (vector (vector 'negation plan) bound 0)))
@@ -147,24 +196,23 @@
          (name (.ref clause 'variable))
          (names (if (and (eq? kind 'generator) (list? name))
                   name (list name))))
-    (require-bound inputs bound)
-    (let loop ((remaining names) (next-bound bound))
-      (if (null? remaining)
-        (vector
-         (vector kind
-                 (if (list? name)
-                   (map (lambda (output)
-                          (cons 'variable output))
-                        name)
-                   name)
-                 inputs (.ref clause function-slot))
-         next-bound 0)
-        (begin
-          (when (memq (car remaining) next-bound)
-            (error "ASCENT computed variable already bound"
-                   (car remaining)))
-          (loop (cdr remaining)
-                (cons (car remaining) next-bound)))))))
+    (require-bound inputs (gerbil-ascent-bound-membership bound))
+    (let (known (and (wide-scope? names) (name-index bound)))
+      (let loop ((remaining names) (next-bound bound))
+        (if (null? remaining)
+          (vector
+           (vector kind
+                   (if (list? name)
+                     (map (lambda (output) (cons 'variable output)) name)
+                     name)
+                   inputs (.ref clause function-slot))
+           next-bound 0)
+          (begin
+            (when (if known (hash-get known (car remaining))
+                      (memq (car remaining) next-bound))
+              (error "ASCENT computed variable already bound" (car remaining)))
+            (when known (hash-put! known (car remaining) #t))
+            (loop (cdr remaining) (cons (car remaining) next-bound))))))))
 
 (def (aggregate-clause-plan clause atom-plan bound)
   (let* ((plan (indexed-atom (atom-plan clause) bound))
@@ -174,20 +222,30 @@
          (terms (vector-ref plan 1)))
     (when (ormap pattern-outputs terms)
       (error "ASCENT pattern cannot bind in aggregate"))
-    (let loop ((remaining names) (next-bound bound))
-      (unless (null? remaining)
-        (when (memq (car remaining) next-bound)
-          (error "ASCENT aggregate variable already bound"
-                 (car remaining)))
-        (loop (cdr remaining) (cons (car remaining) next-bound))))
-    (for-each
-     (lambda (input)
-       (unless (ormap (lambda (term)
-                        (and (eq? (car term) 'variable)
-                             (eq? (cdr term) input)))
-                      terms)
-         (error "ASCENT aggregate input absent from atom" input)))
-     inputs)
+    (let (known (and (wide-scope? names) (name-index bound)))
+      (let loop ((remaining names) (next-bound bound))
+        (unless (null? remaining)
+          (when (if known (hash-get known (car remaining))
+                    (memq (car remaining) next-bound))
+            (error "ASCENT aggregate variable already bound" (car remaining)))
+          (when known (hash-put! known (car remaining) #t))
+          (loop (cdr remaining) (cons (car remaining) next-bound)))))
+    ;; Atom membership has no callbacks. Build only for a wide input query;
+    ;; output and pattern diagnostics above retain their original priority.
+    (let (variables
+          (and (wide-scope? inputs)
+               (name-index
+                (filter-map (lambda (term)
+                              (and (eq? (car term) 'variable) (cdr term)))
+                            terms))))
+      (for-each
+       (lambda (input)
+         (unless (if variables (hash-get variables input)
+                   (ormap (lambda (term)
+                            (and (eq? (car term) 'variable)
+                                 (eq? (cdr term) input))) terms))
+           (error "ASCENT aggregate input absent from atom" input)))
+       inputs))
     (vector (vector 'aggregate plan name inputs (.ref clause 'aggregate)
                     (.ref clause 'output-pattern))
             (append names bound) 0)))
@@ -302,7 +360,8 @@
                 predicate: guard-procedure
                 checked-operator: operator-descriptor
                 (.plan (lambda (_atom-plan bound)
-                         (require-bound (.ref self 'variables) bound)
+                         (require-bound (.ref self 'variables)
+                                        (gerbil-ascent-bound-membership bound))
                          (vector (vector 'guard (.ref self 'variables)
                                          (.ref self 'predicate))
                                  bound 0))))))

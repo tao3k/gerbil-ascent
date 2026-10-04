@@ -103,3 +103,19 @@ in 31 seconds in the suite (baseline about 23.8 seconds, candidate about 3.3
 seconds, candidate p95 836 microseconds). All original sample counts, module
 deadlines, Case budgets and fixture assertions were retained. These are local
 results; logs remain under ignored =.cache/ascent/=.
+
+* Declaration-scope lowering qualification
+
+The declaration-scope slice adds one independent qualification module and
+extends the binding oracle: 48 modules run in parallel, followed by the same
+3 exclusive modules. Final native qualification passes all 51 modules and
+411 Cases, policy over 42 production modules with findings=0/errors=0, and
+all 17 original SS scenarios. Native module deadlines, Case budgets and SS
+sample counts remain unchanged. =build.ss= remains 61 lines.
+
+The explicit declaration-scope research benchmark lives under =t/performance/=
+and is not part of normal semantic or original SS execution. It compares
+1000 samples per shape on frozen =822348c= and the candidate using the same
+compiled fixture and SDK, with reversed process order on repeat. See
+=docs/code-quality-scheme-native-ascent.org= for the scope invariants and
+measurement boundaries. All generated artifacts and logs stay in =.cache/=.

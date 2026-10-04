@@ -20,6 +20,7 @@
     "t/qualification/ascent-candidate-description-test.ss"
     "t/qualification/ascent-closure-candidates-test.ss"
     "t/qualification/ascent-contract-union-test.ss"
+    "t/qualification/ascent-declaration-scope-test.ss"
     "t/qualification/ascent-eqrel-program-test.ss"
     "t/qualification/ascent-finite-evidence-test.ss"
     "t/qualification/ascent-index-lifecycle-test.ss"

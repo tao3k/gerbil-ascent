@@ -7,7 +7,7 @@
 =t/harness/run.ss= contains the reviewed parallel module list. Every qualification
 =*-test.ss= is discovered; modules outside that list run exclusively.
 =std/make= compiles the selected test sources. Native =gxtest= loads their =.ssi=
-modules. =just test= runs 47 independent modules in separate processes, waits for them,
+modules. =just test= runs 48 independent modules in separate processes, waits for them,
 then runs the 3 exclusive modules. Native =std/test= retains Suite and Case order
 inside each process. New modules default to exclusive until reviewed.
 

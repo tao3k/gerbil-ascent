@@ -4,7 +4,8 @@
 
 ;;; Rule planning is separate from relation state and fixed-point execution.
 ;;; The passed atom-plan resolves names and arities against one program schema.
-(import (only-in "objects.ss" gerbil-ascent-clause-plan)
+(import (only-in "objects.ss" gerbil-ascent-clause-plan
+                 gerbil-ascent-bound-membership)
         (only-in "funs.ss" gerbil-ascent-rule-strata
                  gerbil-ascent-delta-positions)
         (only-in :clan/poo/object .ref))
@@ -95,10 +96,10 @@
   (when callback (callback path failure))
   (raise failure))
 
-;; : (-> Head (List Symbol) (-> Atom AtomPlan) AtomPlan)
+;; : (-> Head (-> Symbol Boolean) (-> Atom AtomPlan) AtomPlan)
 ;;; A head may only read variables made available by prior body clauses.
 ;;; Heads and body clauses resolve against the same validated schema.
-(def (head-plan head bound atom-plan)
+(def (head-plan head bound? atom-plan)
   (unless (and (object? head)
                (eq? (.ref head 'ascent-clause-kind) 'atom))
     (error "invalid ASCENT rule head" head))
@@ -107,12 +108,12 @@
      (lambda (term)
        (case (car term)
          ((variable)
-          (unless (memq (cdr term) bound)
+          (unless (bound? (cdr term))
             (error "unsafe ASCENT head variable" (cdr term))))
          ((expression)
           (for-each
            (lambda (name)
-             (unless (memq name bound)
+             (unless (bound? name)
                (error "unsafe ASCENT head expression variable" name)))
            (vector-ref (cdr term) 0)))
          ((pattern) (error "ASCENT pattern is invalid in a rule head"))
@@ -147,14 +148,14 @@
             (set! bound (vector-ref result 1))
             (set! atoms (+ atoms (vector-ref result 2)))))))
      body (iota (length body)))
-    (let (planned-heads
-          (map
-           (lambda (head head-index)
-             (with-catch
-              (lambda (failure)
-                (plan-failure on-plan-error
-                              (list 'rule rule-index 'head head-index)
-                              failure))
-              (lambda () (head-plan head bound atom-plan))))
-           heads (iota (length heads))))
+    (let* ((bound? (gerbil-ascent-bound-membership bound))
+           (planned-heads
+            (map
+             (lambda (head head-index)
+               (with-catch
+                (lambda (failure)
+                  (plan-failure on-plan-error
+                                (list 'rule rule-index 'head head-index) failure))
+                (lambda () (head-plan head bound? atom-plan))))
+             heads (iota (length heads)))))
       (vector planned-heads (reverse body-plans) atoms rule-index))))

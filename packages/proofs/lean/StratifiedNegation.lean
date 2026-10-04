@@ -131,6 +131,37 @@ theorem negation_indexed_iff (full candidates : List row)
       ClauseHolds (.negation full bind) input output := by
   simp only [ClauseHolds, matchingRow_indexed_iff full candidates bind input exact]
 
+/-- Logical contents of a keyed physical lookup. `program/index.ss`
+    chooses a key from already bound terms, while `table/access.ss` owns
+    the physical buckets. The theorem below does not prove that a native
+    bucket has these contents. -/
+def keyedRows [DecidableEq key] (full : List row)
+    (keyOf : row → key) (wanted : key) : List row :=
+  full.filter (fun value => keyOf value = wanted)
+
+theorem keyed_rows_exact [DecidableEq key] (full : List row)
+    (keyOf : row → key) (wanted : key)
+    (bind : env → row → Option env) (input : env)
+    (matching_key : ∀ value output,
+      bind input value = some output → keyOf value = wanted) :
+    IndexExact full (keyedRows full keyOf wanted) bind input := by
+  constructor
+  · intro value member
+    exact (List.mem_filter.mp member).1
+  · intro value output member bound
+    exact List.mem_filter.mpr
+      ⟨member, by simpa using matching_key value output bound⟩
+
+theorem keyed_negation_iff [DecidableEq key] (full : List row)
+    (keyOf : row → key) (wanted : key)
+    (bind : env → row → Option env) (input output : env)
+    (matching_key : ∀ value result,
+      bind input value = some result → keyOf value = wanted) :
+    ClauseHolds (.negation (keyedRows full keyOf wanted) bind) input output ↔
+      ClauseHolds (.negation full bind) input output :=
+  negation_indexed_iff full (keyedRows full keyOf wanted) bind input output
+    (keyed_rows_exact full keyOf wanted bind input matching_key)
+
 def overwrite (_input value : row) : Option row := some value
 
 def equalBind [DecidableEq row] (input value : row) : Option row :=

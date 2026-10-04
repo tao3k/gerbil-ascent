@@ -109,6 +109,11 @@ row without adding bindings. =IndexExact= makes the index requirement
 explicit: candidates come from the full frozen relation and retain
 every row that matches the current binding. Under that premise,
 =atom_indexed_iff= and =negation_indexed_iff= preserve the clause result.
+For a logical key filter, =keyed_rows_exact= reduces that premise to
+one condition: every row accepted by the binder has the key computed
+from the current environment. =keyed_negation_iff= then preserves the
+negative clause. Actual hash buckets, custom providers and the plan's
+key selection still need representation proofs against this filter.
 The =frozen_blocker_step_monotone= theorem states the corresponding
 fixed-point premise: with a fixed lower-stratum blocker, growth of the
 positive current-stratum input cannot retract branch results if its
@@ -158,6 +163,10 @@ is the branch-local formula from the Lean slice; a =global= mutation
 puts exclusion after union and must violate =AtomicSnapshot= when a
 blocked direct witness is published. This compares the same formula
 across the two artifacts but is not a mechanized Lean-to-TLA translation.
+A =reuse= mutation keeps the old answer when only the blocker bit
+changes; it must also violate =AtomicSnapshot= once a via witness is
+retracted or restored. This directly checks that a lower-stratum
+source change is not treated as monotone growth of the old answer.
 [[file:../../../packages/proofs/tla/PositiveNonmembershipSession.tla][PositiveNonmembershipSession]] models certificate binding
 and stale-use rejection. Their =Cuts= are tiny symbolic domains for
 TLC; neither model is a native Gerbil trace refinement, source

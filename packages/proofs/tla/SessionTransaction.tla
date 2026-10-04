@@ -35,7 +35,12 @@ Begin ==
 Solve ==
   /\ phase = "solving"
   /\ candidate' = IF Mutation = "global" THEN GlobalResultOf(pending)
-                  ELSE ResultOf(pending)
+                  ELSE IF Mutation = "reuse"
+                          /\ pending[1] = source[1]
+                          /\ pending[2] = source[2]
+                          /\ pending[3] # source[3]
+                       THEN result
+                       ELSE ResultOf(pending)
   /\ complete' = TRUE
   /\ phase' = "ready"
   /\ UNCHANGED <<generation, source, result, base, pending>>

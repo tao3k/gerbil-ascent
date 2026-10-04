@@ -69,6 +69,11 @@ equivalence, ordered certificate identity, source occurrences, pending work and
 committed observations. R1/R3/R4 acceptance must preserve those distinctions;
 paper algorithms cannot be transferred by treating all of them as row equality.
 
+The [[file:scheme-compiler-proof-bridge.org][scalar/row representation slice]] now proves proper list-row admission,
+complete tuple enumeration, faithful encoding for admitted rows, duplicate/union
+laws and rank/height correspondence. Native scalar equality/hash conformance
+and actual descriptor/step refinement keep their separate R1 obligations.
+
 * Model interface policy
 
 Why might an invocation contain text? Actual source, the user's task and a

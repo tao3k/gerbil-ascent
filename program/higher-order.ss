@@ -9,7 +9,7 @@
         (only-in :gerbil-ascent/program/operator
                  relational-op-source relational-op-union relational-op-join
                  relational-op-project relational-op-select-eq relational-op-flatmap
-                 relational-op-fix relational-op-compile)
+                 relational-op-fix relational-op-compile relational-op-kind)
         (only-in :gerbil-ascent/program/scheme-checked
                  relational-scalar? relational-copy-rows relational-finite-rows relational-finite-source)
         (only-in :gerbil-ascent/program/objects gerbil-ascent-program)
@@ -429,8 +429,17 @@
                                               (list-tail row (vector-ref data 0)))) (vector-ref data 1))))
           (else (error "unsupported typed term kind")))))
     (set! term (check-term! term [] []))
+    ;; Native source observations retain occurrence multiplicity and budgets.
+    ;; A typed relation denotes a set even when lowering returns a bare source
+    ;; (including a parameter or function bottom). Materialize its identity
+    ;; projection as a derived relation; never deduplicate the source log.
+    (let* ((root (lower term []))
+           (result-root
+            (if (eq? (relational-op-kind root) 'source)
+              (relational-op-project root (iota (relational-type-left (relational-typed-term-type term))))
+              root)))
     (let-values (((program output)
-                  (relational-op-compile (lower term []) input-limit derived-limit output-limit)))
+                  (relational-op-compile result-root input-limit derived-limit output-limit)))
       (values
        (gerbil-ascent-program
         (map (lambda (relation)
@@ -441,4 +450,4 @@
              (.ref program 'relations))
         (.ref program 'rules) input-limit derived-limit output-limit
         (.ref program 'source-handles))
-       output))))
+       output)))))

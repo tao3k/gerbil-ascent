@@ -536,4 +536,188 @@ theorem signature_height_least_fixed (signature : FiniteSignature)
 
 end FiniteSignature
 
+namespace RowRepresentation
+
+/-- Semantic scalar tags. Symbol identifiers denote identity, not printed text.
+    Connecting Gerbil scalar equality/hash behavior to these tags is a separate
+    runtime obligation; this model does not assign native symbol identifiers. -/
+inductive Scalar where
+  | integer (value : Int)
+  | boolean (value : Bool)
+  | symbol (identity : Nat)
+  | character (value : Char)
+  deriving DecidableEq
+
+/-- A proper row has the declared length and every atom belongs to the domain. -/
+def admitted {α : Type} (domain : List α) (arity : Nat) (row : List α) : Prop :=
+  row.length = arity ∧ ∀ atom ∈ row, atom ∈ domain
+
+/-- List-spine tuple interpretation, including one empty tuple at arity zero. -/
+def tuples {α : Type} (domain : List α) : Nat → List (List α)
+  | 0 => [[]]
+  | arity + 1 => domain.flatMap fun atom => (tuples domain arity).map (atom :: ·)
+
+theorem constant_sum {α : Type} (values : List α) (count : Nat) :
+    (values.map fun _ => count).sum = values.length * count := by
+  induction values with
+  | nil => simp
+  | cons head tail ih => simp [ih, Nat.succ_mul, Nat.add_comm]
+
+theorem tuples_length {α : Type} (domain : List α) (arity : Nat) :
+    (tuples domain arity).length = domain.length ^ arity := by
+  induction arity with
+  | zero => simp [tuples]
+  | succ arity ih =>
+    simp [tuples, List.length_flatMap, ih, constant_sum, Nat.pow_succ, Nat.mul_comm]
+
+theorem tuples_membership {α : Type} (domain : List α) (arity : Nat) (row : List α) :
+    row ∈ tuples domain arity ↔ admitted domain arity row := by
+  induction arity generalizing row with
+  | zero => cases row <;> simp [tuples, admitted]
+  | succ arity ih =>
+    cases row with
+    | nil => simp [tuples, admitted]
+    | cons atom tail =>
+      simp only [tuples, List.mem_flatMap, List.mem_map]
+      constructor
+      · rintro ⟨head, headMem, rest, restMem, equal⟩
+        have same : head = atom ∧ rest = tail := List.cons.inj equal
+        obtain ⟨headEqual, restEqual⟩ := same
+        subst head; subst rest
+        obtain ⟨length, members⟩ := (ih tail).mp restMem
+        exact ⟨by simp [length], by simpa using And.intro headMem members⟩
+      · rintro ⟨length, members⟩
+        have tailLength : tail.length = arity := by simpa using length
+        have headMem : atom ∈ domain := members atom (by simp)
+        have tailMem : ∀ x ∈ tail, x ∈ domain := fun x hx => members x (by simp [hx])
+        exact ⟨atom, headMem, tail, (ih tail).mpr ⟨tailLength, tailMem⟩, rfl⟩
+
+theorem canonical_domain_membership {α : Type} [DecidableEq α]
+    (domain : List α) (arity : Nat) (row : List α) :
+    admitted domain.eraseDups arity row ↔ admitted domain arity row := by
+  simp [admitted]
+
+theorem domain_order_preserves_admission {α : Type} (left right : List α)
+    (same : ∀ atom, atom ∈ left ↔ atom ∈ right) (arity : Nat) (row : List α) :
+    admitted left arity row ↔ admitted right arity row := by
+  simp only [admitted, same]
+
+/-- A relational value is a Boolean membership table over all admitted tuples.
+    Row multiplicity and enumeration order do not affect public membership. -/
+def encode {α : Type} [DecidableEq α] (domain : List α) (arity : Nat)
+    (rows : List (List α)) : Fin (domain.length ^ arity) → Bool :=
+  fun i => decide ((tuples domain arity).get
+    ⟨i.val, by rw [tuples_length]; exact i.isLt⟩ ∈ rows)
+
+theorem encode_equal_iff {α : Type} [DecidableEq α]
+    (domain : List α) (arity : Nat) (left right : List (List α)) :
+    encode domain arity left = encode domain arity right ↔
+    ∀ row, admitted domain arity row → (row ∈ left ↔ row ∈ right) := by
+  constructor
+  · intro equal row valid
+    obtain ⟨i, hi⟩ := List.mem_iff_get.mp ((tuples_membership domain arity row).mpr valid)
+    have bound : i.val < domain.length ^ arity := by rw [← tuples_length]; exact i.isLt
+    have atIndex := congrFun equal (⟨i.val, bound⟩ : Fin (domain.length ^ arity))
+    change decide ((tuples domain arity).get i ∈ left) =
+      decide ((tuples domain arity).get i ∈ right) at atIndex
+    rw [hi] at atIndex
+    simpa using atIndex
+  · intro same
+    funext i
+    simp only [encode]
+    congr 1
+    apply propext
+    apply same
+    exact (tuples_membership domain arity _).mp (List.get_mem ..)
+
+theorem duplicate_rows_preserve_encoding {α : Type} [DecidableEq α]
+    (domain : List α) (arity : Nat) (rows : List (List α)) :
+    encode domain arity rows.eraseDups = encode domain arity rows := by
+  apply (encode_equal_iff domain arity _ _).mpr
+  intro row _
+  simp
+
+/-- Faithfulness requires admission of every source row. Encoding alone must
+    not be used to silently drop out-of-domain or wrong-arity rows. -/
+theorem admitted_encoding_faithful {α : Type} [DecidableEq α]
+    (domain : List α) (arity : Nat) (left right : List (List α))
+    (leftValid : ∀ row ∈ left, admitted domain arity row)
+    (rightValid : ∀ row ∈ right, admitted domain arity row) :
+    encode domain arity left = encode domain arity right ↔
+    ∀ row, row ∈ left ↔ row ∈ right := by
+  rw [encode_equal_iff]
+  constructor
+  · intro same row
+    constructor
+    · intro member
+      exact (same row (leftValid row member)).mp member
+    · intro member
+      exact (same row (rightValid row member)).mpr member
+  · intro same row _
+    exact same row
+
+theorem union_encoding {α : Type} [DecidableEq α]
+    (domain : List α) (arity : Nat) (left right : List (List α)) (i : Fin (domain.length ^ arity)) :
+    encode domain arity (left ++ right) i =
+      (encode domain arity left i || encode domain arity right i) := by
+  simp [encode, List.mem_append]
+
+theorem empty_relation_encoding {α : Type} [DecidableEq α] (domain : List α) (arity : Nat) :
+    encode domain arity [] = fun _ => false := by
+  funext i
+  simp [encode]
+
+theorem nullary_admission {α : Type} (domain : List α) (row : List α) :
+    admitted domain 0 row ↔ row = [] := by
+  cases row <;> simp [admitted]
+
+theorem empty_domain_positive_rejects {α : Type} (arity : Nat) (row : List α) :
+    ¬ admitted ([] : List α) (arity + 1) row := by
+  rw [← tuples_membership]
+  simp [tuples]
+
+/-- Connect the concrete list universe to the existing signature height. -/
+theorem relation_universe_height {α : Type} (domain : List α) (arity : Nat) :
+    (tuples domain arity).length = FiniteSignature.height (.relation domain.length arity) := by
+  exact tuples_length domain arity
+
+theorem row_encoding_rank_bounded {α : Type} [DecidableEq α]
+    (domain : List α) (arity : Nat) (rows : List (List α)) :
+    booleanRank (encode domain arity rows) ≤
+      FiniteSignature.height (.relation domain.length arity) := by
+  exact boolean_rank_bounded (encode domain arity rows)
+
+theorem row_encoding_rank_mono {α : Type} [DecidableEq α]
+    (domain : List α) (arity : Nat) (left right : List (List α))
+    (included : ∀ row ∈ left, row ∈ right) :
+    booleanRank (encode domain arity left) ≤ booleanRank (encode domain arity right) := by
+  apply boolean_rank_mono
+  intro i member
+  simp only [encode, decide_eq_true_eq] at *
+  exact included _ member
+
+/-- An actual new admitted row increases rank; duplicates and out-of-domain
+    rows cannot be used as witnesses of semantic progress. -/
+theorem row_encoding_rank_strict {α : Type} [DecidableEq α]
+    (domain : List α) (arity : Nat) (left right : List (List α))
+    (included : ∀ row ∈ left, row ∈ right)
+    (changed : ∃ row, admitted domain arity row ∧ row ∉ left ∧ row ∈ right) :
+    booleanRank (encode domain arity left) < booleanRank (encode domain arity right) := by
+  apply boolean_rank_strict
+  · intro i member
+    simp only [encode, decide_eq_true_eq] at *
+    exact included _ member
+  · obtain ⟨row, valid, absent, present⟩ := changed
+    obtain ⟨i, hi⟩ := List.mem_iff_get.mp ((tuples_membership domain arity row).mpr valid)
+    have bound : i.val < domain.length ^ arity := by rw [← tuples_length]; exact i.isLt
+    refine ⟨⟨i.val, bound⟩, ?_, ?_⟩
+    · change decide ((tuples domain arity).get i ∈ left) = false
+      rw [hi]
+      simp [absent]
+    · change decide ((tuples domain arity).get i ∈ right) = true
+      rw [hi]
+      simp [present]
+
+end RowRepresentation
+
 end Ascent

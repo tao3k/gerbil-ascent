@@ -16,7 +16,8 @@
                  relational-program relational-admit relational-solve relational-query-name
                  relational-open-program-session relational-program-append-source!
                  relational-program-replace-source! relational-program-session-run relational-program-query)
-        (only-in :gerbil-ascent/program/scheme-checked relational-finite-source relational-finite-lattice)
+        (only-in :gerbil-ascent/program/scheme-checked
+                 relational-scalar? relational-copy-rows relational-finite-source relational-finite-lattice)
         (only-in :gerbil-ascent/program/objects gerbil-ascent-program)
         (only-in :clan/poo/object .o .ref))
 (export scheme-higher-order-test)
@@ -74,6 +75,53 @@
 
 (def scheme-higher-order-test
   (test-suite "Finite positive higher-order descriptors"
+    (test-case "scalar tags and duplicate domains preserve complete row membership"
+      (let* ((atoms '(0 #f a #\a))
+             (type (relational-relation-type 1 (append atoms atoms)))
+             (rows (map list atoms)))
+        (check-equal? (length (relational-type-right type)) 4)
+        (check-equal? (relational-type=? type (relational-relation-type 1 (reverse atoms))) #t)
+        (check-rows (solve (relational-typed-source 'tagged type (append rows rows))) rows)
+        (check-equal? (height-expression-value (relational-type-height-expression type)) 4)))
+    (test-case "checked atoms reject inexact mutable and opaque values"
+      (for-each
+       (lambda (atom)
+         (check-equal? (relational-scalar? atom) #f)
+         (check-exception (relational-relation-type 1 (list atom)) true)
+         (check-exception (relational-copy-rows (list (list atom)) 1) true))
+       (list 0.0 1/2 "a" (vector 'a) (cons 'a 'b) (lambda () 'a))))
+    (test-case "same printed fresh symbols remain distinct domain inhabitants"
+      (let* ((left (string->uninterned-symbol "same"))
+             (right (string->uninterned-symbol "same"))
+             (type (relational-relation-type 1 (list left right left)))
+             (rows (list (list left) (list right))))
+        (check-equal? (equal? left right) #f)
+        (check-equal? (length (relational-type-right type)) 2)
+        (check-rows (solve (relational-typed-source 'fresh type rows)) rows)))
+    (test-case "empty domain distinguishes false from the true nullary relation"
+      (let* ((nullary (relational-relation-type 0 '()))
+             (unary (relational-relation-type 1 '())))
+        (for-each
+         (lambda (rows)
+           (check-rows (solve (relational-typed-source 'unit nullary rows))
+                       (if (null? rows) '() '(()))))
+         '(() (()) (() ())))
+        (check-equal? (height-expression-value (relational-type-height-expression nullary)) 1)
+        (check-equal? (height-expression-value (relational-type-height-expression unary)) 0)
+        (check-exception (relational-typed-source 'invalid unary '((0))) true)
+        (check-exception (relational-typed-source 'invalid nullary '((0))) true)))
+    (test-case "typed set output retains source occurrences and charges materialization"
+      (let* ((type (relational-relation-type 1 '(0)))
+             (term (relational-typed-source 'occurrences type '((0) (0)))))
+        (let-values (((program output) (relational-typed-compile term 2 1 3)))
+          (let (result (relational-solve (relational-admit program)))
+            (check-equal? (eq? output 'occurrences) #f)
+            (check-equal? (relational-query-name result 'occurrences) '((0) (0)))
+            (check-rows (relational-query-name result output) '((0)))))
+        (let-values (((program output) (relational-typed-compile term 1 1 3)))
+          (check-exception (relational-solve (relational-admit program)) true))
+        (let-values (((program output) (relational-typed-compile term 2 1 2)))
+          (check-exception (relational-solve (relational-admit program)) true))))
     (test-case "finite height formulas match exhaustive tiny tuple and relation universes"
       (for-each
        (lambda (atoms)

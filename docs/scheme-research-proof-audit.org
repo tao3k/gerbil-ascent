@@ -310,3 +310,10 @@ benefit. Use native Scheme truth models and the existing proof suite for each
 slice. A shared final row set alone does not qualify intermediate identities,
 publication behavior, support completeness or cost. Model comprehension and
 MRR Rust integration keep their existing later gates.
+
+The subsequent [[file:scheme-compiler-proof-bridge.org][scalar/row slice]] defines =RowRepresentation.admitted=,
+=tuples= and =encode= and proves the list-to-Boolean-table interpretation laws.
+This advances the type/value package for relation rows. Runtime scalar decoding
+and equality/hash equivalence, captured closures and actual step preservation
+remain required; neither the abstract lawful-equality model nor native samples
+close those universal obligations.

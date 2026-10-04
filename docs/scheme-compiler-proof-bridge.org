@@ -298,3 +298,36 @@ Qualification binds =50c79d4= plus the published patch; subsequent certificate
 and table refactors are preserved by rebase and require exact integrated-head
 CI. No log files, model calls, performance claim or whole-repository closure
 claim belong to this receipt.
+
+* Scalar and row representation slice
+
+=FiniteHeight.RowRepresentation= now gives an explicit list-row model:
+=admitted= checks exact row length and domain membership; =tuples= enumerates
+the list universe, and =encode= maps row membership to the existing Boolean
+table of width =domain.length ^ arity=. The model's scalar constructors are
+exact integers, Booleans, symbol identities and characters, matching the
+categories admitted by =program/scheme-checked.ss=. Symbol identity is abstract;
+it is not the symbol's displayed text.
+
+The proved laws cover tuple enumeration length and admission completeness,
+domain deduplication/reordering, extensional encoding, duplicate row elimination,
+union, empty relations, nullary rows, empty positive-arity domains and relation
+rank/height correspondence. Inclusion preserves rank; adding a genuinely new
+admitted row strictly increases it. Duplicates cannot witness strict progress.
+=admitted_encoding_faithful= requires every input
+row to be admitted. An unchecked encoding observes only the declared universe;
+it must never become a runtime mechanism for silently dropping invalid rows.
+
+Native qualification adds four Cases: distinct mixed scalar categories with
+duplicate domains/rows, rejection of inexact/mutable/opaque values, two fresh
+symbols with the same printed name, and empty/nullary relation outcomes.
+These exercise actual Gerbil membership, domain hashing, lowering and solve.
+All expected complete rows are Scheme data, independent of the compiler.
+
+The mathematical =eraseDups= uses lawful decidable equality. Its equivalence
+to Gerbil's =delete-duplicates/hash= and table hashing is not a mechanized
+toolchain theorem. The native Cases discriminate that boundary on concrete
+inputs. A total native scalar decoder, full runtime equality/hash correspondence,
+descriptor/capture interpretation and actual compiler-step preservation remain
+open. This slice establishes the row interpretation laws required by those
+later refinements, without certifying arbitrary Scheme objects or callbacks.

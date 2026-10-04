@@ -50,6 +50,22 @@ lemmas. The bridge from every Scheme compiler branch to the mathematical
 semantics is an explicit implementation obligation; these lemmas do not
 prove compiler correctness or unrestricted Scheme normalization.
 
+=packages/proofs/lean/FiniteOperators.lean= now discharges the operator
+premises: union, selection, projection, join and a fixed finite mapping are
+monotone. Recursive type-indexed pointwise order admits nested arrow inputs
+and results; abstraction and application preserve that order when their
+function/body premises hold. Least fixed points are closed and fixed under
+a monotone step. Enlarging captured input enlarges the least fixed point.
+Inflationary native union admission has exactly the same closed models and
+least fixed point as the original positive step. No negation or opaque
+runtime callback is introduced into this typed vocabulary.
+
+This separates three proof obligations: typed descriptor/binder checking,
+denotational operator laws, and finite native convergence. The latter two
+have checked Lean lemmas. The Scheme lexical checker and lowering are still
+implementation code, qualified by native discriminators rather than claimed
+as a mechanically verified extraction of the Lean model.
+
 Resource exhaustion is failure, not a partial least fixed point. A finite
 semantic universe does not guarantee success under a smaller operational
 budget. Neither an absent output after failure nor a truncated derivation is

@@ -3,6 +3,34 @@
 #+SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 #+SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
+* Source-only update and diagnostic ownership
+
+The retained Session inherits admitted immutable declarations for prospective
+source snapshots. Rows are captured eagerly into private snapshot fields;
+lazy POO slots do not close over mutable pending source logs. Comparing the
+committed source snapshot does not reconstruct and revalidate a second program.
+The fresh native engine still validates materialized rows and all fact budgets.
+
+=program/admission.ss= owns replacement shape/type checks for both the atomic
+and retained paths. Invalid row diagnostics are identical before any state
+publication. =program/update-selection.ss= owns eligibility, dependency closure
+and selected native plans; the evaluator owns reuse capsules, mutable row/index
+state and execution. =program/result.ss= freezes publication observations.
+
+For a single-source replacement, an opaque callback or custom provider keeps
+the original deferred execution contract: the replacement does not silently
+finish the next run, and a zero-duration query still sees pending work. Checked
+native dependency invalidation may complete before publication. Explicit batch
+replacement remains prospective and atomic for both paths. The Rust BYODS
+lattice fixture independently checks the exact partial/resumed/full statuses;
+matching final rows alone is insufficient.
+
+The unchanged retained and 512-graph arity differential fixtures are compiled
+into the native entry. Their original stdin/row protocol and Rust expectations
+remain authoritative. The 90-second corpus deadline and 5-second progress
+watchdog remain unchanged. This avoids interpreting qualification modules for
+each fixture and exercises actual native execution of the entire corpus.
+
 * Native Session integration
 
 Completed source replacement now identifies changed relations and takes their

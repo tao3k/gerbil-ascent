@@ -14,6 +14,11 @@ against every native computation. No fixture answers enter model requests.
 
 The Gerbil compiler computes runtime import closure. Requests include complete
 ASCENT module sources and the actual task with its expected datum missing.
+The actual compiler probe is compiled into the source-bound native entry;
+each emitted dependency record follows a completed compiler computation. It
+uses the same 1G heap, 5-second real-output watchdog and 120-second module gate.
+Its completion marker follows all requested roots. Python does not infer the
+module graph or replace a failed compiler scan with a hand-written inventory.
 The installed core/types compiler interface and lowered Scheme implementation
 are included explicitly; they are not presented as the original source.
 Other framework modules are listed as assumed dependencies. The model task

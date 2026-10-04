@@ -69,7 +69,7 @@ def source_environment():
 
 
 def source_closure(imports, log):
-    command = HARNESS + ['gxi', '-:max-heap=1G,debug=q', str(ROOT/'tools/model-source-closure.ss'), *imports]
+    command = HARNESS + RUNTIME + ['--source-closure', *imports]
     with log.open('w') as output:
         process = subprocess.Popen(command, cwd=ROOT, env=source_environment(), stdin=subprocess.DEVNULL,
                                    stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, bufsize=1)

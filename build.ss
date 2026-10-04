@@ -36,6 +36,7 @@
     "program/summary"
     "program/admission"
     "program/result"
+    "program/update-selection"
     "program/evaluate"
     "program/session"
     "program/interface"

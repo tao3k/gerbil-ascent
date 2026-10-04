@@ -2,6 +2,7 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 (import (only-in :std/test check-equal? check-exception test-case test-suite)
+        (only-in :gerbil/runtime/gambit call-with-output-string display-exception)
         (only-in :clan/poo/object .o .ref)
         (only-in :gerbil-ascent/program/scheme-language relational-program)
         (only-in :gerbil-ascent/program/objects gerbil-ascent-program gerbil-ascent-guard)
@@ -114,6 +115,17 @@
     (test-case "failed prospective deletion transaction retains completed state"
       (let (session (gerbil-ascent-open-session (path-program '((0 1) (1 2)))))
         (let (old (gerbil-ascent-session-run session))
+          (for-each
+           (lambda (replace)
+             (let (diagnostic
+                   (with-catch
+                    (lambda (failure) (call-with-output-string
+                                      (lambda (port) (display-exception failure port))))
+                    (lambda () (replace) #f)))
+               (check-equal? (and (string? diagnostic)
+                                 (string-contains diagnostic "invalid ASCENT replacement source row") #t) #t)))
+           (list (lambda () (gerbil-ascent-session-replace-source! session 'edge '((0 1 2))))
+                 (lambda () (gerbil-ascent-session-replace-sources! session '((edge (0 1 2)))))))
           (check-exception (gerbil-ascent-session-replace-sources! session '((edge (0)))) true)
           (check-equal? (eq? old (gerbil-ascent-session-run session)) #t)
           (check-exception (gerbil-ascent-session-replace-sources! session '((unknown))) true)

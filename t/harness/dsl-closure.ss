@@ -30,8 +30,30 @@
 (import (only-in :gerbil-ascent/t/qualification/scheme-model-closure-test
                  scheme-model-closure-test model-closure-compute model-closure-score))
 
+
+;;; These are the unchanged Rust differential fixtures, compiled into the
+;;; native entry. The command transports stdin/rows; fixture semantics stay
+;;; Scheme-owned and Rust still checks every original expected row.
+(import (only-in (rename-in :gerbil-ascent/t/qualification/ascent-byods-session-output (main byods-session-main)) byods-session-main))
+(import (only-in (rename-in :gerbil-ascent/t/qualification/ascent-multi-source-session-output (main multi-source-session-main)) multi-source-session-main))
+(import (only-in (rename-in :gerbil-ascent/t/qualification/ascent-grouped-eqrel-session-output (main grouped-eqrel-session-main)) grouped-eqrel-session-main))
+(import (only-in (rename-in :gerbil-ascent/t/qualification/ascent-byods-lattice-session-output (main byods-lattice-session-main)) byods-lattice-session-main))
+(import (only-in (rename-in :gerbil-ascent/t/qualification/ascent-arity-repetition-output (main arity-repetition-main)) arity-repetition-main))
+(import (only-in (rename-in :gerbil-ascent/tools/model-source-closure
+                           (main source-closure-main)) source-closure-main))
+
 (def (main . args)
   (match args
+    (["--source-closure" . roots] (apply source-closure-main roots) (exit 0))
+    (["--oracle" name]
+     (case (string->symbol name)
+       ((byods-session) (byods-session-main))
+       ((multi-source-session) (multi-source-session-main))
+       ((grouped-eqrel-session) (grouped-eqrel-session-main))
+       ((byods-lattice-session) (byods-lattice-session-main))
+       ((arity-repetition) (arity-repetition-main))
+       (else (error "unknown native differential fixture" name)))
+     (exit 0))
     (["--study-compute" id] (model-closure-compute id) (exit 0))
     (["--study-score" id path] (model-closure-score id path) (exit 0))
     (else (run-suites args))))

@@ -161,7 +161,15 @@
            "t/qualification/scheme-library-contract-test.ss"
            "t/qualification/scheme-operator-retained-test.ss"
            "t/qualification/ascent-finite-evidence-test.ss"
-           "t/qualification/ascent-positive-nonmembership-test.ss"))
+           "t/qualification/ascent-positive-nonmembership-test.ss"
+           "t/qualification/ascent-byods-lattice-fixture.ss"
+           "t/qualification/ascent-session-corpus.ss"
+           "t/qualification/ascent-byods-session-output.ss"
+           "t/qualification/ascent-multi-source-session-output.ss"
+           "t/qualification/ascent-grouped-eqrel-session-output.ss"
+           "t/qualification/ascent-byods-lattice-session-output.ss"
+           "t/qualification/ascent-arity-repetition-output.ss"
+           "tools/model-source-closure.ss"))
         ;; Output-dir precedence binds the executable to this current Library,
         ;; even when GERBIL_PATH also contains an older installed ASCENT.
         (let ((source "t/harness/dsl-closure.ss")
@@ -180,6 +188,15 @@
                    (displayln "RECOVER-OBJECT-LOCK " name)
                    (delete-file (path-expand name static-dir))))
                (directory-files static-dir))))
+          ;; gxc also locks the executable stub in the cache root. These two
+          ;; exact paths belong to this entry, not another compiler or prefix.
+          (for-each
+           (lambda (name)
+             (let (path (path-expand name test-cache))
+               (when (file-exists? path)
+                 (displayln "RECOVER-ENTRY-OBJECT-LOCK " name)
+                 (delete-file path))))
+           '("dsl-closure__exe.o.lock" "dsl-closure__exe_.o.lock"))
           ;; An old executable must never survive a no-op/failed compilation.
           (let (binary (path-expand "dsl-closure" test-cache))
             (when (file-exists? binary) (delete-file binary)))

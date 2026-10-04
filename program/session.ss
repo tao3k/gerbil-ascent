@@ -5,9 +5,9 @@
 ;;; Retained source snapshots, failure recovery, and timeout admission.
 (import (only-in :clan/poo/object .o .ref)
         (only-in :clan/poo/mop validate)
-        (only-in "objects.ss" gerbil-ascent-program gerbil-ascent-relation
-                 gerbil-ascent-lattice)
         (only-in "types.ss" GerbilAscentSessionContract)
+        (only-in "admission.ss" gerbil-ascent-check-replacement-rows!)
+        (only-in "update-selection.ss" gerbil-ascent-update-selection)
         (only-in "evaluate.ss" gerbil-ascent-make-engine gerbil-ascent-make-updated-engine)
         (only-in :gerbil-ascent/table/storage
                  gerbil-ascent-set-storage-provider))
@@ -88,29 +88,16 @@
         (let (slot (hash-get positions name))
           (unless slot (error "unknown ASCENT relation" name))
           (- slot 1))))
+    ;; Source-only snapshots retain the admitted immutable declarations.
+    ;; Replacement checks shape/types before publication, and the fresh native
+    ;; engine rechecks every materialized row and all original fact budgets.
     (def (snapshot-program rows)
-      (gerbil-ascent-program
-       (map (lambda (relation source-state)
-              (let* ((source-rows
-                      (append (car source-state)
-                              (reverse (cdr source-state))))
-                     (name (.ref relation 'name))
-                     (arity (.ref relation 'arity))
-                     (index (.ref relation 'index-provider))
-                     (types (.ref relation 'field-predicates)))
-                (if (eq? (.ref relation 'storage-kind) 'lattice)
-                  (gerbil-ascent-lattice name arity source-rows
-                                         (.ref relation 'join) index types
-                                         (.ref relation 'checked-operator)
-                                         (.ref relation 'checked-domain))
-                  (gerbil-ascent-relation name arity source-rows index
-                                          (.ref relation 'storage-provider)
-                                          types (.ref relation 'checked-domain)))))
-            relations (vector->list rows))
-       (.ref program 'rules)
-       (.ref program 'max-input-facts)
-       (.ref program 'max-derived-facts)
-       (.ref program 'max-output-facts)))
+      (let (next-relations
+            (map (lambda (relation source-state)
+                   (let (source-rows (append (car source-state) (reverse (cdr source-state))))
+                     (.o (:: @ relation) rows: source-rows)))
+                 relations (vector->list rows)))
+        (.o (:: @ program) relations: next-relations)))
     (def (restore! rows)
       (set! engine #f)
       (let* ((candidate (snapshot-program rows))
@@ -174,7 +161,15 @@
     (def (replace-source! name rows)
       (when partial?
         (error "finish ASCENT partial run before changing sources"))
-      (if (and initialized? clean?)
+      ;; Opaque providers retain the deferred single-source update contract:
+      ;; their next zero-duration run must observe unfinished work. Only the
+      ;; checked native subset can publish dependency invalidation here.
+      (if (and initialized? clean?
+               (let* ((prospective (snapshot-copy committed))
+                      (index (position-of name)))
+                 (vector-set! prospective index (cons rows []))
+                 (gerbil-ascent-update-selection
+                  committed (snapshot-program prospective) engine-analysis)))
           (begin (replace-sources! (list (cons name rows))) (void))
           (let* ((index (position-of name))
              (source-state (vector-ref pending index))
@@ -210,12 +205,15 @@
              (when (hash-get seen name)
                (error "duplicate batch source" name))
              (hash-put! seen name #t)
+             (gerbil-ascent-check-replacement-rows!
+              name (cdr replacement) (vector-ref (vector-ref engine-schema 2) index)
+              (vector-ref (vector-ref engine-schema 3) index))
              (vector-set! prospective index
                           (cons (cdr replacement) []))))
          replacements)
         (let* ((candidate (snapshot-program prospective))
                (fresh (gerbil-ascent-make-updated-engine
-                       (snapshot-program committed) candidate last-result
+                       committed candidate last-result
                        engine-analysis engine-schema measure-rule-times?))
                (result ((.ref fresh '.run))))
           (unless (.ref result 'finished)

@@ -80,7 +80,8 @@ pub(super) fn scheme_output(recipe: &str, request: &str) -> String {
         .expect("collect Scheme fixture output");
     assert!(
         output.status.success(),
-        "Scheme fixture failed: {}",
+        "Scheme fixture failed:\nstdout:\n{}\nstderr:\n{}",
+        String::from_utf8_lossy(&output.stdout),
         String::from_utf8_lossy(&output.stderr)
     );
     String::from_utf8(output.stdout).expect("Scheme output is UTF-8")

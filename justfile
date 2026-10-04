@@ -308,7 +308,8 @@ byods-lattice-rows:
     @timeout 90s gerbil {{ gerbil_test_runtime_options }} t/qualification/ascent-byods-lattice-output.ss
 
 byods-lattice-session-rows:
-    @timeout 90s gerbil {{ gerbil_test_runtime_options }} t/qualification/ascent-byods-lattice-session-output.ss
+    @python3 tools/dsl-closure-artifact.py check >/dev/null
+    @python3 t/harness/watch_output.py -- timeout 90s .cache/ascent/native-library/dsl-closure {{ gerbil_test_runtime_options }} --oracle byods-lattice-session
 
 byods-lattice-scale-rows:
     @timeout 90s gerbil {{ gerbil_test_runtime_options }} t/qualification/ascent-byods-lattice-scale-output.ss
@@ -413,7 +414,8 @@ scc-order-rows:
     @timeout 90s gerbil {{ gerbil_test_runtime_options }} t/qualification/ascent-scc-order-output.ss
 
 arity-repetition-rows:
-    @timeout 90s gerbil {{ gerbil_test_runtime_options }} t/qualification/ascent-arity-repetition-output.ss
+    @python3 tools/dsl-closure-artifact.py check >/dev/null
+    @python3 t/harness/watch_output.py -- timeout 90s .cache/ascent/native-library/dsl-closure {{ gerbil_test_runtime_options }} --oracle arity-repetition
 
 clause-composition-rows:
     @timeout 90s gerbil {{ gerbil_test_runtime_options }} t/qualification/ascent-clause-composition-output.ss
@@ -446,13 +448,16 @@ divisibility-lattice-rows:
     @timeout 90s gerbil {{ gerbil_test_runtime_options }} t/qualification/ascent-divisibility-lattice-output.ss
 
 multi-source-session-rows:
-    @timeout 90s gerbil {{ gerbil_test_runtime_options }} t/qualification/ascent-multi-source-session-output.ss
+    @python3 tools/dsl-closure-artifact.py check >/dev/null
+    @python3 t/harness/watch_output.py -- timeout 90s .cache/ascent/native-library/dsl-closure {{ gerbil_test_runtime_options }} --oracle multi-source-session
 
 byods-session-rows:
-    @timeout 90s gerbil {{ gerbil_test_runtime_options }} t/qualification/ascent-byods-session-output.ss
+    @python3 tools/dsl-closure-artifact.py check >/dev/null
+    @python3 t/harness/watch_output.py -- timeout 90s .cache/ascent/native-library/dsl-closure {{ gerbil_test_runtime_options }} --oracle byods-session
 
 grouped-eqrel-session-rows:
-    @timeout 90s gerbil {{ gerbil_test_runtime_options }} t/qualification/ascent-grouped-eqrel-session-output.ss
+    @python3 tools/dsl-closure-artifact.py check >/dev/null
+    @python3 t/harness/watch_output.py -- timeout 90s .cache/ascent/native-library/dsl-closure {{ gerbil_test_runtime_options }} --oracle grouped-eqrel-session
 
 oracle:
     #!/usr/bin/env bash
@@ -689,7 +694,12 @@ _test-temporal:
 
 # Compile outside the runtime gate; std/make checks current source dependencies.
 build-dsl-closure:
-    timeout 180s env {{ test_runner }} build-dsl-closure
+    #!/usr/bin/env bash
+    set -euo pipefail
+    export ASCENT_DSL_BUILD_TOKEN="$(python3 -c 'import uuid; print(uuid.uuid4())')"
+    export ASCENT_DSL_BUILD_STARTED="$(python3 -c 'import time; print(time.monotonic())')"
+    export GERBIL_LOADPATH="{{ justfile_directory() }}${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}"
+    timeout --signal=KILL 180s bash -e -c 'gerbil env gxi {{ gerbil_test_runtime_options }} t/harness/run.ss build-dsl-closure; python3 tools/dsl-closure-artifact.py finalize'
 
 # Run the known Suites through std/test in serial AOT processes with strict progress.
 check-dsl-closure:

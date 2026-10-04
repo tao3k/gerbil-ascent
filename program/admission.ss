@@ -4,7 +4,30 @@
 
 ;;; Initialization mutates only buffers owned by the constructing engine.
 ;;; Source multiplicity and row identity are preserved, including duplicates.
-(export gerbil-ascent-initialize-source-row!)
+(export gerbil-ascent-initialize-source-row! gerbil-ascent-check-replacement-rows!)
+
+;; : (forall (a) (-> Symbol [a] Integer (Maybe (-> a Any)) Void))
+;; gerbil-ascent-check-replacement-rows!
+;;   : (-> RelationName Rows Arity (Maybe RowChecker) Void)
+;;   | doc m%
+;;       Validate prospective source rows before any replacement state changes.
+;;       Atomic and retained updates expose the same diagnostic boundary.
+;;
+;;       # Examples
+;;
+;;       ```scheme
+;;       (gerbil-ascent-check-replacement-rows! 'edge '((0 1)) 2 #f)
+;;       ;; => validates the prospective source without publishing it
+;;       ```
+;;     %
+(def (gerbil-ascent-check-replacement-rows! name rows width check)
+  (unless (list? rows)
+    (error "invalid ASCENT replacement source rows" name rows))
+  (for-each
+   (lambda (row)
+     (unless (and (list? row) (= (length row) width))
+       (error "invalid ASCENT replacement source row" name row))
+     (when check (check row))) rows))
 
 ;; gerbil-ascent-initialize-source-row!
 ;;   : (-> Row Nat (Maybe RowChecker) Membership RowsBuffer Nat Nat Nat Nat)

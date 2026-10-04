@@ -7,7 +7,8 @@
 ;;; unchanged roots share a promise without retaining membership or index state.
 ;;; Slot zero carries the invocation deadline and is never captured by results.
 (export gerbil-ascent-publication-cache gerbil-ascent-publish-rows
-        gerbil-ascent-snapshot-rows gerbil-ascent-snapshot-sizes)
+        gerbil-ascent-snapshot-rows gerbil-ascent-snapshot-sizes
+        gerbil-ascent-result-observation)
 
 ;; gerbil-ascent-publication-cache
 ;;   : (-> Nat PublicationCache)
@@ -77,3 +78,29 @@
   (map (lambda (name rows)
          (cons name (length (gerbil-ascent-snapshot-rows rows))))
        (vector->list names) (vector->list snapshots)))
+
+;; : (forall (a) (-> (Maybe Vector) Vector (Vector [a]) (Maybe Vector) Vector))
+;; gerbil-ascent-result-observation
+;;   : (-> (Maybe AffectedRelations) Names ActiveStrata (Maybe RuleTicks) Observation)
+;;   | doc m%
+;;       Freeze execution path, reused names, plan count and observed timings.
+;;       Published metadata retains no mutable frames, ticks or prior result.
+;;
+;;       # Examples
+;;
+;;       ```scheme
+;;       (gerbil-ascent-result-observation #f '#(edge) '#(()) #f)
+;;       ;; => #(stratified-semi-naive () 0 #f)
+;;       ```
+;;     %
+(def (gerbil-ascent-result-observation affected names active rule-ticks)
+  (vector
+   (if affected 'stratified-dependency-invalidation 'stratified-semi-naive)
+   (if affected
+       (filter-map (lambda (index) (and (not (vector-ref affected index))
+                                       (vector-ref names index)))
+                   (iota (vector-length names))) [])
+   (apply + (map length (vector->list active)))
+   (and rule-ticks
+        (map (lambda (ticks) (quotient (* ticks 1000000000) (jiffies-per-second)))
+             (vector->list rule-ticks)))))

@@ -7,16 +7,19 @@
 (import (only-in :clan/poo/object .o .ref object?)
         (only-in :clan/poo/mop validate)
         (only-in :std/iter for iter Iterator &Iterator-next!)
-        (only-in "admission.ss" gerbil-ascent-initialize-source-row!)
+        (only-in "admission.ss" gerbil-ascent-initialize-source-row!
+                 gerbil-ascent-check-replacement-rows!)
         (only-in "result.ss" gerbil-ascent-publication-cache
-                 gerbil-ascent-publish-rows gerbil-ascent-snapshot-rows gerbil-ascent-snapshot-sizes)
+                 gerbil-ascent-publish-rows gerbil-ascent-snapshot-rows gerbil-ascent-snapshot-sizes
+                 gerbil-ascent-result-observation)
         (only-in "planning.ss" gerbil-ascent-prepare-program)
         (only-in "positive.ss" gerbil-ascent-positive-plan
                  gerbil-ascent-run-positive-plan! gerbil-ascent-index-key
                  gerbil-ascent-index-key/terms
                  gerbil-ascent-emit-heads!)
         (only-in "types.ss" GerbilAscentSessionContract)
-        (only-in "scheme-checked.ss" relational-stable-procedure?)
+        (only-in "update-selection.ss" gerbil-ascent-update-selection
+                 gerbil-ascent-active-prefix gerbil-ascent-update-active-plans)
         (only-in "analysis.ss" gerbil-ascent-program-analysis
                  gerbil-ascent-program-schema)
         (only-in "funs.ss" gerbil-ascent-lattice-feeds-relation?
@@ -46,64 +49,25 @@
 ;;; to this module; checked Session owns the previous and prospective inputs.
 (defstruct native-reuse (result affected))
 
+;; gerbil-ascent-make-updated-engine
+;;   : (-> SourceSnapshot Program CompletedResult Analysis Schema Boolean Engine)
+;;   | doc m%
+;;       Select dependency invalidation for a completed retained update.
+;;       The reuse capsule remains private to this evaluator.
+;;
+;;       # Examples
+;;
+;;       ```scheme
+;;       (gerbil-ascent-make-updated-engine old new result analysis schema #f)
+;;       ;; => a fresh prospective engine with independently owned state
+;;       ```
+;;     %
 (def (gerbil-ascent-make-updated-engine previous candidate completed
                                       analysis schema measure-rule-times?)
   (unless (.ref completed 'finished) (error "cannot reuse a partial closure"))
-  (let* ((relations (.ref candidate 'relations))
-         (old-relations (.ref previous 'relations))
-         (plans (vector-ref analysis 2))
-         (count (length relations))
-         (affected (make-vector count #f)))
-    (def (pure-terms? terms)
-      (andmap (lambda (term) (memq (.ref term 'kind) '(variable wildcard literal))) terms))
-    (def (stable-clause? clause)
-      (case (.ref clause 'ascent-clause-kind)
-        ((atom negation) (pure-terms? (.ref clause 'terms)))
-        ((aggregate) (and (pure-terms? (.ref clause 'terms))
-                          (not (.ref clause 'output-pattern))
-                          (relational-stable-procedure? (.ref clause 'aggregate))))
-        ((guard) (relational-stable-procedure? (.ref clause 'predicate)))
-        ((binding) (relational-stable-procedure? (.ref clause 'compute)))
-        (else #f)))
-    (let (eligible?
-          (and (= count (length old-relations))
-               (andmap (lambda (relation)
-                         (if (eq? (.ref relation 'storage-kind) 'lattice)
-                             (relational-stable-procedure? (.ref relation 'join))
-                             (eq? (.ref relation 'storage-provider)
-                                  gerbil-ascent-set-storage-provider))) relations)
-               (andmap (lambda (rule)
-                         (and (andmap (lambda (head) (pure-terms? (.ref head 'terms)))
-                                      (.ref rule 'heads))
-                              (andmap stable-clause? (.ref rule 'body))))
-                       (.ref candidate 'rules))))
-      (if (not eligible?)
-          (gerbil-ascent-make-engine candidate #t analysis schema measure-rule-times?)
-          (begin
-            (for-each
-             (lambda (old new index)
-               (unless (equal? (.ref old 'rows) (.ref new 'rows))
-                 (vector-set! affected index #t)))
-             old-relations relations (iota count))
-            ;; Includes positive, negative, aggregate and lattice dependencies.
-            ;; No relation outside this transitive closure reads changed input.
-            (let close ()
-              (let (changed? #f)
-                (for-each
-                 (lambda (rule)
-                   (when (ormap (lambda (clause)
-                                  (and (memq (vector-ref clause 0) '(atom negation aggregate))
-                                       (vector-ref affected (vector-ref (vector-ref clause 1) 0))))
-                                (vector-ref rule 1))
-                     (for-each
-                      (lambda (head)
-                        (let (index (vector-ref head 0))
-                          (unless (vector-ref affected index)
-                            (vector-set! affected index #t) (set! changed? #t))))
-                      (vector-ref rule 0)))) plans)
-                (when changed? (close))))
-            (gerbil-ascent-make-engine candidate #t analysis schema measure-rule-times? #f
-                                      (make-native-reuse completed affected)))))))
+  (let (affected (gerbil-ascent-update-selection previous candidate analysis))
+    (gerbil-ascent-make-engine candidate #t analysis schema measure-rule-times? #f
+                              (and affected (make-native-reuse completed affected)))))
 
 ;; gerbil-ascent-make-engine
 ;;   : (-> Program Boolean (Maybe Analysis) (Maybe Schema) Boolean Engine)
@@ -339,16 +303,6 @@
             (seed (+ index 1)))))
       ;; Engine-local metadata keeps the shared immutable analysis layout
       ;; unchanged, including when a retained engine reuses that analysis.
-      (def (prunable-prefix body)
-        (if (and (pair? body) (eq? (vector-ref (car body) 0) 'atom))
-          (let (atom (vector-ref (car body) 1))
-            (cons (vector-ref atom 0)
-                  (if (and (null? (vector-ref atom 2))
-                           (andmap (lambda (term)
-                                     (eq? (car term) 'variable))
-                                   (vector-ref atom 1)))
-                    (prunable-prefix (cdr body)) [])))
-          []))
       (let* ((analysis
               ;; Source-only replacement preserves declarations and rules.
               ;; Its session reuses this immutable rule plan while the fresh
@@ -371,30 +325,15 @@
                           (vector (vector-ref rule 0) (vector-ref rule 1)
                                   (vector-ref rule 2) (vector-ref rule 3)
                                   (list->vector
-                                   (prunable-prefix (vector-ref rule 1)))
+                                   (gerbil-ascent-active-prefix (vector-ref rule 1)))
                                   plan
                                   (and plan (make-vector (vector-ref plan 2) #f)))))
                       rules))
                (vector-ref analysis 4)))
              (active-by-stratum
               (if (not reuse) full-active-by-stratum
-                  (vector-map
-                   (lambda (rules)
-                     (filter-map
-                      (lambda (rule)
-                        (let (heads (filter (lambda (head)
-                                             (vector-ref (native-reuse-affected reuse)
-                                                         (vector-ref head 0)))
-                                           (vector-ref rule 0)))
-                          (and (pair? heads)
-                               (if (= (length heads) (length (vector-ref rule 0))) rule
-                                   (let* ((raw (vector heads (vector-ref rule 1)
-                                                       (vector-ref rule 2) (vector-ref rule 3)))
-                                          (plan (gerbil-ascent-positive-plan raw)))
-                                     (vector heads (vector-ref rule 1) (vector-ref rule 2)
-                                             (vector-ref rule 3) (vector-ref rule 4) plan
-                                             (and plan (make-vector (vector-ref plan 2) #f)))))))) rules))
-                   full-active-by-stratum)))
+                  (gerbil-ascent-update-active-plans full-active-by-stratum
+                                                     (native-reuse-affected reuse))))
              (highest-stratum (- (vector-length active-by-stratum) 1))
              (lattice-feeds-relation?
               (and session?
@@ -825,23 +764,16 @@
                  (if (vector? deadline)
                      (gerbil-ascent-publish-rows all deadline)
                      (vector-map (lambda (rows) (reverse rows)) all)))
-                (path (if reuse 'stratified-dependency-invalidation 'stratified-semi-naive))
-                (reused-names
-                 (if reuse (filter-map (lambda (index)
-                                         (and (not (vector-ref (native-reuse-affected reuse) index))
-                                              (vector-ref names index))) (iota count)) []))
-                (selected-count (apply + (map length (vector->list active-by-stratum))))
-                (timings (and rule-ticks
-                              (map (lambda (ticks)
-                                     (quotient (* ticks 1000000000) (jiffies-per-second)))
-                                   (vector->list rule-ticks)))))
+                (observation
+                 (gerbil-ascent-result-observation
+                  (and reuse (native-reuse-affected reuse)) names active-by-stratum rule-ticks)))
            (set! last-result
              (.o (relation-names (vector->list names))
                  (finished complete?)
-                 (evaluation-path path)
-                 (reused-relations reused-names)
-                 (active-rule-count selected-count)
-                 (rule-time-nanoseconds timings)
+                 (evaluation-path (vector-ref observation 0))
+                 (reused-relations (vector-ref observation 1))
+                 (active-rule-count (vector-ref observation 2))
+                 (rule-time-nanoseconds (vector-ref observation 3))
                  (relation-sizes (lambda () (gerbil-ascent-snapshot-sizes names snapshots)))
                  (rows-of (lambda (name)
                             (gerbil-ascent-snapshot-rows
@@ -1006,15 +938,8 @@
                 (error "ASCENT session must run before source updates"))
               (let* ((index (position-of name))
                      (width (vector-ref arity index)))
-                (unless (list? rows)
-                  (error "invalid ASCENT replacement source rows" name rows))
-                (for-each
-                 (lambda (row)
-                   (unless (and (list? row) (= (length row) width))
-                     (error "invalid ASCENT replacement source row" name row))
-                   (let (check (vector-ref field-checkers index))
-                     (when check (check row))))
-                 rows)
+                (gerbil-ascent-check-replacement-rows!
+                 name rows width (vector-ref field-checkers index))
                 (let (next-count
                       (+ (- source-count (length (source-rows-at index)))
                          (length rows)))

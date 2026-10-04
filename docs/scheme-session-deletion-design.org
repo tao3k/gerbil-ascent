@@ -17,13 +17,13 @@ publication. =program/update-selection.ss= owns eligibility, dependency closure
 and selected native plans; the evaluator owns reuse capsules, mutable row/index
 state and execution. =program/result.ss= freezes publication observations.
 
-For a single-source replacement, an opaque callback or custom provider keeps
-the original deferred execution contract: the replacement does not silently
-finish the next run, and a zero-duration query still sees pending work. Checked
-native dependency invalidation may complete before publication. Explicit batch
-replacement remains prospective and atomic for both paths. The Rust BYODS
-lattice fixture independently checks the exact partial/resumed/full statuses;
-matching final rows alone is insufficient.
+Every single-source replacement keeps the original committed-round execution
+contract, including a zero-duration query of pending work. Explicit batch
+replacement owns prospective atomic publication and checked native dependency
+invalidation; the retained operator facade uses that batch path. Recovery of an
+accepted source snapshot also restores a completed result before declaring the
+Session clean. The original timeout Suite and Rust BYODS lattice fixture check
+exact partial/resumed/full statuses; matching final rows alone is insufficient.
 
 The unchanged retained and 512-graph arity differential fixtures are compiled
 into the native entry. Their original stdin/row protocol and Rust expectations

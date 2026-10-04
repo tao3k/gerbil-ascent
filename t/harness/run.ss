@@ -156,6 +156,7 @@
            "t/qualification/scheme-provenance-graph-test.ss"
            "t/qualification/scheme-higher-order-test.ss"
     "t/qualification/scheme-session-deletion-test.ss"
+    "t/qualification/ascent-timeout-test.ss"
     "t/qualification/scheme-stratified-provenance-test.ss"
     "t/qualification/scheme-model-closure-test.ss"
            "t/qualification/scheme-operator-test.ss"

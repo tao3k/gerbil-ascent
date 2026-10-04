@@ -14,6 +14,7 @@
         (only-in :gerbil-ascent/t/qualification/ascent-finite-evidence-test ascent-finite-evidence-test)
         (only-in :gerbil-ascent/t/qualification/ascent-positive-nonmembership-test ascent-positive-nonmembership-test))
 (export main)
+(import (only-in :gerbil-ascent/t/qualification/ascent-timeout-test ascent-timeout-test))
 
 (import (only-in :gerbil-ascent/t/qualification/scheme-provenance-graph-test
                  scheme-provenance-graph-test))
@@ -65,6 +66,7 @@
                 (cons "t/qualification/scheme-provenance-graph-test.ss" scheme-provenance-graph-test)
                 (cons "t/qualification/scheme-higher-order-test.ss" scheme-higher-order-test)
                 (cons "t/qualification/scheme-session-deletion-test.ss" scheme-session-deletion-test)
+                (cons "t/qualification/ascent-timeout-test.ss" ascent-timeout-test)
                 (cons "t/qualification/scheme-stratified-provenance-test.ss" scheme-stratified-provenance-test)
                 (cons "t/qualification/scheme-model-closure-test.ss" scheme-model-closure-test)
                 (cons "t/qualification/scheme-operator-test.ss" scheme-operator-test)

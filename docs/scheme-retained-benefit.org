@@ -116,9 +116,22 @@ candidate construction remains excluded from its solve control.
 
 * Scope and remaining acceptance
 
+The user's build-policy correction is recorded in the
+[[file:evidence/scheme-build-activity-20261004/receipt.json][activity-supervised build receipt]]. Source 99208d7 built in 297.47 seconds
+with exit 0 and completed artifact binding. The process snapshot observed four
+concurrent gsc processes with GERBIL_BUILD_CORES=4. This supersedes the build
+gate failure for that source; it does not retroactively accept earlier killed
+builds or establish a concurrency speedup. Dependency
+initialization and linking include serial phases even with parallel objects.
+The same artifact subsequently passed all twelve native Suites and 127 Cases,
+with twelve MODULE-OK/HARNESS-OK/final OK markers and exit 0. This includes the
+24 model-task native preflight Cases. The three-arm measurement then failed
+the unchanged five-second output gate inside its first retained timing batch,
+after the fresh arm completed; no completed group or distribution is accepted.
+
 The [[file:evidence/scheme-retained-transition-20261004/receipt.json][latest transition receipt]] records the integration of concurrent source
-7e0a060 and all rejected build/progress attempts. Its current three-arm entry
-is not accepted: latest-source compilation reached the unchanged 180-second
+7e0a060 and all rejected build/progress attempts. Its three-arm entry at that
+historical source was not accepted: compilation reached the then-active 180-second
 deadline. A prior pre-integration build completed in 126.06 seconds, but its
 measurement subsequently failed the five-second startup progress bound. The
 entry now reports only completed declarations, solves and timed arms; current

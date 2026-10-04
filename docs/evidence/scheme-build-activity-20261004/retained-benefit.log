@@ -1,0 +1,22 @@
+DSL-ARTIFACT-VERIFIED b333c7ab159d106daf2a6567a40fa7fe937487302ca24829ff5d1434b49b5733
+BENEFIT-DECLARED edges=12
+BENEFIT-DECLARED edges=12
+BENEFIT-INITIALIZED independent edges=12 group=0 instance=0
+BENEFIT-INITIALIZED independent edges=12 group=0 instance=1
+BENEFIT-INITIALIZED independent edges=12 group=0 instance=2
+BENEFIT-INITIALIZED independent edges=12 group=0 instance=3
+BENEFIT-INITIALIZED independent edges=12 group=0 instance=4
+BENEFIT-INITIALIZED independent edges=12 group=0 instance=5
+BENEFIT-INITIALIZED independent edges=12 group=0 instance=6
+BENEFIT-INITIALIZED independent edges=12 group=0 instance=7
+BENEFIT-INITIALIZED independent edges=12 group=0 instance=8
+BENEFIT-INITIALIZED independent edges=12 group=0 instance=9
+BENEFIT-INITIALIZED independent edges=12 group=0 instance=10
+BENEFIT-INITIALIZED independent edges=12 group=0 instance=11
+BENEFIT-INITIALIZED independent edges=12 group=0 instance=12
+BENEFIT-INITIALIZED independent edges=12 group=0 instance=13
+BENEFIT-INITIALIZED independent edges=12 group=0 instance=14
+BENEFIT-INITIALIZED independent edges=12 group=0 instance=15
+BENEFIT-MEASURED independent edges=12 group=0 arm=fresh
+[progress-watchdog] FAIL: no command output for 5s
+error: recipe `check-retained-benefit` failed with exit code 124

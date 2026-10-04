@@ -1,0 +1,132 @@
+{
+  "configuredCores": 4,
+  "processGroup": 55965,
+  "processes": [
+    {
+      "pid": 55965,
+      "parent": 55963,
+      "cpuPercent": 0.0,
+      "rssKiB": 7008,
+      "executable": "bash"
+    },
+    {
+      "pid": 55966,
+      "parent": 55965,
+      "cpuPercent": 0.0,
+      "rssKiB": 932288,
+      "executable": "/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/current/bin/gxi"
+    },
+    {
+      "pid": 59953,
+      "parent": 55966,
+      "cpuPercent": 0.0,
+      "rssKiB": 103024,
+      "executable": "/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/current/bin/gsc"
+    },
+    {
+      "pid": 60208,
+      "parent": 59953,
+      "cpuPercent": 0.0,
+      "rssKiB": 2608,
+      "executable": "/bin/sh"
+    },
+    {
+      "pid": 60298,
+      "parent": 60208,
+      "cpuPercent": 0.0,
+      "rssKiB": 3136,
+      "executable": "/opt/homebrew/bin/gcc-16"
+    },
+    {
+      "pid": 60299,
+      "parent": 60298,
+      "cpuPercent": 13.9,
+      "rssKiB": 179904,
+      "executable": "/opt/homebrew/Cellar/gcc/16.2.0/bin/../libexec/gcc/aarch64-apple-darwin25/16/cc1"
+    },
+    {
+      "pid": 60302,
+      "parent": 60298,
+      "cpuPercent": 0.0,
+      "rssKiB": 33664,
+      "executable": "/nix/store/6adskryjj6g2p508xjxp2x4iwyy15gsr-clang-21.1.8/bin/clang"
+    },
+    {
+      "pid": 60503,
+      "parent": 55966,
+      "cpuPercent": 0.0,
+      "rssKiB": 55264,
+      "executable": "/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/current/bin/gsc"
+    },
+    {
+      "pid": 60741,
+      "parent": 60503,
+      "cpuPercent": 0.0,
+      "rssKiB": 2688,
+      "executable": "/bin/sh"
+    },
+    {
+      "pid": 60831,
+      "parent": 60741,
+      "cpuPercent": 0.0,
+      "rssKiB": 3120,
+      "executable": "/opt/homebrew/bin/gcc-16"
+    },
+    {
+      "pid": 60833,
+      "parent": 60831,
+      "cpuPercent": 13.6,
+      "rssKiB": 174960,
+      "executable": "/opt/homebrew/Cellar/gcc/16.2.0/bin/../libexec/gcc/aarch64-apple-darwin25/16/cc1"
+    },
+    {
+      "pid": 60836,
+      "parent": 60831,
+      "cpuPercent": 0.0,
+      "rssKiB": 33696,
+      "executable": "/nix/store/6adskryjj6g2p508xjxp2x4iwyy15gsr-clang-21.1.8/bin/clang"
+    },
+    {
+      "pid": 60868,
+      "parent": 55966,
+      "cpuPercent": 0.0,
+      "rssKiB": 51552,
+      "executable": "/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/current/bin/gsc"
+    },
+    {
+      "pid": 60883,
+      "parent": 60868,
+      "cpuPercent": 0.0,
+      "rssKiB": 2688,
+      "executable": "/bin/sh"
+    },
+    {
+      "pid": 60978,
+      "parent": 60883,
+      "cpuPercent": 0.0,
+      "rssKiB": 3120,
+      "executable": "/opt/homebrew/bin/gcc-16"
+    },
+    {
+      "pid": 60979,
+      "parent": 60978,
+      "cpuPercent": 7.8,
+      "rssKiB": 123984,
+      "executable": "/opt/homebrew/Cellar/gcc/16.2.0/bin/../libexec/gcc/aarch64-apple-darwin25/16/cc1"
+    },
+    {
+      "pid": 60982,
+      "parent": 60978,
+      "cpuPercent": 0.0,
+      "rssKiB": 33616,
+      "executable": "/nix/store/6adskryjj6g2p508xjxp2x4iwyy15gsr-clang-21.1.8/bin/clang"
+    },
+    {
+      "pid": 61390,
+      "parent": 55966,
+      "cpuPercent": 13.8,
+      "rssKiB": 61936,
+      "executable": "/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/current/bin/gsc"
+    }
+  ]
+}

@@ -1,0 +1,50 @@
+#+TITLE: Native dependency invalidation and atomic deletion
+#+AUTHOR: tao3k team
+#+SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+#+SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+* Native Session integration
+
+Completed source replacement now identifies changed relations and takes their
+transitive downstream dependency closure over the native plan. Positive atoms,
+negation, reductions and lattice projections all participate. The affected
+relations, including recursive components, start from prospective source facts;
+the native stratified evaluator computes their new least closure. Independent
+completed relations seed the new engine. Candidate replay is not the Session's
+query authority. Publication remains atomic and failed updates retain the
+previous complete result and input.
+
+This is relation-level invalidation, with complete rederivation of affected
+components. The finer grounded DRed kernel remains a separate checked support
+facility. Neither algorithm keeps an unfounded cycle alive after its last base
+support is removed. A fully connected dependency graph may require all rules;
+no universal deletion speedup is asserted.
+
+Only immutable atom terms and procedures constructed by the closed Scheme
+operator/reducer/lattice builders justify reuse. The native implementation
+records those procedures in a private weak registry. A descriptor attached to
+an arbitrary callback does not qualify it. Opaque generators, callbacks,
+patterns and custom storage providers use full prospective recomputation.
+
+The complete rule workspace is restored after initial update publication, so
+later insertion can affect a formerly independent component. Source logs keep
+actual source facts, rather than promoting reused derived rows into inputs.
+Result path, selected rule count and timing values are frozen at publication;
+they cannot change when the engine restores its workspace or accepts an append.
+
+* Correctness argument
+
+For an independent relation, none of its rule dependencies transitively reads a
+changed source. Its inputs and completed lower strata are unchanged. Induction
+over strata, with a least fixed point within each positive component, therefore
+preserves its completed rows. Invalidated components receive only current source
+facts plus independently unchanged upstream closures. Native rederivation then
+agrees with a fresh solve, including removal-driven additions through negation
+and changes to exact reduction groups and joined lattice values.
+
+The qualification compares 64 initial three-node graphs and 192 withdrawals
+against independent matrix closure and fresh native solves. Separate Cases
+check cyclic support removal, negation, aggregation, lattice retraction,
+failed publication, callback spoofing and insertion after a deletion. The
+independent branch fixture selects two of three native rule plans for deletion;
+this is evidence of skipped rule work, not a wall-time performance claim.

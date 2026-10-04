@@ -46,6 +46,7 @@
     "candidate/funs"
     "candidate/provenance"
     "candidate/provenance-graph"
+   "candidate/stratified-provenance"
     "candidate/nonmembership"
     "candidate/finite-evidence"
     "candidate/stratified-proof"

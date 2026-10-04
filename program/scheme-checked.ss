@@ -19,7 +19,17 @@
         relational-finite-view relational-captured-value
         relational-term-fingerprint relational-reducer
         relational-operator-literal relational-operand-variables
-        relational-where relational-compute)
+        relational-where relational-compute relational-stable-procedure?)
+
+(def +stable-procedures+
+  (make-hash-table test: eq? weak-keys: #t lock: (make-mutex)))
+
+;;; Only procedures produced by these closed constructors may justify reuse.
+;;; A caller-supplied descriptor on an opaque callback is not a semantic seal.
+(def (relational-stable procedure)
+  (hash-put! +stable-procedures+ procedure #t) procedure)
+(def (relational-stable-procedure? procedure)
+  (and (procedure? procedure) (hash-get +stable-procedures+ procedure) #t))
 
 ;;; The checked language admits only scalar atoms with stable equality and
 ;;; hash behavior. Copy list spines before a source or mapping retains rows.
@@ -100,6 +110,7 @@
 ;;; Lattice joins are chosen by a closed descriptor and rebuilt during
 ;;; admission. The last column is an exact integer; keys stay scalar.
 (def (relational-lattice-join mode)
+  (relational-stable
   (case mode
     ((max)
      (lambda (left right)
@@ -111,7 +122,7 @@
        (unless (and (exact-integer? left) (exact-integer? right))
          (error "min lattice needs exact integer values"))
        (min left right)))
-    (else (error "unknown checked lattice join" mode))))
+    (else (error "unknown checked lattice join" mode)))))
 
 (def (relational-checked-lattice name arity rows mode)
   (unless (and (exact-integer? arity) (> arity 0) (list? rows))
@@ -208,6 +219,7 @@
 ;;; their calling convention once; literal-only operations still execute at
 ;;; row time so numeric errors retain their original evaluation boundary.
 (def (relational-operator-call operation-procedure operands)
+  (relational-stable
   (match operands
     ([operand]
      (if (eq? (vector-ref operand 0) 'variable)
@@ -225,7 +237,7 @@
            (checked-call (b) (operation-procedure a b))
            (let (b (vector-ref right 1))
              (checked-call () (operation-procedure a b)))))))
-    (_ (error "unsupported relational operator arity"))))
+    (_ (error "unsupported relational operator arity")))))
 
 (def (relational-term-fingerprint terms)
   (map (lambda (term)
@@ -235,6 +247,7 @@
 ;;; Fixed reducers consume a completed lower stratum. A procedure stored
 ;;; in a caller-owned Aggregate is never accepted on its own authority.
 (def (relational-reducer-procedure mode inputs)
+  (relational-stable
   (case mode
     ((count)
      (unless (null? inputs)
@@ -255,7 +268,7 @@
               (error "numeric reduction needs exact integer rows")))
           tuples)
          (reducer tuples))))
-    (else (error "unknown checked reducer" mode))))
+    (else (error "unknown checked reducer" mode)))))
 
 (def (relational-reducer output mode inputs relation terms)
   (gerbil-ascent-aggregate

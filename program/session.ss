@@ -8,7 +8,7 @@
         (only-in "objects.ss" gerbil-ascent-program gerbil-ascent-relation
                  gerbil-ascent-lattice)
         (only-in "types.ss" GerbilAscentSessionContract)
-        (only-in "evaluate.ss" gerbil-ascent-make-engine)
+        (only-in "evaluate.ss" gerbil-ascent-make-engine gerbil-ascent-make-updated-engine)
         (only-in :gerbil-ascent/table/storage
                  gerbil-ascent-set-storage-provider))
 
@@ -174,7 +174,9 @@
     (def (replace-source! name rows)
       (when partial?
         (error "finish ASCENT partial run before changing sources"))
-      (let* ((index (position-of name))
+      (if (and initialized? clean?)
+          (begin (replace-sources! (list (cons name rows))) (void))
+          (let* ((index (position-of name))
              (source-state (vector-ref pending index))
              (outcome
               (attempt
@@ -185,8 +187,8 @@
           (vector-set! pending index source-state)
           (recover! pending (vector-ref outcome 1)))
         (set! clean? #f)
-        (vector-ref outcome 1)))
-    ;;; Rebuild and solve a complete prospective source snapshot before
+        (vector-ref outcome 1))))
+    ;;; Invalidate dependent relations and solve a prospective source snapshot before
     ;;; changing the retained engine. A failed batch leaves both the last
     ;;; completed result and its source state available for later updates.
     (def (replace-sources! replacements)
@@ -212,9 +214,9 @@
                           (cons (cdr replacement) []))))
          replacements)
         (let* ((candidate (snapshot-program prospective))
-               (fresh (gerbil-ascent-make-engine
-                       candidate #t engine-analysis engine-schema
-                       measure-rule-times?))
+               (fresh (gerbil-ascent-make-updated-engine
+                       (snapshot-program committed) candidate last-result
+                       engine-analysis engine-schema measure-rule-times?))
                (result ((.ref fresh '.run))))
           (unless (.ref result 'finished)
             (error "batch source replacement did not complete"))

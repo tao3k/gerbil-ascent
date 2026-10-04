@@ -38,7 +38,7 @@ it does not authenticate a producer or establish real-world completeness.
 |----+-----------------+-------------------------------+---------------------|
 | R1 | Admit general higher-order operators only with explicit domains, modes, captures, effects and monotonicity/height obligations | Reject escaped dependencies and out-of-domain derived rows; establish soundness for the stated IR, then compare independent finite models | Open; C4 is the supported subset, not a generic Datafun type theorem |
 | R2 | Finite-domain declarations must validate inputs and every derived value, never silently clamp | Unbounded successor and increasing one-key lattice become admission rejection or explicit domain failure; complete in-domain closure agrees with oracle | Open; current C5 fails at operational bounds |
-| R3 | General deletion requires multi-support and cyclic support semantics | Remove one of two supports, remove final support, break a recursive cycle; compare every transaction with full recomputation and measure work | Open; C6 provides atomic recomputation only |
+| R3 | General deletion requires multi-support and cyclic support semantics | Remove one of two supports, remove final support, break a recursive cycle; compare every transaction with full recomputation and measure work | Implemented native dependency invalidation for the checked DSL; custom providers and opaque callbacks recompute |
 | R4 | Complete provenance needs an explicit recursive provenance algebra and certificate cost bounds | Independent witness enumeration on finite models, cyclic cases, tamper and size limits | Open; C7 provides bounded founded witnesses/finite replay |
 | R5 | Architecture benefit must be measured separately from correctness | Same semantics, input set, dependency versions and budgets; operation counts and time/memory distributions | Open; focused native passes establish no speedup |
 | R6 | Model validation measures comprehension of actual Scheme and reasoning, with actual native feedback after a response | Freeze tasks/source/invocation, score raw acceptance and semantic correctness separately, retain timeouts and status mismatches; compare reasoning and feedback conditions | Open; no preset semantic prompts, tutorials, answer prefills or repair loops |
@@ -84,9 +84,10 @@ and the four broader research obligations still require their own evidence.
 The [[file:scheme-support-graph-design.org][support-graph contract]] records the new complete finite positive derivation
 graph and grounded DRed kernel. Its qualification includes 64 initial graphs
 and 192 withdrawals against both independent matrix closure and native solve.
-R3's retained Session integration and stratified updates remain open; R4's
-Boolean support graph is implemented, while nonpositive and other-semiring
-provenance remain open. The Lean rank and restricted-deletion theorems provide
+Native retained Session integration now invalidates affected positive, negative,
+reduction and lattice dependencies. Complete stratified recursive graphs also
+record exact absence and reduction observations. Other numerical valuations
+and lattice-join histories remain separate algebra obligations. The Lean rank and restricted-deletion theorems provide
 checked abstract premises, not an implementation correctness certificate.
 The submitted AOT recovery head 1d0ce1eb95038696a03b743c1f41dd4b56fc23fd passed
 all four GitHub checks in [[https://github.com/tao3k/gerbil-ascent/actions/runs/37173937141][its exact-head CI run]]. This does not qualify later edits.
@@ -97,3 +98,7 @@ Finite-domain declarations survive admission and source replacement.
 Function-valued fixed points remain a scope decision. Lean now also proves
 finite Boolean-table strict rank growth and inflationary relation termination;
 the Scheme compiler-to-semantics bridge remains a separate obligation.
+
+The [[file:scheme-session-deletion-design.org][native deletion contract]] and [[file:scheme-stratified-provenance-design.org][stratified graph contract]] describe
+the new integration, independent components, callback authority, atomic
+publication, frozen result metadata and complete recursive alternatives.

@@ -164,22 +164,37 @@
           (vector-ref operand 1)))
    operands))
 
-(def (relational-operator-call operation-procedure operands)
+;;; Emit one short parameter-spine check and a direct operator application.
+;;; A variadic case-lambda fallback introduces length/apply dispatch on this
+;;; toolchain; the explicit match retains the original mismatch diagnostic.
+(defrule (checked-call (parameter ...) body)
   (lambda values
-    (let loop ((remaining operands) (bound values) (arguments []))
-      (if (null? remaining)
-        (begin
-          (unless (null? bound)
-            (error "relational operator argument mismatch"))
-          (apply operation-procedure (reverse arguments)))
-        (let (operand (car remaining))
-          (if (eq? (vector-ref operand 0) 'variable)
-            (if (pair? bound)
-              (loop (cdr remaining) (cdr bound)
-                    (cons (car bound) arguments))
-              (error "relational operator argument mismatch"))
-            (loop (cdr remaining) bound
-                  (cons (vector-ref operand 1) arguments))))))))
+    (match values
+      ([parameter ...] body)
+      (_ (error "relational operator argument mismatch")))))
+
+;;; Operator arity and operand shape have already been checked. Specialize
+;;; their calling convention once; literal-only operations still execute at
+;;; row time so numeric errors retain their original evaluation boundary.
+(def (relational-operator-call operation-procedure operands)
+  (match operands
+    ([operand]
+     (if (eq? (vector-ref operand 0) 'variable)
+       (checked-call (value) (operation-procedure value))
+       (let (value (vector-ref operand 1))
+         (checked-call () (operation-procedure value)))))
+    ([left right]
+     (if (eq? (vector-ref left 0) 'variable)
+       (if (eq? (vector-ref right 0) 'variable)
+         (checked-call (a b) (operation-procedure a b))
+         (let (b (vector-ref right 1))
+           (checked-call (a) (operation-procedure a b))))
+       (let (a (vector-ref left 1))
+         (if (eq? (vector-ref right 0) 'variable)
+           (checked-call (b) (operation-procedure a b))
+           (let (b (vector-ref right 1))
+             (checked-call () (operation-procedure a b)))))))
+    (_ (error "unsupported relational operator arity"))))
 
 (def (relational-term-fingerprint terms)
   (map (lambda (term)

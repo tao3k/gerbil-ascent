@@ -129,6 +129,64 @@ fixture thresholds and 1000-sample performance contracts. Logs remain under
 ignored =.cache/ascent/planning-*.log=. These are local receipts, not remote CI
 or a paired declaration-compilation benchmark.
 
+* Feature: checked scalar calling conventions
+
+=gerbil/compiler/optimize-call.ss:43= resolves procedure information before
+optimizing an application; its treatment of known procedures and lambda calls
+depends on actual bindings and effects. The transferable lesson is to check
+generated calls and measured behavior instead of assuming a source form creates
+the desired calling convention.
+
+The checked language supports unary =even?= and =identity=, and binary =<=
+and =+=. Their operand descriptors are validated at construction and rebuilt
+at admission. The old callback interpreted those descriptors again on every
+row, assembled a reversed argument list and invoked =apply=.
+=program/scheme-checked.ss= now specializes the six variable/literal calling
+conventions at construction. A small hygienic =checked-call= rule expands the
+runtime parameter check into a short list match and calls the already checked
+operator directly. Numeric validation still executes at row time, including
+literal-only operators. The original argument-mismatch error is retained.
+
+An initial =case-lambda= variant was rejected. With its variadic error fallback,
+this installed toolchain generated a rest-argument lambda, a length check and
+=apply=. In the complete paired run it won only 797, 730 and 546 of 1000 pairs
+for right-literal, left-literal and unary-literal inputs. These failed the
+unchanged 900-win admission criterion. The explicit-match variant generates
+pair/null checks followed by the operator call in its successful path.
+
+The native =t/performance/ascent-checked-call-performance-test.ss= freezes the
+old calling convention from =a97762d=. Both implementations are natively
+compiled; each shape uses 1000 alternating old/new pairs of 256 calls, identical
+inputs and type checks, with GC outside timed samples. All six shapes must win
+at least 900 pairs and retain median nonregression. This is a calling-kernel
+benchmark: construction, admission, environment lookup and full solves are
+excluded. It does not measure individual-call tail latency.
+
+#+begin_src sh
+just test-file t/qualification/scheme-relational-test.ss
+just test-file t/performance/ascent-checked-call-performance-test.ss
+#+end_src
+
+The semantic module adds checks for all binary operand shapes, immutable scalar
+identity values including =#f=, incorrect parameter counts and deferred numeric
+errors. Existing admission, descriptor-tampering, captured-value and retained
+session Cases continue to cover the whole checked-language boundary.
+
+Two local native paired runs qualify every shape. Strict wins in source order
+(binary variables, right literal, left literal, both literals, unary variable,
+unary literal) are =995/996/998/1000/998/998= in the first run and
+=997/992/999/999/998/998= in the repeat. Batch medians decrease by 50--63 percent
+in these runs. This is bounded calling-kernel evidence, not a complete-solve
+speedup claim. Raw measurements remain in ignored =.cache/ascent/=.
+
+Local qualification with the pinned cache SDK and =GERBIL_BUILD_CORES=12=
+also passes standard build, the final 42-module policy check (findings=0,
+errors=0), all 50 semantic modules and 400 Cases, and all 17 original SS
+performance scenarios. Each command exits 0. Original SS sample counts,
+thresholds, module deadlines and Case budgets are unchanged. The paired kernel
+Case is an additional explicit native test-file command, not a replacement for
+those gates. Remote CI remains separate evidence.
+
 * Feature: lattice rows and term binding
 
 =program/funs.ss= extracted a lattice key with two reversals and a

@@ -5,6 +5,9 @@
 (import (only-in :std/test check-equal? check-exception test-suite)
         (only-in :std/list/list append-map delete-duplicates/hash)
         (only-in :clan/poo/object .ref)
+        (only-in :std/error exception->string)
+        (only-in :gerbil-ascent/program/scheme-checked
+                 relational-compute relational-where relational-operator-literal)
         (only-in :clan/poo/mop element?)
         (only-in :core/observability/testing-case poo-flow-test-case)
         (only-in :gerbil-ascent/program/types
@@ -221,6 +224,47 @@
 
 (def scheme-relational-test
   (test-suite "Scheme relational finite positive gate"
+    (poo-flow-test-case "checked calls preserve all literal and variable argument shapes"
+      (let ((two (relational-operator-literal 2))
+            (three (relational-operator-literal 3)))
+        (for-each
+         (lambda (entry)
+           (let* ((clause (relational-compute 'out '+ (car entry)))
+                  (call (.ref clause 'compute))
+                  (inputs (cadr entry)))
+             (check-equal? (apply call inputs) 5)
+             (check-exception
+              (apply call (cons 0 inputs))
+              (lambda (failure)
+                (and (string-contains (exception->string failure)
+                                      "relational operator argument mismatch") #t)))
+             (when (pair? inputs)
+               (check-exception (apply call (cdr inputs)) true))))
+         (list (list '(x y) '(2 3))
+               (list (list 'x three) '(2))
+               (list (list two 'y) '(3))
+               (list (list two three) [])))
+        (for-each
+         (lambda (value)
+           (check-equal?
+            ((.ref (relational-compute 'out 'identity '(x)) 'compute) value)
+            value)
+           (check-equal?
+            ((.ref (relational-compute 'out 'identity
+                     (list (relational-operator-literal value))) 'compute))
+            value))
+         '(#f #t tag #\a 0 -2))))
+    (poo-flow-test-case "checked constant calls retain deferred numeric validation"
+      (let* ((bad (relational-operator-literal 'bad))
+             (one (relational-operator-literal 1))
+             (sum (.ref (relational-compute 'out '+ (list bad one)) 'compute))
+             (filter (.ref (relational-where 'even? (list bad)) 'predicate)))
+        (check-exception (sum) true)
+        (check-exception (filter) true)
+        (check-equal? ((.ref (relational-where 'even?
+                               (list (relational-operator-literal 2))) 'predicate)) #t)
+        (check-exception
+         ((.ref (relational-where 'even? '(x)) 'predicate) #f) true)))
     (poo-flow-test-case "two fragment instances retain private identities"
       (let* ((source-a (source-fragment '((1 2) (2 3))))
              (source-b (source-fragment '((7 8))))

@@ -708,6 +708,13 @@ build-dsl-closure:
     fi
     timeout --signal=KILL 180s bash -e -c '"$@" {{ gerbil_test_runtime_options }} t/harness/run.ss build-dsl-closure; python3 tools/dsl-closure-artifact.py finalize' build-dsl-closure "${compiler[@]}"
 
+# Counterbalanced measurements with independent Scheme truth; no speed threshold.
+check-retained-benefit:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    python3 tools/dsl-closure-artifact.py check
+    python3 t/harness/watch_output.py -- timeout 120s .cache/ascent/native-library/dsl-closure {{ gerbil_test_runtime_options }} --retained-benefit
+
 # Run the known Suites through std/test in serial AOT processes with strict progress.
 check-dsl-closure:
     #!/usr/bin/env bash

@@ -23,7 +23,7 @@
                  scheme-higher-order-test))
 
 (import (only-in :gerbil-ascent/t/qualification/scheme-session-deletion-test
-                 scheme-session-deletion-test))
+                 scheme-session-deletion-test session-benefit-main))
 
 (import (only-in :gerbil-ascent/t/qualification/scheme-stratified-provenance-test
                  scheme-stratified-provenance-test))
@@ -45,6 +45,7 @@
 
 (def (main . args)
   (match args
+    (["--retained-benefit"] (session-benefit-main) (exit 0))
     (["--source-closure" . roots] (apply source-closure-main roots) (exit 0))
     (["--oracle" name]
      (case (string->symbol name)

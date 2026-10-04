@@ -1,0 +1,80 @@
+#+TITLE: Native retained replacement benefit measurement
+
+* Question and executable boundary
+
+Does checked dependency reuse reduce native work and elapsed time relative to
+a fresh solve of the identical prospective input? Run =just build-dsl-closure=
+then =just check-retained-benefit=. The native entry uses the same compiler,
+dependency prefix, DSL and evaluator for both paths. Python verifies source
+and binary hashes and supervises genuine output; it decides no semantic truth.
+The unchanged bounds are 1G heap, 5 seconds without actual output and 120
+seconds for the complete measurement process. Compilation and parent artifact
+finalization retain their 180-second bound.
+
+* Workloads and independent truth
+
+The base is a twelve-edge chain 0->1->...->12 plus an independent singleton
+source and its copied output. Twenty paired samples run for each condition:
+
+| Condition | Source transaction | Expected active native plans, fresh / retained |
+|-----------+--------------------+------------------------------------------------|
+| independent | Change the singleton 7 to 8 | 3 / 1 |
+| recursive | Remove edge 0->1 | 3 / 2 |
+| all-inputs | Both changes together | 3 / 3 |
+
+Scheme verifies completion and every row of all four relations before
+publishing a sample. Its independent model enumerates all x<y pairs of the
+uninterrupted chain; after deletion node 0 is isolated and only 1<=x<y<=12
+remain reachable. Neither measured result is the other's sole oracle.
+
+* Timing contract
+
+Each sample opens and completes a new base Session. Program construction,
+that initial solve, forced GC and row checking are outside the timers. Fresh
+timing starts at evaluate-program on the already constructed prospective
+program, including engine admission, computation and result publication.
+Retained timing starts at replace-sources!, including its real source snapshot,
+replacement admission, dependency invalidation, computation and publication.
+The original Session setup cost is therefore excluded explicitly: these are
+update measurements for an already retained session, not cold-start claims.
+
+Order alternates AB and BA, ten of each per condition. Raw samples report
+current-jiffy wall seconds and cpu-time process CPU seconds separately, along
+with active-rule-count. Active plans are a dependency-selection observation,
+not counts of every rule invocation, join, allocation or instruction. No
+speed threshold turns a slower but correct sample into an omitted result.
+Shared-host interference remains possible even with counterbalancing.
+
+* Scope and remaining acceptance
+
+The first accepted 60-pair run reports the following wall-time medians. CPU
+medians track them closely; every raw pair is retained in the evidence receipt.
+
+| Condition | Fresh wall median (microseconds) | Retained wall median (microseconds) | Retained / fresh median |
+|-----------+---------------------------------+------------------------------------+-------------------------|
+| independent | 63 | 164.5 | 2.61 |
+| recursive | 54.5 | 174 | 3.19 |
+| all-inputs | 55 | 182.5 | 3.32 |
+
+These are ratios of medians, not medians of paired ratios. On this small
+workload there is no measured speed benefit, including when fewer plans are
+active. Snapshot, admission and update management costs are included; their
+individual contributions have not been profiled, so this result does not
+attribute the regression to one particular function. Microsecond samples are
+especially sensitive to host state and clock granularity. Do not extrapolate
+these ratios to larger inputs.
+
+The architecture must therefore qualify a cost crossover before selecting
+reuse on performance grounds. Next evidence needs larger independent and
+fully affected components, batch duration above the timer resolution, separate
+setup/update accounting, and profiling of admission/snapshot/native solve
+allocations. Any cost-based choice must preserve the same atomic publication,
+failure recovery, budgets and independent result checks. Counting fewer plans
+alone cannot authorize a claim of runtime savings.
+
+This finite chain experiment cannot establish general runtime benefit, memory
+benefit, provenance cost or model reasoning gain. R5 also needs per-operation
+memory/allocation distributions, larger and varied workload families and
+reproducible measurements on an isolated host. R6 still requires a newly
+frozen actual-source plan and explicit source-disclosure/cost authorization.
+No paid model calls belong to this experiment. MRR integration remains gated.

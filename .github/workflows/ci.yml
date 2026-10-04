@@ -38,6 +38,8 @@ jobs:
         run: just build-dsl-closure
       - name: Qualify native DSL closure
         run: just check-dsl-closure
+      - name: Measure native retained replacement against fresh evaluation
+        run: just check-retained-benefit
       - name: Qualify actual native compiler source closure
         run: gerbil env python3 tools/model-closure-study.py probe .cache/ascent/model-source-probe
       - name: Qualify ASCENT SS scenarios

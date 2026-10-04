@@ -20,7 +20,7 @@ Each top-level directory is a Gerbil module namespace:
 | `:gerbil-ascent/program/*` | POO declarations, language compilation, admission and Session coordination |
 | `:gerbil-ascent/core/*` | Dependency graph algorithms, lowered rule semantics, positive execution plans, binary relation kernels and bounded binary evaluation |
 | `:gerbil-ascent/table/*` | Physical indexes, storage providers and demand-driven relation expression adapters |
-| `:gerbil-ascent/candidate/*` | Bounded inert candidate evaluation and selected support projection |
+| `:gerbil-ascent/candidate/*` | Bounded inert candidate evaluation, certificate verification and selected support projection |
 | `:gerbil-ascent/interface/*` | Inert request projection |
 | `:gerbil-ascent/temporal/*` | Checked time/cut projections, graph preflight and locally verified evidence |
 
@@ -138,6 +138,9 @@ scalar clauses,
 `candidate/nonmembership.ss` separately emits a
 bounded per-relation closed-set certificate; its verifier checks input
 coverage, rule closure and target absence relative to the named snapshot.
+`candidate/certificate-limits.ss` owns shared material caps and bounded list
+checks. `candidate/program-identity.ss` preserves the separate finite and
+positive certificate fingerprint formats. Each verifier owns its proof rules.
 Candidate and snapshot data pass a bounded iterative preflight before
 parsing or hashing; cycles and executable leaves are rejected. Inert
 rejected candidates retain a content digest, and

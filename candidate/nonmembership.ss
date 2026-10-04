@@ -6,15 +6,18 @@
 ;;; Closed-world nonmembership relative to one inspected finite positive
 ;;; program and one copied input snapshot. This says nothing about whether
 ;;; the caller supplied every real-world source fact.
-(import (only-in :std/crypto/digest sha256)
-        (only-in :std/encoding/hex hex-encode)
+(import (only-in :gerbil-ascent/candidate/certificate-limits
+                 +max-certificate-relations+ +max-certificate-rows+
+                 +max-certificate-cells+ +max-certificate-row-arity+
+                 bounded-list-length unique-rows?)
+        (only-in :gerbil-ascent/candidate/program-identity
+                 candidate-positive-program-fingerprint)
         (only-in :gerbil-ascent/candidate/types
                  reasoning-snapshot-identity reasoning-snapshot-generation
                  reasoning-snapshot-digest reasoning-snapshot-relations
                  reasoning-snapshot-valid?
-                 reasoning-candidate-relations reasoning-candidate-facts
-                 reasoning-candidate-rules reasoning-candidate-query
-                 reasoning-candidate-limits)
+                 reasoning-candidate-facts
+                 reasoning-candidate-rules reasoning-candidate-query)
         (only-in :gerbil-ascent/candidate/program
                  candidate-variable? scalar?)
         (only-in :gerbil-ascent/candidate/funs
@@ -39,23 +42,6 @@
 (defstruct positive-nonmembership
   (status snapshot-identity snapshot-generation snapshot-digest
           candidate-digest program-fingerprint query work-budget closure))
-
-;;; Independent hard limits for externally supplied certificate material.
-;;; The caller's max-checks is a rule-instance budget, not a memory bound.
-(def +max-certificate-relations+ 64)
-(def +max-certificate-rows+ 4096)
-(def +max-certificate-cells+ 32768)
-(def +max-certificate-row-arity+ 1024)
-
-;; : (forall (a) (-> (List a) Nat (Maybe Nat)))
-;; : (-> Datum Nat (Maybe Nat))
-(def (bounded-list-length items maximum)
-  ;; Stop at the cap even for a cyclic or adversarial list; a fold would
-  ;; traverse the entire input before checking the budget.
-  (do ((rest items (cdr rest))
-       (count 0 (+ count 1)))
-      ((or (null? rest) (not (pair? rest)) (>= count maximum))
-       (and (null? rest) count))))
 
 ;; : (forall (row) (-> (Closure row) Boolean))
 ;; : (-> Datum Boolean)
@@ -86,31 +72,6 @@
                                            #t))))
                            row-list))))))
           closure))))
-
-;; : (forall (p) (-> (InspectedProgram p) Digest))
-;; : (-> InspectedCandidate Digest)
-(def (program-fingerprint spec)
-  (let (datum
-        (list
-         'positive-program-v1
-         (reasoning-candidate-relations spec)
-         (map (lambda (fact)
-                (list (vector-ref fact 0)
-                      (vector-ref fact 1)
-                      (vector-ref fact 2)))
-              (reasoning-candidate-facts spec))
-         (map (lambda (rule)
-                (list (vector-ref rule 0)
-                      (vector-ref rule 1)
-                      (vector-ref rule 2)))
-              (reasoning-candidate-rules spec))
-         (vector-ref (reasoning-candidate-query spec) 0)
-         (reasoning-candidate-limits spec)))
-    (hex-encode
-     (sha256
-      (string->utf8
-       (call-with-output-string ""
-         (lambda (port) (write datum port))))))))
 
 ;; : (forall (a) (-> (List a) Boolean))
 ;; : (-> Query Boolean)
@@ -155,7 +116,7 @@
        status (reasoning-snapshot-identity snapshot)
        (reasoning-snapshot-generation snapshot)
        (reasoning-snapshot-digest snapshot)
-       candidate-digest (program-fingerprint spec)
+       candidate-digest (candidate-positive-program-fingerprint spec)
        (candidate-copy-pairs query) max-steps closure))
     (if (or (not (reasoning-snapshot-valid? snapshot))
             (not (eq? native-status 'complete))
@@ -203,17 +164,6 @@
            (cdr (assq term bindings))
            term))
        (cdr head)))
-
-;; : (forall (a) (-> (List a) Boolean))
-;; : (-> Rows Boolean)
-(def (unique-rows? rows)
-  (let (seen (make-hash-table))
-    (andmap
-     (lambda (row)
-       (if (hash-get seen row)
-         #f
-         (begin (hash-put! seen row #t) #t)))
-     rows)))
 
 ;;; The checker treats the supplied closure as an inductive invariant:
 ;;; every input tuple belongs to it, and every rule instance over it has
@@ -279,7 +229,7 @@
                       candidate-digest)
               (equal?
                (positive-nonmembership-program-fingerprint certificate)
-               (program-fingerprint spec))
+               (candidate-positive-program-fingerprint spec))
               (equal? (positive-nonmembership-query certificate) query)
               preflight
               (equal? (map (lambda (entry) (list (car entry) (cadr entry)))

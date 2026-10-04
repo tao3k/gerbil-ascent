@@ -6,13 +6,17 @@
 ;;; Exact finite replay for the inspected candidate subset. This is a
 ;;; snapshot-relative model check, not general recursive provenance.
 ;;; The replay does not call the ASCENT planner, evaluator or solver.
-(import (only-in :std/crypto/digest sha256)
-        (only-in :std/encoding/hex hex-encode)
+(import (only-in :gerbil-ascent/candidate/certificate-limits
+                 +max-certificate-relations+ +max-certificate-rows+
+                 +max-certificate-cells+ +max-certificate-row-arity+
+                 bounded-list-length unique-rows?)
+        (only-in :gerbil-ascent/candidate/program-identity
+                 candidate-finite-program-fingerprint)
         (only-in :gerbil-ascent/candidate/types
                  reasoning-snapshot-identity reasoning-snapshot-generation
                  reasoning-snapshot-digest reasoning-snapshot-relations
                  reasoning-snapshot-valid?
-                 reasoning-candidate-relations reasoning-candidate-facts
+                 reasoning-candidate-facts
                  reasoning-candidate-rules reasoning-candidate-query
                  reasoning-candidate-limits)
         (only-in :gerbil-ascent/candidate/program candidate-variable? scalar?)
@@ -30,30 +34,6 @@
 (defstruct finite-evidence
   (status snapshot-identity snapshot-generation snapshot-digest
           candidate-digest program query work-budget closure))
-
-(def +max-certificate-relations+ 64)
-(def +max-certificate-rows+ 4096)
-(def +max-certificate-cells+ 32768)
-(def +max-certificate-row-arity+ 1024)
-
-;; : (forall (a) (-> (List a) Nat (Maybe Nat)))
-;; : (-> Datum Nat (Maybe Nat))
-(def (bounded-list-length items maximum)
-  (do ((rest items (cdr rest))
-       (count 0 (+ count 1)))
-      ((or (null? rest) (not (pair? rest)) (>= count maximum))
-       (and (null? rest) count))))
-
-;; : (forall (row) (-> (List row) Boolean))
-;; : (-> Rows Boolean)
-(def (unique-rows? rows)
-  (let (seen (make-hash-table))
-    (andmap
-     (lambda (row)
-       (if (hash-get seen row)
-         #f
-         (begin (hash-put! seen row #t) #t)))
-     rows)))
 
 ;; : (forall (row) (-> (Closure row) Schema Boolean))
 ;; : (-> CertificateClosure Schema Boolean)
@@ -87,29 +67,6 @@
                            (andmap scalar? row))))
                   (caddr entry))))
           closure schema))))
-
-;; : (-> InspectedCandidate Datum)
-(def (program-shape spec)
-  (list
-   (reasoning-candidate-relations spec)
-   (map (lambda (fact)
-          (list (vector-ref fact 0) (vector-ref fact 1)
-                (vector-ref fact 2)))
-        (reasoning-candidate-facts spec))
-   (map (lambda (rule)
-          (list (vector-ref rule 0) (vector-ref rule 1)
-                (vector-ref rule 2)))
-        (reasoning-candidate-rules spec))
-   (vector-ref (reasoning-candidate-query spec) 0)
-   (reasoning-candidate-limits spec)))
-
-;; : (-> InspectedCandidate Digest)
-(def (program-fingerprint spec)
-  (hex-encode
-   (sha256
-    (string->utf8
-     (call-with-output-string ""
-       (lambda (port) (write (program-shape spec) port)))))))
 
 ;; : (forall (v) (-> (List v) (Bindings v) (Row v)))
 ;; : (-> Terms Bindings Row)
@@ -275,7 +232,7 @@
      status (reasoning-snapshot-identity snapshot)
      (reasoning-snapshot-generation snapshot)
      (reasoning-snapshot-digest snapshot) candidate-digest
-     (program-fingerprint spec)
+     (candidate-finite-program-fingerprint spec)
      (candidate-copy-pairs (vector-ref (reasoning-candidate-query spec) 0))
      work-budget (candidate-copy-pairs closure)))
   (if (or (not (reasoning-snapshot-valid? snapshot))
@@ -317,7 +274,7 @@
                 (equal? (finite-evidence-candidate-digest certificate)
                         candidate-digest)
                 (equal? (finite-evidence-program certificate)
-                        (program-fingerprint spec))
+                        (candidate-finite-program-fingerprint spec))
                 (equal? (finite-evidence-query certificate)
                         (vector-ref (reasoning-candidate-query spec) 0))
                 (closure-valid? (finite-evidence-closure certificate)

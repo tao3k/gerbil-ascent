@@ -89,3 +89,69 @@ source states; rerun the exact head for performance comparisons. They
 cover one positive-closure workload and do not establish general
 Datalog speed.
 
+* Study: certificate boundaries with explicit shared owners
+
+The installed Gerbil =2591dcd= sources provide several concrete style lessons:
+
+| Upstream source | Technique | ASCENT application |
+|-----------------+-----------+--------------------|
+| =compiler/optimize-xform.ss:18-39= | Shared traversal dispatch with a dedicated mutation handler | Separate certificate material helpers from each verifier's proof semantics |
+| =compiler/optimize-xform.ss:117-164= | Small reference/set handlers preserve their own matching and publication rules | Retain exact-replay and inductive-nonmembership checks as distinct algorithms |
+| =compiler/base.ss:80-93= | Equality is selected from identifier semantics: bound-identifier comparison or symbol identity | Certificate row uniqueness retains structural equality, not symbol/object identity |
+| =std/struct/dag.ss:35-54= | Tables and visiting state belong to one traversal; cleanup is explicit | Allocate a fresh membership table for each uniqueness check |
+
+The two certificate modules repeated material caps, bounded list traversal,
+row uniqueness and program serialization. Their shared details had multiple
+owners, while their meaningful differences were implicit in long helper bodies.
+This is a responsibility and protocol-maintenance issue even without a timing
+regression.
+
+=candidate/certificate-limits.ss= now owns the original relation/row/cell/arity
+caps and bounded spine/structural uniqueness helpers. Bounded traversal remains
+an explicit =do= loop: an eager fold or a complete =length= followed by a cap
+check cannot terminate an adversarial cyclic spine at the required boundary.
+Each verifier retains its schema/groundness checks and their original ordering;
+there is no extra whole-certificate validation pass.
+
+=candidate/program-identity.ss= owns the ordered projection of relation, fact,
+rule, query and limit fields, followed by byte serialization and hashing.
+A named three-field entry projection removes repeated anonymous field reads.
+It does not serialize an entire vector, sort declarations or normalize rows.
+Two explicit fingerprint functions preserve the historical untagged finite
+format and =positive-program-v1= positive format. Query source labels remain
+excluded, while fact/rule labels remain included.
+
+The public certificate records and verifier entry points retain their fields
+and contracts. Exact finite replay, inductive nonmembership, stratified proof
+checking and production evaluation keep their distinct semantic roles. The
+build entry only declares the two new library modules; regression Cases stay
+in native Unit Tests.
+
+The boundary Unit Test has independent fixed SHA-256 goldens for both wire
+formats, checks projected-field changes and intentionally unprojected query
+labels, covers finite length/cap combinations, and rejects improper/cyclic
+spines and structurally repeated rows. Consumer qualification covers finite
+evidence, positive nonmembership and stratified proof checks. No runtime
+speedup is claimed.
+
+** Local verification
+
+Against source baseline =f6ff037=, the boundary module passes four native Cases,
+finite evidence nine, positive nonmembership eight, and stratified proof
+checking twelve, for 33 Cases in total. All four module processes exit 0 with
+their original timeouts and proof/work budgets. The boundary tests cover
+4356 finite length/cap combinations and both fixed historical fingerprint
+goldens. Schema and size validator forms remain unchanged.
+
+Production policy exits 0 with =findings=2 errors=0= before upstream integration;
+both existing warnings belong to =program/finite-arithmetic.ss=. The changed
+certificate modules introduce no warnings. Org links/blocks and diff formatting
+pass static checks. Execution logs and source hashes stay in ignored
+=.cache/ascent/certificate-boundary/=. These focused checks do not qualify the
+whole suite, SS performance, AOT applications or remote CI.
+
+Normal rebase incorporates upstream =cfda5cd= and =43fd04d=. SHA-256 checks
+confirm the four certificate source modules and four qualified test modules
+are unchanged after integration. Integrated production policy still reports
+=findings=2 errors=0=, with no certificate-module findings. This preserves the
+focused source receipts; it does not qualify the upstream descriptor changes.

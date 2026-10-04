@@ -46,6 +46,8 @@
     "core/binary-program"
     "candidate/closure"
     "candidate/types"
+    "candidate/certificate-limits"
+    "candidate/program-identity"
     "candidate/program"
     "candidate/funs"
     "candidate/provenance"

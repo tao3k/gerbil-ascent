@@ -21,6 +21,10 @@ POO demand adapter         binary relation algorithms  bounded evaluation
 
 temporal/lens -----------> temporal/graph ------------> core/dependency-graph
 time and evidence          symbolic cut adapter        dense SCC traversal
+
+candidate/finite-evidence ----> candidate/certificate-limits <---- candidate/nonmembership
+                         ----> candidate/program-identity   <----
+exact finite replay            material bounds and identity       inductive invariant
 #+end_example
 
 The two syntax surfaces have different contracts. The historical

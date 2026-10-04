@@ -99,7 +99,8 @@ No model calls are included.
 * Function fixed-point proof and acceptance
 
 FiniteHeight.lean adds pointwise function-table rank monotonicity and strict
-growth, stationary-tail, bounded-orbit full-height stationarity, and
+growth, ascending bottom orbits, stationary-tail, bounded-orbit full-height
+stationarity, and
 bottom-iterate leastness lemmas. FiniteOperators.lean proves that recursively
 constructed pointwise bottom is below every nested typed value. Orbit rank growth is the correct premise:
 a monotone function from bottom need not be globally inflationary. The actual
@@ -116,3 +117,15 @@ The [[file:evidence/scheme-function-fix-20261004/receipt.json][function fixed-po
 excluded watchdog/timing diagnosis, two final-source build deadline failures,
 and the remaining latest-native gate. Prior source or diagnostic results
 cannot qualify this implementation. No paid model calls were made.
+
+* Captured compiler environment
+
+When GERBIL_PATH is explicitly captured, the AOT build uses gxi directly and
+prepends the package bin directory exactly as the SDK gxpkg env-exec does.
+The existing root/source load path and captured dependency prefix remain in
+force. Without an explicit package environment, the SDK gerbil env initializer
+remains responsible for it. Compilation, source binding, compiler exit and
+parent finalization still share the original 180-second acceptance bound.
+The first final-source attempts are recorded as excluded deadline failures;
+a cached build satisfying that bound is delivery evidence, not a controlled
+measurement of compiler speedup or application benefit.

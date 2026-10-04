@@ -169,6 +169,17 @@ theorem finite_relation_stabilizes {n : Nat}
   · have := inflationary f i hf; simp [hg] at this
   · rfl
 
+/-- A monotone step iterated from bottom produces an ascending orbit. -/
+theorem bottom_orbit_ascending {α : Type} (le : α → α → Prop)
+    (step : α → α) (bottom : α)
+    (least : ∀ x, le bottom x)
+    (mono : ∀ x y, le x y → le (step x) (step y)) (n : Nat) :
+    le (iterateStep step bottom n) (iterateStep step bottom (n + 1)) := by
+  induction n with
+  | zero => exact least (step bottom)
+  | succ n ih =>
+    exact mono (iterateStep step bottom n) (iterateStep step bottom (n + 1)) ih
+
 /-- Once a Kleene orbit is stationary, every later iterate is identical. -/
 theorem stationary_tail {α : Type} (step : α → α) (initial : α) (n : Nat)
     (fixed : step (iterateStep step initial n) = iterateStep step initial n)

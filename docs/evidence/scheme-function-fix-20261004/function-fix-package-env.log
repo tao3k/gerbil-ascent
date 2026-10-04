@@ -1,0 +1,4 @@
+HOME=/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/current
+PATH=/Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.data/dependencies/prefix
+LOAD=/Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004:/Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.data/dependencies/prefix/lib
+*** WARNING module std/net/request is DEPRECATED and will be removed in the future

@@ -114,8 +114,11 @@ rejection of an infeasible function space. Compiled source lifecycle must also
 preserve the declared domains of compiler-created bottom sources.
 
 The [[file:evidence/scheme-function-fix-20261004/receipt.json][function fixed-point receipt]] records the new source and formal hashes,
-excluded watchdog/timing diagnosis, two final-source build deadline failures,
-and the remaining latest-native gate. Prior source or diagnostic results
+excluded watchdog/timing diagnosis and three final-source deadline failures,
+then the accepted 150.7-second captured-environment build. All twelve native
+Suites / 125 Cases, the focused fifteen-Case higher-order Suite, five original
+Rust differentials, all three Lean files and the native compiler-source probe
+passed. Prior source or diagnostic results
 cannot qualify this implementation. No paid model calls were made.
 
 * Captured compiler environment

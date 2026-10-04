@@ -4,7 +4,8 @@
 
 ;;; Initialization mutates only buffers owned by the constructing engine.
 ;;; Source multiplicity and row identity are preserved, including duplicates.
-(export gerbil-ascent-initialize-source-row! gerbil-ascent-check-replacement-rows!)
+(export gerbil-ascent-initialize-source-row! gerbil-ascent-admit-source-row!
+        gerbil-ascent-check-replacement-rows!)
 
 ;; : (forall (a) (-> Symbol [a] Integer (Maybe (-> a Any)) Void))
 ;; gerbil-ascent-check-replacement-rows!
@@ -49,6 +50,26 @@
   (unless (and (list? stored) (= (length stored) width))
     (error "invalid ASCENT storage provider row" stored))
   (when check (check stored))
+  (gerbil-ascent-admit-source-row! stored present all index count output-limit))
+
+;; : (forall (a m b) (-> a m b Integer Integer Integer Integer))
+;; gerbil-ascent-admit-source-row!
+;;   : (-> ValidatedRow Membership RowsBuffer Nat Nat Nat Nat)
+;;   | doc m%
+;;       Materialize a source row after its caller's validation boundary.
+;;       Checked initialization retains its shape/checker order. Direct
+;;       admission requires validation with no intervening callback or extension.
+;;       Duplicates retain their row identity and consume materialized budget.
+;;
+;;       # Examples
+;;
+;;       ```scheme
+;;       (gerbil-ascent-admit-source-row!
+;;         '(1) (make-hash-table) (vector []) 0 0 8)
+;;       ;; => 1, after the caller has validated the row
+;;       ```
+;;     %
+(def (gerbil-ascent-admit-source-row! stored present all index count output-limit)
   (hash-put! present stored #t)
   (let (next-count (+ count 1))
     (when (> next-count output-limit)

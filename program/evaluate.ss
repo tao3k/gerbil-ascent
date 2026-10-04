@@ -8,6 +8,7 @@
         (only-in :clan/poo/mop validate)
         (only-in :std/iter for iter Iterator &Iterator-next!)
         (only-in "admission.ss" gerbil-ascent-initialize-source-row!
+                 gerbil-ascent-admit-source-row!
                  gerbil-ascent-check-replacement-rows!)
         (only-in "result.ss" gerbil-ascent-publication-cache
                  gerbil-ascent-publish-rows gerbil-ascent-snapshot-rows gerbil-ascent-snapshot-sizes
@@ -231,9 +232,15 @@
                  (if (eq? (vector-ref storage-providers index)
                           gerbil-ascent-set-storage-provider)
                    (set! source-materialized-count
-                     (gerbil-ascent-initialize-source-row! row width
-                       (vector-ref field-checkers index) present all index
-                       source-materialized-count output-limit))
+                     ;; With no field callback, nothing can invalidate the
+                     ;; shape checked above. Exact Set storage returns row.
+                     ;; Callback-bearing rows still cross the checked boundary.
+                     (let (check (vector-ref field-checkers index))
+                       (if check
+                         (gerbil-ascent-initialize-source-row! row width check
+                           present all index source-materialized-count output-limit)
+                         (gerbil-ascent-admit-source-row! row present all index
+                           source-materialized-count output-limit))))
                    (let (materialized
                          ((vector-ref storage-extensions index)
                           (vector-ref storage-states index)

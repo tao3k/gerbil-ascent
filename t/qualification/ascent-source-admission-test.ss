@@ -44,6 +44,15 @@
 
 (def ascent-source-admission-test
   (test-suite "ASCENT default Set source admission"
+    (poo-flow-test-case "wide Set sources retain ordered duplicates and budgets"
+      (let* ((first-row (iota 128))
+             (last-row (reverse first-row))
+             (source-rows (list first-row first-row last-row))
+             (input (program source-rows 128 gerbil-ascent-set-storage-provider [] 3 3)))
+        (check-equal? (rows-of (gerbil-ascent-evaluate-program input)) source-rows)
+        (check-equal? (rows-of (ascent-reference-evaluate-program input)) source-rows)
+        (check-failure (program source-rows 128 gerbil-ascent-set-storage-provider [] 2 3)
+                       "ASCENT source fact budget exceeded")))
     (poo-flow-test-case "identity storage preserves duplicate source order and counts"
       (let* ((rows '((1 2) (1 2) (2 3)))
              (input (program rows 2 gerbil-ascent-set-storage-provider [] 3 3)))

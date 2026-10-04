@@ -1694,3 +1694,69 @@ All original fixtures and limits remain unchanged. The qualified batch
 kernel and complete semantic suite are distinct from unresolved whole-SS
 tail stability. Failed receipts and corrected baseline loading evidence
 are retained; remote CI remains unrun.
+
+* Study: qualified source validation and engine-owned admission
+
+The installed compiler's =optimize-call.ss:45-56= resolves the operator type
+before selecting a specialized call transform. Unknown and nullable operators
+retain the generic transform. The useful lesson is to make the evidence for a
+specialized path explicit at its owner, rather than assume that an earlier check
+makes every later value safe.
+
+ASCENT source initialization checks each declaration row's proper-list shape and
+arity before admitting input budget. The exact built-in Set provider returns that
+same row. Without a field checker, no user callback or storage extension runs
+between this check and materialization. Only this qualified path can reuse the
+shape validation. Rows mutated after declaration still cross the first check.
+Callback-bearing Set rows retain the second shape and field check, including
+stateful rejection on the second callback. Custom providers, even those inheriting
+Set, retain validation of every generated row; lattice joining is unchanged.
+
+=program/admission.ss= separates checked initialization from admission of an
+already validated row. Both paths share membership insertion, materialized budget
+checking and engine-owned buffer insertion in their original order. Duplicates
+still consume budget and no row is copied or deduplicated by this boundary.
+No cache, shared mutable state, declaration layout or build interface is added.
+The existing native source-admission module adds a 128-column ordered-duplicate
+fixture and its failing budget control. All 13 Cases pass with native resolution,
+module/harness/final success markers and exit 0, retaining callback, custom-provider,
+nullary, source-mutation and derived-budget checks.
+
+The controlled native reference freezes admission, evaluator, reuse and selection
+from =7e0a060=. Each fixture constructs and completes a fresh engine with 128
+source rows, no rules and precomputed schema/Analysis. Declaration construction
+is outside timing. Widths 1, 4, 128 and 512 each use 1000 alternating old/new pairs;
+GC runs every 20 pairs outside timing. Finished status and the complete ordered
+source result are checked after timing. Native =.ssi= resolution is required for
+both implementations. This measures warm-analysis engine initialization and
+completion, not cold declaration validation, retained updates or application
+throughput. Experiments and logs stay in ignored =.cache/ascent/validated-source/=.
+
+Median old/new jiffies are 85/83 (722 strict wins) at width 1, 91/89
+(800 wins) at width 4, 232/196 (852 wins) at width 128 and 436/301
+(873 wins) at width 512. Wide-row medians improve by about 15.5% and 31.0%
+respectively. Corresponding p95 old/new values are 685/506, 1284/1148,
+10318/9737 and 16793/9954. These are wall-clock distributions with visible
+long tails; they establish neither CPU-time savings nor an allocation reduction.
+Both narrow controls improve slightly. The probe completes all original pairs
+within its 180-second deadline and exits 0. Original SS performance gaps remain
+open; this admission result does not qualify the complete performance gate.
+
+The complete native =just test= invocation passes all 57 modules and 488 Cases
+with 53 parallel modules, four exclusive modules and =GERBIL_BUILD_CORES=12.
+All 57 module logs include native, module, harness and final success markers;
+there are no Case errors and the invocation exits 0. The selected library-source
+policy audit exits 0 with =findings=1= and =errors=0=: the existing
+=program/higher-order.ss= adjacent typed-combinator contract warning remains.
+Original Case budgets and module timeouts are unchanged. These local results
+are separate from exact-head remote CI and the remaining SS performance gates.
+
+Before push, the branch integrates concurrent commits through =7103f87= by normal
+rebase. Their changes do not modify =program/=, =table/=, =candidate/= or
+=runtime/= library sources. The optimized production bodies and benchmark
+reference boundary remain unchanged. The two changed qualification modules are
+rerun after integration: =scheme-model-closure-test= passes 24 Cases, including
+function-valued fixed points, and =scheme-session-deletion-test= passes 12 Cases,
+including 64 graphs and 192 successive withdrawals. Both retain native,
+module/harness/final success markers and exit 0. The 57-module/488-Case receipt
+above precedes this integration; it is not relabeled as an integrated full run.

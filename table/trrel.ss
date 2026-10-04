@@ -9,9 +9,14 @@
         gerbil-ascent-trrel-extension
         gerbil-ascent-trrel-uf-extension)
 
+;;; The public constructor returns an opaque provider state. Its private
+;;; record names the membership and directional indexes; each run owns all
+;;; three tables and extension functions alone update their contents.
+(defstruct trrel-state (known predecessors successors))
+
 ;; : (-> TransitiveClosureState)
 (def (gerbil-ascent-trrel-state)
-  (vector (make-hash-table) (make-hash-table) (make-hash-table)))
+  (make-trrel-state (make-hash-table) (make-hash-table) (make-hash-table)))
 
 ;;; A loose product bound admits the common path without a planning table.
 ;;; The uncertain path preflights all rows before mutating retained indexes.
@@ -24,10 +29,10 @@
          (pair (if (= width 3) (cdr row) row))
          (left (car pair))
          (right (cadr pair))
-         (known (vector-ref state 0))
+         (known (trrel-state-known state))
          (new-edge? (not (hash-get known row)))
-         (predecessors (vector-ref state 1))
-         (successors (vector-ref state 2))
+         (predecessors (trrel-state-predecessors state))
+         (successors (trrel-state-successors state))
          (added [])
          (planned #f)
          (planned-count 0)

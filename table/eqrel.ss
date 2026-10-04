@@ -6,6 +6,10 @@
 ;;; state; the evaluator creates one instance per declared relation and run.
 (export gerbil-ascent-eqrel-state gerbil-ascent-eqrel-extension)
 
+;;; A shared component object has explicit member and cached-size fields.
+;;; Every member's private index entry points to the same component identity.
+(defstruct eqrel-component (members size))
+
 ;; : (-> EquivalenceComponents)
 (def (gerbil-ascent-eqrel-state)
   (make-hash-table))
@@ -35,7 +39,7 @@
                 (list from to))
               added)))
     (def (new-component! node key)
-      (let (fresh (vector (list node) 1))
+      (let (fresh (make-eqrel-component (list node) 1))
         (hash-put! components key fresh)
         (emit! node node)
         fresh))
@@ -43,8 +47,8 @@
     ;; A rejected session append must leave the provider usable for a retry.
     (let* ((new-nodes (+ (if left-known 0 1)
                          (if (or right-known same-node?) 0 1)))
-           (left-size (if left-known (vector-ref left-known 1) 1))
-           (right-size (if right-known (vector-ref right-known 1) 1))
+           (left-size (if left-known (eqrel-component-size left-known) 1))
+           (right-size (if right-known (eqrel-component-size right-known) 1))
            (needed (+ new-nodes
                       (if (or (and left-known right-known
                                    (eq? left-known right-known))
@@ -69,19 +73,21 @@
               (lambda (to)
                 (emit! from to)
                 (emit! to from))
-              (vector-ref right-component 0)))
-           (vector-ref left-component 0))
-          (let* ((large (if (>= (vector-ref left-component 1)
-                                (vector-ref right-component 1))
+              (eqrel-component-members right-component)))
+           (eqrel-component-members left-component))
+          (let* ((large (if (>= (eqrel-component-size left-component)
+                                (eqrel-component-size right-component))
                           left-component right-component))
                  (small (if (eq? large left-component)
                           right-component left-component))
-                 (members (vector-ref small 0)))
+                 (members (eqrel-component-members small)))
             (for-each
              (lambda (node)
                (hash-put! components (cons group node) large))
              members)
-            (vector-set! large 0 (append members (vector-ref large 0)))
-            (vector-set! large 1 (+ (vector-ref large 1)
-                                    (vector-ref small 1)))))))
+            (eqrel-component-members-set! large
+              (append members (eqrel-component-members large)))
+            (eqrel-component-size-set! large
+              (+ (eqrel-component-size large)
+                 (eqrel-component-size small)))))))
     (reverse added)))

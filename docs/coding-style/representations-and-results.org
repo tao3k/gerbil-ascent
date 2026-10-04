@@ -1,0 +1,86 @@
+#+title: Scheme Coding Style: Data representations and lookup results
+
+[[file:../scheme-coding-style.org][Coding Style index]]
+
+* Upstream source patterns
+
+The installed Gerbil =2591dcd= compiler makes fixed record fields visible:
+
+- =compiler/base.ss:89-96=: =symbol-table= names its =gensyms= and =bindings=,
+  with fresh tables allocated by its initializer.
+- =compiler/base.ss:295=: =compile-executor= names its =submit= and =close=
+  operations. Code reads the role of each field rather than a numeric slot.
+- =compiler/compile.ss:1501-1512=: =meta-state= and =meta-state-block= name the
+  source, phase and code fields used by generation.
+- =compiler/optimize-base.ss:63-76=: =!class= names its hierarchy, fields,
+  constructor and method metadata, while preserving the record's own identity.
+
+The standard library also makes absence explicit:
+
+- =std/hash/misc.ss:104-121=: =hash-ref/default= and =hash-ensure-ref= use
+  =absent-value=; a present false value does not invoke the default thunk.
+- =std/hash/misc.ss:250-256=: =hash-ensure-removed!= returns both the value
+  and a presence flag, so a removed false value differs from a missing key.
+
+These representation choices follow field meaning and observable contracts.
+
+* Representation choices in ASCENT
+
+| Role | Representation | Reason |
+|------+----------------+--------|
+| Fixed storage-state fields | Private named records | Field meaning and mutation ownership are explicit |
+| Dense graph vertex tables | Vectors | Numeric vertex addressing is the algorithm's representation |
+| Certificate wire projection | Ordered lists with explicit field projection | Historical bytes and protocol versions are observable |
+| Candidate variable bindings | Association entries | Entry presence is distinct from the bound scalar value, including false |
+
+The certificate and binding boundaries retain their current formats. A
+truthiness-based default cannot replace an entry-presence test when false is
+a legal row value. Dense algorithm vectors retain their numeric addressing.
+
+The storage indexes have a narrower value domain: component objects, true
+membership markers or neighbor lists. Their existing =hash-get= lookups retain
+an unambiguous missing result. Candidate bindings inspect association-entry
+presence separately from a potentially false scalar value. Each lookup follows
+its actual value domain.
+
+* Applied: named private storage state
+
+=table/eqrel.ss= previously encoded each shared component as a two-slot vector.
+It now declares =eqrel-component (members size)=. The component's identity still
+unifies all of its member index entries. Union-by-size reads the named size;
+only the small component's keys are rebound, and member order is unchanged.
+The cached size remains part of the same component object.
+
+=table/trrel.ss= previously returned a three-slot vector from its state factory.
+Its private =trrel-state (known predecessors successors)= record names the
+membership and directional indexes. The factory allocates three fresh tables
+per provider run. The record accessors are private to the module; consumers use
+the existing state factory and extension functions. Raw vector indexing is no
+longer a supported way to inspect this opaque provider state. Repository
+consumers already treat it as opaque and require no migration.
+
+Budget preflight, row publication, component merge order, reflexive/nonreflexive
+semantics and provider dispatch retain their existing code. Provider entry
+points retain their signatures and each provider run owns its mutable state.
+
+Existing native Unit Tests independently model the closures and check ordered
+publication, grouped isolation, budget rejection/retry, retained sessions,
+concurrent runs and custom composite indexes. These tests exercise the public
+provider contract. No measured
+performance gain follows solely from changing the representation.
+
+* Local verification
+
+Against source baseline =c8ddcd3=, native BYODS invariants pass seven Cases,
+complete BYODS programs twenty-four, and custom BYODS indexes two, for 33 Cases
+in total. Every module has final native/module/harness markers and exits 0.
+Original budgets and timeouts remain unchanged. Source comparison, mapping
+record constructors/accessors back to their prior vector operations and
+excluding comments, confirms that all remaining algorithm forms are unchanged.
+
+Production source policy exits 0 with =findings=2 errors=0=. Both existing
+warnings belong to =program/finite-arithmetic.ss=; the changed storage modules
+introduce none. Coding Style links, paired Org blocks and diff formatting pass
+static checks. Logs stay in ignored =.cache/ascent/storage-state-records/=.
+These focused local checks do not establish a whole-suite, matched SS timing,
+AOT application or remote CI result.

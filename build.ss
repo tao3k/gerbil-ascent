@@ -37,6 +37,7 @@
     "program/admission"
     "program/result"
     "program/update-selection"
+    "program/reuse"
     "program/evaluate"
     "program/session"
     "program/interface"

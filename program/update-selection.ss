@@ -11,8 +11,8 @@
 (export gerbil-ascent-update-selection gerbil-ascent-active-prefix
         gerbil-ascent-update-active-plans)
 
-;; : (forall (a) (-> a a Vector (Maybe Vector)))
 ;; gerbil-ascent-update-selection
+;; : (forall (a) (-> a a Vector (Maybe Vector)))
 ;;   : (-> SourceSnapshot Program Analysis (Maybe AffectedRelations))
 ;;   | doc m%
 ;;       Compare source logs and close the affected set through native plans.
@@ -83,10 +83,20 @@
             affected)))))
 
 
+;; gerbil-ascent-active-prefix
 ;; : (forall (a) (-> [(Vector a)] [Integer]))
 ;; : (-> CompiledBody [RelationIndex])
-;;; Only a pure variable-only atom extends the prunable prefix. Computed
-;;; bindings retain the evaluator's complete traversal and cannot be skipped.
+;; | doc m%
+;;     Only a pure variable-only atom extends the prunable prefix. Computed
+;;     bindings retain the evaluator's complete traversal and cannot be skipped.
+;;
+;;     # Examples
+;;
+;;     ```scheme
+;;     (gerbil-ascent-active-prefix [])
+;;     ;; => []
+;;     ```
+;;   %
 (def (gerbil-ascent-active-prefix body)
         (if (and (pair? body) (eq? (vector-ref (car body) 0) 'atom))
           (let (atom (vector-ref (car body) 1))
@@ -98,10 +108,20 @@
                     (gerbil-ascent-active-prefix (cdr body)) [])))
           []))
 
+;; gerbil-ascent-update-active-plans
 ;; : (forall (a) (-> (Vector [a]) Vector (Vector [a])))
 ;; : (-> ActiveStrata AffectedRelations ActiveStrata)
-;;; A selected rule preserves its immutable plan when every head survives;
-;;; partial-head rules receive a new plan and a fresh engine-owned frame.
+;; | doc m%
+;;     A selected rule preserves its immutable plan when every head survives;
+;;     partial-head rules receive a new plan and a fresh engine-owned frame.
+;;
+;;     # Examples
+;;
+;;     ```scheme
+;;     (gerbil-ascent-update-active-plans '#() '#())
+;;     ;; => '#()
+;;     ```
+;;   %
 (def (gerbil-ascent-update-active-plans full-active-by-stratum affected)
 (vector-map
                    (lambda (rules)

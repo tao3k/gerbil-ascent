@@ -17,6 +17,9 @@
 ;;; Finite recursive equations, with exact completed lower-stratum observations.
 ;;; This represents all grounded alternatives, rather than one founded tree.
 (defstruct stratified-provenance (status stamp nodes edges roots))
+;;; Boundary: bind graph identity to the complete source and candidate input.
+;; : (forall (s p d) (-> s p d Digest))
+;; : (-> ReasoningSnapshot CandidateSpec Digest Digest)
 (def (graph-stamp snapshot spec digest)
   (reasoning-snapshot-content-digest 'stratified-provenance 0
    (list (reasoning-snapshot-identity snapshot) (reasoning-snapshot-generation snapshot)
@@ -24,11 +27,31 @@
          (reasoning-candidate-relations spec) (reasoning-candidate-facts spec)
          (reasoning-candidate-rules spec) (reasoning-candidate-query spec)
          (reasoning-candidate-limits spec))))
+;;; Grounding requires every named variable to have a verified binding.
+;; : (forall (v) (-> [v] [(Pair Symbol v)] [v]))
+;; : (-> CandidateTerms Bindings GroundTerms)
 (def (ground-terms terms bindings)
   (map (lambda (term)
          (if (and (candidate-variable? term) (not (eq? term '?_)))
              (cdr (candidate-required-entry term bindings)) term)) terms))
 
+;; candidate-stratified-provenance
+;; : (forall (s p d n r c g) (-> s p d n r c Nat Nat Nat g))
+;; : (-> ReasoningSnapshot CandidateSpec Digest Symbol Rows Certificate
+;;        Nat Nat Nat StratifiedProvenance)
+;; | doc m%
+;;     Enumerate bounded grounded alternatives only after independently
+;;     verifying the finite closure. Lower-stratum observations are complete.
+;;
+;;     # Examples
+;;
+;;     ```scheme
+;;     (candidate-stratified-provenance snapshot spec digest status rows
+;;                                      certificate 1000 1000 1000)
+;;     ;; => a complete graph or a bounded/invalid status without a graph
+;;     ```
+;;   %
+;;; Boundary: verification precedes graph publication; exhaustion publishes no partial graph.
 (def (candidate-stratified-provenance snapshot spec digest native-status native-rows certificate
                                      finite-budget graph-budget edge-limit)
   (unless (and (exact-integer? graph-budget) (> graph-budget 0)
@@ -133,6 +156,22 @@
                 (make-stratified-provenance 'complete (graph-stamp snapshot spec digest)
                                            published-nodes published-edges published-roots)))))))
 
+;; candidate-verify-stratified-provenance
+;; : (forall (s p d n r c g) (-> s p d n r c Nat g Nat Nat Symbol))
+;; : (-> ReasoningSnapshot CandidateSpec Digest Symbol Rows Certificate
+;;        Nat StratifiedProvenance Nat Nat Symbol)
+;; | doc m%
+;;     Rebuild the bounded graph from verified inputs and compare its stamp,
+;;     nodes, edges and roots before accepting an externally supplied graph.
+;;
+;;     # Examples
+;;
+;;     ```scheme
+;;     (candidate-verify-stratified-provenance snapshot spec digest status rows
+;;                                            certificate 1000 graph 1000 1000)
+;;     ;; => valid only when the complete graph equals the independent rebuild
+;;     ```
+;;   %
 (def (candidate-verify-stratified-provenance snapshot spec digest native-status native-rows certificate
                                             finite-budget graph graph-budget edge-limit)
   (if (not (and (stratified-provenance? graph) (eq? (stratified-provenance-status graph) 'complete)

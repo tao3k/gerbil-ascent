@@ -2,7 +2,7 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(import (only-in :std/test check-equal? test-suite)
+(import (only-in :std/test check-equal? check-exception test-suite)
         (only-in :std/hash/misc hash-ensure-modify!)
         (only-in :clan/poo/object .ref)
         (only-in :core/observability/testing-case poo-flow-test-case)
@@ -129,6 +129,30 @@
 
 (def ascent-byods-invariants-test
   (test-suite "ASCENT BYODS exhaustive three-node invariants"
+    (poo-flow-test-case "eqrel preflight preserves state and deterministic emission order"
+      (let (state (gerbil-ascent-storage-make-state
+                   gerbil-ascent-eqrel-storage-provider))
+        (def (extend row budget)
+          (gerbil-ascent-storage-extend
+           gerbil-ascent-eqrel-storage-provider state [] [] row budget))
+        (check-exception (extend '(1 2) 3) true)
+        (check-equal? (hash-length state) 0)
+        (check-equal? (extend '(1 2) 4)
+                      '((1 1) (2 2) (1 2) (2 1)))
+        (check-exception (extend '(2 3) 4) true)
+        (check-equal? (hash-length state) 2)
+        (check-equal? (extend '(2 1) 0) [])
+        (check-equal? (extend '(1 1) 0) [])
+        (check-exception (extend '(1 2) -1) true)
+        (check-equal? (extend '(2 3) 5)
+                      '((3 3) (2 3) (3 2) (1 3) (3 1)))
+        (check-exception (extend '("other" 1 1) 0) true)
+        (check-equal? (hash-length state) 3)
+        (check-equal? (extend '("other" 1 1) 1) '(("other" 1 1)))
+        (check-equal? (extend '("other" 1 1) 0) [])
+        (check-equal? (extend (list (list 4) (list 4)) 1)
+                      '(((4) (4))))
+        (check-equal? (extend (list (list 4) (list 4)) 0) [])))
     (poo-flow-test-case "all directed edge subsets preserve closure and insertion order independence"
       (for-each
        (lambda (edges)

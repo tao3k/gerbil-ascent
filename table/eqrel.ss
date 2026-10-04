@@ -21,6 +21,12 @@
          (pair (if (= width 3) (cdr row) row))
          (left (car pair))
          (right (cadr pair))
+         (same-node? (equal? left right))
+         (left-key (cons group left))
+         (right-key (if same-node? left-key (cons group right)))
+         (left-known (hash-get components left-key))
+         (right-known (if same-node? left-known
+                         (hash-get components right-key)))
          (added []))
     (def (emit! from to)
       (set! added
@@ -28,52 +34,54 @@
                 (list group from to)
                 (list from to))
               added)))
-    (def (component-of node)
-      (let* ((key (cons group node))
-             (known (hash-get components key)))
-        (or known
-            (let (fresh (vector (list node) 1))
-              (hash-put! components key fresh)
-              (emit! node node)
-              fresh))))
+    (def (new-component! node key)
+      (let (fresh (vector (list node) 1))
+        (hash-put! components key fresh)
+        (emit! node node)
+        fresh))
     ;; Count the reflexive facts and cross product before touching components.
     ;; A rejected session append must leave the provider usable for a retry.
-    (let* ((left-known (hash-get components (cons group left)))
-           (right-known (hash-get components (cons group right)))
-           (new-nodes (+ (if left-known 0 1)
-                         (if (or right-known (equal? left right)) 0 1)))
+    (let* ((new-nodes (+ (if left-known 0 1)
+                         (if (or right-known same-node?) 0 1)))
            (left-size (if left-known (vector-ref left-known 1) 1))
            (right-size (if right-known (vector-ref right-known 1) 1))
            (needed (+ new-nodes
                       (if (or (and left-known right-known
                                    (eq? left-known right-known))
-                              (equal? left right))
+                              same-node?)
                         0
                         (* 2 left-size right-size)))))
       (when (> needed budget)
         (error "ASCENT eqrel output fact budget exceeded")))
-    (let ((left-component (component-of left))
-          (right-component (component-of right)))
-      (unless (eq? left-component right-component)
-        (for-each
-         (lambda (from)
-           (for-each
-            (lambda (to)
-              (emit! from to)
-              (emit! to from))
-            (vector-ref right-component 0)))
-         (vector-ref left-component 0))
-        (let* ((large (if (>= (vector-ref left-component 1)
-                              (vector-ref right-component 1))
-                        left-component right-component))
-               (small (if (eq? large left-component)
-                        right-component left-component))
-               (members (vector-ref small 0)))
+    ;; Preflight and commit use the same resolved components. No callbacks
+    ;; intervene, so successful admission needs no second hash lookup. An
+    ;; already connected edge has no component or row mutation to perform.
+    (unless (and left-known (eq? left-known right-known))
+      (let* ((left-component
+              (or left-known (new-component! left left-key)))
+             (right-component
+              (if same-node? left-component
+                  (or right-known (new-component! right right-key)))))
+        (unless (eq? left-component right-component)
           (for-each
-           (lambda (node)
-             (hash-put! components (cons group node) large))
-           members)
-          (vector-set! large 0 (append members (vector-ref large 0)))
-          (vector-set! large 1 (+ (vector-ref large 1)
-                                  (vector-ref small 1))))))
+           (lambda (from)
+             (for-each
+              (lambda (to)
+                (emit! from to)
+                (emit! to from))
+              (vector-ref right-component 0)))
+           (vector-ref left-component 0))
+          (let* ((large (if (>= (vector-ref left-component 1)
+                                (vector-ref right-component 1))
+                          left-component right-component))
+                 (small (if (eq? large left-component)
+                          right-component left-component))
+                 (members (vector-ref small 0)))
+            (for-each
+             (lambda (node)
+               (hash-put! components (cons group node) large))
+             members)
+            (vector-set! large 0 (append members (vector-ref large 0)))
+            (vector-set! large 1 (+ (vector-ref large 1)
+                                    (vector-ref small 1)))))))
     (reverse added)))

@@ -11,6 +11,8 @@
         (only-in :asp-gerbil-scheme/src/build-api/core-capacity
                  initialize-native-build-core-capacity!))
 
+;; The 64-cut retained-operator stress module uses the exclusive lane to keep
+;; its original process deadline isolated from the module pool's CPU load.
 (def parallel-modules
   '("t/qualification/ascent-aggregate-program-test.ss"
     "t/qualification/ascent-binary-program-test.ss"
@@ -63,7 +65,6 @@
     "t/qualification/scheme-native-integration-test.ss"
     "t/qualification/scheme-native-language-test.ss"
     "t/qualification/scheme-native-reduction-test.ss"
-    "t/qualification/scheme-operator-retained-test.ss"
     "t/qualification/scheme-operator-test.ss"
     "t/qualification/scheme-relational-test.ss"))
 

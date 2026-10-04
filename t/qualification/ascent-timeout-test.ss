@@ -14,7 +14,8 @@
                  gerbil-ascent-session-run
                  gerbil-ascent-session-run-timeout
                  gerbil-ascent-session-append-source!
-                 gerbil-ascent-session-replace-source!)
+                 gerbil-ascent-session-replace-source!
+                 gerbil-ascent-session-replace-sources!)
         (only-in :gerbil-ascent/program/syntax ascent))
 
 (export ascent-timeout-test)
@@ -199,6 +200,47 @@
         (check-exception (gerbil-ascent-session-run-timeout session 1.5) true)
         (check-equal? (.ref (gerbil-ascent-session-run session) 'finished)
                       #t)))
+    (poo-flow-test-case "pending provider recovery retains timed round boundaries"
+      (let* ((program
+              (ascent
+               (relation eq (from to) '((0 1))
+                         (index gerbil-ascent-hash-index-provider)
+                         (storage gerbil-ascent-eqrel-storage-provider))
+               (relation output (from to))
+               ((output x y) <-- (eq x y))
+               (bounds 4 32 64)))
+             (session (gerbil-ascent-open-session program)))
+        (gerbil-ascent-session-run session)
+        (gerbil-ascent-session-replace-source! session 'eq '((0 1) (1 2)))
+        (check-exception
+         (gerbil-ascent-session-append-source! session 'eq '(3)) true)
+        (let (partial (gerbil-ascent-session-run-timeout session 0))
+          (check-equal? (.ref partial 'finished) #f)
+          (check-equal? (length ((.ref partial 'rows-of) 'output)) 9))
+        (check-equal? (.ref (gerbil-ascent-session-run session) 'finished) #t)))
+    (poo-flow-test-case "provisional replacement failure restores source and result together"
+      (let* ((program
+              (ascent
+               (relation edge (from to) '((0 1)))
+               (relation path (from to))
+               ((path x y) <-- (edge x y))
+               ((path x z) <-- (path x y) (edge y z))
+               (bounds 5 6 11)))
+             (session (gerbil-ascent-open-session program))
+             (committed (gerbil-ascent-session-run session)))
+        (gerbil-ascent-session-replace-source! session 'edge '((0 1) (1 2)))
+        (for-each
+         (lambda (edge)
+           (gerbil-ascent-session-append-source! session 'edge edge))
+         '((2 3) (3 4) (4 5)))
+        (let (partial (gerbil-ascent-session-run-timeout session 0))
+          (check-equal? (.ref partial 'finished) #f)
+          (check-exception (gerbil-ascent-session-run session) true)
+          (check-equal? (eq? committed (gerbil-ascent-session-run session)) #t)
+          (check-equal? ((.ref committed 'rows-of) 'path) '((0 1))))
+        (gerbil-ascent-session-replace-sources! session '((edge (7 8))))
+        (check-equal? ((.ref (gerbil-ascent-session-run session) 'rows-of) 'path)
+                      '((7 8)))))
     (poo-flow-test-case "failed resume restores the accepted source snapshot"
       (let* ((program
               (ascent
@@ -223,4 +265,11 @@
           (gerbil-ascent-session-replace-source! session 'edge '((7 8)))
           (check-equal? ((.ref (gerbil-ascent-session-run session) 'rows-of)
                          'path)
-                        '((7 8))))))))
+                        '((7 8)))
+          ;; Recovery must publish a completed result before the next batch
+          ;; update can use the native completed-closure reuse path.
+          (gerbil-ascent-session-replace-sources!
+           session '((edge (8 9))))
+          (check-equal? ((.ref (gerbil-ascent-session-run session) 'rows-of)
+                         'path)
+                        '((8 9))))))))

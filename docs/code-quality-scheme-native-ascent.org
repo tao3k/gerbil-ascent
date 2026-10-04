@@ -556,6 +556,139 @@ changing either function body. Final =just check-policy= has
 =findings=0=, =errors=0= and exit 0. The three SS gaps above remain open;
 these local receipts do not establish current-head remote CI or AOT closure.
 
+* Feature: one eqrel component resolution across admission and commit
+
+The installed =gerbil/runtime/hash.ss:25-26,574-575= defines a HashTable
+=ref= interface and implements =hash-get= by calling it. The eqrel provider
+previously built and queried both endpoint keys during budget preflight,
+then built and queried them again in =component-of=. The provider owns its
+evaluation-local table and invokes no user callback between these phases.
+Reusing the resolved components therefore removes duplicate work without
+changing the table representation or depending on unsafe compiler settings.
+
+=table/eqrel.ss= now resolves each distinct endpoint once. Equal endpoints
+share one key and lookup. Budget admission still precedes all mutation;
+already connected endpoints skip the commit phase after admission. New
+components, reflexive rows, cross-component rows and union-by-size retain
+their previous emission order. The historical member lists remain persistent,
+and the smaller component alone is relabeled during a merge. No state escapes
+to a global cache, and no public interface changes.
+
+The existing BYODS invariants test compares closure against independent
+reachability goldens for all three-node edge subsets, four-node subsets,
+eight-node cycles and bridges, insertion orders, producer partitions and
+interleaved groups. A new Case checks exact emission order, exact budget
+boundaries, untouched state after rejection, retries, zero-budget connected
+and reflexive edges, negative-budget rejection and structurally equal list
+endpoints. The existing eqrel program module also exercises retained-session
+recovery, concurrency, source and derived closure, and output budgets.
+
+The ignored =.cache/ascent/eqrel-resolution/= experiment compiles the frozen
+=5ed765d= provider and the production provider as separate exported native
+modules with =:std/make= optimization enabled. The probe checks both =.ssi=
+resolution paths; generated code names both exported callees. Each shape
+uses 1000 alternating old/new sample pairs, 16 complete calls per sample and
+GC every 20 pairs outside timing. Full ordered result equality is checked
+outside each interval. Shapes are a cold twenty-edge chain, 441 already
+connected edges and 441 self edges on the completed 21-node component.
+This measures the Provider boundary, not complete engine latency.
+
+The native probe exits 0 with ordered parity and reports old/new medians in
+jiffies of =196/157=, =2041/1084= and =2028/612= for these three shapes,
+respectively (about 20%, 47% and 70% lower in this run). Strict new-faster
+counts are =880/1000=, =817/1000= and =907/1000=. These counts expose timing
+variation; this experiment does not establish a universal speedup or satisfy
+the whole-engine SS admission gate. No raw logs or temporary benchmark
+sources are added to Git, and no test work is added to =build.ss=.
+
+The first integrated full-suite attempt exposed a separate retained-session
+regression in the incoming native deletion work. Single-source replacement
+delegated to batch replacement and immediately marked the session clean,
+so its following zero-budget run returned a completed validation result.
+After a failed partial resume, recovery also kept the partial =last-result=
+despite rebuilding the committed source to completion. The existing timeout
+module failed both contracts; a focused run reproduced them. Runtime loader
+records confirmed the intended native session and engine objects were loaded.
+
+The session now keeps successful single-source validation provisional until
+the next run. An unrestricted run uses the already-completed update engine;
+a timed run replays the accepted source through normal round boundaries.
+An engine adoption clears that replay state, so later partial runs resume
+the same engine. Recovery preserves an existing completed result's identity;
+it replaces a partial observation with the completed checkpoint when its source
+snapshot equals the committed snapshot. Native affected-relation reuse for
+batch updates remains in place. The existing timeout Case additionally
+checks that batch reuse succeeds after recovery and a single replacement.
+This applies the same boundary principle as the Provider optimization:
+reuse resolved private state only while its admission preconditions hold.
+
+Source and completed result now form one retained commit checkpoint. A
+single replacement keeps the preceding checkpoint until a run completes,
+even though its prospective engine has already passed validation. Partial
+runs never replace the completed checkpoint. Recovery of accepted pending
+input marks its completed validation for replay on the next timed run.
+Two further native Cases cover replacement-plus-append failure returning
+the original source/result identity and provider failure on pending input
+retaining zero-budget round boundaries. Batch reuse consumes the completed
+checkpoint directly, rather than the most recent partial observation.
+
+The first full-suite attempt is not a pass: the timeout module exits 42,
+and the retained-operator module exceeds its original 120-second process
+deadline after printing success markers. A success marker alone is not a
+qualified receipt. Neither deadlines nor Case expectations are relaxed.
+
+The incoming remote Scheme build also fails its hard source-module limit:
+=program/evaluate.ss= has 1069 effective lines. Completed-closure reuse
+admission, dependency propagation, prefix metadata and rule activation now
+belong to =program/reuse.ss=. The evaluator retains the execution loop and
+its existing exported constructors, and shrinks to 987 physical lines.
+The activation algorithm is transferred intact: retain the complete rule
+activation for later appends, filter only affected heads for the reuse run,
+and create engine-local frames for partial heads. No activation speedup is
+claimed. =build.ss= adds only the new production module declaration.
+The new module and the incoming stratified graph helpers receive adjacent
+generic/domain signatures and examples at their admission boundaries.
+
+A later integrated attempt passes 53 parallel modules but the retained
+operator stress Case reaches only 56 of its original 64 nested source cuts
+before the 120-second process deadline. That module is removed from the
+parallel admission list and uses the existing exclusive lane; the remaining
+53 admitted modules still use =GERBIL_BUILD_CORES=12=. No deadline, Case
+budget, graph sample count or comparison threshold is changed. The latest
+eqrel SS still fails its original 1000-sample 1 ms p95 gate: p50=99 us,
+p95=7.914 ms and max=227.114 ms. This whole-engine failure remains separate
+from the Provider-boundary A/B improvement above.
+
+Final checkpoint validation uses the original native module inventory and
+budgets. Selected production policy audit completes with zero findings and
+zero errors. The full run admits 53 parallel and four exclusive modules:
+55 modules exit successfully before the arbitrary-column rule module fails
+its original 2-second Case duration budget during POO object admission.
+The full coordinator exits 70; it is not a green full-suite receipt.
+That rule module subsequently passes all 14 Cases in a focused native run
+and exits 0 (26-second module duration). The retained operator module then
+passes all six Cases, including all 64 graph and nested source cuts, and
+exits 0 in 108 seconds under the unchanged 120-second process deadline.
+The failed integrated duration gate remains open despite the focused pass.
+The checkpoint timeout module passes all 12 Cases both in its focused run
+and in the integrated run. These receipts cover every module individually;
+they do not replace a successful uninterrupted full run or the SS p95 gate.
+
+Before publication the remote advances to =6c5c6e3= with source-snapshot
+updates and =program/update-selection.ss=. The normal rebase retains that
+implementation: =program/reuse.ss= delegates dependency selection and
+partial-head activation to it, owns the completed reuse capsule and full
+activation, and removes the duplicate selection/prefix/filter algorithms.
+The evaluator now has 975 physical lines. The remote's replacement shape
+checks and native/opaque selection are preserved; single replacement still
+keeps the coupled committed checkpoint until a completed run. Rebased native
+validation passes 12 timeout Cases, 24 eqrel program Cases and the deletion
+module, including its 64 graphs and 192 successive withdrawals. Each module
+has MODULE-OK, HARNESS-OK, final OK and successful coordinator exit. The
+47-module production policy audit exits 0 with zero findings and errors.
+The full-suite and SS failures above remain pre-rebase evidence and are not
+converted into exact-head green claims.
+
 * Feature: explicit SCC traversal state shared by both graph consumers
 
 The installed compiler's =optimize-top.ss:703= (=extract-keyword-args=)

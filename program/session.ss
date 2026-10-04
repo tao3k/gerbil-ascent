@@ -51,9 +51,11 @@
                   (vector->list atomic-appends)))
          (pending (list->vector (vector->list initial)))
          (committed (list->vector (vector->list initial)))
+         (committed-result #f)
          (initialized? #f)
          (clean? #f)
          (partial? #f)
+         (replay-on-timeout? #f)
          (last-result #f)
          (engine (gerbil-ascent-make-engine program #t #f #f
                                           measure-rule-times?))
@@ -103,16 +105,20 @@
       (let* ((candidate (snapshot-program rows))
              (fresh (gerbil-ascent-make-engine candidate #t
                                               engine-analysis engine-schema
-                                              measure-rule-times?)))
-        (when initialized? ((.ref fresh '.run)))
+                                              measure-rule-times?))
+             (restored-result (and initialized? ((.ref fresh '.run)))))
         (adopt-engine! fresh candidate)
         (set! pending (snapshot-copy rows))
         (set! partial? #f)
         (set! clean? (and initialized?
                           (equal? (vector->list rows)
-                                  (vector->list committed))))))
+                                  (vector->list committed))))
+        (set! replay-on-timeout? (and initialized? (not clean?)))
+        (when clean?
+          (set! last-result (or committed-result restored-result)))))
     (def (adopt-engine! fresh candidate)
       (set! engine fresh)
+      (set! replay-on-timeout? #f)
       (set! engine-append (.ref fresh '.append-source!))
       (set! engine-additions (.ref fresh '.source-additions))
       (set! engine-overrides (.ref fresh '.source-overrides))
@@ -170,7 +176,18 @@
                  (vector-set! prospective index (cons rows []))
                  (gerbil-ascent-update-selection
                   committed (snapshot-program prospective) engine-analysis)))
-          (begin (replace-sources! (list (cons name rows))) (void))
+          (let ((previous-committed committed)
+                (previous-result committed-result))
+            (replace-sources! (list (cons name rows)))
+            ;; Single-source validation remains provisional until run. Its
+            ;; completed validation result can serve an unrestricted run,
+            ;; but a timed run must still expose committed round boundaries.
+            (set! committed previous-committed)
+            (set! committed-result previous-result)
+            (set! last-result previous-result)
+            (set! clean? #f)
+            (set! replay-on-timeout? #t)
+            (void))
           (let* ((index (position-of name))
              (source-state (vector-ref pending index))
              (outcome
@@ -213,7 +230,7 @@
          replacements)
         (let* ((candidate (snapshot-program prospective))
                (fresh (gerbil-ascent-make-updated-engine
-                       committed candidate last-result
+                       committed candidate committed-result
                        engine-analysis engine-schema measure-rule-times?))
                (result ((.ref fresh '.run))))
           (unless (.ref result 'finished)
@@ -222,6 +239,7 @@
           (set! pending (snapshot-copy prospective))
           (set! committed (snapshot-copy prospective))
           (set! last-result result)
+          (set! committed-result result)
           (set! clean? #t)
           (set! partial? #f)
           result)))
@@ -237,8 +255,10 @@
           (set! pending next-pending)
           (set! committed (snapshot-copy next-pending))
           (set! last-result (vector-ref outcome 1))
+          (set! committed-result last-result)
           (set! clean? #t)
           (set! partial? #f)
+          (set! replay-on-timeout? #f)
           last-result)))
     (def (run-timeout! duration-nanoseconds)
 
@@ -257,7 +277,8 @@
                    ;; A timeout must still run the accepted source through
                    ;; committed round boundaries rather than return that
                    ;; already-complete validation snapshot.
-                   (when ((.ref engine '.recomputed?))
+                   (when (or replay-on-timeout?
+                             ((.ref engine '.recomputed?)))
                      (let* ((candidate (snapshot-program next-pending))
                             (fresh
                              (gerbil-ascent-make-engine
@@ -275,6 +296,7 @@
               (begin
                 (set! initialized? #t)
                 (set! committed (snapshot-copy next-pending))
+                (set! committed-result result)
                 (set! clean? #t)
                 (set! partial? #f))
               (set! partial? #t))

@@ -13,13 +13,13 @@
                  gerbil-ascent-publish-rows gerbil-ascent-snapshot-rows gerbil-ascent-snapshot-sizes
                  gerbil-ascent-result-observation)
         (only-in "planning.ss" gerbil-ascent-prepare-program)
-        (only-in "positive.ss" gerbil-ascent-positive-plan
-                 gerbil-ascent-run-positive-plan! gerbil-ascent-index-key
+        (only-in "positive.ss" gerbil-ascent-run-positive-plan! gerbil-ascent-index-key
                  gerbil-ascent-index-key/terms
                  gerbil-ascent-emit-heads!)
         (only-in "types.ss" GerbilAscentSessionContract)
-        (only-in "update-selection.ss" gerbil-ascent-update-selection
-                 gerbil-ascent-active-prefix gerbil-ascent-update-active-plans)
+        (only-in "reuse.ss" gerbil-ascent-prepare-native-reuse
+                 gerbil-ascent-activate-rules gerbil-ascent-reuse-active-rules native-reuse?
+                 native-reuse-result native-reuse-affected)
         (only-in "analysis.ss" gerbil-ascent-program-analysis
                  gerbil-ascent-program-schema)
         (only-in "funs.ss" gerbil-ascent-lattice-feeds-relation?
@@ -45,29 +45,26 @@
 ;;; One engine owns all mutable row buffers and indexes. Reused immutable
 ;;; analysis/schema values never share evaluation-local relation state.
 
-;;; Only completed native snapshots may seed an update. The capsule is private
-;;; to this module; checked Session owns the previous and prospective inputs.
-(defstruct native-reuse (result affected))
-
 ;; gerbil-ascent-make-updated-engine
-;;   : (-> SourceSnapshot Program CompletedResult Analysis Schema Boolean Engine)
-;;   | doc m%
-;;       Select dependency invalidation for a completed retained update.
-;;       The reuse capsule remains private to this evaluator.
+;; : (forall (p r a s e) (-> p p r a s Boolean e))
+;; : (-> SourceSnapshot Program EvaluationResult Analysis Schema Boolean Engine)
+;; | doc m%
+;;     Build a retained update engine after admitting the completed closure.
+;;     Unsupported reuse falls back to a fresh evaluation of accepted sources.
 ;;
-;;       # Examples
+;;     # Examples
 ;;
-;;       ```scheme
-;;       (gerbil-ascent-make-updated-engine old new result analysis schema #f)
-;;       ;; => a fresh prospective engine with independently owned state
-;;       ```
-;;     %
+;;     ```scheme
+;;     (gerbil-ascent-make-updated-engine previous candidate completed
+;;                                      analysis schema #f)
+;;     ;; => a retained engine; completed must have finished
+;;     ```
+;;   %
 (def (gerbil-ascent-make-updated-engine previous candidate completed
                                       analysis schema measure-rule-times?)
-  (unless (.ref completed 'finished) (error "cannot reuse a partial closure"))
-  (let (affected (gerbil-ascent-update-selection previous candidate analysis))
-    (gerbil-ascent-make-engine candidate #t analysis schema measure-rule-times? #f
-                              (and affected (make-native-reuse completed affected)))))
+  (gerbil-ascent-make-engine
+   candidate #t analysis schema measure-rule-times? #f
+   (gerbil-ascent-prepare-native-reuse previous candidate completed analysis)))
 
 ;; gerbil-ascent-make-engine
 ;;   : (-> Program Boolean (Maybe Analysis) (Maybe Schema) Boolean Engine)
@@ -301,8 +298,6 @@
                 (vector-set! all-size index (length rows))
                 (vector-set! delta-size index (length rows))))
             (seed (+ index 1)))))
-      ;; Engine-local metadata keeps the shared immutable analysis layout
-      ;; unchanged, including when a retained engine reuses that analysis.
       (let* ((analysis
               ;; Source-only replacement preserves declarations and rules.
               ;; Its session reuses this immutable rule plan while the fresh
@@ -317,23 +312,9 @@
              (rule-ticks (and measure-rule-times?
                               (make-vector (length rules) 0)))
              (strata (vector-ref analysis 3))
-             (full-active-by-stratum
-              (vector-map
-               (lambda (rules)
-                 (map (lambda (rule)
-                        (let (plan (gerbil-ascent-positive-plan rule))
-                          (vector (vector-ref rule 0) (vector-ref rule 1)
-                                  (vector-ref rule 2) (vector-ref rule 3)
-                                  (list->vector
-                                   (gerbil-ascent-active-prefix (vector-ref rule 1)))
-                                  plan
-                                  (and plan (make-vector (vector-ref plan 2) #f)))))
-                      rules))
-               (vector-ref analysis 4)))
+             (full-active-by-stratum (gerbil-ascent-activate-rules analysis))
              (active-by-stratum
-              (if (not reuse) full-active-by-stratum
-                  (gerbil-ascent-update-active-plans full-active-by-stratum
-                                                     (native-reuse-affected reuse))))
+              (gerbil-ascent-reuse-active-rules full-active-by-stratum reuse))
              (highest-stratum (- (vector-length active-by-stratum) 1))
              (lattice-feeds-relation?
               (and session?

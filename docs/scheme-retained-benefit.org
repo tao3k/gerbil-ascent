@@ -13,8 +13,13 @@ finalization retain their 180-second bound.
 
 * Workloads and independent truth
 
-The base is a twelve-edge chain 0->1->...->12 plus an independent singleton
-source and its copied output. Twenty paired samples run for each condition:
+The original receipts measure a twelve-edge chain plus an independent
+singleton source and its copied output. The current entry also measures a
+48-edge chain. Each condition has thirty groups of three timed arms; all six
+order permutations occur five times. Batch sizes are 16 for twelve edges and
+4 for 48 edges, with a distinct completed base Session for every update.
+Declaration, completed initial solve/check and completed timed-arm markers
+report actual work outside timers; they are not periodic heartbeat output.
 
 | Condition | Source transaction | Expected active native plans, fresh / retained |
 |-----------+--------------------+------------------------------------------------|
@@ -23,29 +28,43 @@ source and its copied output. Twenty paired samples run for each condition:
 | all-inputs | Both changes together | 3 / 3 |
 
 Scheme verifies completion and every row of all four relations before
-publishing a sample. Its independent model enumerates all x<y pairs of the
-uninterrupted chain; after deletion node 0 is isolated and only 1<=x<y<=12
-remain reachable. Neither measured result is the other's sole oracle.
+publishing a sample. Its independent model checks x<y membership, rejects
+duplicates and checks the complete triangular cardinality. After deletion
+node 0 is isolated; the lower bound becomes 1. This establishes exact closure
+without comparing one evaluator output with another as the sole oracle.
 
 * Timing contract
 
-Each sample opens and completes a new base Session. Program construction,
-that initial solve, forced GC and row checking are outside the timers. Fresh
-timing starts at evaluate-program on the already constructed prospective
-program, including engine admission, computation and result publication.
-Retained timing starts at replace-sources!, including its real source snapshot,
-replacement admission, dependency invalidation, computation and publication.
+Each batch opens and completes distinct base Sessions. Initial construction,
+initial solves, forced GC and independent row checking are outside the timers.
+Three separately named arms preserve the distinction between solve and update:
+
+| Arm | Timed work |
+|-----+------------|
+| solve | evaluate-program on the preconstructed prospective program: engine admission, computation and publication |
+| fresh-update | Construct a prospective source snapshot from base declarations and ready replacement rows, then full evaluate-program |
+| retained | replace-sources!: snapshot, replacement admission, dependency invalidation, computation and publication |
+
+The fresh-update snapshot preserves the base rules/providers/declarations and
+overrides source rows through the same POO prototype mechanism used by Session.
+Both update arms therefore start with base declarations and ready replacement
+rows and include candidate construction. The solve arm remains a diagnostic
+control, whose time must not be relabeled as the cost of a complete update.
 The original Session setup cost is therefore excluded explicitly: these are
 update measurements for an already retained session, not cold-start claims.
 
-Order alternates AB and BA, ten of each per condition. Raw samples report
-current-jiffy wall seconds and cpu-time process CPU seconds separately, along
-with active-rule-count. Active plans are a dependency-selection observation,
+Raw samples report per-operation batch means for current-jiffy wall seconds,
+cpu-time process CPU seconds, native allocated bytes and active-rule-count.
+The result vectors, loop index lists and two-element f64 counter buffer are
+allocated before timing. Gambit's native =##get-bytes-allocated!= implementation
+was checked against installed compiler commit
+[[https://github.com/gambit/gambit/blob/dcd677cd3e40860bdd27dfbdbf5e3ce46ab03813/lib/_kernel.scm#L4126][dcd677cd3e40860bdd27dfbdbf5e3ce46ab03813]]. Allocation is not live heap or peak RSS.
+Active plans are a dependency-selection observation,
 not counts of every rule invocation, join, allocation or instruction. No
 speed threshold turns a slower but correct sample into an omitted result.
 Shared-host interference remains possible even with counterbalancing.
 
-* Scope and remaining acceptance
+* Historical solve-boundary receipts
 
 The first accepted 60-pair run reports the following wall-time medians. CPU
 medians track them closely; every raw pair is retained in the evidence receipt.
@@ -82,7 +101,24 @@ attribute the regression to one particular function. Microsecond samples are
 especially sensitive to host state and clock granularity. Do not extrapolate
 these ratios to larger inputs.
 
-The architecture must therefore qualify a cost crossover before selecting
+The [[file:evidence/scheme-retained-batch-solve-20261004/receipt.json][batched solve-boundary receipt]] additionally records 120 paired groups,
+17,280 independently checked measured results and native allocation counts
+on source d2922ec. Its complete process finished in 108.92 seconds under the
+original 120-second bound. The data contains all orders and every sample;
+candidate construction remains excluded from its solve control.
+
+* Scope and remaining acceptance
+
+The [[file:evidence/scheme-retained-transition-20261004/receipt.json][latest transition receipt]] records the integration of concurrent source
+7e0a060 and all rejected build/progress attempts. Its current three-arm entry
+is not accepted: latest-source compilation reached the unchanged 180-second
+deadline. A prior pre-integration build completed in 126.06 seconds, but its
+measurement subsequently failed the five-second startup progress bound. The
+entry now reports only completed declarations, solves and timed arms; current
+native qualification must pass before publishing its distributions or freezing
+a new paid model plan. Prior 125-Case receipts bind their original sources.
+
+The architecture must qualify a cost crossover before selecting
 reuse on performance grounds. Next evidence needs larger independent and
 fully affected components, batch duration above the timer resolution, separate
 setup/update accounting, and profiling of admission/snapshot/native solve

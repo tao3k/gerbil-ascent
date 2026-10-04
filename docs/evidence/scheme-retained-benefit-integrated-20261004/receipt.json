@@ -1050,6 +1050,12 @@
   "schema": "ascent.native-retained-benefit",
   "scope": "pre-batching source with integrated immutable activation cache; twelve native Suites accepted on complete rerun; no separate Rust oracle rerun at this intermediate snapshot",
   "sourceHead": "05a192139dcc72835b2362fa3911e7e1579382b0",
+  "sourceReconstruction": {
+    "base": "f01c7b0875a7206f7ede2e3598011552f89955a9",
+    "patch": "source-snapshot.patch",
+    "patchSha256": "9940187467f270ef003a4dc52406252ce8bf83f43d8edcd23eb78d615db2300a",
+    "reason": "source commit was rebased over subsequent owner changes; published base plus patch reconstructs every native artifact source digest"
+  },
   "timingBoundary": "base program, completed session initialization, GC and semantic verification outside timer; admission, snapshot work, native solve and publication inside respective API timing",
   "version": 1
 }

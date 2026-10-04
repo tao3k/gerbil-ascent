@@ -1,0 +1,115 @@
+diff --git a/justfile b/justfile
+index a007f61..2cf227c 100644
+--- a/justfile
++++ b/justfile
+@@ -708,6 +708,13 @@ build-dsl-closure:
+     fi
+     timeout --signal=KILL 180s bash -e -c '"$@" {{ gerbil_test_runtime_options }} t/harness/run.ss build-dsl-closure; python3 tools/dsl-closure-artifact.py finalize' build-dsl-closure "${compiler[@]}"
+ 
++# Counterbalanced measurements with independent Scheme truth; no speed threshold.
++check-retained-benefit:
++    #!/usr/bin/env bash
++    set -euo pipefail
++    python3 tools/dsl-closure-artifact.py check
++    python3 t/harness/watch_output.py -- timeout 120s .cache/ascent/native-library/dsl-closure {{ gerbil_test_runtime_options }} --retained-benefit
++
+ # Run the known Suites through std/test in serial AOT processes with strict progress.
+ check-dsl-closure:
+     #!/usr/bin/env bash
+diff --git a/t/harness/dsl-closure.ss b/t/harness/dsl-closure.ss
+index 0ac6104..62a1515 100644
+--- a/t/harness/dsl-closure.ss
++++ b/t/harness/dsl-closure.ss
+@@ -23,7 +23,7 @@
+                  scheme-higher-order-test))
+ 
+ (import (only-in :gerbil-ascent/t/qualification/scheme-session-deletion-test
+-                 scheme-session-deletion-test))
++                 scheme-session-deletion-test session-benefit-main))
+ 
+ (import (only-in :gerbil-ascent/t/qualification/scheme-stratified-provenance-test
+                  scheme-stratified-provenance-test))
+@@ -45,6 +45,7 @@
+ 
+ (def (main . args)
+   (match args
++    (["--retained-benefit"] (session-benefit-main) (exit 0))
+     (["--source-closure" . roots] (apply source-closure-main roots) (exit 0))
+     (["--oracle" name]
+      (case (string->symbol name)
+diff --git a/t/qualification/scheme-session-deletion-test.ss b/t/qualification/scheme-session-deletion-test.ss
+index 6b7fdcd..fb76296 100644
+--- a/t/qualification/scheme-session-deletion-test.ss
++++ b/t/qualification/scheme-session-deletion-test.ss
+@@ -12,7 +12,70 @@
+         (only-in :gerbil-ascent/program/session gerbil-ascent-open-session
+                  gerbil-ascent-session-run gerbil-ascent-session-append-source!
+                  gerbil-ascent-session-replace-source! gerbil-ascent-session-replace-sources!))
+-(export scheme-session-deletion-test)
++(export scheme-session-deletion-test session-benefit-main)
++
++;;; Counterbalanced native samples. Construction, initial session solve, GC
++;;; and independent checking are outside each timer. Session replacement keeps
++;;; its actual snapshot/admission/publication costs inside the timed operation;
++;;; fresh evaluation includes engine admission and publication. No speed gate.
++(def (session-benefit-main)
++  (def (sample thunk)
++    (let* ((wall (current-jiffy)) (cpu (cpu-time)) (result (thunk))
++           (cpu-seconds (- (cpu-time) cpu))
++           (wall-seconds (/ (- (current-jiffy) wall) (jiffies-per-second))))
++      (vector result wall-seconds cpu-seconds)))
++  (def (check-result result edges first cold)
++    (check-equal? (.ref result 'finished) #t)
++    (check-set (rows result 'edge) edges)
++    (check-set (rows result 'cold) cold)
++    (check-set (rows result 'seen) cold)
++    ;; Independent chain model: reachability is exactly first <= x < y <= 12.
++    ;; Removing edge 0->1 isolates node 0; there are no alternate paths.
++    (check-set (rows result 'path)
++      (apply append (map (lambda (x)
++                    (map (lambda (y) (list x y)) (iota (- 12 x) (+ x 1))))
++                  (iota (- 12 first) first)))))
++  (for-each
++   (lambda (condition)
++     (let* ((edges (map (lambda (x) (list x (+ x 1))) (iota 12)))
++            (edge-change? (not (eq? condition 'independent)))
++            (cold-change? (not (eq? condition 'recursive)))
++            (next-edges (if edge-change? (cdr edges) edges))
++            (next-cold (if cold-change? '((8)) '((7))))
++            (replacements
++             (append (if edge-change? (list (cons 'edge next-edges)) [])
++                     (if cold-change? (list (cons 'cold next-cold)) [])))
++            (base (path-program edges))
++            (prospective (path-program next-edges next-cold)))
++       (let loop ((n 0))
++         (when (< n 20)
++           (let* ((session (gerbil-ascent-open-session base))
++                  (initial (gerbil-ascent-session-run session)))
++             (check-result initial edges 0 '((7)))
++             (##gc)
++             (let-values (((fresh retained)
++                           (if (even? n)
++                             (let* ((a (sample (lambda () (gerbil-ascent-evaluate-program prospective))))
++                                    (b (sample (lambda () (gerbil-ascent-session-replace-sources! session replacements)))))
++                               (values a b))
++                             (let* ((b (sample (lambda () (gerbil-ascent-session-replace-sources! session replacements))))
++                                    (a (sample (lambda () (gerbil-ascent-evaluate-program prospective)))))
++                               (values a b)))))
++               (check-result (vector-ref fresh 0) next-edges (if edge-change? 1 0) next-cold)
++               (check-result (vector-ref retained 0) next-edges (if edge-change? 1 0) next-cold)
++               (check-equal? (.ref (vector-ref fresh 0) 'active-rule-count) 3)
++               (check-equal? (.ref (vector-ref retained 0) 'active-rule-count)
++                             (case condition ((independent) 1) ((recursive) 2) (else 3)))
++               (write (list 'BENEFIT condition n (if (even? n) 'AB 'BA)
++                            (list 'fresh (vector-ref fresh 1) (vector-ref fresh 2)
++                                  (.ref (vector-ref fresh 0) 'active-rule-count))
++                            (list 'retained (vector-ref retained 1) (vector-ref retained 2)
++                                  (.ref (vector-ref retained 0) 'active-rule-count))))
++               (newline) (force-output)))
++           (loop (+ n 1))))))
++   '(independent recursive all-inputs))
++  (displayln "BENEFIT-OK pairs=60 independent-native-verdicts=120")
++  (force-output))
+ 
+ (def (rows result name) ((.ref result 'rows-of) name))
+ (def (check-set actual expected)

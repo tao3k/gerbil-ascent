@@ -2305,6 +2305,12 @@
   ],
   "schema": "ascent.native-retained-batch-solve",
   "sourceHead": "d2922ece980561f4b73c7b3f18c3d8af4e0a0822",
+  "sourceReconstruction": {
+    "base": "f01c7b0875a7206f7ede2e3598011552f89955a9",
+    "patch": "source-snapshot.patch",
+    "patchSha256": "5af4b880ebff97bcf5a16276b928d5ab19c85128280a74f44f178d8a9faa6942",
+    "reason": "source commit was rebased over subsequent owner changes; published base plus patch reconstructs every native artifact source digest"
+  },
   "statsSource": "https://github.com/gambit/gambit/blob/dcd677cd3e40860bdd27dfbdbf5e3ce46ab03813/lib/_kernel.scm#L4126",
   "timingBoundary": "preconstructed prospective solve versus complete retained replacement; constructor cost excluded only from solve control; not a complete fresh-update comparison",
   "version": 1

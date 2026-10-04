@@ -96,6 +96,14 @@ The [[file:evidence/scheme-higher-order-20261004/receipt.json][frozen receipt]] 
 source hashes, formal source hash, and excluded 180-second build failures.
 No model calls are included.
 
+The actual-source model study now uses function-valued recursion in both
+finite-fix tasks: self is an arrow, recursion changes its relation argument,
+and the transfer changes the finite mapping. Native preflight must match the
+independent two-node reachable-set bit masks before freezing a new paid plan.
+The model receives actual implementation and expression source, with no
+expected datum, tutorial, examples added for the study or semantic recipe.
+This bounded family is not a compiler-refinement theorem.
+
 * Function fixed-point proof and acceptance
 
 FiniteHeight.lean adds pointwise function-table rank monotonicity and strict

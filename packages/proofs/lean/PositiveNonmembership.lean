@@ -98,4 +98,39 @@ theorem ground_why_not_sound {α : Type u}
   exact targetAbsent
     (least_included_in_closed ⟨inputCovered, ruleClosed⟩ target derived)
 
+/-- After deleting inputs, restricting rule outputs to an old closed model
+    preserves the new least closure. Grounded support maintenance relies on
+    complete rule instances and founded iteration, not circular support counts. -/
+theorem deletion_restricted_model {α : Type u}
+    (input old : Relation α) (step : Relation α → Relation α)
+    (mono : Monotone step) (covered : Included input old)
+    (oldClosed : Included (step old) old) (row : α) :
+    LeastClosure input step row ↔
+      LeastClosure input (fun r x => old x ∧ step r x) row := by
+  let restricted : Relation α → Relation α := fun r x => old x ∧ step r x
+  have restrictedMono : Monotone restricted := by
+    intro a b hab x hx
+    exact ⟨hx.1, mono hab x hx.2⟩
+  have fullOld : Included (LeastClosure input step) old :=
+    least_included_in_closed ⟨covered, oldClosed⟩
+  have restrictedFull : Included (LeastClosure input restricted)
+      (LeastClosure input step) := by
+    apply least_included_in_closed
+    constructor
+    · exact input_in_least
+    · intro x hx
+      exact least_closed_under_rules mono x hx.2
+  have restrictedClosed : Closed input step (LeastClosure input restricted) := by
+    constructor
+    · exact input_in_least
+    · intro x hx
+      have inOld : old x := oldClosed x (mono
+        (fun y hy => fullOld y (restrictedFull y hy)) x hx)
+      exact least_closed_under_rules restrictedMono x ⟨inOld, hx⟩
+  constructor
+  · intro hx
+    exact least_included_in_closed restrictedClosed row hx
+  · intro hx
+    exact restrictedFull row hx
+
 end Ascent

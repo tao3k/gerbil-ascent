@@ -80,3 +80,13 @@ was rejected. An exploratory API attempt that omitted invoke-gsc and rebound
 a prior binary was interrupted and excluded; deleting the prior binary and
 requiring successful native job draining now prevents that path. GitHub CI
 and the four broader research obligations still require their own evidence.
+
+The [[file:scheme-support-graph-design.org][support-graph contract]] records the new complete finite positive derivation
+graph and grounded DRed kernel. Its qualification includes 64 initial graphs
+and 192 withdrawals against both independent matrix closure and native solve.
+R3's retained Session integration and stratified updates remain open; R4's
+Boolean support graph is implemented, while nonpositive and other-semiring
+provenance remain open. The Lean rank and restricted-deletion theorems provide
+checked abstract premises, not an implementation correctness certificate.
+The submitted AOT recovery head 1d0ce1eb95038696a03b743c1f41dd4b56fc23fd passed
+all four GitHub checks in [[https://github.com/tao3k/gerbil-ascent/actions/runs/37173937141][its exact-head CI run]]. This does not qualify later edits.

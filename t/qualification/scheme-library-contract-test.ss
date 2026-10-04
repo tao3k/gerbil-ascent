@@ -196,26 +196,23 @@
 
 (def (check-all generation edges blocked supplied-weights supplied-roots)
   (let* ((expected (model-summary edges blocked supplied-weights supplied-roots))
-         (direct
-          (relational-query-name
-           (relational-solve
-            (relational-admit
-             (native-program edges blocked supplied-weights supplied-roots)))
-           'summary))
-         (fragment
-          (fragment-program edges blocked supplied-weights supplied-roots))
-         (composed
-          (relational-query
-           (relational-solve
-            (relational-admit
-             (relational-compose (list fragment) 16 64 128)))
-           fragment 'summary))
-         (observed
-          (candidate-result generation edges blocked supplied-weights
-                            supplied-roots)))
+         (direct (relational-query-name
+                  (relational-solve (relational-admit
+                    (native-program edges blocked supplied-weights supplied-roots)))
+                  'summary)))
     (check-equal? (same-set? direct expected) #t)
-    (check-equal? (same-set? composed expected) #t)
-    (check-equal? (same-set? observed expected) #t)))
+    (displayln "CONTRACT-CHECKED direct " generation) (force-output)
+    (let* ((fragment (fragment-program edges blocked supplied-weights supplied-roots))
+           (composed (relational-query
+                      (relational-solve (relational-admit
+                        (relational-compose (list fragment) 16 64 128)))
+                      fragment 'summary)))
+      (check-equal? (same-set? composed expected) #t)
+      (displayln "CONTRACT-CHECKED composed " generation) (force-output))
+    (check-equal? (same-set?
+                   (candidate-result generation edges blocked supplied-weights supplied-roots)
+                   expected) #t)
+    (displayln "CONTRACT-CHECKED candidate " generation) (force-output)))
 
 (def scheme-library-contract-test
   (test-suite "native and candidate common semantic contract"
@@ -296,10 +293,17 @@
              (session
               (relational-open-program-session
                (native-program (car phases) '() weights source-roots)))
-             (first (relational-program-session-run session))
+             (first (let (value (relational-program-session-run session))
+                      (check-equal? (relational-program-query value 'summary) '((0 20)))
+                      (displayln "SUPPORT-CHECKED initial-native") (force-output)
+                      value))
              (snapshot
               (contract-snapshot 0 (car phases) '() weights source-roots))
-             (receipt (reasoning-attempt snapshot candidate 100000 20000)))
+             (receipt (let (value (reasoning-attempt snapshot candidate 100000 20000))
+                        (check-equal? (reasoning-receipt-status value) 'complete)
+                        (check-equal? (reasoning-receipt-rows value) '((0 20)))
+                        (displayln "SUPPORT-CHECKED initial-candidate") (force-output)
+                        value)))
         (for-each
          (lambda (generation edges total)
            (let* ((expected (list (list 0 total)))

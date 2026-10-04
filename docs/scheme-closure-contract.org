@@ -90,7 +90,7 @@ an absence or a completed proof. A founded witness is not all provenance.
 | Replacement/withdrawal and failed transaction | Fresh-model equivalence and old snapshot stability | scheme-operator-retained-test.ss |
 | Finite evidence and ground absence | Binding changes, tampering and exhausted bounds cannot verify | ascent-finite-evidence-test.ss, ascent-positive-nonmembership-test.ss |
 
-Build the known six-Suite AOT entry with =just build-dsl-closure=, then run
+Build the known seven-Suite AOT entry with =just build-dsl-closure=, then run
 =just check-dsl-closure=. Compilation uses the same std/make Library/currentness
 owner; the compiler output-dir option makes its current static output take precedence over an older
 installed ASCENT. Native execution uses std/test's TestModule/TestHarness,

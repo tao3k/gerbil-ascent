@@ -1,0 +1,81 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+#+TITLE: Complete finite positive provenance and grounded deletion
+#+DATE: 2026-10-04
+#+STATUS: graph and deletion kernel implemented; retained native Session integration remains open
+
+* Semantic contract
+
+[[file:../candidate/provenance-graph.ss][The graph module]] reconstructs the completed finite positive closure and
+then enumerates every supported rule's successful grounding over that closure.
+Unlike the founded witness DAG, a fact has every derivation alternative and
+may refer to itself through a recursive rule. Repeated source occurrences
+keep distinct (relation, position) labels. Rule occurrence positions distinguish
+identical user labels. Candidate facts remain separate hypothetical inputs.
+
+For each fact v, its Boolean support equation is the disjunction of its
+remaining source/candidate leaves and, for every grounded rule alternative,
+the conjunction of that alternative's input facts. Interpret the simultaneous
+equations at their least fixed point. A cycle cannot establish its own truth.
+The graph represents all positive derivation alternatives without enumerating
+an infinite collection of recursive proof trees. This contract specifies
+Boolean support; other provenance semirings require their own recursive
+interpretation and are not certified here. Negation/reduction remain unsupported.
+
+Closure replay and alternative enumeration each have a work cap; a separate
+edge cap bounds stored alternatives. Exhaustion returns bounded with no
+alternatives, never a partial complete graph. Verification independently
+reconstructs every alternative and compares nodes, roots and source/program/
+query binding; a missing alternative fails just like an invented one.
+External data is checked for bounded pair structure before edge traversal.
+The caller authenticates source and program identities.
+
+* Deletion state and transaction
+
+Open maintenance only after complete graph verification. It copies nodes,
+query roots and alternatives into private state. Source selectors refer to
+occurrences in the original frozen snapshot, not renumbered current rows.
+Candidate hypotheses remain fixed. Updates support source withdrawal only.
+
+1. Overdelete every affected dependent, including cyclic dependencies.
+2. Rederive affected facts from remaining founded alternatives. An alternate
+   source or derivation can restore a fact; a self-cycle alone cannot.
+3. Publish the new alive set and withdrawn occurrence set together only after
+   both phases finish. Budget/selector errors preserve the prior published state.
+
+This operates on grounded dependency edges; it does not rerun relational joins
+on each withdrawal. Opening pays complete grounding and validation cost.
+Returned work counts edge probes, not time or a speedup claim. It is a native
+Scheme maintenance kernel, not yet the retained Session's update implementation.
+The retained Session currently still recomputes replacements atomically. Moving
+this kernel into that owner needs source generation binding, native grounding
+conformance, transaction failure tests and stratified negative/aggregate updates.
+The independent candidate verifier must keep its separate evidence authority.
+
+* Proof and executable correspondence
+
+[[file:../packages/proofs/lean/PositiveNonmembership.lean][deletion_restricted_model]] proves that, after deleting inputs, restricting
+rule outputs to an old closed model preserves the new least closure, assuming
+monotonicity and input coverage. [[file:../packages/proofs/lean/FiniteHeight.lean][FiniteHeight]] checks bounded-rank stabilization,
+product ranks and finite function-table ranks. Both compile with Lean 4.34.1.
+These abstract theorems do not mechanically prove the Gerbil compiler or DRed
+implementation; their premises need the independent executable discriminators.
+GitHub CI now checks the fixed Lean version as a required independent job.
+
+[[file:../t/qualification/scheme-provenance-graph-test.ss][Qualification]] covers alternate/cyclic support, empty unfounded cycles,
+missing edges, edge exhaustion, invalid selectors and failed publication.
+It also enumerates all 64 directed graphs on three nodes without self edges:
+64 original snapshots plus all 192 successive source withdrawals. Initial
+answers and every withdrawn answer match both an independent matrix closure
+and the existing native rule solver. Exact alternative counts additionally
+match independent source/base-rule/recursive-grounding counts.
+
+* Remaining joint closure
+
+General higher-order checking must connect explicit finite domains and positive
+function types to the checked IR and rank proof. Function-valued fixed points
+and extensional function equality require a separate scope decision. Main
+Session deletion integration, nonpositive provenance, scaling/cost evidence
+and real-model paired measurements remain separate gates. No model call or
+preset semantic prompt is introduced by this module.

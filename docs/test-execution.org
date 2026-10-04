@@ -125,16 +125,16 @@ measurement boundaries. All generated artifacts and logs stay in =.cache/=.
 * DSL closure discriminator
 
 =just build-dsl-closure= reuses std/make's current production Library and
-compiles the six known exported Suites into =t/harness/dsl-closure.ss='s
+compiles the seven known exported Suites into =t/harness/dsl-closure.ss='s
 AOT entry. It uses std/test directly, including its standard Case verdicts,
 MODULE-OK/HARNESS-OK markers and failure propagation. This is a fixed semantic
 qualification entry, not a replacement for general gxtest discovery or the
 full repository suite. the compiler output-dir option selects the current Library static output
 before any older installed ASCENT artifact.
 
-=just check-dsl-closure= checks source/artifact hashes, the six-module inventory,
+=just check-dsl-closure= checks source/artifact hashes, the seven-module inventory,
 heap limit, five-second genuine-output watchdog and the existing 120-second module cap per Suite.
-The six known Suites run in separate serial processes; the five-second idle
+The seven known Suites run in separate serial processes; the five-second idle
 limit is unchanged and the total limit matches _test-file. No timer
 messages count as progress. Python hashes bytes and supervises the native
 process; it owns no Case evaluation, expectation or DSL semantics. A failed

@@ -83,15 +83,31 @@ jobs:
               ;;
             *) exit 2 ;;
           esac
+  formal:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - name: Install fixed Lean toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y elan
+          elan toolchain install leanprover/lean4:v4.34.1
+      - name: Check abstract closure and finite-height proofs
+        run: |
+          elan run leanprover/lean4:v4.34.1 lean packages/proofs/lean/PositiveNonmembership.lean
+          elan run leanprover/lean4:v4.34.1 lean packages/proofs/lean/FiniteHeight.lean
   native-and-oracle:
     if: ${{ always() }}
-    needs: [scheme, oracle]
+    needs: [scheme, oracle, formal]
     runs-on: ubuntu-latest
     steps:
-      - name: Require both independent qualification jobs
+      - name: Require all independent qualification jobs
         env:
           SCHEME_RESULT: ${{ needs.scheme.result }}
           ORACLE_RESULT: ${{ needs.oracle.result }}
+          FORMAL_RESULT: ${{ needs.formal.result }}
         run: |
           test "$SCHEME_RESULT" = success
           test "$ORACLE_RESULT" = success
+          test "$FORMAL_RESULT" = success

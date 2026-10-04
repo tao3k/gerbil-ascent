@@ -50,7 +50,7 @@ task cannot be specified, state a trade-off instead of forcing an A/B.
 | Scheme =(rule ...)= with =?variables= | Explicit logic-variable scope within Gerbil composition | New macro may have poor error locations or more verbose authoring | Native macro prototype, invalid-scope cases and paired authoring tasks |
 | Fragment functions with fresh private handles | Parameterized reuse without accidental relation capture | Flix already supports first-class constraints and private names with stronger checks | Two-instance composition, signature conflict and late negative-cycle tests |
 | Checkable operator IR with fixed/changing contexts | Planner can see dependencies and admission can reject hidden reads | Small IR may exclude useful Scheme and cost more to evaluate | Written semantics, sound admission argument, independent finite model and workload coverage |
-| Declared pointwise view | Local finite row production with visible modes | Host purity, stability and totality remain trusted; finite output per call does not guarantee closure | Mutable-capture, replay and infinite-successor counterexamples; finite-domain evidence or explicit failure |
+| Frozen finite view table (implemented); general callback (proposed) | Visible modes and frozen finite input/output mapping | General callbacks still require purity, stability, effects and termination obligations | Frozen-capture/replay tests; infinite-successor and domain-failure discriminators |
 | Separate =compose=, =admit=, =solve= and =query= | Program identity and completion become observable | Extra stages may burden users | Snapshot/source-replacement tests and paired API usability tasks |
 
 “Fits Scheme better” and “is easier to use” remain hypotheses.  A
@@ -69,7 +69,7 @@ idea does not improve upon its original proof or implementation.
 | Static assurance | A sound admission rule over a stated IR | Datafun/Flix-level type safety without their systems |
 | Performance | Same semantics, pinned versions, matched inputs, operation counts and time/memory distributions | General speed across other workloads or hardware |
 | Ergonomics | Paired tasks, comparable training, counterbalanced order, scored correctness/time/errors | Runtime performance or formal assurance |
-| LLM usefulness | Fixed model, evidence, prompts, budget and repeated seeds; scored answers and unsupported claims | Changes to model weights or general reasoning ability |
+| LLM usefulness | Fixed model, actual Scheme source/tasks, invocation and budget; no preset semantic guidance; score raw acceptance, semantic correctness and actual feedback separately | Changes to model weights or general reasoning ability |
 
 Before a comparison, register the claim, baseline, treatment, common
 semantic subset, primary outcome, task split, sample count, exclusion
@@ -142,3 +142,5 @@ paper system while a semantically matched comparison is absent.
 
 [[file:index.org][Research index]];
 [[file:../../scheme-relational-dsl-design.org][overview]].
+
+See [[file:../../scheme-design-framework.org][the acceptance matrix]] for implemented boundaries and open research gates.

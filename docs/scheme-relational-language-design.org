@@ -722,3 +722,5 @@ create unbounded integer chains. Passing admission is not a termination proof.
 The four-case executable discriminator is
 =t/qualification/scheme-closure-contract-test.ss=; existing operator, joint
 Library, retained Session and evidence corpora cover different laws.
+
+The [[file:scheme-design-framework.org][design framework matrix]] maps each guarantee to its owner, discriminator and remaining acceptance obligation.

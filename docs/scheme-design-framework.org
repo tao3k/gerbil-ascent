@@ -1,0 +1,66 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+#+TITLE: Scheme DSL design framework and acceptance matrix
+#+DATE: 2026-10-04
+#+STATUS: implemented subset specified; research obligations remain explicit
+
+* Acceptance rule
+
+This matrix defines the scope of design closure. An implemented interface,
+a semantic argument, a passing discriminator and measured application benefit
+are separate obligations. A row closes only the claim stated in that row.
+The [[file:scheme-closure-contract.org][closure contract]] supplies the semantic limits; the
+[[file:native-library-acceptance.org][Library acceptance contract]] supplies the general execution gates.
+Historical receipts bind their own sources and do not certify later commits.
+
+* Implemented framework
+
+| ID | Boundary and owner | Guarantee and limit | Implementation | Discriminator |
+|----+--------------------+---------------------+----------------+---------------|
+| C1 | Scheme construction | First-class programs/fragments; host construction remains trusted computation | [[file:../program/interface.ss][interface]], [[file:../program/objects.ss][objects]] | [[file:../t/qualification/scheme-library-contract-test.ss][library contract]]: complete sets against an independent model |
+| C2 | Whole-program admission | Fresh private identities, binding modes and strict dependency checks after composition; valid fragments can form an invalid whole | [[file:../program/scheme-admission.ss][admission]], [[file:../program/planning.ss][planning]] | [[file:../t/qualification/scheme-closure-contract-test.ss][closure]]: individually valid negative fragments reject together |
+| C3 | Checked scalar/view boundary | Frozen immutable scalar captures and finite view tables; no opaque user callback inside checked rules | [[file:../program/scheme-checked.ss][checked descriptors]] | [[file:../t/qualification/scheme-library-contract-test.ss][library contract]]; capture and admission cases remain separate from host purity |
+| C4 | Finite positive operator graph | Fixed arities and finite scalar universe imply finite relation height; resource bounds may still reject | [[file:../program/operator.ss][operator]] | [[file:../t/qualification/scheme-operator-test.ss][operator]]: finite closure and scoped parameter rejection |
+| C5 | General arithmetic/lattice recursion | Binding safety does not imply termination; exhausted bounds fail and cannot publish completed rows | [[file:../program/scheme-checked.ss][scalar operations]], [[file:../t/qualification/scheme-closure-contract-test.ss][closure discriminator]] | Bounded successor returns 0..4; unbounded successor and one-key max fail with exact budget errors |
+| C6 | Retained source lifecycle | Positive insertion reuse; replacement/withdrawal publish an atomic completed recomputation; failed transaction retains prior completed result | [[file:../program/operator-change.ss][positive change]], [[file:../t/qualification/scheme-operator-retained-test.ss][retained qualification]] | Compare complete sets with a fresh model and test failed publication; no incremental deletion savings claim |
+| C7 | Finite evidence and Why-Not | Replay checks exact program/query/snapshot; ground absence requires a completed finite closed model; bounded/unsupported is not absence | [[file:../t/qualification/ascent-finite-evidence-test.ss][finite evidence]], [[file:../t/qualification/ascent-positive-nonmembership-test.ss][nonmembership]] | Tampered binding and exhausted verification bounds reject; founded witness is not all provenance |
+| C8 | Native execution and byte binding | Scheme owns Case verdicts and DSL semantics; Python only checks hashes and genuine output progress | [[file:../t/harness/dsl-closure.ss][native entry]], [[file:../tools/dsl-closure-artifact.py][artifact binding]] | Six known Suites, explicit exit status, MODULE-OK/HARNESS-OK/final OK, 5s silence and 120s module bounds |
+
+C4's finite universe argument applies to fixed sources, mappings and selection
+constants. It does not extend to C5's integer generation. A finite lattice key
+set is insufficient when values can improve forever. C7 binds supplied data;
+it does not authenticate a producer or establish real-world completeness.
+
+* Research decisions and remaining closure conditions
+
+| ID | Design decision | Required falsifiable evidence | Status / dependency |
+|----+-----------------+-------------------------------+---------------------|
+| R1 | Admit general higher-order operators only with explicit domains, modes, captures, effects and monotonicity/height obligations | Reject escaped dependencies and out-of-domain derived rows; establish soundness for the stated IR, then compare independent finite models | Open; C4 is the supported subset, not a generic Datafun type theorem |
+| R2 | Finite-domain declarations must validate inputs and every derived value, never silently clamp | Unbounded successor and increasing one-key lattice become admission rejection or explicit domain failure; complete in-domain closure agrees with oracle | Open; current C5 fails at operational bounds |
+| R3 | General deletion requires multi-support and cyclic support semantics | Remove one of two supports, remove final support, break a recursive cycle; compare every transaction with full recomputation and measure work | Open; C6 provides atomic recomputation only |
+| R4 | Complete provenance needs an explicit recursive provenance algebra and certificate cost bounds | Independent witness enumeration on finite models, cyclic cases, tamper and size limits | Open; C7 provides bounded founded witnesses/finite replay |
+| R5 | Architecture benefit must be measured separately from correctness | Same semantics, input set, dependency versions and budgets; operation counts and time/memory distributions | Open; focused native passes establish no speedup |
+| R6 | Model validation measures comprehension of actual Scheme and reasoning, with actual native feedback after a response | Freeze tasks/source/invocation, score raw acceptance and semantic correctness separately, retain timeouts and status mismatches; compare reasoning and feedback conditions | Open; no preset semantic prompts, tutorials, answer prefills or repair loops |
+| R7 | MRR Rust integration follows native and model acceptance | Preserve exact statuses, ABI limits and semantic authority through a byte-level binding; independent conformance on the accepted subset | Deferred until the preceding acceptance gates; no Rust runtime changes in this slice |
+
+* Model interface policy
+
+Why might an invocation contain text? Actual source, the user's task and a
+transport request identify the computation being evaluated. They are not
+permission to provide prewritten semantic explanations, expected answers,
+few-shot examples or hidden correction rules. This work adds no such prompts.
+A guard must expose the actual computation/status at response time rather
+than teach a predetermined solution. The evaluation target is the model's
+understanding of Scheme logic and its own reasoning ability. Any transport
+format acceptance failure must remain visible separately from semantic accuracy.
+A post hoc extraction result cannot replace the raw-interface acceptance rate.
+Native correctness alone cannot close R6 or justify MRR integration.
+
+* Evidence and integration
+
+The [[file:evidence/scheme-closure-20261004/receipt.json][original six-module receipt]] records 51 passing Cases on its frozen
+source. It remains immutable. This branch integrates the declaration-scope
+baseline 53980e47681d095b30400cefc745d90b5509e8be; acceptance on that integrated
+source requires a new artifact binding and run. GitHub CI is a separate gate
+whose result must be checked against the submitted head.

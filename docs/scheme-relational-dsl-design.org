@@ -304,3 +304,5 @@ procedures are trusted adapters with bounded claims.
 - [[file:scheme-relational-language-design.org][First Scheme language design gate]]
 - [[file:research/agent-inference/index.org][Deployment-time LLM reasoning research index]]
 - [[file:llm-reasoning-library-plan.org][LLM reasoning Library implementation discussion]]
+
+The [[file:scheme-design-framework.org][design framework matrix]] maps each guarantee to its owner, discriminator and remaining acceptance obligation.

@@ -144,3 +144,5 @@ execution is a separate delivery path; this receipt does not qualify the
 interpreter startup, the primary checkout's newer declaration-scope changes,
 full repository CI, incremental deletion, general higher-order typing or
 real model benefit. The source/ABI path adds no prompts or model calls.
+
+The [[file:scheme-design-framework.org][design framework matrix]] maps each guarantee to its owner, discriminator and remaining acceptance obligation.

@@ -5,7 +5,7 @@
 ;;; Private positive-rule execution plans. Plans are immutable and shared;
 ;;; each engine owns its variable frames, including nested/concurrent solves.
 (import (only-in "funs.ss" gerbil-ascent-expression-value gerbil-ascent-head-row))
-(export gerbil-ascent-positive-plan gerbil-ascent-compile-positive-plan gerbil-ascent-run-positive-plan!
+(export gerbil-ascent-prepare-rule-activations gerbil-ascent-positive-plan gerbil-ascent-compile-positive-plan gerbil-ascent-run-positive-plan!
         gerbil-ascent-index-key gerbil-ascent-index-key/terms gerbil-ascent-emit-heads!)
 
 (def +positive-plans+ (make-hash-table-eq weak-keys: #t))
@@ -222,3 +222,53 @@
       (let (head (car remaining))
         (emit-row! head (gerbil-ascent-head-row (vector-ref head 1) environment)))
       (emit (cdr remaining)))))
+
+;; gerbil-ascent-prepare-rule-activations
+;; : (forall (r) (-> (Vector [r]) (Vector [Vector])))
+;; : (-> ActiveRulesByStratum ImmutableActivations)
+;; | doc m%
+;;     Lower immutable activation metadata once with its admitted Analysis.
+;;     Prefix vectors and positive plans contain no engine-owned variable frames.
+;;
+;;     # Examples
+;;
+;;     ```scheme
+;;     (gerbil-ascent-prepare-rule-activations '#(()))
+;;     ;; => '#(())
+;;     ```
+;;   %
+(def (gerbil-ascent-prepare-rule-activations active)
+  (vector-map
+   (lambda (rules)
+     (map (lambda (rule)
+            (vector (vector-ref rule 0) (vector-ref rule 1)
+                    (vector-ref rule 2) (vector-ref rule 3)
+                    (list->vector (active-prefix (vector-ref rule 1)))
+                    (gerbil-ascent-positive-plan rule)))
+          rules))
+   active))
+
+;; active-prefix
+;; : (forall (a) (-> [(Vector a)] [Integer]))
+;; : (-> CompiledBody [RelationIndex])
+;; | doc m%
+;;     Only a pure variable-only atom extends the prunable prefix. Computed
+;;     bindings retain the evaluator's complete traversal and cannot be skipped.
+;;
+;;     # Examples
+;;
+;;     ```scheme
+;;     (active-prefix [])
+;;     ;; => []
+;;     ```
+;;   %
+(def (active-prefix body)
+        (if (and (pair? body) (eq? (vector-ref (car body) 0) 'atom))
+          (let (atom (vector-ref (car body) 1))
+            (cons (vector-ref atom 0)
+                  (if (and (null? (vector-ref atom 2))
+                           (andmap (lambda (term)
+                                     (eq? (car term) 'variable))
+                                   (vector-ref atom 1)))
+                    (active-prefix (cdr body)) [])))
+          []))

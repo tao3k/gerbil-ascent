@@ -5,8 +5,7 @@
 ;;; Completed-closure reuse admission and engine-local rule activation.
 (import (only-in :clan/poo/object .ref)
         (only-in "update-selection.ss" gerbil-ascent-update-selection
-                 gerbil-ascent-active-prefix gerbil-ascent-update-active-plans)
-        (only-in "positive.ss" gerbil-ascent-positive-plan))
+                 gerbil-ascent-update-active-plans))
 (export gerbil-ascent-prepare-native-reuse gerbil-ascent-reuse-active-rules
         gerbil-ascent-activate-rules
         native-reuse? native-reuse-result native-reuse-affected)
@@ -51,7 +50,7 @@
 ;; : (forall (a r) (-> a (Vector [r])))
 ;; : (-> Analysis ActiveRulesByStratum)
 ;; | doc m%
-;;     Compile all rule activation metadata with new engine-local slot frames.
+;;     Instantiate cached immutable activation metadata with engine-local frames.
 ;;
 ;;     # Examples
 ;;
@@ -64,14 +63,14 @@
   (vector-map
    (lambda (rules)
      (map (lambda (rule)
-            (let (plan (gerbil-ascent-positive-plan rule))
+            (let (plan (vector-ref rule 5))
               (vector (vector-ref rule 0) (vector-ref rule 1)
                       (vector-ref rule 2) (vector-ref rule 3)
-                      (list->vector (gerbil-ascent-active-prefix (vector-ref rule 1)))
+                      (vector-ref rule 4)
                       plan
                       (and plan (make-vector (vector-ref plan 2) #f)))))
           rules))
-   (vector-ref analysis 4)))
+   (vector-ref analysis 5)))
 
 ;; gerbil-ascent-reuse-active-rules
 ;; : (forall (r c) (-> (Vector [r]) (Maybe c) (Vector [r])))

@@ -10,7 +10,10 @@
                  gerbil-ascent-rule gerbil-ascent-guard)
         (only-in :gerbil-ascent/program/evaluate
                  gerbil-ascent-evaluate-program gerbil-ascent-make-engine)
-        (only-in :gerbil-ascent/program/positive gerbil-ascent-compile-positive-plan)
+        (only-in :gerbil-ascent/program/positive gerbil-ascent-compile-positive-plan
+                 gerbil-ascent-run-positive-plan!)
+        (only-in :gerbil-ascent/program/reuse gerbil-ascent-activate-rules)
+        (only-in :gerbil-ascent/program/update-selection gerbil-ascent-update-active-plans)
         (only-in :gerbil-ascent/table/storage gerbil-ascent-set-storage-provider)
         (only-in :gerbil-ascent/table/provider gerbil-ascent-hash-index-provider)
         (only-in :gerbil-ascent/t/qualification/ascent-positive-plan-reference-evaluate
@@ -37,6 +40,48 @@
      32 64 96)))
 (def ascent-positive-plan-test
   (test-suite "Complete positive rule slot plans"
+    (poo-flow-test-case "analysis shares immutable activations while every engine owns its frames"
+      (let* ((program (path-program '((0 1) (1 2))))
+             (first (gerbil-ascent-make-engine program #t))
+             (analysis (.ref first '.analysis))
+             (second (gerbil-ascent-make-engine program #t))
+             (a (car (vector-ref (gerbil-ascent-activate-rules analysis) 0)))
+             (b (car (vector-ref (gerbil-ascent-activate-rules analysis) 0))))
+        (check-equal? (eq? analysis (.ref second '.analysis)) #t)
+        (check-equal? (eq? (vector-ref a 4) (vector-ref b 4)) #t)
+        (check-equal? (eq? (vector-ref a 5) (vector-ref b 5)) #t)
+        (check-equal? (eq? (vector-ref a 6) (vector-ref b 6)) #f)
+        (vector-set! (vector-ref a 6) 0 'private)
+        (check-equal? (vector-ref (vector-ref b 6) 0) #f)
+        (check-equal? (rows ((.ref first '.run)) 'path) (rows ((.ref second '.run)) 'path))))
+    (poo-flow-test-case "partial heads share lowered atoms and preserve duplicates with fresh frames"
+      (let* ((x (v 'x))
+             (program
+              (gerbil-ascent-program
+               (list (gerbil-ascent-relation 'source 1 '((7)))
+                     (gerbil-ascent-relation 'left 1 [])
+                     (gerbil-ascent-relation 'right 1 []))
+               (list (gerbil-ascent-rule (list (a 'left (gerbil-ascent-literal 9))
+                                               (a 'left x) (a 'right x) (a 'left x))
+                                        (list (a 'source x)))) 4 8 12))
+             (engine (gerbil-ascent-make-engine program #t))
+             (active (gerbil-ascent-activate-rules (.ref engine '.analysis)))
+             (full (car (vector-ref active 0)))
+             (selected (car (vector-ref (gerbil-ascent-update-active-plans active '#(#f #t #f)) 0)))
+             (plan (vector-ref full 5)) (partial (vector-ref selected 5))
+             (emissions []))
+        (check-equal? (length (vector-ref partial 0)) 3)
+        (check-equal? (eq? (vector-ref plan 1) (vector-ref partial 1)) #t)
+        (check-equal? (vector-ref plan 2) (vector-ref partial 2))
+        (check-equal? (eq? (vector-ref full 6) (vector-ref selected 6)) #f)
+        (check-equal? (length (vector-ref plan 0)) 4)
+        (gerbil-ascent-run-positive-plan!
+         partial (vector-ref selected 6) -1 (lambda args '((7)))
+         (lambda (head row)
+           (set! emissions (cons (cons (vector-ref head 0) row) emissions))))
+        (check-equal? emissions '((1 7) (1 7) (1 9)))
+        (check-equal? (vector-ref (gerbil-ascent-update-active-plans active '#(#f #f #f)) 0) [])
+        (check-equal? (eq? full (car (vector-ref (gerbil-ascent-update-active-plans active '#(#f #t #t)) 0))) #t)))
     (poo-flow-test-case "positional slot selection preserves all key orders and action identity"
       (for-each
        (lambda (width)

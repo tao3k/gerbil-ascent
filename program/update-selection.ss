@@ -8,7 +8,7 @@
         (only-in "scheme-checked.ss" relational-stable-procedure?)
         (only-in "positive.ss" gerbil-ascent-positive-plan)
         (only-in :gerbil-ascent/table/storage gerbil-ascent-set-storage-provider))
-(export gerbil-ascent-update-selection gerbil-ascent-active-prefix
+(export gerbil-ascent-update-selection
         gerbil-ascent-update-active-plans)
 
 ;; gerbil-ascent-update-selection
@@ -113,31 +113,6 @@
         (visit)))))
 
 
-;; gerbil-ascent-active-prefix
-;; : (forall (a) (-> [(Vector a)] [Integer]))
-;; : (-> CompiledBody [RelationIndex])
-;; | doc m%
-;;     Only a pure variable-only atom extends the prunable prefix. Computed
-;;     bindings retain the evaluator's complete traversal and cannot be skipped.
-;;
-;;     # Examples
-;;
-;;     ```scheme
-;;     (gerbil-ascent-active-prefix [])
-;;     ;; => []
-;;     ```
-;;   %
-(def (gerbil-ascent-active-prefix body)
-        (if (and (pair? body) (eq? (vector-ref (car body) 0) 'atom))
-          (let (atom (vector-ref (car body) 1))
-            (cons (vector-ref atom 0)
-                  (if (and (null? (vector-ref atom 2))
-                           (andmap (lambda (term)
-                                     (eq? (car term) 'variable))
-                                   (vector-ref atom 1)))
-                    (gerbil-ascent-active-prefix (cdr body)) [])))
-          []))
-
 ;; gerbil-ascent-update-active-plans
 ;; : (forall (a) (-> (Vector [a]) Vector (Vector [a])))
 ;; : (-> ActiveStrata AffectedRelations ActiveStrata)
@@ -153,20 +128,33 @@
 ;;     ```
 ;;   %
 (def (gerbil-ascent-update-active-plans full-active-by-stratum affected)
-(vector-map
-                   (lambda (rules)
-                     (filter-map
-                      (lambda (rule)
-                        (let (heads (filter (lambda (head)
-                                             (vector-ref affected
-                                                         (vector-ref head 0)))
-                                           (vector-ref rule 0)))
-                          (and (pair? heads)
-                               (if (= (length heads) (length (vector-ref rule 0))) rule
-                                   (let* ((raw (vector heads (vector-ref rule 1)
-                                                       (vector-ref rule 2) (vector-ref rule 3)))
-                                          (plan (gerbil-ascent-positive-plan raw)))
-                                     (vector heads (vector-ref rule 1) (vector-ref rule 2)
-                                             (vector-ref rule 3) (vector-ref rule 4) plan
-                                             (and plan (make-vector (vector-ref plan 2) #f)))))))) rules))
-                   full-active-by-stratum))
+  (vector-map
+   (lambda (rules)
+     (filter-map
+      (lambda (rule)
+        (let (heads (filter (lambda (head)
+                             (vector-ref affected (vector-ref head 0)))
+                           (vector-ref rule 0)))
+          (and (pair? heads)
+               (if (= (length heads) (length (vector-ref rule 0)))
+                 rule
+                 (let* ((full-plan (vector-ref rule 5))
+                        ;; Head filtering leaves body slots unchanged. Share
+                        ;; lowered atoms and project ordered outputs; unsupported
+                        ;; full plans retain normal lowering of the selected heads.
+                        (plan
+                         (if full-plan
+                           (vector
+                            (filter (lambda (output)
+                                      (vector-ref affected
+                                       (vector-ref (vector-ref output 0) 0)))
+                                    (vector-ref full-plan 0))
+                            (vector-ref full-plan 1) (vector-ref full-plan 2))
+                           (gerbil-ascent-positive-plan
+                            (vector heads (vector-ref rule 1)
+                                    (vector-ref rule 2) (vector-ref rule 3))))))
+                   (vector heads (vector-ref rule 1) (vector-ref rule 2)
+                           (vector-ref rule 3) (vector-ref rule 4) plan
+                           (and plan (make-vector (vector-ref plan 2) #f))))))))
+      rules))
+   full-active-by-stratum))

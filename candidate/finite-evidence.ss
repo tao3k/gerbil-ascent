@@ -6,7 +6,8 @@
 ;;; Exact finite replay for the inspected candidate subset. This is a
 ;;; snapshot-relative model check, not general recursive provenance.
 ;;; The replay does not call the ASCENT planner, evaluator or solver.
-(import (only-in :gerbil-ascent/candidate/certificate-limits
+(import (only-in :gerbil-ascent/candidate/datum candidate-copy-pairs)
+        (only-in :gerbil-ascent/candidate/certificate-limits
                  +max-certificate-relations+ +max-certificate-rows+
                  +max-certificate-cells+ +max-certificate-row-arity+
                  bounded-list-length unique-rows?)
@@ -21,7 +22,7 @@
                  reasoning-candidate-limits)
         (only-in :gerbil-ascent/candidate/program candidate-variable? scalar?)
         (only-in :gerbil-ascent/candidate/funs
-                 candidate-copy-pairs candidate-same-row-set?
+                 candidate-same-row-set?
                  candidate-schema-of candidate-required-entry
                  candidate-bind-atom candidate-fixed-clause
                  candidate-strata-of))

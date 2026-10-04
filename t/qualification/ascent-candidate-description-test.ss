@@ -3,6 +3,8 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 (import (only-in :std/test check-equal? test-suite test-case)
+        (only-in :gerbil-ascent/candidate/datum
+                 reasoning-bounded-data? candidate-copy-pairs)
         (only-in :gerbil-ascent/candidate/program candidate-language-description)
         (only-in :gerbil-ascent/candidate/reasoning
                  reasoning-source-snapshot reasoning-attempt reasoning-receipt-status
@@ -25,6 +27,17 @@
 
 (def ascent-candidate-description-test
   (test-suite "parser-owned candidate description"
+    (test-case "inert publication detaches nested and shared pairs"
+      (let* ((shared (cons #f 7))
+             (datum (cons shared (cons shared 'tail)))
+             (copy (candidate-copy-pairs datum)))
+        (check-equal? (reasoning-bounded-data? datum 16 8) #t)
+        (check-equal? copy '((#f . 7) (#f . 7) . tail))
+        (set-car! shared 'caller-change)
+        (check-equal? copy '((#f . 7) (#f . 7) . tail))
+        (set-cdr! (car copy) 'published-change)
+        (check-equal? (cadr copy) '(#f . 7))
+        (check-equal? shared '(caller-change . 7))))
     (test-case "every advertised compute name and arity executes"
       (let* ((description (candidate-language-description))
              (operators (cdr (assq 'operators (cddr description)))))

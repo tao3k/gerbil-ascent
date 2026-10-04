@@ -2,11 +2,12 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(import (only-in :gerbil-ascent/candidate/types
+(import (only-in :gerbil-ascent/candidate/datum reasoning-bounded-data? candidate-copy-pairs)
+        (only-in :gerbil-ascent/candidate/types
                  reasoning-snapshot-relations reasoning-candidate-facts
-                 reasoning-candidate-rules reasoning-bounded-data?)
+                 reasoning-candidate-rules)
         (only-in :gerbil-ascent/candidate/program candidate-variable?)
-        (only-in :gerbil-ascent/candidate/funs candidate-copy-pairs candidate-fixed-clause candidate-bind-atom)
+        (only-in :gerbil-ascent/candidate/funs candidate-fixed-clause candidate-bind-atom)
         (only-in :gerbil-ascent/candidate/provenance
                  candidate-positive-closed-absence positive-fixed-clause?
                  positive-proof? positive-proof-status positive-proof-nodes positive-proof-roots

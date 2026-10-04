@@ -155,3 +155,97 @@ confirm the four certificate source modules and four qualified test modules
 are unchanged after integration. Integrated production policy still reports
 =findings=2 errors=0=, with no certificate-module findings. This preserves the
 focused source receipts; it does not qualify the upstream descriptor changes.
+
+* Study: one owner for inert data operations
+
+Gerbil =2591dcd= separates the lower-level syntax representation from compiler
+coordination. =expander/stx.ss:8-9= depends on =common=; its
+=syntax->datum= implementation at lines 76-88 reconstructs pairs, vectors and
+boxes according to their representations. =datum->syntax='s local
+=wrap-inner= traversal at lines 97-108 follows the same explicit shape cases.
+=apply-mark= at =expander/stx.ss:176-183= names a pair's head and tail with
+=match= rather than repeating field projections. The shared ASCENT copier
+uses that pair-pattern form while retaining its recursive algorithm.
+=compiler/base.ss:8-10= imports the expander rather than defining another copy
+of those representation operations.
+
+The transferable lesson is ownership of data transformations at the lowest
+appropriate domain layer. ASCENT's inspected candidate grammar is narrower:
+scalar leaves and pairs. Gerbil's syntax conversion is not a candidate copier;
+its handling of syntax objects, vectors and boxes would change our contract.
+
+Previously, =types= owned the bounded pair walker, =funs= owned a recursive
+pair copier, and =program= and =reasoning= each defined another pair copier.
+The =funs= module also depends on the candidate parser for variable recognition.
+Using it as the parser's shared data layer would introduce a dependency cycle.
+
+=candidate/datum.ss= now owns the unchanged bounded pair walk and the single
+=candidate-copy-pairs= implementation. It imports no candidate, compiler,
+crypto, evaluator or proof module. Consumers import these operations directly:
+
+| Module group | Responsibility |
+|--------------+----------------|
+| =datum= | Bound inert pair trees; detach pairs at publication boundaries |
+| =types= | Snapshot and diagnostic records, snapshot consistency and digest |
+| =program= | Inspect grammar; lower admitted forms; describe parser vocabulary |
+| =funs= | Bind inspected rules, schemas and strata |
+| Proof and provenance modules | Produce/check their distinct evidence semantics |
+| =reasoning= | Coordinate attempts and publish detached receipts |
+
+=types= continues to export the existing public bounded-data predicate through
+its imported binding. Internal consumers use =datum= directly. The old copier
+export in internal =funs= is removed and every repository consumer is migrated.
+The build declaration adds one library module; no build procedure is added.
+
+Pair copying still reconstructs both cars and cdrs, preserves leaf identity,
+and intentionally duplicates shared acyclic pairs. It is not input admission;
+its callers retain their existing finite-data checks and trusted-description
+boundary. Node/depth budgets, cycle rejection, digest bytes and diagnostic
+publication order remain unchanged. The bounded walker remains iterative;
+the copier retains its prior recursive algorithm. This is a responsibility
+refactor, with no stack-depth or runtime speedup claim.
+
+The native boundary Case copies nested and shared pairs with an improper tail,
+then mutates the caller's pair and one published branch independently. It
+checks unchanged values in the detached copy and its other branch. Existing
+Cases retain cycle/depth/work exhaustion, source/receipt mutation isolation,
+fixed digest bindings and independent graph/reference checks.
+
+The selected-library policy completes with =errors=0= and three findings:
+two pre-existing =program/finite-arithmetic.ss= warnings and one R013 warning
+for =candidate/datum.ss=. The latter's reported facets include manual-loop
+and numeric-domain signals. Its bounded active-path traversal needs explicit
+pending work and remaining node/depth budgets; eagerly applying a list
+combinator would traverse input before enforcing those limits. The warning is
+retained as an advisory, with the specialized boundary documented rather than
+adding an unrelated combinator to satisfy file-level coverage.
+
+** Local verification
+
+Against source baseline =7d590e1=, eight native modules pass 65 distinct Cases:
+
+| Module | Cases |
+|--------+-------|
+| =ascent-reasoning-library= | 12 |
+| =ascent-candidate-description= | 5 |
+| =ascent-finite-evidence= | 9 |
+| =ascent-positive-nonmembership= | 8 |
+| =ascent-positive-provenance= | 6 |
+| =ascent-stratified-proof= | 12 |
+| =scheme-provenance-graph= | 6 |
+| =scheme-stratified-provenance= | 7 |
+
+Reasoning and description are rerun after the final copier and boundary Case
+changes; the table uses these final runs. All module processes and both
+supervising command loops exit 0, with unchanged test timeouts and proof/work
+budgets. Source hashes remain equal to the final-run snapshot. These focused
+local results do not establish full-suite, AOT application or remote CI closure.
+Logs and source hash receipts live under ignored =.cache/ascent/candidate-datum/=.
+
+Before push, this change is rebased over the concurrent remote head =4980321=.
+The incoming production change is isolated to =program/higher-order.ss=;
+no production module or any of these eight test modules imports that module.
+Candidate, build declaration and modified test source hashes remain identical
+to the qualified snapshot. The 65-Case receipt remains a source-scoped local
+result; it is not a claim that the incoming higher-order changes were tested
+by this study.

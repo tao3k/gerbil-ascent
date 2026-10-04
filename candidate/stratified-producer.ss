@@ -6,14 +6,15 @@
 ;;; Build one founded proof from a verified finite candidate closure. Search
 ;;; order is stratum then rule/fact order; the separate checker remains the
 ;;; authority for the returned proof. This is not a Why-Not producer.
-(import (only-in :std/hash/misc hash-ensure-modify!)
+(import (only-in :gerbil-ascent/candidate/datum candidate-copy-pairs)
+        (only-in :std/hash/misc hash-ensure-modify!)
         (only-in :gerbil-ascent/candidate/types
                  reasoning-snapshot-relations
                  reasoning-candidate-relations reasoning-candidate-facts
                  reasoning-candidate-rules reasoning-candidate-query)
         (only-in :gerbil-ascent/candidate/program candidate-variable?)
         (only-in :gerbil-ascent/candidate/funs
-                 candidate-copy-pairs candidate-schema-of
+                 candidate-schema-of
                  candidate-required-entry candidate-bind-atom
                  candidate-fixed-clause candidate-strata-of)
         (only-in :gerbil-ascent/candidate/finite-evidence

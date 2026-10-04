@@ -1,13 +1,14 @@
 ;;; -*- Gerbil -*-
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
-(import (only-in :gerbil-ascent/candidate/types
+(import (only-in :gerbil-ascent/candidate/datum reasoning-bounded-data? candidate-copy-pairs)
+        (only-in :gerbil-ascent/candidate/types
                  reasoning-snapshot-identity reasoning-snapshot-generation reasoning-snapshot-digest
-                 reasoning-snapshot-content-digest reasoning-snapshot-relations reasoning-bounded-data?
+                 reasoning-snapshot-content-digest reasoning-snapshot-relations
                  reasoning-candidate-relations reasoning-candidate-facts reasoning-candidate-rules
                  reasoning-candidate-query reasoning-candidate-limits)
         (only-in :gerbil-ascent/candidate/program candidate-variable?)
-        (only-in :gerbil-ascent/candidate/funs candidate-copy-pairs candidate-bind-atom
+        (only-in :gerbil-ascent/candidate/funs candidate-bind-atom
                  candidate-fixed-clause candidate-required-entry)
         (only-in :gerbil-ascent/candidate/finite-evidence candidate-verified-finite-closure))
 (export candidate-stratified-provenance candidate-verify-stratified-provenance

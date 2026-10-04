@@ -6,7 +6,8 @@
 ;;; Closed-world nonmembership relative to one inspected finite positive
 ;;; program and one copied input snapshot. This says nothing about whether
 ;;; the caller supplied every real-world source fact.
-(import (only-in :gerbil-ascent/candidate/certificate-limits
+(import (only-in :gerbil-ascent/candidate/datum candidate-copy-pairs)
+        (only-in :gerbil-ascent/candidate/certificate-limits
                  +max-certificate-relations+ +max-certificate-rows+
                  +max-certificate-cells+ +max-certificate-row-arity+
                  bounded-list-length unique-rows?)
@@ -21,7 +22,7 @@
         (only-in :gerbil-ascent/candidate/program
                  candidate-variable? scalar?)
         (only-in :gerbil-ascent/candidate/funs
-                 candidate-copy-pairs candidate-schema-of
+                 candidate-schema-of
                  candidate-bind-atom candidate-fixed-clause)
         (only-in :gerbil-ascent/candidate/provenance
                  candidate-positive-closed-absence positive-proof-status

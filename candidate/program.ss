@@ -7,13 +7,13 @@
 ;;; Inspect inert proposal data, then lower the checked form into the
 ;;; trusted Scheme relational language. This module never evaluates a
 ;;; candidate-supplied procedure.
-(import (only-in :gerbil-ascent/candidate/types
+(import (only-in :gerbil-ascent/candidate/datum reasoning-bounded-data? candidate-copy-pairs)
+        (only-in :gerbil-ascent/candidate/types
                  reasoning-snapshot-relations
                  make-reasoning-diagnostic make-candidate-rejection
                  make-reasoning-candidate reasoning-candidate-relations
                  reasoning-candidate-facts reasoning-candidate-rules
                  reasoning-candidate-query reasoning-candidate-limits
-                 reasoning-bounded-data?
                  +max-relations+ +max-rules+ +max-input-facts+
                  +max-derived-facts+ +max-output-facts+)
         (only-in :gerbil-ascent/program/objects
@@ -159,9 +159,7 @@
 ;;; A fresh inert projection of the parser contract, never executable code.
 ;;; Operator admission and this public description share the same registry.
 (def (candidate-language-description)
-  (def (copy datum)
-    (if (pair? datum) (cons (copy (car datum)) (copy (cdr datum))) datum))
-  (copy
+  (candidate-copy-pairs
    (list 'candidate-language 'v1
          '(forms (relation NAME ARITY) (fact SOURCE TERM ...)
                  (rule HEAD BODY ...) (query RELATION TERM ...)

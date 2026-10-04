@@ -8,16 +8,9 @@
                  reasoning-snapshot-relations reasoning-candidate-relations)
         (only-in :gerbil-ascent/candidate/program candidate-variable?))
 
-(export candidate-copy-pairs candidate-same-row-set?
+(export candidate-same-row-set?
         candidate-schema-of candidate-required-entry
         candidate-bind-atom candidate-fixed-clause candidate-strata-of)
-
-;; Copy only the pair spine. Inspected candidate leaves are scalars.
-(def (candidate-copy-pairs datum)
-  (if (pair? datum)
-    (cons (candidate-copy-pairs (car datum))
-          (candidate-copy-pairs (cdr datum)))
-    datum))
 
 (def (candidate-same-row-set? left right)
   (and (= (length left) (length right))

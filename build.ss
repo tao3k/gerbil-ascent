@@ -45,6 +45,7 @@
     "program/interface"
     "core/binary-program"
     "candidate/closure"
+    "candidate/datum"
     "candidate/types"
     "candidate/certificate-limits"
     "candidate/program-identity"

@@ -7,7 +7,8 @@
 ;;; scalar filters and computations.
 ;;; Its result is checked against the completed native query before use.
 ;;; Node inputs always refer to earlier nodes, so the list is a finite DAG.
-(import (only-in :gerbil-ascent/candidate/types
+(import (only-in :gerbil-ascent/candidate/datum candidate-copy-pairs)
+        (only-in :gerbil-ascent/candidate/types
                  reasoning-snapshot-identity reasoning-snapshot-generation
                  reasoning-snapshot-digest reasoning-snapshot-relations
                  reasoning-snapshot-valid?
@@ -15,7 +16,7 @@
                  reasoning-candidate-query reasoning-candidate-limits)
         (only-in :gerbil-ascent/candidate/program candidate-variable?)
         (only-in :gerbil-ascent/candidate/funs
-                 candidate-copy-pairs candidate-same-row-set?
+                 candidate-same-row-set?
                  candidate-bind-atom candidate-fixed-clause))
 
 (export candidate-positive-proof candidate-positive-closed-absence

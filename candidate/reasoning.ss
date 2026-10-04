@@ -4,7 +4,8 @@
 
 ;;; Bounded, inert rule proposals against a caller-owned snapshot.
 ;;; A receipt is an observation of one candidate, not source admission.
-(import (only-in :std/crypto/digest sha256)
+(import (only-in :gerbil-ascent/candidate/datum reasoning-bounded-data? candidate-copy-pairs)
+        (only-in :std/crypto/digest sha256)
         (only-in :std/encoding/hex hex-encode)
         (only-in :std/error exception->string)
         (only-in :gerbil-ascent/candidate/types
@@ -12,7 +13,6 @@
                  reasoning-snapshot-identity reasoning-snapshot-generation
                  reasoning-snapshot-digest reasoning-snapshot-relations
                  reasoning-snapshot-content-digest reasoning-snapshot-valid?
-                 reasoning-bounded-data?
                  make-reasoning-diagnostic reasoning-diagnostic?
                  reasoning-diagnostic-code reasoning-diagnostic-path
                  reasoning-diagnostic-detail
@@ -78,11 +78,6 @@
   (and (list? row) (= (length row) arity)
        (andmap scalar? row)
        (map identity row)))
-
-(def (copy-datum datum)
-  (if (pair? datum)
-    (cons (copy-datum (car datum)) (copy-datum (cdr datum)))
-    datum))
 
 (def (digest-datum datum)
   (hex-encode
@@ -297,18 +292,18 @@
    (reasoning-snapshot-identity snapshot)
    (reasoning-snapshot-generation snapshot)
    (reasoning-snapshot-digest snapshot)
-   digest (copy-datum query) (copy-datum rows)
+   digest (candidate-copy-pairs query) (candidate-copy-pairs rows)
    (map (lambda (diagnostic)
           (make-reasoning-diagnostic
            (reasoning-diagnostic-code diagnostic)
-           (copy-datum (reasoning-diagnostic-path diagnostic))
-           (copy-datum (reasoning-diagnostic-detail diagnostic))))
+           (candidate-copy-pairs (reasoning-diagnostic-path diagnostic))
+           (candidate-copy-pairs (reasoning-diagnostic-detail diagnostic))))
         diagnostics)
    (and evidence
         (make-reasoning-evidence
          (reasoning-evidence-kind evidence)
-         (copy-datum (reasoning-evidence-support evidence))
-         (copy-datum (reasoning-evidence-reachable evidence))))
+         (candidate-copy-pairs (reasoning-evidence-support evidence))
+         (candidate-copy-pairs (reasoning-evidence-reachable evidence))))
    proof nonmembership stratified))
 
 (def (capture thunk)

@@ -6,8 +6,9 @@
 ;;; Check an externally supplied, founded derivation against an exact finite
 ;;; stratum replay. This is a bounded proof for one inspected candidate, not
 ;;; provenance completeness or source authentication. The producer is separate.
-(import (only-in :gerbil-ascent/candidate/types
-                 reasoning-bounded-data? reasoning-snapshot-relations
+(import (only-in :gerbil-ascent/candidate/datum reasoning-bounded-data?)
+        (only-in :gerbil-ascent/candidate/types
+                 reasoning-snapshot-relations
                  reasoning-candidate-relations
                  reasoning-candidate-facts reasoning-candidate-rules
                  reasoning-candidate-query)

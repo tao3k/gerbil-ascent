@@ -127,3 +127,20 @@ planner changes. Model benefit and performance require separate paired runs.
 
 These remain open explicitly. MRR Rust integration follows the native contract
 and model-validation gates; this work changes no Rust runtime or authority owner.
+
+
+* 2026-10-04 focused native qualification
+
+The [[file:evidence/scheme-closure-20261004/receipt.json][receipt]] records six distinct modules, 51 CASE-OK entries, six
+HARNESS-OK and six final OK markers, exit 0 and no failure/overflow markers.
+The native gate retained five-second real-output progress and the existing
+120-second per-module deadline. Four new termination/composition Cases check
+the exact budget failure and failed-admission behavior. The finite-evidence
+64-graph loop now flushes progress only after completed assertions.
+
+Earlier silent interpreter startup and AOT aggregate/45-second-cap failures
+are preserved in the raw archive. They are not reclassified as passes. AOT
+execution is a separate delivery path; this receipt does not qualify the
+interpreter startup, the primary checkout's newer declaration-scope changes,
+full repository CI, incremental deletion, general higher-order typing or
+real model benefit. The source/ABI path adds no prompts or model calls.

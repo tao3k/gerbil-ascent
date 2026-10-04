@@ -157,6 +157,11 @@
            "t/qualification/scheme-artifact-test.ss"
            "t/qualification/scheme-provenance-graph-test.ss"
            "t/qualification/scheme-higher-order-test.ss"
+           ;; AOT linkage requires the index suite's independent reference
+           ;; modules as explicit build roots, not interpreted dependencies.
+           "t/qualification/ascent-index-reference-funs.ss"
+           "t/qualification/ascent-index-reference-provider.ss"
+           "t/qualification/ascent-index-reference-evaluate.ss"
            "t/qualification/ascent-index-lifecycle-test.ss"
     "t/qualification/scheme-session-deletion-test.ss"
     "t/qualification/ascent-timeout-test.ss"

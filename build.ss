@@ -56,6 +56,7 @@
     "candidate/stratified-proof"
     "candidate/stratified-producer"
     "candidate/reasoning"
+    "temporal/graph"
     "temporal/lens"
     "interface/request"))
 

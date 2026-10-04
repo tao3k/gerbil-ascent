@@ -294,3 +294,44 @@ are preserved. Logs stay in ignored =.cache/ascent/type-height-algebra/=.
 This is focused local semantic qualification; no new full-suite, performance,
 AOT application or remote CI result is asserted.
 
+* Study: pass-owned symbol maps and whole-cut graph preflight
+
+The installed compiler's =compile.ss:1113-1127= collects runtime imports using
+a local =make-hash-table-eq= and a small =K= continuation. Each context identity
+is handled once before adding its load path. =optimize-spec.ss:121-130= similarly
+allocates method-call and slot-reference tables for one specialization target.
+Collection state has one enclosing owner; the helper handles one identifier.
+
+The installed Gerbil =2591dcd= compiler provides two concrete state lifetimes:
+=optimize-base.ss:24-29= constructs the optimizer's symbol-identity tables,
+while =optimize.ss:27-30= creates fresh mutator/local-type maps at the optimizer
+entry point. Shared optimizer information and per-pass traversal state have
+separate owners. The transferable technique is to choose the map's equality
+from the identifier protocol, and allocate mutable traversal state at its call
+boundary rather than retaining it in source declarations.
+
+ASCENT's temporal solve previously checked every parent edge by recomputing
+reachability from its target. Each reachable level scanned the complete edge
+list and performed list-membership checks. Cycle rejection is a property of
+the whole cut, so the repeated closures did unnecessary work even when the
+root or valid-time window excluded those events.
+
+=temporal/graph.ss= now owns the symbolic-to-dense graph adapter. Its fresh
+=make-hash-table-eq= preserves the existing =memq= symbol identity. Both endpoints
+are interned, including parents without event data. The adapter rejects self
+edges and detects larger cycles via =core/dependency-graph='s SCC traversal.
+After indexing, the graph pass is linear in vertices and edges; expected hash
+lookup cost governs indexing. Source edge lists remain immutable.
+
+=temporal/lens.ss= retains cut selection, time/order checks, rejection priority,
+horizon/frontier publication and evidence binding. The cycle check still runs
+on the entire selected cut before window/root filtering. It does not consult
+the candidate oracle, reuse a receipt, or cache across generations. No measured
+end-to-end speedup follows solely from the traversal change.
+
+Native tests compare all 512 directed three-vertex graphs, including self edges,
+against an independent Boolean matrix closure, repeat with reversed edge order,
+and check long graphs at the 512-parent-edge bound and isolated missing-parent
+cycles. Lens integration covers disconnected/out-of-window cycles, absent event
+data, self loops and preservation of a previously verified answer. Current
+verification results belong in [[file:qualification-history.org][qualification history]].

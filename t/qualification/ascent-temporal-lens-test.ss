@@ -49,6 +49,24 @@
 
 (def ascent-temporal-lens-test
   (test-suite "finite temporal lens integrated gate"
+    (test-case "whole-cut cycles remain rejected outside the window and root reach"
+      (let* ((l (lens 0 9 '(a b c) 8 #t 5 10))
+             (es '((a 0 0) (b 0 0) (c 0 0)))
+             (s (source 0 '((a b) (b c)) es))
+             (accepted (temporal-solve l s 'a)))
+        (check-complete accepted [])
+        (for-each
+         (lambda (bad-source)
+           (let (answer (temporal-solve l bad-source 'a))
+             (check-equal? (temporal-status answer) 'rejected)
+             (check-equal? (temporal-frontier answer) '((cyclic-cut)))
+             (check-equal? (temporal-rows answer) [])
+             (check-equal? (temporal-receipt answer) #f)))
+         (list (source 0 '((b c) (c b)) es)
+               (source 0 '((b b)) es)
+               (source 0 '((b c) (c b)) '((a 0 0) (b 0 0)))))
+        (check-equal? (temporal-verify l s 'a accepted) 'valid)
+        (check-complete accepted [])))
     (test-case "interval uncertainty, independent point enumeration and receipt binding"
       ;; Enumerate every possible point independently for each finite bound.
       (for-each

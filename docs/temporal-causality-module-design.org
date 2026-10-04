@@ -218,6 +218,12 @@ vertical domain.
 =temporal-verify= and detached projection/accessor functions. The sketch above
 remains a broader design; it does not name these implemented functions.
 
+=temporal/graph.ss= owns the checked cut's symbol-to-dense-ID adapter. It
+checks self edges and strongly connected components through
+=core/dependency-graph.ss= once for the entire cut, including events outside
+the window or absent event data. Per-call graph state is private; window,
+horizon, rejection priority and evidence binding remain with =temporal/lens.ss=.
+
 The first exchange contract is deliberately finite and explicit:
 
 - Source, cut, event and clock identities are non-reserved symbols supplied

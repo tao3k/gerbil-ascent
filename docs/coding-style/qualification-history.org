@@ -381,3 +381,30 @@ The integrated =scheme-higher-order= and =scheme-operator= native Unit Tests
 each pass 22 Cases and exit 0, in 29 and 82 seconds respectively. These focused
 checks cover the upstream arithmetic and recursive-lowering integration; they
 do not replace an integrated whole-suite run or establish performance gains.
+* Whole-cut temporal graph preflight
+
+Source baseline: =a093838=. The implementation replaces per-edge reachability
+checks with a fresh symbolic graph adapter and one dense SCC traversal. See
+[[file:compiler-patterns.org::*Study: pass-owned symbol maps and whole-cut graph preflight][the compiler source study]] for =compile.ss= and optimizer state-ownership
+patterns. Only the cycle predicate changes in the temporal solve; cut selection,
+frontier order, rejection priority, horizon, snapshots and receipt checking
+retain their existing code. =build.ss= adds the production module declaration.
+
+Native =ascent-temporal-graph-test= passes all three Cases and exits 0 in eight
+seconds. The independent matrix model covers all 512 directed three-vertex
+graphs, with 1024 cycle verdict comparisons after reversing edge order. Scale
+controls include 512-edge graphs, disconnected cycles, isolated symbol maps
+and unchanged source edges. These are semantic and bound checks, not matched
+wall-time speedup evidence.
+
+Production source policy exits 0 with =findings=2 errors=0=; both existing
+warnings remain in =program/finite-arithmetic.ss=. Neither temporal module
+introduces a warning. Org blocks, local Coding Style links and diff formatting
+pass static checks. Logs stay in ignored =.cache/ascent/temporal-cut-graph/=.
+No whole-suite, original SS, AOT application or remote CI result follows from
+these focused local checks.
+
+Native =ascent-temporal-lens-test= also passes all eleven Cases and exits 0,
+including the new whole-cut cycle gate and the existing interval, receipt,
+cut/knowledge/window and 64 ordered-graph/source-order controls. Original
+timeouts, evidence limits and horizon semantics remain unchanged.

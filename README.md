@@ -22,12 +22,15 @@ Each top-level directory is a Gerbil module namespace:
 | `:gerbil-ascent/table/*` | Physical indexes, storage providers and demand-driven relation expression adapters |
 | `:gerbil-ascent/candidate/*` | Bounded inert candidate evaluation and selected support projection |
 | `:gerbil-ascent/interface/*` | Inert request projection |
+| `:gerbil-ascent/temporal/*` | Checked time/cut projections, graph preflight and locally verified evidence |
 
 The generic core kernels consume dense adjacency or private lowered rule data.
 They do not import program declarations, POO contracts or Session lifecycle code.
 `program/planning.ss`, `program/summary.ss` and `program/evaluate.ss` adapt those
-kernels to admitted programs. Physical row indexes and storage providers belong
-to `table/`; caller-facing request projection belongs to `interface/`.
+kernels to admitted programs. `temporal/graph.ss` adapts checked symbolic parent
+edges to the same graph kernel for whole-cut cycle checks. Physical row indexes
+and storage providers belong to `table/`; caller-facing request projection
+belongs to `interface/`.
 
 `core/binary-relation.ss` owns encoded-pair closure, composition, shortest
 distance and dense path algorithms, including their private adjacency and

@@ -18,6 +18,9 @@ program/scheme-language.ss        |                          |
 
 table/expression --------> core/binary-relation <------ core/binary-program
 POO demand adapter         binary relation algorithms  bounded evaluation
+
+temporal/lens -----------> temporal/graph ------------> core/dependency-graph
+time and evidence          symbolic cut adapter        dense SCC traversal
 #+end_example
 
 The two syntax surfaces have different contracts. The historical

@@ -8,6 +8,7 @@
 (import (only-in :std/crypto/digest sha256)
         (only-in :std/encoding/hex hex-encode)
         (only-in :clan/poo/object .o .ref .slot? object?)
+        (only-in :gerbil-ascent/temporal/graph temporal-cut-cyclic?)
         (only-in :gerbil-ascent/candidate/types reasoning-bounded-data?)
         (only-in :gerbil-ascent/candidate/reasoning
                  reasoning-source-snapshot reasoning-attempt
@@ -178,18 +179,6 @@
      (rule (reach ?x ?z) (reach ?x ?y) (parent ?y ?z))
      (query reach ?x ?y) (limits 1024 4096 4096)))
 
-;; : (forall (id) (-> id (List (Pair id id)) (List id)))
-;; : (-> EventId ParentEdges EventIds)
-(def (reachable root edges)
-  (let loop ((known (list root)) (front (list root)))
-    (if (null? front) known
-      (let (next (filter (lambda (x) (not (memq x known)))
-                        (foldl (lambda (e xs)
-                                 (if (and (memq (car e) front)
-                                          (not (memq (cadr e) xs)))
-                                   (cons (cadr e) xs) xs)) [] edges)))
-        (loop (foldl cons known next) next)))))
-
 ;; : (forall (scope) (-> TemporalLens TemporalSource Symbol scope TemporalAnswer))
 ;; : (-> Lens Source Root Scope Answer)
 (def (solve lens source root scope-value)
@@ -230,9 +219,7 @@
                    ((not (and upper-from (<= upper-from lower-to)))
                     (open! 'unknown-parent-order edge))))))) cut-edges)
     ;; Parent closure and cycles are checked even outside the valid window.
-    (for-each (lambda (e)
-                (when (memq (car e) (reachable (cadr e) cut-edges))
-                  (reject! 'cyclic-cut))) cut-edges)
+    (when (temporal-cut-cyclic? cut-edges) (reject! 'cyclic-cut))
     (let* ((eligible (filter
                       (lambda (e)
                         (and (memq (car e) members) (<= (caddr e) as-of)

@@ -1,0 +1,22 @@
+#+TITLE: ASCENT test support
+
+This Python package owns provider HTTP/SSE byte IO, frozen request receipts,
+and process supervision. It does not parse Scheme model predictions, determine
+DSL correctness, publish native artifacts, or implement a semantic oracle.
+
+Scheme owns artifact admission in =t/harness/artifact.ss= and inert prediction
+projection in =t/harness/prediction.ss=. Native Cases cover staged compilation
+failure, owner/source/binary changes, prediction ambiguity, size and nesting
+bounds, and rejection of executable expressions. Those Cases run in the AOT
+DSL harness. Python tests cover only process activity and request byte context.
+
+From the repository root, use the captured environment:
+
+#+begin_src sh
+PYTHONPATH=python/src python3 -m ascent_test_support.model_study --help
+python3 -m unittest discover -s python/tests -v
+#+end_src
+
+The package has standard pyproject metadata and a src layout. Model calls still
+require a newly frozen plan and explicit source/cost authorization. Package
+migration does not reuse an older approval or establish a new model score.

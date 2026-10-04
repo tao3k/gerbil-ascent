@@ -14,6 +14,8 @@
         (only-in :gerbil-ascent/t/qualification/ascent-finite-evidence-test ascent-finite-evidence-test)
         (only-in :gerbil-ascent/t/qualification/ascent-positive-nonmembership-test ascent-positive-nonmembership-test))
 (export main)
+(import (only-in :gerbil-ascent/t/qualification/scheme-artifact-test scheme-artifact-test))
+(import (only-in :gerbil-ascent/t/harness/prediction prediction-main))
 (import (only-in :gerbil-ascent/t/qualification/ascent-timeout-test ascent-timeout-test))
 
 (import (only-in :gerbil-ascent/t/qualification/scheme-provenance-graph-test
@@ -57,6 +59,7 @@
        (else (error "unknown native differential fixture" name)))
      (exit 0))
     (["--study-compute" id] (model-closure-compute id) (exit 0))
+    (["--study-project" path] (prediction-main path) (exit 0))
     (["--study-score" id path] (model-closure-score id path) (exit 0))
     (else (run-suites args))))
 
@@ -64,6 +67,7 @@
   (let* ((entries
           (list
                 (cons "t/qualification/scheme-closure-contract-test.ss" scheme-closure-contract-test)
+                (cons "t/qualification/scheme-artifact-test.ss" scheme-artifact-test)
                 (cons "t/qualification/scheme-provenance-graph-test.ss" scheme-provenance-graph-test)
                 (cons "t/qualification/scheme-higher-order-test.ss" scheme-higher-order-test)
                 (cons "t/qualification/scheme-session-deletion-test.ss" scheme-session-deletion-test)

@@ -13,11 +13,10 @@ import time
 import http.client
 import statistics
 import shutil
-from model_prediction_transport import prediction_from_output
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[3]
 BINARY = ROOT / '.cache/ascent/native-library/dsl-closure'
-HARNESS = [sys.executable, str(ROOT/'t/harness/watch_output.py'), '--', 'timeout', '120s']
+HARNESS = [sys.executable, '-m', 'ascent_test_support.supervision', '--', 'timeout', '120s']
 RUNTIME = [str(BINARY), '-:max-heap=1G,debug=q']
 PRICE_URL = 'https://api-docs.deepseek.com/quick_start/pricing/'
 MAX_INPUT_BYTES = 655360
@@ -32,7 +31,7 @@ def digest(data):
 
 
 def producer_hashes():
-    paths = [Path(__file__), ROOT/'tools/model_prediction_transport.py',
+    paths = [Path(__file__), ROOT/'t/harness/prediction.ss',
              ROOT/'tools/model-source-closure.ss']
     return {str(path.relative_to(ROOT)): digest(path.read_bytes()) for path in paths}
 
@@ -97,7 +96,7 @@ def source_closure(imports, log):
 
 
 def probe(output):
-    subprocess.run([sys.executable, str(ROOT/'tools/dsl-closure-artifact.py'), 'check'], cwd=ROOT, check=True)
+    subprocess.run(['gxi', str(ROOT/'t/harness/artifact.ss'), 'check'], cwd=ROOT, check=True)
     output.mkdir(parents=True, exist_ok=False)
     text = native(HARNESS + RUNTIME + ['t/qualification/scheme-model-closure-test.ss'], output/'preflight.native.log')
     cases = [json.loads(line.removeprefix('STUDY-CASE ')) for line in text.splitlines() if line.startswith('STUDY-CASE ')]
@@ -198,7 +197,7 @@ def validate(preview, approved):
         plan['maxInputBytes']!=MAX_INPUT_BYTES or plan['maxOutputTokens']!=MAX_OUTPUT_TOKENS or
         plan['producerHashes']!=producer_hashes()):
         raise ValueError('frozen producer/budget contract changed')
-    subprocess.run([sys.executable,str(ROOT/'tools/dsl-closure-artifact.py'),'check'],cwd=ROOT,check=True)
+    subprocess.run(['gxi',str(ROOT/'t/harness/artifact.ss'),'check'],cwd=ROOT,check=True)
     if plan['sourceBinding']!=json.loads((ROOT/'.cache/ascent/native-library/dsl-closure.json').read_text()):
         raise ValueError('native artifact changed after preparation')
     for name, sha in plan['modules'].items():
@@ -278,6 +277,13 @@ def provider(request, api_key, destination):
     return raw, metadata
 
 
+def native_projection(raw_path, directory):
+    text = native(HARNESS + RUNTIME + ['--study-project', str(raw_path)], directory/'projection.native.log')
+    projected = json.loads(next(line.removeprefix('NATIVE-PROJECTION ') for line in text.splitlines()
+                                if line.startswith('NATIVE-PROJECTION ')))['prediction']
+    return projected if isinstance(projected, str) else None
+
+
 def native_score(id, candidate, directory):
     directory.mkdir()
     path=directory/'candidate.sexp';path.write_text(candidate if candidate is not None else '')
@@ -347,8 +353,8 @@ def live(preview,output,approved):
                 ledger.write(json.dumps(attempt)+'\n');ledger.flush();os.fsync(ledger.fileno())
             print(f'CALL {index+1}/60 {item["family"]} {item["arm"]} ',end='',flush=True)
             raw,response=provider(request,key,destination/'response.json');(destination/'raw-output.txt').write_text(raw)
-            canonical=prediction_from_output(raw)
-            start=time.monotonic();raw_score=native_score(item['case'],raw,destination/'raw')
+            start=time.monotonic();canonical=native_projection(destination/'raw-output.txt',destination)
+            raw_score=native_score(item['case'],raw,destination/'raw')
             observation=native_score(item['case'],canonical,destination/'normalized')
             truth=(preview/'private'/f'{item["case"]}.sexp').read_text().strip()
             if observation['nativeDatum']!=truth or raw_score['nativeDatum']!=truth:

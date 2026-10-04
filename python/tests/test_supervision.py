@@ -10,7 +10,7 @@ import unittest
 class BuildActivity(unittest.TestCase):
     def run_child(self, code):
         return subprocess.run(
-            [sys.executable, str(Path(__file__).parents[1] / 't/harness/watch_output.py'),
+            [sys.executable, str(Path(__file__).parents[1] / 'src/ascent_test_support/supervision.py'),
              '--cpu-progress', '--startup-seconds', '2', '--idle-seconds', '2',
              '--', sys.executable, '-c', code],
             capture_output=True, text=True, timeout=15)

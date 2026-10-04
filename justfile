@@ -308,8 +308,8 @@ byods-lattice-rows:
     @timeout 90s gerbil {{ gerbil_test_runtime_options }} t/qualification/ascent-byods-lattice-output.ss
 
 byods-lattice-session-rows:
-    @python3 tools/dsl-closure-artifact.py check >/dev/null
-    @python3 t/harness/watch_output.py -- timeout 90s .cache/ascent/native-library/dsl-closure {{ gerbil_test_runtime_options }} --oracle byods-lattice-session
+    @gxi t/harness/artifact.ss check >/dev/null
+    @PYTHONPATH="{{ justfile_directory() }}/python/src" python3 -m ascent_test_support.supervision -- timeout 90s .cache/ascent/native-library/dsl-closure {{ gerbil_test_runtime_options }} --oracle byods-lattice-session
 
 byods-lattice-scale-rows:
     @timeout 90s gerbil {{ gerbil_test_runtime_options }} t/qualification/ascent-byods-lattice-scale-output.ss
@@ -414,8 +414,8 @@ scc-order-rows:
     @timeout 90s gerbil {{ gerbil_test_runtime_options }} t/qualification/ascent-scc-order-output.ss
 
 arity-repetition-rows:
-    @python3 tools/dsl-closure-artifact.py check >/dev/null
-    @python3 t/harness/watch_output.py -- timeout 90s .cache/ascent/native-library/dsl-closure {{ gerbil_test_runtime_options }} --oracle arity-repetition
+    @gxi t/harness/artifact.ss check >/dev/null
+    @PYTHONPATH="{{ justfile_directory() }}/python/src" python3 -m ascent_test_support.supervision -- timeout 90s .cache/ascent/native-library/dsl-closure {{ gerbil_test_runtime_options }} --oracle arity-repetition
 
 clause-composition-rows:
     @timeout 90s gerbil {{ gerbil_test_runtime_options }} t/qualification/ascent-clause-composition-output.ss
@@ -448,16 +448,16 @@ divisibility-lattice-rows:
     @timeout 90s gerbil {{ gerbil_test_runtime_options }} t/qualification/ascent-divisibility-lattice-output.ss
 
 multi-source-session-rows:
-    @python3 tools/dsl-closure-artifact.py check >/dev/null
-    @python3 t/harness/watch_output.py -- timeout 90s .cache/ascent/native-library/dsl-closure {{ gerbil_test_runtime_options }} --oracle multi-source-session
+    @gxi t/harness/artifact.ss check >/dev/null
+    @PYTHONPATH="{{ justfile_directory() }}/python/src" python3 -m ascent_test_support.supervision -- timeout 90s .cache/ascent/native-library/dsl-closure {{ gerbil_test_runtime_options }} --oracle multi-source-session
 
 byods-session-rows:
-    @python3 tools/dsl-closure-artifact.py check >/dev/null
-    @python3 t/harness/watch_output.py -- timeout 90s .cache/ascent/native-library/dsl-closure {{ gerbil_test_runtime_options }} --oracle byods-session
+    @gxi t/harness/artifact.ss check >/dev/null
+    @PYTHONPATH="{{ justfile_directory() }}/python/src" python3 -m ascent_test_support.supervision -- timeout 90s .cache/ascent/native-library/dsl-closure {{ gerbil_test_runtime_options }} --oracle byods-session
 
 grouped-eqrel-session-rows:
-    @python3 tools/dsl-closure-artifact.py check >/dev/null
-    @python3 t/harness/watch_output.py -- timeout 90s .cache/ascent/native-library/dsl-closure {{ gerbil_test_runtime_options }} --oracle grouped-eqrel-session
+    @gxi t/harness/artifact.ss check >/dev/null
+    @PYTHONPATH="{{ justfile_directory() }}/python/src" python3 -m ascent_test_support.supervision -- timeout 90s .cache/ascent/native-library/dsl-closure {{ gerbil_test_runtime_options }} --oracle grouped-eqrel-session
 
 oracle:
     #!/usr/bin/env bash
@@ -696,8 +696,10 @@ _test-temporal:
 build-dsl-closure:
     #!/usr/bin/env bash
     set -euo pipefail
-    export ASCENT_DSL_BUILD_TOKEN="$(python3 -c 'import uuid; print(uuid.uuid4())')"
-    export ASCENT_DSL_BUILD_STARTED="$(python3 -c 'import time; print(time.monotonic())')"
+    mkdir -p .cache/ascent/tmp
+    export ASCENT_DSL_BUILD_TOKEN="$(mktemp .cache/ascent/tmp/build-owner.XXXXXX)"
+    trap 'rm -f "$ASCENT_DSL_BUILD_TOKEN"' EXIT
+    export ASCENT_DSL_BUILD_STARTED="$(date +%s)"
     export GERBIL_LOADPATH="{{ justfile_directory() }}${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}"
     compiler=(gerbil env gxi)
     if [[ -n "${GERBIL_PATH:-}" ]]; then
@@ -706,29 +708,29 @@ build-dsl-closure:
         export PATH="$GERBIL_PATH/bin:$PATH"
         compiler=(gxi)
     fi
-    python3 t/harness/watch_output.py --cpu-progress --startup-seconds 60 --idle-seconds 60 -- bash -e -c '"$@" {{ gerbil_test_runtime_options }} t/harness/run.ss build-dsl-closure; python3 tools/dsl-closure-artifact.py finalize' build-dsl-closure "${compiler[@]}"
+    PYTHONPATH="{{ justfile_directory() }}/python/src" python3 -m ascent_test_support.supervision --cpu-progress --startup-seconds 60 --idle-seconds 60 -- bash -e -c '"$@" {{ gerbil_test_runtime_options }} t/harness/run.ss build-dsl-closure; gxi t/harness/artifact.ss finalize' build-dsl-closure "${compiler[@]}"
 
 # Counterbalanced measurements with independent Scheme truth; no speed threshold.
 check-retained-benefit:
     #!/usr/bin/env bash
     set -euo pipefail
-    python3 tools/dsl-closure-artifact.py check
-    python3 t/harness/watch_output.py -- timeout 120s .cache/ascent/native-library/dsl-closure {{ gerbil_test_runtime_options }} --retained-benefit
+    gxi t/harness/artifact.ss check
+    PYTHONPATH="{{ justfile_directory() }}/python/src" python3 -m ascent_test_support.supervision -- timeout 120s .cache/ascent/native-library/dsl-closure {{ gerbil_test_runtime_options }} --retained-benefit
 
 # Run the known Suites through std/test in serial AOT processes with strict progress.
 check-dsl-closure:
     #!/usr/bin/env bash
     set -euo pipefail
-    python3 tools/dsl-closure-artifact.py check
+    gxi t/harness/artifact.ss check
     test -x .cache/ascent/native-library/dsl-closure
     mkdir -p .cache/ascent/tmp
     output_file="$(mktemp .cache/ascent/tmp/dsl.XXXXXX)"
     trap 'rm -f "$output_file"' EXIT
-    for module in scheme-closure-contract scheme-provenance-graph scheme-higher-order scheme-session-deletion ascent-timeout scheme-stratified-provenance scheme-model-closure scheme-operator scheme-library-contract scheme-operator-retained ascent-finite-evidence ascent-positive-nonmembership; do
-        python3 t/harness/watch_output.py -- timeout "${ASCENT_GXTEST_TIMEOUT:-120s}" .cache/ascent/native-library/dsl-closure {{ gerbil_test_runtime_options }} "t/qualification/$module-test.ss" 2>&1 | tee -a "$output_file"
+    for module in scheme-closure-contract scheme-artifact scheme-provenance-graph scheme-higher-order scheme-session-deletion ascent-timeout scheme-stratified-provenance scheme-model-closure scheme-operator scheme-library-contract scheme-operator-retained ascent-finite-evidence ascent-positive-nonmembership; do
+        PYTHONPATH="{{ justfile_directory() }}/python/src" python3 -m ascent_test_support.supervision -- timeout "${ASCENT_GXTEST_TIMEOUT:-120s}" .cache/ascent/native-library/dsl-closure {{ gerbil_test_runtime_options }} "t/qualification/$module-test.ss" 2>&1 | tee -a "$output_file"
     done
     if grep -E 'ERROR (CHECK|CASE|HARNESS|MODULE)|Heap overflow|Stack overflow' "$output_file" >/dev/null; then exit 1; fi
     awk -f tools/assert-test-cases.awk "$output_file"
-    test "$(grep -c '^MODULE-OK ' "$output_file")" -eq 12
-    test "$(grep -c '^HARNESS-OK ' "$output_file")" -eq 12
-    test "$(grep -cx 'OK' "$output_file")" -eq 12
+    test "$(grep -c '^MODULE-OK ' "$output_file")" -eq 13
+    test "$(grep -c '^HARNESS-OK ' "$output_file")" -eq 13
+    test "$(grep -cx 'OK' "$output_file")" -eq 13

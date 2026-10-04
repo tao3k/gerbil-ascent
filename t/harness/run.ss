@@ -7,6 +7,7 @@
 (import (only-in :gerbil/compiler compile-module compile-exe execute-pending-compile-jobs!)
         (only-in :std/make make)
         :std/misc/process :std/os/flock :std/os/device
+        (only-in "artifact.ss" artifact-main)
         (only-in "../../build.ss" gerbil-ascent-library-modules)
         (only-in :asp-gerbil-scheme/src/build-api/core-capacity
                  initialize-native-build-core-capacity!))
@@ -105,7 +106,8 @@
   (let* ((library (path-expand "lib" test-cache))
          (module-file (path-expand "modules.sexp" test-cache))
          (modules (append gerbil-ascent-library-modules
-                          '("t/scenarios/performance/ascent-table-expression/baseline"))))
+                          '("t/scenarios/performance/ascent-table-expression/baseline"
+                            "t/harness/artifact" "t/harness/prediction"))))
     (call-with-output-file [path: module-file truncate: #t]
       (lambda (out) (write modules out) (newline out)))
     ;; Compile both sides of the paired performance fixture. Native make also
@@ -149,10 +151,10 @@
       (lambda ()
         ;; Freeze and bind under the same compilation lock: concurrent builds
         ;; cannot replace each other's source snapshot.
-        (run-command ["python3" "tools/dsl-closure-artifact.py" "freeze"])
-        (unless (zero? command-exit-status) (error "DSL source freeze failed"))
+        (artifact-main "freeze")
         (prepare-test-library!
          '("t/qualification/scheme-closure-contract-test.ss"
+           "t/qualification/scheme-artifact-test.ss"
            "t/qualification/scheme-provenance-graph-test.ss"
            "t/qualification/scheme-higher-order-test.ss"
     "t/qualification/scheme-session-deletion-test.ss"
@@ -207,7 +209,7 @@
           ;; Drain every queued object and the compiler's link barrier before
           ;; binding. Compiler exceptions propagate; no partial binary qualifies.
           (execute-pending-compile-jobs!)
-          (run-command ["python3" "tools/dsl-closure-artifact.py" "bind"])))))
+          (artifact-main "bind")))))
     (["test-file" path]
      (with-test-lane
       (lambda () (prepare-test-library! [path])

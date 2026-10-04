@@ -41,7 +41,7 @@ jobs:
       - name: Measure native retained replacement against fresh evaluation
         run: just check-retained-benefit
       - name: Qualify actual native compiler source closure
-        run: gerbil env python3 tools/model-closure-study.py probe .cache/ascent/model-source-probe
+        run: PYTHONPATH=python/src gerbil env python3 -m ascent_test_support.model_study probe .cache/ascent/model-source-probe
       - name: Qualify ASCENT SS scenarios
         run: just performance
   oracle:
@@ -105,8 +105,8 @@ jobs:
           elan run leanprover/lean4:v4.34.1 lean packages/proofs/lean/PositiveNonmembership.lean
           elan run leanprover/lean4:v4.34.1 lean packages/proofs/lean/FiniteHeight.lean
           elan run leanprover/lean4:v4.34.1 lean packages/proofs/lean/FiniteOperators.lean
-      - name: Reject invalid artifact publication and model byte contexts
-        run: python3 -m unittest tools/test_dsl_artifact.py tools/test_build_activity.py tools/test_model_closure_study.py -v
+      - name: Qualify Python byte IO and process supervision
+        run: python3 -m unittest discover -s python/tests -v
   native-and-oracle:
     if: ${{ always() }}
     needs: [scheme, oracle, formal]

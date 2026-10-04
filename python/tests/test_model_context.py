@@ -1,34 +1,16 @@
 # SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 """Byte transport and provider-context discriminators; no semantic oracle."""
-import importlib.util
 import json
 from pathlib import Path
 import sys
 import tempfile
 import unittest
 
-TOOLS=Path(__file__).resolve().parent
-sys.path.insert(0,str(TOOLS))
-from model_prediction_transport import prediction_from_output
-spec=importlib.util.spec_from_file_location('closure_study',TOOLS/'model-closure-study.py')
-study=importlib.util.module_from_spec(spec);spec.loader.exec_module(study)
+sys.path.insert(0, str(Path(__file__).parents[1] / 'src'))
+from ascent_test_support import model_study as study
 
-class ByteTransport(unittest.TestCase):
-    def test_literal_assertions_and_quotes_are_inert(self):
-        for text in ['2',"'2",'(check-equal? result 2)',"(check-equal? result '(1 2))"]:
-            self.assertEqual(prediction_from_output(text),text)
-        self.assertIsNone(prediction_from_output('(check-equal? result (+ 1 2))'))
-        self.assertIsNone(prediction_from_output("(check-equal? result '?)"))
-
-    def test_conflicting_explicit_data_is_rejected_without_private_truth(self):
-        self.assertIsNone(prediction_from_output("(check-equal? result '2)\n```scheme\n'3\n```"))
-        self.assertIsNotNone(prediction_from_output("(check-equal? result '2)\n```scheme\n'2\n```"))
-
-    def test_size_and_nesting_are_bounded(self):
-        self.assertIsNone(prediction_from_output('x'*65537))
-        self.assertIsNone(prediction_from_output('('*65+'2'+')'*65))
-
+class ProviderByteContext(unittest.TestCase):
     def test_request_context_difference_is_only_real_computed_feedback(self):
         with tempfile.TemporaryDirectory() as temp:
             root=Path(temp)

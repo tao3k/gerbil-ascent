@@ -5,8 +5,9 @@
 Does checked dependency reuse reduce native work and elapsed time relative to
 a fresh solve of the identical prospective input? Run =just build-dsl-closure=
 then =just check-retained-benefit=. The native entry uses the same compiler,
-dependency prefix, DSL and evaluator for both paths. Python verifies source
-and binary hashes and supervises genuine output; it decides no semantic truth.
+dependency prefix, DSL and evaluator for both paths. Scheme verifies source
+and binary hashes and admits the artifact. The Python IO package supervises
+genuine process activity; it decides no semantic truth.
 The unchanged bounds are 1G heap, 5 seconds without actual output and 120
 seconds for the complete measurement process. Compilation and parent artifact
 finalization no longer have a 180-second total deadline, following the user's

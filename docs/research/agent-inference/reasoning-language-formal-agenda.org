@@ -89,7 +89,7 @@ The tracked =packages/proofs/lean/= modules currently include
 =LexicalLowering= (typed lexical preservation), =RecursiveLowering=
 (positive scoped feedback), =FiniteOperators= and =FiniteHeight=
 (monotone/finite-rank laws), =DescriptorScope=, =CappedArithmetic=,
-=PositiveNonmembership= and =SessionPublication=. The
+=PositiveNonmembership=, =SessionPublication= and =StratifiedNegation=. The
 [[file:../../scheme-compiler-proof-bridge.org][proof bridge]] states their hypotheses and concrete omissions. These
 proofs are valuable but do not yet relate native Scheme scalars,
 descriptor graphs, emitted rules or table steps to the Lean objects.
@@ -101,6 +101,21 @@ descriptor graphs, emitted rules or table steps to the Lean objects.
 | =FiniteHeight.bounded_bottom_least_fixed= | An ascending finite-rank orbit reaches the least fixed point under its premises | Native type/domain interpretation supplies the rank and every native step preserves its order |
 | =PositiveNonmembership.ground_why_not_sound= | Ground absence follows from the model's closure premises | Native certificate checking and caller source-completeness are separate |
 | =SessionPublication.publication_consistent= | Publication retains source/result consistency when a completed solve is qualified | Native Session steps implement the abstraction and qualification is independently established |
+| =StratifiedNegation.visit_iff= and =evaluateBranches_iff= | A frozen-stratum atom/negation clause walk has the stated branch-local set meaning; a direct witness survives a blocker on the via branch | =gerbil-ascent-bind-row= and =indexed-rows= must refine the modeled match and index-exactness premises; no recursive stratum or aggregation is covered |
+
+The new clause proof follows the control path in =program/evaluate.ss=:
+positive atoms extend the environment; negation checks for a matching
+row without adding bindings. =IndexExact= makes the index requirement
+explicit: candidates come from the full frozen relation and retain
+every row that matches the current binding. Under that premise,
+=atom_indexed_iff= and =negation_indexed_iff= preserve the clause result.
+The =frozen_blocker_step_monotone= theorem states the corresponding
+fixed-point premise: with a fixed lower-stratum blocker, growth of the
+positive current-stratum input cannot retract branch results if its
+positive via operator is monotone.
+The proof does not establish that Scheme's index planner satisfies this
+premise, or that the checked rule planner always produces the modeled
+clause sequence. Those are the next implementation refinement obligations.
 
 The next high-value theorem is *native-step refinement for one finite
 positive fragment*, rather than another abstract least-fixed-point
@@ -138,7 +153,12 @@ silently identified by matching type names.
 * TLA+: present lifecycle models and missing bridge
 
 [[file:../../../packages/proofs/tla/SessionTransaction.tla][SessionTransaction]] models atomic source/result publication, stale
-work and abort; [[file:../../../packages/proofs/tla/PositiveNonmembershipSession.tla][PositiveNonmembershipSession]] models certificate binding
+work and abort over one symbolic direct/via/blocked row. Its =ResultOf=
+is the branch-local formula from the Lean slice; a =global= mutation
+puts exclusion after union and must violate =AtomicSnapshot= when a
+blocked direct witness is published. This compares the same formula
+across the two artifacts but is not a mechanized Lean-to-TLA translation.
+[[file:../../../packages/proofs/tla/PositiveNonmembershipSession.tla][PositiveNonmembershipSession]] models certificate binding
 and stale-use rejection. Their =Cuts= are tiny symbolic domains for
 TLC; neither model is a native Gerbil trace refinement, source
 authentication model or liveness proof. The inspected MRR checkout at
@@ -149,7 +169,8 @@ MRR-side TLC gate.
 
 The actual checked invariants here are =AtomicSnapshot= in the
 transaction model and =NoStalePublished/NoStaleUse= in the certificate
-model. They speak about protocol state, not least-fixed-point rows.
+model. They speak about protocol state and the symbolic branch result,
+not a native least-fixed-point computation.
 
 The next cross-owner safety model belongs at the ASCENT-to-MRR
 publication boundary. Model =Propose=, =Solve=, =SourceChange=,

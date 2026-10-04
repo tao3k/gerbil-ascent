@@ -1,17 +1,23 @@
 ---- MODULE SessionTransaction ----
 \* SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 \* SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
-\* Publication protocol, not a Datalog evaluator or a Gerbil refinement proof.
+\* Publication protocol over one symbolic row of a branch-scoped rule.
+\* This is not a Datalog evaluator or a Gerbil refinement proof.
 EXTENDS Naturals, Integers, TLC
 CONSTANTS ExplorationDepth, Mutation
-Cuts == {<<a, b>> : a \in 0..1, b \in 0..1}
-\* Two symbolic result rows stand for a completed solve of a source cut.
-ResultOf(cut) == {i \in 1..2 : cut[i] = 1}
+\* Direct, via, and lower-stratum exclusion membership for one row.
+Cuts == {<<d, v, b>> : d \in 0..1, v \in 0..1, b \in 0..1}
+\* Negation belongs to the via branch before union with direct.
+ResultOf(cut) == IF cut[1] = 1 \/ (cut[2] = 1 /\ cut[3] = 0)
+                 THEN {1} ELSE {}
+\* Wrong lowering: move the exclusion after the union.
+GlobalResultOf(cut) == IF (cut[1] = 1 \/ cut[2] = 1) /\ cut[3] = 0
+                       THEN {1} ELSE {}
 VARIABLES generation, source, result, phase, base, pending, candidate, complete
 vars == <<generation, source, result, phase, base, pending, candidate, complete>>
 Init ==
   /\ generation = 0
-  /\ source = <<0, 0>>
+  /\ source = <<0, 0, 0>>
   /\ result = ResultOf(source)
   /\ phase = "idle"
   /\ base = -1
@@ -28,7 +34,8 @@ Begin ==
   /\ UNCHANGED <<generation, source, result>>
 Solve ==
   /\ phase = "solving"
-  /\ candidate' = ResultOf(pending)
+  /\ candidate' = IF Mutation = "global" THEN GlobalResultOf(pending)
+                  ELSE ResultOf(pending)
   /\ complete' = TRUE
   /\ phase' = "ready"
   /\ UNCHANGED <<generation, source, result, base, pending>>
@@ -63,7 +70,7 @@ Spec == Init /\ [][Next]_vars
 TypeOK ==
   /\ generation \in Nat
   /\ source \in Cuts /\ pending \in Cuts
-  /\ result \subseteq 1..2 /\ candidate \subseteq 1..2
+  /\ result \subseteq {1} /\ candidate \subseteq {1}
   /\ base \in {-1} \cup Nat
   /\ phase \in {"idle", "solving", "ready"}
   /\ complete \in BOOLEAN

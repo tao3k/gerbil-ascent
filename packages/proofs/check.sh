@@ -22,7 +22,7 @@ for model in PositiveNonmembershipSession SessionTransaction; do
   echo "TLA-CHECK $model exploration=$depth (not a protocol limit)"
   "${tlc[@]}" -workers 2 -config "$temp/$model.cfg" -metadir "$temp/$model" "packages/proofs/tla/$model.tla"
 done
-for mutation in early stale; do
+for mutation in early stale global; do
   sed "s/Mutation = \"none\"/Mutation = \"$mutation\"/" "$temp/SessionTransaction.cfg" > "$temp/$mutation.cfg"
   if "${tlc[@]}" -workers 2 -config "$temp/$mutation.cfg" -metadir "$temp/$mutation" packages/proofs/tla/SessionTransaction.tla > "$temp/$mutation.log" 2>&1; then
     cat "$temp/$mutation.log"
@@ -35,6 +35,7 @@ for mutation in early stale; do
   case "$mutation" in
     early) [[ "$code" = 12 ]] && grep -q 'Invariant AtomicSnapshot is violated' "$temp/$mutation.log" ;;
     stale) [[ "$code" = 13 ]] && grep -q 'Action property NoStaleCommit is violated' "$temp/$mutation.log" ;;
+    global) [[ "$code" = 12 ]] && grep -q 'Invariant AtomicSnapshot is violated' "$temp/$mutation.log" ;;
   esac
   echo "COUNTEREXAMPLE-OK $mutation"
 done

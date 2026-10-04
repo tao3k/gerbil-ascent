@@ -21,6 +21,8 @@ bounded explanation, and possible revision.  The
 this ledger studies the *interaction protocol* around the Library.
 The sources below use different logics and workloads.  Their results
 are design evidence, not proof that our Library already has the API.
+The [[file:reasoning-language-formal-agenda.org][reasoning-language and formal agenda]] ranks the ASCENT/PL language
+papers, maps the MRR boundary, and states the remaining Lean/TLA+ gates.
 The first concrete checker is =gerbil-ascent=; POO Flow owns workflow
 composition, tool selection and runtime handoff.
 The implementation priority is the direct Library contract for LLM
@@ -35,6 +37,7 @@ contract; they are lower priority than its executable Scheme fixture.
 | DB26 | [[https://arxiv.org/abs/2609.37233][DatalogBench, arXiv v1]] | [[file:datalogbench-db26.org][reading]] | Can LLM-written recursive rules pass execution tests, not just parsing? |
 | FL25 | [[https://www.vldb.org/pvldb/vol19/p361-zhao.pdf][FlowLog, PVLDB 2025 / VLDB 2026]] | [[file:../scheme-dsl/flowlog-fl25.org][reading]] | Which plan/physical choices preserve a recursive result while reducing work on real graphs? |
 | B23 | [[https://kmicinski.com/assets/byods.pdf][BYODS, OOPSLA 2023]] | [[file:../scheme-dsl/byods-b23.org][reading]] | Do specialized relation Providers expose every new fact through delta? |
+| X25 | [[https://drops.dagstuhl.de/entities/document/10.4230/LIPIcs.ECOOP.2025.33][Mono Types, ECOOP 2025]] | [[file:../scheme-dsl/mono-types-x25.org][reading]] | Can first-class container observations preserve a finite fixed point after lowering? |
 | IR25 | [[https://proceedings.iclr.cc/paper_files/paper/2025/file/582d4e27fa24168f3af1f4582655034b-Paper-Conference.pdf][IRIS, ICLR 2025]] | [[file:2026-logic-ai-screen.org][core screen]] | Does a generated source/sink specification improve real-code analysis without hiding false alerts? |
 | P18 | [[https://arxiv.org/abs/1808.05752][PUG extended paper]] | [[file:pug-p18.org][reading]] | What is a bounded why/why-not explanation? |
 | S23 | [[https://doi.org/10.1145/3591280][Scallop, PLDI]] | [[file:scallop-s23.org][reading]] | What extra semantics would a differentiable training integration require? |
@@ -159,6 +162,7 @@ Start with the [[file:2026-logic-ai-screen.org][core screen]] and [[file:matlogi
 scope and witnesses, then [[file:datalogbench-db26.org][DB26]] for generated rule correctness. Read
 [[file:../scheme-dsl/byods-b23.org][B23]] and [[file:../scheme-dsl/flowlog-fl25.org][FL25]] beside the Scheme Provider, planner and Session
 code, followed by the [[file:../scheme-dsl/datafun-f16.org][F16]]/[[file:../scheme-dsl/datafun-s20.org][S20]] functional boundary. The
+[[file:../scheme-dsl/mono-types-x25.org][X25]] reading tests whether a first-class container can preserve that boundary.
 [[file:pug-p18.org][P18]] gives the separate explanation semantics; [[file:scallop-s23.org][S23]]
 frames the optional training-framework question.
 For an actual deployed-model interface, read

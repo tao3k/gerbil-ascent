@@ -62,6 +62,8 @@ The [code-anchored research screen](docs/research/agent-inference/2026-logic-ai-
 ranked them by the question each can test in this implementation. Recent
 model papers lead the inference section; older PL work remains central where
 it supplies a precise language, fixed-point or incremental-evaluation law.
+The [reasoning-language and formal agenda](docs/research/agent-inference/reasoning-language-formal-agenda.org)
+connects ASCENT, MRR, Lean and TLA+ without treating their boundaries as proved integration.
 
 ### Model reasoning and executable inference: current evidence
 
@@ -79,6 +81,7 @@ mined with confidence thresholds rather than established as universal laws.
 - [Datafun: a Functional Datalog](https://doi.org/10.1145/3022670.2951948) (2016) — monotonicity and finite-height fixed points.
 - [Seminaïve Evaluation for a Higher-Order Functional Language](https://doi.org/10.1145/3371090) (2020) — change semantics for higher-order rules.
 - [Bring Your Own Data Structures to Datalog](https://doi.org/10.1145/3622840) (2023) — concrete/delta semantics for specialized relations.
+- [Mono Types – First-Class Containers for Datalog](https://drops.dagstuhl.de/entities/document/10.4230/LIPIcs.ECOOP.2025.33) (ECOOP 2025) — mechanized monotone container observations and program-analysis experiments.
 - [Seamless Deductive Inference via Macros](https://doi.org/10.1145/3497776.3517779) (2022) — the Rust Ascent language and comparison baseline.
 - [Flix: A Design for Language-Integrated Datalog](https://doi.org/10.1145/3763126) (2025) — first-class program and private predicate boundaries.
 - [FlowLog: Efficient and Extensible Datalog via Incrementality](https://www.vldb.org/pvldb/vol19/p361-zhao.pdf) (PVLDB 2025; VLDB 2026) — recursive plan and incremental engine experiments.

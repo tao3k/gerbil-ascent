@@ -44,6 +44,7 @@ snapshot and program; source completeness remains a caller obligation.
 |-----+-------------------------+------------+------------------------|
 | A22 | [[https://thomas.gilray.org/pdf/seamless-deductive.pdf][Ascent paper]] | [[file:ascent-a22.org][Ascent]] | Preserve rule and planner information |
 | B23 | [[https://kmicinski.com/assets/byods.pdf][BYODS paper]] | [[file:byods-b23.org][BYODS]] | Preserve concrete and delta meaning when a Provider adds facts |
+| X25 | [[https://drops.dagstuhl.de/entities/document/10.4230/LIPIcs.ECOOP.2025.33][Mono Types, ECOOP 2025]] | [[file:mono-types-x25.org][mono types]] | First-class containers need monotone, order-independent reads and a distinct termination bound |
 | F16 | [[https://www.cl.cam.ac.uk/~nk480/datafun.pdf][Datafun paper]] | [[file:datafun-f16.org][Datafun]] | State monotonicity assumptions explicitly |
 | H13 | [[https://www.schemeworkshop.org/2013/papers/HemannMuKanren2013.pdf][µKanren paper]] | [[file:microkanren-h13.org][µKanren]] | Distinguish search from bottom-up evaluation |
 | F20 | [[https://plg.uwaterloo.ca/~olhotak/pubs/oopsla20c.pdf][Flix paper]] / [[https://doi.org/10.1145/3428193][DOI]] | [[file:flix-f20.org][Flix]] | Validate composition and stratification |
@@ -126,6 +127,11 @@ check and does not gain a persistent cache. Deletion-aware change and a
 general typed higher-order calculus remain separate research
 obligations. Match lifecycle cost, larger scale and allocation receipts
 before any broad performance conclusion.
+
+The [[file:mono-types-x25.org][Mono Types reading]] adds a language-level container hypothesis,
+not an implemented feature. Its Rocq laws concern observable =add/read=
+behavior; they do not certify current lattice callbacks, Provider deltas,
+source withdrawals or finite-height termination.
 
 * Research and proof synchronization (2026-10-04)
 

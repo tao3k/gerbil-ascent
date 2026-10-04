@@ -34,6 +34,17 @@ it does not authenticate a producer or establish real-world completeness.
 
 * Research decisions and remaining closure conditions
 
+The Python/native testing boundary was corrected after rebasing the concurrent
+834ff8c core ownership migration. Artifact admission and bounded inert Scheme
+prediction parsing now live in the native test harness; their nine failure and
+discriminator Cases run through std/test in the AOT entry. Remaining provider
+byte IO and process supervision form the =python/= package with pyproject/src
+layout. No Python entry remains in =tools/=. On source 0e1141e, the
+[[file:evidence/scheme-native-framework-integrated-20261004/receipt.json][integrated native qualification]] passed thirteen Suites / 138 Cases with exit 0,
+and five Python IO controls passed. This closes this testing ownership migration,
+not the open research and model-benefit conditions in the table below. No real
+model call or new accuracy/benefit score belongs to this migration.
+
 | ID | Design decision | Required falsifiable evidence | Status / dependency |
 |----+-----------------+-------------------------------+---------------------|
 | R1 | Admit general higher-order operators only with explicit domains, modes, captures, effects and monotonicity/height obligations | Reject escaped dependencies and out-of-domain derived rows; establish soundness for the stated IR, then compare independent finite models | Nested monotone arrows, lexical descriptors and native lowering implemented; operator monotonicity, nested application and relation fixed-point laws checked in Lean alongside finite-rank termination; finite-height function-valued fix natively qualified; mechanized compiler bridge remains open |

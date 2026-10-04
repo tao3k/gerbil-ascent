@@ -386,7 +386,7 @@ logs, model calls or runtime performance claim are published by this slice.
 After the checked runtime was split into lifecycle owners, the repair moved
 into [[file:../program/scheme-session.ss][scheme-session]] and the [[file:../program/scheme-query.ss][query owner]] documents the same authority boundary.
 The [[file:evidence/scheme-row-lifecycle-20261005/receipt.json][lifecycle integration receipt]] independently qualifies =84ba4ac= on source
-base =6d407ea=: 365 Scheme source hashes, a freshly built native artifact and
+base =6d407ea=: 365 bound input hashes (including three build-control files), a freshly built native artifact and
 the same 109 Cases across six modules, with complete success markers and exit 0.
 The eight Lean files and TLA models are unchanged from the fully checked parent
 snapshot; GitHub =formal= also succeeded for =84ba4ac=. Later documentation-only
@@ -532,3 +532,25 @@ The [[file:evidence/scheme-projected-join-rule-20261005/receipt.json][projected-
 qualification after the upstream index lifecycle change. Rejected build or
 qualification attempts, if any, remain excluded. TLA lifecycle models are
 unchanged; no model calls or performance claim is added.
+
+Native qualification exposed an entry-path issue while integrating the index
+suite. The standalone gxtest path produced no Case before the five-second
+silence gate and was excluded. The suite is now registered in the AOT entry.
+Static linking then identified omitted independent reference modules, including
+their transitive analysis dependency. =prepare-test-library!= now compiles the
+complete four-module reference graph whenever the index lifecycle suite is
+requested, for both ordinary and AOT module preparation. No semantic assertion
+or watchdog bound was relaxed. The receipt distinguishes the prior accepted
+three-module artifact, failed startup/build attempts and the final four-module
+AOT qualification. It does not claim universal gxtest startup guarantees.
+Rechecking the ordinary gxtest entry after the dependency repair still trips
+the five-second silence gate before its first Case. That startup failure stays
+open; the missing-static-module diagnosis explains the AOT link failure, not
+this remaining ordinary-entry delay. No native semantic failure was observed
+by that rejected entry, since it never reached a Case.
+
+Artifact =sourceCount= denotes all bound inputs, not exclusively Scheme files.
+The final snapshot has 365 Scheme sources plus =justfile=, the supervision
+module and its package metadata: 368 inputs. Historical receipt hashes and
+counts remain intact; the lifecycle narrative above corrects this count's
+description without expanding its qualification scope.

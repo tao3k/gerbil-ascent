@@ -318,11 +318,38 @@ admitted row strictly increases it. Duplicates cannot witness strict progress.
 row to be admitted. An unchecked encoding observes only the declared universe;
 it must never become a runtime mechanism for silently dropping invalid rows.
 
-Native qualification adds four Cases: distinct mixed scalar categories with
+Native qualification adds six Cases: distinct mixed scalar categories with
 duplicate domains/rows, rejection of inexact/mutable/opaque values, two fresh
-symbols with the same printed name, and empty/nullary relation outcomes.
+symbols with the same printed name, empty/nullary relation outcomes, and source
+occurrence/materialization budget boundaries, and retained source-only updates
+with immutable prior results.
 These exercise actual Gerbil membership, domain hashing, lowering and solve.
 All expected complete rows are Scheme data, independent of the compiler.
+
+The first native run exposed a concrete boundary mismatch: source initialization
+deliberately retains duplicate occurrences, but typed compilation returned a
+bare source as its set-valued result. Mixed duplicate rows returned eight rows
+instead of four; two empty tuples returned two instead of one. That artifact
+failed qualification (exit 1, no final OK) and is excluded.
+
+=program/higher-order.ss= now wraps a lowered source root in an identity
+projection, so the returned typed output handle names a derived set relation.
+Source handles, occurrence rows and source budgets retain their meaning. This
+also covers a parameter application or function bottom that lowers to a source.
+Existing computed roots already produce derived set relations. Callers use the
+returned output handle; it need not equal a source's name. The materialized
+output consumes derived/output budget, and the new budget Case requires that
+cost rather than hiding it. No performance gain follows from this repair.
+
+The first integrated qualification then exposed the named Session constructor's
+all-relations-as-sources restriction. The new derived output correctly was not
+a source handle, so two existing retained Cases failed. Named Sessions now
+retain the snapshot's declared source arities, just as fragment Sessions do;
+all checked append/replacement/transaction paths use that whitelist. Derived
+relations remain queryable and cannot be updated through their output handles.
+The added retained Case checks rejected helper mutations, source insertion and
+replacement, duplicate occurrence observations, set output and a frozen old
+result. This constructor repair does not grant helper mutation authority.
 
 The mathematical =eraseDups= uses lawful decidable equality. Its equivalence
 to Gerbil's =delete-duplicates/hash= and table hashing is not a mechanized
@@ -331,3 +358,12 @@ inputs. A total native scalar decoder, full runtime equality/hash correspondence
 descriptor/capture interpretation and actual compiler-step preservation remain
 open. This slice establishes the row interpretation laws required by those
 later refinements, without certifying arbitrary Scheme objects or callbacks.
+
+The next descriptor/rule bridge must also distinguish typed term domains from
+compiled schema envelopes: derived relations currently use the collected scalar
+pool, while original sources retain their specific domains. The existing domain
+order Case records that pooled envelope. A rule-preservation proof must show
+which produced rows inhabit each term's own type; merely passing the broader
+compiled field predicate is insufficient. Checked retained updates use the
+source-handle whitelist; direct use of the generic native engine is outside
+that typed authority boundary.

@@ -258,6 +258,9 @@ in the [native qualification report](t/performance/session-lifecycle/README.org)
 
 Measured full-suite comparisons and the admission rationale are recorded in
 [t/performance/suite-execution/README.org](t/performance/suite-execution/README.org).
+The [declaration compilation receipt](docs/declaration-compilation-benchmark.org)
+compares cold construction, cached construction, and complete solves across the
+planning refactor without changing the original scenario thresholds.
 
 ## Positive rule execution
 

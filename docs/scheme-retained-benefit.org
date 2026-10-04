@@ -118,6 +118,14 @@ entry now reports only completed declarations, solves and timed arms; current
 native qualification must pass before publishing its distributions or freezing
 a new paid model plan. Prior 125-Case receipts bind their original sources.
 
+On source 7103f87 the native dynamic model module completed all 24 tasks,
+including the two actual function-valued fixed points (independent bitmasks
+3 and 1), with NATIVE-MODULES-OK, MODULE-OK, HARNESS-OK, final OK and exit 0.
+That invocation did not enforce the five-second output watchdog. A separate
+direct gxi/gxtest invocation with the watchdog exited 124 before any output.
+The first result establishes computation agreement only; neither invocation
+replaces the accepted AOT preflight or authorizes a model accuracy claim.
+
 The architecture must qualify a cost crossover before selecting
 reuse on performance grounds. Next evidence needs larger independent and
 fully affected components, batch duration above the timer resolution, separate

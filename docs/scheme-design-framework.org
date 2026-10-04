@@ -71,3 +71,12 @@ compilation/linking (exit 124). Neither started the six-Suite semantic run.
 This is an open build-delivery gate, not a semantic failure or a qualified
 integrated artifact. GitHub CI runs the same gate; its exact-head verdict
 must be recorded independently. Previous 51-case results cannot substitute.
+
+The [[file:evidence/scheme-closure-recovery-20261004/receipt.json][AOT recovery receipt]] supersedes the build-delivery failure on its own
+frozen source: the abandoned reasoning.o.lock was recovered under the exclusive
+lane, native compilation/linking completed under 180 seconds, and all six
+Suites / 51 Cases passed with unchanged test bounds. A source-mutation control
+was rejected. An exploratory API attempt that omitted invoke-gsc and rebound
+a prior binary was interrupted and excluded; deleting the prior binary and
+requiring successful native job draining now prevents that path. GitHub CI
+and the four broader research obligations still require their own evidence.

@@ -43,6 +43,7 @@ snapshot and program; source completeness remains a caller obligation.
 | Key | Source and durable link | Local note | Main design constraint |
 |-----+-------------------------+------------+------------------------|
 | A22 | [[https://thomas.gilray.org/pdf/seamless-deductive.pdf][Ascent paper]] | [[file:ascent-a22.org][Ascent]] | Preserve rule and planner information |
+| B23 | [[https://kmicinski.com/assets/byods.pdf][BYODS paper]] | [[file:byods-b23.org][BYODS]] | Preserve concrete and delta meaning when a Provider adds facts |
 | F16 | [[https://www.cl.cam.ac.uk/~nk480/datafun.pdf][Datafun paper]] | [[file:datafun-f16.org][Datafun]] | State monotonicity assumptions explicitly |
 | H13 | [[https://www.schemeworkshop.org/2013/papers/HemannMuKanren2013.pdf][µKanren paper]] | [[file:microkanren-h13.org][µKanren]] | Distinguish search from bottom-up evaluation |
 | F20 | [[https://plg.uwaterloo.ca/~olhotak/pubs/oopsla20c.pdf][Flix paper]] / [[https://doi.org/10.1145/3428193][DOI]] | [[file:flix-f20.org][Flix]] | Validate composition and stratification |
@@ -50,6 +51,8 @@ snapshot and program; source completeness remains a caller obligation.
 | B22 | [[https://arxiv.org/pdf/2203.16684][DBSP paper]] / [[https://doi.org/10.48550/arXiv.2203.16684][DOI]] | [[file:dbsp-b22.org][DBSP]] | Separate retained update work from full reconstruction |
 | H18 | [[https://ojs.aaai.org/index.php/AAAI/article/view/11554/11413][DRedc paper]] / [[https://doi.org/10.1609/aaai.v32i1.11554][DOI]] | [[file:deletion-h18.org][Deletion H18]] | Count supports separately before maintaining recursive deletions |
 | L25 | [[https://plg.uwaterloo.ca/~olhotak/pubs/oopsla25b.pdf][Flix design paper]] / [[https://doi.org/10.1145/3763126][DOI]] | [[file:flix-l25.org][Flix L25]] | Program values, private names and solve/query boundary |
+| FL25 | [[https://www.vldb.org/pvldb/vol19/p361-zhao.pdf][FlowLog, PVLDB 2025 / VLDB 2026]] | [[file:flowlog-fl25.org][FlowLog]] | Separate logical rule plans from physical recursive execution |
+| S24 | [[https://www.vldb.org/pvldb/vol18/p651-micinski.pdf][Datalog with First-Class Facts, PVLDB 2024 / VLDB 2025]] | [[file:../agent-inference/2026-logic-ai-screen.org][core screen]] | Nested fact identity and termination need a distinct language contract |
 
 * Cross-paper synthesis
 :PROPERTIES:

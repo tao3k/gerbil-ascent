@@ -31,7 +31,11 @@ contract; they are lower priority than its executable Scheme fixture.
 #+NAME: agent-source-ledger
 | Key | Primary source | Our note | Applicable question |
 |-----+----------------+----------+---------------------|
+| ML26 | [[https://proceedings.mlr.press/v306/miao26e.html][LLM-MatLogic, ICML 2026]] | [[file:matlogic-ml26.org][reading]] | Can model-specified graph negation keep its branch scope and witness through execution? |
 | DB26 | [[https://arxiv.org/abs/2609.37233][DatalogBench, arXiv v1]] | [[file:datalogbench-db26.org][reading]] | Can LLM-written recursive rules pass execution tests, not just parsing? |
+| FL25 | [[https://www.vldb.org/pvldb/vol19/p361-zhao.pdf][FlowLog, PVLDB 2025 / VLDB 2026]] | [[file:../scheme-dsl/flowlog-fl25.org][reading]] | Which plan/physical choices preserve a recursive result while reducing work on real graphs? |
+| B23 | [[https://kmicinski.com/assets/byods.pdf][BYODS, OOPSLA 2023]] | [[file:../scheme-dsl/byods-b23.org][reading]] | Do specialized relation Providers expose every new fact through delta? |
+| IR25 | [[https://proceedings.iclr.cc/paper_files/paper/2025/file/582d4e27fa24168f3af1f4582655034b-Paper-Conference.pdf][IRIS, ICLR 2025]] | [[file:2026-logic-ai-screen.org][core screen]] | Does a generated source/sink specification improve real-code analysis without hiding false alerts? |
 | LL23 | [[https://aclanthology.org/2023.findings-emnlp.248/][Logic-LM, EMNLP Findings]] | [[file:logic-lm-ll23.org][reading]] | Which solver diagnostics make a bounded repair loop useful? |
 | LI23 | [[https://aclanthology.org/2023.emnlp-main.313/][LINC, EMNLP]] | [[file:linc-li23.org][reading]] | Does valid formalization preserve the intended source meaning? |
 | R24 | [[https://aclanthology.org/2024.findings-acl.254/][Readi, ACL Findings]] | [[file:readi-r24.org][reading]] | Can a stuck graph path get compact, local feedback? |
@@ -47,11 +51,18 @@ contract; they are lower priority than its executable Scheme fixture.
 :CUSTOM_ID: agent-inference-synthesis
 :END:
 
-The first relational case should be =propose -> inspect -> execute ->
-explain -> revise=.  The general workflow is =observe -> propose ->
-check -> explain -> choose another step or stop=.  This is our synthesis,
-not an API these papers
-jointly prescribe.  LL23 and LI23 support separating language
+The [[file:2026-logic-ai-screen.org][code-anchored research screen]] joins the Ascent, BYODS and Datafun
+lineage to real knowledge-graph questions, candidate-rule synthesis and
+the actual Scheme owners. It puts semantic scope, independent results
+and workload quality before publication year.
+
+The first model comparison preserves the raw, frozen =propose= output,
+then measures =inspect=, =execute= and =explain= as separate outcomes.
+A later revision is a separate experimental condition, not evidence
+that the model understood the rule on its first attempt. The general
+workflow can use =observe -> propose -> check -> explain -> choose
+another step or stop=. This is our synthesis, not an API these papers
+jointly prescribe. LL23 and LI23 support separating language
 formalization from symbolic execution; DB26 shows that repair of syntax
 and declarations can still leave recursive semantic errors.  R24
 motivates local feedback at the point where a graph plan gets stuck.
@@ -153,10 +164,12 @@ not itself validate LLM-proposed facts, rule meaning or evidence admission.
 
 * Reading order
 
-Start with [[file:ircot-i23.org][I23]], [[file:react-a23.org][A23]] and
-[[file:tot-t23.org][T23]] for the deployment-time loop, then
-[[file:datalogbench-db26.org][DB26]] for the
-rule-generation failure taxonomy.  Read
+Start with the [[file:2026-logic-ai-screen.org][core screen]] and [[file:matlogic-ml26.org][ML26]] for real-KG
+scope and witnesses, then [[file:datalogbench-db26.org][DB26]] for generated rule correctness. Read
+[[file:../scheme-dsl/byods-b23.org][B23]] and [[file:../scheme-dsl/flowlog-fl25.org][FL25]] beside the Scheme Provider, planner and Session
+code, followed by the [[file:../scheme-dsl/datafun-f16.org][F16]]/[[file:../scheme-dsl/datafun-s20.org][S20]] functional boundary. The
+older [[file:ircot-i23.org][I23]], [[file:react-a23.org][A23]] and
+[[file:tot-t23.org][T23]] provide deployment-time workflow background.  Read
 [[file:logic-lm-ll23.org][LL23]] and [[file:linc-li23.org][LI23]] for
 formalization/solver feedback and its limits.  Read
 [[file:readi-r24.org][R24]] for graph interaction and

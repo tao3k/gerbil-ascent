@@ -1,0 +1,69 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+#+TITLE: B23 reading: BYODS concretization and delta visibility
+#+STATUS: paper-to-code research; no new provider parity or performance receipt
+#+DATE: 2026-10-04
+#+FILETAGS: :research:byods:datalog:provider:
+
+* Source and question
+
+Arash Sahebolamri, Langston Barrett, Scott Moore, and Kristopher Micinski,
+[[https://kmicinski.com/assets/byods.pdf][Bring Your Own Data Structures to Datalog]], OOPSLA2 2023, Article 264.
+The question for this repository is precise: when a storage Provider
+implicitly adds facts, can every rule consumer observe those facts at
+the right semi-naive frontier, with the same result as the provider's
+declared concrete relation? This paper is a core semantic reference for
+=table/=, not merely a suggestion to use faster containers.
+
+* Paper premises
+
+| Locator | Result | Consequence for a provider |
+|---------+--------+----------------------------|
+| §3, PDF pp. 5–6, Theorem 3.1 | A monotone concretization makes the immediate-consequence operator monotone; =eqrel= is a positive example, while arbitrary lattice relations do not receive a blanket guarantee. | Specify the exact rows represented by private state; a successful insertion must not retract visible rows under the positive contract. |
+| §3.3, PDF pp. 7–9, Theorem 3.5 | Semi-naive and naive DLDS semantics agree under the paper's total/delta concretization conditions. A newly implied =eqrel= pair must pass through delta; reading only the old total and a raw input delta can miss a later join. | Test the *emitted* frontier as well as the final closure, especially when two producer rules meet in one component. |
+| §5.1–5.4, PDF pp. 13–15 | Specialized =eqrel=, =trrel= and =trrel_uf= address equivalence and transitive relations in real analyses, including Polonius. | Compare on relation-appropriate graph workloads and record both full outputs and provider cost. Published speedups do not transfer to Scheme. |
+
+The paper's =eqrel= and =trrel= represent distinct relation meanings.
+Equivalence closure is reflexive, symmetric and transitive over known
+members; transitive reachability is directed. A physical index Provider
+that only changes lookup has a different obligation from a storage
+Provider that changes the fact set.
+
+* Exact Scheme seams
+
+| Owner | Current role | Limit to check |
+|-------+--------------+----------------|
+| [[file:../../../table/storage.ss][=table/storage.ss=]] | =gerbil-ascent-storage-extend= asks a per-run Provider state for a bounded batch of newly visible rows; Set, =eqrel=, =trrel= and =trrel_uf= are declared here. | The returned batch must include every new concrete fact before later rule rounds consume delta. The POO contract alone does not prove this for a caller-defined Provider. |
+| [[file:../../../table/eqrel.ss][=table/eqrel.ss=]] | Components emit reflexive and cross-component pairs; budget preflight precedes component mutation. | Two producers that join components, duplicate input, failed budget and retry must preserve frontier and final closure. |
+| [[file:../../../table/trrel.ss][=table/trrel.ss=]] | Per-run predecessor/successor indexes emit directed closure; =trrel_uf= adds its reflexive variant. | A bridge edge, cycle, insertion order and group isolation need exact new-pair checks. |
+| [[file:../../../table/provider.ss][=table/provider.ss=]] | Index Provider builds/extends/looks up physical indexes; evaluator rechecks returned rows. | A custom lookup can over-return candidates but cannot omit a matching row or change logical meaning. |
+| [[file:../../../program/evaluate.ss][=program/evaluate.ss=]] and [[file:../../../program/session.ss][=program/session.ss=]] | Semi-naive run and retained source updates consume Provider output. | Source replacement and failure recovery have separate publication contracts; this is not a proof of general incremental deletion. |
+
+The [[file:../../rust-parity.org][Rust parity matrix]] already records finite graph and
+insertion-order checks, plus a minimal *pinned Rust 0.8.0 grouped
+=eqrel= split-producer discrepancy*: =(alpha,1,2)= and =(alpha,2,3)=
+from different producers should permit =(alpha,1,3)=, but the pinned
+Rust delta path can omit it. Scheme emits it. That counterexample is a
+particularly useful BYODS discriminator; it must remain a reported
+upstream divergence, not be copied into the Scheme semantics.
+
+* Next paired experiment
+
+1. Freeze a finite directed graph, one grouped graph, provider version,
+   program and source order. Use an independent graph model to compute
+   equivalence or transitive closure for the selected provider.
+2. Capture each Provider expansion batch and the relation seen by the
+   next rule round, then compare the complete result. Include a bridge
+   whose new implied pair feeds a second producer's join, not only a
+   single-head materialization.
+3. Repeat over append, duplicate, failed budget/retry and replacement.
+   Compare the last published snapshot with a fresh solve after each
+   successful update. Measure wall time, allocation and memory only
+   after exact outputs and frontier visibility agree.
+
+This protocol tests the Scheme Provider contract. It does not reproduce
+the paper's Rust performance results or prove the contract for every
+possible user-supplied Provider.
+
+[[file:index.org][Scheme research index]]; [[file:../../related-work-matrix.org][related-work matrix]].

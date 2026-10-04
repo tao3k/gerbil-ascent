@@ -58,6 +58,14 @@ This list brings together the primary papers in the
 [Scheme DSL readings](docs/research/scheme-dsl/index.org),
 [agent inference readings](docs/research/agent-inference/index.org), and
 [temporal study](docs/temporal-causality-module-design.org).
+The [code-anchored research screen](docs/research/agent-inference/2026-logic-ai-screen.org)
+connects the core Datalog papers to real graph tasks and this implementation.
+
+### Real graph reasoning and Datalog synthesis (2026 first)
+
+- [LLM-MatLogic: Executable Exchange Contracts for Knowledge-Graph Query Answering with Scoped Negation](https://proceedings.mlr.press/v306/miao26e.html) (2026)
+- [DatalogBench: Evaluating Large Language Models on Text-to-Datalog Synthesis](https://arxiv.org/abs/2609.37233) (2026)
+- [IRIS: LLM-Assisted Static Analysis for Detecting Security Vulnerabilities](https://proceedings.iclr.cc/paper_files/paper/2025/file/582d4e27fa24168f3af1f4582655034b-Paper-Conference.pdf) (2025)
 
 ### Relational languages and evaluation
 
@@ -74,6 +82,8 @@ This list brings together the primary papers in the
 - [Fixpoints for the Masses: Programming with First-Class Datalog Constraints](https://plg.uwaterloo.ca/~olhotak/pubs/oopsla20c.pdf) (2020)
 - [Seminaïve Evaluation for a Higher-Order Functional Language](https://doi.org/10.1145/3371090) (2020)
 - [Flix: A Design for Language-Integrated Datalog](https://doi.org/10.1145/3763126) (2025)
+- [FlowLog: Efficient and Extensible Datalog via Incrementality](https://www.vldb.org/pvldb/vol19/p361-zhao.pdf) (PVLDB 2025; VLDB 2026)
+- [Datalog with First-Class Facts](https://www.vldb.org/pvldb/vol18/p651-micinski.pdf) (PVLDB 2024; VLDB 2025)
 
 ### Provenance and time
 
@@ -86,7 +96,6 @@ This list brings together the primary papers in the
 
 ### Model reasoning and inference
 
-- [DatalogBench: Evaluating Large Language Models on Text-to-Datalog Synthesis](https://arxiv.org/abs/2609.37233) (2026)
 - [Logic-LM: Empowering Large Language Models with Symbolic Solvers for Faithful Logical Reasoning](https://aclanthology.org/2023.findings-emnlp.248/) (2023)
 - [LINC: A Neurosymbolic Approach for Logical Reasoning by Combining Language Models with First-Order Logic Provers](https://aclanthology.org/2023.emnlp-main.313/) (2023)
 - [Call Me When Necessary: LLMs can Efficiently and Faithfully Reason over Structured Environments](https://aclanthology.org/2024.findings-acl.254/) (2024)

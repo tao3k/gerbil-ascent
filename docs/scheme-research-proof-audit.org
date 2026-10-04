@@ -6,9 +6,12 @@
 
 * Audit decision
 
-The [[file:research/scheme-dsl/index.org][DSL source ledger]] contains eight papers: A22, F16, H13, F20,
-S20 and L25 concern the language/kernel; H18 and B22 add deletion and
-incremental-maintenance constraints. These are distinct from the separate
+At this audit's baseline, the [[file:research/scheme-dsl/index.org][DSL source ledger]] contained eight papers:
+A22, F16, H13, F20, S20 and L25 concerned the language/kernel; H18 and
+B22 added deletion and incremental-maintenance constraints. Later B23,
+FL25 and S24 readings add Provider, physical-plan and nested-fact
+questions without extending the audited proof coverage. These are
+distinct from the separate
 [[file:research/agent-inference/index.org][agent-inference collection]]. The next step is to connect paper assumptions
 to admitted Scheme IR and observable transactions. Adding syntax, quoting a
 paper or passing an abstract proof is insufficient for design closure.

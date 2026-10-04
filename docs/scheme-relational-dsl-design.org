@@ -26,6 +26,7 @@ The [[file:research/agent-inference/index.org][LLM reasoning research index]] st
 The historical =ascent= implementation recorded selected Rust behavior.
 The new Gerbil Scheme language has no Rust compatibility requirement;
 its grammar, semantic IR and tests must be designed on their own terms.
+The [[file:scheme-closure-contract.org][closure contract]] states the guarantees and open extension obligations.
 The native subset is available through =program/interface.ss=; the old
 =ascent= form lives in =program/syntax.ss= for the parity corpus.
 

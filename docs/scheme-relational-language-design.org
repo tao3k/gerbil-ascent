@@ -610,7 +610,7 @@ are candidates; their semantic categories are the design decision.
 | Class | Proposed form | Meaning | Initial admission |
 |-------+---------------+---------+-------------------|
 | Pure expression IR | =(where (?x) (op even? ?x))=, =(compute ?y (?x) (op add ?x 1))= | Fixed built-in test or scalar projection over already bound values | Checkable operator descriptor and types; no arbitrary closure |
-| Pointwise finite view | =(view successors (input ?x) (output ?y))= followed by =(successors ?x ?y)= | A fixed =x -> finite-set(y)= adapter, with visible input/output mode | Deferred until stability, finite-domain and failure tests exist; trusted only unless operator body is analyzable |
+| Pointwise finite view | Frozen input/output rows, exposed through ordinary atoms or =flatmap= | Fixed finite relation; no rule-time callback | Implemented finite table subset; arbitrary pointwise procedures remain proposed |
 | Relation transformer | A value of shape =Rel[A] -> Rel[B]= used inside a fixed point | Higher-order changing relation/operator semantics | Research stage: typed IR and delta interpretation required |
 
 The first class has two semantic operations: =where= filters a
@@ -711,3 +711,14 @@ does not gate this language.
 
 [[file:scheme-relational-dsl-design.org][Overview]];
 [[file:research/scheme-dsl/index.org][source ledger]].
+
+
+* Closure contract and design decisions
+
+The [[file:scheme-closure-contract.org][closure contract]] is the shared interpretation of completion,
+composition, finite height, update semantics and bounded evidence. It separates
+finite positive operator graphs from checked scalar/lattice rules that may
+create unbounded integer chains. Passing admission is not a termination proof.
+The four-case executable discriminator is
+=t/qualification/scheme-closure-contract-test.ss=; existing operator, joint
+Library, retained Session and evidence corpora cover different laws.

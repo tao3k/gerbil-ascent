@@ -38,12 +38,13 @@ or permission to act.
 
 * Priority and ownership
 
-1. Complete A22/B23 behavioral parity before promoting a new Agent extension.
-   Use the Rust oracle for behavior and the standard SS scenarios for cost.
-   The pinned =ascent-byods-rels 0.8.0= provider macros match two- and
-   three-column relations.  A four-column grouped =eqrel= / =trrel= /
-   =trrel_uf= probe fails at Rust macro expansion; wider grouping is a later
-   extension proposal, not an unmet 0.8.0 parity feature.
+1. Qualify the Scheme-native language against its own admission contract and
+   independent finite models. A22/B23 parity remains a separate historical
+   research track; it does not define validity or block native language work.
+   Rust fixtures discriminate selected behavior and cost, without imposing
+   Rust syntax or compatibility aliases on the public Scheme grammar.
+   The pinned BYODS providers accept binary and ternary declarations;
+   wider grouping is a separate extension proposal.
 2. Use D13/D23/H18 to compare retained updates with full recomputation after
    every insertion and deletion.  Equality includes the fact set and MRR's
    required supports for the same generation; an update-cost claim also needs

@@ -52,6 +52,7 @@
     "t/qualification/ascent-timeout-test.ss"
     "t/qualification/ascent-timing-test.ss"
     "t/qualification/ascent-workspace-test.ss"
+    "t/qualification/scheme-closure-contract-test.ss"
     "t/qualification/scheme-library-contract-test.ss"
     "t/qualification/scheme-native-integration-test.ss"
     "t/qualification/scheme-native-language-test.ss"
@@ -136,6 +137,28 @@
      (with-test-lane
       (lambda () (prepare-test-library! quick-modules)
                  (run-command ["just" "_test-quick"]))))
+    (["build-dsl-closure"]
+     (with-test-lane
+      (lambda ()
+        ;; Freeze and bind under the same compilation lock: concurrent builds
+        ;; cannot replace each other's source snapshot.
+        (run-command ["python3" "tools/dsl-closure-artifact.py" "freeze"])
+        (unless (zero? command-exit-status) (error "DSL source freeze failed"))
+        (prepare-test-library!
+         '("t/qualification/scheme-closure-contract-test.ss"
+           "t/qualification/scheme-operator-test.ss"
+           "t/qualification/scheme-library-contract-test.ss"
+           "t/qualification/scheme-operator-retained-test.ss"
+           "t/qualification/ascent-finite-evidence-test.ss"
+           "t/qualification/ascent-positive-nonmembership-test.ss"))
+        ;; Output-dir precedence binds the executable to this current Library,
+        ;; even when GERBIL_PATH also contains an older installed ASCENT.
+        (run-command ["gxc" "-:max-heap=1G,debug=q" "-exe"
+                      "-d" (path-expand "lib" test-cache)
+                      "-o" (path-expand "dsl-closure" test-cache)
+                      "t/harness/dsl-closure.ss"])
+        (when (zero? command-exit-status)
+          (run-command ["python3" "tools/dsl-closure-artifact.py" "bind"])))))
     (["test-file" path]
      (with-test-lane
       (lambda () (prepare-test-library! [path])

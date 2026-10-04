@@ -686,3 +686,25 @@ _test-temporal:
     grep -F 'HARNESS-OK' "$log" >/dev/null
     grep -x 'OK' "$log" >/dev/null
     if [[ -n "${ASCENT_TEST_LIBRARY:-}" ]]; then grep -Fx 'NATIVE-MODULES-OK' "$log" >/dev/null; fi
+
+# Compile outside the runtime gate; std/make checks current source dependencies.
+build-dsl-closure:
+    timeout 180s env {{ test_runner }} build-dsl-closure
+
+# Run the known Suites through std/test in serial AOT processes with strict progress.
+check-dsl-closure:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    python3 tools/dsl-closure-artifact.py check
+    test -x .cache/ascent/native-library/dsl-closure
+    mkdir -p .cache/ascent/tmp
+    output_file="$(mktemp .cache/ascent/tmp/dsl.XXXXXX)"
+    trap 'rm -f "$output_file"' EXIT
+    for module in scheme-closure-contract scheme-operator scheme-library-contract scheme-operator-retained ascent-finite-evidence ascent-positive-nonmembership; do
+        python3 t/harness/watch_output.py -- timeout 45s .cache/ascent/native-library/dsl-closure {{ gerbil_test_runtime_options }} "t/qualification/$module-test.ss" 2>&1 | tee -a "$output_file"
+    done
+    if grep -E 'ERROR (CHECK|CASE|HARNESS|MODULE)|Heap overflow|Stack overflow' "$output_file" >/dev/null; then exit 1; fi
+    awk -f tools/assert-test-cases.awk "$output_file"
+    test "$(grep -c '^MODULE-OK ' "$output_file")" -eq 6
+    test "$(grep -c '^HARNESS-OK ' "$output_file")" -eq 6
+    test "$(grep -cx 'OK' "$output_file")" -eq 6

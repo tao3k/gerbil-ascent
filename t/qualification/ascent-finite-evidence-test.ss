@@ -223,5 +223,8 @@
                         (length
                          (filter (lambda (node) (not (= node 2)))
                                  reachable))))))
-           (check-case snapshot graph-program expected)))
+           (check-case snapshot graph-program expected)
+           (when (zero? (modulo (+ mask 1) 2))
+             (displayln "PROGRESS finite evidence graphs " (+ mask 1) "/64")
+             (force-output))))
        (iota 64)))))

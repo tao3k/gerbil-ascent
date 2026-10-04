@@ -12,7 +12,7 @@ The public language is the =relational-program= and
 =relational-fragment= API exported by =program/interface.ss=. Trusted
 Scheme code constructs finite program values before admission. Its
 checked rule subset has positive atoms, lower-stratum negation,
-=where= (=even?=, =<=), =compute= (=identity=, =+=), checked reductions,
+=where= (=even?=, =<), =compute= (=identity=, =+=), checked reductions,
 finite pointwise views, and min/max lattice declarations. Scalar
 literals and explicit =(value expression)= captures are copied at
 construction; no host procedure is called from a checked rule body.
@@ -37,6 +37,17 @@ re-exported by =program/interface.ss=. Retirement of that parser
 requires moving its qualification to a test-only build path; its
 presence does not enlarge the native public grammar. No internal JSON
 protocol, model scheduler or Rust runtime bridge is part of this gate.
+
+* Closure and termination contract
+
+[[file:scheme-closure-contract.org][The closure contract]] distinguishes finite operator graphs, budget-limited
+scalar/lattice recursion, whole-program composition and snapshot-relative
+evidence. Native admission does not generally prove termination.
+=just build-dsl-closure= compiles and binds the focused AOT entry;
+=just check-dsl-closure= runs its standard native Suites serially with strict
+five-second progress and source/artifact checks;
+performance, model benefit, historical Rust comparison and same-head CI
+remain separate gates.
 
 * Executable semantic admission
 

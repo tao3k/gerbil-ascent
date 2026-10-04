@@ -1,0 +1,182 @@
+DSL-ARTIFACT-VERIFIED f8603a5fa01a8f88679869318521745b0d186481e60905b3c99782b06ead9066
+HARNESS Scheme DSL closure
+MODULE t/qualification/scheme-closure-contract-test.ss
+SUITE Scheme closure guarantees and operational failure boundaries
+CASE finite successor completes with the exact independent interval
+CASE-OK finite successor completes with the exact independent interval
+CASE monotone integer successor does not become complete at a budget
+CASE-OK monotone integer successor does not become complete at a budget
+CASE one lattice key does not imply finite-height refinement
+CASE-OK one lattice key does not imply finite-height refinement
+CASE separately admissible fragments can compose into a negative cycle
+CASE-OK separately admissible fragments can compose into a negative cycle
+CASE recursive provenance retains every source and cyclic alternative
+CASE-OK recursive provenance retains every source and cyclic alternative
+CASE a recursive cycle without a founded source proves no row
+CASE-OK a recursive cycle without a founded source proves no row
+CASE complete provenance cannot omit an alternative or exceed its cap
+CASE-OK complete provenance cannot omit an alternative or exceed its cap
+SUITE-OK Scheme closure guarantees and operational failure boundaries
+MODULE-OK t/qualification/scheme-closure-contract-test.ss
+HARNESS-OK Scheme DSL closure
+OK
+HARNESS Scheme DSL closure
+MODULE t/qualification/scheme-operator-test.ss
+SUITE Scheme finite relation operator graph
+CASE projected join compiles directly to its output relation
+CASE-OK projected join compiles directly to its output relation
+CASE projected join retains zero-arity and repeated columns
+CASE-OK projected join retains zero-arity and repeated columns
+CASE fixed-point union branches target the fixed relation
+CASE-OK fixed-point union branches target the fixed relation
+CASE sixty-four graph fixed points equal independent closure
+PROGRESS operator graph parity 2/64
+PROGRESS operator graph parity 4/64
+PROGRESS operator graph parity 6/64
+PROGRESS operator graph parity 8/64
+PROGRESS operator graph parity 10/64
+PROGRESS operator graph parity 12/64
+PROGRESS operator graph parity 14/64
+PROGRESS operator graph parity 16/64
+PROGRESS operator graph parity 18/64
+PROGRESS operator graph parity 20/64
+PROGRESS operator graph parity 22/64
+PROGRESS operator graph parity 24/64
+PROGRESS operator graph parity 26/64
+PROGRESS operator graph parity 28/64
+PROGRESS operator graph parity 30/64
+PROGRESS operator graph parity 32/64
+PROGRESS operator graph parity 34/64
+PROGRESS operator graph parity 36/64
+PROGRESS operator graph parity 38/64
+PROGRESS operator graph parity 40/64
+PROGRESS operator graph parity 42/64
+PROGRESS operator graph parity 44/64
+PROGRESS operator graph parity 46/64
+PROGRESS operator graph parity 48/64
+PROGRESS operator graph parity 50/64
+PROGRESS operator graph parity 52/64
+PROGRESS operator graph parity 54/64
+PROGRESS operator graph parity 56/64
+PROGRESS operator graph parity 58/64
+PROGRESS operator graph parity 60/64
+PROGRESS operator graph parity 62/64
+PROGRESS operator graph parity 64/64
+CASE-OK sixty-four graph fixed points equal independent closure
+CASE reference change matches finite closure set difference
+PROGRESS operator change parity 2/64
+PROGRESS operator change parity 4/64
+PROGRESS operator change parity 6/64
+PROGRESS operator change parity 8/64
+PROGRESS operator change parity 10/64
+PROGRESS operator change parity 12/64
+PROGRESS operator change parity 14/64
+PROGRESS operator change parity 16/64
+PROGRESS operator change parity 18/64
+PROGRESS operator change parity 20/64
+PROGRESS operator change parity 22/64
+PROGRESS operator change parity 24/64
+PROGRESS operator change parity 26/64
+PROGRESS operator change parity 28/64
+PROGRESS operator change parity 30/64
+PROGRESS operator change parity 32/64
+PROGRESS operator change parity 34/64
+PROGRESS operator change parity 36/64
+PROGRESS operator change parity 38/64
+PROGRESS operator change parity 40/64
+PROGRESS operator change parity 42/64
+PROGRESS operator change parity 44/64
+PROGRESS operator change parity 46/64
+PROGRESS operator change parity 48/64
+PROGRESS operator change parity 50/64
+PROGRESS operator change parity 52/64
+PROGRESS operator change parity 54/64
+PROGRESS operator change parity 56/64
+PROGRESS operator change parity 58/64
+PROGRESS operator change parity 60/64
+PROGRESS operator change parity 62/64
+PROGRESS operator change parity 64/64
+CASE-OK reference change matches finite closure set difference
+CASE both changing join sides and a finite map propagate inserts
+CASE-OK both changing join sides and a finite map propagate inserts
+CASE selection after join sees only new paths
+CASE-OK selection after join sees only new paths
+CASE nested fixed points with an outer changing parameter
+CASE-OK nested fixed points with an outer changing parameter
+CASE zero-change propagation avoids old recursive joins
+CASE-OK zero-change propagation avoids old recursive joins
+CASE select, project, finite flatmap and union share one solve
+CASE-OK select, project, finite flatmap and union share one solve
+CASE fixed-point placeholder is local to its builder
+CASE-OK fixed-point placeholder is local to its builder
+CASE one relation transformer applies to two distinct inputs
+CASE-OK one relation transformer applies to two distinct inputs
+CASE shared child cannot capture a fixed-point parameter
+CASE-OK shared child cannot capture a fixed-point parameter
+CASE one source withdrawal recompiles to a new complete result
+CASE-OK one source withdrawal recompiles to a new complete result
+CASE two builder instances retain separate private names
+CASE-OK two builder instances retain separate private names
+CASE operator graphs compose as fresh native fragments
+CASE-OK operator graphs compose as fresh native fragments
+CASE delta prediction matches retained append and withdrawal
+CASE-OK delta prediction matches retained append and withdrawal
+CASE construction rejects hidden code and invalid shapes
+CASE-OK construction rejects hidden code and invalid shapes
+CASE growth budget cannot return a complete fixed point
+CASE-OK growth budget cannot return a complete fixed point
+SUITE-OK Scheme finite relation operator graph
+MODULE-OK t/qualification/scheme-operator-test.ss
+HARNESS-OK Scheme DSL closure
+OK
+HARNESS Scheme DSL closure
+MODULE t/qualification/scheme-library-contract-test.ss
+SUITE native and candidate common semantic contract
+CASE eight diagnostic graphs share one finite model
+CONTRACT-PROGRESS 0
+CONTRACT-PROGRESS 1
+CONTRACT-PROGRESS 3
+CONTRACT-PROGRESS 7
+CONTRACT-PROGRESS 24
+CONTRACT-PROGRESS 31
+CONTRACT-PROGRESS 47
+CONTRACT-PROGRESS 63
+CASE-OK eight diagnostic graphs share one finite model
+CASE blocked odd and equal-weight states discriminate admitted mistakes
+DISCRIMINATOR-PROGRESS 0
+DISCRIMINATOR-PROGRESS 1
+DISCRIMINATOR-PROGRESS 2
+DISCRIMINATOR-PROGRESS 3
+DISCRIMINATOR-PROGRESS 4
+DISCRIMINATOR-PROGRESS 5
+DISCRIMINATOR-PROGRESS 6
+MUTANT-PROGRESS missing-negation 0
+MUTANT-PROGRESS missing-negation 1
+MUTANT-PROGRESS missing-negation 2
+MUTANT-PROGRESS missing-negation 3
+MUTANT-PROGRESS missing-negation 4
+MUTANT-PROGRESS missing-negation 5
+MUTANT-PROGRESS missing-negation 6
+MUTANT-DISCRIMINATED missing-negation
+MUTANT-PROGRESS missing-guard 0
+MUTANT-PROGRESS missing-guard 1
+MUTANT-PROGRESS missing-guard 2
+MUTANT-PROGRESS missing-guard 3
+MUTANT-PROGRESS missing-guard 4
+MUTANT-PROGRESS missing-guard 5
+MUTANT-PROGRESS missing-guard 6
+MUTANT-DISCRIMINATED missing-guard
+MUTANT-PROGRESS guard-after-doubling 0
+MUTANT-PROGRESS guard-after-doubling 1
+MUTANT-PROGRESS guard-after-doubling 2
+MUTANT-PROGRESS guard-after-doubling 3
+MUTANT-PROGRESS guard-after-doubling 4
+MUTANT-PROGRESS guard-after-doubling 5
+MUTANT-PROGRESS guard-after-doubling 6
+MUTANT-DISCRIMINATED guard-after-doubling
+CASE-OK blocked odd and equal-weight states discriminate admitted mistakes
+CASE multi-source withdrawal and failed transaction are atomic
+CASE-OK multi-source withdrawal and failed transaction are atomic
+CASE alternate and last support withdrawal preserve snapshot binding
+[progress-watchdog] FAIL: no command output for 5s
+error: recipe `check-dsl-closure` failed with exit code 124

@@ -79,3 +79,5 @@ and extensional function equality require a separate scope decision. Main
 Session deletion integration, nonpositive provenance, scaling/cost evidence
 and real-model paired measurements remain separate gates. No model call or
 preset semantic prompt is introduced by this module.
+
+The [[file:evidence/scheme-support-graph-20261004/receipt.json][source-bound receipt]] records the six passing new Cases and both formal files. Earlier full-gate resource failures remain explicit; this focused pass does not relabel them.

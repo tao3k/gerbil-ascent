@@ -87,6 +87,17 @@ def Ordered : (t : Signature) → Meaning t → Meaning t → Prop
   | .relation _, a, b => Included a b
   | .arrow _ output, f, g => ∀ input, Ordered output (f input) (g input)
 
+/-- Least element for nested finite relation/function lattices. -/
+def bottom : (t : Signature) → Meaning t
+  | .relation _ => fun _ => False
+  | .arrow _ output => fun _ => bottom output
+
+theorem bottom_ordered (t : Signature) (value : Meaning t) :
+    Ordered t (bottom t) value := by
+  induction t with
+  | relation n => exact fun _ h => False.elim h
+  | arrow input output _ ih => exact fun x => ih (value x)
+
 theorem ordered_refl (t : Signature) (value : Meaning t) : Ordered t value value := by
   induction t with
   | relation n => exact fun _ h => h

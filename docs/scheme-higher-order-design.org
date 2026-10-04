@@ -11,12 +11,21 @@ at construction and produces a lexical data closure. Native evaluation never
 calls that builder. Application is checked beta lowering into the existing
 positive operator IR; no second query interpreter is authoritative.
 
-Fixed points operate on relation endofunctions. Function-valued fixed points
-and function equality are not admitted. This is a stated language boundary,
-not a claim of termination for arbitrary Scheme procedures. The requested
-full closure therefore still requires an explicit function-valued fixed-point
-semantics, admission/lowering implementation and independent qualification;
-relation fixed-point evidence cannot discharge that obligation.
+Fixed points admit endofunctions on finite relation and nested arrow types.
+Relation fixed points retain native recursive evaluation. Arrow fixed points
+start at the constant pointwise bottom and undergo the full conservative
+finite-height number of compiler applications. Every application uses the
+reified lexical closure; user builders are not called again. The resulting
+relation observation lowers to the same positive operator IR.
+
+The height is |input semantic domain| times the codomain height. Cardinality
+counts all finite functions, giving a conservative bound for monotone functions.
+Saturating arithmetic prevents enormous powers from allocating enormous exact
+integers. A height larger than the remaining normalization budget rejects;
+expansion itself also consumes that budget. No function-identity comparison,
+observed-argument sample or truncated approximation can certify a fixed point.
+Empty codomains have height zero and keep their unique bottom. Function equality
+and unrestricted Scheme procedure recursion remain outside this language.
 
 * Native finite domains
 
@@ -86,3 +95,19 @@ heap and module deadlines; GitHub checks must match the submitted head.
 The [[file:evidence/scheme-higher-order-20261004/receipt.json][frozen receipt]] records 11 native Cases with unchanged bounds,
 source hashes, formal source hash, and excluded 180-second build failures.
 No model calls are included.
+
+* Function fixed-point proof and acceptance
+
+FiniteHeight.lean adds pointwise function-table rank monotonicity and strict
+growth, stationary-tail, bounded-orbit full-height stationarity, and
+bottom-iterate leastness lemmas. FiniteOperators.lean proves that recursively
+constructed pointwise bottom is below every nested typed value. Orbit rank growth is the correct premise:
+a monotone function from bottom need not be globally inflationary. The actual
+Scheme compiler-to-denotation bridge and concrete type-cardinality and compiler refinement
+remain explicit obligations, not conclusions from these abstract lemmas.
+
+Native discriminators include every seed of a two-node cycle where recursion
+changes the argument, recursive nested returned functions, a function-valued
+input, zero-height empty codomain, builder invocation count, and bounded
+rejection of an infeasible function space. Compiled source lifecycle must also
+preserve the declared domains of compiler-created bottom sources.

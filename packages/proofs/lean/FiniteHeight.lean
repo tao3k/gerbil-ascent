@@ -67,6 +67,41 @@ theorem table_rank_bounded {α : Type} (rank : α → Nat) (height : Nat)
     simp only [tableRank, List.length_cons, Nat.succ_mul]
     omega
 
+/-- Pointwise rank order is preserved by summing a finite function table. -/
+theorem function_table_rank_mono {α β : Type} (rank : β → Nat)
+    (f g : α → β) (domain : List α)
+    (ordered : ∀ x, x ∈ domain → rank (f x) ≤ rank (g x)) :
+    tableRank rank (domain.map f) ≤ tableRank rank (domain.map g) := by
+  induction domain with
+  | nil => simp [tableRank]
+  | cons x xs ih =>
+    have head := ordered x (by simp)
+    have tail := ih (fun y hy => ordered y (by simp [hy]))
+    simp only [List.map_cons, tableRank]
+    omega
+
+/-- A changed point in a monotone finite function table increases its rank. -/
+theorem function_table_rank_strict {α β : Type} (rank : β → Nat)
+    (f g : α → β) (domain : List α)
+    (ordered : ∀ x, x ∈ domain → rank (f x) ≤ rank (g x))
+    (changed : ∃ x, x ∈ domain ∧ rank (f x) < rank (g x)) :
+    tableRank rank (domain.map f) < tableRank rank (domain.map g) := by
+  induction domain with
+  | nil => obtain ⟨x, hx, _⟩ := changed; simp at hx
+  | cons x xs ih =>
+    have head := ordered x (by simp)
+    have tailOrder : ∀ y, y ∈ xs → rank (f y) ≤ rank (g y) :=
+      fun y hy => ordered y (by simp [hy])
+    obtain ⟨y, hy, hstrict⟩ := changed
+    rcases List.mem_cons.mp hy with heq | hmem
+    · subst y
+      have tail := function_table_rank_mono rank f g xs tailOrder
+      simp only [List.map_cons, tableRank]
+      omega
+    · have tail := ih tailOrder ⟨y, hmem, hstrict⟩
+      simp only [List.map_cons, tableRank]
+      omega
+
 /-- A finite relation is a Boolean table over its admitted tuple universe. -/
 def booleanRank : {n : Nat} → (Fin n → Bool) → Nat
   | 0, _ => 0
@@ -133,5 +168,66 @@ theorem finite_relation_stabilizes {n : Nat}
   · exact False.elim (unchanged ⟨i, hf, hg⟩)
   · have := inflationary f i hf; simp [hg] at this
   · rfl
+
+/-- Once a Kleene orbit is stationary, every later iterate is identical. -/
+theorem stationary_tail {α : Type} (step : α → α) (initial : α) (n : Nat)
+    (fixed : step (iterateStep step initial n) = iterateStep step initial n)
+    (extra : Nat) :
+    iterateStep step initial (n + extra) = iterateStep step initial n := by
+  induction extra with
+  | zero => simp
+  | succ extra ih =>
+    change step (iterateStep step initial (n + extra)) = iterateStep step initial n
+    rw [ih]
+    exact fixed
+
+/-- Monotone iteration from bottom need not be globally inflationary. Only
+    strict rank growth on its own orbit is required for full-height unrolling. -/
+theorem bounded_orbit_height_fixed {α : Type} (step : α → α) (initial : α)
+    (rank : α → Nat) (height : Nat)
+    (bounded : ∀ n, rank (iterateStep step initial n) ≤ height)
+    (progress : ∀ n, step (iterateStep step initial n) ≠ iterateStep step initial n →
+      rank (iterateStep step initial n) < rank (iterateStep step initial (n + 1))) :
+    step (iterateStep step initial height) = iterateStep step initial height := by
+  have stationary : ∃ n, n ≤ height ∧
+      step (iterateStep step initial n) = iterateStep step initial n := by
+    apply Classical.byContradiction
+    intro h
+    have moving : ∀ n, n ≤ height →
+        step (iterateStep step initial n) ≠ iterateStep step initial n := by
+      intro n hn heq
+      exact h ⟨n, hn, heq⟩
+    have climbing : ∀ n, n ≤ height + 1 → n ≤ rank (iterateStep step initial n) := by
+      intro n
+      induction n with
+      | zero => intro _; omega
+      | succ n ih =>
+        intro hn
+        have old := ih (by omega)
+        have incr := progress n (moving n (by omega))
+        omega
+    have lower := climbing (height + 1) (by omega)
+    have upper := bounded (height + 1)
+    omega
+  obtain ⟨n, hn, hfixed⟩ := stationary
+  have tail := stationary_tail step initial n hfixed (height - n)
+  have index : n + (height - n) = height := by omega
+  rw [index] at tail
+  rw [tail]
+  exact hfixed
+
+/-- Every approximation from bottom is below every fixed point. Together
+    with full-height stationarity this establishes leastness, without comparing
+    runtime function identities or sampling only observed arguments. -/
+theorem bottom_iterate_le_fixed {α : Type} (le : α → α → Prop)
+    (step : α → α) (bottom value : α)
+    (least : ∀ x, le bottom x)
+    (mono : ∀ x y, le x y → le (step x) (step y))
+    (fixed : step value = value) (n : Nat) :
+    le (iterateStep step bottom n) value := by
+  induction n with
+  | zero => exact least value
+  | succ n ih =>
+    simpa only [iterateStep, fixed] using mono (iterateStep step bottom n) value ih
 
 end Ascent

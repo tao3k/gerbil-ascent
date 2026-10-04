@@ -36,7 +36,7 @@ it does not authenticate a producer or establish real-world completeness.
 
 | ID | Design decision | Required falsifiable evidence | Status / dependency |
 |----+-----------------+-------------------------------+---------------------|
-| R1 | Admit general higher-order operators only with explicit domains, modes, captures, effects and monotonicity/height obligations | Reject escaped dependencies and out-of-domain derived rows; establish soundness for the stated IR, then compare independent finite models | Nested monotone arrows, lexical descriptors and native lowering implemented; operator monotonicity, nested application and relation fixed-point laws checked in Lean alongside finite-rank termination; function-valued fix and mechanized compiler bridge remain open |
+| R1 | Admit general higher-order operators only with explicit domains, modes, captures, effects and monotonicity/height obligations | Reject escaped dependencies and out-of-domain derived rows; establish soundness for the stated IR, then compare independent finite models | Nested monotone arrows, lexical descriptors and native lowering implemented; operator monotonicity, nested application and relation fixed-point laws checked in Lean alongside finite-rank termination; finite-height function-valued fix implemented; its native acceptance and mechanized compiler bridge remain separate gates |
 | R2 | Finite-domain declarations must validate inputs and every derived value, never silently clamp | Unbounded successor and increasing one-key lattice become admission rejection or explicit domain failure; complete in-domain closure agrees with oracle | Explicit finite domains enforced at admission and every native row boundary, including replacement; no generic finite-height lattice declaration theorem |
 | R3 | General deletion requires multi-support and cyclic support semantics | Remove one of two supports, remove final support, break a recursive cycle; compare every transaction with full recomputation and measure work | Implemented native dependency invalidation for the checked DSL; custom providers and opaque callbacks recompute |
 | R4 | Complete provenance needs an explicit recursive provenance algebra and certificate cost bounds | Independent witness enumeration on finite models, cyclic cases, tamper and size limits | Complete finite stratified alternative graph implemented and independently rebuilt; negative/group observations included; arbitrary numeric semiring valuations and lattice-join histories remain separate obligations |
@@ -95,7 +95,8 @@ all four GitHub checks in [[https://github.com/tao3k/gerbil-ascent/actions/runs/
 The [[file:scheme-higher-order-design.org][higher-order contract]] adds nested function inputs and results through
 checked lexical descriptors and beta lowering into native positive IR.
 Finite-domain declarations survive admission and source replacement.
-Function-valued fixed points remain a scope decision. Lean now also proves
+Function-valued fixed points now use conservative full-height compiler expansion;
+normalization budget rejection and native acceptance remain explicit. Lean now also proves
 finite Boolean-table strict rank growth and inflationary relation termination;
 the Scheme compiler-to-semantics bridge remains a separate obligation.
 

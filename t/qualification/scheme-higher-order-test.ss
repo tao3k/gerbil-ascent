@@ -34,7 +34,10 @@
          (relational-typed-join path edge 1 0) '(0 3)))))
 (def (solve term)
   (let-values (((program output) (relational-typed-compile term 32 256 512)))
-    (relational-query-name (relational-solve (relational-admit program)) output)))
+    (displayln "HIGHER-ORDER-COMPILED") (force-output)
+    (let (rows (relational-query-name (relational-solve (relational-admit program)) output))
+      (displayln "HIGHER-ORDER-SOLVED") (force-output)
+      rows)))
 (def (check-rows actual expected)
   (check-equal? (length actual) (length expected))
   (for-each (lambda (row) (check-equal? (and (member row actual) #t) #t)) expected))
@@ -88,12 +91,93 @@
         (check-exception (relational-typed-compile escaped 32 256 512) true))
       (check-exception
        (relational-typed-function r2 (lambda (_parameter) (lambda () 'hidden-read))) true))
-    (test-case "fixed points require finite relation endofunctions and expansion is bounded"
-      (check-exception (relational-typed-fix (relational-typed-function rr values)) true)
+    (test-case "function fixed points use finite height and expansion is bounded"
+      (let* ((fixed (relational-typed-fix (relational-typed-function rr values)))
+             (argument (relational-typed-source 'argument r2 '((0 1)))))
+        (check-exception (relational-typed-compile
+                         (relational-typed-apply fixed argument) 32 256 512) true))
       (let* ((source (relational-typed-source 'x r2 '((0 1))))
              (identity (relational-typed-function r2 values)))
         (check-exception
          (relational-typed-compile (relational-typed-apply identity source) 32 256 512 1) true)))
+    (test-case "recursive functions propagate across changed arguments for every finite seed"
+      (let* ((type (relational-relation-type 1 '(0 1)))
+             (arrow (relational-arrow-type type type))
+             (builds 0)
+             (fixed
+              (relational-typed-fix
+               (relational-typed-function
+                arrow (lambda (self)
+                        (set! builds (+ builds 1))
+                        (relational-typed-function
+                         type (lambda (seed)
+                                (relational-typed-union
+                                 seed
+                                 (relational-typed-apply
+                                  self (relational-typed-flatmap
+                                        seed type '(((0) (1)) ((1) (0)))))))))))))
+        ;; Independent finite two-node reachability, including the empty seed.
+        (for-each
+         (lambda (rows expected)
+           (check-rows (solve (relational-typed-apply
+                              fixed (relational-typed-source 'seed type rows))) expected))
+         '(() ((0)) ((1)) ((0) (1)))
+         '(() ((0) (1)) ((0) (1)) ((0) (1))))
+        (check-equal? builds 1)))
+    (test-case "nested returned functions use a pointwise bottom and preserve lexical inputs"
+      (let* ((type (relational-relation-type 1 '(0 1)))
+             (arrow (relational-arrow-type type (relational-arrow-type type type)))
+             (fixed
+              (relational-typed-fix
+               (relational-typed-function
+                arrow (lambda (self)
+                        (relational-typed-function
+                         type (lambda (left)
+                                (relational-typed-function
+                                 type (lambda (right)
+                                        (relational-typed-union
+                                         left (relational-typed-apply
+                                               (relational-typed-apply self right) left)))))))))))
+        (check-rows
+         (solve (relational-typed-apply
+                 (relational-typed-apply fixed (relational-typed-source 'left type '((0))))
+                 (relational-typed-source 'right type '((1))))) '((0) (1)))))
+    (test-case "function fixed points accept higher-order inputs and the empty codomain"
+      (let* ((type (relational-relation-type 1 '(0)))
+             (arrow (relational-arrow-type type type))
+             (input (relational-typed-function type values))
+             (seed (relational-typed-source 'seed type '((0))))
+             (fixed
+              (relational-typed-fix
+               (relational-typed-function
+                (relational-arrow-type arrow type)
+                (lambda (self)
+                  (relational-typed-function
+                   arrow (lambda (function)
+                           (relational-typed-union
+                            seed (relational-typed-apply
+                                  function (relational-typed-apply self function))))))))))
+        (check-rows (solve (relational-typed-apply fixed input)) '((0))))
+      (let* ((empty (relational-relation-type 1 '()))
+             (type (relational-relation-type 1 '(0 1)))
+             (arrow (relational-arrow-type type empty))
+             (fixed (relational-typed-fix (relational-typed-function arrow values))))
+        (check-rows (solve (relational-typed-apply
+                           fixed (relational-typed-source 'seed type '((0))))) '())))
+    (test-case "compiler bottom sources retain their exact empty native domain"
+      (let* ((empty (relational-relation-type 1 '()))
+             (type (relational-relation-type 1 '(0 1)))
+             (arrow (relational-arrow-type type empty))
+             (fixed (relational-typed-fix (relational-typed-function arrow values))))
+        (let-values (((program output)
+                      (relational-typed-compile
+                       (relational-typed-apply fixed (relational-typed-source 'seed type '((0))))
+                       32 256 512)))
+          (let ((session (relational-open-program-session program))
+                (bottom (car (.ref program 'source-handles))))
+            (relational-program-session-run session)
+            (check-exception (relational-program-append-source! session bottom '(0)) true)
+            (check-rows (relational-program-query (relational-program-session-run session) output) '())))))
     (test-case "typed native sessions retain finite domains through replacement and rollback"
       (let-values (((program output)
                     (relational-typed-compile

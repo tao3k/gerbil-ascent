@@ -18,7 +18,7 @@
   "schema": "ascent.model-plan-native-preflight",
   "sourceFiles": 38,
   "sourceHead": "e732b2b76e558257fb70bfff75ea108e7e0f2a3a",
-  "status": "prepared; new fee and source-exfiltration authorization pending",
+  "status": "historical prepared snapshot; superseded for latest implementation by function-valued fixed-point changes; zero paid calls",
   "supersedesPlanSha256": "594b9442da7af3fb190ab5b317725397f0081c558187d0ee31ec8b7c6bae8936",
   "version": 1
 }

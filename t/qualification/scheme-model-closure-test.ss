@@ -74,17 +74,19 @@
         (bits (solve mapped)))
       6)
     (study-case finite-fix initial
-      (let* ((r (relational-relation-type 2 '(0 1 2 3)))
-             (edge (relational-typed-source 'edge r '((0 1) (1 2))))
-             (seed (relational-typed-source 'seed r '((0 1))))
-             (function (relational-typed-function r
-               (lambda (path) (relational-typed-union seed
-                 (relational-typed-project (relational-typed-join path edge 1 0) '(0 3))))))
+      (let* ((r (relational-relation-type 1 '(0 1)))
+             (seed (relational-typed-source 'seed r '((0))))
+             (function (relational-typed-function (relational-arrow-type r r)
+               (lambda (self) (relational-typed-function r
+                 (lambda (input) (relational-typed-union input
+                   (relational-typed-apply self
+                     (relational-typed-flatmap input r '(((0) (1)) ((1) (0)))))))))))
              (solve (lambda (term)
              (let-values (((program output) (relational-typed-compile term 32 256 512)))
                (relational-query-name (relational-solve (relational-admit program)) output)))))
-        (length (solve (relational-typed-fix function))))
-      2)
+        (foldl (lambda (row mask) (+ mask (expt 2 (car row)))) 0
+               (solve (relational-typed-apply (relational-typed-fix function) seed))))
+      3)
     (study-case domain-runtime initial
       (let-values (((program output) (relational-typed-compile
                       (relational-typed-source 'input (relational-relation-type 1 '(0 1)) '((0))) 32 256 512)))
@@ -210,17 +212,19 @@
         (bits (solve mapped)))
       24)
     (study-case finite-fix transfer
-      (let* ((r (relational-relation-type 2 '(0 1 2 3)))
-             (edge (relational-typed-source 'edge r '((0 1) (1 2) (2 3))))
-             (seed (relational-typed-source 'seed r '((0 1))))
-             (function (relational-typed-function r
-               (lambda (path) (relational-typed-union seed
-                 (relational-typed-project (relational-typed-join path edge 1 0) '(0 3))))))
+      (let* ((r (relational-relation-type 1 '(0 1)))
+             (seed (relational-typed-source 'seed r '((0))))
+             (function (relational-typed-function (relational-arrow-type r r)
+               (lambda (self) (relational-typed-function r
+                 (lambda (input) (relational-typed-union input
+                   (relational-typed-apply self
+                     (relational-typed-flatmap input r '(((1) (0)))))))))))
              (solve (lambda (term)
              (let-values (((program output) (relational-typed-compile term 32 256 512)))
                (relational-query-name (relational-solve (relational-admit program)) output)))))
-        (length (solve (relational-typed-fix function))))
-      3)
+        (foldl (lambda (row mask) (+ mask (expt 2 (car row)))) 0
+               (solve (relational-typed-apply (relational-typed-fix function) seed))))
+      1)
     (study-case domain-runtime transfer
       (let-values (((program output) (relational-typed-compile
                       (relational-typed-source 'input (relational-relation-type 1 '(0 1)) '((0))) 32 256 512)))

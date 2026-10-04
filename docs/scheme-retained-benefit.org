@@ -58,6 +58,22 @@ all raw distributions, the 125-Case rerun and five unchanged Rust differentials.
 | recursive | 54.5 | 174 | 3.19 |
 | all-inputs | 55 | 182.5 | 3.32 |
 
+A second complete 60-pair measurement on source 05a1921, integrating the
+concurrent activation-cache change f01c7b0, still reports no small-chain speed
+benefit. The [[file:evidence/scheme-retained-benefit-integrated-20261004/receipt.json][integrated receipt]] binds its distinct source and artifact.
+
+| Condition | Fresh wall median (microseconds) | Retained wall median (microseconds) | Retained / fresh median |
+|-----------+---------------------------------+------------------------------------+-------------------------|
+| independent | 63 | 170.5 | 2.71 |
+| recursive | 60 | 179.5 | 2.99 |
+| all-inputs | 59 | 183 | 3.10 |
+
+The two runs are not a controlled A/B of the activation-cache implementation:
+compilation state and host conditions were not held fixed. Each run separately
+counterbalances fresh versus retained update and keeps all twenty pairs.
+The original pre-integration snapshot is reconstructible from published
+a68d044 plus its receipt's source-snapshot.patch after the commits were rebased.
+
 These are ratios of medians, not medians of paired ratios. On this small
 workload there is no measured speed benefit, including when fewer plans are
 active. Snapshot, admission and update management costs are included; their

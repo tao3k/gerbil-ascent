@@ -5,9 +5,88 @@
 ;;; Rule planning is separate from relation state and fixed-point execution.
 ;;; The passed atom-plan resolves names and arities against one program schema.
 (import (only-in "objects.ss" gerbil-ascent-clause-plan)
+        (only-in "funs.ss" gerbil-ascent-rule-strata
+                 gerbil-ascent-delta-positions)
         (only-in :clan/poo/object .ref))
 
-(export gerbil-ascent-prepare-rule)
+(export gerbil-ascent-prepare-rule gerbil-ascent-prepare-program)
+
+;;; Compile declarations against one validated schema without reading source
+;;; rows or allocating storage state, indexes, variable frames or timers.
+;;; The result retains declarations; its vector layout is shared with the cache
+;;; and engine.
+;; : (-> Relations Rules ProgramSchema (Maybe PlanErrorCallback) Analysis)
+(def (gerbil-ascent-prepare-program relations rules schema on-plan-error)
+  (let* ((names (vector-ref schema 1))
+         (arity (vector-ref schema 2))
+         (positions (vector-ref schema 4))
+         (kinds (vector-ref schema 8))
+         (count (vector-length names)))
+    (def position-of
+      (if (= count 1)
+        (lambda (name)
+          (if (eq? name (vector-ref names 0))
+            0
+            (error "unknown ASCENT relation" name)))
+        (lambda (name)
+          (let (slot (hash-get positions name))
+            (unless slot (error "unknown ASCENT relation" name))
+            (- slot 1)))))
+    (def (atom-plan atom)
+      (unless (and (object? atom)
+                   (memq (.ref atom 'ascent-clause-kind)
+                         '(atom negation aggregate)))
+        (error "invalid ASCENT atom declaration" atom))
+      (let* ((index (position-of (.ref atom 'relation)))
+             (terms (.ref atom 'terms)))
+        (unless (and (list? terms) (= (length terms) (vector-ref arity index)))
+          (error "ASCENT atom arity mismatch" (.ref atom 'relation)))
+        (vector index
+                (map (lambda (term)
+                       (let (kind (.ref term 'kind))
+                         (unless (memq kind '(variable wildcard literal expression pattern))
+                           (error "invalid ASCENT rule term" kind))
+                         (cons kind (.ref term 'value))))
+                     terms))))
+    (let* ((plans
+            (map (lambda (rule index)
+                   (gerbil-ascent-prepare-rule
+                    rule index atom-plan on-plan-error))
+                 rules (iota (length rules))))
+           (strata
+            (with-catch
+             (lambda (failure)
+               (plan-failure on-plan-error '(program dependencies) failure))
+             (lambda () (gerbil-ascent-rule-strata plans count kinds)))))
+      (vector relations rules plans strata (active-rules plans strata)))))
+
+;;; Group each rule's heads once instead of rescanning every rule in every
+;;; stratum. Reverse both accumulators to retain head and source-rule order.
+;; : (-> RulePlans Strata ActiveRulesByStratum)
+(def (active-rules plans strata)
+  (let* ((highest (if (zero? (vector-length strata)) -1
+                     (apply max (vector->list strata))))
+         (active (make-vector (+ highest 1) [])))
+    (for-each
+     (lambda (rule)
+       (let (heads-by-stratum (make-hash-table-eqv))
+         (for-each
+          (lambda (head)
+            (hash-update! heads-by-stratum
+                          (vector-ref strata (vector-ref head 0))
+                          (cut cons head <>) []))
+          (vector-ref rule 0))
+         (hash-for-each
+          (lambda (stratum heads)
+            (vector-set! active stratum
+              (cons (vector (reverse heads) (vector-ref rule 1)
+                            (gerbil-ascent-delta-positions
+                             (vector-ref rule 1) strata stratum)
+                            (vector-ref rule 3))
+                    (vector-ref active stratum))))
+          heads-by-stratum)))
+     plans)
+    (vector-map reverse active)))
 
 ;;; A report callback receives the actual failing rule position. The original
 ;;; exception remains authoritative and is re-raised for direct callers.
@@ -18,7 +97,7 @@
 
 ;; : (-> Head (List Symbol) (-> Atom AtomPlan) AtomPlan)
 ;;; A head may only read variables made available by prior body clauses.
-;;; This check shares the same atom-plan as runtime evaluation.
+;;; Heads and body clauses resolve against the same validated schema.
 (def (head-plan head bound atom-plan)
   (unless (and (object? head)
                (eq? (.ref head 'ascent-clause-kind) 'atom))

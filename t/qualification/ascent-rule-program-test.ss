@@ -4,6 +4,10 @@
 
 (import (only-in :std/test check-equal? check-exception test-suite)
         (only-in :clan/poo/object .o .ref)
+        (only-in :gerbil-ascent/program/analysis gerbil-ascent-program-schema)
+        (only-in :gerbil-ascent/program/planning gerbil-ascent-prepare-program)
+        (only-in :gerbil-ascent/table/storage gerbil-ascent-set-storage-provider)
+        (only-in :gerbil-ascent/table/provider gerbil-ascent-hash-index-provider)
         (only-in :core/observability/testing-case
                  poo-flow-default-testing-case-profile
                  poo-flow-test-case/with)
@@ -54,6 +58,68 @@
 
 (def ascent-rule-program-test
   (test-suite "ASCENT positive relations with arbitrary columns"
+    (poo-flow-test-case/with +positive-case-profile+
+      "declaration compilation never invokes storage or rule callbacks"
+      (let* ((states 0) (extensions 0) (guards 0)
+             (storage
+              (.o (:: @ gerbil-ascent-set-storage-provider)
+                  (.make-state (lambda () (set! states (+ states 1)) #f))
+                  (.extend-rows
+                   (lambda args
+                     (set! extensions (+ extensions 1))
+                     (apply (.ref gerbil-ascent-set-storage-provider '.extend-rows)
+                            args)))))
+             (program
+              (gerbil-ascent-program
+               (list (gerbil-ascent-relation 'source 1 '((7)))
+                     (gerbil-ascent-relation 'out 1 []
+                       gerbil-ascent-hash-index-provider storage))
+               (list (r (a 'out (v 'x)) (a 'source (v 'x))
+                        (gerbil-ascent-guard '(x)
+                          (lambda (_x) (set! guards (+ guards 1)) #t))))
+               4 4 8))
+             (relations (.ref program 'relations))
+             (schema (gerbil-ascent-program-schema program relations)))
+        (gerbil-ascent-prepare-program relations (.ref program 'rules) schema #f)
+        (check-equal? (list states extensions guards) '(0 0 0))
+        (check-equal? (rows (gerbil-ascent-evaluate-program program) 'out) '((7)))
+        (check-equal? states 1)
+        (check-equal? (> extensions 0) #t)
+        (check-equal? (> guards 0) #t)))
+    (poo-flow-test-case/with +positive-case-profile+
+      "heads split across strata retain duplicates and source rule order"
+      (let* ((x (v 'x))
+             (program
+              (gerbil-ascent-program
+               (list (gerbil-ascent-relation 'source 1 '((7)))
+                     (gerbil-ascent-relation 'blocked 1 [])
+                     (gerbil-ascent-relation 'early 1 [])
+                     (gerbil-ascent-relation 'late 1 []))
+               (list (gerbil-ascent-rule
+                      (list (a 'late x) (a 'early x) (a 'late x))
+                      (list (a 'source x)))
+                     (r (a 'late x) (a 'source x)
+                        (gerbil-ascent-negation 'blocked (list x))))
+               4 8 12))
+             (relations (.ref program 'relations))
+             (analysis
+              (gerbil-ascent-prepare-program
+               relations (.ref program 'rules)
+               (gerbil-ascent-program-schema program relations) #f))
+             (active (vector-ref analysis 4)))
+        (check-equal? (vector-ref analysis 3) '#(0 0 0 1))
+        (check-equal?
+         (vector-map
+          (lambda (rules)
+            (map (lambda (rule)
+                   (list (vector-ref rule 3)
+                         (map (cut vector-ref <> 0) (vector-ref rule 0))
+                         (vector-ref rule 2))) rules))
+          active)
+         '#(((0 (2) (0))) ((0 (3 3) ()) (1 (3) ()))))
+        (let (result (gerbil-ascent-evaluate-program program))
+          (check-equal? (rows result 'early) '((7)))
+          (check-equal? (rows result 'late) '((7))))))
     (poo-flow-test-case/with +positive-case-profile+
       "mixed ternary inputs derive four-column, unary and recursive rows"
       (let* ((source '((1 2 "a") (2 3 "b") (3 3 "c") (1 2 "a")))

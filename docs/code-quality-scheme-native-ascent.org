@@ -65,6 +65,70 @@ updating the same hash key with values 7 and 8 using
 =hash-update!=, and raised a pair-expected error for =(last '())=.
 They confirm the small operations, not the whole evaluator.
 
+* Feature: declaration compilation and ordered stratum grouping
+
+The installed compiler makes pass ownership visible in its entrypoints.
+=gerbil/compiler/optimize.ss:27= scopes mutation and local-type tables to one
+=optimize!= invocation; =compile.ss:57= declares the syntax handlers for binding
+collection explicitly. =optimize-base.ss:24= names optimizer metadata with a
+structure instead of spreading its field interpretation across callers.
+These are concrete ways to expose invariants to a reader and to the compiler.
+They do not establish that every upstream implementation is faster.
+For diagnostics, =base.ss:97= passes the current compile context and source
+syntax to =raise-syntax-error=. ASCENT's corresponding boundary keeps the
+rule/body/head or program-dependency path and re-raises the original exception
+after the optional diagnostic callback observes it.
+
+ASCENT now has one declaration compilation entrypoint,
+=gerbil-ascent-prepare-program= in =program/planning.ss=. It accepts relations,
+rules, a validated schema and the diagnostic callback. It resolves atoms,
+checks body/head variable bindings, computes strata and groups active rules.
+It neither reads source rows nor invokes storage or rule callbacks.
+=program/evaluate.ss= requests this result through the existing declaration
+cache, then constructs its own execution metadata, variable frames and timers.
+
+#+begin_example
+relations + rules + validated schema
+                  |
+                  v
+planning: resolve -> bind/check -> strata -> ordered active rules
+                  |
+                  v
+analysis cache: immutable declaration plan
+                  |
+                  v
+engine: owned rows, indexes, variable frames, budgets and timers
+#+end_example
+
+The earlier active-rule construction scanned every rule's heads once per
+stratum. The replacement groups each rule's heads in one traversal, prepends
+the resulting active rule to its stratum, then reverses the accumulators.
+Hash iteration order cannot change rule order: a rule contributes at most one
+group to each stratum, and each stratum reverses the same source-rule traversal.
+Head order and duplicate heads are retained. Delta positions and diagnostic
+paths still use the original lowering functions.
+
+The private plan vector layout and public POO declarations remain identical.
+Source admission still precedes declaration compilation inside engine creation,
+preserving the existing error and provider-callback order. This change removes
+declaration compilation from the large engine closure without moving callbacks
+into a different phase. It does not claim a measured solve-time speedup.
+
+Qualification adds two Cases to the existing =ascent-rule-program-test.ss=:
+storage and guard callbacks remain idle during compilation and execute during
+evaluation; a multi-head rule spanning two strata retains repeated heads,
+source-rule order and the correct delta positions. Existing language diagnostic,
+negation, aggregate, lattice and retained-session tests cover the other seams.
+
+Local validation of this change uses the pinned cache SDK with
+=GERBIL_BUILD_CORES=12=: standard =just build= succeeds; =just check-policy=
+checks 42 modules with findings=0 and errors=0; =just test= passes 50 modules
+and 398 Cases; exclusive =just performance= passes all 17 distinct SS scenarios.
+The commands return exit 0 with the original module deadlines, Case budgets,
+fixture thresholds and 1000-sample performance contracts. Logs remain under
+ignored =.cache/ascent/planning-*.log=. These are local receipts, not remote CI
+or a paired declaration-compilation benchmark.
+
 * Feature: lattice rows and term binding
 
 =program/funs.ss= extracted a lattice key with two reversals and a

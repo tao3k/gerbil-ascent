@@ -10,16 +10,14 @@
         (only-in "admission.ss" gerbil-ascent-initialize-source-row!)
         (only-in "result.ss" gerbil-ascent-publication-cache
                  gerbil-ascent-publish-rows gerbil-ascent-snapshot-rows gerbil-ascent-snapshot-sizes)
-        (only-in "planning.ss" gerbil-ascent-prepare-rule)
+        (only-in "planning.ss" gerbil-ascent-prepare-program)
         (only-in "positive.ss" gerbil-ascent-positive-plan
                  gerbil-ascent-run-positive-plan! gerbil-ascent-index-key
                  gerbil-ascent-emit-heads!)
         (only-in "types.ss" GerbilAscentSessionContract)
         (only-in "analysis.ss" gerbil-ascent-program-analysis
                  gerbil-ascent-program-schema)
-        (only-in "funs.ss" gerbil-ascent-rule-strata
-                 gerbil-ascent-lattice-feeds-relation?
-                 gerbil-ascent-delta-positions
+        (only-in "funs.ss" gerbil-ascent-lattice-feeds-relation?
                  gerbil-ascent-lattice-key
                  gerbil-ascent-lattice-value
                  gerbil-ascent-joined-row
@@ -108,24 +106,6 @@
             (let (slot (hash-get positions name))
               (unless slot (error "unknown ASCENT relation" name))
               (- slot 1)))))
-      (def (term-kind term)
-        (let (kind (.ref term 'kind))
-          (unless (memq kind '(variable wildcard literal expression pattern))
-            (error "invalid ASCENT rule term" kind))
-          kind))
-      (def (atom-plan atom)
-        (unless (and (object? atom)
-                     (memq (.ref atom 'ascent-clause-kind)
-                           '(atom negation aggregate)))
-          (error "invalid ASCENT atom declaration" atom))
-        (let* ((index (position-of (.ref atom 'relation)))
-               (terms (.ref atom 'terms)))
-          (unless (and (list? terms) (= (length terms) (vector-ref arity index)))
-            (error "ASCENT atom arity mismatch" (.ref atom 'relation)))
-          (vector index
-                  (map (lambda (term)
-                         (cons (term-kind term) (.ref term 'value)))
-                       terms))))
       (def (indexed-rows atom environment use-delta? slot-terms)
         (let* ((index (vector-ref atom 0))
                (columns (vector-ref atom 2))
@@ -276,48 +256,8 @@
                   (gerbil-ascent-program-analysis
                    program relations rules
                    (lambda ()
-                     (let (plans
-                           (map
-                            (lambda (rule index)
-                              (gerbil-ascent-prepare-rule
-                               rule index atom-plan plan-error))
-                            rules (iota (length rules))))
-                       (let* ((strata
-                               (with-catch
-                                (lambda (failure)
-                                  (when plan-error
-                                    (plan-error '(program dependencies)
-                                                failure))
-                                  (raise failure))
-                                (lambda ()
-                                  (gerbil-ascent-rule-strata
-                                   plans count kinds))))
-                              (highest (if (= count 0) -1
-                                         (apply max (vector->list strata))))
-                              (active (make-vector (+ highest 1) [])))
-                         (let plan-stratum ((stratum 0))
-                           (when (<= stratum highest)
-                             (let (selected
-                                   (filter-map
-                                    (lambda (rule)
-                                      (let (heads
-                                            (filter
-                                             (lambda (head)
-                                               (= (vector-ref strata
-                                                              (vector-ref head 0))
-                                                  stratum))
-                                             (vector-ref rule 0)))
-                                        (and (pair? heads)
-                                             (vector
-                                              heads (vector-ref rule 1)
-                                              (gerbil-ascent-delta-positions
-                                               (vector-ref rule 1) strata
-                                               stratum)
-                                              (vector-ref rule 3)))))
-                                    plans))
-                               (vector-set! active stratum selected)
-                               (plan-stratum (+ stratum 1)))))
-                         (vector relations rules plans strata active)))))))
+                     (gerbil-ascent-prepare-program
+                      relations rules schema plan-error)))))
              (rule-plans (vector-ref analysis 2))
              (rule-ticks (and measure-rule-times?
                               (make-vector (length rules) 0)))

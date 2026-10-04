@@ -1,0 +1,139 @@
+timeout 180s env GERBIL_LOADPATH="/Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" gerbil env gxi -:max-heap=1G,debug=q t/harness/run.ss build-dsl-closure
+DSL-SOURCE-FROZEN
+... compile program/objects
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.cache/ascent/native-library/lib/gerbil-ascent/program/objects~0.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.cache/ascent/native-library/lib/gerbil-ascent/program/objects.scm)
+... compile program/syntax
+... compile program/scheme-checked
+... compile program/planning
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.cache/ascent/native-library/lib/gerbil-ascent/program/syntax.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.cache/ascent/native-library/lib/gerbil-ascent/program/scheme-checked~0.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.cache/ascent/native-library/lib/gerbil-ascent/program/scheme-checked.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.cache/ascent/native-library/lib/gerbil-ascent/program/planning~0.scm)
+... compile program/evaluate
+... compile program/operator
+... compile candidate/program
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.cache/ascent/native-library/lib/gerbil-ascent/program/planning.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.cache/ascent/native-library/lib/gerbil-ascent/program/scheme-checked~1.scm)
+... compile program/session
+... compile program/operator-change
+... compile candidate/funs
+... compile program/scheme-admission
+... compile candidate/provenance
+... compile candidate/finite-evidence
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.cache/ascent/native-library/lib/gerbil-ascent/program/syntax~1.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.cache/ascent/native-library/lib/gerbil-ascent/program/evaluate~0.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.cache/ascent/native-library/lib/gerbil-ascent/program/evaluate.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.cache/ascent/native-library/lib/gerbil-ascent/program/operator~0.scm)
+... compile program/scheme-language
+... compile program/operator-session
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.cache/ascent/native-library/lib/gerbil-ascent/program/operator.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.cache/ascent/native-library/lib/gerbil-ascent/candidate/program~0.scm)
+... compile candidate/nonmembership
+... compile candidate/stratified-proof
+... compile t/qualification/scheme-closure-contract-test
+... compile program/interface
+... compile candidate/stratified-producer
+... compile t/qualification/scheme-operator-retained-test
+... compile candidate/reasoning
+... compile temporal/lens
+... compile t/qualification/scheme-operator-test
+... compile t/qualification/scheme-library-contract-test
+... compile t/qualification/ascent-finite-evidence-test
+... compile t/qualification/ascent-positive-nonmembership-test
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.cache/ascent/native-library/lib/gerbil-ascent/candidate/program.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.cache/ascent/native-library/lib/gerbil-ascent/program/operator~1.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.cache/ascent/native-library/lib/gerbil-ascent/program/session~0.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.cache/ascent/native-library/lib/gerbil-ascent/program/session.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.cache/ascent/native-library/lib/gerbil-ascent/program/operator-change~0.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.cache/ascent/native-library/lib/gerbil-ascent/program/operator-change.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.cache/ascent/native-library/lib/gerbil-ascent/candidate/funs~0.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.cache/ascent/native-library/lib/gerbil-ascent/candidate/funs.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.cache/ascent/native-library/lib/gerbil-ascent/program/scheme-admission~0.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.cache/ascent/native-library/lib/gerbil-ascent/program/scheme-admission.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.cache/ascent/native-library/lib/gerbil-ascent/program/scheme-admission~1.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.cache/ascent/native-library/lib/gerbil-ascent/candidate/finite-evidence~0.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.cache/ascent/native-library/lib/gerbil-ascent/candidate/finite-evidence.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.cache/ascent/native-library/lib/gerbil-ascent/candidate/provenance~0.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.cache/ascent/native-library/lib/gerbil-ascent/candidate/provenance.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.cache/ascent/native-library/lib/gerbil-ascent/candidate/provenance~1.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.cache/ascent/native-library/lib/gerbil-ascent/candidate/finite-evidence~1.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.cache/ascent/native-library/lib/gerbil-ascent/program/scheme-language.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.cache/ascent/native-library/lib/gerbil-ascent/program/scheme-language~1.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.cache/ascent/native-library/lib/gerbil-ascent/program/operator-session~0.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.cache/ascent/native-library/lib/gerbil-ascent/program/operator-session.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.cache/ascent/native-library/lib/gerbil-ascent/candidate/nonmembership~0.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.cache/ascent/native-library/lib/gerbil-ascent/candidate/nonmembership.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.cache/ascent/native-library/lib/gerbil-ascent/program/operator-session~1.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.cache/ascent/native-library/lib/gerbil-ascent/candidate/nonmembership~1.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.cache/ascent/native-library/lib/gerbil-ascent/candidate/stratified-proof~0.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.cache/ascent/native-library/lib/gerbil-ascent/candidate/stratified-proof.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.cache/ascent/native-library/lib/gerbil-ascent/t/qualification/scheme-closure-contract-test~0.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.cache/ascent/native-library/lib/gerbil-ascent/t/qualification/scheme-closure-contract-test.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.cache/ascent/native-library/lib/gerbil-ascent/program/interface.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.cache/ascent/native-library/lib/gerbil-ascent/candidate/stratified-producer~0.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.cache/ascent/native-library/lib/gerbil-ascent/candidate/stratified-producer.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.cache/ascent/native-library/lib/gerbil-ascent/t/qualification/scheme-operator-retained-test~0.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.cache/ascent/native-library/lib/gerbil-ascent/t/qualification/scheme-operator-retained-test.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.cache/ascent/native-library/lib/gerbil-ascent/candidate/reasoning~0.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.cache/ascent/native-library/lib/gerbil-ascent/candidate/reasoning.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.cache/ascent/native-library/lib/gerbil-ascent/candidate/reasoning~1.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.cache/ascent/native-library/lib/gerbil-ascent/temporal/lens~0.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.cache/ascent/native-library/lib/gerbil-ascent/temporal/lens.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.cache/ascent/native-library/lib/gerbil-ascent/t/qualification/scheme-operator-test~0.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.cache/ascent/native-library/lib/gerbil-ascent/t/qualification/scheme-operator-test.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.cache/ascent/native-library/lib/gerbil-ascent/t/qualification/ascent-finite-evidence-test~0.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.cache/ascent/native-library/lib/gerbil-ascent/t/qualification/ascent-finite-evidence-test.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.cache/ascent/native-library/lib/gerbil-ascent/t/qualification/scheme-library-contract-test~0.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.cache/ascent/native-library/lib/gerbil-ascent/t/qualification/scheme-library-contract-test.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.cache/ascent/native-library/lib/gerbil-ascent/t/qualification/ascent-positive-nonmembership-test~0.scm)
+... execute compile job (compile-file /Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.cache/ascent/native-library/lib/gerbil-ascent/t/qualification/ascent-positive-nonmembership-test.scm)
+/Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.cache/ascent/native-library/lib/static/gerbil-ascent__table__trrel.scm:
+/Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.cache/ascent/native-library/lib/static/gerbil-ascent__table__eqrel.scm:
+/Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.data/dependencies/prefix/lib/static/clan__poo__support__base.scm:
+/Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.data/dependencies/prefix/lib/static/clan__poo__object.scm:
+/Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.data/dependencies/prefix/lib/static/clan__poo__support__repr.scm:
+/Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.data/dependencies/prefix/lib/static/clan__poo__support__json.scm:
+/Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.data/dependencies/prefix/lib/static/clan__poo__support__io.scm:
+/Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.data/dependencies/prefix/lib/static/clan__poo__mop.scm:
+/Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.data/dependencies/prefix/lib/static/core__types.scm:
+/Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.cache/ascent/native-library/lib/static/gerbil-ascent__table__storage.scm:
+/Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.cache/ascent/native-library/lib/static/gerbil-ascent__table__funs.scm:
+/Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.cache/ascent/native-library/lib/static/gerbil-ascent__table__provider.scm:
+/Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.cache/ascent/native-library/lib/static/gerbil-ascent__program__aggregators.scm:
+/Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.cache/ascent/native-library/lib/static/gerbil-ascent__program__types.scm:
+/Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.cache/ascent/native-library/lib/static/gerbil-ascent__program__objects.scm:
+/Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.cache/ascent/native-library/lib/static/gerbil-ascent__program__scheme-checked.scm:
+/Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.cache/ascent/native-library/lib/static/gerbil-ascent__candidate__types.scm:
+/Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.cache/ascent/native-library/lib/static/gerbil-ascent__candidate__program.scm:
+/Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.cache/ascent/native-library/lib/static/gerbil-ascent__candidate__funs.scm:
+/Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.cache/ascent/native-library/lib/static/gerbil-ascent__candidate__provenance.scm:
+/Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.cache/ascent/native-library/lib/static/gerbil-ascent__candidate__nonmembership.scm:
+/Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.cache/ascent/native-library/lib/static/gerbil-ascent__table__access.scm:
+/Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.cache/ascent/native-library/lib/static/gerbil-ascent__program__graph.scm:
+/Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.cache/ascent/native-library/lib/static/gerbil-ascent__program__funs.scm:
+/Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.cache/ascent/native-library/lib/static/gerbil-ascent__program__analysis.scm:
+/Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.cache/ascent/native-library/lib/static/gerbil-ascent__program__positive.scm:
+/Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.cache/ascent/native-library/lib/static/gerbil-ascent__program__planning.scm:
+/Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.cache/ascent/native-library/lib/static/gerbil-ascent__program__result.scm:
+/Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.cache/ascent/native-library/lib/static/gerbil-ascent__program__admission.scm:
+/Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.cache/ascent/native-library/lib/static/gerbil-ascent__program__evaluate.scm:
+/Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.cache/ascent/native-library/lib/static/gerbil-ascent__program__session.scm:
+/Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.cache/ascent/native-library/lib/static/gerbil-ascent__program__scheme-admission.scm:
+/Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.cache/ascent/native-library/lib/static/gerbil-ascent__candidate__finite-evidence.scm:
+/Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.cache/ascent/native-library/lib/static/gerbil-ascent__candidate__stratified-proof.scm:
+/Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.cache/ascent/native-library/lib/static/gerbil-ascent__candidate__stratified-producer.scm:
+/Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.cache/ascent/native-library/lib/static/gerbil-ascent__candidate__reasoning.scm:
+/Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.cache/ascent/native-library/lib/static/gerbil-ascent__t__qualification__ascent-positive-nonmembership-test.scm:
+/Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.cache/ascent/native-library/lib/static/gerbil-ascent__t__qualification__ascent-finite-evidence-test.scm:
+/Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.cache/ascent/native-library/lib/static/gerbil-ascent__program__operator.scm:
+/Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.cache/ascent/native-library/lib/static/gerbil-ascent__program__operator-session.scm:
+/Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.cache/ascent/native-library/lib/static/gerbil-ascent__program__operator-change.scm:
+/Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.cache/ascent/native-library/lib/static/gerbil-ascent__program__summary.scm:
+/Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.cache/ascent/native-library/lib/static/gerbil-ascent__t__qualification__scheme-operator-retained-test.scm:
+/Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.cache/ascent/native-library/lib/static/gerbil-ascent__t__qualification__scheme-library-contract-test.scm:
+/Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.cache/ascent/native-library/lib/static/gerbil-ascent__t__qualification__scheme-operator-test.scm:
+/Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.cache/ascent/native-library/lib/static/gerbil-ascent__t__qualification__scheme-closure-contract-test.scm:
+/Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.cache/ascent/native-library/lib/static/gerbil-ascent__t__harness__dsl-closure.scm:
+/Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.cache/ascent/native-library/dsl-closure__exe.scm:
+error: recipe `build-dsl-closure` failed on line 692 with exit code 124

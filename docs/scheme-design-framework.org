@@ -64,3 +64,10 @@ source. It remains immutable. This branch integrates the declaration-scope
 baseline 53980e47681d095b30400cefc745d90b5509e8be; acceptance on that integrated
 source requires a new artifact binding and run. GitHub CI is a separate gate
 whose result must be checked against the submitted head.
+
+The [[file:evidence/scheme-closure-integration-20261004/receipt.json][integration receipt]] records two builds of submitted source 8c2d746:
+both reached the unchanged 180-second compilation deadline during AOT static
+compilation/linking (exit 124). Neither started the six-Suite semantic run.
+This is an open build-delivery gate, not a semantic failure or a qualified
+integrated artifact. GitHub CI runs the same gate; its exact-head verdict
+must be recorded independently. Previous 51-case results cannot substitute.

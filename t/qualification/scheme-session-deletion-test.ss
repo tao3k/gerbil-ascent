@@ -5,8 +5,10 @@
         (only-in :gerbil/runtime/gambit call-with-output-string display-exception)
         (only-in :clan/poo/object .o .ref)
         (only-in :gerbil-ascent/program/scheme-language relational-program)
-        (only-in :gerbil-ascent/program/objects gerbil-ascent-program gerbil-ascent-guard)
+        (only-in :gerbil-ascent/program/objects gerbil-ascent-program gerbil-ascent-guard
+                 gerbil-ascent-relation)
         (only-in :gerbil-ascent/program/evaluate gerbil-ascent-evaluate-program)
+        (only-in :gerbil-ascent/program/update-selection gerbil-ascent-update-selection)
         (only-in :gerbil-ascent/program/session gerbil-ascent-open-session
                  gerbil-ascent-session-run gerbil-ascent-session-append-source!
                  gerbil-ascent-session-replace-source! gerbil-ascent-session-replace-sources!))
@@ -65,6 +67,84 @@
 
 (def scheme-session-deletion-test
   (test-suite "Native dependency invalidation and source withdrawal"
+    (test-case "lowered dependencies agree with matrix reachability for every graph and root"
+      ;; Exercise the lowered dependency boundary independently of rule planning.
+      ;; Atom, negation and aggregate reads all propagate to every head.
+      (let (candidate
+            (relational-program
+             (relation a (value) '((1))) (relation b (value) '((1)))
+             (relation c (value) '((1))) (limits 8 8 16)))
+        (for-each
+         (lambda (mask)
+           (let* ((edges (edges-for-mask mask))
+                  (closure (matrix-closure edges))
+                  (plans
+                   (map (lambda (edge index)
+                          (vector (list (vector (cadr edge) []) (vector (cadr edge) []))
+                                  (list (vector (list-ref '(atom negation aggregate) (modulo index 3))
+                                                (vector (car edge) [])))))
+                        edges (iota (length edges)))))
+             (for-each
+              (lambda (root)
+                (let* ((before (list->vector
+                                (map (lambda (index) (cons (if (= index root) [] '((1))) []))
+                                     (iota 3))))
+                       (actual (gerbil-ascent-update-selection before candidate
+                                                              (vector [] [] plans))))
+                  (check-equal?
+                   (vector->list actual)
+                   (map (lambda (target)
+                          (or (= target root) (and (member (list root target) closure) #t)))
+                        (iota 3)))))
+              (iota 3))))
+         (iota 64))))
+    (test-case "unchanged lattice source joins consume no reused derived budget"
+      (let* ((program
+              (relational-program
+               (lattice best (key value) '((1 2) (1 5)) max)
+               (relation input (key value) '((2 9)))
+               (relation cold (value) '((7) (7)))
+               (rule (best ?k ?v) (input ?k ?v))
+               (limits 8 1 16)))
+             (session (gerbil-ascent-open-session program))
+             (old (gerbil-ascent-session-run session))
+             (updated (gerbil-ascent-session-replace-sources! session '((cold (8) (8))))))
+        (check-set (rows old 'best) '((1 5) (2 9)))
+        (check-set (rows updated 'best) '((1 5) (2 9)))
+        (check-equal? (rows updated 'cold) '((8) (8)))
+        (check-equal? (.ref updated 'active-rule-count) 0)
+        (check-exception (gerbil-ascent-session-replace-sources! session '((input (2 9) (3 10)))) true)
+        (check-equal? (eq? updated (gerbil-ascent-session-run session)) #t)))
+    (test-case "field callbacks preserve source membership after checking retained rows"
+      (let* ((cell (list 7)) (armed? #f) (checks 0)
+             (checker (lambda (value)
+                        (when armed?
+                          (set! checks (+ checks 1))
+                          (set-car! value (+ (car value) 1)))
+                        #t))
+             (base
+              (relational-program
+               (relation item (value) '())
+               (relation input (value) '((1))) (relation out (value) '())
+               (relation trigger (value) '((0)))
+               (rule (out ?v) (input ?v)) (limits 8 1 16)))
+             (declarations (.ref base 'relations))
+             (updated-declarations
+              (cons (gerbil-ascent-relation
+                     'item 1 (list (list cell))
+                     (.ref (car declarations) 'index-provider)
+                     (.ref (car declarations) 'storage-provider)
+                     (list checker))
+                    (cdr declarations)))
+             (program (.o (:: @ base) relations: updated-declarations))
+             (session (gerbil-ascent-open-session program)))
+        (gerbil-ascent-session-run session)
+        (set! armed? #t)
+        (let (updated (gerbil-ascent-session-replace-sources! session '((trigger (1)))))
+          (check-equal? (.ref updated 'finished) #t)
+          (check-equal? checks 3)
+          (check-equal? (rows updated 'item) '(((10))))
+          (check-equal? (rows updated 'out) '((1))))))
     (test-case "deletion skips an independent component and restores all rules for later append"
       (let* ((session (gerbil-ascent-open-session (path-program '((0 1) (1 2)))))
              (old (gerbil-ascent-session-run session))

@@ -63,24 +63,54 @@
                (unless (equal? (append (car old) (reverse (cdr old))) (.ref new 'rows))
                  (vector-set! affected index #t)))
              old-relations relations (iota count))
-            ;; Includes positive, negative, aggregate and lattice dependencies.
-            ;; No relation outside this transitive closure reads changed input.
-            (let close ()
-              (let (changed? #f)
-                (for-each
-                 (lambda (rule)
-                   (when (ormap (lambda (clause)
-                                  (and (memq (vector-ref clause 0) '(atom negation aggregate))
-                                       (vector-ref affected (vector-ref (vector-ref clause 1) 0))))
-                                (vector-ref rule 1))
-                     (for-each
-                      (lambda (head)
-                        (let (index (vector-ref head 0))
-                          (unless (vector-ref affected index)
-                            (vector-set! affected index #t) (set! changed? #t))))
-                      (vector-ref rule 0)))) plans)
-                (when changed? (close))))
+            (propagate-affected! plans affected)
             affected)))))
+
+;; propagate-affected!
+;; : (forall (p) (-> [p] (Vector Boolean) Void))
+;; : (-> RulePlans AffectedRelations Void)
+;; | doc m%
+;;     Build invocation-local dependency edges and visit each affected relation
+;;     once. Positive, negative and aggregate reads invalidate every rule head.
+;;     Marking before enqueue prevents cycles and repeated heads from revisiting.
+;;
+;;     # Examples
+;;
+;;     ```scheme
+;;     (propagate-affected! [] (vector #t #f))
+;;     ;; => no additional affected relations
+;;     ```
+;;   %
+(def (propagate-affected! plans affected)
+  (let* ((count (vector-length affected))
+         (successors (make-vector count []))
+         (pending []))
+    (for-each
+     (lambda (rule)
+       (let (heads (map (lambda (head) (vector-ref head 0)) (vector-ref rule 0)))
+         (for-each
+          (lambda (clause)
+            (when (memq (vector-ref clause 0) '(atom negation aggregate))
+              (let (source (vector-ref (vector-ref clause 1) 0))
+                (vector-set! successors source
+                  (append heads (vector-ref successors source))))))
+          (vector-ref rule 1))))
+     plans)
+    (let seed ((index 0))
+      (when (< index count)
+        (when (vector-ref affected index) (set! pending (cons index pending)))
+        (seed (+ index 1))))
+    (let visit ()
+      (unless (null? pending)
+        (let (source (car pending))
+          (set! pending (cdr pending))
+          (for-each
+           (lambda (target)
+             (unless (vector-ref affected target)
+               (vector-set! affected target #t)
+               (set! pending (cons target pending))))
+           (vector-ref successors source)))
+        (visit)))))
 
 
 ;; gerbil-ascent-active-prefix

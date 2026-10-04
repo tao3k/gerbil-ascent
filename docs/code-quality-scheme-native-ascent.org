@@ -556,6 +556,91 @@ changing either function body. Final =just check-policy= has
 =findings=0=, =errors=0= and exit 0. The three SS gaps above remain open;
 these local receipts do not establish current-head remote CI or AOT closure.
 
+* Feature: bounded dependency traversal and source membership in retained updates
+
+The installed compiler's =optimize-top.ss:703= (=extract-keyword-args=)
+uses an explicit remaining suffix and accumulator in a named tail loop.
+Its lesson here is to make progress and ownership visible in traversal state;
+it is not a dependency invalidation algorithm. The installed runtime's
+=hash.ss:385-387,574-575= gives ordinary hash tables an =equal?= test and
+implements =hash-get= through their reference method. These source contracts
+permit a structurally equal source membership lookup without changing row
+representation or introducing unchecked compiler declarations.
+
+Native retained-update selection previously rescanned every compiled rule
+until no additional relation became affected. Reverse-ordered dependency
+chains require one new full scan per level. Selection now constructs local
+body-to-head adjacency once, seeds a pending list from changed sources, and
+marks a relation before pushing it. Each relation is visited at most once;
+duplicate edges and recursive cycles cannot reenqueue an already marked
+relation. Positive atoms, negation and aggregates preserve their dependency
+roles, including every head of a multi-head rule. Work is bounded by relation
+count plus the constructed dependency edges, independent of source rule
+order. Eligibility checks, immutable analysis layout, rule activation order,
+and the fallback for opaque callbacks/providers are unchanged. No new cache
+or build interface is introduced.
+
+Completed closure seeding previously used =member= against the materialized
+source list for each distinct retained row, producing quadratic membership
+work when an unchanged relation had many source rows. Set source admission
+already owns an =equal?= membership table; reuse now consults that table before
+replacing it with the completed closure's fresh membership. Relations with user
+field checks retain the original linear equality walk, because a callback may
+change a row after source admission. Lattice source
+admission instead joins by key and does not populate that Set membership, so
+reuse builds a separate table from its final joined source rows. This distinction
+preserves derived-budget accounting: joined source rows are source facts,
+and distinct retained rows absent from that source are derived facts. Source
+multiplicity, ordered publication, field checks and all fact limits remain.
+
+Three native Cases in the existing deletion module cover the boundaries. All
+64 subsets of the six non-reflexive three-node edges and each starting relation
+are compared against independent matrix reachability. Synthetic lowered
+plans include duplicate heads and atom/negation/aggregate reads; this isolates
+dependency traversal from planner correctness. A checked lattice program
+with duplicate source keys, duplicate Set rows and a one-fact derived limit
+checks joined-source reuse, ordered duplicates and failure rollback. A raw
+relation with a field callback that mutates a structural term additionally
+checks the original three callback invocations and exact one-fact derived
+budget. It uses the generic relation constructor because the checked DSL
+accepts only scalar row fields. All ten Cases pass, including the existing
+64-graph/192-withdrawal acceptance corpus; the coordinator exits 0 in 36
+seconds. The production policy audit also
+exits 0 with zero findings and errors.
+
+The ignored =.cache/ascent/update-traversal/= experiment freezes the evaluator,
+reuse capsule and update selection from =5d5aec1= under a separate native
+package. Both old and current evaluators resolve to =.ssi= modules. Each sample
+constructs an updated native engine and runs it to completion for two source
+relations: an unchanged 32, 128 or 512-row relation and one changed trigger.
+Initial completion, declarations, schema and analysis are outside timing;
+engine construction, source admission, selection, seeding and publication are
+inside. Full ordered rows and finished status are checked after every sample.
+Each shape has 1000 alternating old/new pairs, with GC every 20 pairs outside
+measurement. No compiler, qualification process or competing probe from this
+turn runs concurrently with the measurement. Host contention and automatic GC
+remain possible and are reflected in the tails.
+
+The final native probe exits 0 with medians in jiffies of =86/82=, =201/113=
+and =1702/232=, respectively (about 5%, 44% and 86% lower). Strict new-faster
+counts are =921/1000=, =951/1000= and =953/1000=. Old/new p95 values are
+=542/274=, =14593/6600= and =73664/11722=. This is a complete retained
+update measurement for unchanged source membership, not an independent
+measurement of dependency propagation or a pass of the existing SS gates.
+No logs or temporary experiment sources are committed.
+
+The normal rebase preserves remote commits through =f1c4827=; they change
+build/CI qualification and documentation without overlapping this production
+algorithm. Final native qualification on that combined tree exits 0 with
+57 modules and 479 successful Cases (53 parallel, four exclusive, 12 jobs).
+Every module has native import, MODULE-OK, HARNESS-OK and final OK receipts.
+The original arbitrary-column duration gate passes in the uninterrupted run;
+the 64-cut retained operator module exits 0 in 64 seconds under its original
+120-second limit. Source policy remains zero findings/errors for the same
+production sources. No Case/module budgets or sample counts change. The
+existing SS suite is not rerun here and its remaining admission gates are
+not claimed closed by these functional and retained-update measurements.
+
 * Feature: one eqrel component resolution across admission and commit
 
 The installed =gerbil/runtime/hash.ss:25-26,574-575= defines a HashTable

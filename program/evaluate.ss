@@ -276,15 +276,30 @@
           (when (< index count)
             (unless (vector-ref (native-reuse-affected reuse) index)
               (let* ((rows ((.ref (native-reuse-result reuse) 'rows-of) (vector-ref names index)))
-                     (base (vector-ref all index)) (present (make-hash-table)))
+                     (base (vector-ref all index))
+                     (check (vector-ref field-checkers index))
+                     ;; Set admission already populated this source membership.
+                     ;; Lattice admission joins source rows by key instead, so
+                     ;; build membership from its final joined source rows.
+                     (base-present
+                      (and (not check)
+                       (if (vector-ref lattice-joins index)
+                        (let (membership (make-hash-table))
+                          (for-each (lambda (row) (hash-put! membership row #t))
+                                    base)
+                          membership)
+                        (vector-ref seen index))))
+                     (present (make-hash-table)))
                 (for-each
                  (lambda (row)
                    (unless (and (list? row) (= (length row) (vector-ref arity index)))
                      (error "invalid completed reuse row"))
-                   (let (check (vector-ref field-checkers index)) (when check (check row)))
+                   (when check (check row))
                    (unless (hash-get present row)
                      (hash-put! present row #t)
-                     (unless (member row base) (set! derived-count (+ derived-count 1))))) rows)
+                     ;; User field callbacks retain the original equality walk.
+                     (unless (if base-present (hash-get base-present row) (member row base))
+                       (set! derived-count (+ derived-count 1))))) rows)
                 (when (or (> derived-count derived-limit)
                           (> (+ source-materialized-count derived-count) output-limit))
                   (error "ASCENT reused closure fact budget exceeded"))

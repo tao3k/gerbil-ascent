@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 #+TITLE: Typed lexical lowering proof and native compiler correspondence
 #+DATE: 2026-10-04
-#+STATUS: lexical and scoped recursive kernels proved; concrete compiler refinement open
+#+STATUS: lexical, recursive and finite-signature kernels proved; native refinement open
 
 * Stated claim
 
@@ -232,3 +232,69 @@ separation and coding-style documentation). The rebuilt source-bound artifact
 passed the same four native modules and all 58 Cases. Proof source hashes are
 unchanged from the successful formal gate. This is focused qualification,
 not a claim that all native modules or model experiments were rerun.
+
+
+* Finite signature interpretation and typed admission snapshots
+
+F16 §5.3 Lemma 4 requires monotonicity, a least element and finite height.
+The new =FiniteHeight.FiniteShape= development instantiates these premises
+with nested finite pointwise tables. =indexed_rank_bounded=, =indexed_rank_mono= and =indexed_rank_strict= sum over every input index;
+=rank_bounded=, =rank_mono=, =rank_strict= and =bottom_least= extend those laws
+through nested tables. =full_height_least_fixed= proves full-height unrolling
+is stationary and below every fixed point, assuming the step is monotone.
+
+=enumerateTables= lists all finite tables, with both length and completeness
+proved. Tuple enumeration has length =d^a=, including one empty tuple when
+=a= is zero; an empty atom domain and positive arity has no tuples. Complete
+nested-value enumeration has length =cardinality= and covers every value.
+=arrow_encoding_injective= encodes a semantic function over all input values,
+not observed arguments; equality of complete tables reflects function equality.
+The enumeration is a proof construction, not a production allocation policy.
+
+=FiniteSignature= mirrors the exact native formulas: relation cardinality
+=2^(d^a)= / height =d^a=, arrow cardinality =card(B)^card(A)= / height
+=card(A)*height(B)=. =shape_cardinality= and =shape_height= establish formula
+correspondence, and =signature_height_least_fixed= proves height sufficiency
+for the exhaustively represented signature semantics. Full function spaces
+supply conservative bounds for admitted monotone inhabitants. The step's
+monotonicity remains a premise; constructing a native type is not its proof.
+
+The native compiler already had a scoped recursive validator. It now returns
+owned canonical types and typed-term graphs and lowers that returned graph.
+Domain duplicates are removed by the same finite relation type constructor;
+source/mapping rows, vectors, projection lists and child lists are reconstructed.
+The binder itself is checked even when unused in its body. A global descriptor
+copy table preserves binder/node identity; scoped validation still checks every
+term occurrence and its current bindings before returning a cached copy.
+Snapshot acquisition is synchronous; concurrent mutation atomicity is not claimed.
+
+Public =relational-type-height-expression= uses the same type shape/cycle/depth
+admission. Per-invocation cardinality/height caches reuse validated type identity;
+they hold no callback or cross-invocation state. Production capped arithmetic
+and the independent actual normalization work counter remain in effect. A
+resource rejection is not a theorem of semantic nontermination.
+
+Native discriminators enumerate nine tiny signatures (0/1/2 atoms and 0/1/2
+columns), check relation/arrow height against independently generated tuples
+and subsets, analyze a 24-layer shared type graph, reject opaque/cyclic domains
+and typed graph cycles/out-of-domain maps, and mutate domains/source/mapping
+rows after compilation to check program ownership. Existing exact expansion
+boundaries and lexical/nested fixed-point controls remain required.
+
+Remaining bridge: native scalar equality and deduplication to =Fin= atom codes;
+row lists to tuples; native descriptors and captured environments to the typed
+signature/term semantics; actual lowering-step monotonicity and memo/rule/delta
+execution correspondence. These obligations cannot be discharged by the new
+height theorem or by finite native test samples alone.
+
+
+The [[file:evidence/scheme-finite-signature-20261004/receipt.json][finite-signature receipt]] binds the source patch and qualified artifact.
+Five native modules passed 90 Cases (including dynamically expanded model-task
+cases), with five MODULE/HARNESS/final OK markers and exit 0. Eight Lean files,
+both TLA models and both expected faults passed; the proof slice adds 20
+theorems. Three failed development builds and one rejected native artifact
+(eight CASE errors, exit 1, no final OK) remain excluded and recorded.
+Qualification binds =50c79d4= plus the published patch; subsequent certificate
+and table refactors are preserved by rebase and require exact integrated-head
+CI. No log files, model calls, performance claim or whole-repository closure
+claim belong to this receipt.

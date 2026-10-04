@@ -6,7 +6,8 @@
         (only-in :std/test check-equal? check-exception test-case test-suite)
         (only-in :gerbil-ascent/program/higher-order
                  relational-relation-type relational-arrow-type relational-type=?
-                 relational-type-height-expression relational-typed-source
+                 relational-type-height-expression relational-type-right
+                 relational-typed-term-data relational-typed-term-inputs relational-typed-source
                  relational-typed-function relational-typed-apply relational-typed-union
                  relational-typed-join relational-typed-project relational-typed-flatmap
                  relational-typed-select-eq
@@ -50,8 +51,86 @@
    (.ref program 'max-input-facts) (.ref program 'max-derived-facts)
    (.ref program 'max-output-facts) (.ref program 'source-handles)))
 
+;;; Exhaustive finite truth data, independent of the compiler/type formulas.
+(def (truth-tuples atoms arity)
+  (if (zero? arity) '(())
+    (foldr append []
+           (map (lambda (atom)
+                  (map (lambda (tail) (cons atom tail)) (truth-tuples atoms (- arity 1)))) atoms))))
+(def (truth-subsets rows)
+  (if (null? rows) '(())
+    (let (tail (truth-subsets (cdr rows)))
+      (append tail (map (lambda (subset) (cons (car rows) subset)) tail)))))
+(def (truth-power base exponent)
+  (if (zero? exponent) 1 (* base (truth-power base (- exponent 1)))))
+(def (height-expression-value expression)
+  (if (number? expression) expression
+    (let ((left (height-expression-value (cadr expression)))
+          (right (height-expression-value (caddr expression))))
+      (case (car expression)
+        ((expt) (truth-power left right))
+        ((*) (* left right))
+        (else (error "unexpected height expression"))))))
+
 (def scheme-higher-order-test
   (test-suite "Finite positive higher-order descriptors"
+    (test-case "finite height formulas match exhaustive tiny tuple and relation universes"
+      (for-each
+       (lambda (atoms)
+         (for-each
+          (lambda (arity)
+            (let* ((type (relational-relation-type arity atoms))
+                   (tuples (truth-tuples atoms arity))
+                   (relations (truth-subsets tuples))
+                   (arrow (relational-arrow-type type type)))
+              (check-equal? (height-expression-value (relational-type-height-expression type)) (length tuples))
+              (check-equal? (height-expression-value (relational-type-height-expression arrow))
+                            (* (length relations) (length tuples)))
+              (displayln "FINITE-SIGNATURE-CHECKED " (length atoms) "/" arity) (force-output)))
+          '(0 1 2)))
+       '(() (0) (0 1))))
+    (test-case "shared type graphs analyze without expanding repeated subgraphs"
+      (let loop ((depth 24) (type (relational-relation-type 1 '(0))))
+        (if (zero? depth)
+          (let (height (relational-type-height-expression type))
+            (check-equal? (car height) '*))
+          (loop (- depth 1) (relational-arrow-type type type)))))
+    (test-case "height admission canonicalizes changed domains and rejects opaque and cyclic spines"
+      (let* ((type (relational-relation-type 1 '(0 1)))
+             (domain (relational-type-right type)))
+        (set-car! (cdr domain) 0)
+        (check-equal? (height-expression-value (relational-type-height-expression type)) 1)
+        (check-rows (solve (relational-typed-source 'deduplicated type '((0)))) '((0))))
+      (let* ((type (relational-relation-type 1 '(0)))
+             (source (relational-typed-source 'source type '((0)))))
+        (set-car! (relational-type-right type) (lambda () 'opaque))
+        (check-exception (relational-type-height-expression type) true)
+        (check-exception (relational-typed-compile source 32 256 512) true))
+      (let* ((type (relational-relation-type 1 '(0)))
+             (domain (relational-type-right type)))
+        (set-cdr! domain domain)
+        (check-exception (relational-type-height-expression type) true)))
+    (test-case "typed admission rejects descriptor cycles and mutated mappings"
+      (let* ((type (relational-relation-type 1 '(0 1)))
+             (source (relational-typed-source 'source type '((0))))
+             (union (relational-typed-union source source)))
+        (set-car! (relational-typed-term-inputs union) union)
+        (check-exception (relational-typed-compile union 32 256 512) true))
+      (let* ((type (relational-relation-type 1 '(0 1)))
+             (source (relational-typed-source 'source type '((0))))
+             (mapped (relational-typed-flatmap source type '(((0) (1))))))
+        (set-car! (cdr (car (vector-ref (relational-typed-term-data mapped) 1))) 2)
+        (check-exception (relational-typed-compile mapped 32 256 512) true)))
+    (test-case "typed compilation owns admitted domains and source mapping rows"
+      (let* ((type (relational-relation-type 1 '(0 1)))
+             (source (relational-typed-source 'owned type '((0))))
+             (mapped (relational-typed-flatmap source type '(((0) (1))))))
+        (let-values (((program output) (relational-typed-compile mapped 32 256 512)))
+          (set-car! (relational-type-right type) 9)
+          (set-car! (car (vector-ref (relational-typed-term-data source) 1)) 9)
+          (set-car! (cdr (car (vector-ref (relational-typed-term-data mapped) 1))) 9)
+          (check-rows (relational-query-name (relational-solve (relational-admit program)) output) '((1)))
+          (check-exception (relational-typed-compile mapped 32 256 512) true))))
     (test-case "lexical lowering agrees with independent finite algebra on every input pair"
       (let* ((type (relational-relation-type 1 '(0 1)))
              (subsets '(() ((0)) ((1)) ((0) (1))))

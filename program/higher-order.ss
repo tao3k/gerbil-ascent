@@ -18,6 +18,8 @@
 
 (export relational-relation-type relational-arrow-type relational-type?
         relational-type=? relational-type-height-expression
+        relational-type-kind relational-type-left relational-type-right
+        relational-typed-term-kind relational-typed-term-inputs relational-typed-term-data
         relational-typed-source relational-typed-function relational-typed-apply
         relational-typed-union relational-typed-join relational-typed-project
         relational-typed-select-eq relational-typed-flatmap relational-typed-fix
@@ -58,7 +60,8 @@
 ;; : (-> TypeCandidate TypeCandidate Boolean)
 (def (relational-type=? left right)
   (and (relational-type? left) (relational-type? right)
-       (eq? (relational-type-kind left) (relational-type-kind right))
+       (or (eq? left right)
+       (and (eq? (relational-type-kind left) (relational-type-kind right))
        (case (relational-type-kind left)
          ((relation)
           (and (= (relational-type-left left) (relational-type-left right))
@@ -68,36 +71,64 @@
          ((arrow)
           (and (relational-type=? (relational-type-left left) (relational-type-left right))
                (relational-type=? (relational-type-right left) (relational-type-right right))))
-         (else #f))))
+         (else #f))))))
+
+;;; Copy validated finite types, preserving graph identity and canonical domains.
+;;; The charge hook shares the compiler's actual expansion counter; public
+;;; height analysis uses the same shape/cycle/depth admission without a counter.
+(def (finite-type-snapshotter charge!)
+  (let (copies (make-hash-table-eq))
+    (def (snapshot type path)
+      (charge!)
+      (unless (and (relational-type? type) (not (memq type path)) (< (length path) 128))
+        (error "invalid or cyclic finite type"))
+      (or (hash-get copies type)
+          (let (owned
+                (case (relational-type-kind type)
+                  ((relation) (relational-relation-type (relational-type-left type)
+                                                        (relational-type-right type)))
+                  ((arrow) (relational-arrow-type
+                            (snapshot (relational-type-left type) (cons type path))
+                            (snapshot (relational-type-right type) (cons type path))))
+                  (else (error "unknown finite type"))))
+            (hash-put! copies type owned)
+            owned)))
+    snapshot))
 
 ;;; Type structure owns the finite lattice formulas. The arithmetic supplied
 ;;; by the caller either records expressions or saturates at a budget cap.
 ;; : (forall (a) (-> (Type a) (-> SExpression SExpression SExpression) SExpression))
 ;; : (-> FiniteType CardinalityPower Cardinality)
-(def (type-cardinality type power)
-  (case (relational-type-kind type)
-    ((relation) (power 2 (power (length (relational-type-right type))
-                              (relational-type-left type))))
-    ((arrow) (power (type-cardinality (relational-type-right type) power)
-                    (type-cardinality (relational-type-left type) power)))
-    (else (error "unknown finite type"))))
+(def (type-cardinality type power (cache (make-hash-table-eq)))
+  (or (hash-get cache type)
+      (let (value
+            (case (relational-type-kind type)
+              ((relation) (power 2 (power (length (relational-type-right type))
+                                        (relational-type-left type))))
+              ((arrow) (power (type-cardinality (relational-type-right type) power cache)
+                              (type-cardinality (relational-type-left type) power cache)))
+              (else (error "unknown finite type"))))
+        (hash-put! cache type value) value)))
 
 ;; : (forall (a) (-> (Type a) (-> SExpression SExpression SExpression) (-> SExpression SExpression SExpression) SExpression))
 ;; : (-> FiniteType CardinalityPower HeightProduct Height)
-(def (type-height type power multiply)
+(def (type-height type power multiply (cardinalities (make-hash-table-eq)) (heights (make-hash-table-eq)))
   (unless (relational-type? type) (error "expected finite type"))
-  (case (relational-type-kind type)
-    ((relation) (power (length (relational-type-right type))
-                      (relational-type-left type)))
-    ((arrow) (multiply (type-cardinality (relational-type-left type) power)
-                       (type-height (relational-type-right type) power multiply)))
-    (else (error "unknown finite type"))))
+  (or (hash-get heights type)
+      (let (value
+            (case (relational-type-kind type)
+              ((relation) (power (length (relational-type-right type))
+                                (relational-type-left type)))
+              ((arrow) (multiply (type-cardinality (relational-type-left type) power cardinalities)
+                                 (type-height (relational-type-right type) power multiply cardinalities heights)))
+              (else (error "unknown finite type"))))
+        (hash-put! heights type value) value)))
 
 ;;; Symbolic heights avoid constructing enormous powerset/function spaces.
 ;; : (forall (a) (-> (Type a) SExpression))
 ;; : (-> FiniteType SymbolicHeight)
 (def (relational-type-height-expression type)
-  (type-height type
+  (type-height ((finite-type-snapshotter void) type [])
                (lambda (base exponent) (list 'expt base exponent))
                (lambda (left right) (list '* left right))))
 
@@ -228,7 +259,7 @@
 ;;; Functions are data closures, and application is beta lowering into one IR.
 ;; Every invocation owns its counters, source tables and domain accumulator.
 ;; Revalidate the complete descriptor graph before lowering. Count every type,
-;; term and lowering visit; shared nodes do not grant a budget exemption.
+;; scoped term and lowering visit; cached type graphs charge each lookup.
 ;; Preserve lexical environments by reifying functions as closures. Relation
 ;; fixed points lower to IR; function fixed points use the conservative finite
 ;; height with saturating arithmetic, never sample-based early termination.
@@ -240,48 +271,58 @@
   (unless (and (exact-integer? expansion-limit) (> expansion-limit 0))
     (error "typed expansion limit must be positive"))
   (let ((steps 0) (sources (make-hash-table-eq)) (source-domains (make-hash-table-eq)) (atoms []))
-    (def (check-type! type path)
-      (set! steps (+ steps 1))
-      (when (> steps expansion-limit) (error "typed normalization budget exceeded"))
-      (unless (and (relational-type? type) (not (memq type path)) (< (length path) 128))
-        (error "invalid or cyclic finite type"))
-      (case (relational-type-kind type)
-        ((relation)
-         (relational-relation-type (relational-type-left type) (relational-type-right type))
-         (set! atoms (delete-duplicates/hash (append atoms (relational-type-right type)))))
-        ((arrow)
-         (check-type! (relational-type-left type) (cons type path))
-         (check-type! (relational-type-right type) (cons type path)))
-        (else (error "unknown finite type"))))
+    (def term-copies (make-hash-table-eq))
+    (def snapshot-type (finite-type-snapshotter
+                        (lambda ()
+                          (set! steps (+ steps 1))
+                          (when (> steps expansion-limit) (error "typed normalization budget exceeded")))))
+    (def collected-types (make-hash-table-eq))
+    (def (collect-type-atoms! type)
+      (unless (hash-get collected-types type)
+        (hash-put! collected-types type #t)
+        (case (relational-type-kind type)
+          ((relation) (set! atoms (delete-duplicates/hash (append atoms (relational-type-right type)))))
+          ((arrow) (collect-type-atoms! (relational-type-left type))
+                   (collect-type-atoms! (relational-type-right type))))))
+    (def (check-type! type)
+      (let (owned (snapshot-type type []))
+        (collect-type-atoms! owned)
+        owned))
     (def (check-term! node scope path)
       (set! steps (+ steps 1))
       (when (> steps expansion-limit) (error "typed normalization budget exceeded"))
       (unless (and (relational-typed-term? node) (not (memq node path)) (< (length path) 128))
         (error "invalid or cyclic typed term"))
-      (let ((type (relational-typed-term-type node))
+      (let ((type (check-type! (relational-typed-term-type node)))
             (kind (relational-typed-term-kind node))
             (inputs (relational-typed-term-inputs node))
             (data (relational-typed-term-data node)))
-        (check-type! type [])
         (unless (and (list? inputs) (<= (length inputs) 2)) (error "invalid typed children"))
         (if (eq? kind 'function)
           (begin
             (unless (and (= (length inputs) 1) (eq? (relational-type-kind type) 'arrow)
                          (relational-typed-term? data)
-                         (eq? (relational-typed-term-kind data) 'parameter)
-                         (relational-type=? (relational-typed-term-type data) (relational-type-left type)))
+                         (eq? (relational-typed-term-kind data) 'parameter))
               (error "typed function binder/signature mismatch"))
-            (check-term! (car inputs) (cons (cons data (relational-type-left type)) scope) (cons node path))
-            (unless (relational-type=? (relational-typed-term-type (car inputs)) (relational-type-right type))
-              (error "typed function result signature mismatch")))
+            (let* ((bound-scope (cons (cons data (relational-type-left type)) scope))
+                   (parameter (check-term! data bound-scope (cons node path)))
+                   (body (check-term! (car inputs) bound-scope (cons node path))))
+              (unless (relational-type=? (relational-typed-term-type body) (relational-type-right type))
+                (error "typed function result signature mismatch"))
+              (or (hash-get term-copies node)
+                  (let (owned (make-relational-typed-term type 'function (list body) parameter))
+                    (hash-put! term-copies node owned) owned))))
           (begin
-            (for-each (lambda (input) (check-term! input scope (cons node path))) inputs)
-            (let (rebuilt
+            (when (memq kind '(parameter apply fix union))
+              (unless (eq? data #f) (error "invalid typed inert node data")))
+            (let* ((inputs (map (lambda (input) (check-term! input scope (cons node path))) inputs))
+                   (rebuilt
                   (case kind
                     ((parameter)
                      (let (binding (assq node scope))
                        (unless (and binding (null? inputs) (relational-type=? (cdr binding) type))
-                         (error "typed parameter escaped its binder")) node))
+                         (error "typed parameter outside admitted lexical scope"))
+                       (make-relational-typed-term type 'parameter [] #f)))
                     ((source)
                      (unless (and (null? inputs) (vector? data) (= (vector-length data) 2))
                        (error "invalid typed source data"))
@@ -316,9 +357,11 @@
                       (car inputs) type
                       (map (lambda (row) (list (take row (vector-ref data 0))
                                               (list-tail row (vector-ref data 0)))) (vector-ref data 1))))
-                    (else (error "unsupported typed term kind"))))
+                    (else (error "unsupported typed term kind")))))
               (unless (relational-type=? (relational-typed-term-type rebuilt) type)
-                (error "typed node result signature mismatch")))))))
+                (error "typed node result signature mismatch"))
+              (or (hash-get term-copies node)
+                  (begin (hash-put! term-copies node rebuilt) rebuilt)))))))
     (def (apply-closure closure argument)
       (unless (typed-closure? closure) (error "typed application is not a reified function"))
       (lower (typed-closure-body closure)
@@ -357,7 +400,7 @@
                                                 (vector-ref (relational-typed-term-data checked) 1)))
                    (hash-put! sources node op) op))))
           ((parameter) (let (binding (assq node environment))
-                         (unless binding (error "typed parameter escaped its binder")) (cdr binding)))
+                         (unless binding (error "typed parameter missing from frozen environment")) (cdr binding)))
           ((function) (make-typed-closure data (car inputs) environment))
           ((apply) (apply-closure (lower (car inputs) environment)
                                   (lower (cadr inputs) environment)))
@@ -385,7 +428,7 @@
                       (map (lambda (row) (list (take row (vector-ref data 0))
                                               (list-tail row (vector-ref data 0)))) (vector-ref data 1))))
           (else (error "unsupported typed term kind")))))
-    (check-term! term [] [])
+    (set! term (check-term! term [] []))
     (let-values (((program output)
                   (relational-op-compile (lower term []) input-limit derived-limit output-limit)))
       (values

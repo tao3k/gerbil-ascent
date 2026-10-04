@@ -24,6 +24,7 @@
     "program/syntax"
     "program/planning"
     "core/positive-plan"
+    "program/index"
     "program/scheme-checked"
     "program/scheme-snapshot"
     "program/scheme-query"

@@ -411,3 +411,89 @@ pass over the row could help wide composite keys, but arbitrary
 column order must be preserved. Use the existing index-program and
 BYODS cases plus a matched wide-row probe before choosing an algorithm.
 
+** Canonical single-column physical index lifecycle
+
+The installed Gerbil compiler's =compiler/base.ss:150-174,198-235=
+uses admitted binding shapes and native identifiers directly. Its
+=runtime/hash.ss:475-505= selects hash implementations from equality
+semantics. Applying these ideas here means removing a redundant
+one-element key list throughout construction, extension and lookup.
+It does not justify an =eq?= table: strings, lists, false and empty-list
+values remain valid keys with structural equality.
+
+=table/access.ss= now uses a plain native hash table for the canonical
+one-column index. Composite and empty keys retain the existing path;
+custom Providers still receive list keys through their original hooks.
+Bucket order remains reverse-on-build and prepend-on-extension.
+=core/positive-plan.ss= evaluates a single key value through the same
+slot or expression helper used by the previous list-key producer.
+Physical construction still precedes expression evaluation.
+
+=program/index.ss= owns one engine's lazy all/delta caches and cache
+versions. The evaluator owns admitted rows and publishes row/size/version
+vectors. Extension reverses an admitted batch only when a cache exists
+and the caller supplies reverse order. The 32-row threshold and retained
+snapshot behavior are unchanged. =build.ss= adds one production module.
+
+The native =just performance-scalar-index= probe compiles the frozen
+pre-change access module and the candidate in the same library. It checks
+both resolution paths and native objects, then compares exact ordered
+results before warmup and in every one of 100 alternating sample pairs.
+Large samples batch five full build/extend/lookup lifecycles over 4096
+initial rows, 1024 appended rows and 5120 lookups. The eight-row fixture
+is only an allocation control; the engine skips physical indexing there.
+
+Each scenario and library path is an explicit =main= argument. Gerbil's
+native =add-load-path!= loads the library. There are no new scenario or
+library environment variables. Existing compiler parallelism remains
+configured through the toolchain's =GERBIL_BUILD_CORES= interface.
+
+Allocation and CPU counters use Gambit's native =##process-statistics=
+slots 7 and 0+1, respectively, as defined in
+[[https://raw.githubusercontent.com/gambit/gambit/master/lib/_kernel.scm][Gambit's kernel source]].
+One collection precedes warmup; natural collections remain in measured
+batches. Singleton admission requires at least 10% lower median allocation,
+CPU and wall time, with at least 75/100 CPU wins. Composite controls require
+equal allocation and no more than 5% median CPU/wall regression.
+
+The initial mixed interpreted/native comparison is invalid. Earlier
+record-wrapper and plain-table trials failed the experimental 75/100 wall
+win requirement; forced collection per sample did not fix it. The current
+CPU gate qualifies computational cost, not stable individual-call latency.
+An aggregate four-scenario process also exceeded its 90-second deadline;
+each scenario now runs in its own process with that same deadline. Neither
+unit test budgets nor the existing whole-engine SS gates are relaxed.
+Local raw logs remain under ignored =.cache/ascent/scalar-index/=.
+
+The first complete explicit-argument run is rejected. Both singleton cases
+allocate 1,461,238 rather than 1,952,758 bytes per lifecycle (25.17% less),
+with median CPU reductions of 27.65% and 27.78% and 86/100 and 83/100 CPU
+wins. The composite control allocates 2,444,278 bytes in both variants,
+but its wall median rises from 36,107 to 43,981 microseconds (21.81%).
+Its CPU medians are 3445.8/3458.2 microseconds. The process exits 70 at
+the unchanged control gate and never reaches the tiny scenario. This
+is not a complete passing performance receipt.
+
+The unchanged four-scenario rerun completes all 100 pairs per scenario:
+
+| Scenario          | Bytes old/new     | CPU us old/new | CPU wins | Wall us old/new | Wall wins |
+|-------------------+-------------------+----------------+----------+-----------------+-----------|
+| First column      | 1952758 / 1461238 | 1408.2 / 996.2 |   86/100 | 22700 / 5252    |    70/100 |
+| Later column      | 1952758 / 1461238 | 1452.8 / 1015.4 |  86/100 | 13868 / 5175    |    64/100 |
+| Composite control | 2444278 / 2444278 | 3443.4 / 3292.0 |  58/100 | 39815 / 34845   |    57/100 |
+| Tiny control      | 5008 / 4144       | 2.926 / 2.242  |   81/100 | 12 / 6          |    61/100 |
+
+The two singleton CPU medians improve by 29.26% and 30.11%; allocation
+improves by 25.17%. These results qualify the physical lifecycle kernel.
+The earlier control failure and wall variation remain material limits:
+no whole-engine speedup or stable individual-call latency is established.
+
+Focused native semantic qualification passes five lifecycle Cases, nine
+index-program Cases and two BYODS index composition Cases. Every module
+reports native resolution, MODULE-OK, HARNESS-OK, final OK and coordinator
+exit 0. The BYODS module is rerun after integrating remote Scheme changes;
+the candidate's index implementation, benchmark and earlier two test sources
+are byte-identical across that integration. The four changed production
+modules pass the policy audit with zero findings and zero errors.
+This focused receipt does not establish full-suite, whole-engine SS or
+current-head remote CI closure.

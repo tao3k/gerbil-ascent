@@ -14,9 +14,9 @@
                  gerbil-ascent-publish-rows gerbil-ascent-snapshot-rows gerbil-ascent-snapshot-sizes
                  gerbil-ascent-result-observation)
         (only-in "planning.ss" gerbil-ascent-prepare-program)
-        (only-in :gerbil-ascent/core/positive-plan gerbil-ascent-run-positive-plan! gerbil-ascent-index-key
-                 gerbil-ascent-index-key/terms
+        (only-in :gerbil-ascent/core/positive-plan gerbil-ascent-run-positive-plan!
                  gerbil-ascent-emit-heads!)
+        (only-in "index.ss" gerbil-ascent-make-row-indexes row-indexes-rows row-indexes-advance!)
         (only-in "types.ss" GerbilAscentSessionContract)
         (only-in "reuse.ss" gerbil-ascent-prepare-native-reuse
                  gerbil-ascent-activate-rules gerbil-ascent-reuse-active-rules native-reuse?
@@ -29,8 +29,6 @@
                  gerbil-ascent-joined-row
                  gerbil-ascent-expression-value
                  gerbil-ascent-bind-row)
-        (only-in :gerbil-ascent/table/access gerbil-ascent-physical-index-build
-                 gerbil-ascent-physical-index-extend! gerbil-ascent-physical-index-rows)
         (only-in :gerbil-ascent/table/provider gerbil-ascent-hash-index-provider)
         (only-in :gerbil-ascent/table/storage
                  gerbil-ascent-storage-make-state
@@ -113,9 +111,9 @@
            (delta-version (make-vector count 0))
            (all-size (make-vector count 0))
            (delta-size (make-vector count 0))
-           (all-indexes (make-vector count #f))
-           (delta-indexes (make-vector count #f))
            (index-providers (vector-ref schema 5))
+           (indexes (gerbil-ascent-make-row-indexes
+                     all delta all-size delta-size all-version delta-version index-providers))
            (storage-extensions (vector-ref schema 6))
            (storage-states (make-vector count #f))
            (seen (make-vector count #f))
@@ -136,53 +134,8 @@
             (let (slot (hash-get positions name))
               (unless slot (error "unknown ASCENT relation" name))
               (- slot 1)))))
-      (def (indexed-rows atom environment use-delta? slot-terms)
-        (let* ((index (vector-ref atom 0))
-               (columns (vector-ref atom 2))
-               (rows (vector-ref (if use-delta? delta all) index)))
-          (if (or (null? columns)
-                  (< (vector-ref (if use-delta? delta-size all-size)
-                                 index)
-                     32))
-            rows
-            (let* ((caches (if use-delta? delta-indexes all-indexes))
-                   (cache
-                    (or (vector-ref caches index)
-                        (let (fresh (make-hash-table))
-                          (vector-set! caches index fresh)
-                          fresh)))
-                   (version (vector-ref
-                             (if use-delta? delta-version all-version)
-                             index))
-                   (entry (hash-get cache columns))
-                   (lookup
-                    (if (and entry (= (car entry) version))
-                      (cdr entry)
-                      (let (built (gerbil-ascent-physical-index-build
-                                   (vector-ref index-providers index) rows columns))
-                        (hash-put! cache columns (cons version built))
-                        built)))
-                   (terms (vector-ref atom 1))
-                   (key (if slot-terms
-                          (gerbil-ascent-index-key
-                           terms columns environment slot-terms)
-                          (gerbil-ascent-index-key/terms
-                           (vector-ref atom 4) environment))))
-              (gerbil-ascent-physical-index-rows
-               (vector-ref index-providers index) lookup key)))))
-      (def (advance-all-indexes! index new-rows)
-        (let (cache (vector-ref all-indexes index))
-          (when (and cache (pair? new-rows))
-            (let ((version (vector-ref all-version index))
-                  (provider (vector-ref index-providers index)))
-              (hash-for-each
-               (lambda (columns entry)
-                 (when (= (car entry) version)
-                   (hash-put! cache columns
-                     (cons (+ version 1)
-                           (gerbil-ascent-physical-index-extend!
-                            provider (cdr entry) new-rows columns)))))
-               cache)))))
+      (def indexed-rows (row-indexes-rows indexes))
+      (def advance-all-indexes! (row-indexes-advance! indexes))
       (let initialize ((remaining relations) (index 0))
         (unless (null? remaining)
           (let* ((relation (car remaining))
@@ -397,8 +350,7 @@
                                (new-delta
                                 (and (not shared-tail?)
                                      (append accepted old-delta))))
-                          (when (vector-ref all-indexes index)
-                            (advance-all-indexes! index (reverse accepted)))
+                          (advance-all-indexes! index accepted #t)
                           (let (new-all (append! accepted old-all))
                             (vector-set! all index new-all)
                             (vector-set! delta index

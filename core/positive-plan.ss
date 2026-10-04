@@ -6,7 +6,8 @@
 ;;; each engine owns its variable frames, including nested/concurrent solves.
 (import (only-in "rule-semantics.ss" gerbil-ascent-expression-value gerbil-ascent-head-row))
 (export gerbil-ascent-prepare-rule-activations gerbil-ascent-positive-plan gerbil-ascent-compile-positive-plan gerbil-ascent-run-positive-plan!
-        gerbil-ascent-index-key gerbil-ascent-index-key/terms gerbil-ascent-emit-heads!)
+        gerbil-ascent-index-key gerbil-ascent-index-key/terms
+        gerbil-ascent-index-value gerbil-ascent-emit-heads!)
 
 (def +positive-plans+
   (make-hash-table-eq weak-keys: #t lock: (make-mutex 'ascent-positive-plans)))
@@ -185,6 +186,14 @@
 ;; : (-> Terms Environment Key)
 (def (gerbil-ascent-index-key/terms key-terms environment)
   (map (lambda (term) (index-term-value term environment)) key-terms))
+
+;;; A canonical single-column index consumes the value directly. Keep both
+;;; slot frames and general expression/variable environments on their existing
+;;; value paths, after index construction and once per candidate lookup.
+;; : (-> Term Environment (Maybe SlotTerm) Value)
+(def (gerbil-ascent-index-value term environment slot-term)
+  (if slot-term (term-value slot-term environment)
+      (index-term-value term environment)))
 
 ;;; Both key interfaces share value semantics; selection must not evaluate an
 ;;; expression or retain its result across row candidates or source updates.

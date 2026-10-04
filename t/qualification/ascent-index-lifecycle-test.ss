@@ -5,6 +5,8 @@
         (only-in :core/observability/testing-case poo-flow-test-case)
         (only-in :clan/poo/object .o .ref)
         (only-in :gerbil-ascent/table/funs gerbil-ascent-index-build gerbil-ascent-index-extend!)
+        (only-in :gerbil-ascent/table/access gerbil-ascent-physical-index-build
+                 gerbil-ascent-physical-index-extend! gerbil-ascent-physical-index-rows)
         (rename-in (only-in :gerbil-ascent/t/qualification/ascent-index-reference-funs
                            gerbil-ascent-index-build gerbil-ascent-index-extend!)
                    (gerbil-ascent-index-build old-build)
@@ -30,6 +32,27 @@
 (def (rows result) ((.ref result 'rows-of) 'out))
 (def ascent-index-lifecycle-test
   (test-suite "Complete index lifecycle"
+    (poo-flow-test-case "physical single-column keys preserve equality and incremental bucket order"
+      (let* ((source (list (list #f 0) (list '() 1) (list "same" 2)
+                           (list (string-copy "same") 3) (list '(a b) 4)))
+             (batch (list (list (string-copy "same") 5) (list #f 6)))
+             (provider gerbil-ascent-hash-index-provider))
+        (for-each
+         (lambda (columns)
+           (let ((reference (old-build source columns))
+                 (physical (gerbil-ascent-physical-index-build provider source columns)))
+             (old-extend! reference batch columns)
+             (gerbil-ascent-physical-index-extend! provider physical batch columns)
+             (for-each
+              (lambda (row)
+                (let (key (map (lambda (column) (list-ref row column)) columns))
+                  (check-equal? (gerbil-ascent-physical-index-rows provider physical key)
+                                (hash-get reference key))))
+              (append source batch))
+             (when (pair? columns)
+               (check-equal? (gerbil-ascent-physical-index-rows
+                              provider physical (map (lambda (_) 'absent) columns)) []))))
+         '((0) (1) (0 1) (1 0) (0 0) ()))))
     (poo-flow-test-case "all ordered subsets and arbitrary columns preserve keys and bucket order"
       (let (source (map (lambda (n) (map (lambda (c) (modulo (+ n c) 3)) (iota 8))) (iota 40)))
         (for-each

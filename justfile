@@ -83,6 +83,19 @@ _test-suite jobs lane:
         while IFS= read -r path; do just _test-file "$path" 2>&1 | tee "$directory/$(basename "$path").log"; done < "$directory/exclusive"
     fi
 
+# Paired native index construction, extension and evaluated-key lookup.
+performance-scalar-index:
+    {{ test_runner }} run -- just _performance-scalar-index
+
+_performance-scalar-index:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    library="{{ justfile_directory() }}/.cache/ascent/native-library/lib"
+    gxi {{ gerbil_test_runtime_options }} -e '(add-load-path! (path-expand ".cache/ascent/native-library/lib"))' -e '(import :std/make)' -e '(make ["table/funs" "table/access" "core/positive-plan" "program/index" "program/evaluate" "t/performance/scalar-index/reference-access" "t/performance/scalar-index-benchmark"] srcdir: (current-directory) libdir: (path-expand ".cache/ascent/native-library/lib") build-deps: (path-expand ".cache/ascent/native-library/build-deps"))'
+    for scenario in single-first single-later composite-control tiny-control; do
+        timeout 90s gxi {{ gerbil_test_runtime_options }} -e '(add-load-path! (path-expand ".cache/ascent/native-library/lib"))' :gerbil-ascent/t/performance/scalar-index-benchmark "$scenario" "$library"
+    done
+
 test-quick:
     {{ test_runner }} test-quick
 

@@ -1,0 +1,3 @@
+(import :std/test :gerbil-ascent/program/higher-order :gerbil-ascent/program/scheme-language)
+(define result (let* ((r (relational-relation-type 2 '(0 1 2 3))) (edge (relational-typed-source 'edge r '((0 1) (1 2)))) (seed (relational-typed-source 'seed r '((0 1)))) (function (relational-typed-function r (lambda (path) (relational-typed-union seed (relational-typed-project (relational-typed-join path edge 1 0) '(0 3)))))) (solve (lambda (term) (let-values (((program output) (relational-typed-compile term 32 256 512))) (relational-query-name (relational-solve (relational-admit program)) output))))) (length (solve (relational-typed-fix function)))))
+(check-equal? result '?)

@@ -1,0 +1,3 @@
+(import :std/test :gerbil-ascent/program/scheme-language :gerbil-ascent/program/session :clan/poo/object)
+(define result (let* ((program (relational-program (relation item (n) '((1) (2))) (relation blocked (n) '((1))) (relation allowed (n) '()) (rule (allowed ?n) (item ?n) (not (blocked ?n))) (limits 32 256 512))) (session (gerbil-ascent-open-session program)) (old (gerbil-ascent-session-run session))) (gerbil-ascent-session-replace-source! session 'blocked '()) (let (new (gerbil-ascent-session-run session)) (list (length ((.ref old 'rows-of) 'allowed)) (length ((.ref new 'rows-of) 'allowed))))))
+(check-equal? result '?)

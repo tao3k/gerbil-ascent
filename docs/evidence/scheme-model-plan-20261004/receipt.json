@@ -1,0 +1,16 @@
+{
+  "schema": "ascent.model-plan-native-preflight",
+  "version": 1,
+  "planSha256": "0c00e978caaa12f45cbe1408e56a98e1360dbf612a62e32f8fa5691e2b253f8b",
+  "sourceHead": "ee202716da5f34c1b63e0043489bb91ffff14437",
+  "artifactSha256": "634ecaae6100183be5910cf01279d404e88889608fd4a0400d823dd39c45f139",
+  "nativeTasks": 24,
+  "nativeScorerControls": 10,
+  "sourceFiles": 36,
+  "offlineValidationExitStatus": 0,
+  "modelCalls": 0,
+  "status": "prepared; new fee and source-exfiltration authorization pending",
+  "privateTruthSentToModel": false,
+  "expectedHashesOnlyInPublicPlan": true,
+  "reconstruction": "ASCENT sources at sourceHead; compiler-lowered core/types files here; task files here; ordering and SHA256 bytes in plan.json; input.ss includes file comments followed by unchanged files then exact task. Private expected fixture is not model context."
+}

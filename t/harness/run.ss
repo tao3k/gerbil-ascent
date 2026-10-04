@@ -107,7 +107,15 @@
          (module-file (path-expand "modules.sexp" test-cache))
          (modules (append gerbil-ascent-library-modules
                           '("t/scenarios/performance/ascent-table-expression/baseline"
-                            "t/harness/artifact" "t/harness/prediction"))))
+                            "t/harness/artifact" "t/harness/prediction")
+                          ;; Compile the complete independent reference graph
+                          ;; for both ordinary module tests and AOT linkage.
+                          (if (member "t/qualification/ascent-index-lifecycle-test.ss" tests)
+                            '("t/qualification/ascent-index-reference-funs"
+                              "t/qualification/ascent-index-reference-provider"
+                              "t/qualification/ascent-positive-plan-reference-analysis"
+                              "t/qualification/ascent-index-reference-evaluate")
+                            []))))
     (call-with-output-file [path: module-file truncate: #t]
       (lambda (out) (write modules out) (newline out)))
     ;; Compile both sides of the paired performance fixture. Native make also
@@ -157,11 +165,6 @@
            "t/qualification/scheme-artifact-test.ss"
            "t/qualification/scheme-provenance-graph-test.ss"
            "t/qualification/scheme-higher-order-test.ss"
-           ;; AOT linkage requires the index suite's independent reference
-           ;; modules as explicit build roots, not interpreted dependencies.
-           "t/qualification/ascent-index-reference-funs.ss"
-           "t/qualification/ascent-index-reference-provider.ss"
-           "t/qualification/ascent-index-reference-evaluate.ss"
            "t/qualification/ascent-index-lifecycle-test.ss"
     "t/qualification/scheme-session-deletion-test.ss"
     "t/qualification/ascent-timeout-test.ss"

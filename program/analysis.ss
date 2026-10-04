@@ -10,40 +10,29 @@
 
 ;; Program declarations are POO values. Their lowered rule plan is immutable
 ;; and can be shared; each evaluation still creates its own relation state.
-(def +program-analysis-cache+ (make-hash-table-eq weak-keys: #t))
-(def +program-schema-cache+ (make-hash-table-eq weak-keys: #t))
-(def +program-analysis-lock+ (make-mutex 'ascent-program-analysis))
+(def +program-analysis-cache+
+  (make-hash-table-eq weak-keys: #t lock: (make-mutex 'ascent-program-analysis)))
+(def +program-schema-cache+
+  (make-hash-table-eq weak-keys: #t lock: (make-mutex 'ascent-program-schema)))
 
-;; : (forall (a) (-> (-> a) a))
-;; : (-> Thunk Result)
-(def (with-program-analysis-lock thunk)
-  (dynamic-wind
-   (lambda () (mutex-lock! +program-analysis-lock+))
-   thunk
-   (lambda () (mutex-unlock! +program-analysis-lock+))))
-
+;;; Primitive table access owns its lock. Declaration inspection and caller
+;;; builders stay outside critical sections; failed builds publish nothing.
 ;; : (-> Program Relations Rules (-> Analysis) Analysis)
 (def (gerbil-ascent-program-analysis program relations rules build)
-  (let (cached
-        (with-program-analysis-lock
-         (lambda () (hash-get +program-analysis-cache+ program))))
+  (let (cached (hash-get +program-analysis-cache+ program))
     (if (and cached
              (eq? relations (vector-ref cached 0))
              (eq? rules (vector-ref cached 1)))
       cached
       (let (fresh (build))
-        (with-program-analysis-lock
-         (lambda ()
-           (hash-put! +program-analysis-cache+ program fresh)))
+        (hash-put! +program-analysis-cache+ program fresh)
         fresh))))
 
 ;;; Schema cache keys include declaration identity, so replacing relations
 ;;; cannot reuse old names, arities, or provider dispatch slots.
 ;; : (-> Program Relations ProgramSchema)
 (def (gerbil-ascent-program-schema program relations)
-  (let (cached
-        (with-program-analysis-lock
-         (lambda () (hash-get +program-schema-cache+ program))))
+  (let (cached (hash-get +program-schema-cache+ program))
     (if (and cached (eq? relations (vector-ref cached 0)))
       cached
       (let* ((count (length relations))
@@ -99,6 +88,5 @@
         (let (fresh (vector relations names arity field-checkers positions
                             index-providers storage-extensions lattice-joins
                             kinds storage-providers))
-          (with-program-analysis-lock
-           (lambda () (hash-put! +program-schema-cache+ program fresh)))
+          (hash-put! +program-schema-cache+ program fresh)
           fresh)))))

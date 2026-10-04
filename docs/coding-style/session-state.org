@@ -287,3 +287,69 @@ including 64 graphs and 192 successive withdrawals. Both retain native,
 module/harness/final success markers and exit 0. The 57-module/488-Case receipt
 above precedes this integration; it is not relabeled as an integrated full run.
 
+
+* Study: native synchronization at the cache owner
+
+Gerbil =2591dcd= supplies the synchronization boundary in the table itself:
+
+| Upstream source | Concrete boundary |
+|-----------------+-------------------|
+| =runtime/hash.ss:261-271= | Locked primitive methods acquire and release their Locker with =dynamic-wind= |
+| =runtime/hash.ss:276-285= | Reference and insertion use the respective read/write operations |
+| =runtime/hash.ss:385-407= | =make-hash-table= wraps the table when =lock:= is supplied |
+| =runtime/hash.ss:434-458= | Weak Gambit tables retain the same locking wrapper |
+| =runtime/hash.ss:491-492= | =make-hash-table-eq= forwards constructor options and fixes identity equality |
+| =compiler/base.ss:392-402= | Snapshot the current executor under its mutex, close it outside that mutex, and clean up publication afterward |
+
+The transferable rule is to put synchronization at the owner of the shared
+state, with explicit boundaries around work that may reenter the system.
+ASCENT's =program/scheme-checked.ss= already uses native locking for its weak
+stable-procedure table. The analysis, schema and positive-plan caches now follow
+the same native table convention.
+
+Previously, =program/analysis= and =core/positive-plan= each implemented a
+manual =dynamic-wind= wrapper around primitive table lookups and insertions.
+Analysis and schema shared one mutex even though no operation atomically
+accessed both tables. Each of the three caches now constructs its own weak,
+identity-keyed table with a named native mutex. The two wrappers and their
+separate global lock bindings are removed.
+
+Lookup, version validation, cold construction and insertion retain their
+original order. Declaration inspection, schema callbacks and rule compilation
+stay outside primitive-operation locks. In particular, a caller-supplied
+analysis builder may inspect or build another analysis. A failed build cannot
+replace the prior cached entry. Native hash operations retain dynamic cleanup;
+there is no new manually managed lock lifetime.
+
+The change does not turn lookup/build/insert into an atomic transaction or a
+single-flight cache. Concurrent misses may still build equivalent immutable
+values; each caller receives its own completed result. Program relation/rule
+identity guards still reject a mismatched cached declaration version. Positive
+plans still box an unsupported false result in a present entry, and evaluation
+frames remain engine-local. Weak keys and all cached layouts are unchanged.
+
+Two native boundary Cases check failure and reentrancy explicitly. One injects
+a cold-build failure, invokes the same cache from inside a successful builder,
+then checks warm reuse and preservation of the old version after a failed new
+version. The other rejects a duplicate-relation schema, checks that its warm
+entry survived, and verifies rebuilding on a distinct relation-list identity.
+Existing concurrent engine, retained update, callback-trace and result
+publication Cases qualify the surrounding execution path. No runtime speedup
+is claimed from removing cross-cache lock coupling.
+
+** Local verification
+
+Against the =49b14e1= production baseline, =ascent-positive-plan= passes 17
+native Cases, =ascent-mutual-program= four, and =ascent-result-publication= five:
+26 Cases in total. Every module and the supervising command loop exit 0 with
+module/harness/final success markers, unchanged timeouts and original budgets.
+The selected-library policy completes with =findings=3 errors=0=, retaining
+exactly the three existing warnings and adding none in the changed cache owners.
+Source hashes for both production files and the changed test remain unchanged
+through verification. Logs and hashes stay in ignored
+=.cache/ascent/native-cache-locks/=.
+
+The workspace advances to concurrent README-only commit =ede87c4= during this
+run. That change is retained; it modifies no qualified Scheme source or test.
+These focused local Cases do not establish full-suite, AOT application,
+performance or exact-head remote CI closure.

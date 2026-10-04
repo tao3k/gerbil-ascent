@@ -8,15 +8,11 @@
 (export gerbil-ascent-prepare-rule-activations gerbil-ascent-positive-plan gerbil-ascent-compile-positive-plan gerbil-ascent-run-positive-plan!
         gerbil-ascent-index-key gerbil-ascent-index-key/terms gerbil-ascent-emit-heads!)
 
-(def +positive-plans+ (make-hash-table-eq weak-keys: #t))
-(def +positive-plans-lock+ (make-mutex 'ascent-positive-plans))
+(def +positive-plans+
+  (make-hash-table-eq weak-keys: #t lock: (make-mutex 'ascent-positive-plans)))
 
-;; : (forall (a) (-> (-> a) a))
-;; : (-> Thunk Result)
-(def (with-plan-lock thunk)
-  (dynamic-wind (lambda () (mutex-lock! +positive-plans-lock+)) thunk
-                (lambda () (mutex-unlock! +positive-plans-lock+))))
-
+;;; Compilation runs outside the table's primitive-operation lock. Concurrent
+;;; misses may compile equivalent immutable plans, each with engine-local frames.
 ;;; Cache by immutable admitted active-rule identity, including unsupported
 ;;; rules. Analysis layout and evaluation-local state remain separate.
 ;; gerbil-ascent-positive-plan
@@ -32,12 +28,12 @@
 ;;       ```
 ;;     %
 (def (gerbil-ascent-positive-plan rule)
-  (let (entry (with-plan-lock (lambda () (hash-get +positive-plans+ rule))))
+  (let (entry (hash-get +positive-plans+ rule))
     (if entry
       (cdr entry)
       (let (plan (gerbil-ascent-compile-positive-plan
                   (vector-ref rule 0) (vector-ref rule 1)))
-        (with-plan-lock (lambda () (hash-put! +positive-plans+ rule (cons #t plan))))
+        (hash-put! +positive-plans+ rule (cons #t plan))
         plan))))
 
 ;;; Unsupported terms or clauses keep the complete rule on the general path.

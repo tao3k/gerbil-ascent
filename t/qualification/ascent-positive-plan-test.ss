@@ -1,7 +1,7 @@
 ;;; -*- Gerbil -*-
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
-(import (only-in :std/test test-suite check-equal?)
+(import (only-in :std/test test-suite check-equal? check-exception)
         (only-in :core/observability/testing-case poo-flow-test-case)
         (only-in :clan/poo/object .o .ref)
         (only-in :gerbil-ascent/program/interface
@@ -10,6 +10,8 @@
                  gerbil-ascent-rule gerbil-ascent-guard)
         (only-in :gerbil-ascent/program/evaluate
                  gerbil-ascent-evaluate-program gerbil-ascent-make-engine)
+        (only-in :gerbil-ascent/program/analysis
+                 gerbil-ascent-program-analysis gerbil-ascent-program-schema)
         (only-in :gerbil-ascent/core/positive-plan gerbil-ascent-compile-positive-plan
                  gerbil-ascent-run-positive-plan!)
         (only-in :gerbil-ascent/program/reuse gerbil-ascent-activate-rules)
@@ -40,6 +42,43 @@
      32 64 96)))
 (def ascent-positive-plan-test
   (test-suite "Complete positive rule slot plans"
+    (poo-flow-test-case "analysis builds stay reentrant and failure leaves cached versions usable"
+      (let* ((program (path-program '((0 1))))
+             (relations (.ref program 'relations))
+             (rules (.ref program 'rules)))
+        (check-exception
+         (gerbil-ascent-program-analysis program relations rules
+           (lambda () (error "failed cold analysis"))) true)
+        (let (outer
+              (gerbil-ascent-program-analysis program relations rules
+                (lambda ()
+                  (let (inner
+                        (gerbil-ascent-program-analysis program relations rules
+                          (lambda () (vector relations rules 'inner))))
+                    (check-equal? (vector-ref inner 2) 'inner))
+                  (vector relations rules 'outer))))
+          (check-equal?
+           (eq? outer (gerbil-ascent-program-analysis program relations rules
+                        (lambda () (error "warm analysis must not rebuild")))) #t)
+          (check-exception
+           (gerbil-ascent-program-analysis program relations (map identity rules)
+             (lambda () (error "failed new declaration version"))) true)
+          (check-equal?
+           (eq? outer (gerbil-ascent-program-analysis program relations rules
+                        (lambda () (error "failed build must not replace old entry")))) #t))))
+    (poo-flow-test-case "schema failures preserve warm entries and new declaration identities rebuild"
+      (let* ((program (path-program '((0 1))))
+             (relations (.ref program 'relations))
+             (schema (gerbil-ascent-program-schema program relations)))
+        (check-exception
+         (gerbil-ascent-program-schema program (cons (car relations) relations)) true)
+        (check-equal? (eq? schema (gerbil-ascent-program-schema program relations)) #t)
+        (let* ((replacement (map identity relations))
+               (fresh (gerbil-ascent-program-schema program replacement)))
+          (check-equal? (eq? fresh schema) #f)
+          (check-equal? (vector-ref fresh 1) (vector-ref schema 1))
+          (check-equal? (eq? replacement (vector-ref fresh 0)) #t)
+          (check-equal? (eq? fresh (gerbil-ascent-program-schema program replacement)) #t))))
     (poo-flow-test-case "analysis shares immutable activations while every engine owns its frames"
       (let* ((program (path-program '((0 1) (1 2))))
              (first (gerbil-ascent-make-engine program #t))

@@ -35,9 +35,9 @@
   (let (result (relational-solution-result solution))
     (relational-result-rows result (relational-export fragment label))))
 
-;;; Named one-shot programs may contain private derived relations, so they
-;;; cannot use the retained session API, which requires every relation to be
-;;; source-capable. Query the completed admitted result directly.
+;;; Query the completed admitted result directly by its returned handle.
+;;; Named retained programs may also contain derived query relations; their
+;;; checked mutation authority is restricted to declared source handles.
 (def (relational-query-name solution name)
   (unless (and (relational-solution? solution) (symbol? name))
     (error "relational named query requires a solved value" name))

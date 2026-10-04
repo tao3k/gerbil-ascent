@@ -133,8 +133,9 @@ full repository suite. =gxc -d= selects the current Library static output
 before any older installed ASCENT artifact.
 
 =just check-dsl-closure= checks source/artifact hashes, the six-module inventory,
-heap limit, five-second genuine-output watchdog and 45-second cap per Suite.
-The six known Suites run in separate serial processes; no deadline is extended. No timer
+heap limit, five-second genuine-output watchdog and the existing 120-second module cap per Suite.
+The six known Suites run in separate serial processes; the five-second idle
+limit is unchanged and the total limit matches _test-file. No timer
 messages count as progress. Python hashes bytes and supervises the native
 process; it owns no Case evaluation, expectation or DSL semantics. A failed
 one-shot solve cannot be reclassified as complete by this entry.

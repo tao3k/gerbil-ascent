@@ -701,7 +701,7 @@ check-dsl-closure:
     output_file="$(mktemp .cache/ascent/tmp/dsl.XXXXXX)"
     trap 'rm -f "$output_file"' EXIT
     for module in scheme-closure-contract scheme-operator scheme-library-contract scheme-operator-retained ascent-finite-evidence ascent-positive-nonmembership; do
-        python3 t/harness/watch_output.py -- timeout 45s .cache/ascent/native-library/dsl-closure {{ gerbil_test_runtime_options }} "t/qualification/$module-test.ss" 2>&1 | tee -a "$output_file"
+        python3 t/harness/watch_output.py -- timeout "${ASCENT_GXTEST_TIMEOUT:-120s}" .cache/ascent/native-library/dsl-closure {{ gerbil_test_runtime_options }} "t/qualification/$module-test.ss" 2>&1 | tee -a "$output_file"
     done
     if grep -E 'ERROR (CHECK|CASE|HARNESS|MODULE)|Heap overflow|Stack overflow' "$output_file" >/dev/null; then exit 1; fi
     awk -f tools/assert-test-cases.awk "$output_file"

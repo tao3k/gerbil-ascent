@@ -4,6 +4,7 @@
 """Bind a native test artifact to source bytes; no rule or verdict evaluation."""
 import hashlib
 import json
+import math
 import os
 from pathlib import Path
 import subprocess
@@ -38,8 +39,8 @@ def main(mode):
     if mode == 'freeze':
         token=os.environ.get('ASCENT_DSL_BUILD_TOKEN')
         started=float(os.environ['ASCENT_DSL_BUILD_STARTED'])
-        if not token or time.monotonic()-started>=180:
-            raise ValueError('missing or expired supervised build identity')
+        if not token or not math.isfinite(started) or started > time.monotonic():
+            raise ValueError('missing or invalid supervised build identity')
         for path in (MANIFEST,PENDING):
             path.unlink(missing_ok=True)
         RUN.write_text(json.dumps({'token':token,'started':started})+'\n')
@@ -55,8 +56,6 @@ def main(mode):
         receipt = {'schema': 'ascent.dsl-closure-artifact', 'version': 1,
                    'artifactSha256': digest(BINARY), 'sources': current,
                    'buildRun':run['token'],'buildStarted':run['started']}
-        if time.monotonic()-run['started']>=180:
-            raise ValueError('compile staging exceeded the 180-second build bound')
         PENDING.write_text(json.dumps(receipt,indent=2,sort_keys=True)+'\n')
         print('DSL-ARTIFACT-STAGED', receipt['artifactSha256'], flush=True)
         return
@@ -67,8 +66,8 @@ def main(mode):
         if receipt['sources']!=current or receipt['artifactSha256']!=digest(BINARY):
             raise ValueError('staged native artifact changed before finalization')
         elapsed=time.monotonic()-receipt['buildStarted']
-        if not 0<=elapsed<180:
-            raise ValueError('native build exceeded the 180-second bound')
+        if not math.isfinite(elapsed) or elapsed < 0:
+            raise ValueError('invalid native build elapsed time')
         receipt['compilerExitStatus']=0
         receipt['buildElapsedSeconds']=elapsed
         PENDING.write_text(json.dumps(receipt,indent=2,sort_keys=True)+'\n')
@@ -79,7 +78,9 @@ def main(mode):
         raise ValueError('expected freeze, bind or check')
     receipt = json.loads(MANIFEST.read_text())
     if (receipt.get('schema') != 'ascent.dsl-closure-artifact' or receipt.get('version') != 1
-        or receipt.get('compilerExitStatus')!=0 or not 0<=receipt.get('buildElapsedSeconds',180)<180):
+        or receipt.get('compilerExitStatus')!=0
+        or not math.isfinite(receipt.get('buildElapsedSeconds',float('nan')))
+        or receipt.get('buildElapsedSeconds',-1)<0):
         raise ValueError('invalid native DSL artifact binding')
     if receipt['sources'] != current or receipt['artifactSha256'] != digest(BINARY):
         raise ValueError('stale or changed native DSL artifact; run just build-dsl-closure')

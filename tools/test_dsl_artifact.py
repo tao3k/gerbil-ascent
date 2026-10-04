@@ -52,15 +52,16 @@ class ArtifactPublication(unittest.TestCase):
         self.call('finalize', False, {**self.env, 'ASCENT_DSL_BUILD_TOKEN': 'other-owner'})
         self.call('check', False)
 
-    def test_expired_build_cannot_stage(self):
+    def test_completed_build_beyond_180_seconds_is_accepted(self):
         self.stage()
         import json
         path = self.cache / 'dsl-closure-run.json'
         run = json.loads(path.read_text())
         run['started'] = time.monotonic() - 181
         path.write_text(json.dumps(run))
-        self.call('bind', False)
-        self.call('check', False)
+        self.call('bind')
+        self.call('finalize')
+        self.call('check')
 
     def test_changed_source_cannot_publish(self):
         self.stage()

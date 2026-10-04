@@ -706,7 +706,7 @@ build-dsl-closure:
         export PATH="$GERBIL_PATH/bin:$PATH"
         compiler=(gxi)
     fi
-    timeout --signal=KILL 180s bash -e -c '"$@" {{ gerbil_test_runtime_options }} t/harness/run.ss build-dsl-closure; python3 tools/dsl-closure-artifact.py finalize' build-dsl-closure "${compiler[@]}"
+    python3 t/harness/watch_output.py --cpu-progress --startup-seconds 60 --idle-seconds 60 -- bash -e -c '"$@" {{ gerbil_test_runtime_options }} t/harness/run.ss build-dsl-closure; python3 tools/dsl-closure-artifact.py finalize' build-dsl-closure "${compiler[@]}"
 
 # Counterbalanced measurements with independent Scheme truth; no speed threshold.
 check-retained-benefit:

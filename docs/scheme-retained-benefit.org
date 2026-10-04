@@ -9,7 +9,14 @@ dependency prefix, DSL and evaluator for both paths. Python verifies source
 and binary hashes and supervises genuine output; it decides no semantic truth.
 The unchanged bounds are 1G heap, 5 seconds without actual output and 120
 seconds for the complete measurement process. Compilation and parent artifact
-finalization retain their 180-second bound.
+finalization no longer have a 180-second total deadline, following the user's
+explicit build policy correction. The build supervisor observes actual command
+output and CPU-time advances in its own process group; 60 seconds with neither
+signal fails the build. CPU activity is evidence of execution, not proof of
+semantic progress or successful compilation. Compilation must still exit 0,
+and source/owner/binary binding must pass before artifact publication. Runtime
+Cases retain the five-second output and 120-second module bounds. Historical
+deadline failures below remain failures under their original policy.
 
 * Workloads and independent truth
 

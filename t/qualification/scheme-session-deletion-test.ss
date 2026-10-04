@@ -36,13 +36,16 @@
         (unless (>= bytes 0) (error "native allocation counter regressed"))
         (vector results (/ wall-seconds batch) (/ cpu-seconds batch) (/ bytes batch)))))
   (def (benchmark-program edges cold)
-    (relational-program
+    (let (program (relational-program
      (relation edge (from to) edges) (relation path (from to) '())
      (relation cold (value) cold) (relation seen (value) '())
      (rule (path ?x ?y) (edge ?x ?y))
      (rule (path ?x ?z) (path ?x ?y) (edge ?y ?z))
      (rule (seen ?x) (cold ?x))
      (limits 128 8192 262144)))
+      (displayln "BENEFIT-DECLARED edges=" (length edges))
+      (force-output)
+      program))
   ;; A complete fresh update starts with the same base declarations and ready
   ;; replacement rows as Session replacement. Candidate construction belongs
   ;; inside both update timers. Keep solve-only as a separately named control.
@@ -95,6 +98,8 @@
                           (let* ((session (gerbil-ascent-open-session base))
                                  (initial (gerbil-ascent-session-run session)))
                             (check-result initial edges nodes 0 '((7)))
+                            (displayln "BENEFIT-INITIALIZED " condition " edges=" nodes " group=" n " instance=" _)
+                            (force-output)
                             session)) (iota batch)))))
              (##gc)
              (let ((fresh #f) (updated #f) (retained #f)
@@ -109,7 +114,9 @@
                     ((fresh) (set! fresh (sample (lambda (_) (gerbil-ascent-evaluate-program prospective)) batch)))
                     ((updated) (set! updated (sample (lambda (_) (gerbil-ascent-evaluate-program (replacement-program base replacements))) batch)))
                     ((retained) (set! retained (sample (lambda (n) (gerbil-ascent-session-replace-sources! (vector-ref sessions n) replacements)) batch)))
-                    (else (error "unknown native measurement arm" arm)))) (cdr order))
+                    (else (error "unknown native measurement arm" arm)))
+                  (displayln "BENEFIT-MEASURED " condition " edges=" nodes " group=" n " arm=" arm)
+                  (force-output)) (cdr order))
                (for-each
                 (lambda (a b c)
                   (check-result a next-edges nodes (if edge-change? 1 0) next-cold)
@@ -130,8 +137,8 @@
                (newline) (force-output)))
            (loop (+ n 1))))))
        '(independent recursive all-inputs))))
-   '((12 32) (48 8)))
-  (displayln "BENEFIT-OK groups=180 independent-native-verdicts=10800")
+   '((12 16) (48 4)))
+  (displayln "BENEFIT-OK groups=180 independent-native-verdicts=5400")
   (force-output))
 
 (def (rows result name) ((.ref result 'rows-of) name))

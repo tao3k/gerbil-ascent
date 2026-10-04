@@ -49,6 +49,7 @@ not results the authors established for Gerbil.
 | Artifact | Checked statement | Uncovered implementation obligation |
 |----------+-------------------+-------------------------------------|
 | [[file:../packages/proofs/lean/FiniteOperators.lean][FiniteOperators]] | Positive primitives, pointwise nested arrows, application and relation least-fixed-point laws | Concrete descriptor validation, lexical environments, compiler branch correctness and native plan execution |
+| [[file:../packages/proofs/lean/LexicalLowering.lean][LexicalLowering]] | Typed positive lexical grammar lowers to a distinct relational IR with semantic preservation; logical monotonicity, finite join tuple encoding and each finite unrolling iterate | Descriptor-to-typed-grammar translation, relation feedback, concrete height/saturation, list/scalar encoding and native rule emission; [[file:scheme-compiler-proof-bridge.org][branch correspondence]] keeps these open |
 | [[file:../packages/proofs/lean/FiniteHeight.lean][FiniteHeight]] | Boolean/table ranks, bounded stationarity; new =bounded_bottom_least_fixed= combines full-height stationarity with leastness | Concrete nested type cardinality, rank strictness, saturating budget admission and complete finite-domain enumeration |
 | [[file:../packages/proofs/lean/PositiveNonmembership.lean][PositiveNonmembership]] | Closed-model absence and restricted deletion; new input-inclusion and deletion-preserves-absence lemmas | Executable certificate coverage, exact source/program binding, founded support reconstruction |
 | [[file:../packages/proofs/lean/SessionPublication.lean][SessionPublication]] | For arbitrary natural-number generations: stale/incomplete work preserves the snapshot; qualified completion publishes a consistent source/result pair | Solver qualification is an explicit premise; the imperative Gerbil implementation still needs a refinement relation |
@@ -103,5 +104,6 @@ success, bounded TLC success, native semantic qualification, remote CI and real
 model benefit are separate entries. No new real-model call belongs to this audit.
 
 The [[file:scheme-design-framework.org][acceptance matrix]] remains the closure authority. This plan refines R1–R7;
-it does not mark them all closed. The [[file:evidence/scheme-proof-audit-20261004/formal.log][formal run]] records this patch's proof and
-model-checker results; its receipt identifies the checked files and toolchain.
+it does not mark them all closed. The [[file:evidence/scheme-proof-audit-20261004/receipt.json][formal receipt]] records this patch's proof and
+model-checker results and identifies the checked files and toolchain. Execution
+logs are excluded under the [[file:evidence/README.org][evidence publication policy]].

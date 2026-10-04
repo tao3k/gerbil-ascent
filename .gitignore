@@ -2,7 +2,7 @@
 target/
 manifest.ss
 
-# Generated execution logs stay local.
+# Execution logs and their sidecars must never be committed.
 *.log
 *.log.license
 .cache/

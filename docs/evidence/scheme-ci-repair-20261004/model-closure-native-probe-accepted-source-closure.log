@@ -1,7 +1,0 @@
-:gerbil/core
-*** ERROR IN gx#core-import-module__% -- 
-*** ERROR IN ?
---- Syntax Error: error reading module
---- Context: 
-... form:   "/Users/guangtao/ghq/github.com/tao3k/meta-relational-reasoning/.data/worktrees/ascent-dsl-closure-20261004/.data/dependencies/prefix/lib/clan/poo/object.ssi"
-... detail: "\n*** ERROR IN \".data/dependencies/prefix/lib/clan/poo/object.ssi\"@1.10-1.22\n--- Syntax Error: cannot find library module\n... form:   "

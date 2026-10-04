@@ -55,6 +55,13 @@ model call or new accuracy/benefit score belongs to this migration.
 | R6 | Model validation measures comprehension of actual Scheme and reasoning, with actual native feedback after a response | Freeze tasks/source/invocation, score raw acceptance and semantic correctness separately, retain timeouts and status mismatches; compare reasoning and feedback conditions | Open; no preset semantic prompts, tutorials, answer prefills or repair loops |
 | R7 | MRR Rust integration follows native and model acceptance | Preserve exact statuses, ABI limits and semantic authority through a byte-level binding; independent conformance on the accepted subset | Deferred until the preceding acceptance gates; no Rust runtime changes in this slice |
 
+R1 now includes the [[file:scheme-compiler-proof-bridge.org][typed lexical lowering proof slice]]: universal normalization
+preservation for the stated positive grammar, logical monotonicity, finite tuple
+join encoding and every finite unrolling iterate. Descriptor admission, relation
+feedback and concrete height/saturation remain open implementation bridges.
+Native qualification binds its exact artifact; no abstract theorem substitutes
+for actual source-bound execution or closes R5/R6.
+
 * Model interface policy
 
 Why might an invocation contain text? Actual source, the user's task and a

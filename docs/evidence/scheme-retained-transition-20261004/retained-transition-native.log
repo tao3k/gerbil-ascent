@@ -1,6 +1,0 @@
-DSL-ARTIFACT-VERIFIED a121f760a01b3b6f43487f1d7c4c95b60161d37bf37c4a0281b0640972651c15
-[progress-watchdog] FAIL: no command output for 5s
-error: recipe `check-retained-benefit` failed with exit code 124
-real 6.53
-user 0.60
-sys 0.15

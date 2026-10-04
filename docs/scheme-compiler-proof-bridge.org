@@ -1,0 +1,103 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+#+TITLE: Typed lexical lowering proof and native compiler correspondence
+#+DATE: 2026-10-04
+#+STATUS: lexical positive kernel proved; concrete compiler refinement open
+
+* Stated claim
+
+[[file:../packages/proofs/lean/LexicalLowering.lean][LexicalLowering]] supplies a typed expression calculus, lexical environments,
+a distinct relational IR, its interpreter and a logical relation between
+compiled values and source meanings. It proves lowering preservation for every
+well-typed expression in its source/parameter/function/apply/union/join/project/
+select/flatmap grammar. The target relational IR has no function or application
+node. Mathematical arrow values stand for compiler closures and capture their
+defining environment. They do not authorize runtime Scheme callbacks.
+
+The theorem is universally quantified over related environments and all
+realizing arguments, including function arguments and returned functions. It
+does not compare closure identities or choose a finite list of observed inputs.
+The row case establishes extensional equality of relation membership. This
+is a formal normalization theorem for the specified kernel, not yet a theorem
+that =program/higher-order.ss= implements it.
+
+The finite native discriminator enumerates all 16 pairs of subsets of ={0,1}=.
+One factory returns a closure over a captured input; that closure is reused for
+each argument. Its body combines union, keyed join, equality selection,
+projection and finite mapping. Expected rows are computed by direct membership:
+retain the captured set, adding 1 precisely when both inputs contain 0. The
+reference does not call the typed compiler or positive operator interpreter.
+Existing function-valued fix, escaped-binder, finite-domain and rollback Cases
+remain in the same native Suite.
+
+* Phase and branch correspondence
+
+| Scheme branch / phase | Mathematical artifact | Discharged statement | Concrete remaining obligation |
+|-----------------------+-----------------------+----------------------+-------------------------------|
+| =check-type!/check-term!= | Intrinsically typed =Expression= and scoped =Variable= | Ill-typed or escaped variables cannot be formed in the formal grammar | Prove admitted mutable descriptors translate to this grammar; revalidation, cycles, signature equality and malformed payload errors remain native code |
+| =source= | =Expression.source= → =RelationalIR.source= | Fixed source membership is preserved | Freeze/copy Gerbil row spines and encode scalar equality/domain membership; source-name collision checks belong to operator admission |
+| =parameter= / =assq= | =lookup= and =lookup_realizes= | A scoped parameter resolves to related values | Identity-based Scheme binders must translate to the same formal lexical index |
+| =function= / =typed-closure= | =lower.function= captures the supplied environment | Returned closures preserve the defining lexical scope | Concrete closure fields and environment spines must realize that capture; alpha-renaming/identity translation remains separate |
+| =apply-closure= / =apply= | Extend captured environment with argument; =lowering_preserves_meaning= | Beta application preserves meaning at relation and nested arrow types | Show actual =cons/assq= environment operations implement formal lookup and extension |
+| =union= | Separate source and IR constructors/interpreters | Complete union membership preserved | Native atom/rule emission and duplicate handling must realize IR semantics |
+| =join= | =join_tuple_encoding= | Pair-valued join equals concatenated finite tuple membership at both key columns | Prove Gerbil list layout/scalar encoding implements the finite tuple representation; planner indexes remain an execution proof obligation |
+| =project= | Column function in both calculi | Existential projected membership preserved | Admitted column list must translate to that function, including repeated/empty projections |
+| =select-eq= | Fixed selection predicate | Conjunctive filtered membership preserved | Scalar equality and column extraction must agree with the admitted domain encoding |
+| =flatmap= | Fixed finite mapping membership | Zero/one/many mapped membership preserved | Split mapping rows at input width and preserve set semantics/declared output domain |
+| Function-valued =fix= unroll | =bottom_realizes= and =unrolling_preserves_meaning= | Every finite iteration from pointwise bottom preserves meaning | Establish actual =bounded-height= sufficiency, saturation correctness and remaining-budget admission; relate to =FiniteHeight.bounded_bottom_least_fixed= |
+| Relation-valued =fix= feedback | Existing =FiniteOperators= / =FiniteHeight= laws | Abstract least closure and finite-rank stationarity | Not a constructor of the new lexical calculus yet; scoped recursive IR and native delta-plan semantics still need a preservation proof |
+| Native =relational-op-compile= | Relational IR interpreter | Formal denotation specified | Named relation allocation, SCC/delta variants, tuple storage and emitted rules are not mechanically refined by this patch |
+
+* Monotonicity and finite domain boundary
+
+=denotation_monotone= proves preservation of a type-indexed logical relation.
+Relations use inclusion; arrows relate outputs for every pair of related
+arguments. =closed_function_monotone= specializes it to ordinary relation-to-
+relation functions, without assuming the conclusion as a compiler premise.
+Higher-order arguments must themselves satisfy the logical relation. An opaque
+nonmonotone host procedure does not become admissible by having an arrow label.
+
+This calculus excludes fixed-point syntax from its expression grammar. Its
+separate unrolling theorem preserves each finite iterate but does not establish
+that an arbitrary iteration count is sufficient. Existing rank/leastness laws
+must still be connected to the concrete finite signatures and feedback compiler.
+The mathematical source/table predicates and column maps are frozen denotations,
+not executable Scheme effect checks or a new public callback API.
+
+The tuple representation =Fin width → Fin atoms= states an admitted finite
+domain explicitly. =concatenate_left/right/parts= establish a bijective layout
+between a pair of such tuples and their concatenation, including empty tuple
+widths. It supports =join_tuple_encoding= over every encoded row. Encoding
+actual immutable Scheme scalars into that finite universe is a remaining bridge;
+the Lean lemma does not establish their runtime hash/equality implementation.
+
+* Acceptance and next refinement
+
+The [[file:evidence/scheme-lexical-lowering-20261004/receipt.json][receipt]] binds the checked proof files, source patch, native artifact and
+structured formal/build/qualification outcomes. Execution logs are excluded
+under the [[file:evidence/README.org][publication policy]]. All current Lean files run through the
+existing proof gate and GitHub =formal= job. Native admission remains under the
+1G heap, five-second output progress and 120-second module bounds. Compilation
+uses the authorized activity gate without a total 180-second deadline.
+
+On this frozen native source, all 13 Suites / 139 Cases passed with exit 0,
+including all 16 new finite input pairs; the activity-supervised build completed
+in 128.052 seconds. Five Lean files and both normal TLA models passed, and both
+intentional publication faults produced the expected counterexamples. These
+results are recorded directly in the structured receipt, without process logs.
+
+The preceding GitHub head =aa07037= has a separate failed benefit gate: after
+the solve-only arm, group 0 raised =Stack overflow= in =##structure-instance-of?=
+before fresh-update completion (exit 70). Both Rust oracle jobs and formal
+passed. This is not a successful benefit measurement or an exact-head CI pass
+for this new slice. Candidate construction/update must be diagnosed before the
+three-arm benefit gate can close; its failure stays explicit in the receipt.
+
+The next compiler proof slice is scoped relation feedback plus finite signature
+enumeration/cardinality and saturating height. After it, descriptor admission
+and lexical-identity translation must establish that an accepted Scheme graph
+is a well-typed expression of the proved calculus. Only then can the abstract
+normalization theorem qualify the actual compiler's accepted grammar.
+Native differential qualification, implementation refinement, performance and
+real-model comprehension remain separate gates in the [[file:scheme-research-proof-audit.org][research plan]]. No provider
+call or new model accuracy/benefit claim belongs to this compiler-proof slice.

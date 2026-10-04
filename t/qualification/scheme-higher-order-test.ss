@@ -7,6 +7,7 @@
                  relational-type-height-expression relational-typed-source
                  relational-typed-function relational-typed-apply relational-typed-union
                  relational-typed-join relational-typed-project relational-typed-flatmap
+                 relational-typed-select-eq
                  relational-typed-fix relational-typed-compile)
         (only-in :gerbil-ascent/program/scheme-language
                  relational-program relational-admit relational-solve relational-query-name
@@ -49,6 +50,38 @@
 
 (def scheme-higher-order-test
   (test-suite "Finite positive higher-order descriptors"
+    (test-case "lexical lowering agrees with independent finite algebra on every input pair"
+      (let* ((type (relational-relation-type 1 '(0 1)))
+             (subsets '(() ((0)) ((1)) ((0) (1))))
+             (factory
+              (relational-typed-function
+               type (lambda (captured)
+                      (relational-typed-function
+                       type (lambda (argument)
+                              (relational-typed-union
+                               captured
+                               (relational-typed-flatmap
+                                (relational-typed-project
+                                 (relational-typed-select-eq
+                                  (relational-typed-join captured argument 0 0) 0 0)
+                                 '(1))
+                                type '(((0) (1)) ((1) (0)))))))))))
+        (for-each
+         (lambda (left)
+           ;; Reuse one returned closure across every argument, preserving the
+           ;; defining capture. Expected rows use a direct membership model,
+           ;; not the typed/operator interpreter or the compiler under test.
+           (let (closure (relational-typed-apply
+                          factory (relational-typed-source 'left type left)))
+             (for-each
+              (lambda (right)
+                (let* ((added? (and (member '(0) left) (member '(0) right)))
+                       (expected (if (and added? (not (member '(1) left)))
+                                   (cons '(1) left) left)))
+                  (check-rows
+                   (solve (relational-typed-apply
+                           closure (relational-typed-source 'right type right))) expected)))
+              subsets))) subsets)))
     (test-case "normalization publishes the latest domain order without leaking between compiles"
       (let* ((input-type (relational-relation-type 1 '(a b)))
              (source (relational-typed-source 'source input-type '((a)))))

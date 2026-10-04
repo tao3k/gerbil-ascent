@@ -77,6 +77,14 @@ have checked Lean lemmas. The Scheme lexical checker and lowering are still
 implementation code, qualified by native discriminators rather than claimed
 as a mechanically verified extraction of the Lean model.
 
+The [[file:scheme-compiler-proof-bridge.org][lexical compiler proof slice]] now adds a typed source calculus, separate
+relational IR and a universal lowering-preservation theorem with related
+environments, higher-order arguments and returned closures. It also proves
+positive logical monotonicity, finite tuple join encoding and preservation of
+every finite function-unrolling iterate. The concrete descriptor checker,
+relation-feedback compilation and finite-height calculation remain bridges;
+the proved kernel must not be described as the whole Scheme compiler.
+
 Resource exhaustion is failure, not a partial least fixed point. A finite
 semantic universe does not guarantee success under a smaller operational
 budget. Neither an absent output after failure nor a truncated derivation is

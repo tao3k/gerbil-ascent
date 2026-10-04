@@ -95,6 +95,12 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - name: Reject committed execution logs
+        run: |
+          if [ -n "$(git ls-files '*.log' '*.log.license')" ]; then
+            echo 'Execution logs and log license sidecars must not be committed.' >&2
+            exit 1
+          fi
       - name: Install fixed Lean toolchain
         run: |
           sudo apt-get update

@@ -12,5 +12,6 @@
   "status": "prepared; new fee and source-exfiltration authorization pending",
   "privateTruthSentToModel": false,
   "expectedHashesOnlyInPublicPlan": true,
-  "reconstruction": "ASCENT sources at sourceHead; compiler-lowered core/types files here; task files here; ordering and SHA256 bytes in plan.json; input.ss includes file comments followed by unchanged files then exact task. Private expected fixture is not model context."
+  "reconstruction": "ASCENT sources at sourceHead; compiler-lowered core/types files here; task files here; ordering and SHA256 bytes in plan.json; input.ss includes file comments followed by unchanged files then exact task. Private expected fixture is not model context.",
+  "taskArchiveNaming": "Public task data uses .task.sexp with unchanged .task.ss bytes; it is not an AOT compilation unit."
 }

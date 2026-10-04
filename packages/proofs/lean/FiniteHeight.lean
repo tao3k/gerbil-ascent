@@ -764,6 +764,70 @@ theorem identity_materialization_admitted {α : Type} [DecidableEq α]
   intro row member
   exact valid row ((identity_materialization_membership rows row).mp member)
 
+/-- Projection may reorder, repeat or omit columns. Checked indices carry
+    the native constructor's bounds premise; no injectivity is required. -/
+def projectColumns {α : Type} (row : List α) (columns : List (Fin row.length)) : List α :=
+  columns.map row.get
+
+theorem projection_preserves_domain {α : Type} (domain : List α) (arity : Nat)
+    (row : List α) (columns : List (Fin row.length))
+    (valid : admitted domain arity row) :
+    admitted domain columns.length (projectColumns row columns) := by
+  constructor
+  · simp [projectColumns]
+  · intro atom member
+    obtain ⟨index, _, equal⟩ := List.mem_map.mp member
+    subst atom
+    exact valid.2 _ (List.get_mem ..)
+
+theorem union_preserves_domain {α : Type} (domain : List α) (arity : Nat)
+    (left right : List (List α))
+    (leftValid : ∀ row ∈ left, admitted domain arity row)
+    (rightValid : ∀ row ∈ right, admitted domain arity row) :
+    ∀ row ∈ left ++ right, admitted domain arity row := by
+  intro row member
+  rcases List.mem_append.mp member with fromLeft | fromRight
+  · exact leftValid row fromLeft
+  · exact rightValid row fromRight
+
+/-- A join's key condition only removes pairs. The concatenated output has
+    the sum arity and retains the common domain required by the constructor. -/
+theorem join_tuple_preserves_domain {α : Type} (domain : List α)
+    (leftArity rightArity : Nat) (left right : List α)
+    (leftValid : admitted domain leftArity left)
+    (rightValid : admitted domain rightArity right) :
+    admitted domain (leftArity + rightArity) (left ++ right) := by
+  constructor
+  · simp [leftValid.1, rightValid.1]
+  · intro atom member
+    rcases List.mem_append.mp member with fromLeft | fromRight
+    · exact leftValid.2 atom fromLeft
+    · exact rightValid.2 atom fromRight
+
+theorem selection_preserves_domain {α : Type} (domain : List α) (arity : Nat)
+    (rows : List (List α)) (predicate : List α → Bool)
+    (valid : ∀ row ∈ rows, admitted domain arity row) :
+    ∀ row ∈ rows.filter predicate, admitted domain arity row := by
+  intro row member
+  exact valid row (List.mem_filter.mp member).1
+
+/-- A frozen finite table relates complete input/output rows. Output validity
+    is required for every table entry, not inferred from a pooled schema. -/
+def finiteMapRows {α : Type} [DecidableEq α]
+    (rows : List (List α)) (table : List (List α × List α)) : List (List α) :=
+  rows.flatMap fun row => (table.filter fun entry => decide (entry.1 = row)).map Prod.snd
+
+theorem finite_mapping_preserves_output_domain {α : Type} [DecidableEq α]
+    (outputDomain : List α) (outputArity : Nat)
+    (rows : List (List α)) (table : List (List α × List α))
+    (valid : ∀ entry ∈ table, admitted outputDomain outputArity entry.2) :
+    ∀ row ∈ finiteMapRows rows table, admitted outputDomain outputArity row := by
+  intro row member
+  obtain ⟨_, _, outputMember⟩ := List.mem_flatMap.mp member
+  obtain ⟨pair, filtered, same⟩ := List.mem_map.mp outputMember
+  subst row
+  exact valid pair (List.mem_filter.mp filtered).1
+
 end RowRepresentation
 
 end Ascent

@@ -422,3 +422,40 @@ receipt records only the independently rerun higher-order module and the
 current formal checks. Full per-term domain preservation and mapping-table
 mutation contracts remain open. TLA lifecycle models are unchanged because
 this refinement adds no state transition.
+
+* Positive primitive row-domain laws
+
+The next R1 slice in =RowRepresentation= establishes five local row-domain
+laws against =program/higher-order.ss='s existing constructor contracts.
+
+| Constructor | Mathematical law | Required premise |
+|-------------+------------------+------------------|
+| =relational-typed-union= | =union_preserves_domain= | Both inputs have the same admitted arity/domain |
+| =relational-typed-join= | =join_tuple_preserves_domain= | Both rows inhabit the common domain; output arity is their sum |
+| =relational-typed-project= | =projection_preserves_domain= | Every selected index is in bounds; duplicates/reordering/zero columns are allowed |
+| =relational-typed-select-eq= | =selection_preserves_domain= | Input rows are admitted; selection only removes rows |
+| =relational-typed-flatmap= | =finite_mapping_preserves_output_domain= | Every frozen table output inhabits the declared output domain and arity |
+
+The join law concerns concatenated rows. Matching keys restricts which pairs
+appear, so it cannot invalidate the common-domain law. The projection model
+uses =Fin row.length= indices corresponding to the constructor's bounds check;
+it does not require a permutation or nonempty result. The selection theorem's
+mathematical predicate is only a subset operation; native admission continues
+to accept equality descriptors, not arbitrary predicate callbacks.
+
+=finiteMapRows= models table matching and suffix output as a list of complete
+input/output pairs. Its output-domain premise must hold for *every* table
+entry. The input and output domains may differ, as the Scheme constructor
+allows. This is a law for a frozen validated table, not a theorem that arbitrary
+retained mutation of a pooled helper source preserves the original term type.
+Set normalization can compose with the existing membership/admission laws.
+
+These local laws make the premises of the remaining descriptor/emitter proof
+explicit. They do not establish the actual Scheme graph-to-rule translation,
+native equality, helper-table mutation contract or recursive fixed-point
+refinement. No runtime source changes or new performance/model claims occur.
+The native operator rerun checks existing complete-row tests, including
+zero-arity/repeated-column projected joins and combined positive operators;
+its current counts and source binding are recorded separately in the
+[[file:evidence/scheme-primitive-domains-20261005/receipt.json][primitive-domain receipt]]. Historical higher-order constructor qualification
+remains in the preceding receipts. Lifecycle TLA models are unchanged.

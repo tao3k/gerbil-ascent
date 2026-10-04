@@ -95,6 +95,14 @@ the historical 109-Case qualification. It establishes this mathematical step;
 the native rule emitter, equality/hash implementation and exact per-term domains
 still require their own correspondence proofs. TLA lifecycle behavior is unchanged.
 
+The [[file:scheme-compiler-proof-bridge.org][positive primitive domain slice]] adds local row-domain laws for union,
+join, arbitrary checked projection, selection and finite mapping. Each law
+states its own arity/domain premise; mapping may change domains and requires
+validity of every frozen output entry. These are prerequisites for the concrete
+descriptor/emitter induction, whose implementation correspondence remains open.
+The [[file:evidence/scheme-primitive-domains-20261005/receipt.json][current receipt]] records formal results and the native operator gate,
+including any rejected supervised runs rather than inheriting a historical pass.
+
 * Model interface policy
 
 Why might an invocation contain text? Actual source, the user's task and a

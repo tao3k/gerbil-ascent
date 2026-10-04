@@ -7,7 +7,7 @@
         (only-in :clan/poo/mop validate)
         (only-in "types.ss" GerbilAscentSessionContract)
         (only-in "admission.ss" gerbil-ascent-check-replacement-rows!)
-        (only-in "update-selection.ss" gerbil-ascent-update-selection)
+        (only-in "update-selection.ss" gerbil-ascent-update-eligible?)
         (only-in "evaluate.ss" gerbil-ascent-make-engine gerbil-ascent-make-updated-engine)
         (only-in :gerbil-ascent/table/storage
                  gerbil-ascent-set-storage-provider))
@@ -170,12 +170,10 @@
       ;; Opaque providers retain the deferred single-source update contract:
       ;; their next zero-duration run must observe unfinished work. Only the
       ;; checked native subset can publish dependency invalidation here.
-      (if (and initialized? clean?
-               (let* ((prospective (snapshot-copy committed))
-                      (index (position-of name)))
-                 (vector-set! prospective index (cons rows []))
-                 (gerbil-ascent-update-selection
-                  committed (snapshot-program prospective) engine-analysis)))
+      ;; Eligibility depends only on the original declarations. The batch
+      ;; transaction validates replacement rows before constructing its one
+      ;; prospective program and computing authoritative dependency closure.
+      (if (and initialized? clean? (gerbil-ascent-update-eligible? program))
           (let ((previous-committed committed)
                 (previous-result committed-result))
             (replace-sources! (list (cons name rows)))

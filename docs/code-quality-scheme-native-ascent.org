@@ -556,6 +556,61 @@ changing either function body. Final =just check-policy= has
 =findings=0=, =errors=0= and exit 0. The three SS gaps above remain open;
 these local receipts do not establish current-head remote CI or AOT closure.
 
+* Feature: declaration-only preflight for single-source replacement
+
+The installed compiler's =optimize-call.ss:45-56= resolves applicability before
+choosing a specialized transform and retains the general transform for unknown
+or nullable types. The transferable lesson is to distinguish qualification from
+the actual transform. It does not implement ASCENT update transactions.
+
+Single-source replacement previously copied the committed source snapshot,
+constructed a prospective POO Program and computed the full affected dependency
+closure just to decide whether to enter the batch transaction. That transaction
+then validated rows, constructed another Program and computed closure again.
+The dependency graph itself is invocation-local; moving it into shared Analysis
+would add cold admission work and another layout migration.
+
+The preflight now calls =gerbil-ascent-update-eligible?= on the original Session
+declarations. It neither reads rows nor invokes field or rule callbacks. The
+formal transaction still checks eligibility on the actual prospective Program
+and computes source differences and dependency closure after row validation.
+This retains mutation-sensitive field checks, unsupported-provider fallback,
+provisional single-source publication, timeout replay and failure recovery.
+No new cache, mutable shared metadata, Analysis field or build interface is added.
+
+The existing =scheme-session-deletion-test= now exercises single-source replacement
+after its mutation-sensitive batch test, checking unchanged callback counts and
+the retained row value. It also checks that declaration preflight invokes no
+field callback and rejects the forged descriptor on an opaque guard. The full
+module passes with its original 64 graph and 192 withdrawal coverage, native
+module/harness/final markers and exit 0.
+
+A frozen native reference from =f01c7b0= relocates Session, evaluator, reuse and
+selection modules into a separate namespace. Both sides call native exports and
+share unchanged declaration planning and storage implementations. Each of three
+shapes uses 1000 alternating old/new pairs, with explicit GC every 20 pairs outside
+timing. Source rows are prepared outside timing; each interval covers the complete
+replacement transaction, including unrestricted run for the provisional single
+operation. Completion and exact input/output rows are checked after timing.
+The fixture has two unary relations, one source row, and one or eight identical
+positive rules. Session creation and its initial completed run are outside timing.
+
+Median old/new jiffies are 112/98 for one-rule single replacement (931 wins),
+126/111 for eight-rule single replacement (919 wins), and 97/97 for the one-rule
+batch control (484 wins). These support about 12% lower median cost on these
+fixtures, not a general solver or workload-wide speedup. All probes and logs
+remain in ignored =.cache/ascent/replacement-preflight/=. The production policy
+audit exits 0 with one existing =higher-order.ss= typed-contract warning and zero
+errors; that warning and previously recorded SS performance gaps remain open.
+
+Final integrated =just test= against the =f01c7b0= baseline plus this slice exits
+0: 57 modules and 485 Cases pass, with 53 parallel modules, four exclusive
+modules and 12 workers. All 57 logs contain native resolution, module, harness
+and final success markers, with zero error markers. Original Case budgets,
+module deadlines, sample counts and scheduling remain unchanged. This is native
+semantic qualification; new-head remote CI and the SS performance gate are
+separate evidence.
+
 * Feature: immutable activation metadata with engine-owned execution frames
 
 The installed compiler's =optimize-base.ss:16-29= separates optimizer info,

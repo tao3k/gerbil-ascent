@@ -8,7 +8,8 @@
         (only-in :gerbil-ascent/program/objects gerbil-ascent-program gerbil-ascent-guard
                  gerbil-ascent-relation)
         (only-in :gerbil-ascent/program/evaluate gerbil-ascent-evaluate-program)
-        (only-in :gerbil-ascent/program/update-selection gerbil-ascent-update-selection)
+        (only-in :gerbil-ascent/program/update-selection gerbil-ascent-update-selection
+                 gerbil-ascent-update-eligible?)
         (only-in :gerbil-ascent/program/session gerbil-ascent-open-session
                  gerbil-ascent-session-run gerbil-ascent-session-append-source!
                  gerbil-ascent-session-replace-source! gerbil-ascent-session-replace-sources!))
@@ -144,6 +145,16 @@
           (check-equal? (.ref updated 'finished) #t)
           (check-equal? checks 3)
           (check-equal? (rows updated 'item) '(((10))))
+          (check-equal? (rows updated 'out) '((1))))
+        ;; Single-source preflight must not read rows or invoke field checks;
+        ;; the actual transaction retains the batch callback sequence.
+        (check-equal? (gerbil-ascent-update-eligible? program) #t)
+        (check-equal? checks 3)
+        (gerbil-ascent-session-replace-source! session 'trigger '((2)))
+        (let (updated (gerbil-ascent-session-run session))
+          (check-equal? (.ref updated 'finished) #t)
+          (check-equal? checks 6)
+          (check-equal? (rows updated 'item) '(((13))))
           (check-equal? (rows updated 'out) '((1))))))
     (test-case "deletion skips an independent component and restores all rules for later append"
       (let* ((session (gerbil-ascent-open-session (path-program '((0 1) (1 2)))))
@@ -219,6 +230,7 @@
              (first (.o (:: @ (car rules)) body: (append (.ref (car rules) 'body) (list guard))))
              (program (gerbil-ascent-program (.ref base 'relations) (cons first (cdr rules)) 32 256 512))
              (session (gerbil-ascent-open-session program)))
+        (check-equal? (gerbil-ascent-update-eligible? program) #f)
         (gerbil-ascent-session-run session)
         (set! allow? #f)
         (let (result (gerbil-ascent-session-replace-sources! session '((cold (8)))))

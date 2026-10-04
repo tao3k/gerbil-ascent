@@ -8,8 +8,47 @@
         (only-in "scheme-checked.ss" relational-stable-procedure?)
         (only-in "positive.ss" gerbil-ascent-positive-plan)
         (only-in :gerbil-ascent/table/storage gerbil-ascent-set-storage-provider))
-(export gerbil-ascent-update-selection
+(export gerbil-ascent-update-eligible? gerbil-ascent-update-selection
         gerbil-ascent-update-active-plans)
+
+;; gerbil-ascent-update-eligible?
+;; : (forall (p) (-> p Boolean))
+;; : (-> Program Boolean)
+;; | doc m%
+;;     Check declaration eligibility without constructing a source snapshot,
+;;     reading rows or computing dependency closure. Only registered closed
+;;     procedures and built-in storage qualify; no callback is invoked.
+;;
+;;     # Examples
+;;
+;;     ```scheme
+;;     (gerbil-ascent-update-eligible? native-program)
+;;     ;; => #t for declarations supporting completed-closure reuse
+;;     ```
+;;   %
+(def (gerbil-ascent-update-eligible? candidate)
+  (def (pure-terms? terms)
+    (andmap (lambda (term) (memq (.ref term 'kind) '(variable wildcard literal))) terms))
+  (def (stable-clause? clause)
+    (case (.ref clause 'ascent-clause-kind)
+      ((atom negation) (pure-terms? (.ref clause 'terms)))
+      ((aggregate) (and (pure-terms? (.ref clause 'terms))
+                        (not (.ref clause 'output-pattern))
+                        (relational-stable-procedure? (.ref clause 'aggregate))))
+      ((guard) (relational-stable-procedure? (.ref clause 'predicate)))
+      ((binding) (relational-stable-procedure? (.ref clause 'compute)))
+      (else #f)))
+  (and (andmap (lambda (relation)
+                 (if (eq? (.ref relation 'storage-kind) 'lattice)
+                   (relational-stable-procedure? (.ref relation 'join))
+                   (eq? (.ref relation 'storage-provider)
+                        gerbil-ascent-set-storage-provider)))
+               (.ref candidate 'relations))
+       (andmap (lambda (rule)
+                 (and (andmap (lambda (head) (pure-terms? (.ref head 'terms)))
+                              (.ref rule 'heads))
+                      (andmap stable-clause? (.ref rule 'body))))
+               (.ref candidate 'rules))))
 
 ;; gerbil-ascent-update-selection
 ;; : (forall (a) (-> a a Vector (Maybe Vector)))
@@ -32,29 +71,9 @@
          (plans (vector-ref analysis 2))
          (count (length relations))
          (affected (make-vector count #f)))
-    (def (pure-terms? terms)
-      (andmap (lambda (term) (memq (.ref term 'kind) '(variable wildcard literal))) terms))
-    (def (stable-clause? clause)
-      (case (.ref clause 'ascent-clause-kind)
-        ((atom negation) (pure-terms? (.ref clause 'terms)))
-        ((aggregate) (and (pure-terms? (.ref clause 'terms))
-                          (not (.ref clause 'output-pattern))
-                          (relational-stable-procedure? (.ref clause 'aggregate))))
-        ((guard) (relational-stable-procedure? (.ref clause 'predicate)))
-        ((binding) (relational-stable-procedure? (.ref clause 'compute)))
-        (else #f)))
     (let (eligible?
           (and (= count (length old-relations))
-               (andmap (lambda (relation)
-                         (if (eq? (.ref relation 'storage-kind) 'lattice)
-                             (relational-stable-procedure? (.ref relation 'join))
-                             (eq? (.ref relation 'storage-provider)
-                                  gerbil-ascent-set-storage-provider))) relations)
-               (andmap (lambda (rule)
-                         (and (andmap (lambda (head) (pure-terms? (.ref head 'terms)))
-                                      (.ref rule 'heads))
-                              (andmap stable-clause? (.ref rule 'body))))
-                       (.ref candidate 'rules))))
+               (gerbil-ascent-update-eligible? candidate)))
       (if (not eligible?)
           #f
           (begin

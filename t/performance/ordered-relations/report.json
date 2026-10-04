@@ -1,0 +1,370 @@
+{
+  "runs": [
+    "first",
+    "repeat"
+  ],
+  "warmups": 20,
+  "samples": 1000,
+  "results": [
+    {
+      "name": "cold-projection-256",
+      "primary": true,
+      "allocation_pass": true,
+      "timing_pass": false,
+      "runs": [
+        {
+          "repetitions": 1,
+          "old-p50-bytes": 242912,
+          "new-p50-bytes": 165728,
+          "old-p95-bytes": 242944,
+          "new-p95-bytes": 165760,
+          "paired-wins": 998,
+          "old-p50-ns": 340000,
+          "new-p50-ns": 304000,
+          "old-p95-ns": 7028000,
+          "new-p95-ns": 2764000,
+          "time-paired-wins": 877,
+          "primary": true
+        },
+        {
+          "repetitions": 1,
+          "old-p50-bytes": 242912,
+          "new-p50-bytes": 165728,
+          "old-p95-bytes": 242944,
+          "new-p95-bytes": 165760,
+          "paired-wins": 998,
+          "old-p50-ns": 336000,
+          "new-p50-ns": 299000,
+          "old-p95-ns": 2074000,
+          "new-p95-ns": 1130000,
+          "time-paired-wins": 875,
+          "primary": true
+        }
+      ]
+    },
+    {
+      "name": "complete-snapshot-16",
+      "primary": true,
+      "allocation_pass": true,
+      "timing_pass": true,
+      "runs": [
+        {
+          "repetitions": 1,
+          "old-p50-bytes": 181168,
+          "new-p50-bytes": 158576,
+          "old-p95-bytes": 181168,
+          "new-p95-bytes": 158576,
+          "paired-wins": 998,
+          "old-p50-ns": 88000,
+          "new-p50-ns": 65000,
+          "old-p95-ns": 244000,
+          "new-p95-ns": 183000,
+          "time-paired-wins": 958,
+          "primary": true
+        },
+        {
+          "repetitions": 1,
+          "old-p50-bytes": 181168,
+          "new-p50-bytes": 158576,
+          "old-p95-bytes": 181168,
+          "new-p95-bytes": 158576,
+          "paired-wins": 998,
+          "old-p50-ns": 90000,
+          "new-p50-ns": 67000,
+          "old-p95-ns": 272000,
+          "new-p95-ns": 211000,
+          "time-paired-wins": 929,
+          "primary": true
+        }
+      ]
+    },
+    {
+      "name": "complete-fanout-32",
+      "primary": true,
+      "allocation_pass": true,
+      "timing_pass": false,
+      "runs": [
+        {
+          "repetitions": 1,
+          "old-p50-bytes": 586544,
+          "new-p50-bytes": 455472,
+          "old-p95-bytes": 586544,
+          "new-p95-bytes": 455472,
+          "paired-wins": 992,
+          "old-p50-ns": 1080000,
+          "new-p50-ns": 1119000,
+          "old-p95-ns": 52782000,
+          "new-p95-ns": 37012000,
+          "time-paired-wins": 231,
+          "primary": true
+        },
+        {
+          "repetitions": 1,
+          "old-p50-bytes": 586544,
+          "new-p50-bytes": 455472,
+          "old-p95-bytes": 586544,
+          "new-p95-bytes": 455472,
+          "paired-wins": 992,
+          "old-p50-ns": 1063000,
+          "new-p50-ns": 1107000,
+          "old-p95-ns": 10314000,
+          "new-p95-ns": 14639000,
+          "time-paired-wins": 239,
+          "primary": true
+        }
+      ]
+    },
+    {
+      "name": "closure-chain-32",
+      "primary": true,
+      "allocation_pass": true,
+      "timing_pass": true,
+      "runs": [
+        {
+          "repetitions": 1,
+          "old-p50-bytes": 128960,
+          "new-p50-bytes": 107904,
+          "old-p95-bytes": 128960,
+          "new-p95-bytes": 107904,
+          "paired-wins": 999,
+          "old-p50-ns": 69000,
+          "new-p50-ns": 43000,
+          "old-p95-ns": 206000,
+          "new-p95-ns": 126000,
+          "time-paired-wins": 964,
+          "primary": true
+        },
+        {
+          "repetitions": 1,
+          "old-p50-bytes": 128960,
+          "new-p50-bytes": 107904,
+          "old-p95-bytes": 128960,
+          "new-p95-bytes": 107904,
+          "paired-wins": 999,
+          "old-p50-ns": 70000,
+          "new-p50-ns": 44000,
+          "old-p95-ns": 299000,
+          "new-p95-ns": 169000,
+          "time-paired-wins": 946,
+          "primary": true
+        }
+      ]
+    },
+    {
+      "name": "distance-chain-32",
+      "primary": true,
+      "allocation_pass": true,
+      "timing_pass": true,
+      "runs": [
+        {
+          "repetitions": 1,
+          "old-p50-bytes": 159392,
+          "new-p50-bytes": 141280,
+          "old-p95-bytes": 159392,
+          "new-p95-bytes": 141280,
+          "paired-wins": 1000,
+          "old-p50-ns": 78000,
+          "new-p50-ns": 53000,
+          "old-p95-ns": 234000,
+          "new-p95-ns": 178000,
+          "time-paired-wins": 942,
+          "primary": true
+        },
+        {
+          "repetitions": 1,
+          "old-p50-bytes": 159392,
+          "new-p50-bytes": 141280,
+          "old-p95-bytes": 159392,
+          "new-p95-bytes": 141280,
+          "paired-wins": 1000,
+          "old-p50-ns": 77000,
+          "new-p50-ns": 51000,
+          "old-p95-ns": 450000,
+          "new-p95-ns": 204000,
+          "time-paired-wins": 952,
+          "primary": true
+        }
+      ]
+    },
+    {
+      "name": "sparse-projection-513",
+      "primary": false,
+      "allocation_pass": false,
+      "timing_pass": false,
+      "runs": [
+        {
+          "repetitions": 1,
+          "old-p50-bytes": 58168,
+          "new-p50-bytes": 58200,
+          "old-p95-bytes": 58168,
+          "new-p95-bytes": 58200,
+          "paired-wins": 3,
+          "old-p50-ns": 16000,
+          "new-p50-ns": 16000,
+          "old-p95-ns": 60000,
+          "new-p95-ns": 59000,
+          "time-paired-wins": 385,
+          "primary": false
+        },
+        {
+          "repetitions": 1,
+          "old-p50-bytes": 58168,
+          "new-p50-bytes": 58200,
+          "old-p95-bytes": 58168,
+          "new-p95-bytes": 58200,
+          "paired-wins": 3,
+          "old-p50-ns": 16000,
+          "new-p50-ns": 16000,
+          "old-p95-ns": 56000,
+          "new-p95-ns": 57000,
+          "time-paired-wins": 334,
+          "primary": false
+        }
+      ]
+    },
+    {
+      "name": "external-compose-256",
+      "primary": false,
+      "allocation_pass": true,
+      "timing_pass": false,
+      "runs": [
+        {
+          "repetitions": 1,
+          "old-p50-bytes": 145184,
+          "new-p50-bytes": 87968,
+          "old-p95-bytes": 145184,
+          "new-p95-bytes": 87968,
+          "paired-wins": 998,
+          "old-p50-ns": 265000,
+          "new-p50-ns": 260000,
+          "old-p95-ns": 810000,
+          "new-p95-ns": 800000,
+          "time-paired-wins": 672,
+          "primary": false
+        },
+        {
+          "repetitions": 1,
+          "old-p50-bytes": 145184,
+          "new-p50-bytes": 87968,
+          "old-p95-bytes": 145184,
+          "new-p95-bytes": 87968,
+          "paired-wins": 998,
+          "old-p50-ns": 259000,
+          "new-p50-ns": 255000,
+          "old-p95-ns": 926000,
+          "new-p95-ns": 1004000,
+          "time-paired-wins": 603,
+          "primary": false
+        }
+      ]
+    },
+    {
+      "name": "empty-distances-512",
+      "primary": false,
+      "allocation_pass": false,
+      "timing_pass": false,
+      "runs": [
+        {
+          "repetitions": 1,
+          "old-p50-bytes": 2153744,
+          "new-p50-bytes": 2153888,
+          "old-p95-bytes": 2153744,
+          "new-p95-bytes": 2153888,
+          "paired-wins": 1,
+          "old-p50-ns": 112000,
+          "new-p50-ns": 112000,
+          "old-p95-ns": 1195000,
+          "new-p95-ns": 267000,
+          "time-paired-wins": 492,
+          "primary": false
+        },
+        {
+          "repetitions": 1,
+          "old-p50-bytes": 2153744,
+          "new-p50-bytes": 2153888,
+          "old-p95-bytes": 2153744,
+          "new-p95-bytes": 2153888,
+          "paired-wins": 1,
+          "old-p50-ns": 113000,
+          "new-p50-ns": 112000,
+          "old-p95-ns": 1030000,
+          "new-p95-ns": 341000,
+          "time-paired-wins": 489,
+          "primary": false
+        }
+      ]
+    },
+    {
+      "name": "sparse-distances-512",
+      "primary": false,
+      "allocation_pass": false,
+      "timing_pass": false,
+      "runs": [
+        {
+          "repetitions": 1,
+          "old-p50-bytes": 2154336,
+          "new-p50-bytes": 2154480,
+          "old-p95-bytes": 2154336,
+          "new-p95-bytes": 2154480,
+          "paired-wins": 33,
+          "old-p50-ns": 113000,
+          "new-p50-ns": 113000,
+          "old-p95-ns": 248000,
+          "new-p95-ns": 480000,
+          "time-paired-wins": 409,
+          "primary": false
+        },
+        {
+          "repetitions": 1,
+          "old-p50-bytes": 2154336,
+          "new-p50-bytes": 2154480,
+          "old-p95-bytes": 2154336,
+          "new-p95-bytes": 2154480,
+          "paired-wins": 32,
+          "old-p50-ns": 112000,
+          "new-p50-ns": 112000,
+          "old-p95-ns": 280000,
+          "new-p95-ns": 573000,
+          "time-paired-wins": 448,
+          "primary": false
+        }
+      ]
+    },
+    {
+      "name": "cold-index-256",
+      "primary": false,
+      "allocation_pass": false,
+      "timing_pass": false,
+      "runs": [
+        {
+          "repetitions": 1,
+          "old-p50-bytes": 63920,
+          "new-p50-bytes": 63920,
+          "old-p95-bytes": 63920,
+          "new-p95-bytes": 63920,
+          "paired-wins": 1,
+          "old-p50-ns": 253000,
+          "new-p50-ns": 253000,
+          "old-p95-ns": 865000,
+          "new-p95-ns": 1114000,
+          "time-paired-wins": 403,
+          "primary": false
+        },
+        {
+          "repetitions": 1,
+          "old-p50-bytes": 63920,
+          "new-p50-bytes": 63920,
+          "old-p95-bytes": 63920,
+          "new-p95-bytes": 63920,
+          "paired-wins": 0,
+          "old-p50-ns": 249000,
+          "new-p50-ns": 250000,
+          "old-p95-ns": 986000,
+          "new-p95-ns": 1493000,
+          "time-paired-wins": 390,
+          "primary": false
+        }
+      ]
+    }
+  ]
+}

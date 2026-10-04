@@ -19,9 +19,11 @@
                  gerbil-ascent-evaluate-program
                  gerbil-ascent-open-session
                  gerbil-ascent-session-append-source!
+                 gerbil-ascent-session-replace-source!
                  gerbil-ascent-session-run
                  gerbil-ascent-variable gerbil-ascent-atom
                  gerbil-ascent-rule)
+        (only-in :gerbil-ascent/program/syntax ascent)
         (only-in :gerbil-ascent/t/qualification/ascent-eqrel-program-fixture
                  ascent-eqrel-fixture-evaluate
                  ascent-storage-fixture-evaluate)
@@ -30,6 +32,22 @@
                  ascent-byods-query-evaluate))
 
 (export ascent-eqrel-program-test)
+
+(def (nonpositive-byods-program edges blocks
+                                (target 3) (input-limit 12)
+                                (derived-limit 64) (output-limit 96))
+  (ascent
+   (relation edge ((from integer?) (to integer?)) edges)
+   (relation block ((node integer?)) (map list blocks))
+   (relation wanted ((node integer?)) (list (list target)))
+   (relation path ((from integer?) (to integer?)) []
+             (index gerbil-ascent-hash-index-provider)
+             (storage gerbil-ascent-trrel-uf-storage-provider))
+   (relation safe ((from integer?) (to integer?)))
+   ((path from to) <-- (edge from to))
+   ((safe from to) <-- (path from to) (wanted to)
+    (not (block from)))
+   (bounds input-limit derived-limit output-limit)))
 
 (def ascent-eqrel-program-test
   (test-suite "ASCENT BYODS equivalence storage"
@@ -209,6 +227,95 @@
                                           ((.ref second 'rows-of) 'eq-match))))
                         #t)
           (check-equal? ((.ref first 'rows-of) 'eq-match) []))))
+    (poo-flow-test-case
+      "nonpositive BYODS session matches fresh state and rejects invalid input"
+      (let* ((session (gerbil-ascent-open-session
+                       (nonpositive-byods-program '((1 2)) [])))
+             (first (gerbil-ascent-session-run session)))
+        (gerbil-ascent-session-append-source! session 'edge '(2 3))
+        (let* ((second (gerbil-ascent-session-run session))
+               (fresh (gerbil-ascent-evaluate-program
+                       (nonpositive-byods-program '((1 2) (2 3)) []))))
+          (for-each
+           (lambda (name)
+             (let ((actual ((.ref second 'rows-of) name))
+                   (expected ((.ref fresh 'rows-of) name)))
+               (check-equal? (length actual) (length expected))
+               (for-each
+                (lambda (row)
+                  (check-equal? (not (not (member row actual))) #t))
+                expected)))
+           '(path safe))
+          (check-equal?
+           (not (not (member '(1 3) ((.ref second 'rows-of) 'safe))))
+           #t)
+          (check-exception
+           (gerbil-ascent-session-append-source! session 'block '("bad"))
+           true)
+          (check-equal? (eq? second (gerbil-ascent-session-run session)) #t)
+          (gerbil-ascent-session-append-source! session 'block '(1))
+          (let* ((third (gerbil-ascent-session-run session))
+                 (fresh-third (gerbil-ascent-evaluate-program
+                               (nonpositive-byods-program
+                                '((1 2) (2 3)) '(1)))))
+            (for-each
+             (lambda (name)
+               (let ((actual ((.ref third 'rows-of) name))
+                     (expected ((.ref fresh-third 'rows-of) name)))
+                 (check-equal? (length actual) (length expected))
+                 (for-each
+                  (lambda (row)
+                    (check-equal? (not (not (member row actual))) #t))
+                  expected)))
+             '(path safe))
+            (check-equal? (member '(1 3) ((.ref third 'rows-of) 'safe))
+                          #f)
+            (check-equal? ((.ref first 'rows-of) 'safe) [])))))
+    (poo-flow-test-case
+      "BYODS source withdrawal rebuilds a larger transitive relation"
+      (let* ((edges (map (lambda (n) (list n (+ n 1))) (iota 12 1)))
+             (without-bridge
+              (filter (lambda (edge) (not (equal? edge '(7 8)))) edges))
+             (make-program
+              (lambda (source blocks)
+                (nonpositive-byods-program source blocks 13 32 256 512)))
+             (session (gerbil-ascent-open-session (make-program edges [])))
+             (first (gerbil-ascent-session-run session)))
+        (def (same-rows? result fresh name)
+          (let ((actual ((.ref result 'rows-of) name))
+                (expected ((.ref fresh 'rows-of) name)))
+            (and (= (length actual) (length expected))
+                 (andmap (lambda (row) (member row actual)) expected))))
+        (check-equal? (not (not (member '(1 13)
+                                        ((.ref first 'rows-of) 'safe)))) #t)
+        (gerbil-ascent-session-append-source! session 'block '(1))
+        (let ((blocked (gerbil-ascent-session-run session))
+              (fresh (gerbil-ascent-evaluate-program
+                      (make-program edges '(1)))))
+          (check-equal? (same-rows? blocked fresh 'path) #t)
+          (check-equal? (same-rows? blocked fresh 'safe) #t)
+          (gerbil-ascent-session-replace-source!
+           session 'edge without-bridge)
+          (let ((withdrawn (gerbil-ascent-session-run session))
+                (fresh-withdrawn
+                 (gerbil-ascent-evaluate-program
+                  (make-program without-bridge '(1)))))
+            (check-equal? (same-rows? withdrawn fresh-withdrawn 'path) #t)
+            (check-equal? (same-rows? withdrawn fresh-withdrawn 'safe) #t)
+            (check-equal? (member '(1 13)
+                                  ((.ref withdrawn 'rows-of) 'path)) #f)
+            (gerbil-ascent-session-replace-source! session 'block [])
+            (gerbil-ascent-session-replace-source! session 'edge edges)
+            (let ((restored (gerbil-ascent-session-run session))
+                  (fresh-restored
+                   (gerbil-ascent-evaluate-program
+                    (make-program edges []))))
+              (check-equal? (same-rows? restored fresh-restored 'path) #t)
+              (check-equal? (same-rows? restored fresh-restored 'safe) #t)
+              (check-equal? (not (not (member '(1 13)
+                                              ((.ref restored 'rows-of)
+                                               'safe)))) #t)
+              (check-equal? (same-rows? first fresh-restored 'path) #t))))))
     (poo-flow-test-case "BYODS providers emit only new rows across edge prefixes"
       (for-each
        (lambda (provider edges expected-sizes)
@@ -337,6 +444,59 @@
             ((.ref (gerbil-ascent-session-run session) 'rows-of) 'stored)
             '((1 2) (3 4)))))
        (list (list '(2 3) 'broken) '((2 3) (3 2)))))
+    (poo-flow-test-case "mutating Provider failure leaves retained session reusable"
+      (let* ((provider
+              (.o (:: @ gerbil-ascent-set-storage-provider)
+                  (.make-state (lambda () (vector #f)))
+                  (.extend-rows
+                   (lambda (state _all _pending row _budget)
+                     (when (vector-ref state 0)
+                       (error "ASCENT Provider retained a rejected mutation"))
+                     (if (equal? row '(2 3))
+                       (begin
+                         (vector-set! state 0 #t)
+                         (list 'invalid))
+                       (list row))))))
+             (program
+              (gerbil-ascent-program
+               (list (gerbil-ascent-relation
+                      'stored 2 '((1 2))
+                      gerbil-ascent-hash-index-provider provider))
+               [] 4 8 8))
+             (session (gerbil-ascent-open-session program)))
+        (check-equal?
+         ((.ref (gerbil-ascent-session-run session) 'rows-of) 'stored)
+         '((1 2)))
+        (check-exception
+         (gerbil-ascent-session-append-source! session 'stored '(2 3))
+         true)
+        (gerbil-ascent-session-append-source! session 'stored '(3 4))
+        (check-equal?
+         ((.ref (gerbil-ascent-session-run session) 'rows-of) 'stored)
+         '((1 2) (3 4)))
+        (gerbil-ascent-session-append-source! session 'stored '(4 5))
+        (check-exception
+         (gerbil-ascent-session-append-source! session 'stored '(2 3))
+         true)
+        (check-equal?
+         ((.ref (gerbil-ascent-session-run session) 'rows-of) 'stored)
+         '((1 2) (3 4) (4 5)))))
+    (poo-flow-test-case "failed run restores the last committed source snapshot"
+      (let* ((program
+              (ascent
+               (relation edge ((from integer?) (to integer?)) '((1 2)))
+               (relation copied ((from integer?) (to integer?)))
+               ((copied from to) <-- (edge from to))
+               (bounds 8 1 8)))
+             (session (gerbil-ascent-open-session program))
+             (first (gerbil-ascent-session-run session)))
+        (gerbil-ascent-session-append-source! session 'edge '(2 3))
+        (check-exception (gerbil-ascent-session-run session) true)
+        (check-equal? (eq? first (gerbil-ascent-session-run session)) #t)
+        (gerbil-ascent-session-replace-source! session 'edge '((3 4)))
+        (check-equal?
+         ((.ref (gerbil-ascent-session-run session) 'rows-of) 'copied)
+         '((3 4)))))
     (poo-flow-test-case "eqrel output stays within the program fact budget"
       (check-exception
        (ascent-eqrel-fixture-evaluate

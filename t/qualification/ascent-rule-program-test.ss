@@ -4,8 +4,10 @@
 
 (import (only-in :std/test check-equal? check-exception test-suite)
         (only-in :clan/poo/object .o .ref)
-        (only-in :core/observability/debug
-                 poo-flow-debug-memory-policy)
+        (only-in :gerbil-ascent/program/analysis gerbil-ascent-program-schema)
+        (only-in :gerbil-ascent/program/planning gerbil-ascent-prepare-program)
+        (only-in :gerbil-ascent/table/storage gerbil-ascent-set-storage-provider)
+        (only-in :gerbil-ascent/table/provider gerbil-ascent-hash-index-provider)
         (only-in :core/observability/testing-case
                  poo-flow-default-testing-case-profile
                  poo-flow-test-case/with)
@@ -24,6 +26,7 @@
                  gerbil-ascent-evaluate-program
                  gerbil-ascent-open-session
                  gerbil-ascent-session-append-source!
+                 gerbil-ascent-session-replace-source!
                  gerbil-ascent-session-run))
 
 (export ascent-rule-program-test)
@@ -36,12 +39,8 @@
 (def +positive-case-profile+
   (.o (:: @ poo-flow-default-testing-case-profile)
       (identity 'ascent/positive-case)
-      (memory-policy
-       (poo-flow-debug-memory-policy
-        'ascent/positive-case heap-limit-bytes: 1073741824
-        live-growth-limit-bytes: 16777216
-        sample-interval-milliseconds: 10
-        collect-before-sample?: #t))
+      (live-growth-limit-bytes 16777216)
+      (collect-before-sample? #t)
       (max-duration-milliseconds 2000)))
 
 ;;; This case constructs and evaluates two separately admitted POO programs.
@@ -59,6 +58,68 @@
 
 (def ascent-rule-program-test
   (test-suite "ASCENT positive relations with arbitrary columns"
+    (poo-flow-test-case/with +positive-case-profile+
+      "declaration compilation never invokes storage or rule callbacks"
+      (let* ((states 0) (extensions 0) (guards 0)
+             (storage
+              (.o (:: @ gerbil-ascent-set-storage-provider)
+                  (.make-state (lambda () (set! states (+ states 1)) #f))
+                  (.extend-rows
+                   (lambda args
+                     (set! extensions (+ extensions 1))
+                     (apply (.ref gerbil-ascent-set-storage-provider '.extend-rows)
+                            args)))))
+             (program
+              (gerbil-ascent-program
+               (list (gerbil-ascent-relation 'source 1 '((7)))
+                     (gerbil-ascent-relation 'out 1 []
+                       gerbil-ascent-hash-index-provider storage))
+               (list (r (a 'out (v 'x)) (a 'source (v 'x))
+                        (gerbil-ascent-guard '(x)
+                          (lambda (_x) (set! guards (+ guards 1)) #t))))
+               4 4 8))
+             (relations (.ref program 'relations))
+             (schema (gerbil-ascent-program-schema program relations)))
+        (gerbil-ascent-prepare-program relations (.ref program 'rules) schema #f)
+        (check-equal? (list states extensions guards) '(0 0 0))
+        (check-equal? (rows (gerbil-ascent-evaluate-program program) 'out) '((7)))
+        (check-equal? states 1)
+        (check-equal? (> extensions 0) #t)
+        (check-equal? (> guards 0) #t)))
+    (poo-flow-test-case/with +positive-case-profile+
+      "heads split across strata retain duplicates and source rule order"
+      (let* ((x (v 'x))
+             (program
+              (gerbil-ascent-program
+               (list (gerbil-ascent-relation 'source 1 '((7)))
+                     (gerbil-ascent-relation 'blocked 1 [])
+                     (gerbil-ascent-relation 'early 1 [])
+                     (gerbil-ascent-relation 'late 1 []))
+               (list (gerbil-ascent-rule
+                      (list (a 'late x) (a 'early x) (a 'late x))
+                      (list (a 'source x)))
+                     (r (a 'late x) (a 'source x)
+                        (gerbil-ascent-negation 'blocked (list x))))
+               4 8 12))
+             (relations (.ref program 'relations))
+             (analysis
+              (gerbil-ascent-prepare-program
+               relations (.ref program 'rules)
+               (gerbil-ascent-program-schema program relations) #f))
+             (active (vector-ref analysis 4)))
+        (check-equal? (vector-ref analysis 3) '#(0 0 0 1))
+        (check-equal?
+         (vector-map
+          (lambda (rules)
+            (map (lambda (rule)
+                   (list (vector-ref rule 3)
+                         (map (cut vector-ref <> 0) (vector-ref rule 0))
+                         (vector-ref rule 2))) rules))
+          active)
+         '#(((0 (2) (0))) ((0 (3 3) ()) (1 (3) ()))))
+        (let (result (gerbil-ascent-evaluate-program program))
+          (check-equal? (rows result 'early) '((7)))
+          (check-equal? (rows result 'late) '((7))))))
     (poo-flow-test-case/with +positive-case-profile+
       "mixed ternary inputs derive four-column, unary and recursive rows"
       (let* ((source '((1 2 "a") (2 3 "b") (3 3 "c") (1 2 "a")))
@@ -123,7 +184,75 @@
           (check-equal? (length (rows second 'reach)) 3)
           (check-equal? (rows first 'reach) '((1 2))))))
     (poo-flow-test-case/with +positive-case-profile+
-      "session rejects source updates through negation"
+      "ten thousand positive appends retain order and recover state"
+      (let* ((size 10000)
+             (expected (map list (iota size)))
+             (program
+              (gerbil-ascent-program
+               (list (gerbil-ascent-relation 'item 1 [])) []
+               (+ size 2) size size))
+             (session (gerbil-ascent-open-session program))
+             (first (gerbil-ascent-session-run session)))
+        (for-each
+         (lambda (key)
+           (gerbil-ascent-session-append-source! session 'item (list key)))
+         (iota size))
+        (let (second (gerbil-ascent-session-run session))
+          (check-equal? (rows second 'item) expected)
+          (gerbil-ascent-session-append-source! session 'item '(0))
+          (check-exception
+           (gerbil-ascent-session-append-source! session 'item '(0 1))
+           true)
+          (check-equal? (rows (gerbil-ascent-session-run session) 'item)
+                        expected)
+          (gerbil-ascent-session-replace-source! session 'item '((42)))
+          (check-equal? (rows (gerbil-ascent-session-run session) 'item)
+                        '((42)))
+          (check-equal? (rows second 'item) expected)
+          (check-equal? (rows first 'item) []))))
+    (poo-flow-test-case/with +positive-case-profile+
+      "staged Set rows share one global output budget"
+      (let* ((program
+              (gerbil-ascent-program
+               (list (gerbil-ascent-relation 'left 1 [])
+                     (gerbil-ascent-relation 'right 1 []))
+               [] 4 4 1))
+             (session (gerbil-ascent-open-session program)))
+        (gerbil-ascent-session-run session)
+        (gerbil-ascent-session-append-source! session 'left '(1))
+        (check-exception
+         (gerbil-ascent-session-append-source! session 'right '(2))
+         true)
+        (let (first (gerbil-ascent-session-run session))
+          (check-equal? (rows first 'left) '((1)))
+          (check-equal? (rows first 'right) [])
+          (gerbil-ascent-session-append-source! session 'left '(1))
+          (check-equal? (eq? first (gerbil-ascent-session-run session))
+                        #t)
+          (check-exception
+           (gerbil-ascent-session-append-source! session 'right '(1))
+           true)
+          (check-equal? (eq? first (gerbil-ascent-session-run session))
+                        #t))))
+    (poo-flow-test-case/with +positive-case-profile+
+      "batched Set duplicates retain first source order"
+      (let* ((program
+              (gerbil-ascent-program
+               (list (gerbil-ascent-relation 'item 1 []))
+               [] 6 6 3))
+             (session (gerbil-ascent-open-session program)))
+        (gerbil-ascent-session-run session)
+        (for-each
+         (lambda (row)
+           (gerbil-ascent-session-append-source! session 'item row))
+         '((1) (2) (1) (3)))
+        (let (first (gerbil-ascent-session-run session))
+          (check-equal? (rows first 'item) '((1) (2) (3)))
+          (gerbil-ascent-session-append-source! session 'item '(2))
+          (check-equal? (eq? first (gerbil-ascent-session-run session))
+                        #t))))
+    (poo-flow-test-case/with +positive-case-profile+
+      "session recomputes negation after source updates"
       (let* ((program
               (gerbil-ascent-program
                (list (gerbil-ascent-relation 'candidate 1 '((1)))
@@ -134,13 +263,53 @@
                         (gerbil-ascent-negation 'blocked (list (v 'x)))))
                4 4 8))
              (session (gerbil-ascent-open-session program)))
-        (check-equal? (rows (gerbil-ascent-session-run session)
-                            'allowed) '((1)))
+        (let (first (gerbil-ascent-session-run session))
+          (check-equal? (rows first 'allowed) '((1)))
+          (gerbil-ascent-session-append-source! session 'blocked '(1))
+          (let (second (gerbil-ascent-session-run session))
+            (check-equal? (rows second 'allowed) [])
+            (check-equal? (rows first 'allowed) '((1)))
+            (check-equal? (eq? second (gerbil-ascent-session-run session))
+                          #t)
+            (check-exception
+             (gerbil-ascent-session-replace-source!
+              session 'blocked '((1 2)))
+             true)
+            (check-equal? (eq? second (gerbil-ascent-session-run session))
+                          #t)
+            (gerbil-ascent-session-replace-source! session 'blocked [])
+            (gerbil-ascent-session-append-source! session 'candidate '(2))
+            (check-equal?
+             (length (rows (gerbil-ascent-session-run session) 'allowed))
+             2)
+            (check-equal? (rows first 'allowed) '((1)))
+            (check-equal? (rows second 'allowed) [])))))
+    (poo-flow-test-case/with +positive-case-profile+
+      "nonpositive recomputation rejects over-budget source atomically"
+      (let* ((program
+              (gerbil-ascent-program
+               (list (gerbil-ascent-relation 'candidate 1 '((1)))
+                     (gerbil-ascent-relation 'blocked 1 [])
+                     (gerbil-ascent-relation 'allowed 1 []))
+               (list (r (a 'allowed (v 'x))
+                        (a 'candidate (v 'x))
+                        (gerbil-ascent-negation 'blocked (list (v 'x)))))
+               4 4 3))
+             (session (gerbil-ascent-open-session program))
+             (first (gerbil-ascent-session-run session)))
         (check-exception
-         (gerbil-ascent-session-append-source!
-          session 'blocked '(1)) true)
-        (check-equal? (rows (gerbil-ascent-session-run session)
-                            'allowed) '((1)))))
+         (gerbil-ascent-session-append-source! session 'candidate '(2))
+         true)
+        (check-exception
+         (gerbil-ascent-session-replace-source!
+          session 'candidate '((1) (2)))
+         true)
+        (check-equal? (eq? first (gerbil-ascent-session-run session)) #t)
+        (gerbil-ascent-session-append-source! session 'blocked '(1))
+        (check-equal?
+         ((.ref (gerbil-ascent-session-run session) 'rows-of) 'allowed)
+         [])
+        (check-equal? (rows first 'allowed) '((1)))))
     (poo-flow-test-case/with +positive-case-profile+
       "empty rule set preserves sources and returns"
       (let (result

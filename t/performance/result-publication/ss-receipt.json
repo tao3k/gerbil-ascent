@@ -1,0 +1,22 @@
+[
+  {
+    "name": "ascent-session-update",
+    "exit": 0,
+    "p95": "922us"
+  },
+  {
+    "name": "ascent-ten-thousand-appends",
+    "exit": 1,
+    "p95": "104.996ms"
+  },
+  {
+    "name": "ascent-nonpositive-session-update",
+    "exit": 0,
+    "p95": "978us"
+  },
+  {
+    "name": "ascent-product-session",
+    "exit": 0,
+    "p95": "1.938ms"
+  }
+]

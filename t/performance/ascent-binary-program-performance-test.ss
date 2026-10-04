@@ -3,7 +3,8 @@
 ;;;
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(import (only-in :std/test check-equal? test-case test-suite)
+(import (only-in :gerbil-ascent/t/performance/native-library assert-native-library!)
+        (only-in :std/test check-equal? test-case test-suite)
         (only-in :clan/poo/object .o .ref .call)
         (only-in :clan/poo/trie UIntTrieSet)
         (only-in :asp-gerbil-scheme/benchmark-api
@@ -54,6 +55,7 @@
 (def ascent-binary-program-performance-test
   (test-suite "ASCENT Scheme binary program performance"
     (test-case "twenty-node chain within standard fixture"
+      (assert-native-library!)
       (check-equal? (benchmark-fixture-contract-pass? fixture) #t)
       (let-values (((receipt actual)
                     (benchmark-run/result fixture candidate-evaluation)))

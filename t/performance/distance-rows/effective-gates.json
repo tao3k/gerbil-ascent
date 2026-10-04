@@ -1,0 +1,26 @@
+[
+  {
+    "name": "policy",
+    "initial_exit": 0,
+    "final_exit": 0,
+    "rechecked": false
+  },
+  {
+    "name": "ascent-table-expression",
+    "initial_exit": 1,
+    "final_exit": 0,
+    "rechecked": true
+  },
+  {
+    "name": "ascent-table-expression-membership",
+    "initial_exit": 0,
+    "final_exit": 0,
+    "rechecked": false
+  },
+  {
+    "name": "ascent-reachability-closure",
+    "initial_exit": 0,
+    "final_exit": 0,
+    "rechecked": false
+  }
+]

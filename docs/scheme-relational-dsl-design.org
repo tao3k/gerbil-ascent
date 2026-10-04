@@ -1,0 +1,305 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+#+TITLE: Scheme relational DSL: design overview
+#+STATUS: design overview; checked native subset implemented, wider higher-order semantics proposed
+#+DATE: 2026-09-30
+#+FILETAGS: :design:scheme-dsl:
+
+* Purpose and boundary
+:PROPERTIES:
+:CUSTOM_ID: scheme-dsl-overview
+:END:
+
+This is the short overview for discussing the next Scheme relational
+language.  [[file:research/scheme-dsl/language-history.org][Language history]] explains how the ideas developed;
+[[file:research/scheme-dsl/index.org][the research index]] links individual paper readings with PDF locators.
+The [[file:research/scheme-dsl/reflection.org][reflection and comparison plan]]
+separates paper results from our hypotheses and defines the evidence
+needed before claiming an improvement.
+The [[file:scheme-relational-language-design.org][first language design gate]] defines the high-order layers,
+rule-time operator boundary, native Scheme grammar and
+discriminating experiments.  Its
+[[file:scheme-relational-language-design.org::#scheme-language-finite-operator-graph][finite positive operator subset]] now has executable lowering and
+qualification.
+The [[file:research/agent-inference/index.org][LLM reasoning research index]] studies the deployment-time interface.
+The historical =ascent= implementation recorded selected Rust behavior.
+The new Gerbil Scheme language has no Rust compatibility requirement;
+its grammar, semantic IR and tests must be designed on their own terms.
+The native subset is available through =program/interface.ss=; the old
+=ascent= form lives in =program/syntax.ss= for the parity corpus.
+
+One small relational form remains legible:
+
+#+begin_src scheme
+(rule (path ?source ?target)
+  (edge ?source ?target))
+(rule (path ?source ?target)
+  (path ?source ?middle)
+  (edge ?middle ?target))
+#+end_src
+
+The =rule= form derives facts.  Variables prefixed by =?= belong to the
+rule, so a lexical Scheme binding cannot be mistaken for a logic
+variable.  Body atoms state joins and equality of repeated variables.
+Scheme functions can build program values around these rules; admitted
+operators may compute local values inside rules.  Those phases need
+different guarantees.  This =rule= spelling is implemented within the
+checked =relational-program= and =relational-fragment= forms; the broader
+higher-order language described below remains a proposal.
+
+* Two implementation priorities
+:PROPERTIES:
+:CUSTOM_ID: scheme-dsl-priorities
+:END:
+
+The first gate is the Scheme relational language design.  Once that
+gate has a concrete semantics and native qualification fixture, the two near-term
+products are (1) a reliable internal Datalog Library
+in Scheme and (2) an LLM reasoning Library built on the same
+program, snapshot and result semantics.  Both need executable evidence.
+The [[file:research/agent-inference/serving-sglang-vllm.org][SGLang/vLLM adapter]]
+is a later delivery channel, after the Library contract is useful from a
+plain Scheme caller.  No model server should define rule validity,
+fixed-point completion, explanation meaning or source authority.
+
+#+NAME: scheme-two-priorities
+| Priority | First executable slice | Acceptance evidence |
+|----------+------------------------+---------------------|
+| Internal Datalog | Assemble one inspectable program from Scheme fragments; admit relation shapes, bindings, dependencies and strata; run and query an immutable result | Independent finite model checks complete recursive facts and negative cases; malformed program returns a located diagnostic; source replacement preserves prior result |
+| LLM reasoning | Submit a candidate fact/rule/query against a named source snapshot; inspect, execute, explain and revise through the Library | A fixed transcript distinguishes undeclared relation, compiling wrong recursive join, present pair and missing pair; status and support limits are explicit; no candidate becomes admitted source |
+
+For the first slice, use a finite graph with recursive reachability and a
+source withdrawal.  The internal path determines the exact result and
+failure behavior; the LLM path exposes that behavior as structured,
+bounded observations.  The same transcript should be callable without
+any LLM or serving framework.  Only then compare actual model turns and
+answer quality.  The historical
+[[file:replication-checklist.org][Rust comparison checklist]] is not a
+gate for this language.
+The current Scheme implementation has checked scalar clauses, stratified
+negation, checked reductions and lattices, finite views, and retained
+source-replacement Sessions.  =relational-admit/report= returns a typed
+diagnostic with a zero-based planner path for invalid rule bodies, heads
+and dependency cycles; direct =relational-admit= still raises.
+Rule-local =where= and =compute= inputs can use scalar literals and
+explicit =(value expression)= captures as well as bound variables;
+admission rebuilds the fixed descriptor before a solve.
+The [[file:llm-reasoning-library-plan.org][implementation plan]] maps the
+research to code seams, interface claims and falsifiable experiments.
+
+* Design feel: a small relational core within Scheme
+:PROPERTIES:
+:CUSTOM_ID: scheme-dsl-design-feel
+:END:
+
+The public authoring surface should read as Scheme composition of
+relational programs, with a small visible =rule= core.  Program
+fragments are ordinary values that
+Scheme functions can parameterize and combine.  Their relation handles,
+imports, exports, and rules become an inspectable logical program before
+execution.  A rule-time function has declared binding modes, effects,
+and dependencies; it cannot be an opaque call disguised as a relation.
+
+#+NAME: scheme-design-shape
+| Surface | Proposed role | Semantics visible to admission |
+|---------+---------------+--------------------------------|
+| Scheme function | Constructs or specializes fragment values | Resulting fragment and public signature |
+| =rule= and atoms | Derivation, joins, logic-variable equality | Binding modes and dependency edges |
+| Term expression | Row-local scalar computation | Explicit bound inputs and output term |
+| Pointwise relation adapter | Zero, one, or many output rows per fixed input tuple | Input/output modes and declared stability contract |
+| Negation, aggregation, lattice join | Explicit nonpositive or ordered operations | Strata, order/join laws, finite-height obligations |
+| Solve and query | Complete one admitted snapshot, then read it | Completion/failure status and immutable result |
+
+=relation-view= is one provisional adapter for row-local functions, not
+the entire higher-order language.  Arbitrary Scheme closures are not
+proved pure, total, stable, or monotone by accepting =procedure?=.
+
+* LLM reasoning Library is a first-class design case
+:PROPERTIES:
+:CUSTOM_ID: scheme-agent-library
+:END:
+
+The internal rule core and the external LLM interface are both
+Library requirements.  Deployment-time inference is the main use:
+an LLM may receive current evidence, propose candidate
+facts/rules/queries, inspect diagnostics, execute a bounded program,
+ask why or why-not, and revise.  Search is one input path, not the
+definition of all reasoning.  Nonrelational arithmetic, code, planning
+or hypothesis checks need their own semantics behind a shared attempt
+and feedback envelope.  The Library returns observations for the
+model's next turn; it does not change the model's trained weights or
+learned reward model.  A search hit is not an unverified fact insertion
+into the fixed point.
+
+#+NAME: scheme-llm-loop
+| LLM action | Library response | Required boundary |
+|--------------+------------------+-------------------|
+| Propose a fact or rule | Inspectable candidate with syntax/schema/mode diagnostics | No source authority or MRR admission |
+| Execute a query | Complete rows or explicit partial/failure under exact program, snapshot and limits | No completed-answer claim on budget failure |
+| Ask why or why-not | Rule/source witness or bounded missing-premise explanation with status | One witness is not complete provenance |
+| Receive evidence and revise | New attempt against named source generation | Search hit remains a candidate until source binding |
+
+The first graph transcript is implemented in =candidate/reasoning.ss=:
+it accepts an inert two-rule reachability proposal against a copied
+source snapshot, diagnoses an undeclared helper, observes the complete
+result of a compiling wrong join, and returns a row-labelled path
+witness or reachable cut for the exact canonical graph program.  The
+[[file:llm-reasoning-library-plan.org::#llm-library-first-transcript][implemented contract and limits]] and
+[[file:research/agent-inference/index.org::#agent-inference-gate][research gate]] distinguish this case from a general explanation or
+model-control API.  A separate [[file:research/scheme-dsl/positive-provenance.org][finite positive provenance gate]]
+now replays inspected positive atom-only rules into a rule-instance DAG
+and matches its roots against a completed native query.  It reports
+=bounded= or =unsupported= for this Why proof. A distinct
+[[file:research/scheme-dsl/positive-nonmembership.org][ground Why-Not certificate]]
+checks input inclusion, rule closure and tuple absence for a finite
+positive program relative to one snapshot. It does not assert that
+the caller supplied every real-world source fact.
+MRR remains the later
+semantic admission owner, while POO Flow owns caller context and
+effect handoff.
+
+* Current design choices for discussion
+:PROPERTIES:
+:CUSTOM_ID: scheme-dsl-decisions
+:END:
+
+The table makes our present direction explicit. Several working choices
+now have a bounded implementation and qualification: native rules,
+first-class fragments, fresh handles, checked scalar operators, finite
+views, stratified negation, reductions, lattices, source replacement,
+and first-class positive relation transformers. The discriminator
+column still describes evidence needed for broader claims.
+
+#+NAME: scheme-design-decisions
+| Decision | Working choice | Reason | Discriminator before commitment |
+|----------+----------------+--------+---------------------------------|
+| Core rule | Use a Scheme =rule= form, positive atoms and =?= variables | Preserves an analyzable join graph without Rust spelling | Complete facts and plan visibility against an independent finite model |
+| Host syntax | One new Scheme grammar and semantic IR | Scheme supplies functions and lexical composition | Native fixture spanning scalar, filter, pattern, finite view and recursion |
+| Higher-order construction | Scheme functions return first-class fragment/program values | Reuse the host language without executing at construction | Two parameterized instantiations with private relations |
+| Private names | Fresh relation handles per fragment instantiation; explicit shared imports/exports | Avoid accidental capture through equal printed symbols | Compose two instances with same private label |
+| Public contract | Export relation shapes and handles; keep internal graph for admission | Permit refactoring private rules while retaining planner evidence | Interface and combined-program diagnostics |
+| Rule-time calls | Only declared pointwise adapters or later checked operators | Hidden relation reads and mutable captures break planning | Reject unbound mode, mutation, hidden dependency, divergence |
+| Recursion domain | Require finite-height evidence for closure claim; otherwise bounded failure is explicit | Finite output per call does not imply finite closure | Infinite successor fails; finite successor completes |
+| Nonpositive operations | Negation and general aggregation read completed lower strata | Combined fragments can introduce negative cycles | Late-composition cycle rejection |
+| Lattice state | Explicit order and join contract, separate from set relations | A user join needs law and height evidence | Finite-model law checks and closure comparison |
+| Lifecycle | Construct/inject, admit, solve, query as distinct stages | Late composition and source replacement change answers | Negation-sensitive late composition and repeated query |
+| Source withdrawal | Recompute the accepted snapshot until deletion semantics are proved | Increasing-delta theory does not justify deletion | Failure-atomic replacement with full output comparison |
+| Higher-order delta | First specialize fragments to inspectable IR; research typed operator changes later | Datafun S20's proof concerns a typed calculus | Naive versus transformed full-result equivalence and scale |
+
+Within the internal priority, design the native grammar, semantic IR
+and admission boundary; rewrite the implementation against their
+qualification, then research a restricted higher-order operator IR.
+That restricted operator IR now has an executable reference meaning,
+explicit transformer application, positive-rule lowering and fragment
+composition. Its source-growth change has both a two-complete-result
+reference and a structural positive-change interpreter with a recursive
+frontier. A [[file:research/scheme-dsl/e4-positive-change.org][paired local E4 probe]] records exact-set checks, join probes and
+exploratory timing, including an adverse small case. General typed
+change and a broad performance benefit are not established.
+The [[file:research/scheme-dsl/e4-retained-session.org][retained Session gate]] now admits one transformer into the native
+indexed evaluator and checks appends, duplicate rows, withdrawals and
+old snapshots against a finite graph model. A checked batch transaction
+can replace the explicit input and other exported graph sources together;
+the native Session publishes their result only after a complete solve.
+The 64-mask nested-closure check covers two-source changes and a failed
+batch followed by a successful update tests rollback. Its earlier matched local probe
+compares update latency after initialization with fresh materialization;
+it does not establish lifecycle-wide or general performance superiority.
+The same transaction owner now accepts checked updates across distinct
+fragments and from a direct named program. One end-to-end qualification
+uses an independent finite model for recursive reachability, negation,
+finite mapping, grouped count and a max lattice, then checks both
+withdrawal and failure rollback. [[file:research/scheme-dsl/deletion-h18.org][H18]] makes explicit that this is
+atomic recomputation, pending any support-aware deletion algorithm.
+The LLM candidate/observation contract follows the admitted Scheme
+core; it cannot claim stronger semantics than that core provides.
+Flix and Datafun inform semantic questions;
+neither language's surface is a target for copying.
+
+* Semantic and lifecycle sketch
+:PROPERTIES:
+:CUSTOM_ID: scheme-dsl-architecture
+:END:
+
+A conceptual program flow is below.  Names and syntax are explanatory,
+not promised API spelling.
+
+#+begin_src scheme
+;; Schematic, not implemented.
+(def (reachability edge-handle)
+  (fragment
+    (import (edge edge-handle))
+    (private (path (vertex vertex)))
+    (export (reach path))
+    (rule (path ?x ?y) (edge ?x ?y))
+    (rule (path ?x ?z) (path ?x ?y) (edge ?y ?z))))
+(def reach (reachability edge-handle))
+(def program (compose (inject edge-handle edge-rows) reach))
+(def checked (admit program))
+(def solved (solve checked))
+(query solved (export-of reach 'reach))
+#+end_src
+
+Construction can use normal Scheme functions and POO declarations.
+Admission validates the assembled program: relation identity and arity,
+lexical captures, bound inputs, dependencies, negative cycles, and
+operator effects.  Fixed-point execution uses visible positive atoms
+for join and delta planning.  Solving produces either a completed
+snapshot or explicit failure; querying does not rerun a program.
+
+#+NAME: scheme-language-layers
+| Phase | Object | Obligation |
+|-------+--------+------------|
+| Construct | Fragment/program values | Fresh private handles; explicit imports/exports |
+| Admit | Immutable logical IR | Modes, schema, effects, dependency graph, strata |
+| Evaluate | Sets and ordered state | Stable monotone contribution; closure or failure |
+| Session | Accepted source snapshot | Replacement invalidation and failure atomicity |
+| Query | Solved immutable result | Repeatable projection without mutation |
+
+A fixed point may call a pointwise function =f : I -> finite-set(O)=.
+For a growing input relation =R= it contributes the union of =f(i)=
+for =i in R=.  This contribution grows with =R= only when =f= remains
+stable for that snapshot and reads no hidden changing relations.
+Even then, a recursive successor can generate unbounded facts.  A
+fact budget is an explicit failure bound, never evidence of completed
+least-fixed-point termination.  A finite-domain claim requires domain
+checks and rejection of out-of-domain rows.
+
+* Acceptance and open questions
+:PROPERTIES:
+:CUSTOM_ID: scheme-dsl-migration
+:END:
+
+The first native fixture should combine fragment reuse with private
+handles, source injection/replacement, scalar projection, zero/one/many
+row adapters, recursion, lattice refinement, negation, explicit solve,
+and repeated queries.  Compare complete facts with an independent
+finite model.  Inspect admitted dependency edges, selected indexes and
+delta positions; exercise admission failures, failure atomicity and
+matched scale.  Rewrite the current syntax and tests directly once the
+Scheme contract is settled; old Rust-shaped forms are not retained as
+public aliases or release gates.
+
+#+NAME: scheme-discussion-questions
+| Question for us | Why it changes the design | Next evidence |
+|-----------------+---------------------------+---------------|
+| Should private relation handles be first-class values or exist only in a fragment scope? | Controls hygiene and how fragments share relations | Two-instantiation and cross-module fixture |
+| Should the pointwise adapter be one =relation-view= declaration or several typed operators? | Controls ergonomics and planner precision | Compare integrated fixture and diagnostic quality |
+| Which restricted Scheme expressions can be mechanically certified pure and stable? | Sets the boundary between trusted and verified rule-time code | Scope, capture, effect, and divergence counterexamples |
+| Which finite domains and lattice orders can be admitted without hidden truncation? | Determines when completion can be claimed | Independent finite fixed-point model |
+| What is the smallest public program signature that supports safe composition? | Balances abstraction against combined-program admission | Late cycle and schema-change fixtures |
+| When is typed higher-order delta worth the compiler cost? | Controls the transition beyond first-order specialization | Reference evaluator, transformed evaluator, scale profile |
+
+These are design questions, not deferred proof by terminology.  A
+restricted operator IR may eventually support checked monotonicity and
+higher-order change semantics.  Until then, rule-time arbitrary Scheme
+procedures are trusted adapters with bounded claims.
+
+* Reading path
+
+- [[file:research/scheme-dsl/language-history.org][Language history and design lineage]]
+- [[file:research/scheme-dsl/index.org][Structured research index and individual paper notes]]
+- [[file:scheme-relational-language-design.org][First Scheme language design gate]]
+- [[file:research/agent-inference/index.org][Deployment-time LLM reasoning research index]]
+- [[file:llm-reasoning-library-plan.org][LLM reasoning Library implementation discussion]]

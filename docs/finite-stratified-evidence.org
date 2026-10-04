@@ -1,0 +1,170 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+#+TITLE: Finite stratified evidence for inspected candidates
+#+STATUS: bounded replay, proof producer and checker implemented; general provenance open
+#+DATE: 2026-10-01
+#+FILETAGS: :ascent:scheme:evidence:verification:
+
+* Claim
+:PROPERTIES:
+:CUSTOM_ID: finite-stratified-evidence-claim
+:END:
+
+For one valid copied source snapshot, one already inspected inert candidate,
+and a completed native query, =candidate-finite-evidence= computes the exact
+finite relation sets using a separate interpreter. It accepts the native
+answer only when its query rows equal this replay. The returned closure
+contains all source and derived relations, including relations read by
+negation and reduction. =candidate-verify-finite-evidence= checks snapshot
+identity, generation and digest, program fingerprint, candidate digest,
+query, closure shape and the native answer, then independently recomputes
+the finite model. A changed closure, source, program or answer fails.
+
+The semantic claim is *relative*: within the supplied finite snapshot and
+inspected rule program, a verified closure is exactly the stratum-by-stratum
+least fixed point. It can justify the presence or absence of a *ground*
+tuple in that model and exact values for the checked =count=, =sum=, =min=
+and =max= reductions. It does not prove that the caller supplied all
+real-world facts, that the candidate expresses the user's intent, or that
+one missing tuple has a unique Why-Not cause. It contains no complete
+derivation provenance or causal counterfactual proof.
+
+* Replay rules
+:PROPERTIES:
+:CUSTOM_ID: finite-stratified-evidence-rules
+:END:
+
+1. Candidate facts are a hypothetical source overlay. Duplicate rows form
+   one set tuple. The source snapshot remains immutable.
+2. Positive dependencies may read their own stratum; a negative or reduce
+   dependency must read a strictly lower completed stratum. A strict cycle
+   is unsupported.
+3. Each stratum starts with its admitted input rows and adds rule heads
+   until no new row appears. Fixed =where= and =compute= operations are
+   recomputed from prior bindings. A negated atom succeeds only when no
+   matching lower-stratum tuple exists; wildcards mean existential match.
+4. A reduction matches every distinct source tuple under the current
+   bindings. =count= and =sum= emit zero for an empty group; =min= and =max=
+   emit no value. The verifier enforces the candidate's finite derived-row
+   limit and a separate work budget before claiming completion.
+5. =complete= means replay and native query agree and the closure fits
+   hard certificate caps; =mismatch= means they disagree; =bounded= means
+   a work, derived-row or certificate cap prevented completion;
+   =unsupported= means native completion or a valid stratification is absent.
+   Verification returns =valid=, =invalid= or =bounded=.
+
+The =candidate-verify-stratified-proof= checker adds a *supplied* derivation
+DAG for a nonempty completed query. Each source node names a snapshot row
+position, each hypothetical fact node names the inspected fact label, and
+each rule node names a rule label and one witness per clause. Positive atoms
+refer to earlier nodes. A negated atom is checked against the exact completed
+lower-stratum relation, with the preceding bindings fixed. A reduction
+enumerates earlier nodes for its complete matching group; the checker compares
+the distinct rows against the replayed relation before recomputing
+=count=, =sum=, =min= or =max=. Fixed scalar operations are recomputed. Root
+nodes must equal all native query rows. Both the supplied proof and its work
+have explicit bounds; the checker returns =unsupported= for an empty answer.
+
+The checker first validates the finite certificate and obtains the *freshly
+replayed* closure from =candidate-verified-finite-closure=. It does not trust
+the certificate's mutable closure as a source of lower-stratum facts.
+=candidate-produce-stratified-proof= now searches that verified closure by
+stratum and fixed-point round, emits one founded support per reachable row,
+and calls the checker before returning =complete= with a proof. It returns
+=bounded= when its work/node limit is exhausted, =unsupported= for an empty
+answer or missing support, and =invalid= when the certificate or produced
+proof fails verification. This API is separate from the existing positive
+receipt proof. A caller can request attachment to an ordinary receipt by
+passing a fourth positive =reasoning-attempt= argument. The same budget caps
+finite replay and proof search; omission leaves the existing receipt path
+unchanged. The attached value exposes its finite certificate, proof datum and
+=complete=, =bounded=, =unsupported=, =mismatch= or =invalid= status.
+=reasoning-verify-stratified-receipt= checks the current snapshot/proposal
+binding, reinspects the inert candidate, and independently checks a
+=complete= proof with a caller-selected positive verification budget. The
+other verdicts never validate a proof by implication. An empty query still
+has a finite certificate that can be checked through
+=reasoning-verify-finite-receipt=, but its proof status is =unsupported=.
+
+#+begin_src scheme
+(def receipt (reasoning-attempt snapshot candidate 100000 20000))
+(reasoning-verify-finite-receipt receipt snapshot candidate 20000)
+;; => valid for the bounded finite model, including an empty answer
+(reasoning-verify-stratified-receipt receipt snapshot candidate 20000)
+;; => valid only for a completed, founded nonempty proof
+#+end_src
+
+The bounded claim is relative to the supplied snapshot and inspected
+candidate. Neither the producer nor checker provides exhaustive lineage for
+every derivation, a Why-Not explanation, open-world absence, source
+authentication, or larger-scale performance evidence. A general recursive
+Why/Why-Not representation needs separate semantics and tests.
+The older [[file:research/scheme-dsl/positive-provenance.org][positive proof]] and
+[[file:llm-reasoning-library-plan.org][LLM Library plan]] retain their own
+narrower statuses.
+
+* Executable checks
+:PROPERTIES:
+:CUSTOM_ID: finite-stratified-evidence-checks
+:END:
+
+=t/qualification/ascent-finite-evidence-test.ss= checks negation combined
+with recursive path closure, fixed arithmetic and reduction; all four
+reducers including empty groups; a negated wildcard; source correction;
+changed certificate rows; a stale generation; replay/native disagreement;
+and all 64 directed three-node graph subsets against a separate
+reachability count model. The last corpus is finite evidence for those
+programs only. Neither that corpus nor the replay is a model-benefit test.
+
+=t/qualification/ascent-stratified-proof-test.ss= checks founded negation,
+fixed computation and reduction support, all four reducers and empty groups;
+it rejects omitted or repeated group support, forward references, a changed
+negative row, stale source generation, altered closure, wrong roots and a
+proof-work cap. It checks produced proofs for these cases and every nonempty
+answer among all 64 directed three-node graph subsets against the independent
+checker; an empty answer returns =unsupported=. A separate hand-calculated
+recursive path, negation and count case checks source correction and duplicate
+edge support (counts 1, 2 and 2), then rejects the old certificate against
+the changed source. Separate finite-replay and proof-search budget tests return
+=bounded=. These are bounded examples, not a completeness theorem.
+
+=t/qualification/ascent-reasoning-library-test.ss= exercises the optional
+ordinary-receipt path with recursion, negation, fixed operations and a
+reduction. It checks source correction, wrong-proposal binding, a changed
+proof root, an independent verification budget, and native completion after
+evidence budget exhaustion. For an empty answer it verifies the finite
+certificate while the proof remains =unsupported=.
+The shared =scheme-library-contract-test.ss= checks requested receipt proofs
+alongside direct native, fragment and candidate outputs against one
+independent finite model on eight diagnostic graph snapshots.
+
+#+begin_src sh
+ASCENT_GXTEST_TIMEOUT=180s just test-file t/qualification/ascent-finite-evidence-test.ss
+ASCENT_GXTEST_TIMEOUT=180s just test-file t/qualification/ascent-stratified-proof-test.ss
+#+end_src
+
+* Model gate and next proof gate
+:PROPERTIES:
+:CUSTOM_ID: finite-stratified-evidence-next
+:END:
+
+POO Flow Python Testing completed two small paired model pilots with the
+tasks, source fixtures, model settings, request cap and choice/boundary
+scores fixed before each run. The per-case results and limitations are in
+[[https://github.com/tao3k/poo-flow/pull/34][POO Flow PR #34]]. They did not establish general model benefit. The
+temporal-causality cases separately inspect a native closed cut and an
+open parent; this finite relation replay does not itself certify valid
+time, knowledge time, causal cuts or release authority.
+
+The checked subset now has an opt-in receipt path. It binds the same snapshot,
+candidate digest, query rows and finite certificate, preserves native
+completion when proof generation is bounded or unsupported, and states its
+additional work budget. Independent small-case expectations cover recursive,
+negative and reduction strata, source changes and duplicate support; finite
+and proof work caps are separate in the direct API. The 64-graph producer
+corpus relies on the separate checker for proof validity; its answer model is
+exercised by the finite-evidence corpus. The remaining proof gate is broader
+independent oracle coverage for combined clauses and capacity limits.
+General negative explanations, exhaustive lineage and model benefit remain
+separate research gates.

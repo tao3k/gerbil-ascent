@@ -1,0 +1,137 @@
+#+TITLE: Ground Why-Not Certificate for Finite Positive Rules
+#+DATE: 2026-10-01
+#+STATUS: Implemented bounded certificate
+#+FILETAGS: :ascent:scheme:provenance:why-not:
+
+* Claim and assumptions
+:PROPERTIES:
+:CUSTOM_ID: ascent-positive-nonmembership-claim
+:END:
+
+The certificate answers only a *ground* tuple question for one copied
+snapshot and one inspected program.  Let =D= be the finite relation-tagged
+source rows, =H= the candidate facts (which the inspector permits only on
+source relations), and =P= safe rules whose bodies contain positive
+atoms and checked, deterministic =where=/=compute= clauses only, and
+whose heads write derived relations. The
+inspector has already checked schema, arity, bound head variables and
+these source/derived boundaries.  The generator and verifier additionally
+check this positive subset and a ground query. Fixed scalar operations
+may produce values outside the input domain; the certificate is issued
+only when finite saturation fits the row and work bounds.
+
+The certificate gives a finite relation set =C= for *every declared
+relation*. Its checker establishes:
+
+#+name: why-not-obligations
+| Obligation | Check |
+|------------+-------|
+| Scope | Snapshot identity, generation, digest; candidate digest and independently recomputed inspected-program fingerprint; exact ground query |
+| Input inclusion | Every row of =D= and =H= belongs to its named relation in =C= |
+| Rule closure | Every grounded body instance drawn from =C=, after fixed filters and computations, has its head tuple in =C= |
+| Target absence | The ground target tuple is absent from its relation in =C= |
+| Native boundary | Native solve completed and returned no row for that query |
+| Finite work | Generation and rule-instance verification have separate work caps; exhaustion yields =bounded=. External certificates also have hard relation, row and cell size limits. |
+
+For positive rules, =D ∪ H ⊆ C= and =T_P(C) ⊆ C= imply by induction that
+the least fixed point =L(P,D∪H) ⊆ C=. Therefore the absent target is not
+in that least fixed point. This is a nonmembership proof relative to the
+specified rows and rules.  =C= may contain extra well-typed rows: a
+larger inductive invariant still suffices if the target stays absent.
+The producer currently computes the independent finite closure; the
+checker establishes the invariant without trusting how =C= was produced.
+
+This is a closed-world claim *inside the supplied snapshot*. ASCENT
+does not certify that the source list captures all events, that the
+caller has authority to assert it complete, or that no revision arrived
+later. POO Flow Temporal owns those completeness, revision and admission
+conditions. The certificate binds local content, not an authenticated
+external source identity.
+
+* API and statuses
+:PROPERTIES:
+:CUSTOM_ID: ascent-positive-nonmembership-api
+:END:
+
+=candidate/nonmembership.ss= exports
+=candidate-positive-nonmembership= and
+=candidate-verify-positive-nonmembership=. The generator receives an
+inspected candidate, completed native status and rows, candidate digest,
+and work budget. It returns a =positive-nonmembership= with =complete=,
+=bounded= or =unsupported= status and, only for =complete=, the finite
+per-relation closure. The checker receives a separate verification cap
+and returns =valid=, =bounded= or =invalid=. It enumerates all body
+matches against the supplied =C=, checking each resulting head tuple.
+The verification work cap counts row preflight, rule-body probes and
+fixed-clause evaluations; it is not a total CPU instruction bound.
+Before this enumeration, the
+checker rejects a supplied certificate over 64 relations, 4096 rows,
+32768 scalar cells or 1024 cells in one row. These are independent
+hard input-size limits, so even a caller-supplied huge closure cannot
+force an unbounded preflight walk. All checks still run locally on
+untrusted data, and the certificate does not authenticate a source.
+
+=reasoning-attempt= attaches this value through
+=reasoning-receipt-nonmembership=. The outer receipt can report a
+completed native query while its nonmembership field says =bounded= or
+=unsupported=. Consumers must require both native =complete= and
+certificate =complete=, then independently verify it against the exact
+inspected program and snapshot. The existing graph-specific reachable
+cut remains only a diagnostic; it is not this certificate.
+
+* Formal boundary
+:PROPERTIES:
+:CUSTOM_ID: ascent-positive-nonmembership-formal
+:END:
+
+=packages/proofs/lean/PositiveNonmembership.lean= defines relation inclusion,
+monotone rule step, the least closed relation, and proves the
+nonmembership implication for any relation-tagged target. It also
+proves the least closed relation is fixed under a monotone step. The
+Lean theorem is abstract: it does not establish that the Gerbil
+inspector, generator, or verifier implements the premises. The finite
+qualification cases and independent checker are separate evidence for
+that mapping.
+
+=packages/proofs/tla/PositiveNonmembershipSession.tla= models local snapshot
+generation and two-source atomic cut replacement, proof computation,
+bounded failure, publishing and using a certificate. A stale
+computation may finish after a source swap but cannot publish or be
+used as current. This is an ASCENT-local lifecycle model. It does not
+represent POO Flow's source authority, evidence assessment, or
+cross-GQL admission.
+
+=just check-nonmembership-formal= compiles the Lean file and explores
+the bounded TLC configuration. The checked configuration has four
+two-source cuts and generations 0–2; TLC explored 72 distinct states
+and reported no invariant violation. The gate accepts =TLC_BIN= when
+=tlc= is not on =PATH=. This finite search does not prove arbitrary
+session behavior or correspondence to the Scheme implementation.
+
+* Evidence and exclusions
+:PROPERTIES:
+:CUSTOM_ID: ascent-positive-nonmembership-evidence
+:END:
+
+=just test-file t/qualification/ascent-positive-nonmembership-test.ss=
+checks public receipt integration, closure rows, independent replay,
+missing source/candidate row, broken rule closure, altered digest,
+oversized external closure, fixed scalar closure and a corrupted
+computed row, generation and verification budgets, an actually derivable target,
+non-ground query, negative rule, and incomplete native execution.
+The complete Scheme qualification passed with bounded two-file batches
+and standalone exhaustive operator modules. The harness now fails after
+5 seconds without output, including startup, and has a 45-second
+per-batch total limit. Verbose =gxtest= case logs and flushed finite
+graph progress are actual test progress. The earlier single-process
+harness triggered a POO Flow debug memory watchdog after the new proof
+tests had passed.
+
+Negation, aggregate/reducer bodies, arbitrary
+Scheme callbacks, and non-ground query patterns remain unsupported by
+this certificate. The omitted-premise summary sometimes desired for
+interactive Why-Not is future work; a summary is not the proof.
+The [[https://arxiv.org/abs/1808.05752][PUG extended paper]] studies richer Why/Why-Not
+provenance and relevant failure explanations. Our finite inductive
+certificate is a narrower local design and does not implement PUG's
+provenance graph or sampling methods.

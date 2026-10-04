@@ -1,0 +1,18 @@
+{
+  "baseline_head": "674c68c6bba8c4a7f291e3a1699815226038f268",
+  "transformations": "analysis unchanged; positive imports relocated; evaluate imports relocated and public function alpha renames only",
+  "files": [
+    {
+      "file": "t/qualification/ascent-workspace-reference-analysis.ss",
+      "sha256": "1a5c0216db986c29f260a118ac895ebfd9de49a2276864bc26860152f5e15e99"
+    },
+    {
+      "file": "t/qualification/ascent-workspace-reference-positive.ss",
+      "sha256": "2d6b7ec6824733668f568f8753bb8f7fb96499bbbd6bdff75a4e66f652c4927b"
+    },
+    {
+      "file": "t/qualification/ascent-workspace-reference-evaluate.ss",
+      "sha256": "eeb629221d34cc2ad0478058788da1577003c0a378c19b8e2c69053172fc0369"
+    }
+  ]
+}

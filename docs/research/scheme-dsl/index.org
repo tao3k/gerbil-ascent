@@ -1,0 +1,125 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+#+TITLE: Scheme relational DSL research index
+#+STATUS: source ledger, design questions and bounded local receipts
+#+DATE: 2026-10-01
+#+FILETAGS: :research:scheme-dsl:
+
+* Scope
+:PROPERTIES:
+:CUSTOM_ID: scheme-dsl-research
+:END:
+
+These notes preserve stable source links, page and section locators,
+bounded readings, and experiments for the [[file:../../scheme-relational-dsl-design.org][Scheme relational DSL overview]].
+The linked PDFs remain the primary sources; this repository records our
+analysis so future design work can resume from a precise location.
+The [[file:language-history.org][language history]] traces the design lineage across
+the papers before the overview states our current choices.
+The [[file:../../scheme-relational-language-design.org][first language design gate]]
+turns these constraints into a proposed Scheme surface and semantic
+qualification plan before implementation changes.
+The [[file:reflection.org][research reflection and A/B protocol]]
+separates established results, our departures, and evidence needed
+before any claim of improvement.
+The [[file:e4-positive-change.org][E4 local receipt]] records the finite positive-change
+implementation, exact-set checks, paired operation counts, raw timing
+samples and its scope limit.
+The [[file:e4-retained-session.org][retained Session receipt]] follows the same operator graph into the
+native indexed evaluator, checks update/withdrawal semantics and
+compares update latency with fresh materialization.
+The [[file:deletion-h18.org][deletion study]] records DRed/Counting prerequisites, the current
+cross-fragment atomic transaction gate, and a falsifiable route to a
+future incremental deletion experiment.
+The [[file:positive-provenance.org][finite positive provenance gate]] records a replayable
+rule-instance DAG for inspected positive atom proposals, with source and
+candidate facts separated and no general Why-Not claim.
+The [[file:positive-nonmembership.org][ground Why-Not certificate]] checks a finite
+post-fixed relation set for the same positive subset, relative to one
+snapshot and program; source completeness remains a caller obligation.
+
+#+NAME: source-ledger
+| Key | Source and durable link | Local note | Main design constraint |
+|-----+-------------------------+------------+------------------------|
+| A22 | [[https://thomas.gilray.org/pdf/seamless-deductive.pdf][Ascent paper]] | [[file:ascent-a22.org][Ascent]] | Preserve rule and planner information |
+| F16 | [[https://www.cl.cam.ac.uk/~nk480/datafun.pdf][Datafun paper]] | [[file:datafun-f16.org][Datafun]] | State monotonicity assumptions explicitly |
+| H13 | [[https://www.schemeworkshop.org/2013/papers/HemannMuKanren2013.pdf][µKanren paper]] | [[file:microkanren-h13.org][µKanren]] | Distinguish search from bottom-up evaluation |
+| F20 | [[https://plg.uwaterloo.ca/~olhotak/pubs/oopsla20c.pdf][Flix paper]] / [[https://doi.org/10.1145/3428193][DOI]] | [[file:flix-f20.org][Flix]] | Validate composition and stratification |
+| S20 | [[https://www.rntz.net/files/seminaive-datafun.pdf][Datafun semi-naive paper]] / [[https://doi.org/10.1145/3371090][DOI]] | [[file:datafun-s20.org][Datafun S20]] | Higher-order deltas need typed transformation |
+| B22 | [[https://arxiv.org/pdf/2203.16684][DBSP paper]] / [[https://doi.org/10.48550/arXiv.2203.16684][DOI]] | [[file:dbsp-b22.org][DBSP]] | Separate retained update work from full reconstruction |
+| H18 | [[https://ojs.aaai.org/index.php/AAAI/article/view/11554/11413][DRedc paper]] / [[https://doi.org/10.1609/aaai.v32i1.11554][DOI]] | [[file:deletion-h18.org][Deletion H18]] | Count supports separately before maintaining recursive deletions |
+| L25 | [[https://plg.uwaterloo.ca/~olhotak/pubs/oopsla25b.pdf][Flix design paper]] / [[https://doi.org/10.1145/3763126][DOI]] | [[file:flix-l25.org][Flix L25]] | Program values, private names and solve/query boundary |
+
+* Cross-paper synthesis
+:PROPERTIES:
+:CUSTOM_ID: scheme-dsl-synthesis
+:END:
+
+A22 makes relation atoms, dependencies, and join planning central,
+while its arrow and host forms are embedding choices rather than a
+syntax requirement for our Scheme language.  F16 supplies
+a formal example of functional fixed points guarded by monotonicity and
+finite-height structure.  H13 shows how a small Scheme relational core
+can gain a user interface through ordinary functions and macros, but its
+stream search is a different evaluator.  F20 makes whole Datalog
+fragments first-class values and checks the composition they form.
+
+Our proposed =relation-view= is an inference across those sources: a
+fixed, finite, pointwise Scheme function contributes rows monotonically
+as *input tuples* grow.  No cited paper proves arbitrary Gerbil
+procedures stable, pure, terminating, or visible to the planner.  Those
+are explicit admission and test obligations in the proposal.
+
+The deeper [[file:datafun-f16.org::#datafun-termination][Datafun reading]] separates
+monotonicity from termination: one emitted row per call can generate
+an infinite recursive chain.  An explicit finite-height fact domain
+could support a closure claim; the current fact budget only bounds
+execution through failure.  This changes the proposed view's
+acceptance gate, not the current implementation's evidence status.
+
+The other sources constrain separate boundaries: [[file:ascent-a22.org::#ascent-rule-boundary][Ascent]]
+requires planner-visible bindings and dependencies;
+[[file:flix-f20.org::#flix-composition-boundary][Flix]] requires checks after
+fragments are assembled and has a stronger static assurance that this
+repo does not implement; [[file:microkanren-h13.org::#microkanren-kernel-boundary][µKanren]]
+supports a small Scheme kernel with user-level syntax while retaining
+its distinct stream-search semantics.
+
+The long-term [[file:../../scheme-relational-dsl-design.org::#scheme-dsl-architecture][architecture decision]]
+now separates Scheme functions that *construct* program values from
+functions evaluated *inside* a fixed point.  The former can remain
+ordinary higher-order Scheme.  The latter need declared bindings,
+effects, dependencies, stable captures, and a finite-height or explicit
+resource-failure story.  A =relation-view= is a possible pointwise
+adapter; it is not the whole language design.  [[file:datafun-s20.org][S20]]
+provides a research route to higher-order delta evaluation after a
+typed operator IR exists, while [[file:flix-l25.org][L25]] adds
+hygienic private predicates and explicit program/solve/query stages.
+
+#+NAME: paper-transfer-decision
+| Source | Adopt as design constraint | Do not infer |
+|--------+----------------------------+--------------|
+| A22 | Preserve inspectable atoms, SCC/delta and join visibility | Rust arrow syntax or Rust performance transfers |
+| F16 | Require stable monotone dependence and finite-height closure evidence | Arbitrary Scheme calls are statically proven |
+| F20 | Check combined schema and negative cycles after composition | Gerbil fragments have row-polymorphic static safety |
+| H13 | Keep a small semantic kernel beneath Scheme abstractions | Stream-search fairness equals bottom-up completion |
+| S20 | Explore typed higher-order change semantics | Existing opaque closures receive a semi-naive theorem |
+| B22 | Compare retained update to fresh materialization with explicit lifecycle scope | Our native Session implements DBSP stream semantics or its complexity bounds |
+| L25 | Design program values, private handles and explicit solve/query | Flix syntax or static effect/type system already exists here |
+
+* Current evidence and next gate
+
+The native Scheme grammar now combines recursion, checked scalar
+capture, finite zero/one/many views, fragment composition, source
+replacement and rejection diagnostics. The finite operator corpus
+compares complete results with an independent graph model. The E4
+probe measures positive insertion change within the finite set
+interpreters; it is not an indexed-engine or cross-language result.
+
+The native retained Session now owns cross-call state for first-class
+operator fragments. The separate finite interpreter remains a semantic
+check and does not gain a persistent cache. Deletion-aware change and a
+general typed higher-order calculus remain separate research
+obligations. Match lifecycle cost, larger scale and allocation receipts
+before any broad performance conclusion.

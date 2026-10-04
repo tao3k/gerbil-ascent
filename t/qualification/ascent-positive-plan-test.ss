@@ -1,0 +1,168 @@
+;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+(import (only-in :std/test test-suite check-equal?)
+        (only-in :core/observability/testing-case poo-flow-test-case)
+        (only-in :clan/poo/object .o .ref)
+        (only-in :gerbil-ascent/program/interface
+                 gerbil-ascent-program gerbil-ascent-relation gerbil-ascent-variable
+                 gerbil-ascent-literal gerbil-ascent-wildcard gerbil-ascent-atom
+                 gerbil-ascent-rule gerbil-ascent-guard)
+        (only-in :gerbil-ascent/program/evaluate
+                 gerbil-ascent-evaluate-program gerbil-ascent-make-engine)
+        (only-in :gerbil-ascent/table/storage gerbil-ascent-set-storage-provider)
+        (only-in :gerbil-ascent/table/provider gerbil-ascent-hash-index-provider)
+        (only-in :gerbil-ascent/t/qualification/ascent-positive-plan-reference-evaluate
+                 ascent-positive-plan-reference-evaluate-program
+                 ascent-positive-plan-reference-make-engine))
+(export ascent-positive-plan-test)
+(def (v name) (gerbil-ascent-variable name))
+(def (a name . terms) (gerbil-ascent-atom name terms))
+(def (rows result name) ((.ref result 'rows-of) name))
+(def (compare program names)
+  (let ((old (ascent-positive-plan-reference-evaluate-program program))
+        (new (gerbil-ascent-evaluate-program program)))
+    (for-each (lambda (name) (check-equal? (rows new name) (rows old name))) names)
+    (check-equal? (.ref new 'finished) (.ref old 'finished))
+    new))
+(def (path-program edges)
+  (let ((x (v 'x)) (y (v 'y)) (z (v 'z)))
+    (gerbil-ascent-program
+     (list (gerbil-ascent-relation 'edge 2 edges)
+           (gerbil-ascent-relation 'path 2 []))
+     (list (gerbil-ascent-rule (list (a 'path x y)) (list (a 'edge x y)))
+           (gerbil-ascent-rule (list (a 'path x z))
+                              (list (a 'path x y) (a 'edge y z))))
+     32 64 96)))
+(def ascent-positive-plan-test
+  (test-suite "Complete positive rule slot plans"
+    (poo-flow-test-case "all 512 directed three-node graphs match independent reachability"
+      (let (pairs (apply append (map (lambda (x) (map (lambda (y) (list x y)) '(0 1 2))) '(0 1 2))))
+        (for-each
+         (lambda (bits)
+           (let* ((edges (filter-map (lambda (edge index)
+                                     (and (not (zero? (bitwise-and bits (arithmetic-shift 1 index)))) edge)) pairs (iota 9)))
+                  (matrix (make-vector 9 #f)))
+             (for-each (lambda (edge) (vector-set! matrix (+ (* 3 (car edge)) (cadr edge)) #t)) edges)
+             (for-each
+              (lambda (k)
+                (for-each (lambda (x)
+                            (for-each (lambda (y)
+                                        (when (and (vector-ref matrix (+ (* 3 x) k))
+                                                   (vector-ref matrix (+ (* 3 k) y)))
+                                          (vector-set! matrix (+ (* 3 x) y) #t))) '(0 1 2))) '(0 1 2))) '(0 1 2))
+             (let ((actual (rows (compare (path-program edges) '(edge path)) 'path))
+                   (expected (filter (lambda (edge) (vector-ref matrix (+ (* 3 (car edge)) (cadr edge)))) pairs)))
+               (check-equal? (length actual) (length expected))
+               (check-equal? (andmap (lambda (edge) (if (member edge actual) #t #f)) expected) #t))))
+         (iota 512))))
+    (poo-flow-test-case "failed candidates and repeated variables never expose stale slots"
+      (let ((x (v 'x)) (y (v 'y)))
+        (let (result (compare
+                      (gerbil-ascent-program
+                       (list (gerbil-ascent-relation 'input 3 '((1 2 0) (3 3 1) (4 4 0) (5 6 1) (#f #f 1)))
+                             (gerbil-ascent-relation 'out 1 []))
+                       (list (gerbil-ascent-rule (list (a 'out x))
+                                                (list (a 'input x x (gerbil-ascent-literal 1))))) 32 32 64)
+                      '(out)))
+          (check-equal? (rows result 'out) '((3) (#f))))))
+    (poo-flow-test-case "wildcards zero-arity atoms and literal heads preserve ordered outputs"
+      (let ((x (v 'x)) (w (gerbil-ascent-wildcard)))
+        (let (result (compare
+                      (gerbil-ascent-program
+                       (list (gerbil-ascent-relation 'flag 0 '(()))
+                             (gerbil-ascent-relation 'input 2 '((1 a) (2 b) (1 c)))
+                             (gerbil-ascent-relation 'out 2 []))
+                       (list (gerbil-ascent-rule (list (a 'out (gerbil-ascent-literal 'tag) x))
+                                                (list (a 'flag) (a 'input x w)))) 32 32 64)
+                      '(out)))
+          (check-equal? (rows result 'out) '((tag 2) (tag 1))))))
+    (poo-flow-test-case "indexed fanout and multiple heads retain exact key and callback order"
+      (let* ((x (v 'x)) (y (v 'y)) (calls [])
+             (provider (.o (:: @ gerbil-ascent-hash-index-provider)
+                           (.lookup-index (lambda (table key)
+                                      (set! calls (cons key calls))
+                                      ((.ref gerbil-ascent-hash-index-provider '.lookup-index) table key)))))
+             (p (gerbil-ascent-program
+                 (list (gerbil-ascent-relation 'left 1 '((0) (1)))
+                       (gerbil-ascent-relation 'right 2 (map (lambda (n) (list (modulo n 2) n)) (iota 40)) provider)
+                       (gerbil-ascent-relation 'out 2 [])
+                       (gerbil-ascent-relation 'copy 1 []))
+                 (list (gerbil-ascent-rule (list (a 'out x y) (a 'copy y))
+                                          (list (a 'left x) (a 'right x y)))) 64 128 192))
+             (old (ascent-positive-plan-reference-evaluate-program p)) (old-calls calls))
+        (set! calls [])
+        (let (new (gerbil-ascent-evaluate-program p))
+          (check-equal? calls old-calls)
+          (check-equal? (rows new 'out) (rows old 'out))
+          (check-equal? (rows new 'copy) (rows old 'copy)))))
+    (poo-flow-test-case "custom output expansion observes the same candidates and pending snapshots"
+      (let* ((x (v 'x)) (calls [])
+             (storage (.o (:: @ gerbil-ascent-set-storage-provider)
+                          (.extend-rows (lambda (_state all pending row budget)
+                                          (set! calls (cons (list all pending row budget) calls))
+                                          (list row (list (+ 10 (car row))))))))
+             (p (gerbil-ascent-program
+                 (list (gerbil-ascent-relation 'input 1 '((1) (1) (2)))
+                       (gerbil-ascent-relation 'out 1 [] gerbil-ascent-hash-index-provider storage))
+                 (list (gerbil-ascent-rule (list (a 'out x)) (list (a 'input x)))) 32 32 64))
+             (old (ascent-positive-plan-reference-evaluate-program p)) (old-calls calls))
+        (set! calls [])
+        (let (new (gerbil-ascent-evaluate-program p))
+          (check-equal? (rows new 'out) (rows old 'out))
+          (check-equal? calls old-calls))))
+    (poo-flow-test-case "retained appends replacements and zero-timeout runs preserve snapshots"
+      (let* ((p (path-program '((0 1) (1 2))))
+             (old (ascent-positive-plan-reference-make-engine p #t))
+             (new (gerbil-ascent-make-engine p #t))
+             (old-first ((.ref old '.run))) (new-first ((.ref new '.run))))
+        (for-each (lambda (engine) ((.ref engine '.append-source!) 'edge '(2 0))) (list old new))
+        (for-each (lambda (engine) ((.ref engine '.run-timeout) 0)) (list old new))
+        (check-equal? (rows ((.ref new '.run)) 'path) (rows ((.ref old '.run)) 'path))
+        (check-equal? (rows old-first 'path) (rows new-first 'path))
+        (for-each (lambda (engine) ((.ref engine '.replace-source!) 'edge '((2 1)))) (list old new))
+        (check-equal? (rows ((.ref new '.run)) 'path) (rows ((.ref old '.run)) 'path))))
+    (poo-flow-test-case "wide rules read numeric slots without a fixed variable limit"
+      (let* ((variables (map (lambda (n) (v (string->symbol (string-append "v" (number->string n))))) (iota 40)))
+             (source (iota 40))
+             (p (gerbil-ascent-program
+                 (list (gerbil-ascent-relation 'input 40 (list source))
+                       (gerbil-ascent-relation 'out 40 []))
+                 (list (gerbil-ascent-rule
+                        (list (gerbil-ascent-atom 'out (reverse variables)))
+                        (list (gerbil-ascent-atom 'input variables)))) 16 16 32)))
+        (check-equal? (rows (compare p '(out)) 'out) (list (reverse source)))))
+    (poo-flow-test-case "compiled emission preserves derived and output budget errors"
+      (def (outcome solve p)
+        (with-catch (lambda (failure) (error-message failure)) (lambda () (solve p) 'success)))
+      (for-each
+       (lambda (limits)
+         (let* ((x (v 'x))
+                (p (gerbil-ascent-program
+                    (list (gerbil-ascent-relation 'input 1 '((1) (2)))
+                          (gerbil-ascent-relation 'out 1 []))
+                    (list (gerbil-ascent-rule (list (a 'out x)) (list (a 'input x))))
+                    16 (car limits) (cadr limits))))
+           (check-equal? (outcome gerbil-ascent-evaluate-program p)
+                         (outcome ascent-positive-plan-reference-evaluate-program p))
+           (check-equal? (outcome gerbil-ascent-evaluate-program p) (caddr limits))))
+       '((1 64 "ASCENT derived fact budget exceeded")
+         (64 3 "ASCENT output fact budget exceeded"))))
+    (poo-flow-test-case "cached plans never share frames across concurrent engines"
+      (let* ((p (path-program '((0 1) (1 2) (2 0))))
+             (expected (rows (ascent-positive-plan-reference-evaluate-program p) 'path))
+             (workers (map (lambda (_) (spawn (lambda () (rows (gerbil-ascent-evaluate-program p) 'path)))) (iota 8))))
+        (for-each (lambda (worker) (check-equal? (thread-join! worker) expected)) workers)))
+    (poo-flow-test-case "unsupported callback clauses preserve callback traces"
+      (let* ((x (v 'x)) (calls [])
+             (p (gerbil-ascent-program
+                 (list (gerbil-ascent-relation 'input 1 '((1) (2)))
+                       (gerbil-ascent-relation 'out 1 []))
+                 (list (gerbil-ascent-rule (list (a 'out x))
+                                          (list (a 'input x)
+                                                (gerbil-ascent-guard '(x) (lambda (value) (set! calls (cons value calls)) #t))))) 32 32 64))
+             (old (ascent-positive-plan-reference-evaluate-program p)) (old-calls calls))
+        (set! calls [])
+        (let (new (gerbil-ascent-evaluate-program p))
+          (check-equal? calls old-calls)
+          (check-equal? (rows new 'out) (rows old 'out)))))))

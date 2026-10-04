@@ -4,7 +4,10 @@
 
 (import (only-in :std/test check-equal? test-suite)
         (only-in :std/hash/misc hash-ensure-modify!)
+        (only-in :clan/poo/object .ref)
         (only-in :core/observability/testing-case poo-flow-test-case)
+        (only-in :gerbil-ascent/t/qualification/ascent-byods-query-fixture
+                 ascent-byods-query-evaluate)
         (only-in :gerbil-ascent/table/interface
                  gerbil-ascent-eqrel-storage-provider
                  gerbil-ascent-trrel-storage-provider
@@ -18,6 +21,24 @@
   '((0 0) (0 1) (0 2)
     (1 0) (1 1) (1 2)
     (2 0) (2 1) (2 2)))
+
+(def +four-node-edges+
+  '((0 0) (0 1) (0 2) (1 2)
+    (2 1) (2 3) (3 0) (3 3)))
+
+(def +eight-node-edges+
+  '((0 1) (1 2) (2 3) (3 4)
+    (4 5) (5 6) (6 7) (7 0)
+    (0 4) (2 6) (4 0) (6 2)))
+
+(def (eight-node-subset mask)
+  (let loop ((remaining +eight-node-edges+) (bit 1) (selected []))
+    (if (null? remaining)
+      (reverse selected)
+      (loop (cdr remaining) (* bit 2)
+            (if (odd? (quotient mask bit))
+              (cons (car remaining) selected)
+              selected)))))
 
 (def (subsets items)
   (if (null? items)
@@ -80,14 +101,14 @@
      nodes)
     wanted))
 
-(def (provider-rows provider edges)
+(def (provider-rows provider edges (budget 9))
   (let ((state (gerbil-ascent-storage-make-state provider))
         (rows []))
     (for-each
      (lambda (edge)
        (set! rows
          (append (gerbil-ascent-storage-extend
-                  provider state rows [] edge 9)
+                  provider state rows [] edge budget)
                  rows))
        (check-equal?
         (gerbil-ascent-storage-extend provider state rows [] edge 0)
@@ -98,8 +119,8 @@
 (def (grouped-rows group edges)
   (map (lambda (edge) (cons group edge)) edges))
 
-(def (check-provider-rows provider ordered wanted)
-  (let (actual (provider-rows provider ordered))
+(def (check-provider-rows provider ordered wanted (budget 9))
+  (let (actual (provider-rows provider ordered budget))
     (check-equal? (length actual) (length wanted))
     (for-each
      (lambda (row)
@@ -123,6 +144,100 @@
                 gerbil-ascent-trrel-storage-provider
                 gerbil-ascent-trrel-uf-storage-provider)))
        (subsets +possible-edges+)))
+    (poo-flow-test-case "four-node sparse subsets preserve larger merges"
+      (for-each
+       (lambda (edges)
+         (for-each
+          (lambda (kind provider)
+            (let (wanted (reference-rows kind edges))
+              (for-each
+               (lambda (ordered)
+                 (check-provider-rows provider ordered wanted 16))
+               (list edges (reverse edges)))))
+          '(eqrel trrel trrel-uf)
+          (list gerbil-ascent-eqrel-storage-provider
+                gerbil-ascent-trrel-storage-provider
+                gerbil-ascent-trrel-uf-storage-provider)))
+       (subsets +four-node-edges+)))
+    (poo-flow-test-case "eight-node cycles and bridges preserve closure"
+      (for-each
+       (lambda (mask)
+         (let (edges (eight-node-subset mask))
+           (for-each
+            (lambda (kind provider)
+              (let (wanted (reference-rows kind edges))
+                (for-each
+                 (lambda (ordered)
+                   (check-provider-rows provider ordered wanted 64))
+                 (list edges (reverse edges)))))
+            '(eqrel trrel trrel-uf)
+            (list gerbil-ascent-eqrel-storage-provider
+                  gerbil-ascent-trrel-storage-provider
+                  gerbil-ascent-trrel-uf-storage-provider))))
+       (append (map (lambda (sample) (modulo (* sample 263) 4096))
+                    (iota 256))
+               '(1 1365 3855 4095))))
+    (poo-flow-test-case "four-node edges close across every two-producer partition"
+      (let* ((edges +four-node-edges+)
+             (wanted (map (lambda (node) (list "alpha" node)) '(0 1 2 3)))
+             (expected
+              (map (lambda (kind)
+                     (grouped-rows "alpha" (reference-rows kind edges)))
+                   '(eqrel trrel trrel-uf))))
+        (for-each
+         (lambda (first)
+           (let* ((second
+                   (filter (lambda (edge) (not (member edge first))) edges))
+                  (result
+                   (ascent-byods-query-evaluate
+                    (grouped-rows "alpha" first) wanted
+                    (grouped-rows "alpha" second)))
+                  (rows-of (.ref result 'rows-of)))
+             (for-each
+              (lambda (name rows)
+                (let (actual (rows-of name))
+                  (check-equal? (length actual) (length rows))
+                  (for-each
+                   (lambda (row)
+                     (check-equal? (not (not (member row actual))) #t))
+                   rows)))
+              '(eq-match tr-match uf-match) expected)))
+         (subsets edges))))
+    (poo-flow-test-case "eight-node producer partitions retain complete joins"
+      (let* ((edges +eight-node-edges+)
+             (wanted '(("alpha" 0)))
+             (expected
+              (map (lambda (kind)
+                     (grouped-rows
+                      "alpha"
+                      (filter (lambda (row) (= (cadr row) 0))
+                              (reference-rows kind edges))))
+                   '(eqrel trrel trrel-uf))))
+        (for-each
+         (lambda (mask)
+           (let* ((first (eight-node-subset mask))
+                  (second
+                   (filter (lambda (edge) (not (member edge first)))
+                           edges))
+                  (result
+                   (ascent-byods-query-evaluate
+                    (grouped-rows "alpha" first) wanted
+                    (grouped-rows "alpha" second)))
+                  (rows-of (.ref result 'rows-of)))
+             (for-each
+              (lambda (name rows)
+                (let (actual (rows-of name))
+                  (unless (= (length actual) (length rows))
+                    (error "ASCENT eight-node partition mismatch"
+                           mask name (length actual) (length rows)))
+                  (for-each
+                   (lambda (row)
+                     (check-equal? (not (not (member row actual))) #t))
+                   rows)))
+              '(eq-match tr-match uf-match) expected)))
+         (append (map (lambda (sample) (modulo (* sample 263) 4096))
+                      (iota 256))
+                 '(1 1365 3855 4095)))))
     (poo-flow-test-case "grouped storage isolates two interleaved edge sets"
       (let (beta '((0 1) (1 2) (2 0)))
         (for-each

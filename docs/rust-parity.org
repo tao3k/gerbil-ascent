@@ -10,12 +10,135 @@
 The first target is behavioral parity with the pinned =ascent 0.8.0= oracle,
 interpreted through Scheme and Gerbil modules. The [[https://s-arash.github.io/ascent/cc22main-p95-seamless-deductive-inference-via-macros.pdf][CC 2022 paper]],
 [[https://kmicinski.com/assets/byods.pdf][BYODS paper]], and [[https://github.com/s-arash/ascent][Rust implementation]] define the baseline.
+Where Rust 0.8.0 exposes raw same-key lattice source rows or retained-run
+artifacts that disagree with the paper's lattice fixed-point semantics,
+the Scheme result follows the fixed point and records the Rust difference
+with a pinned probe and an independent semilattice model.
 Rust-specific surface syntax and ownership rules need equivalent Scheme APIs
 and macro behavior; copying Rust syntax is not a requirement. Each row closes
 only with a matching Rust fixture, Scheme result comparison, invalid-program
 test where relevant, and a measured performance receipt. Until then, this
 repository is a partial implementation, and Agent extensions are research
 proposals rather than core parity claims.
+
+* Whole-program closure gates
+
+The rows below are evidence for four joint gates, not independent reasons to
+declare the replication complete. A gate stays open while any listed
+interaction lacks executable evidence.
+
+| Gate | Required evidence | Current open work |
+|------+-------------------+-------------------|
+| Source and API | Scheme macro/module forms cover each pinned Rust syntax family; POO contracts reject malformed declarations before evaluation; exported session/program API is documented | remaining generated SCC diagnostic API, wider invalid-program diagnostics, remaining attribute semantics |
+| Fixed point | Same-input Rust/Scheme differential covers recursive SCCs, strata, negation, aggregation, lattice joins, and their combinations; independent finite-model checks cover bounded graphs and adjudicate pinned Rust lattice-source divergences | product/other partial-order lattices, wider invalid dependency shapes, larger-scale behavior |
+| State and storage | All pinned BYODS Provider families and repeated-run modes have differential and failure-atomic receipts; independent and intra-program concurrency are bounded | wider producer partitions, mixed direct-source/derived lattice performance, source replacement and timeout scale, intra-program parallel execution |
+| Admission | The ASCENT head passes its full Scheme/Rust policy and 1000-sample SS gates; the exact pinned POO Flow head passes consumer integration on Linux | rerun after every new pin; no earlier green run substitutes for final-head evidence |
+
+The integrated corpus in =rust/ascent-oracle/tests/integration/composed_corpus.rs=
+uses one program with multi-head rules, recursive closure, stratified
+negation, aggregation over the completed closure, disjunction, and a
+recursive coordinatewise product lattice with typed Scheme declarations.
+It compares complete rows over all 512 three-node edge subsets, all blocker
+subsets on one cycle, two duplicate input cases, and 256 subsets of an
+eight-edge four-node graph with varied blocker sets: 778 fresh Rust/Scheme
+program pairs in one batch. Every case also compares a three-phase retained
+Scheme session (initial, added edge and blocker, replacement) with fresh Rust
+fixed points. This is a cross-feature interaction gate, not a proof for
+arbitrary graph sizes or the other open rows.
+The upstream =var_points_to= rule program is also compared end to end on
+empty, reference, and branching source snapshots. Scheme =_= terms are
+independent body wildcards, matching Rust's discarded columns; they cannot
+occur in a rule head. This exercise combines typed source columns, multiple
+source relations, alias recursion, field-matched joins and a second recursive
+points-to relation. It is one complete example, not a general guarantee for
+all Rust examples or token syntax.
+The 1000-sample standard SS =ascent-var-points-to= scenario evaluates the
+predeclared reference program under the unchanged 1 ms p95 budget and checks
+its four alias and five points-to rows outside the timed region. Exact pinned
+Linux integration is its admission receipt.
+Two more complete pinned Rust package examples have direct Scheme output
+comparisons: Fibonacci over empty, one-, two-, six- and nine-number sources,
+and the four-column context-sensitive flow graph over empty, isolated,
+cross-context and duplicate-edge sources. The standard SS
+=ascent-upstream-examples= scenario measures the original six-number
+Fibonacci input and the two isolated three-edge contexts independently,
+each with 1000 samples and the unchanged 1 ms p95 bound. These cover recursive
+body expressions and higher-arity joins, while the wider matrix remains open.
+All ASCENT standard SS fixtures now use 1000 measured samples in the
+independent package's CI; POO Flow checks only its pinned consumer boundary.
+ASP =6a6d164= preconditions each group of twenty samples with Gambit GC;
+automatic collections during a sample remain timed. It keeps the V1 receipt,
+1000 samples and existing p95 budgets. Its wall-clock suite time and p95 may
+differ from older per-sample-GC receipts, so admission uses the exact pinned
+ASCENT Linux run.
+The 1000-row
+to 10000-row input-scale qualification is separate from repeated timing of
+the small reference examples. The indexed two-hop join now has a complete
+Rust/Scheme result differential at both input sizes; this is a semantic scale
+receipt, not a latency or memory bound. Other operators and retained updates
+still need input-scale receipts. Older 20-sample receipts below are historical
+measurements and do not admit the new fixture heads.
+An earlier local 1000-sample sweep passed all 16 then-present fixtures. Indexed joins measured
+964us locally, but 1.693ms on exact-head Linux, missing its 1000us target
+while passing its unchanged 2000us hard gate. Table expression and shortest
+candidates measured 1.624ms and 1.499ms on Linux under their existing 2000us
+hard gates. The exact-head Linux native and package jobs passed; the target
+misses remain algorithmic performance work, not waived budget failures.
+Pinned Ascent 0.8.0 requires =Hash= for a lattice value, while its exported
+=Product<(u32,u32)>= does not implement =Hash=. The Rust corpus uses a local
+=CoordinateMax= newtype with the same product order and coordinatewise join;
+it does not claim the exported =Product= type itself is usable in a lattice.
+The retained-session corpus in
+=rust/ascent-oracle/tests/integration/session_corpus.rs= partitions all 512
+three-node edge subsets into initial and appended facts, then compares both
+phases of one multi-head, mutually recursive Rust program with a retained
+Scheme session. Two additional cases exercise duplicate appends. Each Rust
+final phase is independently compared with a fresh Rust run, and the Scheme
+adapter verifies that the earlier result snapshot remains stable. This
+closes the bounded positive SCC update corpus, not nonmonotone or lattice
+updates.
+The lattice-session corpus in
+=rust/ascent-oracle/tests/integration/lattice_session.rs= exercises the same
+512 edge subsets and two duplicate cases with both recursive =Dual= / min
+and =Set= / union lattices in one retained program. It compares both phases
+with pinned Rust and checks each Rust final phase against a fresh Rust run.
+Scheme retains earlier result snapshots. This admits positive relation-source
+updates feeding those lattice families, not nonmonotone source changes.
+The pinned Rust direct-source probe in the same module shows that pushing
+=(0, Dual(3))= after an existing =(0, Dual(5))= leaves both tuples in the
+public lattice field, and both can feed a downstream relation. The Scheme
+evaluator follows the paper's fixed-point lattice semantics: source and
+derived values join by key. A 66-case two-phase independent min-semilattice
+model checks direct and mixed updates with downstream lattice copies.
+The pinned Rust retained run can expose a different multiset of public
+lattice rows than a fresh Rust run over the same source values. Rust probes
+preserve the raw-source and repeated-run divergences as version-specific
+evidence.
+The product-session corpus in
+=rust/ascent-oracle/tests/integration/product_session.rs= adds 66 two-phase
+derived-only sessions that match pinned Rust 0.8.0 and an independent
+coordinatewise-max model. Another 66 two-phase sessions mix incomparable
+direct product source values with derived improvements and compare both
+Scheme phases with that model. A pinned Rust probe records its divergent
+public score rows while a downstream lattice copy has already joined them.
+The standard 1000-sample retained-product SS scenario passed locally at
+635us p95 and on exact-head Linux at 944.2us p95 under its 1000us target
+and 2000us hard gate at =2618fd0=.
+For nonpositive updates and source replacement, a retained Scheme session
+evaluates its complete accepted source snapshot before publishing a new
+result. The composed 778-case corpus compares three phases with fresh
+pinned Rust programs: initial sources, an added edge and blocker, then
+replacement with the original sources. It combines recursion, negation,
+aggregation, disjunction and a product lattice. Earlier snapshots remain stable.
+An over-budget recomputation rejects without accepting its source row;
+a later valid append can still succeed. BYODS transitive Provider cases
+check the same policy across storage materialization and negation, including
+withdrawal and restoration of an edge in a twelve-edge chain. That larger
+Scheme/fresh-Scheme receipt is not a Rust differential or a scale benchmark.
+The standard 1000-sample SS scenario =ascent-nonpositive-session-update=
+checks a recursive path program as a blocker is appended and withdrawn.
+Its earlier 20-sample local run passed the unchanged 1 ms bound; exact pinned
+Linux integration of the 1000-sample fixture is its next admission receipt.
 
 * POO Flow programming style in the Scheme implementation
 
@@ -48,6 +171,10 @@ The evaluator resolves each storage Provider method slot once when it
 initializes a relation, then invokes the selected Scheme function in the row
 loop. This preserves the public POO extension point without repeated slot
 dispatch for every fact.
+For a retained session, a rejected update or run rebuilds evaluation-local
+Provider state from the last accepted source snapshot. This covers a Provider
+that mutates its private state before returning an invalid batch. Providers
+that mutate external shared state must manage that state themselves.
 Input budgets count declared source rows; total output budgets count
 materialized source rows after BYODS expansion plus derived rows. A
 qualification case checks that a two-edge =eqrel= source cannot materialize
@@ -55,34 +182,144 @@ nine rows and then derive nine more under a twelve-row output limit.
 Dependency stratification, delta-position planning, lattice row operations
 and rule binding live in =program/funs.ss= as named Scheme functions. The
 evaluator retains session-local fact buffers, pending deltas and rule
-execution state. Immutable lowered rules and strata are cached by the
-identity of the declared POO program with weak keys; cache access is
-serialized, while every evaluation builds separate fact buffers, indexes,
-BYODS state and budgets. POO refinement creates a new program identity and
-therefore receives its own analysis. This is Scheme planning inside the
+execution state. Validated relation schema and immutable lowered rules and
+strata are cached by the identity of the declared POO program with weak keys;
+cache access is serialized, while every evaluation checks its current source
+rows and builds separate fact buffers, indexes, BYODS state and budgets.
+When the first round of a stratum starts with =delta= equal to =all=, one full rule
+evaluation covers every atom position. Later rounds still use each selected
+delta position. This removes duplicate first-round joins without changing
+the semi-naive fixed point; the full Rust/Scheme corpus exercises this path.
+POO refinement creates a new program identity and
+therefore receives its own analysis. A retained session's source-only
+replacement preserves declarations and rules, so its fresh fixed-point
+evaluation reuses the session's immutable rule plan; rows, indexes, Provider
+state and budgets are still rebuilt. This is Scheme planning inside the
 evaluator, not a separate source or runtime language. Its public
 =GerbilAscentSessionContract= exposes
-=.append-source!= and =.run= procedures. =gerbil-ascent-open-session= creates
+=.append-source!=, =.replace-source!= and =.run= procedures. =gerbil-ascent-open-session= creates
 one session; the one-shot API executes that session once. Results contain
 stable row snapshots. A second run without new materialized rows reuses its
 result, while positive relation-atom rules consume appended source deltas.
+The BYODS invariant corpus now checks all 256 subsets of eight directed
+edges across four nodes, including loops, a reverse bridge and two paths
+between components. Scheme =eqrel=, =trrel= and =trrel_uf= Providers match an
+independent graph-closure model in both insertion orders. Pinned Rust
+=ascent-byods-rels 0.8.0= matches the same model for the same 256 source
+snapshots. Wider producer partitions and larger graphs remain open.
+The four-node eight-edge graph is also partitioned exhaustively between two
+independent producer rules in all 256 ways. Scheme =eqrel=, =trrel= and
+=trrel_uf= downstream joins match the independent graph-closure model for
+every partition. The pinned Rust =eqrel= split-producer counterexample remains
+documented; this Scheme/model receipt does not assert Rust parity for all
+partitions.
+An eight-node graph with a directed cycle and four cross links adds 260
+selected source subsets and 260 two-producer partitions. Rust and Scheme
+=eqrel=, =trrel= and =trrel_uf= each match an independent closure model on
+the subsets; Scheme checks both insertion orders and all selected partitions.
+Five source snapshots compare complete Rust/Scheme output directly, and four
+grouped partitions compare the downstream join with Rust, using the recorded
+Rust =eqrel= split-producer difference as the adjudication boundary. The
+standard 1000-sample SS transitive-provider scenario now includes the full
+eight-node cycle under its unchanged 1 ms hard gate. These receipts do not
+cover arbitrary producer graphs or 1,000- to 10,000-node closure scale.
 
 * Feature matrix
 
 | Rust Ascent 0.8.0 feature | Scheme namespace | Current state | Required closing evidence |
 |---------------------------+------------------+---------------+---------------------------|
-| Relation declaration, arbitrary arity and column types | =program/= | positive generic path handles nullary through four-column mixed rows, including a nullary rule gate over boolean and string columns; binary fast path remains | broader column types and scale/performance receipts |
-| Multiple heads, relation clauses, repeated variables, joins | =program/= | positive generic multi-head rules, joins and repeated-variable equality pass selected Rust oracle fixtures; one recursive SCC rule emits both a path and a unary witness, with a selected 544.178 us Linux SS p95 | arbitrary body shape, invalid-program corpus and wider performance receipts |
-| Semi-naive least fixed point, dependencies and strata | =program/=, =core/= | generic recursive path supports positive and negative strata; a two-relation mutually recursive SCC with cyclic and reordered sources matches selected Rust fixed-point snapshots, including a second head on one recursive rule | broader SCC/rule order, invalid-program and termination corpus |
-| Repeated =run()= after source relation updates | =program/= | Retained Scheme session reuses rows, indexes and BYODS state for positive atom-only source additions; one recursive multi-head SCC directly compares retained Scheme and Rust sessions through unchanged, duplicate, cycle and branching updates. A 20-sample Linux SS update gate passes at 581.207 µs p95. A malformed or over-budget custom Provider batch now rejects before changing evaluator-owned session rows or input counters, and a later valid append succeeds. Source deletion and nonpositive updates require fresh evaluation | compare wider positive corpus and update shapes; characterize Rust retained-state behavior for negation and aggregates; Provider-owned state must obey its own failure-atomic contract |
-| Conditions, bindings and generators | =program/=, =core/= | generic POO guard and =let= binding; generator clauses stream Gerbil Standard Library iterables with ordered binding checks. Lists, vectors, a bound-dependent range yielding zero to two values, and a vector of tuple outputs match selected Rust iterators and tuple patterns. Duplicate output names, already-bound names, and wrong tuple widths reject | broader iterator/pattern corpus and scale receipts |
+| Relation declaration, arbitrary arity and column types | =program/= | positive generic path handles nullary through five-column results, including a nullary rule gate over boolean and string columns; binary fast path remains; Scheme =ascent= declarations accept per-column predicates and check source, retained updates, derived rows, and Provider outputs. The 2048-snapshot =arity_repetition.rs= corpus combines nullary gating with unary through five-column results over all directed three-node graphs and two rule orders, checking fresh Rust against retained Scheme replacement and a finite model | Rust compile-time type diagnostics and broader column-type/scale receipts |
+| Multiple heads, relation clauses, repeated variables, joins | =program/= | positive generic multi-head rules, joins and repeated-variable equality pass selected Rust oracle fixtures; one recursive SCC rule emits both a path and a unary witness, with a selected 544.178 us Linux SS p95. The 2048-snapshot arity corpus also reverses the head order of a two-head self-loop rule between its two variants | arbitrary body shape, invalid-program corpus and wider performance receipts |
+| Semi-naive least fixed point, dependencies and strata | =program/=, =core/= | generic recursive path supports positive and negative strata; a two-relation mutually recursive SCC with cyclic and reordered sources matches selected Rust fixed-point snapshots, including a second head on one recursive rule. Twenty-nine pinned Rust compile-fail cases and Scheme admission cases cover dependency cycles, unsafe negation, unbound head and clause inputs, unknown ordinary, head, negative and aggregate relations, body/head/negative/aggregate arity, source-row arity, unbound expressions, an unbound guard, source/derived field type errors, and =let=/=for=/aggregate outputs shadowing an atom variable; the Scheme cycle diagnostic identifies the strict edge kind. Two pinned Rust 0.8.0 acceptance versus Scheme rejection cases cover duplicate declarations and lattice-to-ordinary feedback; Scheme rejects the latter because the projection requires a strict stratum | broader SCC/rule order, remaining invalid-program categories and termination corpus |
+| Repeated =run()= after source relation updates | =program/= | Retained Scheme session reuses rows, indexes and BYODS state for positive atom-only relation-source additions; all 512 three-node edge subsets plus two duplicate cases compare both phases of multi-head SCC and dual-lattice retained Scheme sessions with Rust 0.8.0. Direct lattice, nonpositive and source replacement operations re-evaluate the accepted source snapshot. Two 66-case min-lattice corpora and two 66-case product-lattice corpora match independent fixed-point models; the product derived-only corpus also matches pinned Rust retained runs. 778 composed three- and four-node sessions match fresh pinned Rust results in all three phases, including source withdrawal. Earlier snapshots stay stable. An over-budget recomputation and invalid replacement are failure-atomic. A rejected Provider batch that mutates evaluation-local state restores the last accepted source snapshot; a failed run restores the last committed one. The 1000-sample Linux SS positive relation-update and append-and-withdraw gates pass under their unchanged 1 ms budgets. A 10,000-append positive session preserves source order, failed-update recovery and prior snapshots, and complete source/derived copy output matches pinned Rust; the 1000-sample Linux SS gate passed at 21.489576 ms p95 on code head =779f34b= | larger BYODS and positive multi-relation state; recomputation and replacement scale/performance; Provider-managed external state remains outside the session rollback contract |
+| Generated timeout | =program/= | =gerbil-ascent-session-run-timeout= accepts a nonnegative nanosecond budget and returns a POO result with =finished= plus immutable relation snapshots. A zero-budget recursive chain commits the first rule round, a second zero-budget call advances, and an unbounded run matches a fresh fixed point. First partial and final rows compare with pinned Rust 0.8.0. Resumed recursion also feeds a later negated stratum, a recursive minimum lattice matches a fresh fixed point, and an =eqrel= BYODS closure feeds a downstream copy after resumption. After source replacement, two zero-budget calls commit successive rounds; an unbounded run completes recursive closure and negation, and a later append preserves the earlier snapshot. Source changes are rejected until the partial run completes. Rust 0.8.0 instead repeats the same visible rows on a second zero-budget call; the pinned test records that divergence | broader BYODS/recomputation and strata/lattice interactions; source-replacement timeout performance and time-budget scale receipts; Rust has no exact Scheme nanosecond API equivalence |
+| Conditions, bindings and generators | =program/=, =core/= | generic POO guard and =let= binding; generator clauses stream Gerbil Standard Library iterables with ordered binding checks. Lists, vectors, a bound-dependent range yielding zero to two values, and a vector of tuple outputs match selected Rust iterators and tuple patterns. The 519-case =clause_composition.rs= corpus adds a bound-dependent two-value generator, guard and =let= whose candidates feed negation, recursive closure, grouped count and custom maximum aggregation; fresh Rust, retained Scheme and an independent model agree. The same Scheme rule module has complete-output checks at 1,000 and 10,000 edge/root pairs. Duplicate output names, already-bound names, and wrong tuple widths reject | broader iterator/pattern corpus and timed scale receipts |
 | Stratified negation | =program/= | 3-level negated relation fixture and negative-cycle rejection pass selected Rust oracle comparison | broader safe/unsafe programs and performance receipts |
-| Aggregation and custom aggregators | =program/= | count, sum, min, max, mean and custom iterator aggregators pass empty, duplicate-input and grouped Rust fixtures; a count over a completed recursive path closure matches pinned Rust for empty, chain, cycle and duplicate-edge snapshots, including a root with zero paths; Scheme rejects an aggregate dependency cycle as the pinned Rust macro does | broader derived-aggregate and type corpus, invalid-program diagnostics and performance receipts |
-| Lattice declarations and recursive joins | =program/=, =table/= | POO lattice declaration with user join; selected recursive shortest-path and duplicate-key snapshots match Rust | broader join families, lattice/negation composition, invalid join laws and scale receipts |
-| Relation indexes and selected physical plan | =table/=, =program/= | bound-column hash index plan for generic relation clauses above a 32-row threshold; standard hash Provider extends a cached index from new rows rather than rebuilding from the complete relation after every append or recursive round; a 50-edge session checks the new two-hop fact and unchanged custom Provider build count; grouped ternary two-hop with a two-column key matches Rust using both hash and custom alist Providers | lattice indexes, broader provider choice and composite scale/performance receipts |
-| BYODS data structure provider protocol | =table/= | POO index Provider with default hash and custom alist fixtures; set, =eqrel=, =trrel= and =trrel_uf= storage Providers have bounded Scheme functions; selected binary and grouped ternary materialized rows plus a string-keyed BYODS/body join match Rust =ascent-byods-rels 0.8.0=; all 512 directed edge subsets on three nodes match independent graph closure references for =eqrel=, =trrel= and =trrel_uf= in forward and reverse insertion order, including zero-budget duplicate inserts; the same 512 subsets as one ternary group stay isolated from a second cyclic group in both group insertion orders; split-producer =trrel= / =trrel_uf= joins match, while a minimal pinned-Rust =eqrel= split-producer counterexample is recorded; built-in providers reject an over-budget append before committing state, with retained-session retry tests | larger storage merge invariants, wider producer partitions and scale parity; wider grouped arity is a later extension |
-| Parallel execution | =core/=, =table/= | four independent Scheme program evaluations pass a concurrent reentrancy qualification under Core Observability; intra-program evaluation is serial | deterministic intra-program serial/parallel parity, bounded worker failure behavior and contention benchmark |
-| Gerbil module and macro embedding | =program/=, =interface/= | reusable Gerbil module exports a rule-program constructor; lexical origin capture matches selected Rust =ascent_run!= snapshots | generated declarations, module composition beyond one rule family, macro diagnostics and performance |
+| Aggregation and custom aggregators | =program/= | count, sum, min, max, mean and custom iterator aggregators pass empty, duplicate-input and grouped Rust fixtures; a count over a completed recursive path closure matches pinned Rust for empty, chain, cycle and duplicate-edge snapshots, including a root with zero paths. The 519-case composed corpus also checks a custom maximum aggregator over recursive closure, including groups with no output. Scheme rejects an aggregate dependency cycle as the pinned Rust macro does | broader derived-aggregate and type corpus, invalid-program diagnostics and performance receipts |
+| Lattice declarations and recursive joins | =program/=, =table/= | POO lattice declaration with user join and typed columns checks source, derived, and merged values; C4 composes source and type refinements. Recursive shortest-path =Dual= / =min= and recursive =Set= / union match 514 two-phase retained sessions; direct and mixed lattice source appends each match 66 two-phase cases against an independent fixed-point model. Rust 0.8.0 raw-source and retained-run divergences are recorded; a product-order newtype matches the 778-case composed fresh corpus and 66 derived-only retained sessions, while 66 mixed direct-product sessions match an independent fixed-point model. Derived =Dual=/minimum batches with two candidate values per key match pinned Rust at 1,000 and 10,000 keys using hash-staged per-round joins; direct lattice sources with two values per key match the fixed-point minimum at the same scales. Mixed direct and derived retained sessions check every =score= and downstream =copy= row after initial run, direct append, and whole-source replacement at 1,000 and 10,000 keys against an independent fixed-point model, while preserving the first snapshot. A 66-case weighted graph corpus checks recursive minimum lattice feeding a later negated stratum over initial, append, and replacement phases against fresh Rust and an independent shortest-path model. A 512-case divisibility-order corpus uses Standard Library =lcm= for recursive joins and checks downstream negation and count against pinned Rust plus independent reachability/LCM model | broader partial-order/source combinations, invalid join laws and repeated-append throughput/memory receipts; exported Rust =Product= lacks required =Hash= |
+| Relation indexes and selected physical plan | =table/=, =program/= | bound-column hash index plan for generic relation clauses above a 32-row threshold; standard hash Provider extends a cached index from new rows rather than rebuilding from the complete relation after every append or recursive round; a 50-edge session checks the new two-hop fact and unchanged custom Provider build count; grouped ternary two-hop with a two-column key matches Rust using both hash and custom alist Providers; complete two-hop output matches pinned Rust at 1,000 and 10,000 source rows with the standard hash Provider. A bound =(group, node)= composite key reads a derived =Dual=/minimum lattice after two candidate values per key join; complete 50- and 1,000-key output matches pinned Rust through both the standard hash and custom alist index Providers, and the custom Provider records the actual composite-key build. After an appended source refines one lattice value, retained Scheme sessions with both index Providers remove the obsolete ordinary downstream row; the pinned Rust 0.8.0 retained run exposes an extra row while its fresh fixed point does not | wider retained lattice/index interactions, broader provider choice and composite scale/performance receipts |
+| BYODS data structure provider protocol | =table/= | POO index Provider with default hash and custom alist fixtures; set, =eqrel=, =trrel= and =trrel_uf= storage Providers have bounded Scheme functions; selected binary and grouped ternary materialized rows plus a string-keyed BYODS/body join match Rust =ascent-byods-rels 0.8.0=; all 512 directed edge subsets on three nodes match independent graph closure references for =eqrel=, =trrel= and =trrel_uf= in forward and reverse insertion order, including zero-budget duplicate inserts; 256 four-node sparse subsets match the independent closure model in both Scheme insertion orders and in pinned Rust; all 256 producer partitions of the full eight-edge four-node graph match the independent model in Scheme; 260 eight-node cycle-and-bridge snapshots and selected producer partitions match the independent closure model, with selected Rust/Scheme output differentials and a 1000-sample SS ring receipt; 1,000- and 10,000-edge disjoint five-node chains match pinned Rust and an independent component model for all three binary Providers; the same 512 three-node subsets as one ternary group stay isolated from a second cyclic group in both group insertion orders; split-producer =trrel= / =trrel_uf= joins match, while a minimal pinned-Rust =eqrel= split-producer counterexample is recorded; built-in providers reject an over-budget append before committing state, with retained-session retry tests. Program-level =(default-storage provider)= plus explicit relation overrides matches pinned Rust =#![ds(eqrel)]= on selected binary and grouped sources. The existing 1000-sample SS scenario checks that the default resolves to the same Provider as the explicit declaration. Separate local 1000-sample default probes ranged from 439 to 1058 us p95, so a stable standalone default performance gate remains open. Imported fragments keep their lexical Provider rather than inheriting the caller default | larger storage merge invariants, wider graphs and producer partitions, grouped scale parity, and performance; wider grouped arity is a later extension |
+| Parallel execution | =core/=, =table/= | four independent Scheme program evaluations pass a concurrent reentrancy qualification under Core Observability; Rust =ascent_par!= and =ascent_run_par!= outputs on four selected graph snapshots match the Scheme fixed point with one and four Rayon workers. The pinned Rust =#![inter_rule_parallelism]= variant matches those selected outputs under both worker counts. Scheme intra-program evaluation is still serial | Scheme intra-program execution policy, worker failure behavior, broader determinism and contention benchmark |
+| Gerbil module and macro embedding | =program/=, =interface/= | reusable Gerbil module exports a rule-program constructor; =ascent-fragment= exports validated POO declarations/rules for lexical =(include name)=; a recursive closure matches Rust =ascent_source!= / =include_source!= over empty, branching, and duplicate snapshots; module =defsyntax= and local =(macro name ((parameter kind) ...) clause ...)= with =kind= in =expr=, =ident= generate fragments, with direct local invocation; a Rust embedded macro fixture matches fact, copied-rule and combined typed-parameter output over five snapshots; invalid =ident= arguments and unknown parameter kinds reject at expansion; include expressions are validated once | Rust token-copy name resolution and wider diagnostics, fragment scale/performance |
+
+When a rule projects a lattice value into an ordinary relation, Scheme
+finishes the lattice stratum before evaluating that projection. A recursive
+=8 -> 4 -> 2 -> 1= minimum example therefore publishes only =1=, matching
+the pinned Rust fresh program. A retained Rust 0.8.0 run after a later
+source refinement keeps the previous ordinary row; the Scheme session
+recomputes from its accepted source snapshot and matches the fresh fixed
+point. The 50-key indexed session checks this with both hash and alist index
+Providers, while the fresh index differential checks 50 and 1,000 keys.
+Repeated zero-budget timeout calls across the recursive lattice and ordinary
+projection strata publish no obsolete value, then finish with the same
+fixed-point rows and preserve the first partial snapshot.
+
+The pinned Rust =#![measure_rule_times]= attribute and Scheme's
+=measure-rule-times?: #t= evaluator option produce the same rows for empty,
+single and duplicate sources. Scheme returns per-rule nanoseconds in
+declaration order; Rust exposes durations by SCC/rule fields. A retained
+Scheme Session keeps timing enabled across positive appends and whole-source
+replacement. Exact clock values are not compared. Result POO
+=relation-sizes= counts the immutable rows of each relation on demand; its
+empty, single and duplicate-source counts match Rust's generated
+=relation_sizes_summary()=, and earlier Session snapshots retain their own
+sizes after updates. A one-rule Rust probe checks that generated
+=scc_times_summary()= exposes one acyclic iteration, one rule entry and
+the same duration as its public rule field. Scheme exposes per-rule
+nanoseconds but no SCC timing or iteration summary, so runtime diagnostics
+remain a separate mapping gap. The Scheme
+=gerbil-ascent-program-summary= analyzes the declaration's rule dependency
+SCCs; =syntax.rs= compares its recursive flags and dynamic relation sets
+with Rust's static =summary()= on one recursive-pair program. Rust's lowered
+rule text and broader SCC ordering are not covered by that probe. The syntax
+oracle also checks Rust's braced multi-head fact form, warned =||=
+disjunction spelling and parenthesized aggregator expression against Scheme
+facts, =or= and aggregate forms on five source snapshots.
+Rust's
+=generate_run_timeout= has selected recursive-chain partial and final
+receipts, including a chain feeding a later negated stratum. Its first
+zero-budget rows and completed rows compare with Scheme and an explicit
+finite expected set; Scheme checks that no negative-stratum rows appear in
+the first partial snapshot. A second zero-budget call exposes a Rust 0.8.0
+restart behavior; Scheme advances its retained round cursor to preserve
+fixed-point progress. The Scheme deadline is checked after each committed
+round, so cancellation inside a large round has not been established.
+=run-timeout= after a nonpositive source update currently starts a fresh
+resumable engine after eager update validation. A local 1000-sample probe
+that added zero-budget timeout and completion to the existing source-update
+SS case measured 8.539 ms p95 against its unchanged 1 ms limit, while the
+original source-update case passed at 380 us p95 in a separate local run.
+The probe was not admitted as a performance gate; removing the duplicate
+evaluation is open work before claiming timeout scale parity.
+=inter_rule_parallelism= remains open execution-policy work.
+
+Derived lattice batches now stage the last value per key in a Scheme hash
+table and materialize pending rows once per round. Commit removes superseded
+accepted rows in one pass. Direct lattice sources also join through the hash
+table and materialize their rows once after input validation. On one local
+1,000-key single-candidate derived input,
+three before/after evaluations had median evaluator times of 186,270 us and
+5,514 us respectively. The pinned Rust differential compares every output
+row at 1,000 and 10,000 keys. This is a selected scale and local timing
+receipt; retained updates, memory use and Linux performance need separate
+evidence. Direct-source fixed-point output is independently checked at 1,000
+and 10,000 keys; it is not asserted to match Rust's recorded raw-source
+divergence.
+
+The retained lattice scale case exercises source append and replacement with
+derived refinement and a downstream lattice copy at 1,000 and 10,000 keys.
+It compares complete output rows at each of three phases with an independent
+minimum model and checks that the first snapshot is unchanged. This is a
+semantic scale receipt; repeated-append latency and memory remain open.
+
+The =lattice-negation= corpus enumerates all 64 subsets of six weighted
+edges and adds two duplicate/reordered update cases. A recursive minimum
+lattice feeds a threshold relation, which a later stratum negates. Each
+case compares Scheme's initial, appended, and replaced session snapshots
+with fresh pinned Rust programs; an independent shortest-path relaxation
+checks every Rust result. The earlier Scheme snapshot is checked after
+replacement. This closes the selected minimum/negation interaction, not
+arbitrary partial orders or negation directly over lattice values.
 
 The current Rust oracle in =rust/ascent-oracle/= covers positive binary
 closure, guarded filter/copy/join, shortest source support, and selected
@@ -92,6 +329,55 @@ and name their input variables explicitly. These fixtures do
 not close the rows above. =candidate/= and
 =interface/= hold existing experimental projections; their MRR or Agent use
 cannot substitute for Rust feature parity.
+The =clause-composition= corpus exhausts the 512 subsets of the nine directed
+edges on nodes ={0,1,2}= and adds seven duplicated-edge inputs. Each edge
+generates two candidate targets; a guard drops self-targets, a =let= binds a
+score, a derived relation blocks selected pairs, and a later stratum uses
+negation before recursive closure and a grouped count. Every =blocked=,
+=candidate=, =allowed=, =reach=, =reach-count= and custom =reach-max= row agrees among fresh
+pinned Rust 0.8.0, one retained Scheme plan with source replacement, and an
+independent Floyd-Warshall/count/maximum model. This finite domain does not establish
+arbitrary generator, aggregator or graph behavior.
+The companion scale corpus uses the same Scheme rule module, with a lexical
+next-target function and one root per source edge. Four-spaced source nodes
+alternate self-edges and forward edges while generated targets may join a
+shared small target set. This exercises blocking, one- and two-value
+generation, and grouped recursive results.
+At 1,000 and 10,000 edge/root pairs, respectively, 7,334 and 73,334 complete
+derived rows match fresh pinned Rust and an independent adjacency traversal.
+The source, derived and output fact bounds are structural ceilings of 2n,
+10n and 12n; they do not relax any existing qualification budget. This is
+scale parity for this graph family, not a timing or memory gate.
+The =divisibility-lattice= corpus uses the same exhaustive graph family with
+one seed per node. The Rust oracle defines the divisibility partial order
+and LCM join on positive integers; Scheme uses its Standard Library =lcm=.
+Each source's value propagates through the graph, and the joined value feeds
+a later =six= relation, its stratified negation and an aggregate count. Fresh
+Rust rows, one retained Scheme plan with edge replacement and an independent
+reflexive reachability/LCM model agree for all 512 inputs. This tests a
+non-total order with cycles but not direct lattice source updates or join-law
+enforcement for arbitrary user procedures.
+The shortest-source-support candidate projection now derives distance and
+canonical support in one labelled breadth-first traversal per source vertex.
+Its path frontier shares reversed Scheme lists, and the public support list
+is materialized only for each result. Superseded queue states are discarded
+before expansion. A 64-node chain checks all 2,016
+derived pairs and its 63-label longest support; a 32-node chain compares
+all 496 candidates, including support labels, with pinned Rust 0.8.0.
+This removes duplicate
+distance-closure work but is a selected scale receipt, not a general
+performance claim or a replacement for the pinned Rust differential.
+For the same 64-node chain, a local three-run before/after probe evaluated
+the projection 20 times per process and forced every support list. Median
+process wall time fell from 2.62 s to 0.90 s; all runs produced the same
+873,600 total labels. This is a local algorithm comparison, not a standard
+SS receipt or a cross-platform latency bound.
+The syntax differential compares body argument expressions that read an
+earlier column in the same atom or a binding from a preceding atom. It also
+compares a negated atom whose second argument is an expression over its bound
+first argument, across empty, duplicate, branching, anchor-hit and
+anchor-miss sources. These bounded cases close the selected body-expression
+positions, not arbitrary expression types or diagnostic parity.
 The derived-aggregation differential lets =path= reach its recursive fixed
 point before =reach-count= counts paths for selected roots in the next stratum.
 Empty, chain, cycle and duplicate-edge inputs match Rust, including a zero
@@ -100,11 +386,35 @@ not a recursive aggregate dependency: pinned =ascent_macro 0.8.0=
 rejects a cycle through an aggregate with its
 ="use of aggregated relation ... cannot be stratified"= diagnostic in
 =ascent_mir.rs=, and the Scheme qualification rejects the same dependency.
+The invalid-program differential uses a positive Rust macro compilation as
+the compiler-probe control, then requires the pinned Rust 0.8.0 compiler to
+reject twenty-six source programs with pinned diagnostics or the recorded
+aggregate macro panic. The Scheme
+counterparts must reject in the matching dependency, binding, relation, or
+arity class. Three negative cycles include a direct self-edge, two
+negative edges, and one negative edge with positive feedback. The Scheme
+planner locates a strict edge within a dependency cycle only on the error
+path, so unrelated aggregate declarations do not relabel a negation cycle.
+The added cases cover an unbound head variable, unknown relation, wrong body
+and head arity, an unbound guard variable, binding inputs to =let= and =for=,
+an unknown aggregate source, negation before its variable is bound, and source
+and derived field type failures. Rust diagnoses the latter at compile time;
+Scheme predicates reject them before publishing a result.
+The added source-row arity, unknown negated relation and two-relation
+aggregate-cycle probes reject on both sides. For an aggregate input absent
+from its source atom, pinned Rust 0.8.0 panics inside macro expansion at an
+=Option::unwrap()=; Scheme rejects the missing input during admission. The
+test pins this upstream diagnostic difference without accepting the program.
+A separate pinned probe shows that Rust
+0.8.0 accepts two identical declarations of the same relation and a
+lattice-to-ordinary feedback loop; Scheme rejects the ambiguous schema and
+the unstratifiable projection before evaluation. This is a bounded diagnostic corpus,
+not full Rust compile-time type checking.
 The standard =ascent-derived-aggregate= SS scenario evaluates the declared
-three-edge cycle and isolated root for 20 samples under the unchanged 1 ms
+three-edge cycle and isolated root for 1000 samples under the unchanged 1 ms
 budget used by the other small recursive scenarios. It checks all nine path
 facts and four counts outside the timed region. Its Linux performance receipt
-must be read from the exact pinned POO Flow CI head.
+must be read from the exact ASCENT CI head.
 The positive binary differential now includes an empty source, a self-loop,
 duplicate edges, disconnected cycles and overlapping paths. Both the binary
 fast path and generic rule path compare their complete sorted closure with
@@ -128,11 +438,11 @@ rules and includes a directed cycle. One recursive rule has two heads:
 deduplication for an empty source, a self-loop, a cycle, reversed source
 order, duplicate edges, a branching graph with a cycle, and a finite chain.
 This is evidence for one SCC shape, not a general termination proof.
-The standard =ascent-mutual-recursive-heads= SS scenario measures 20
+The standard =ascent-mutual-recursive-heads= SS scenario measures 1000
 evaluations of a predeclared three-edge cyclic program with a 1 ms p95
 ceiling. It checks all nine rows in each path relation and all three unary
-witnesses outside the timed region. The [[https://github.com/tao3k/poo-flow/actions/runs/36287894639/job/108532047947][POO Flow Ubuntu native job]] at
-POO Flow =6598403= and ASCENT =be30fef= measured 544.178 us p95 and passed
+witnesses outside the timed region. The [[https://github.com/tao3k/poo-flow/actions/runs/36330634991][last exact-head POO Flow Ubuntu run]] at
+POO Flow =b6fe0db= and ASCENT =84f279d= measured 511.008 us p95 and passed
 the unchanged ceiling. This is one selected recursive multi-head shape and
 does not close the wider performance or termination corpus.
 The repeated-run oracle uses one Rust program for an initial edge, a second
@@ -153,20 +463,115 @@ and a closing cycle. Scheme checks =path0=, =path1= and =witness= against fresh
 evaluation after each changed prefix and checks that earlier snapshots stay
 stable. The Rust oracle repeats =run()= on one program through the same
 sequence and compares each result with both retained and fresh Scheme output.
-These checks cover one wider positive update shape, not deletion or
-nonmonotone incremental semantics. The Rust oracle package runs the ASP Rust
+These checks cover one wider positive update shape. Source replacement and
+nonpositive updates have separate fresh fixed-point receipts above. The Rust oracle package runs the ASP Rust
 package policy as a dedicated test. Its differential cases live in
 responsibility-specific integration modules mounted by a thin Cargo target.
-The standard SS scenario =ascent-session-update= prepares 20 sessions outside
+
+The =scc_order.rs= differential adds a three-relation recursive SCC with a
+multi-head rule. For all 64 loop-free directed graphs on three nodes it
+compares complete Rust and Scheme output sets under two rule declaration and
+body-clause orders, and checks that the two Rust orders have the same fixed
+point. This bounded corpus tests order independence for that SCC topology; it
+does not establish order independence for arbitrary rule programs.
+
+The =multi_source_session.rs= differential retains one Scheme session through
+nine updates to =edge= and =blocked=. Source replacement withdraws prior
+reachability and blocked facts; negation and a downstream count aggregate
+then recompute. A malformed replacement must fail without changing the
+committed snapshot, duplicate input must preserve set semantics, and every
+earlier result must stay stable. Each phase is checked against a fresh Rust
+0.8.0 program and an independent finite reachability/blocked-set/count model.
+The Rust comparison intentionally uses fresh programs because pinned Rust
+repeated-run behavior for nonmonotone changes is documented separately.
+The =byods_session.rs= differential retains one Scheme session with two
+ordinary source relations feeding binary =eqrel=, =trrel= and =trrel_uf=
+Providers.
+Nine appends, replacements, withdrawals, a duplicate and a malformed
+replacement compare all three public relations at every phase with fresh
+Rust 0.8.0 programs, an independent undirected-component model for =eqrel=,
+and a directed-closure model for the transitive Providers. This binary
+receipt does not extend the separate grouped =eqrel= split-producer Rust
+counterexample to a general Rust parity claim. The Scheme
+fixture uses =ascent-session-qualification=, a hygienic test macro shared
+with the ordinary multi-source session fixture: each caller supplies its
+Session constructor and projected relation names, while the macro binds the
+shared input, snapshot and output runner.
+The =grouped_eqrel_session.rs= corpus retains two grouped sources across
+=alpha= and =beta= components and nine mixed updates, including a failed
+replacement, duplicate, withdrawal and later restoration. Each Scheme phase
+matches an independent per-group undirected-component model and a fresh Rust
+single-producer program over the same accepted source union. Rust's known
+grouped split-producer merge gap remains covered by its separate minimized
+counterexample; this retained receipt does not claim two-producer Rust parity.
+The Scheme =ascent-byods-index-test.ss= crosses grouped =eqrel= storage with
+the downstream alist index Provider: a bound =(group, node)= lookup confirms
+the composite index is built, matches the default hash output, and preserves
+the expected rows after source append and replacement while prior snapshots
+remain stable. This is a selected physical-plan invariant; the custom alist
+index itself is not a pinned Rust BYODS data structure.
+Positive retained source appends now keep a persistent reverse addition log
+outside the evaluator and update accepted/delta row counts from each new
+batch. Neither operation scans all earlier rows on each append. A selected
+local three-run measurement of the append loop for 10,000 distinct unary
+rows changed from 0.914505 s median at =90ee32d= to 0.009079 s median;
+program setup and final =run= were outside this timing. A 10,000-row
+Scheme qualification checks source order, duplicate insertion, failure
+recovery, source replacement, and unchanged earlier snapshots. The pinned
+Rust Ascent oracle compares every source and derived copy row after 10,000
+appends. An exploratory 1,000-sample SS trial at =65a08fc= measured 10,000
+appends plus a retained run at 114.565763 ms Linux p95, above its proposed
+50 ms hard ceiling. That head did not enter standard SS admission.
+The built-in Set Provider now commits validated source rows directly instead
+of wrapping each row in a single-element Provider batch; custom Providers
+retain the batch preflight. A current local 1,000-sample retry of the same
+10,000-append fixture measured 62.625 ms p95, still above the unchanged
+50 ms ceiling. This is a historical local result, not a Linux performance claim.
+The current implementation selects a Scheme append procedure once from the
+immutable relation schema. An all-built-in Session records the accepted source
+log in the engine and captures a recovery snapshot at =run=; custom Providers
+retain per-operation recovery. Set rows are admitted once per fixed-point
+batch, and a unique first batch can share its persistent source spine with
+=all= and =delta=. The 10,000-append phase allocated about 25.8 MiB before
+these changes and 6.4 MiB afterward in a focused local measurement. The first
+1,000-sample local SS run under the unchanged 50 ms ceiling passed at 47.592 ms
+p95, with 17 samples above 50 ms. Repeated runs at 51.751, 50.993 and
+50.122 ms p95 failed the same ceiling before the final schema-specialized
+append and hash-capacity changes. The reviewed implementation then passed
+two consecutive 1,000-sample local runs at 45.825 and 45.561 ms p95, and a
+17-case standard SS suite passed at that candidate. After moving Set batch
+admission into =table/storage=, its focused 1,000-sample run passed at
+47.248 ms p95, while a later full local suite was disrupted by an unrelated
+=derived-aggregate= 1 ms miss under high host load. The exact code head
+=779f34b= subsequently passed Scheme qualification, Rust policy and all 44
+Rust integration tests, and all 17 standard 1,000-sample SS cases on
+[[https://github.com/tao3k/gerbil-ascent/actions/runs/36422567580][Linux CI]], with the 10,000-append scenario at 21.489576 ms p95. The pinned
+POO Flow consumer =801cfb9= passed its Ubuntu native and package jobs on
+[[https://github.com/tao3k/poo-flow/actions/runs/36422814327][Linux CI]]. Any later code or pin must receive its own exact-head admission.
+This fixture now participates in =just performance= without changing its
+sample count, target, or hard ceiling.
+The 15 scenario SS receipts run as native Gerbil TestCases through Core
+Observability's POO testing Case profile. Core owns the policy constructor,
+validation, and watchdog; ASCENT overrides only the Profile slots: a 768 MiB
+heap ceiling, 256 MiB live-growth ceiling, 25 ms sampling, and a 175-second
+duration ceiling. Gambit's existing 1 GiB process heap cap
+remains the final boundary. The other two SS scenarios use the same Core
+testing Case interface. An integration qualification checks that a POO slot
+override produces Core's typed memory anomaly under a zero-heap policy. The
+10,000-append scenario uses the same Core Case profile and the unchanged
+latency bound.
+
+The standard SS scenario =ascent-session-update= prepares 1000 sessions outside
 the timed region, then times one source append and recursive closure per
-session. It checks all 20 results and passed the [[https://github.com/tao3k/poo-flow/actions/runs/36261908951/job/108459287469][POO Flow Ubuntu native gate]]
-at 581.207 µs p95 under the unchanged 1 ms budget. This is one bounded
+session. It checks all 1000 results and passed the [[https://github.com/tao3k/poo-flow/actions/runs/36330634991][last exact-head POO Flow Ubuntu native gate]]
+at 533.652 µs p95 under the unchanged 1 ms budget. This is one bounded
 ten-edge chain shape, not a general update complexity result. The Rust oracle also records
 that appending a blocking fact does not retract a previously derived negated
 row, and that appending an aggregate source can retain the old total and
 produce a new total different from a fresh program. These are observed
 Rust 0.8.0 repeated-run behaviors, not a claim that nonmonotone updates have
-clean incremental semantics. Scheme rejects such session updates.
+clean incremental semantics. Scheme reevaluates accepted sources for these
+updates and compares each result with a fresh pinned Rust program.
 The concurrent qualification launches four independent fixed-point programs
 with Gerbil workers and checks every returned relation projection. It checks
 reentrancy across programs; it does not establish intra-program parallel
@@ -208,6 +613,11 @@ missing Rust row.
 
 The =eqrel= component index emits only newly joined cross-component pairs.
 It avoids scanning all previously materialized pairs for every input edge.
+The =byods.rs= chain scale corpus compares complete Rust and Scheme rows at
+1,000 and 10,000 source edges with an independent five-node component model.
+It covers 250 and 2,500 separate components and exercises reflexive,
+undirected and directed closure in =eqrel=, =trrel_uf= and =trrel=. This is a
+semantic input-scale receipt, not a throughput or memory bound.
 The 20-edge source chain still produces all 441 expected facts, and the Rust
 oracle now compares this complete closure plus reversed, duplicate,
 reflexive and interleaved-group source snapshots. A concurrent qualification
@@ -220,7 +630,7 @@ per relation. A Scheme qualification advances =eqrel=, =trrel= and
 only rows absent from the prior materialization. This verifies the Provider
 boundary but does not imply retained rule-program state.
 
-The standard =ascent-byods-eqrel= SS scenario times 20 evaluations of a
+The standard =ascent-byods-eqrel= SS scenario times 1000 evaluations of a
 predeclared 20-edge program per run. Before the component index, one local
 run measured 3.508 ms p95. Three local runs after the change measured 450,
 448 and 965 us p95, all below its 1 ms budget. These local samples do not

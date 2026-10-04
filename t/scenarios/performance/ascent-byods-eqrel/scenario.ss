@@ -14,7 +14,8 @@
         (only-in :gerbil-ascent/program/interface
                  gerbil-ascent-relation
                  gerbil-ascent-program
-                 gerbil-ascent-evaluate-program))
+                 gerbil-ascent-evaluate-program)
+        (only-in :gerbil-ascent/program/syntax ascent))
 
 (def fixture
   (call-with-input-file
@@ -28,20 +29,32 @@
           gerbil-ascent-hash-index-provider
           gerbil-ascent-eqrel-storage-provider))
    [] 32 500 500))
+(def default-program
+  (ascent
+   (default-storage gerbil-ascent-eqrel-storage-provider)
+   (relation eq (from to)
+             (map (lambda (from) (list from (+ from 1))) (iota 20)))
+   (bounds 32 500 500)))
+
+(unless (eq? (.ref (car (.ref default-program 'relations))
+                   'storage-provider)
+             gerbil-ascent-eqrel-storage-provider)
+  (error "ASCENT program default changed the benchmark storage Provider"))
 
 (unless (benchmark-fixture-contract-pass? fixture)
   (error "invalid ASCENT BYODS benchmark" fixture))
 
+(def (candidate-eqrel)
+  (let (rows ((.ref (gerbil-ascent-evaluate-program program) 'rows-of) 'eq))
+    (list (length rows)
+          (if (member '(0 20) rows) #t #f)
+          (if (member '(20 0) rows) #t #f)
+          (if (member '(5 5) rows) #t #f))))
+
 (let-values (((receipt result)
-              (benchmark-run/result fixture
-                                    (lambda ()
-                                      (gerbil-ascent-evaluate-program program)))))
-  (let (rows ((.ref result 'rows-of) 'eq))
-    (unless (and (= (length rows) 441)
-                 (member '(0 20) rows)
-                 (member '(20 0) rows)
-                 (member '(5 5) rows))
-      (error "ASCENT BYODS eqrel changed closure semantics")))
+              (benchmark-run/result fixture candidate-eqrel)))
+  (unless (equal? result '(441 #t #t #t))
+    (error "ASCENT BYODS eqrel changed closure semantics"))
   (unless (benchmark-receipt-pass? receipt)
     (error "ASCENT BYODS eqrel exceeded the benchmark budget" receipt))
   (display "[gerbil-ascent-benchmark] ascent-byods-eqrel p95=")

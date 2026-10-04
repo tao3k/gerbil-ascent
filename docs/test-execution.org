@@ -1,0 +1,105 @@
+#+TITLE: Native build and test entrypoints
+#+AUTHOR: tao3k team and Contributors
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+* Ownership
+=build.ss= declares production modules and the native ASP build specification.
+=t/harness/run.ss= owns test inventories, native test compilation and scheduling.
+It imports the production module list rather than duplicating it; =std/make=
+owns compilation and incremental dependency checks.
+=just= exposes the existing commands and starts separate module processes with
+=xargs -P=. There is no separate test framework in =tools/= and no Python runner
+on the active build/test/performance entrypoints.
+
+The real tests remain in =t/qualification/*-test.ss= and =t/performance/*-test.ss=.
+Native =gxtest= discovers exported Suites; =std/test= owns Case execution, setup,
+cleanup and assertions. The small =t/harness/gxtest.ss= adapter checks the
+compiled library and propagates the native gxtest return value to the process.
+The temporal harness retains its visible import boundaries.
+
+* Compilation and isolation
+Just invokes =t/harness/run.ss= through =gerbil env gxi= so native Gerbil selects the
+project dependency environment before resolving build imports. An explicit
+=GERBIL_PATH= is retained. Bare =gxi= can miss dependencies installed by
+=gerbil deps --install= into the project's =.gerbil/= directory; this was the
+first failure in the remote Scheme jobs for commit =53e6691=.
+
+Production and selected =*-test.ss= modules compile through the test entrypoint into
+=.cache/ascent/native-library/lib=. Native =gxtest= directly loads the compiled
+=.ssi= test module and executes the original exported Suites and Cases.
+The compiled library comes before the checkout in =GERBIL_LOADPATH=; otherwise
+source modules can be interpreted and invalidate performance comparisons.
+The table-expression paired fixture's baseline is compiled alongside production.
+=std/make= checks source dependencies before each invocation; no custom fingerprint
+cache duplicates its currentness logic.
+
+A native =std/os/flock= lease protects a complete package invocation. The parallel
+module pool finishes before exclusive modules start. Builds and performance
+commands use the same lease. Children call the private Just recipes without
+acquiring a nested lease. Independent invocations therefore cannot contaminate
+timed Cases. No standalone scheduler tests are added: validation runs ASCENT's
+actual modules and Cases.
+
+* Commands
+#+begin_src sh
+just build
+just check-policy
+just test                    # capacity from GERBIL_BUILD_CORES / native CPU count
+just test 12
+just test-serial
+just test-file t/qualification/ascent-rule-program-test.ss
+just test-parallel
+just performance-scenario ascent-table-expression
+just performance
+#+end_src
+
+Module deadlines and Case budgets are unchanged. Every native test must produce
+CASE-OK, MODULE-OK, HARNESS-OK and final OK with a successful process exit.
+Failure markers, missing markers, overflows and nonzero exits fail the command.
+Pool logs and temporary output stay under ignored =.cache/ascent/=.
+
+* Evidence boundary
+The first replacement-entrypoint run passed 46 parallel modules; the interpreted
+retained-operator test module exceeded its original 120-second deadline. That
+failed log is preserved in the cache. Native =gxtest= subsequently executed the
+compiled version of that unchanged test module successfully with the same
+deadline. This is an isolated result; the full compiled suite requires its own
+completed run.
+
+The final package-entrypoint run passed all 50 modules and 396 Cases, with
+zero error markers and process exit 0. It used =GERBIL_BUILD_CORES=12=, compiled
+test modules, and the unchanged module deadlines and Case budgets. Its logs are
+local cache artifacts; this is local validation, not remote CI evidence.
+A speculative contract-union optimization failed its paired Program admission
+criterion and was withdrawn. No production speedup is claimed from that study.
+
+Historical Python study collectors referring to the removed runners are archived
+experiments. Use the native Just commands above for current qualification.
+
+Earlier local checks: the binary-program performance module passed, and the
+ordered-relations native comparison completed twice (10 scenarios, 1000 pairs
+per scenario per run). The table-expression SS scenario exceeded its original
+120-second module deadline in that earlier environment.
+
+The subsequent timeout investigation restored the pinned dependency environment
+under ignored =.cache/ascent/sdk/= and rebuilt ASP =v0.1.2.2=. The unchanged
+table-expression benchmark completed: 1000 baseline measurements took about
+17.5 seconds and 1000 candidate measurements about 1.7 seconds; the complete
+test module passed in 34 seconds under its original 120-second deadline.
+Phase diagnostics are outside the measured benchmark thunks. The earlier
+temporary environment is no longer available, so this result does not establish
+the cause of its timeout or a production algorithm speedup.
+
+The CI dependency-context failure was reproduced locally: bare =gxi= failed to
+resolve ASP's core-capacity module, while =gerbil env gxi= returned capacity 12
+from the same project environment. This validates the entrypoint correction;
+remote CI for the corrected commit still requires its own result.
+
+In that restored environment, =just test= completed all 50 modules and 396 Cases
+with zero error markers and exit 0. The subsequent exclusive =just performance=
+completed all 17 distinct SS scenarios with exit 0. Table-expression completed
+in 31 seconds in the suite (baseline about 23.8 seconds, candidate about 3.3
+seconds, candidate p95 836 microseconds). All original sample counts, module
+deadlines, Case budgets and fixture assertions were retained. These are local
+results; logs remain under ignored =.cache/ascent/=.

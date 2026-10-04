@@ -1,0 +1,482 @@
+{
+  "warmups": 20,
+  "samples": 1000,
+  "allocation_qualified": false,
+  "results": [
+    {
+      "name": "complete-16",
+      "primary": false,
+      "timing_qualified": false,
+      "runs": [
+        {
+          "repetitions": 1,
+          "old-p50-ns": 67000,
+          "new-p50-ns": 66000,
+          "old-p95-ns": 171000,
+          "new-p95-ns": 173000,
+          "time-paired-wins": 423,
+          "primary": false
+        },
+        {
+          "repetitions": 1,
+          "old-p50-ns": 68000,
+          "new-p50-ns": 68000,
+          "old-p95-ns": 629000,
+          "new-p95-ns": 240000,
+          "time-paired-wins": 423,
+          "primary": false
+        }
+      ]
+    },
+    {
+      "name": "complete-degree-16-32",
+      "primary": false,
+      "timing_qualified": false,
+      "runs": [
+        {
+          "repetitions": 1,
+          "old-p50-ns": 511000,
+          "new-p50-ns": 512000,
+          "old-p95-ns": 5442000,
+          "new-p95-ns": 6816000,
+          "time-paired-wins": 283,
+          "primary": false
+        },
+        {
+          "repetitions": 1,
+          "old-p50-ns": 523000,
+          "new-p50-ns": 524000,
+          "old-p95-ns": 21138000,
+          "new-p95-ns": 19986000,
+          "time-paired-wins": 383,
+          "primary": false
+        }
+      ]
+    },
+    {
+      "name": "complete-degree-23-32",
+      "primary": false,
+      "timing_qualified": false,
+      "runs": [
+        {
+          "repetitions": 1,
+          "old-p50-ns": 708000,
+          "new-p50-ns": 711000,
+          "old-p95-ns": 7961000,
+          "new-p95-ns": 8812000,
+          "time-paired-wins": 263,
+          "primary": false
+        },
+        {
+          "repetitions": 1,
+          "old-p50-ns": 721000,
+          "new-p50-ns": 724000,
+          "old-p95-ns": 24559000,
+          "new-p95-ns": 32924000,
+          "time-paired-wins": 321,
+          "primary": false
+        }
+      ]
+    },
+    {
+      "name": "complete-degree-24-32",
+      "primary": true,
+      "timing_qualified": false,
+      "runs": [
+        {
+          "repetitions": 1,
+          "old-p50-ns": 736000,
+          "new-p50-ns": 424000,
+          "old-p95-ns": 9567000,
+          "new-p95-ns": 4427000,
+          "time-paired-wins": 930,
+          "primary": true
+        },
+        {
+          "repetitions": 1,
+          "old-p50-ns": 751000,
+          "new-p50-ns": 432000,
+          "old-p95-ns": 24492000,
+          "new-p95-ns": 13783000,
+          "time-paired-wins": 861,
+          "primary": true
+        }
+      ]
+    },
+    {
+      "name": "complete-degree-31-32",
+      "primary": true,
+      "timing_qualified": false,
+      "runs": [
+        {
+          "repetitions": 1,
+          "old-p50-ns": 942000,
+          "new-p50-ns": 544000,
+          "old-p95-ns": 14068000,
+          "new-p95-ns": 11736000,
+          "time-paired-wins": 899,
+          "primary": true
+        },
+        {
+          "repetitions": 1,
+          "old-p50-ns": 955000,
+          "new-p50-ns": 551000,
+          "old-p95-ns": 21702000,
+          "new-p95-ns": 19543000,
+          "time-paired-wins": 867,
+          "primary": true
+        }
+      ]
+    },
+    {
+      "name": "complete-degree-48-64",
+      "primary": true,
+      "timing_qualified": false,
+      "runs": [
+        {
+          "repetitions": 1,
+          "old-p50-ns": 4393000,
+          "new-p50-ns": 2119000,
+          "old-p95-ns": 70947000,
+          "new-p95-ns": 54423000,
+          "time-paired-wins": 852,
+          "primary": true
+        },
+        {
+          "repetitions": 1,
+          "old-p50-ns": 7692000,
+          "new-p50-ns": 2467000,
+          "old-p95-ns": 90566000,
+          "new-p95-ns": 58903000,
+          "time-paired-wins": 807,
+          "primary": true
+        }
+      ]
+    },
+    {
+      "name": "complete-degree-63-64",
+      "primary": true,
+      "timing_qualified": false,
+      "runs": [
+        {
+          "repetitions": 1,
+          "old-p50-ns": 5854000,
+          "new-p50-ns": 2923000,
+          "old-p95-ns": 71376000,
+          "new-p95-ns": 49105000,
+          "time-paired-wins": 839,
+          "primary": true
+        },
+        {
+          "repetitions": 1,
+          "old-p50-ns": 11096000,
+          "new-p50-ns": 4031000,
+          "old-p95-ns": 109995000,
+          "new-p95-ns": 66527000,
+          "time-paired-wins": 794,
+          "primary": true
+        }
+      ]
+    },
+    {
+      "name": "closure-fanout-32",
+      "primary": true,
+      "timing_qualified": false,
+      "runs": [
+        {
+          "repetitions": 1,
+          "old-p50-ns": 612000,
+          "new-p50-ns": 325000,
+          "old-p95-ns": 5477000,
+          "new-p95-ns": 1192000,
+          "time-paired-wins": 947,
+          "primary": true
+        },
+        {
+          "repetitions": 1,
+          "old-p50-ns": 618000,
+          "new-p50-ns": 328000,
+          "old-p95-ns": 12187000,
+          "new-p95-ns": 6164000,
+          "time-paired-wins": 898,
+          "primary": true
+        }
+      ]
+    },
+    {
+      "name": "distance-fanout-32",
+      "primary": false,
+      "timing_qualified": false,
+      "runs": [
+        {
+          "repetitions": 1,
+          "old-p50-ns": 424000,
+          "new-p50-ns": 335000,
+          "old-p95-ns": 2064000,
+          "new-p95-ns": 1174000,
+          "time-paired-wins": 944,
+          "primary": false
+        },
+        {
+          "repetitions": 1,
+          "old-p50-ns": 429000,
+          "new-p50-ns": 337000,
+          "old-p95-ns": 8248000,
+          "new-p95-ns": 5059000,
+          "time-paired-wins": 860,
+          "primary": false
+        }
+      ]
+    },
+    {
+      "name": "distance-then-closure-32",
+      "primary": true,
+      "timing_qualified": true,
+      "runs": [
+        {
+          "repetitions": 1,
+          "old-p50-ns": 747000,
+          "new-p50-ns": 349000,
+          "old-p95-ns": 5872000,
+          "new-p95-ns": 1730000,
+          "time-paired-wins": 948,
+          "primary": true
+        },
+        {
+          "repetitions": 1,
+          "old-p50-ns": 752000,
+          "new-p50-ns": 351000,
+          "old-p95-ns": 25073000,
+          "new-p95-ns": 8108000,
+          "time-paired-wins": 922,
+          "primary": true
+        }
+      ]
+    },
+    {
+      "name": "distance-chain-32",
+      "primary": false,
+      "timing_qualified": false,
+      "runs": [
+        {
+          "repetitions": 1,
+          "old-p50-ns": 51000,
+          "new-p50-ns": 51000,
+          "old-p95-ns": 141000,
+          "new-p95-ns": 142000,
+          "time-paired-wins": 198,
+          "primary": false
+        },
+        {
+          "repetitions": 1,
+          "old-p50-ns": 51000,
+          "new-p50-ns": 51000,
+          "old-p95-ns": 106000,
+          "new-p95-ns": 126000,
+          "time-paired-wins": 214,
+          "primary": false
+        }
+      ]
+    },
+    {
+      "name": "distance-chain-128",
+      "primary": false,
+      "timing_qualified": false,
+      "runs": [
+        {
+          "repetitions": 1,
+          "old-p50-ns": 435000,
+          "new-p50-ns": 432000,
+          "old-p95-ns": 3868000,
+          "new-p95-ns": 8488000,
+          "time-paired-wins": 602,
+          "primary": false
+        },
+        {
+          "repetitions": 1,
+          "old-p50-ns": 438000,
+          "new-p50-ns": 436000,
+          "old-p95-ns": 7933000,
+          "new-p95-ns": 17786000,
+          "time-paired-wins": 589,
+          "primary": false
+        }
+      ]
+    },
+    {
+      "name": "closure-chain-32",
+      "primary": false,
+      "timing_qualified": false,
+      "runs": [
+        {
+          "repetitions": 1,
+          "old-p50-ns": 43000,
+          "new-p50-ns": 43000,
+          "old-p95-ns": 47000,
+          "new-p95-ns": 46000,
+          "time-paired-wins": 172,
+          "primary": false
+        },
+        {
+          "repetitions": 1,
+          "old-p50-ns": 43000,
+          "new-p50-ns": 43000,
+          "old-p95-ns": 110000,
+          "new-p95-ns": 111000,
+          "time-paired-wins": 210,
+          "primary": false
+        }
+      ]
+    },
+    {
+      "name": "projection-256",
+      "primary": false,
+      "timing_qualified": false,
+      "runs": [
+        {
+          "repetitions": 1,
+          "old-p50-ns": 296000,
+          "new-p50-ns": 296000,
+          "old-p95-ns": 1486000,
+          "new-p95-ns": 2028000,
+          "time-paired-wins": 415,
+          "primary": false
+        },
+        {
+          "repetitions": 1,
+          "old-p50-ns": 295000,
+          "new-p50-ns": 295000,
+          "old-p95-ns": 3271000,
+          "new-p95-ns": 5016000,
+          "time-paired-wins": 478,
+          "primary": false
+        }
+      ]
+    },
+    {
+      "name": "empty-distances-64",
+      "primary": false,
+      "timing_qualified": false,
+      "runs": [
+        {
+          "repetitions": 1,
+          "old-p50-ns": 13000,
+          "new-p50-ns": 14000,
+          "old-p95-ns": 15000,
+          "new-p95-ns": 14000,
+          "time-paired-wins": 75,
+          "primary": false
+        },
+        {
+          "repetitions": 1,
+          "old-p50-ns": 13000,
+          "new-p50-ns": 14000,
+          "old-p95-ns": 45000,
+          "new-p95-ns": 47000,
+          "time-paired-wins": 111,
+          "primary": false
+        }
+      ]
+    },
+    {
+      "name": "empty-distances-512",
+      "primary": false,
+      "timing_qualified": false,
+      "runs": [
+        {
+          "repetitions": 1,
+          "old-p50-ns": 15000,
+          "new-p50-ns": 15000,
+          "old-p95-ns": 17000,
+          "new-p95-ns": 16000,
+          "time-paired-wins": 290,
+          "primary": false
+        },
+        {
+          "repetitions": 1,
+          "old-p50-ns": 15000,
+          "new-p50-ns": 15000,
+          "old-p95-ns": 50000,
+          "new-p95-ns": 51000,
+          "time-paired-wins": 298,
+          "primary": false
+        }
+      ]
+    },
+    {
+      "name": "sparse-distances-512",
+      "primary": false,
+      "timing_qualified": false,
+      "runs": [
+        {
+          "repetitions": 1,
+          "old-p50-ns": 17000,
+          "new-p50-ns": 17000,
+          "old-p95-ns": 19000,
+          "new-p95-ns": 19000,
+          "time-paired-wins": 262,
+          "primary": false
+        },
+        {
+          "repetitions": 1,
+          "old-p50-ns": 18000,
+          "new-p50-ns": 18000,
+          "old-p95-ns": 59000,
+          "new-p95-ns": 58000,
+          "time-paired-wins": 272,
+          "primary": false
+        }
+      ]
+    },
+    {
+      "name": "empty-distances-513",
+      "primary": false,
+      "timing_qualified": false,
+      "runs": [
+        {
+          "repetitions": 1,
+          "old-p50-ns": 14000,
+          "new-p50-ns": 14000,
+          "old-p95-ns": 48000,
+          "new-p95-ns": 48000,
+          "time-paired-wins": 209,
+          "primary": false
+        },
+        {
+          "repetitions": 1,
+          "old-p50-ns": 14000,
+          "new-p50-ns": 15000,
+          "old-p95-ns": 48000,
+          "new-p95-ns": 48000,
+          "time-paired-wins": 238,
+          "primary": false
+        }
+      ]
+    },
+    {
+      "name": "sparse-distances-513",
+      "primary": false,
+      "timing_qualified": false,
+      "runs": [
+        {
+          "repetitions": 1,
+          "old-p50-ns": 17000,
+          "new-p50-ns": 17000,
+          "old-p95-ns": 58000,
+          "new-p95-ns": 56000,
+          "time-paired-wins": 226,
+          "primary": false
+        },
+        {
+          "repetitions": 1,
+          "old-p50-ns": 18000,
+          "new-p50-ns": 18000,
+          "old-p95-ns": 58000,
+          "new-p95-ns": 56000,
+          "time-paired-wins": 262,
+          "primary": false
+        }
+      ]
+    }
+  ]
+}

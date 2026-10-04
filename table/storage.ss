@@ -6,7 +6,8 @@
 ;;; state belongs to the relation run, not the shared Provider declaration.
 ;;; Stateful Providers must reject failures before mutating their private state;
 ;;; the evaluator preflights returned batches before committing its own rows.
-(import (only-in :clan/poo/object .o .ref)
+(import (only-in :gerbil/runtime/gambit fx-)
+        (only-in :clan/poo/object .o .ref)
         (only-in :clan/poo/mop .defgeneric define-type validate)
         (only-in :core/types
                  PooFlowNativeObjectContract.
@@ -23,6 +24,7 @@
         gerbil-ascent-trrel-storage-provider
         gerbil-ascent-trrel-uf-storage-provider
         gerbil-ascent-storage-make-state
+        gerbil-ascent-set-batch-admit!
         gerbil-ascent-storage-extend)
 
 (def +make-state+
@@ -32,6 +34,8 @@
   (poo-flow-predicate-contract 'ascent/storage-extend procedure?
                                (lambda (_value _context) [])))
 
+;;; Every storage provider owns a fresh state per evaluation. The shared POO
+;;; declaration contains only constructor and extension behavior.
 (define-type (GerbilAscentStorageProviderContract
               @ PooFlowNativeObjectContract.)
   identity: 'ascent/storage-provider
@@ -41,9 +45,66 @@
 
 (def StorageProvider. (.ref GerbilAscentStorageProviderContract 'proto))
 
+;; : (-> StorageProvider StorageState)
 (def (gerbil-ascent-storage-make-state provider)
   ((.ref provider '.make-state)))
 
+;;; Admit a newest-first source-log prefix against Set membership. On an
+;;; empty Set, a unique whole log is already the correct row spine and can be
+;;; shared without copying. The fallback walks source order, so duplicates
+;;; preserve the first accepted row's position. The returned table owns all
+;;; accepted rows, including when the input table was empty and resized.
+;; gerbil-ascent-set-batch-admit!
+;;   : (-> SourceLog Nat SetMembership Boolean (Values Rows SetMembership))
+;;   | doc m%
+;;       Admit a staged Set batch in source order and return the accepted rows
+;;       with their membership index. An empty Set can share a unique source
+;;       log without copying its list spine.
+;;
+;;       # Examples
+;;
+;;       ```scheme
+;;       (gerbil-ascent-set-batch-admit! '((1 2)) 1 (make-hash-table) #t)
+;;       ;; => the accepted row list and its membership table
+;;       ```
+;;     %
+(def (gerbil-ascent-set-batch-admit! source-log count seen share-source?)
+  (def (admit present)
+    (let (source-order
+          (let collect ((cursor source-log) (left count) (ordered []))
+            (if (= left 0) ordered
+              (collect (cdr cursor) (fx- left 1)
+                       (cons (car cursor) ordered)))))
+      (let deduplicate ((remaining source-order) (accepted []))
+        (if (null? remaining)
+          (values accepted present)
+          (let (row (car remaining))
+            (if (hash-get present row)
+              (deduplicate (cdr remaining) accepted)
+              (begin
+                (hash-put! present row #t)
+                (deduplicate (cdr remaining) (cons row accepted)))))))))
+  (if (and share-source? (= (hash-length seen) 0))
+    (let (present (make-hash-table size: count))
+      ;; Clear the private uniqueness table before source-order admission:
+      ;; its newest-row keys must not replace first-accepted row identities.
+      (let scan ((cursor source-log) (left count) (next-size 1))
+        (if (= left 0)
+          (if (null? cursor)
+            (values source-log present)
+            (begin (hash-clear! present) (admit present)))
+          (begin
+            ;; One insertion and its cardinality reveal a duplicate without
+            ;; hashing every unique row a second time for a membership probe.
+            (hash-put! present (car cursor) #t)
+            (if (= (hash-length present) next-size)
+              (scan (cdr cursor) (fx- left 1) (fx+ next-size 1))
+              (begin (hash-clear! present) (admit present)))))))
+    (admit seen)))
+
+;;; Extension must return a bounded batch before the evaluator commits rows;
+;;; stateful providers preflight failures before changing their own state.
+;; : (-> StorageProvider StorageState Rows Rows Row Nat Rows)
 (.defgeneric (gerbil-ascent-storage-extend provider state all pending row budget)
   slot: .extend-rows)
 

@@ -1,0 +1,5 @@
+(import (only-in :std/make make))
+(make '("table/expression" "t/performance/distance-rows/reference")
+      srcdir: (current-directory) libdir: (getenv "ASCENT_DISTANCE_LIB")
+      build-deps: (getenv "ASCENT_DISTANCE_BUILD_DEPS"))
+(exit 0)

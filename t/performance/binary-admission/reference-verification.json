@@ -1,0 +1,11 @@
+{
+  "commit": "a453dc032f82c1911bf7b87ab6a635947502df1a",
+  "verified": true,
+  "source_sha256": "032a061a98b6ad6bae2accb154a9bb1df337bc19c4d505656d5f6813d6a487cd",
+  "program_sha256": "a92d5c93afe2e2babc0a642695e45d757d562c1752a81818845a059ddf7136e8",
+  "reference_program_sha256": "81494fc08b554d925fd9e0e54b24ef8a8776c3c07be8299fec945b48dded020a",
+  "reference_sha256": "67bf35bdf37cb0c384acd583054bf10919bce0473c3466864834f18b00a96c1b",
+  "adaptations": [
+    "exported identifiers alpha renamed; reference table import redirected"
+  ]
+}

@@ -1,0 +1,22 @@
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+((benchmarkKind . scenario-e2e)
+ (max_total . 1000us)
+ (target_total . 700us)
+ (regression_budget . 300us)
+ (expected_over_input_budget . 0us)
+ (sampleCount . 1000)
+ (targetRationale . "Evaluate the complete pinned Rust Fibonacci program with recursive body expressions.")
+ (unit . "us")
+ (sourcePath . "t/scenarios/performance/ascent-upstream-examples/benchmark-fibonacci.ss")
+ (rule . GERBIL-SCHEME-AGENT-R031)
+ (feature . ascent-fibonacci)
+ (optimizationFocus . "Scheme expression indexing and semi-naive recursion")
+ (inputShape . "six number facts, matching the pinned Rust package example")
+ (expectedOutcome . "six Fibonacci rows ending in (5,8)")
+ (expectedRepair . "select the Standard Library index plan for bound recursive expressions")
+ (baseline . "scan every recursive relation row for each body expression")
+ (candidate . "cached POO rule plan with bound expression lookup")
+ (measurementPhases candidate-fibonacci assert-semantic-gate assert-time-gate)
+ (tags poo ascent fibonacci recursion performance))

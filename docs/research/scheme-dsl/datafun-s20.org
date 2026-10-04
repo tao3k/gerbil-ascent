@@ -1,0 +1,75 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+#+TITLE: S20 reading: higher-order semi-naive evaluation in Datafun
+#+STATUS: research note; no Gerbil optimization claim
+#+DATE: 2026-09-30
+#+FILETAGS: :research:datafun:incrementalization:scheme-dsl:
+
+* Bibliography
+:PROPERTIES:
+:CUSTOM_ID: datafun-s20
+:SOURCE_PDF: https://www.rntz.net/files/seminaive-datafun.pdf
+:DOI: 10.1145/3371090
+:ACCESSED: 2026-09-30
+:END:
+
+Michael Arntzenius and Neel Krishnaswami, [[https://www.rntz.net/files/seminaive-datafun.pdf][Seminaïve Evaluation for a
+Higher-Order Functional Language]], POPL 2020.  PDF page numbers below
+count from one.  This paper advances the optimization question left
+open by the [[file:datafun-f16.org][2016 Datafun paper]].
+
+* Evidence ledger
+
+#+NAME: datafun-s20-evidence
+| Locator | Paper contribution | Relevance | Transfer limit |
+|---------+--------------------+-----------+----------------|
+| Abstract, PDF p. 1 | Extends semi-naive transformation to higher-order Datafun programs | Higher-order recursion need not lose all delta optimization | Transformation is for Datafun's typed calculus |
+| §1, PDF pp. 2–3 | Uses a modal constraint and type-directed translations | Require an analyzable operator IR | Arbitrary Gerbil closures do not expose this structure |
+| §5, PDF p. 10 | Defines increasing changes for sets and functions | Model deltas at relation/operator level | Current row deltas do not include function changes |
+| §9, PDF pp. 25–26 | Raw transformation has modest gains; simplification yields asymptotic gains on selected workloads | Benchmark the full optimization pipeline | No quantitative result transfers to this repository |
+
+* Design consequence
+:PROPERTIES:
+:CUSTOM_ID: datafun-s20-consequence
+:END:
+
+The 2016 paper's later-work statement about higher-order optimization is
+historical.  This 2020 paper supplies a semantic-preserving route for a
+typed higher-order language, including a notion of change for a
+function.  It is evidence that a long-term Gerbil language could have
+higher-order operators *inside* fixed-point computations without
+permanently giving up semi-naive evaluation.  It is not evidence that
+the current planner already handles an opaque Scheme procedure.
+
+A conservative first stage keeps functions higher-order at program
+construction time and lowers admitted programs to first-order named
+relations and visible positive atoms. That finite stage now has a
+structural insertion-change interpreter and a [[file:e4-positive-change.org][local E4 receipt]]. It
+does not supply Datafun's typed monotonicity proof or general function
+changes. The result type and optimization theorem in the paper have
+their own scope; they do not validate an arbitrary host-language FFI
+boundary.
+
+The paper's change structures here describe increasing changes.
+Removing or replacing source facts is not covered by that argument.
+The current retained Gerbil session can recompute from the accepted
+source snapshot; any future deletion-aware higher-order algorithm
+requires a separate semantic equivalence and rollback receipt.
+
+* Discriminator
+
+The first discriminator now has a recursive first-class transformer,
+independent finite-model equality, and paired join-probe/fix-iteration
+counts over chain and star families. Its zero-change propagation
+avoids old joins during a recursive frontier step. The finite interpreter
+still rebuilds the old fixed point for each call. The
+[[file:e4-retained-session.org][native Session gate]] instead retains the lowered rule state across
+calls and checks append/withdrawal semantics. A matched larger-scale
+and lifecycle-cost test remains open.
+A transform that skips a delta without an equivalence argument is not
+admitted.
+
+* Related notes
+
+[[file:index.org][Research index]]; [[file:../../scheme-relational-dsl-design.org][Scheme DSL proposal]].

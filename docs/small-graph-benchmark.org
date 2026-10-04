@@ -1,0 +1,127 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+#+TITLE: Three-node reachability lifecycle benchmark
+#+DATE: 2026-10-01
+#+STATUS: research receipt; no admitted regression gate
+
+* Method
+
+Run =just small-graph-benchmark= after =just build=. The native Gerbil
+script [[file:../t/performance/small-graph-benchmark.ss][small-graph-benchmark.ss]]
+uses the ASP =testing-benchmark-run/result= API and its
+[[file:../t/performance/small-graph/benchmark.ss][scenario fixture]]. Each
+phase has 20 samples and records p50, p95, max, and one selected sample's
+runtime memory delta. Three directed graphs on vertices 0, 1 and 2 have
+0, 3, or 6 edges. An independent Floyd–Warshall closure supplies the exact
+expected row set outside timed code. The selected result from every phase is
+checked; the replacement phase alternates two distinct input states and
+checks every sample inside its timed operation. The duplicate append phase
+checks that adding an existing edge leaves the closure unchanged.
+
+=reference= is the operator interpreter. =compile= lowers an operator graph
+to a Core program. =admit= prepares the engine from an already compiled
+program. =admit-solve= makes a fresh admission and runs inference; a second
+solve on the same admission is a cached result. =fragment= composes, admits,
+runs, and queries a named fragment. =retained-open= builds and opens a
+retained operator session. =retained-replace= updates an existing session.
+=retained-duplicate= appends a row already in an existing session. These
+phases overlap by design and must not be added together.
+
+The later =native-core= phase reuses immutable schema and rule analysis
+from a prebuilt engine, then builds a fresh state and executes the full
+semi-naive evaluator. It bypasses the public admission copy and is an
+attribution probe, not a replacement public API.
+
+The fixture's 1 ms =target_total= is an aspirational p95 target for each
+phase. Its 999 ms =max_total= is a permissive research guard, not a CI
+performance promise. =targetMet= in receipts compares each phase's p95
+against 1 ms. The =gcDelta= value is the ASP API's memory-counter delta
+for its selected sample, not total allocations across all 20 samples.
+
+* Environment and receipts
+
+- Apple arm64, Gerbil =2591dcd= on Gambit =dcd677c=.
+- Baseline source commit =84b145d68cd8ce826551d2ac92ab3a1c5ff08d46=
+  plus the uncommitted benchmark and proof changes in this branch.
+- Receipt 1: [[file:../t/performance/small-graph/receipts/2026-10-01-run-1.txt][run 1]].
+- Receipt 2: [[file:../t/performance/small-graph/receipts/2026-10-01-run-2.txt][run 2]].
+
+* Results
+
+The receipt files are the full phase summaries. Values below are p50
+milliseconds; =reference= is shown in microseconds. Each cell has the first
+and second run separated by =/=. Do not compare the values across phases
+as an exclusive cost decomposition.
+
+| Phase | 0 edges | 3 edges | 6 edges |
+|-------+---------+---------+---------|
+| reference (µs) | 6/6 | 35/34 | 60/59 |
+| compile (ms) | 80.4/61.9 | 22.8/24.2 | 32.6/61.5 |
+| admit (ms) | 58.7/88.6 | 104.6/61.2 | 34.2/64.9 |
+| admit-solve (ms) | 106.6/77.0 | 80.2/64.2 | 102.4/48.9 |
+| fragment (ms) | 168.7/192.8 | 182.4/284.0 | 115.1/124.1 |
+| retained-open (ms) | 114.9/144.5 | 140.8/160.5 | 200.4/120.1 |
+| retained-replace (ms) | 49.7/85.0 | 34.9/78.6 | 44.0/64.3 |
+| retained-duplicate (ms) | 56.3/36.3 | 39.7/54.0 | 93.2/32.8 |
+
+* Interpretation
+
+The independent closure is microsecond scale on all three graphs. The
+program-facing lifecycle is tens to hundreds of milliseconds even at this
+size. Graph size therefore does not explain most of the end-to-end cost.
+The general semi-naive evaluator and public POO-backed construction,
+validation, lowering, and admission all need separate attribution before
+changing the algorithm. The run-to-run and p95 spread also forbids claiming
+an optimization from one sample.
+
+This benchmark covers one positive transitive-closure program and three
+input shapes. It is not evidence about arbitrary recursive Datalog,
+stratified negation, reducers, larger graphs, multicore throughput, or
+deployed latency. A future change should rerun the same fixture, compare
+matched distributions, and retain semantic equality with the independent
+closure and the 64-mask qualification corpus.
+
+* Operator lowering experiment
+
+The before code was commit =f587d91= with only the =native-core= phase
+added to the benchmark script. The after code fused =project(join(...))=
+into one projected rule and directed =fix(union(...))= branches into the
+fixed-point relation. The latter transformation removes a materialized
+union and its copy rule. For this reachability graph, the Core program
+changed from five relations and five rules to three relations and three
+rules. The 64 graph shapes in =scheme-operator-test.ss= and its nested,
+retained, and budget cases passed after the change.
+
+Two separate runs before and after used the same three masks, 20 samples
+per phase, machine, and ASP fixture. The receipts are
+[[file:../t/performance/small-graph/receipts/2026-10-01-optimization-before-1.txt][before 1]],
+[[file:../t/performance/small-graph/receipts/2026-10-01-optimization-before-2.txt][before 2]],
+[[file:../t/performance/small-graph/receipts/2026-10-01-optimization-after-1.txt][after 1]], and
+[[file:../t/performance/small-graph/receipts/2026-10-01-optimization-after-2.txt][after 2]].
+The table gives the median of the six p50 values (three masks times two
+runs), in milliseconds. The last column counts mask/run pairs whose after
+p50 was smaller. It is an indicative local comparison, not a CI gate.
+
+| Phase | Before | After | Lower pairs |
+|-------+--------+-------+-------------|
+| reference | 0.034 | 0.046 | 1/6 |
+| compile | 45.258 | 18.410 | 6/6 |
+| admit | 47.918 | 16.605 | 6/6 |
+| admit-solve | 53.575 | 19.970 | 6/6 |
+| native-core | 0.266 | 0.310 | 3/6 |
+| fragment | 154.520 | 82.000 | 5/6 |
+| retained-open | 175.571 | 82.412 | 6/6 |
+| retained-replace | 73.370 | 27.936 | 5/6 |
+| retained-duplicate | 52.608 | 23.343 | 6/6 |
+
+The two fusions reduced public-path cost in these matched runs. The
+independent reference stayed microsecond scale and native-core did not
+show a matched speedup, so the main gain is fewer intermediate POO
+declarations and admission work. Public operations still miss the 1 ms
+research target by a wide margin. Removing intermediate relations also
+reduces consumption of =max-derived-facts=, which is a resource budget:
+programs at a very tight budget may complete after this optimization where
+the prior lowering was bounded. Exact row-set semantics are unchanged when
+both versions complete. Another optimization should target the remaining
+snapshot and validation cost directly, with the same qualified boundaries.

@@ -8,12 +8,14 @@
                  poo-flow-test-case)
         (only-in :gerbil-ascent/t/qualification/ascent-aggregate-program-fixture
                  ascent-aggregate-fixture-evaluate
+                 ascent-aggregate-pattern-evaluate
                  ascent-derived-aggregate-fixture-evaluate)
         (only-in :gerbil-ascent/program/interface
                  gerbil-ascent-relation gerbil-ascent-variable
                  gerbil-ascent-atom gerbil-ascent-rule
                  gerbil-ascent-aggregate gerbil-ascent-program
-                 gerbil-ascent-evaluate-program gerbil-ascent-count))
+                 gerbil-ascent-evaluate-program gerbil-ascent-count)
+        (only-in :gerbil-ascent/program/syntax ascent))
 
 (export ascent-aggregate-program-test)
 
@@ -42,6 +44,27 @@
         (check-equal? (rows result 'total) '((0)))
         (check-equal? (rows result 'cardinality) '((0)))
         (check-equal? (rows result 'custom) [])))
+    (poo-flow-test-case "aggregate result destructures a native pattern"
+      (check-equal?
+       (rows (ascent-aggregate-pattern-evaluate '(5 2 5 1))
+             'extrema-pair)
+       '((1 5)))
+      (check-equal?
+       (rows (ascent-aggregate-pattern-evaluate []) 'extrema-pair)
+       []))
+    (poo-flow-test-case "aggregate output pattern rejects a mismatched value"
+      (check-exception
+       (gerbil-ascent-evaluate-program
+        (ascent
+         (relation number (value) '((1)))
+         (relation out (first second))
+         ((out first second) <--
+          (aggregate (first second)
+                     (lambda (_tuples) (list (vector 1)))
+                     () (number value)
+                     (vector first second)))
+         (bounds 4 4 8)))
+       true))
     (poo-flow-test-case "aggregate a completed recursive closure in a higher stratum"
       (let (result (ascent-derived-aggregate-fixture-evaluate
                    '((0 1) (1 2) (2 0)) '(0 1 2 5)))

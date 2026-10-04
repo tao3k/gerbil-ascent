@@ -6,9 +6,13 @@
 ;;; state; the evaluator creates one instance per declared relation and run.
 (export gerbil-ascent-eqrel-state gerbil-ascent-eqrel-extension)
 
+;; : (-> EquivalenceComponents)
 (def (gerbil-ascent-eqrel-state)
   (make-hash-table))
 
+;;; Budget preflight must finish before merging components. A rejected source
+;;; update must leave the retained session state reusable on the next call.
+;; : (-> EquivalenceComponents Rows Rows Row Nat Rows)
 (def (gerbil-ascent-eqrel-extension components _all _pending row budget)
   (let* ((width (length row))
          (_ (unless (memq width '(2 3))

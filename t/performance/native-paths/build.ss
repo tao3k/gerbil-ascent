@@ -1,0 +1,5 @@
+(import (only-in :std/make make))
+(make '("table/expression" "t/performance/native-paths/reference")
+      srcdir: (current-directory) libdir: (getenv "ASCENT_NATIVE_PATHS_LIB")
+      build-deps: (getenv "ASCENT_NATIVE_PATHS_BUILD_DEPS"))
+(exit 0)

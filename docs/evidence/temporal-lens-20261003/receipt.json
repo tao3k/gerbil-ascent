@@ -1,0 +1,127 @@
+{
+  "benchmark": "same star/snapshot/candidate/budgets, finite/founded verification once per path, 5 alternating pairs after warmup",
+  "binding": "native snapshot identity SHA256 binds full canonical lens/source/root/scope; compare/fork reverify actual base receipts",
+  "cases": 9,
+  "cut_knowledge_window_cases": 128,
+  "date": "2026-10-03",
+  "files": {
+    "build-policy.log": "546af03a75f74a88aeb7a8513379b84589ae6abb19bb789a782aba870fa899a7",
+    "final-qualification-scale.log": "8534c6ac4bff709ba6b5b7e202ab39c9db15c3b5d5f1c134130becf6b98784b0"
+  },
+  "limits": {
+    "derived": 4096,
+    "events": 256,
+    "evidence_steps": 100000,
+    "horizon": 128,
+    "input": 1024,
+    "output": 4096,
+    "parents": 512
+  },
+  "model_calls": 0,
+  "ordered_graph_solves": 128,
+  "policy_errors": 0,
+  "policy_findings": 0,
+  "policy_modules": 37,
+  "scale": [
+    {
+      "events": 8,
+      "plain_median_ms": 43.65897178649902,
+      "repetitions": 5,
+      "samples": [
+        {
+          "plain_ms": 50.633907318115234,
+          "rep": 0,
+          "temporal_ms": 15.069961547851562
+        },
+        {
+          "plain_ms": 16.12401008605957,
+          "rep": 1,
+          "temporal_ms": 15.48314094543457
+        },
+        {
+          "plain_ms": 45.027971267700195,
+          "rep": 2,
+          "temporal_ms": 15.017986297607422
+        },
+        {
+          "plain_ms": 15.120983123779297,
+          "rep": 3,
+          "temporal_ms": 14.961957931518555
+        },
+        {
+          "plain_ms": 43.65897178649902,
+          "rep": 4,
+          "temporal_ms": 15.06495475769043
+        }
+      ],
+      "temporal_median_ms": 15.06495475769043
+    },
+    {
+      "events": 32,
+      "plain_median_ms": 28.01799774169922,
+      "repetitions": 5,
+      "samples": [
+        {
+          "plain_ms": 27.287006378173828,
+          "rep": 0,
+          "temporal_ms": 56.596994400024414
+        },
+        {
+          "plain_ms": 27.647018432617188,
+          "rep": 1,
+          "temporal_ms": 27.608871459960938
+        },
+        {
+          "plain_ms": 56.09416961669922,
+          "rep": 2,
+          "temporal_ms": 27.797937393188477
+        },
+        {
+          "plain_ms": 46.582937240600586,
+          "rep": 3,
+          "temporal_ms": 69.65994834899902
+        },
+        {
+          "plain_ms": 28.01799774169922,
+          "rep": 4,
+          "temporal_ms": 90.46196937561035
+        }
+      ],
+      "temporal_median_ms": 56.596994400024414
+    },
+    {
+      "events": 128,
+      "plain_median_ms": 219.18797492980957,
+      "repetitions": 5,
+      "samples": [
+        {
+          "plain_ms": 217.91505813598633,
+          "rep": 0,
+          "temporal_ms": 219.70510482788086
+        },
+        {
+          "plain_ms": 219.18797492980957,
+          "rep": 1,
+          "temporal_ms": 246.59204483032227
+        },
+        {
+          "plain_ms": 190.4890537261963,
+          "rep": 2,
+          "temporal_ms": 222.14007377624512
+        },
+        {
+          "plain_ms": 226.35984420776367,
+          "rep": 3,
+          "temporal_ms": 268.3429718017578
+        },
+        {
+          "plain_ms": 227.34689712524414,
+          "rep": 4,
+          "temporal_ms": 221.8918800354004
+        }
+      ],
+      "temporal_median_ms": 222.14007377624512
+    }
+  ],
+  "scope": "finite-point-time-lens"
+}

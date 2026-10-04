@@ -1,0 +1,6 @@
+(import (only-in :std/make make))
+(make '("program/evaluate" "t/qualification/ascent-multi-frontier-reference-evaluate")
+      srcdir: (current-directory)
+      libdir: (getenv "ASCENT_MULTI_FRONTIER_LIB")
+      build-deps: ".gerbil/multi-frontier/build-deps")
+(exit 0)

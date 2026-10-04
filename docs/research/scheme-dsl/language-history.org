@@ -1,0 +1,191 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+#+TITLE: A language history for the Scheme relational DSL
+#+STATUS: research synthesis; interpretations are design proposals
+#+DATE: 2026-10-01
+#+FILETAGS: :research:language-history:scheme-dsl:
+
+* Scope and reading convention
+:PROPERTIES:
+:CUSTOM_ID: scheme-dsl-language-history
+:END:
+
+This is a selective language history, not a claim of direct descent
+between every cited system.  It follows seven primary sources that
+expose distinct answers to one question: how can functional language
+abstraction coexist with relational fixed points?  The linked
+[[file:index.org][research index]] keeps the PDF URLs, section/page locators, and
+individual evidence ledgers.  Each section here separates what a
+source contributes from our proposed transfer into Gerbil.
+
+#+NAME: history-map
+| Period | Source | Language move | Boundary for our design |
+|--------+--------+---------------+-------------------------|
+| 2013 | [[file:microkanren-h13.org][H13 µKanren]] | Tiny relational kernel, Scheme functions/macros for goals | Stream search is not bottom-up completion |
+| 2016 | [[file:datafun-f16.org][F16 Datafun]] | Higher-order functions with tracked monotonicity and finite fixed points | Opaque Scheme closures inherit no proof |
+| 2020 | [[file:flix-f20.org][F20 Flix]] | First-class Datalog constraint sets and composition | Check the assembled program, including stratification |
+| 2020 | [[file:datafun-s20.org][S20 Datafun]] | Seminaive evaluation extended to typed higher-order changes | A typed change transform is required |
+| 2022 | [[file:ascent-a22.org][A22 Ascent]] | Datalog-like rules embedded in Rust with compiler planning | Keep visible joins/dependencies, not Rust spelling |
+| 2022 | [[file:dbsp-b22.org][B22 DBSP]] | Stream calculus for incremental view maintenance, including recursion | Retained update state and complete snapshots are distinct from one-shot differences |
+| 2025 | [[file:flix-l25.org][L25 Flix]] | Integrated program values, private names, inject/solve/query | Design explicit phases and relation identities |
+
+* 2013: µKanren makes the host-language boundary small
+:PROPERTIES:
+:CUSTOM_ID: history-microkanren
+:END:
+
+Hemann and Friedman's [[file:microkanren-h13.org][µKanren]] reduces relational search to
+a small goal/stream kernel.  Scheme functions and macros build richer
+goal syntax above it.  This is an instructive architecture for a
+Scheme-native interface: lexical functions can combine relational
+program pieces without every combinator becoming a primitive.
+
+Its semantics are search through unification and interleaved streams.
+Answer order and availability during an unfinished search matter.
+Our evaluator derives bottom-up sets to a fixed point.  Thus the
+portable idea is a small kernel under Scheme abstractions; goal
+constructors or fairness results do not transfer as the rule engine.
+The [[file:microkanren-h13.org::#microkanren-kernel-boundary][reading note]] records the discriminator.
+
+* 2016: Datafun treats monotonicity as a language property
+:PROPERTIES:
+:CUSTOM_ID: history-datafun-f16
+:END:
+
+[[file:datafun-f16.org][Datafun]] makes a stronger move: it tracks where a function is
+monotone, so higher-order functional expressions can participate in
+fixed points.  Its finite-height structure also bounds iteration.
+The two obligations are separate.  A stable function that emits one
+row per input can still generate an infinite recursive successor
+chain if the fact domain is unbounded.
+
+Our pointwise relation adapter is a narrower inference.  Holding a
+function =f= fixed, taking the union of its rows over a growing input
+relation is monotone in that relation.  This does not prove =f= stable
+under mutation, pure, terminating, or free of hidden relation reads.
+Nor does it give Datafun's type-based proof for arbitrary Scheme
+closures.  The [[file:datafun-f16.org::#datafun-termination][finite-height analysis]] motivates a
+separate completed-closure claim versus explicit resource failure.
+
+* 2020: Flix makes whole rule sets composable values
+:PROPERTIES:
+:CUSTOM_ID: history-flix-f20
+:END:
+
+[[file:flix-f20.org][First-class Datalog constraints in Flix]] shift composition above
+individual rules.  A program can build and combine constraint sets;
+well-formedness and stratification then concern the combined set.
+This suggests Scheme functions should return parameterized fragment
+values.  Relation identity, import/export shape, and admission of the
+assembled program are more important than copying any Flix surface
+token.  Existing Gerbil =ascent-fragment= and POO declarations are a
+starting point, but they do not provide Flix's static row-polymorphic
+assurance.  The [[file:flix-f20.org::#flix-composition-boundary][composition reading]] identifies that
+limit and the negative-cycle test.
+
+* 2020: higher-order seminaive evaluation becomes a typed problem
+:PROPERTIES:
+:CUSTOM_ID: history-datafun-s20
+:END:
+
+The [[file:datafun-s20.org][Datafun seminaive work]] derives changes for higher-order
+values in a typed calculus.  It undermines a simplistic assumption
+that higher-order functions must always require full recomputation.
+It does not justify applying a delta shortcut to an opaque Gerbil
+procedure.  First-class Scheme fragment constructors can initially
+specialize to an inspectable first-order IR.  A later restricted
+operator language could define an order, function changes, and a
+semantics-preserving delta transform.  The proof and benchmark target
+would be that new IR, with a naive interpreter as reference.
+
+* 2022: Ascent shows the value of planner-visible rules
+:PROPERTIES:
+:CUSTOM_ID: history-ascent-a22
+:END:
+
+[[file:ascent-a22.org][Ascent]] presents deductive rules embedded in Rust.  Its compiler
+can see relation atoms, binding patterns, dependencies, and join
+structure, enabling indexing and seminaive work.  Host expression,
+pattern, guard, and generator spellings solve a Rust embedding problem.
+They are not part of the relational theorem that our Scheme interface
+must preserve. A native Scheme rule with visible relation atoms retains
+the planner-visible core; explicit term
+projections and admitted relation views can handle local computation.
+The [[file:ascent-a22.org::#ascent-rule-boundary][Ascent note]] records what cannot be inferred
+from Rust performance or syntax.
+
+* 2022: DBSP distinguishes snapshots from changes
+:PROPERTIES:
+:CUSTOM_ID: history-dbsp-b22
+:END:
+
+[[file:dbsp-b22.org][DBSP]] develops a stream account of incremental view maintenance,
+including recursive queries. Its setup separates a database snapshot,
+an update, and the change to a view; its recursive construction keeps
+state across input updates. For our Scheme Library this sharpens the
+question left by a one-shot set-difference interpreter: which state
+does the execution engine retain between calls? The existing native
+Session is the relevant owner. Its positive append behavior and
+replacement recomputation have their own bounded qualification, not a
+DBSP stream-circuit proof.
+
+* 2025: Flix exposes the program lifecycle
+:PROPERTIES:
+:CUSTOM_ID: history-flix-l25
+:END:
+
+The later [[file:flix-l25.org][Flix language design]] makes program values, private
+predicate names, data injection, solving, and querying explicit.  It
+helps articulate two different times at which "higher-order" can
+occur: Scheme functions may construct a program before admission;
+functions called during a fixed point become logical operators with
+proof obligations.  Fresh private relation handles and an explicit
+solve boundary let late composition and negation be checked before
+execution.  We should investigate these boundaries in Gerbil without
+claiming its current fragments inherit Flix's type/effect system.
+
+* Our branch: from Rust parity to a Scheme language
+:PROPERTIES:
+:CUSTOM_ID: history-gerbil-design
+:END:
+
+The present gerbil-ascent work began with selected Rust Ascent 0.8.0
+parity cases.  That is behavioral evidence for cases with matching
+semantics; it does not authorize a Rust-shaped Scheme grammar.  The
+proposed design path is:
+
+1. Retain arrow/atoms and an inspectable admitted IR for joins, SCCs,
+   strata, indexes, and delta positions.
+2. Let Scheme functions construct fragments with fresh private relation
+   identities and explicit shared imports/exports.
+3. Use declared row-local adapters as a limited bridge into rules;
+   distinguish trusted laws from mechanically checked operators.
+4. Separate assembly/injection, admission, solve, and query.
+5. Qualify one integrated finite-model fixture and source replacement,
+   then migrate the public surface directly.
+6. Research typed monotone operator changes only after a restricted IR
+   and reference evaluator exist.
+
+The history is therefore a set of constraints and research hypotheses,
+not an assertion that one of these languages already solves the Gerbil
+problem.  The current choices and discussion questions live in the
+[[file:../../scheme-relational-dsl-design.org::#scheme-dsl-decisions][design overview]].
+
+* Questions to carry forward
+:PROPERTIES:
+:CUSTOM_ID: history-open-questions
+:END:
+
+#+NAME: history-research-questions
+| Tension across sources | Proposed Gerbil experiment |
+|------------------------+----------------------------|
+| µKanren host combinators versus bottom-up completion | Compare answer sets separately from order and partial availability |
+| Datafun monotonicity versus arbitrary Scheme effects | Mutation, hidden-read, divergence, finite-domain cases |
+| Flix first-class fragments versus private identity | Two instantiations and late negative-cycle composition |
+| Ascent planner visibility versus host expressiveness | Inspect indexes/delta positions for scalar and multi-row adapters |
+| Higher-order deltas versus opaque procedures | Typed IR naive/transformed equivalence, then matched scale |
+
+See [[file:index.org][the source ledger]] for the primary PDFs and page-specific
+readings.  This document records our synthesis; it does not replace
+those sources.

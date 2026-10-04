@@ -1,0 +1,44 @@
+#+TITLE: Native qualification module scheduling
+#+AUTHOR: tao3k team and Contributors
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+* Module and Case execution
+=t/harness/run.ss= contains the reviewed parallel module list. Every qualification
+=*-test.ss= is discovered; modules outside that list run exclusively.
+=std/make= compiles the selected test sources. Native =gxtest= loads their =.ssi=
+modules. =just test= runs 47 independent modules in separate processes, waits for them,
+then runs the 3 exclusive modules. Native =std/test= retains Suite and Case order
+inside each process. New modules default to exclusive until reviewed.
+
+| Exclusive module | Reason |
+|------------------+--------|
+| ascent-rule-program-test.ss | Custom 2/5-second Case limits |
+| ascent-mutual-program-test.ss | Custom 15-second Case limit |
+| ascent-observability-test.ss | Sampling and duration contract |
+
+The parallel list includes process-local temporal, operator, callback and
+zero-timeout semantics. Per-rule timing tests in that list assert type and
+nonnegativity rather than elapsed speed. Parallel modules do not write a shared
+result file. Each has its own cache log and the native 120-second deadline.
+
+* Capacity
+=just test= and =just test-parallel= use ASP's native capacity resolver:
+=GERBIL_BUILD_CORES= when configured, otherwise the native CPU count.
+=just test 12= explicitly selects twelve processes; =just test-serial= uses one.
+There is no four-process cap. Capacity changes process scheduling, not Case order.
+
+The package invocation holds an exclusive native OS lease across compilation and
+both test phases. Builds and performance commands use the same lane. This also
+prevents independently launched commands from overlapping duration assertions.
+
+* Entrypoints and evidence
+=build.ss= owns production build declarations. =t/harness/run.ss= owns test
+configuration and native test compilation. The existing Just recipes
+use a standard process pool and =t/harness/gxtest.ss= forwards to =gxtest=.
+The tests assert ASCENT behavior in =t/*-test.ss=; no custom coordinator or
+coordinator self-tests remain in =tools/=.
+See =docs/test-execution.org= for native library selection and completion checks.
+Logs live under =.cache/ascent/native-library/test.*/=; generated logs and cache
+files are ignored by Git. Historical Python scheduling receipts are not evidence
+for the current entrypoint.

@@ -1,0 +1,144 @@
+* Measurement correction: allocation qualification withdrawn
+The row propagation audit found 86 negative byte-counter deltas among 20,000
+observations in each saved run. Their runtime cause is unconfirmed. Historical
+allocation-saving qualification below and in report.json is withdrawn. Raw
+samples and original reports remain preserved; timing/output evidence is
+independent. See [[file:../row-propagation/README.md][row propagation measurement audit]].
+
+#+TITLE: Ordered publication across bounded relation kernels
+
+* Shared representation
+
+Projection, composition and delta composition, bounded/unbounded closure, and
+shortest-distance publication now use the same private occupied-word bitmap
+when appropriate. Each sixteen-pair word is a u16; its mask and encoded offset
+fit fixnums even on 32-bit Gambit. Admission records a word only on its first
+transition from zero. Sorting occupied word indices in descending order and
+consing set bits in descending order produces the exact ascending pair list.
+The result costs O(k + b log b) for k pairs in b occupied words, rather than
+comparison-sorting every pair. Empty/unoccupied words are never scanned during
+publication. Membership storage shrinks from one byte to one bit per pair.
+
+The public POO projections still expose ordinary sorted lists and read-only
+membership/distance closures. Each expression owns its prepared source and
+result containers. Sparse radix >512 keeps hash membership and ordinary list
+sorting; external neighbor callbacks retain their invocation order. No global
+cache or scheduling/profile/budget changes.
+
+Closure uses one admission operation per candidate. Its private bit is admitted
+before checking the pair budget; an exceeded budget throws before counting,
+frontier insertion or any public result can escape. The externally observed
+budget failure and callback trace remain unchanged.
+
+Distance storage already determines membership, so a second bitmap is created
+only once discovered cardinality reaches max(16, radix squared /64). Earlier
+rows migrate once, and their temporary list is released. Smaller outputs keep
+ordinary list publication, avoiding an extra domain-sized allocation for empty
+or sparse distance results. Existing frontier propagation and distance joins
+are unchanged.
+
+* Exact baseline and complete consumption
+
+baseline.txt pins the preceding commit cb67c4d. reference.ss is its exact
+production table/expression.ss with only two exported names alpha renamed.
+=t/performance/ordered-relations/qualify.ss= reconstructs and checks it before each qualification. Both modules
+compile together into an isolated library. dependency-verification.json also
+checks the 299 installed dependency artifact hashes against the preceding and
+subsequent full production snapshots. The probe checks actual .ssi import
+paths inside the measuring process, and saves source/native artifact hashes.
+
+Each of two runs uses 20 warmups and 1000 alternating old/new pairs. Every timer
+includes expression creation and the demanded final rows; complete graph cases
+also demand projection, closure, distance rows and every returned distance.
+Semantic equality is checked outside each timed attempt. Gambit cumulative
+allocation counter slot 7 is used without forced per-sample GC.
+
+The five primary workloads retain the earlier classification and require a
+strict median allocation decrease and at least 900 strict paired allocation
+wins in both runs. Controls additionally cover sparse radix 513, external-left
+composition, index-only access, and empty/sparse distances at radix 512.
+Control costs are reported without declaring uniform non-regression. Timing
+claims require lower medians and at least 900 strict paired time wins in BOTH
+runs; report.py enforces the allocation gate and records timing classifications.
+
+* Matched results
+
+| Complete workload | Baseline median bytes | Candidate median bytes | Two-run timing qualification |
+|-------------------+-----------------------+------------------------+------------------------------|
+| projection 256    |                242912 |                 165728 | below 900 paired time wins    |
+| all results 16    |                181168 |                 158576 | PASS, 88-90us to 65-67us       |
+| full fanout 32    |                586544 |                 455472 | slower, 1063-1080us to 1107-1119us |
+| closure chain 32  |                128960 |                 107904 | PASS, 69-70us to 43-44us       |
+| distance chain 32 |                159392 |                 141280 | PASS, 77-78us to 51-53us       |
+
+All five primary allocation reductions repeat, approximately 11-32%. External
+composition also reduces median bytes 145184 ->87968. This is a storage and
+publication optimization with a measured CPU tradeoff: dense full fanout is
+about 4% slower. It is not a uniform speedup or a tail-latency claim.
+
+Sparse projection adds 32 bytes (58168 ->58200). Empty/sparse distance controls
+add 144 bytes per result (approximately 2.15MB total); their median time remains
+112-113us. Index-only allocation stays 63920 bytes. Raw paired samples, p95,
+and strict wins are retained in first.sexp/repeat.sexp and report.json.
+initial.* is an earlier eight-workload diagnostic, before adaptive distance
+publication and the single closure admission; exclude it from final claims.
+
+* Functional evidence
+
+The existing independent Floyd-Warshall/composition oracle covers all 512
+three-node graphs, snapshot withdrawal/replacement, custom callback traces,
+fanout, sparse input and closure budgets. A new native Case covers radix
+5/16/17/31/32/33/511/512/513, block boundaries, final partial words, canonical
+rows, all derived distance lookups, invalid membership queries, and exact
+closure budget success/failure.
+
+Production module import proof, policy, original SS gate receipts and the final
+functional suite are collected separately. The original table-expression gate
+passes at candidate p95 1.194ms, below its unchanged 2ms budget. The original
+membership gate passes at 25us and closure gate at 92us. This is the
+original fixture baseline, distinct from the exact cb67c4d matched comparison. Original profile/fixture sources
+remain unchanged; timings in the table above compare only exact preceding and
+candidate relation implementations in native mode.
+
+* Collector failure excluded from qualification
+
+The first functional-suite collection started while the long parent exclusive
+performance lease was held. Twenty-four workers exceeded their 120s admission
+wait before entering Cases. That collection was stopped, and the complete suite
+was restarted after all performance gates had finished. failed-concurrent-*.log
+retains this orchestration failure; it is not a solver semantic result. Final
+suite coverage is extracted only from a complete, zero-failure suite receipt.
+
+A subsequent complete run finished all 48 modules with one failure in the
+unchanged observability Case expecting a duration interruption during a 100ms
+sleep. Its completed suite receipt and module error remain in
+failed-observability-*. An immediate isolated recheck passed both Cases without
+source/profile/dependency changes. This establishes intermittent test behavior,
+not its cause or an upstream monitor fix. The inspected dependency package source checks elapsed
+time in the sampler but has no final elapsed check on normal completion; that
+is a possible race path, not a trace of the failing attempt. The final full
+suite passed all 48 modules and 373 native Cases after this recheck, with the
+earlier failure preserved. collect-suite.py verifies every Case/Module/Harness
+and final OK marker and rejects native exit-zero errors. All 41 production
+source hashes, paired native artifacts, and the production snapshot still
+match after completion.
+
+* Reproduction
+
+#+begin_src sh
+export GERBIL_PATH=/private/tmp/ascent-asp-v0122-gerbil
+export GERBIL_BUILD_CORES=12
+just ordered-relations-benchmark
+just performance-scenario ascent-table-expression
+just performance-scenario ascent-table-expression-membership
+just performance-scenario ascent-reachability-closure
+just performance-scenario ascent-binary-program
+just test
+#+end_src
+
+* Current execution
+The active qualifier uses Scheme process APIs under the common native lease.
+=just ordered-relations-benchmark= runs the frozen native comparison twice.
+Current logs, samples, library artifacts and receipts are stored under
+=.cache/ascent/t/performance/ordered-relations/=. Historical JSON receipts in
+this directory describe the earlier revisions; they are not current CI results.

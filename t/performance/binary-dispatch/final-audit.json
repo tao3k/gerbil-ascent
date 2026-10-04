@@ -1,0 +1,63 @@
+{
+  "source_sha256": {
+    "core/binary-program.ss": "e3477fcd8b49b7098d0a1e0eb4383b61f2c3a4fc7b113835745aa5d0a4a0636d",
+    "t/performance/binary-dispatch/README.md": "3fa9ce1cf22a348e048df8109d7d517aeda7e7218323ecf040ae450fdf39c184",
+    "t/performance/binary-dispatch/baseline.txt": "0a03017d82ebd90ce95682dd613ef4e314940c6bc29dac1bf89c163ead12db75",
+    "t/performance/binary-dispatch/benchmark.ss": "ef876c7c1a90506f929e7396854c0e6110dcbb4f5e09f2c34769c04a35ae23fc",
+    "t/performance/binary-dispatch/build.ss": "ad56603e595013d14f42884819a5e7ca02d32b2e67d4cd6dd560cf2aa49a1d6d",
+    "t/performance/binary-dispatch/criteria.json": "76f4e752e5565c636946033aa6d80e8b22512db1384ef02f89110ebb066ac818",
+    "t/performance/binary-dispatch/explore-dispatch-only.ss": "70c5f741828f7899871dd828b50c4344e34f5aadcc6951d252501699d5ded4cf",
+    "t/performance/binary-dispatch/explore.ss": "70c5f741828f7899871dd828b50c4344e34f5aadcc6951d252501699d5ded4cf",
+    "t/performance/binary-dispatch/oracle.ss": "5382ecf0c728aae3ce01ea21ffb9300cf82acf0564e3db63c2b8a8bb0a98222c",
+    "t/performance/binary-dispatch/production.py": "ad07b5b999712337cda98e73aef2140616e84142ac02a2eb3646452b7a35eee0",
+    "t/performance/binary-dispatch/qualify.py": "c5ed7eadc6fd31fa42bd1fbfdfcc79651ef5b60fbb724dbee8099d90fa975f50",
+    "t/performance/binary-dispatch/reference-expression.ss": "e83234b12e0cd4953d06b731ffa9085aac23f060d00cc9d0c577ce634af1f305",
+    "t/performance/binary-dispatch/reference-program.ss": "ff35309e1e04f31a13e58c9d5205ff94f58d471cd139529aa4a67ad53a191581",
+    "t/performance/binary-dispatch/report.py": "fc8db84789af27c2793e60d4dfeb75017bab9c7c0fe481e9291c7c522589865e",
+    "t/performance/binary-dispatch/verify.py": "97477fb92968be3612852505e8a7e7ce489a84199aaa151e886c3f2b5bfbec46",
+    "t/qualification/ascent-binary-program-test.ss": "f23ed599fbb41b5660b01a523e7b5308cbf001850551d09ed1c8c34a606912af",
+    "table/expression.ss": "032a061a98b6ad6bae2accb154a9bb1df337bc19c4d505656d5f6813d6a487cd"
+  },
+  "production_git_blobs": {
+    "core/binary-program.ss": "f77b87d0a70ab2715f7c5c8cac1e5fe037e89412",
+    "table/expression.ss": "9e02f86e9adf61633a76ce9d5f090d59b9a0c1e0",
+    "t/qualification/ascent-binary-program-test.ss": "37f6fc3a3b7abe9c8707ac2baa6c56d6a2549a62"
+  },
+  "matched_sources_and_artifacts_verified": true,
+  "production_sources_and_artifacts_verified": true,
+  "external_native_dependencies_verified": 1080,
+  "matched_profiles": 18,
+  "timing_qualified_profiles": 11,
+  "controls_within_bound": true,
+  "allocation_claim": false,
+  "gates": [
+    {
+      "name": "policy",
+      "exit": 0,
+      "seconds": 19.837458875001175
+    },
+    {
+      "name": "ascent-table-expression",
+      "exit": 0,
+      "seconds": 41.74394904199289
+    },
+    {
+      "name": "ascent-table-expression-membership",
+      "exit": 0,
+      "seconds": 10.430932041999768
+    },
+    {
+      "name": "ascent-reachability-closure",
+      "exit": 0,
+      "seconds": 5.874839958996745
+    },
+    {
+      "name": "ascent-binary-program",
+      "exit": 0,
+      "seconds": 5.712917249999009
+    }
+  ],
+  "modules": 48,
+  "cases": 376,
+  "remote_ci_verified": false
+}

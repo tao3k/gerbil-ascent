@@ -1,0 +1,29 @@
+{
+  "sources": {
+    "table/expression.ss": "95a16012510220d79a329074a44bfac7b4b611e315173126869e1748ce69ba05",
+    "t/qualification/ascent-materialization-test.ss": "4a8875013b7893309dfc6aacff6abd47f99220442f9cbbf2dcce4a3cea9d5f0f",
+    "justfile": "924cdf716439763cb79fe2eb725b6f14e48a1b9d39896a0882d1ab1ad416caaf",
+    "t/performance/ordered-relations/benchmark.ss": "aeb43a9341cd39f2d75a19b82bfa2e53565543fe235e6a039261728c7e3fa361",
+    "t/performance/ordered-relations/build.ss": "07d7ac0a64489da7e91eb0ebed87f6beb080659b67eef5a880b96bc8cd22a361",
+    "t/performance/ordered-relations/reference.ss": "b808fef99b322bd8193419c39f857540d59064a6af58b7bb2bbf06ff1aa4dee6",
+    "t/performance/ordered-relations/qualify.py": "5d715793e29b5b9f6ad3ba09567cf06b69259b32c8c0d0dd44d3db35cf5305dc"
+  },
+  "artifacts": {
+    "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/ordered-relations/lib/static/gerbil-ascent__t__performance__ordered-relations__reference.scm": "8583c955d64453d3467eca48ab49e616fb49ee275bba35b264a337d5b3799fca",
+    "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/ordered-relations/lib/static/gerbil-ascent__table__expression.scm": "fd9d3f5edaa2b1372919b4538f161627e1056bd2860ab318d7a0e740a9f93f86",
+    "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/ordered-relations/lib/gerbil-ascent/table/expression.o1": "559709ca92e54eb95b002a6f7ac095f5ca80e77f3ece3ade7a9a11012e45540d",
+    "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/ordered-relations/lib/gerbil-ascent/table/expression~0.o1": "cb80146c29159d5248c234164ee7a591515a0403e7300b8b215183632a12111e",
+    "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/ordered-relations/lib/gerbil-ascent/table/expression.scm": "1645cb27d67dd4aef4af0a71647cf228e96afb44ca66120d2a9bcbe978f79e25",
+    "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/ordered-relations/lib/gerbil-ascent/table/expression~0.scm": "fd9d3f5edaa2b1372919b4538f161627e1056bd2860ab318d7a0e740a9f93f86",
+    "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/ordered-relations/lib/gerbil-ascent/table/expression.o2": "86fedd1ec8016b7068e9055ffd82bce681f582c0038af6447db74e17b267c8d1",
+    "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/ordered-relations/lib/gerbil-ascent/table/expression~0.o2": "2140436bb416515a1f21e3f4830fc741f018e53109ed8a6f5bd8dbeff0de21a8",
+    "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/ordered-relations/lib/gerbil-ascent/table/expression.ssxi.ss": "b602ed0a7351f5559319cd2f31b4e5fbd79c59e33a609a4463e145fd9072b1d2",
+    "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/ordered-relations/lib/gerbil-ascent/table/expression.ssi": "ebdb9ba7725d83193970bb484ca060f18b9f963cffe6b8bd544611478c174dd9",
+    "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/ordered-relations/lib/gerbil-ascent/t/performance/ordered-relations/reference.ssxi.ss": "71959d1dcd808e63d5205513cd25bb36cb2174d4c2f9babaa128576147fe4ef9",
+    "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/ordered-relations/lib/gerbil-ascent/t/performance/ordered-relations/reference.o1": "cf94910c688881d47415454b37dd223b0172efb37d59070570ba462334cb8b41",
+    "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/ordered-relations/lib/gerbil-ascent/t/performance/ordered-relations/reference~0.o1": "90a6c645619cc87a3c21fbd99049d5f0b6a0974443ad0e9f08829cfc2d1e49be",
+    "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/ordered-relations/lib/gerbil-ascent/t/performance/ordered-relations/reference~0.scm": "8583c955d64453d3467eca48ab49e616fb49ee275bba35b264a337d5b3799fca",
+    "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/ordered-relations/lib/gerbil-ascent/t/performance/ordered-relations/reference.ssi": "5e182cc8bd5442f7038e9b1cb9a9796d6a2a068fd2ccc3f8ddb028709ae46dd0",
+    "/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent/.gerbil/ordered-relations/lib/gerbil-ascent/t/performance/ordered-relations/reference.scm": "83c425767ea8b734a8a025e7e5819d582695b1ed01582017b1c1df4fd29a829b"
+  }
+}

@@ -1,0 +1,33 @@
+#+title: Matched SCC stratification planning
+
+=GERBIL_BUILD_CORES=12 GERBIL_PATH=<qualified-prefix> just strata-benchmark=
+runs compiled old and new algorithms in one process with alternating order.
+The recipe compiles current planning and the reference oracle into one
+isolated output directory with identical optimizing settings.
+The relaxation oracle is frozen from =74f0046bb6137b4fce22db5ae398b9812734c137=. Candidate source manifests
+are saved beside each raw receipt. Both local runs passed the matched gate.
+These receipts identify the SCC source state before subsequent row-binding
+edits in =program/funs.ss=; the stratification algorithm is unchanged.
+
+| shape | old p50 run 1/2 (us) | new p50 run 1/2 (us) | new wins run 1/2 |
+|-------+-----------------------+-----------------------+------------------|
+| positive, 32 vertices | 0.531 / 0.562 | 0.437 / 0.437 | 932 / 946 |
+| strict chain, 32 vertices | 5 / 5 | 3 / 3 | 984 / 985 |
+| strict chain, 128 vertices | 59 / 59 | 10 / 10 | 972 / 974 |
+| strict chain, 256 vertices | 235 / 230 | 20 / 20 | 980 / 980 |
+
+Each case has 1000 paired samples. The positive case repeats 32 calls
+inside each sample to amortize clock resolution; reported values are per
+call. Strict-chain samples contain one call. Exact minimum strata are
+checked after every timed sample. All samples are retained in =receipts/=.
+
+- [[file:receipts/2026-10-02-matched-1.sexp][Run 1 raw samples]] and
+  [[file:receipts/2026-10-02-matched-1.sexp.sources][source manifest]]
+- [[file:receipts/2026-10-02-matched-2.sexp][Run 2 raw samples]] and
+  [[file:receipts/2026-10-02-matched-2.sexp.sources][source manifest]]
+
+This is a planning boundary receipt over prebuilt lowered rules. It excludes
+POO construction, admission, fixed-point execution, and process startup.
+The host was heavily loaded; absolute p95 varied substantially. These receipts support the
+matched planning median and paired-win result, not an end-to-end latency
+or whole-suite qualification claim.

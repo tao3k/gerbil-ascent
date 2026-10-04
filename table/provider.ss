@@ -23,6 +23,8 @@
                                procedure?
                                (lambda (_value _context) [])))
 
+;;; A provider controls physical lookup but cannot change relation semantics;
+;;; build, extend, and lookup slots remain one validated receiver axis.
 (define-type (GerbilAscentIndexProviderContract
               @ PooFlowNativeObjectContract.)
   identity: 'ascent/index-provider
@@ -33,13 +35,20 @@
 
 (def IndexProvider. (.ref GerbilAscentIndexProviderContract 'proto))
 
+;;; Build starts from the evaluator's current immutable row snapshot.
 (.defgeneric (gerbil-ascent-index-provider-build provider rows columns)
   slot: .build-index)
+;;; Extend receives only newly admitted rows, preserving index cache reuse.
 (.defgeneric (gerbil-ascent-index-provider-extend! provider index rows columns)
   slot: .extend-index!)
+;;; Lookup is allowed to return a superset of matching rows because an index
+;;; covers only selected columns. The evaluator checks every term before a
+;;; candidate can contribute to a rule head.
 (.defgeneric (gerbil-ascent-index-provider-lookup provider index key)
   slot: .lookup-index)
 
+;;; The default hash provider preserves row buckets in relation order and
+;;; remains replaceable at declaration time without changing rule syntax.
 (def gerbil-ascent-hash-index-provider
   (validate GerbilAscentIndexProviderContract
             (.o (:: @ IndexProvider.)

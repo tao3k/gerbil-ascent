@@ -1,0 +1,22 @@
+[
+  {
+    "name": "first",
+    "exit": 0,
+    "seconds": 116.8175202919956
+  },
+  {
+    "name": "repeat",
+    "exit": 0,
+    "seconds": 58.616504332996556
+  },
+  {
+    "name": "suite",
+    "exit": 0,
+    "seconds": 140.0047061660007
+  },
+  {
+    "name": "original-ss",
+    "exit": 1,
+    "seconds": 9.236503291998815
+  }
+]

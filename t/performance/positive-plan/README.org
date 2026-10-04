@@ -1,0 +1,132 @@
+#+TITLE: Positive rule execution and engine lifecycle qualification
+
+* Production change
+
+This is one execution-path change: compile complete supported positive rules
+into immutable numeric slot plans, reuse those plans across engines, traverse
+with an invocation-local frame, construct ordered index keys directly from
+slots, and emit through the existing engine admission boundary. One-shot
+engines also avoid allocating Session-only source-update and timeout closures.
+
+The supported fragment consists of positive atoms with variable, literal and
+wildcard terms and simple admitted heads. Any expression, pattern, guard,
+binding, generator, aggregate or negation clause keeps the complete rule on
+the general interpreter. Admission, storage expansion, lattice merge, budgets,
+Provider callback ordering, semi-naive pivots and output order are preserved.
+The cache uses weak rule identity keys and a mutex; no mutable execution frame
+is shared. The original analysis vector layout remains unchanged.
+
+* Exact reference and checks
+
+The reference is local commit =57cc611=. Its evaluator is copied with only
+module import relocation and exported function alpha renames; its analysis is
+an exact source copy. [[file:reference-verification.json][Reference hashes]] record those transformations.
+Both engines are compiled with native std/make into an isolated benchmark lib.
+[[file:module-resolution.log][Module resolution]] verifies the loaded SSI paths.
+
+[[file:suite-coverage.json][Full qualification coverage]]: 44 modules, 355 native Cases, all passed
+(102.895 seconds). Ten new Cases cover all 512 three-node directed graphs,
+failed candidates and repeated variables, false values, wildcard/nullary
+atoms, exact custom index traces, custom storage expansion, retained Sessions,
+40 variables, budget errors, eight concurrent engines and callback fallback.
+[[file:focused-final.log][Focused run]] passed. [[file:qualified-policy-final.log][Native policy]] checked 39 modules with zero
+findings and zero errors. The only change after full-suite qualification was
+comment documentation; the repeat benchmark and final policy include it.
+
+* Matched complete-solve measurements
+
+Each workload uses 20 warmups and 1000 alternating old/new complete solves.
+Samples record time and Gambit process-statistics slot 7 cumulative allocated
+bytes; this is not the latest-GC gauge. There is no forced GC between samples.
+The same source, heap, runtime and expected results apply to both engines.
+An allocation gate requires non-increasing median bytes on every workload;
+primary workloads also require at least 900 strict paired byte wins.
+A timing claim requires a lower median and at least 900 strict paired time wins.
+
+[[file:final-matched.sexp][First accepted raw samples]] and [[file:repeat-matched.sexp][repeat raw samples]] retain all samples.
+The repeat summary is:
+
+| Workload | Old bytes | New bytes | Reduction | Byte wins / 1000 | Old / new median time | Time wins / 1000 |
+|---------+-----------+-----------+-----------+------------------+-----------------------+------------------|
+| recursive-chain-16 | 50000 | 46912 | 6.18% | 993 | 0.018 / 0.018 ms | 466 |
+| recursive-chain-256 | 625456 | 583968 | 6.63% | 994 | 0.290 / 0.295 ms | 187 |
+| recursive-chain-1024 | 2431984 | 2267616 | 6.76% | 981 | 1.150 / 1.170 ms | 192 |
+| indexed-fanout-50-1 | 104048 | 89536 | 13.95% | 994 | 0.089 / 0.087 ms | 773 |
+| indexed-fanout-100-100 | 10430160 | 9450848 | 9.39% | 931 | 10.879 / 10.510 ms | 678 |
+| indexed-wide-40-256 | 2691280 | 1708720 | 36.51% | 980 | 2.796 / 1.992 ms | 912 |
+| source-only | 14288 | 12624 | 11.65% | 997 | 0.002 / 0.002 ms | 148 |
+
+The wide 40-variable join is the reproducible timing gain: 2.806 -> 1.993 ms
+and 2.796 -> 1.992 ms, with 930 and 912 strict paired time wins respectively.
+That is approximately 1.40x speed and 36.51% fewer allocated bytes. Other
+workloads do not satisfy the timing claim gate. In particular, 256/1024-node
+chain medians are about 1-2% slower in both runs; the 1024-node repeat p95 is
+also higher (2.011 -> 2.599 ms). This change has no uniform speedup claim.
+All seven workloads reduce median allocation in both accepted runs.
+
+* Original SS gates
+
+The unchanged original SS inventory is qualified separately from the paired
+probe. No duration budget, heap fence or GC profile was relaxed.
+[[file:original-ss.log][Initial original batch]] passed its first three entries, then failed the
+nonpositive Session update timing gate: median 256 us, p95 2.541 ms versus
+1 ms. This failed batch is retained.
+
+A subsequent isolated old/public-engine control verified its actual SSI path
+before running the unchanged scenario: [[file:actual-baseline-nonpositive-ss.log][old engine]] p95 471 us,
+[[file:resolved-current-nonpositive-ss.log][current engine]] p95 480 us, both passed all native markers. The initial
+failure was not stably reproduced by this pair. These controls do not establish
+whole-inventory tail closure or erase the failed batch.
+
+[[file:remaining-ss/summary.json][Continuation]] passed ten subsequent entries, then failed table-expression:
+median 951 us, p95 2.072 ms, max 40.923 ms versus the original 2 ms
+admission limit (=max_total=). The 1.05 ms =regression_budget= field is metadata. Its semantic gate completed; the typed failure is the time
+gate. No cause attribution is established by these observations.
+[[file:final-ss/summary.json][Final two entries]] record membership and shortest-candidates separately; both passed. Across
+the 17 original inventory entries, 15 passed and two failed their initial
+timing gates. The old/new nonpositive controls are additional runs.
+There is no claim that one uninterrupted original SS batch passed.
+
+* Retained rejected attempts
+
+The initial plan, dispatch restructuring and lifecycle restructuring retain
+source snapshots, manifests and raw matched receipts. Initial source-only
+allocation increased 768 bytes; dispatch-only still increased 480 bytes.
+Moving Session-only closures into the Session branch resolved that control.
+Initial policy builds rejected the oversized evaluator; later restructuring
+and full typed comments satisfy policy. The initial focused test had a wrong
+handwritten output-order expectation; old and new results agreed. The first
+wide benchmark also had a wrong golden row order; [[file:wide-diagnostic.log][diagnostic]] confirms
+old/new agreement, and the corrected probe retains both failed and passing runs.
+
+Earlier public-baseline resolution attempts loaded current source or current
+installed SSI, and one wrapper failed because the profile helper was absent.
+Those logs are retained but excluded from the old-engine comparison. Only
+=actual-baseline-nonpositive-ss.log= is the qualified public old-engine control.
+
+* Reproduction
+
+From the repository root, with the same pinned dependency environment:
+
+#+begin_src sh
+GERBIL_PATH=/private/tmp/ascent-test-scheduling-gerbil GERBIL_BUILD_CORES=12 \
+  just test
+GERBIL_PATH=/private/tmp/ascent-test-scheduling-gerbil GERBIL_BUILD_CORES=12 \
+  ASCENT_POSITIVE_PLAN_RECEIPT=/private/tmp/positive-plan-repeat.sexp \
+  just positive-plan-benchmark
+#+end_src
+
+The benchmark recipe holds the exclusive test lease, builds into
+=.gerbil/positive-plan/lib=, applies bounded native timeouts, and rejects native
+ERROR/overflow markers even when the process exits zero. Source hashes are
+written next to the receipt. =qualified.sources= pins the committed production
+and qualification sources; =repeat-matched.sexp.sources= pins measured sources.
+
+To construct the public old engine in a separate source directory, copy
+=gerbil.pkg= and =public-baseline-evaluate.ss= to its =program/evaluate.ss=,
+then run =build-public-baseline.ss= with absolute =ASCENT_BASELINE_SRC=,
+=ASCENT_BASELINE_LIB= and =ASCENT_BASELINE_BUILD_DEPS= paths. Prepend the resulting
+lib to =GERBIL_LOADPATH= and verify the public evaluator's =find-library-module=
+path before loading =baseline-nonpositive-scenario.ss=. Keep the same original
+performance profile and heap fence. Do not infer successful resolution merely
+from a successful build or process exit.

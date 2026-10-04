@@ -59,6 +59,21 @@
                      (.o (source-index (position-of source-name))
                          (head-index (position-of head-name)))))))))
 
+;;; Dense arrays handle bounded small domains; sparse hash indexes avoid
+;;; allocating a quadratic domain when radix is large. Both paths publish
+;;; the same canonical relation rows and POO result interface.
+;; gerbil-ascent-evaluate-binary-program
+;;   : (-> BinaryProgram BinaryResult)
+;;   | doc m%
+;;       Evaluate finite copy, filter, and join rules to their fixed point.
+;;
+;;       # Examples
+;;
+;;       ```scheme
+;;       (gerbil-ascent-evaluate-binary-program program)
+;;       ;; => a result exposing relation names and pair snapshots
+;;       ```
+;;     %
 (def (gerbil-ascent-evaluate-binary-program program)
   (let* ((width (.ref program 'radix))
          (sources (.ref program 'relations))
@@ -75,20 +90,22 @@
     ;; These mutable arrays are private to one evaluation. The public boundary
     ;; remains immutable UIntTrieSet snapshots and POO relation objects.
     (let* ((count (length sources))
+           (source-vector (list->vector sources))
            (names (make-vector count #f))
            (positions (make-hash-table))
            (all (make-vector count []))
            (delta (make-vector count []))
            (all-index (make-vector count #f))
            (delta-index (make-vector count #f))
-           (seen (make-vector count #f))
-           (pending-epochs (make-vector count #f))
+           (admitted (make-vector count #f))
            (indexed-rights (make-hash-table))
            (derived-heads (make-hash-table))
            (dense? (<= width 512))
            (source-count 0)
            (derived-count 0)
            (position-counter 0))
+      ;;; Intentional raw data record: the adjacency index is evaluation-local
+      ;;; mutable storage, while public relations remain validated POO values.
       (def (new-index)
         (if dense? (make-vector width []) (make-hash-table)))
       (def (index-targets index node)
@@ -98,22 +115,25 @@
           (if dense?
             (vector-set! index from (cons to (vector-ref index from)))
             (hash-put! index from (cons to (index-targets index from))))))
-      (def (new-seen)
-        (if dense? (make-u8vector (* width width) 0) (make-hash-table)))
-      (def (seen? storage pair)
-        (if dense? (= (u8vector-ref storage pair) 1)
-            (hash-get storage pair)))
-      (def (mark-seen! storage pair)
-        (if dense? (u8vector-set! storage pair 1)
-            (hash-put! storage pair #t)))
-      (def (new-pending-epochs)
-        (if dense? (make-vector (* width width) 0) (make-hash-table)))
-      (def (pending-epoch storage pair)
-        (if dense? (vector-ref storage pair)
-            (hash-get storage pair)))
-      (def (mark-pending! storage pair epoch)
-        (if dense? (vector-set! storage pair epoch)
-            (hash-put! storage pair epoch)))
+      ;;; Intentional raw data record: one monotone admission ledger per
+      ;;; derived relation covers source, pending and committed pairs. Rules
+      ;;; read all/delta rows, so marking a pending pair cannot expose it early.
+      ;;; Sixteen bounded pair flags share one u16 word in dense domains.
+      (def (new-admitted)
+        (if dense? (make-u16vector (quotient (+ (* width width) 15) 16) 0)
+            (make-hash-table)))
+      (def (admitted? storage pair)
+        (if dense?
+          (let ((word (fxarithmetic-shift-right pair 4))
+                (mask (fxarithmetic-shift-left 1 (fxand pair 15))))
+            (not (fxzero? (fxand (u16vector-ref storage word) mask))))
+          (hash-get storage pair)))
+      (def (mark-admitted! storage pair)
+        (if dense?
+          (let ((word (fxarithmetic-shift-right pair 4))
+                (mask (fxarithmetic-shift-left 1 (fxand pair 15))))
+            (u16vector-set! storage word (fxior (u16vector-ref storage word) mask)))
+          (hash-put! storage pair #t)))
       (for-each
        (lambda (rule)
          (hash-put! derived-heads (.ref rule 'head) #t)
@@ -124,11 +144,7 @@
        (lambda (relation)
          (let* ((name (.ref relation 'name))
                 (pairs (.ref relation 'pairs))
-                (position position-counter)
-                (all-links (and (hash-get indexed-rights name)
-                                (new-index)))
-                (present (and (hash-get derived-heads name)
-                              (new-seen))))
+                (position position-counter))
            (unless (and (symbol? name) (not (hash-get positions name)))
              (error "invalid or duplicate ASCENT relation" name))
            (.call UIntTrieSet .foldl
@@ -143,8 +159,6 @@
                     (when (> source-count output-limit)
                       (error "ASCENT output pair budget exceeded"
                              source-count output-limit))
-                    (when present (mark-seen! present pair))
-                    (when all-links (index-add! all-links pair))
                     (vector-set! all position
                                  (cons pair (vector-ref all position)))
                     (void))
@@ -152,13 +166,7 @@
            (vector-set! names position name)
            (hash-put! positions name (+ position 1))
            (set! position-counter (+ position-counter 1))
-           (vector-set! seen position present)
-           (when present
-             (vector-set! pending-epochs position
-                          (new-pending-epochs)))
-           (vector-set! all-index position all-links)
-           (vector-set! delta position (vector-ref all position))
-           (vector-set! delta-index position all-links)))
+           (vector-set! delta position (vector-ref all position))))
        sources)
       (def (position-of name)
         (let (slot (hash-get positions name))
@@ -178,21 +186,58 @@
              (position-of (.ref rule 'right)))))
        rules)
       (def (publish-result results path-name)
-        (.o (relation-names (vector->list names))
-            (evaluation-path path-name)
-            (pair-list-of
-             (lambda (name)
-               (vector-ref results (position-of name))))
-            (pairs-of
-             (lambda (name)
-               (.call UIntTrieSet .<-list
-                      (vector-ref results (position-of name)))))))
+        ;; Private records pair a row copy with its persistent set. Validate the
+        ;; copy on every demand: public lists are mutable, even though native
+        ;; UIntTrieSet snapshots can safely be shared.
+        (let (snapshots (make-vector count #f))
+          (.o (relation-names (vector->list names))
+              (evaluation-path path-name)
+              (pair-list-of
+               (lambda (name)
+                 (vector-ref results (position-of name))))
+              (pairs-of
+               (lambda (name)
+                 (let* ((i (position-of name)) (rows (vector-ref results i))
+                        (cached (vector-ref snapshots i)))
+                   (unless (or cached (hash-get derived-heads name))
+                     ;; Unchanged inputs already own the requested native set.
+                     ;; Compare with private captured rows, including mutations
+                     ;; made before the first set demand.
+                     (set! cached (vector (reverse (vector-ref all i))
+                                          (.ref (vector-ref source-vector i) 'pairs)))
+                     (vector-set! snapshots i cached))
+                   (if (and cached (equal? rows (vector-ref cached 0)))
+                     (vector-ref cached 1)
+                     (let (value (.call UIntTrieSet .<-list rows))
+                       (vector-set! snapshots i (vector (append rows []) value))
+                       value))))))))
+      ;; Validation captures source rows once. Only the general evaluator needs
+      ;; admission ledgers and join indexes; build those after dispatch.
+      (def (initialize-general-state!)
+        (let initialize ((i 0))
+          (when (< i count)
+            (let* ((name (vector-ref names i))
+                   (rows (vector-ref all i))
+                   (links (and (hash-get indexed-rights name) (new-index)))
+                   (present (and (hash-get derived-heads name) (new-admitted))))
+              ;; Replay indexed sources in the original fold order. Neighbor
+              ;; order can affect filter callback traces in subsequent rounds.
+              (when (or links present)
+                (for-each
+                 (lambda (pair)
+                   (when present (mark-admitted! present pair))
+                   (when links (index-add! links pair)))
+                 (if links (reverse rows) rows)))
+              (vector-set! admitted i present)
+              (vector-set! all-index i links)
+              (vector-set! delta-index i links))
+            (initialize (+ i 1)))))
       (let (pattern (and dense? (transitive-pattern rules all position-of)))
         (if pattern
           (let* ((source-position (.ref pattern 'source-index))
                  (head-position (.ref pattern 'head-index))
                  (source-set
-                  (.ref (list-ref sources source-position) 'pairs))
+                  (.ref (vector-ref source-vector source-position) 'pairs))
                  (allowance (min limit (- output-limit source-count)))
                  (closure-pairs
                   (.ref (gerbil-ascent-relation-closure-bounded
@@ -201,30 +246,33 @@
             (let publish-sources ((i 0))
               (when (< i count)
                 (vector-set! results i
-                             (.call UIntTrieSet .list<-
-                                    (.ref (list-ref sources i) 'pairs)))
+                             (reverse (vector-ref all i)))
                 (publish-sources (+ i 1))))
             (vector-set! results head-position closure-pairs)
             (publish-result results 'transitive-closure))
-          (begin
-            (let ((active? #t) (epoch 0))
+          (let (instructions
+                ;; Evaluation-local positional instructions retain declaration
+                ;; order. Resolve immutable rule slots once, outside the rounds.
+                (map (lambda (rule)
+                       (let (kind (.ref rule 'kind))
+                         (vector kind (position-of (.ref rule 'head))
+                                 (position-of (.ref rule 'left))
+                                 (and (eq? kind 'join) (position-of (.ref rule 'right)))
+                                 (and (eq? kind 'filter) (.ref rule 'predicate)))))
+                     rules))
+            (initialize-general-state!)
+            (let (active? #t)
               (until (not active?)
                 (let ((pending (make-vector count []))
                       (next (make-vector count []))
                       (next-index (make-vector count #f))
                       (pending-count 0))
-                  (set! epoch (+ epoch 1))
-                  (let initialize ((i 0))
-                    (when (< i count)
-                      (when (vector-ref all-index i)
-                        (vector-set! next-index i (new-index)))
-                      (initialize (+ i 1))))
                   (def (emit! head pair)
-                    (unless (or (seen? (vector-ref seen head) pair)
-                                (eqv? (pending-epoch
-                                       (vector-ref pending-epochs head) pair)
-                                      epoch))
-                      (mark-pending! (vector-ref pending-epochs head) pair epoch)
+                    (unless (admitted? (vector-ref admitted head) pair)
+                      ;; Admission is permanent for this evaluation. A failed
+                      ;; budget aborts the query; no partially built result is
+                      ;; published. Pending rows still commit after all rules.
+                      (mark-admitted! (vector-ref admitted head) pair)
                       (set! pending-count (+ pending-count 1))
                       (when (> (+ derived-count pending-count) limit)
                         (error "ASCENT derived pair budget exceeded" limit))
@@ -245,9 +293,9 @@
                      left-pairs))
                   (for-each
                    (lambda (rule)
-                     (let ((kind (.ref rule 'kind))
-                           (head (position-of (.ref rule 'head)))
-                           (left (position-of (.ref rule 'left))))
+                     (let ((kind (vector-ref rule 0))
+                           (head (vector-ref rule 1))
+                           (left (vector-ref rule 2)))
                        (case kind
                          ((copy)
                           (for-each (lambda (pair) (emit! head pair))
@@ -258,7 +306,7 @@
                            (filter
                             (lambda (pair)
                               (let (accepted?
-                                    ((.ref rule 'predicate)
+                                    ((vector-ref rule 4)
                                      (quotient pair width)
                                      (modulo pair width)))
                                 (unless (boolean? accepted?)
@@ -266,20 +314,25 @@
                                 accepted?))
                             (vector-ref delta left))))
                          ((join)
-                          (let (right (position-of (.ref rule 'right)))
+                          (let (right (vector-ref rule 3))
                             (unless (null? (vector-ref delta left))
                               (compose! head (vector-ref delta left)
                                         (vector-ref all-index right)))
                             (unless (null? (vector-ref delta right))
                               (compose! head (vector-ref all left)
                                         (vector-ref delta-index right))))))))
-                   rules)
+                   instructions)
                   (set! active? #f)
                   (let commit ((i 0))
                     (when (< i count)
+                      ;; Only relations with newly committed rows need an index
+                      ;; for the next delta. Unchanged right inputs retain their
+                      ;; all-index and have an empty delta with no delta-index.
+                      (when (and (pair? (vector-ref pending i))
+                                 (vector-ref all-index i))
+                        (vector-set! next-index i (new-index)))
                       (for-each
                        (lambda (pair)
-                         (mark-seen! (vector-ref seen i) pair)
                          (set! active? #t)
                          (set! derived-count (+ derived-count 1))
                          (vector-set! all i (cons pair (vector-ref all i)))
@@ -295,6 +348,6 @@
               (let publish ((i 0))
                 (when (< i count)
                   (vector-set! results i
-                               (list-sort < (vector-ref all i)))
+                               (list-sort < (append (vector-ref all i) [])))
                   (publish (+ i 1))))
               (publish-result results 'semi-naive))))))))

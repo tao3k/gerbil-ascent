@@ -1,0 +1,79 @@
+;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+;;; Publish persistent ordered rows. A retained engine owns the optional cache;
+;;; every publication owns its vector. Promises close only persistent row roots;
+;;; unchanged roots share a promise without retaining membership or index state.
+;;; Slot zero carries the invocation deadline and is never captured by results.
+(export gerbil-ascent-publication-cache gerbil-ascent-publish-rows
+        gerbil-ascent-snapshot-rows gerbil-ascent-snapshot-sizes)
+
+;; gerbil-ascent-publication-cache
+;;   : (-> Nat PublicationCache)
+;;   | doc m%
+;;       Allocate private root and promise vectors for one retained engine. The cache
+;;       is never attached to a public result or shared across engines.
+;;
+;;       # Examples
+;;
+;;       ```scheme
+;;       (gerbil-ascent-publication-cache 2)
+;;       ;; => private roots and ordered rows for two relations
+;;       ```
+;;     %
+(def (gerbil-ascent-publication-cache count)
+  (vector #f (make-vector count #f) (make-vector count #f)))
+
+;; gerbil-ascent-publish-rows
+;;   : (-> RowsVector PublicationCache RowsVector)
+;;   | doc m%
+;;       Publish a fresh vector of lazy row snapshots and reuse a promise only when
+;;       the engine's persistent row root is unchanged. Engine-owned append
+;;       prefixes and lattice replacement always change that root.
+;;
+;;       # Examples
+;;
+;;       ```scheme
+;;       (gerbil-ascent-publish-rows (vector '((2) (1)))
+;;                                  (gerbil-ascent-publication-cache 1))
+;;       ;; => a fresh vector whose promise yields '((1) (2))
+;;       ```
+;;     %
+(def (gerbil-ascent-publish-rows all cache)
+  (let (snapshots (make-vector (vector-length all) []))
+    (publish-index! all (vector-ref cache 1) (vector-ref cache 2) snapshots 0)
+    snapshots))
+
+;; : (-> RowsVector RowsVector RowsVector RowsVector Nat Void)
+(def (publish-index! all roots ordered snapshots index)
+  (when (< index (vector-length all))
+    (let (rows (vector-ref all index))
+      (unless (eq? rows (vector-ref roots index))
+        (vector-set! ordered index (delay (reverse rows)))
+        (vector-set! roots index rows))
+      (vector-set! snapshots index (vector-ref ordered index)))
+    (publish-index! all roots ordered snapshots (+ index 1))))
+
+;; : (forall (a) (-> (U [a] (Promise [a])) [a]))
+;; : (-> RowSnapshot Rows)
+(def (gerbil-ascent-snapshot-rows rows)
+  (if (promise? rows) (force rows) rows))
+
+;; gerbil-ascent-snapshot-sizes
+;;   : (-> Names SnapshotVector RelationSizes)
+;;   | doc m%
+;;       Read ordinary counts from the same memoized row views as rows-of.
+;;       Name and snapshot vectors belong to this published result.
+;;
+;;       # Examples
+;;
+;;       ```scheme
+;;       (gerbil-ascent-snapshot-sizes (vector 'item) (vector '((1) (2))))
+;;       ;; => '((item . 2))
+;;       ```
+;;     %
+(def (gerbil-ascent-snapshot-sizes names snapshots)
+  (map (lambda (name rows)
+         (cons name (length (gerbil-ascent-snapshot-rows rows))))
+       (vector->list names) (vector->list snapshots)))

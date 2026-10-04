@@ -7,10 +7,8 @@
 ;;; source support. Fact labels here are caller-owned integers; MRR retains
 ;;; semantic FactId, rule-pack, generation, and admission authority.
 
-(import (only-in :clan/poo/object .o .mix .ref .call)
-        (only-in :clan/poo/trie UIntTrieSet)
-        (only-in :gerbil-ascent/table/expression
-                 gerbil-ascent-table-expression-prototype))
+(import (only-in :gerbil/runtime/gambit fx+)
+        (only-in :clan/poo/object .o))
 
 (export gerbil-ascent-closure-candidates)
 
@@ -24,14 +22,20 @@
 
 (def (better-support? candidate current)
   (or (not current)
-      (< (length candidate) (length current))
-      (and (= (length candidate) (length current))
-           (support<? candidate current))))
+      (< (car candidate) (car current))
+      (and (= (car candidate) (car current))
+           (support<? (reverse (cdr candidate))
+                      (reverse (cdr current))))))
 
 (def (source-index facts radix)
   (let ((index (make-vector radix []))
-        (nodes (make-hash-table))
+        (nodes (make-u8vector radix 0))
+        (node-count 0)
         (ids (make-hash-table)))
+    (def (mark-node! node)
+      (when (= (u8vector-ref nodes node) 0)
+        (u8vector-set! nodes node 1)
+        (set! node-count (fx+ node-count 1))))
     (for-each
      (lambda (fact)
        (let ((pair (car fact)) (id (cdr fact)))
@@ -42,34 +46,40 @@
            (error "duplicate ASCENT source fact label" id))
          (hash-put! ids id #t)
          (let ((from (quotient pair radix)) (to (modulo pair radix)))
-           (hash-put! nodes from #t)
-           (hash-put! nodes to #t)
+           (mark-node! from)
+           (mark-node! to)
            (vector-set! index from
                         (cons (cons to id) (vector-ref index from))))))
      facts)
-    (let ((node-count 0))
-      (hash-for-each (lambda (_ __) (set! node-count (+ node-count 1))) nodes)
-      (values index node-count))))
+    (values index node-count)))
 
 (def (shortest-supports index origin radix)
   (let ((best (make-vector radix #f)))
-    (let loop ((frontier (list (cons origin []))))
+    ;; A path is (depth . reversed-labels): extending it shares the existing
+    ;; list instead of copying an increasingly long forward path per edge.
+    (let loop ((frontier (list (cons origin (cons 0 [])))))
       (unless (null? frontier)
         (let (next [])
           (for-each
            (lambda (state)
-             (for-each
-              (lambda (edge)
-                (let* ((target (car edge))
-                       (support (append (cdr state) (list (cdr edge))))
-                       (current (vector-ref best target)))
-                  (when (better-support? support current)
-                    (vector-set! best target support)
-                    ;; A cycle can prove (origin, origin), but following it
-                    ;; cannot improve any shortest path from origin.
-                    (unless (= target origin)
-                      (set! next (cons (cons target support) next))))))
-              (vector-ref index (car state))))
+             ;; A superseded path cannot improve any descendant through the
+             ;; same suffix. Identity checks discard its queued expansion.
+             (when (or (= (car state) origin)
+                       (eq? (cdr state) (vector-ref best (car state))))
+               (for-each
+                (lambda (edge)
+                  (let* ((target (car edge))
+                         (parent (cdr state))
+                         (support (cons (+ 1 (car parent))
+                                        (cons (cdr edge) (cdr parent))))
+                         (current (vector-ref best target)))
+                    (when (better-support? support current)
+                      (vector-set! best target support)
+                      ;; A cycle can prove (origin, origin), but following it
+                      ;; cannot improve any shortest path from origin.
+                      (unless (= target origin)
+                        (set! next (cons (cons target support) next))))))
+                (vector-ref index (car state)))))
            frontier)
           (loop (reverse next)))))
     best))
@@ -86,36 +96,31 @@
     (when (> (* node-count node-count) max-derived-pairs)
       (error "ASCENT derived pair budget exceeded"
              (* node-count node-count) max-derived-pairs))
-    (let* ((edges (.call UIntTrieSet .<-list (map car facts)))
-           (width radix)
-           (expression
-            (.mix gerbil-ascent-table-expression-prototype
-                  (.o (source-pairs edges) (radix width))))
-           (projection (.ref expression 'shortest-distance-projection))
-           (pairs (.ref projection 'pairs))
-           (distance-of (.ref projection 'distance-of))
-           (all
-            (let loop ((remaining pairs) (origin #f) (supports #f) (result []))
-              (if (null? remaining)
+    ;; A source-labelled breadth-first traversal already computes both the
+    ;; minimum distance and canonical support. Visiting origins and targets
+    ;; in numeric order publishes the same canonical pair order without a
+    ;; second closure materialization or a result sort.
+    (let* ((all
+            (let origin-loop ((origin 0) (result []))
+              (if (= origin radix)
                 (reverse result)
-                (let* ((encoded (car remaining))
-                       (from (quotient encoded radix))
-                       (to (modulo encoded radix))
-                       (paths (if (equal? origin from) supports
-                                  (shortest-supports index from radix)))
-                       (path (vector-ref paths to)))
-                  (unless path
-                    (error "ASCENT closure pair has no source support" encoded))
-                  (unless (= (length path) (distance-of encoded))
-                    (error "ASCENT shortest support and lattice distance disagree"
-                           encoded))
-                  (loop (cdr remaining) from paths
-                        (cons (.o (pair encoded)
-                                  (distance (length path))
-                                  (support path)
-                                  (rule (if (= (length path) 1)
-                                          'base 'transitive)))
-                              result))))))
+                (let ((paths (and (pair? (vector-ref index origin))
+                                  (shortest-supports index origin radix))))
+                  (let target-loop ((target 0) (result result))
+                    (if (= target radix)
+                      (origin-loop (fx+ origin 1) result)
+                      (let (path (and paths (vector-ref paths target)))
+                        (if path
+                          (let (depth (car path))
+                            (target-loop
+                             (fx+ target 1)
+                             (cons (.o (pair (+ (* origin radix) target))
+                                       (distance depth)
+                                       (support (reverse (cdr path)))
+                                       (rule (if (= depth 1)
+                                               'base 'transitive)))
+                                   result)))
+                          (target-loop (fx+ target 1) result)))))))))
            (truncated? (> (length all) max-results)))
       (.o (status (if truncated? 'output-truncated 'complete))
           (input-count (length facts))

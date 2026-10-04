@@ -1,0 +1,492 @@
+{
+  "command": "GERBIL_BUILD_CORES=12 just test",
+  "baseline_commit": "a891376",
+  "configured_jobs": 12,
+  "modules": 50,
+  "parallel": 47,
+  "exclusive": 3,
+  "seconds": 296.01906299999973,
+  "failed": true,
+  "modules_passed": 49,
+  "case_ok": 394,
+  "case_errors": 2,
+  "remaining_gate": "ascent-rule-program-test.ss original 2/5-second Case budgets",
+  "duration_thresholds_changed": false,
+  "host_load_observation": [
+    103.92,
+    105.79,
+    88.53
+  ],
+  "host_load_is_not_a_proven_cause": true,
+  "first_scheduler_unit_run": {
+    "tests": 13,
+    "errors": 1,
+    "failure": "test_suite_phase_barrier_and_machine_receipt timed out at 5 seconds while native pool was running"
+  },
+  "final_scheduler_unit_run": {
+    "tests": 13,
+    "errors": 0,
+    "seconds": 21.449
+  },
+  "sources": {
+    "tools/test_execution.py": "0caf6f48372bd5a95818a3a0ca54cde67a030b28bad649f8a223fb648fa62aa3",
+    "tools/tests/test_test_execution.py": "43981959c12e4af87386ba7ce08994567389a6128f37a7727f0991389244ffce",
+    "justfile": "d86090818391f0c4c353c63d49d303d1eb8ad52bd78a52030b2bcd7f126bc2e8",
+    "docs/test-module-scheduling.org": "7a73311088936c8694fc2fcda4c69705d971bcc55823bfdeb81e115034c7d776"
+  },
+  "results": [
+    {
+      "module": "t/qualification/ascent-aggregate-program-test.ss",
+      "lane": "parallel",
+      "exit": 0,
+      "seconds": 33.855282999997144,
+      "case_ok": 6,
+      "case_errors": [],
+      "raw_log_sha256": "f3e91ed9d8618d97585eec1793b83cbbfdd5f6e1e8165cebecb2dca7b558815c"
+    },
+    {
+      "module": "t/qualification/ascent-binary-program-test.ss",
+      "lane": "parallel",
+      "exit": 0,
+      "seconds": 27.030379875010112,
+      "case_ok": 16,
+      "case_errors": [],
+      "raw_log_sha256": "d96ac40cc9826502fa21034ebb863991c6d86d67ed718f27dc145ab70fc49f97"
+    },
+    {
+      "module": "t/qualification/ascent-binding-program-test.ss",
+      "lane": "parallel",
+      "exit": 0,
+      "seconds": 35.72366541600786,
+      "case_ok": 1,
+      "case_errors": [],
+      "raw_log_sha256": "05148574bf6d1c0ee4a81484dead5ac8c99f7221799fb295522a8fd31054772a"
+    },
+    {
+      "module": "t/qualification/ascent-binding-test.ss",
+      "lane": "parallel",
+      "exit": 0,
+      "seconds": 29.179524749997654,
+      "case_ok": 11,
+      "case_errors": [],
+      "raw_log_sha256": "9a2051846e7eb13d9caa240193b6ea47c92fe842d5de48d7b59720489ec4c319"
+    },
+    {
+      "module": "t/qualification/ascent-byods-index-test.ss",
+      "lane": "parallel",
+      "exit": 0,
+      "seconds": 35.84989562499686,
+      "case_ok": 2,
+      "case_errors": [],
+      "raw_log_sha256": "e03461c4936be9625ddfaca3ac9a7fea9cd7f6ebc584ad4ade9f7e230accf339"
+    },
+    {
+      "module": "t/qualification/ascent-byods-invariants-test.ss",
+      "lane": "parallel",
+      "exit": 0,
+      "seconds": 51.820283541994286,
+      "case_ok": 6,
+      "case_errors": [],
+      "raw_log_sha256": "0ab77802e7ff17521810b5b271c8441c93b460ac339676cf2f35c6bbd1abdb93"
+    },
+    {
+      "module": "t/qualification/ascent-candidate-description-test.ss",
+      "lane": "parallel",
+      "exit": 0,
+      "seconds": 33.48488320800243,
+      "case_ok": 4,
+      "case_errors": [],
+      "raw_log_sha256": "a7b8cf236cddc1143bb21c6d69873f14dd1ad9514281457d891cd4820ec329c5"
+    },
+    {
+      "module": "t/qualification/ascent-closure-candidates-test.ss",
+      "lane": "parallel",
+      "exit": 0,
+      "seconds": 18.920810832991265,
+      "case_ok": 6,
+      "case_errors": [],
+      "raw_log_sha256": "7a4416c39ac97b549c53b28966fe107c361c1ded2f434b85750e37805d58a4f7"
+    },
+    {
+      "module": "t/qualification/ascent-contract-union-test.ss",
+      "lane": "parallel",
+      "exit": 0,
+      "seconds": 28.957474124996224,
+      "case_ok": 3,
+      "case_errors": [],
+      "raw_log_sha256": "6afa33b72149ec75f17aced2383644b9156351ffadb57eb93e2946b474db42fb"
+    },
+    {
+      "module": "t/qualification/ascent-eqrel-program-test.ss",
+      "lane": "parallel",
+      "exit": 0,
+      "seconds": 41.96969483299472,
+      "case_ok": 24,
+      "case_errors": [],
+      "raw_log_sha256": "4d21318bae2420ad7304dc67502645f56afc1f749688591f00aad4a7926c7e39"
+    },
+    {
+      "module": "t/qualification/ascent-finite-evidence-test.ss",
+      "lane": "parallel",
+      "exit": 0,
+      "seconds": 57.368646667004214,
+      "case_ok": 9,
+      "case_errors": [],
+      "raw_log_sha256": "6d50e88c3abc61478d6f145d534bb7671da20272fe3dd7d28696d8cda76e2baf"
+    },
+    {
+      "module": "t/qualification/ascent-index-lifecycle-test.ss",
+      "lane": "parallel",
+      "exit": 0,
+      "seconds": 37.54020129099081,
+      "case_ok": 4,
+      "case_errors": [],
+      "raw_log_sha256": "8b6d57eee33f24174ecae9606ea28cee2567ffcd770fd9488ffdc496cf22fabf"
+    },
+    {
+      "module": "t/qualification/ascent-index-program-test.ss",
+      "lane": "parallel",
+      "exit": 0,
+      "seconds": 26.595917792001273,
+      "case_ok": 7,
+      "case_errors": [],
+      "raw_log_sha256": "eac38f290ce535c08f063e3570ea9753e76f3dfaec5875faac0a123e7013119b"
+    },
+    {
+      "module": "t/qualification/ascent-invalid-program-test.ss",
+      "lane": "parallel",
+      "exit": 0,
+      "seconds": 28.586030042002676,
+      "case_ok": 1,
+      "case_errors": [],
+      "raw_log_sha256": "a65c7cfe0c70fd6923d55ad208c2068dfb0113a5bd1ba708ce74ce9c2b014187"
+    },
+    {
+      "module": "t/qualification/ascent-lattice-program-test.ss",
+      "lane": "parallel",
+      "exit": 0,
+      "seconds": 25.281429000009666,
+      "case_ok": 11,
+      "case_errors": [],
+      "raw_log_sha256": "50934a898c68c4bab05eb2eb30c69b8a22567d3c96dc6c915cc8d9456f79cc2e"
+    },
+    {
+      "module": "t/qualification/ascent-materialization-test.ss",
+      "lane": "parallel",
+      "exit": 0,
+      "seconds": 21.10998966699117,
+      "case_ok": 6,
+      "case_errors": [],
+      "raw_log_sha256": "b8e5c4568cd71c945ed9228878da43bb9460c29de355c69a27dc29fa900e19d1"
+    },
+    {
+      "module": "t/qualification/ascent-module-program-test.ss",
+      "lane": "parallel",
+      "exit": 0,
+      "seconds": 19.935695166990627,
+      "case_ok": 3,
+      "case_errors": [],
+      "raw_log_sha256": "c88380ce0cef72d379a30fdd22810468765c1ad6e48a4d14974a8f59375376c2"
+    },
+    {
+      "module": "t/qualification/ascent-multi-frontier-test.ss",
+      "lane": "parallel",
+      "exit": 0,
+      "seconds": 22.470920958003262,
+      "case_ok": 9,
+      "case_errors": [],
+      "raw_log_sha256": "6ae949abf88d08b3e3e2a8d040ce2db0c2b75346cbc03ac3caa02b31f415582a"
+    },
+    {
+      "module": "t/qualification/ascent-mutual-program-test.ss",
+      "lane": "exclusive",
+      "exit": 0,
+      "seconds": 27.222904082998866,
+      "case_ok": 4,
+      "case_errors": [],
+      "raw_log_sha256": "40697a3d0fde458f53b0f4b95ed3dd56454efd95494cbb8f46dbade9786238d0"
+    },
+    {
+      "module": "t/qualification/ascent-observability-test.ss",
+      "lane": "exclusive",
+      "exit": 0,
+      "seconds": 16.28612183299265,
+      "case_ok": 2,
+      "case_errors": [],
+      "raw_log_sha256": "03c75996a6e7b1252cda6d74cb85eb00fc36f145d51ac93c474214628819747d"
+    },
+    {
+      "module": "t/qualification/ascent-poo-primitives-test.ss",
+      "lane": "parallel",
+      "exit": 0,
+      "seconds": 15.286616583005525,
+      "case_ok": 3,
+      "case_errors": [],
+      "raw_log_sha256": "c2c2cc36631c4092822667e548e61c60d64d31ac792fe25d8f0f390b262e8dd9"
+    },
+    {
+      "module": "t/qualification/ascent-positive-nonmembership-test.ss",
+      "lane": "parallel",
+      "exit": 0,
+      "seconds": 18.95225154099171,
+      "case_ok": 8,
+      "case_errors": [],
+      "raw_log_sha256": "44f20f13488d01033e3c848bc492f670d275f03ea4801d1b733721da751a3aef"
+    },
+    {
+      "module": "t/qualification/ascent-positive-plan-test.ss",
+      "lane": "parallel",
+      "exit": 0,
+      "seconds": 49.28317120899737,
+      "case_ok": 10,
+      "case_errors": [],
+      "raw_log_sha256": "43e65165976c5f003ae5a687c80cf6d590b06183017bd2175ecfb0a4c21b6c36"
+    },
+    {
+      "module": "t/qualification/ascent-positive-provenance-test.ss",
+      "lane": "parallel",
+      "exit": 0,
+      "seconds": 20.515634291994502,
+      "case_ok": 6,
+      "case_errors": [],
+      "raw_log_sha256": "c0773b049284a68ed4a9b07333445bbdfb68e2630c570f75413149f1ac301f3e"
+    },
+    {
+      "module": "t/qualification/ascent-reasoning-library-test.ss",
+      "lane": "parallel",
+      "exit": 0,
+      "seconds": 33.43586762499763,
+      "case_ok": 12,
+      "case_errors": [],
+      "raw_log_sha256": "45fc84a4156952710a031afbe282be8f149faf7cb97d371b04dc453847c37fa4"
+    },
+    {
+      "module": "t/qualification/ascent-request-projection-test.ss",
+      "lane": "parallel",
+      "exit": 0,
+      "seconds": 9.505274416005705,
+      "case_ok": 2,
+      "case_errors": [],
+      "raw_log_sha256": "a0627c75a0eee8896f9c3de2053d8be6a28d34c48d60782886deea76e852ce1e"
+    },
+    {
+      "module": "t/qualification/ascent-result-publication-test.ss",
+      "lane": "parallel",
+      "exit": 0,
+      "seconds": 21.072033958000247,
+      "case_ok": 5,
+      "case_errors": [],
+      "raw_log_sha256": "4495c971a9f5671fc46daebf9f7fa41131398ba2ed0c19c4331a691ca41c82b2"
+    },
+    {
+      "module": "t/qualification/ascent-rule-program-test.ss",
+      "lane": "exclusive",
+      "exit": 1,
+      "seconds": 47.30598012500559,
+      "case_ok": 10,
+      "case_errors": [
+        "ERROR CASE mixed ternary inputs derive four-column, unary and recursive rows",
+        "ERROR CASE source withdrawal recomputes without changing earlier result"
+      ],
+      "raw_log_sha256": "f8707b693b813607a01196569fec5f7e8f0fbcd13678aa96c386dacac6b2b578"
+    },
+    {
+      "module": "t/qualification/ascent-scc-summary-test.ss",
+      "lane": "parallel",
+      "exit": 0,
+      "seconds": 22.493634916987503,
+      "case_ok": 1,
+      "case_errors": [],
+      "raw_log_sha256": "c17a593c10ab53949ddc191578635b293678a4a447c120c7019409d7e81efd16"
+    },
+    {
+      "module": "t/qualification/ascent-set-batch-test.ss",
+      "lane": "parallel",
+      "exit": 0,
+      "seconds": 21.76903162500821,
+      "case_ok": 4,
+      "case_errors": [],
+      "raw_log_sha256": "684b08f5000d1186a30295495c2d33770ad1e7170c7725d0da537e10519bfcb0"
+    },
+    {
+      "module": "t/qualification/ascent-set-emit-test.ss",
+      "lane": "parallel",
+      "exit": 0,
+      "seconds": 23.543586874991888,
+      "case_ok": 12,
+      "case_errors": [],
+      "raw_log_sha256": "47183e4236ba9604bb357c706f02e7578637ac72177e36b695f4d1df92f4003e"
+    },
+    {
+      "module": "t/qualification/ascent-set-size-test.ss",
+      "lane": "parallel",
+      "exit": 0,
+      "seconds": 23.502893500000937,
+      "case_ok": 10,
+      "case_errors": [],
+      "raw_log_sha256": "b8ca9c919343c4a55a0e57aa42a8dd55764d9689c405a5478488089cc86db8ac"
+    },
+    {
+      "module": "t/qualification/ascent-set-source-test.ss",
+      "lane": "parallel",
+      "exit": 0,
+      "seconds": 20.04932883300353,
+      "case_ok": 14,
+      "case_errors": [],
+      "raw_log_sha256": "46fe3c1a808f6888a63e36f45ebf1e136d748e366213bf35ef0c59c71189dc21"
+    },
+    {
+      "module": "t/qualification/ascent-size-test.ss",
+      "lane": "parallel",
+      "exit": 0,
+      "seconds": 21.93688733399904,
+      "case_ok": 7,
+      "case_errors": [],
+      "raw_log_sha256": "91c7f105665e68430071ae1c0966a9334b93d3aabfec58c5ee53d11bcc098a15"
+    },
+    {
+      "module": "t/qualification/ascent-source-admission-test.ss",
+      "lane": "parallel",
+      "exit": 0,
+      "seconds": 19.030427042001975,
+      "case_ok": 12,
+      "case_errors": [],
+      "raw_log_sha256": "3b996dfc98fd9db9b86ee1716be382c61ffe48a985ec085e0c657dd89a781921"
+    },
+    {
+      "module": "t/qualification/ascent-strata-test.ss",
+      "lane": "parallel",
+      "exit": 0,
+      "seconds": 17.291708249991643,
+      "case_ok": 3,
+      "case_errors": [],
+      "raw_log_sha256": "04ddbbb26cf00e93aded2eb31a744fa8548329578a8373b6eac4394dd45428bf"
+    },
+    {
+      "module": "t/qualification/ascent-stratified-proof-test.ss",
+      "lane": "parallel",
+      "exit": 0,
+      "seconds": 42.08666704199277,
+      "case_ok": 12,
+      "case_errors": [],
+      "raw_log_sha256": "d6d54e08e7641e8660ed9e5d8691fcc56dcaa4fd38e7233dfc3e099dc7383a08"
+    },
+    {
+      "module": "t/qualification/ascent-syntax-test.ss",
+      "lane": "parallel",
+      "exit": 0,
+      "seconds": 33.163412750000134,
+      "case_ok": 24,
+      "case_errors": [],
+      "raw_log_sha256": "9a36ff7d447f5d071c1be288de8d7632501b4df98f66b7bcd68672741f6de012"
+    },
+    {
+      "module": "t/qualification/ascent-table-expression-test.ss",
+      "lane": "parallel",
+      "exit": 0,
+      "seconds": 21.436429374996806,
+      "case_ok": 8,
+      "case_errors": [],
+      "raw_log_sha256": "8479e7c960bddcfe3fdfe02544abfe51fefbdfed468c15073ebab7f8a9ba1670"
+    },
+    {
+      "module": "t/qualification/ascent-temporal-lens-test.ss",
+      "lane": "parallel",
+      "exit": 0,
+      "seconds": 104.6739193329995,
+      "case_ok": 10,
+      "case_errors": [],
+      "raw_log_sha256": "ae1840d61953f962b77a8ed00415e8b0848f898258075803e2476903cccb5797"
+    },
+    {
+      "module": "t/qualification/ascent-timeout-test.ss",
+      "lane": "parallel",
+      "exit": 0,
+      "seconds": 33.59542920900276,
+      "case_ok": 10,
+      "case_errors": [],
+      "raw_log_sha256": "2561bd53056de55e1fd34496f661e8ec92aab43d34baad3d23df4c11f78d8dca"
+    },
+    {
+      "module": "t/qualification/ascent-timing-test.ss",
+      "lane": "parallel",
+      "exit": 0,
+      "seconds": 30.076811666993308,
+      "case_ok": 1,
+      "case_errors": [],
+      "raw_log_sha256": "46132f7fea20593ceba8c5b4724bf0505ff48b4a727ac3bbdd08ea5f1a0b9b8d"
+    },
+    {
+      "module": "t/qualification/ascent-workspace-test.ss",
+      "lane": "parallel",
+      "exit": 0,
+      "seconds": 29.939348708008765,
+      "case_ok": 3,
+      "case_errors": [],
+      "raw_log_sha256": "de9ba5f85242ba3a05f9daab45533fb8d815a4a32451938379891085db9898a3"
+    },
+    {
+      "module": "t/qualification/scheme-library-contract-test.ss",
+      "lane": "parallel",
+      "exit": 0,
+      "seconds": 88.69394879099855,
+      "case_ok": 5,
+      "case_errors": [],
+      "raw_log_sha256": "16bc2a5c61a3d7a53a96e72eca87291ed056b3fbb10f4c34de7a26dd3074d3a3"
+    },
+    {
+      "module": "t/qualification/scheme-native-integration-test.ss",
+      "lane": "parallel",
+      "exit": 0,
+      "seconds": 27.907467500001076,
+      "case_ok": 1,
+      "case_errors": [],
+      "raw_log_sha256": "d17a9e2e6341793d57609571a8bb85a7560bcceaa192945d1e490791826ebd6a"
+    },
+    {
+      "module": "t/qualification/scheme-native-language-test.ss",
+      "lane": "parallel",
+      "exit": 0,
+      "seconds": 25.882458916006726,
+      "case_ok": 7,
+      "case_errors": [],
+      "raw_log_sha256": "9cef5d9f0ade0cc56176eff55bc76e965257fac4674b8faa29987005051ea7ef"
+    },
+    {
+      "module": "t/qualification/scheme-native-reduction-test.ss",
+      "lane": "parallel",
+      "exit": 0,
+      "seconds": 25.849998916994082,
+      "case_ok": 6,
+      "case_errors": [],
+      "raw_log_sha256": "93b5cd41da909f87965076556cb947e36ea0b7606086f52268f7bcaa30728dfd"
+    },
+    {
+      "module": "t/qualification/scheme-operator-retained-test.ss",
+      "lane": "parallel",
+      "exit": 0,
+      "seconds": 118.31398825001088,
+      "case_ok": 6,
+      "case_errors": [],
+      "raw_log_sha256": "b6aa9bcd8114b118a3d70725d654935f5662c813ce57721706b14a3d54c644db"
+    },
+    {
+      "module": "t/qualification/scheme-operator-test.ss",
+      "lane": "parallel",
+      "exit": 0,
+      "seconds": 86.08759675000329,
+      "case_ok": 19,
+      "case_errors": [],
+      "raw_log_sha256": "9155c03f3a62aaa4f68e073167dd1ecb1e3eb105b8f1fd52355fe3cfc7253a60"
+    },
+    {
+      "module": "t/qualification/scheme-relational-test.ss",
+      "lane": "parallel",
+      "exit": 0,
+      "seconds": 60.14724866700999,
+      "case_ok": 28,
+      "case_errors": [],
+      "raw_log_sha256": "4a8efbf370fc17a90489cdc862d15c7df8a188ab23bd6e95131202d53cbc64a5"
+    }
+  ]
+}

@@ -1,0 +1,293 @@
+{
+  "qualification": {
+    "modules": 43,
+    "cases": 345,
+    "results": [
+      {
+        "module": "t/qualification/ascent-closure-candidates-test.ss",
+        "cases": 6,
+        "exit": 0,
+        "log": "ascent-closure-candidates-test.log"
+      },
+      {
+        "module": "t/qualification/ascent-request-projection-test.ss",
+        "cases": 2,
+        "exit": 0,
+        "log": "ascent-request-projection-test.log"
+      },
+      {
+        "module": "t/qualification/ascent-binary-program-test.ss",
+        "cases": 9,
+        "exit": 0,
+        "log": "ascent-binary-program-test.log"
+      },
+      {
+        "module": "t/qualification/ascent-poo-primitives-test.ss",
+        "cases": 3,
+        "exit": 0,
+        "log": "ascent-poo-primitives-test.log"
+      },
+      {
+        "module": "t/qualification/ascent-strata-test.ss",
+        "cases": 3,
+        "exit": 0,
+        "log": "ascent-strata-test.log"
+      },
+      {
+        "module": "t/qualification/ascent-table-expression-test.ss",
+        "cases": 8,
+        "exit": 0,
+        "log": "ascent-table-expression-test.log"
+      },
+      {
+        "module": "t/qualification/ascent-scc-summary-test.ss",
+        "cases": 1,
+        "exit": 0,
+        "log": "ascent-scc-summary-test.log"
+      },
+      {
+        "module": "t/qualification/ascent-aggregate-program-test.ss",
+        "cases": 6,
+        "exit": 0,
+        "log": "ascent-aggregate-program-test.log"
+      },
+      {
+        "module": "t/qualification/ascent-binding-program-test.ss",
+        "cases": 1,
+        "exit": 0,
+        "log": "ascent-binding-program-test.log"
+      },
+      {
+        "module": "t/qualification/ascent-binding-test.ss",
+        "cases": 11,
+        "exit": 0,
+        "log": "ascent-binding-test.log"
+      },
+      {
+        "module": "t/qualification/ascent-byods-index-test.ss",
+        "cases": 2,
+        "exit": 0,
+        "log": "ascent-byods-index-test.log"
+      },
+      {
+        "module": "t/qualification/ascent-byods-invariants-test.ss",
+        "cases": 6,
+        "exit": 0,
+        "log": "ascent-byods-invariants-test.log"
+      },
+      {
+        "module": "t/qualification/ascent-contract-union-test.ss",
+        "cases": 3,
+        "exit": 0,
+        "log": "ascent-contract-union-test.log"
+      },
+      {
+        "module": "t/qualification/ascent-eqrel-program-test.ss",
+        "cases": 24,
+        "exit": 0,
+        "log": "ascent-eqrel-program-test.log"
+      },
+      {
+        "module": "t/qualification/ascent-finite-evidence-test.ss",
+        "cases": 9,
+        "exit": 0,
+        "log": "ascent-finite-evidence-test.log"
+      },
+      {
+        "module": "t/qualification/ascent-index-program-test.ss",
+        "cases": 7,
+        "exit": 0,
+        "log": "ascent-index-program-test.log"
+      },
+      {
+        "module": "t/qualification/ascent-invalid-program-test.ss",
+        "cases": 1,
+        "exit": 0,
+        "log": "ascent-invalid-program-test.log"
+      },
+      {
+        "module": "t/qualification/ascent-lattice-program-test.ss",
+        "cases": 11,
+        "exit": 0,
+        "log": "ascent-lattice-program-test.log"
+      },
+      {
+        "module": "t/qualification/ascent-module-program-test.ss",
+        "cases": 3,
+        "exit": 0,
+        "log": "ascent-module-program-test.log"
+      },
+      {
+        "module": "t/qualification/ascent-multi-frontier-test.ss",
+        "cases": 9,
+        "exit": 0,
+        "log": "ascent-multi-frontier-test.log"
+      },
+      {
+        "module": "t/qualification/ascent-mutual-program-test.ss",
+        "cases": 4,
+        "exit": 0,
+        "log": "ascent-mutual-program-test.log"
+      },
+      {
+        "module": "t/qualification/ascent-observability-test.ss",
+        "cases": 2,
+        "exit": 0,
+        "log": "ascent-observability-test.log"
+      },
+      {
+        "module": "t/qualification/ascent-positive-nonmembership-test.ss",
+        "cases": 8,
+        "exit": 0,
+        "log": "ascent-positive-nonmembership-test.log"
+      },
+      {
+        "module": "t/qualification/ascent-positive-provenance-test.ss",
+        "cases": 6,
+        "exit": 0,
+        "log": "ascent-positive-provenance-test.log"
+      },
+      {
+        "module": "t/qualification/ascent-reasoning-library-test.ss",
+        "cases": 12,
+        "exit": 0,
+        "log": "ascent-reasoning-library-test.log"
+      },
+      {
+        "module": "t/qualification/ascent-rule-program-test.ss",
+        "cases": 12,
+        "exit": 0,
+        "log": "ascent-rule-program-test.log"
+      },
+      {
+        "module": "t/qualification/ascent-set-batch-test.ss",
+        "cases": 4,
+        "exit": 0,
+        "log": "ascent-set-batch-test.log"
+      },
+      {
+        "module": "t/qualification/ascent-set-emit-test.ss",
+        "cases": 12,
+        "exit": 0,
+        "log": "ascent-set-emit-test.log"
+      },
+      {
+        "module": "t/qualification/ascent-set-size-test.ss",
+        "cases": 10,
+        "exit": 0,
+        "log": "ascent-set-size-test.log"
+      },
+      {
+        "module": "t/qualification/ascent-set-source-test.ss",
+        "cases": 14,
+        "exit": 0,
+        "log": "ascent-set-source-test.log"
+      },
+      {
+        "module": "t/qualification/ascent-size-test.ss",
+        "cases": 7,
+        "exit": 0,
+        "log": "ascent-size-test.log"
+      },
+      {
+        "module": "t/qualification/ascent-source-admission-test.ss",
+        "cases": 12,
+        "exit": 0,
+        "log": "ascent-source-admission-test.log"
+      },
+      {
+        "module": "t/qualification/ascent-stratified-proof-test.ss",
+        "cases": 12,
+        "exit": 0,
+        "log": "ascent-stratified-proof-test.log"
+      },
+      {
+        "module": "t/qualification/ascent-syntax-test.ss",
+        "cases": 24,
+        "exit": 0,
+        "log": "ascent-syntax-test.log"
+      },
+      {
+        "module": "t/qualification/ascent-timeout-test.ss",
+        "cases": 10,
+        "exit": 0,
+        "log": "ascent-timeout-test.log"
+      },
+      {
+        "module": "t/qualification/ascent-timing-test.ss",
+        "cases": 1,
+        "exit": 0,
+        "log": "ascent-timing-test.log"
+      },
+      {
+        "module": "t/qualification/scheme-library-contract-test.ss",
+        "cases": 3,
+        "exit": 0,
+        "log": "scheme-library-contract-test.log"
+      },
+      {
+        "module": "t/qualification/scheme-native-integration-test.ss",
+        "cases": 1,
+        "exit": 0,
+        "log": "scheme-native-integration-test.log"
+      },
+      {
+        "module": "t/qualification/scheme-native-language-test.ss",
+        "cases": 7,
+        "exit": 0,
+        "log": "scheme-native-language-test.log"
+      },
+      {
+        "module": "t/qualification/scheme-native-reduction-test.ss",
+        "cases": 6,
+        "exit": 0,
+        "log": "scheme-native-reduction-test.log"
+      },
+      {
+        "module": "t/qualification/scheme-operator-retained-test.ss",
+        "cases": 6,
+        "exit": 0,
+        "log": "scheme-operator-retained-test.log"
+      },
+      {
+        "module": "t/qualification/scheme-operator-test.ss",
+        "cases": 19,
+        "exit": 0,
+        "log": "scheme-operator-test.log"
+      },
+      {
+        "module": "t/qualification/scheme-relational-test.ss",
+        "cases": 28,
+        "exit": 0,
+        "log": "scheme-relational-test.log"
+      }
+    ]
+  },
+  "build_policy": {
+    "modules": 38,
+    "findings": 0,
+    "errors": 0,
+    "exit": 0
+  },
+  "allocation": {
+    "runs": 2,
+    "pairs_per_workload": 1000,
+    "reference_commit": "baf50c2",
+    "dense_win_gate": 900,
+    "controls": "median non-regression",
+    "metric": "cumulative allocated bytes",
+    "latency_claim": false
+  },
+  "original_SS": {
+    "status": "fail",
+    "case": "ascent-byods-trrel/tr",
+    "samples": 1000,
+    "p50_ns": 453000,
+    "p95_ns": 1563000,
+    "max_ns": 99557000,
+    "p95_limit_ns": 1000000,
+    "process_exit": 1,
+    "remaining_entries": "not run after fail-fast"
+  },
+  "remote_CI": "not run"
+}

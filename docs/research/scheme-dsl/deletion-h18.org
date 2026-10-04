@@ -1,0 +1,90 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+#+TITLE: H18: deletion and rederivation across a Datalog materialisation
+#+STATUS: primary-source reading and next algorithm discriminator
+#+DATE: 2026-10-01
+#+FILETAGS: :research:scheme-dsl:deletion:datalog:
+
+* Source and question
+:PROPERTIES:
+:CUSTOM_ID: deletion-h18-source
+:SOURCE_PDF: https://ojs.aaai.org/index.php/AAAI/article/view/11554/11413
+:DOI: 10.1609/aaai.v32i1.11554
+:ACCESSED: 2026-10-01
+:END:
+
+Pan Hu, Boris Motik and Ian Horrocks, /Optimised Maintenance of
+Datalog Materialisations/, AAAI 2018. [[https://ojs.aaai.org/index.php/AAAI/article/view/11554/11413][Authoritative PDF]];
+[[https://doi.org/10.1609/aaai.v32i1.11554][DOI]]. Printed pp. 1871–1879; PDF page locators below start at one.
+
+Question for this repository: what information would be required to
+maintain a materialised recursive result after a source deletion,
+without re-solving the complete accepted snapshot? The current
+[[file:e4-retained-session.org][native Session]] does re-solve for replacement. Its atomic cross-fragment
+transaction is a semantic baseline, not a deletion algorithm.
+
+* Evidence ledger
+:PROPERTIES:
+:CUSTOM_ID: deletion-h18-ledger
+:END:
+
+#+NAME: deletion-h18-evidence
+| Location | Paper's result or scope | Consequence for this Library |
+|----------+-------------------------+------------------------------|
+| §2, PDF p. 2 | Defines safe, stratified Datalog, recursive and nonrecursive rules per stratum, and a materialisation for explicit facts | Our admission and dependency planner must identify these categories before any analogous deletion transform |
+| §1 and §3.1, PDF pp. 1–3 | DRed overdeletes consequences of removed explicit facts, then rederives facts with other supports | A derived set row cannot be removed merely because one path disappeared |
+| §1, PDF pp. 1–2 | Simple Counting tracks derivation counts but applies only to nonrecursive rules | One counter per output row is not a general recursive solution |
+| §4.1–4.2, PDF pp. 4–5 | DRedc distinguishes nonrecursive and recursive derivation counts and avoids backward rule evaluation in its model | A future implementation needs rule-instance support information that the current set result does not expose |
+| §6, PDF pp. 7–8 | Compares update algorithms on synthetic and real datasets | Its speed results do not transfer to the Gerbil evaluator or our source distributions |
+
+The paper's setting is stratified Datalog materialisation. Our Scheme
+surface also contains checked finite views and max/min lattices. A
+lattice join has no general inverse, and a changed lower stratum can
+invalidate negation, grouped reductions and higher strata. Applying
+the paper's algorithm to those forms requires a new semantic account;
+the present implementation recomputes their accepted snapshots.
+
+The [[https://www.vldb.org/pvldb/vol16/p1601-budiu.pdf][DBSP PVLDB 2023 paper]] (§4, PDF pp. 5–6) instead represents changes
+with integer-weighted sets and uses negative weights for removals. It
+shows a broader calculus including nonpositive operators. We have not
+implemented that representation or its derivative circuit. The two
+papers therefore identify distinct possible implementation routes,
+neither of which is established by our current set-valued Session.
+
+* Local semantic gate and falsifiers
+:PROPERTIES:
+:CUSTOM_ID: deletion-h18-local-gate
+:END:
+
+The current =relational-session-transaction!= accepts checked source
+updates from multiple first-class fragments, solves a prospective
+snapshot in a separate engine, and publishes it only on completion.
+The [[file:../../../t/qualification/scheme-native-integration-test.ss][combined qualification]] updates operator recursion, a negated
+relation, finite mapping, roots for grouped count and a max lattice in
+one transaction. A separate four-vertex matrix supplies expected
+closure, filtering, counts and maxima. It also checks that malformed,
+duplicate and over-budget updates preserve the prior result and source
+state. The named =relational-program= path has the same atomic owner.
+
+#+NAME: deletion-h18-next-experiments
+| Case | Independent reference | Observation required before an incremental claim |
+|------+-----------------------+--------------------------------------------------|
+| One edge withdrawn from two supporting paths | Fresh finite closure after each update | Alternate support survives, including recursive cycles |
+| Last support withdrawn | Fresh finite closure | Derived row disappears only when no valid derivation remains |
+| Mixed insertion and deletion in one transaction | Fresh complete program result | No intermediate result becomes visible |
+| Negation or grouped count changes in a lower stratum | Fresh stratified result | Higher strata are invalidated and recomputed or maintained under a proved rule |
+| Max lattice witness withdrawn | Fresh lattice result | Prior maximum does not persist without surviving support |
+| Candidate engine fails a budget | Last committed snapshot | No partially changed source, index or result is published |
+
+For an algorithm experiment, preregister both methods: whole-snapshot
+recomputation as baseline and one specified incremental technique for
+its supported fragment. Use identical update sequences, budgets and
+query observations; report initialization cost, per-update time,
+resident state, rule matches, and every correctness mismatch. Retain
+alternative-path and cyclic cases even if they make the incremental
+method slower. No result from the current transaction test establishes
+incremental deletion performance.
+
+[[file:dbsp-b22.org][DBSP note]]; [[file:reflection.org][research reflection]];
+[[file:../../scheme-relational-language-design.org][Scheme language design]].

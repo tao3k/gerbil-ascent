@@ -1,0 +1,92 @@
+;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+(import (only-in :std/test test-suite check-equal?)
+        (only-in :core/observability/testing-case poo-flow-test-case)
+        (only-in :clan/poo/object .o .ref)
+        (only-in :gerbil-ascent/table/funs gerbil-ascent-index-build gerbil-ascent-index-extend!)
+        (rename-in (only-in :gerbil-ascent/t/qualification/ascent-index-reference-funs
+                           gerbil-ascent-index-build gerbil-ascent-index-extend!)
+                   (gerbil-ascent-index-build old-build)
+                   (gerbil-ascent-index-extend! old-extend!))
+        (only-in :gerbil-ascent/program/interface gerbil-ascent-program gerbil-ascent-relation
+                 gerbil-ascent-variable gerbil-ascent-atom gerbil-ascent-rule)
+        (only-in :gerbil-ascent/program/evaluate gerbil-ascent-make-engine gerbil-ascent-evaluate-program)
+        (only-in :gerbil-ascent/table/provider gerbil-ascent-hash-index-provider)
+        (only-in :gerbil-ascent/t/qualification/ascent-index-reference-evaluate
+                 ascent-index-reference-make-engine ascent-index-reference-evaluate-program))
+(export ascent-index-lifecycle-test)
+(def (indexed-program width provider)
+  (let* ((x (gerbil-ascent-variable 'x)) (y (gerbil-ascent-variable 'y))
+         (a (lambda (name terms) (gerbil-ascent-atom name terms))))
+    (gerbil-ascent-program
+     (list (gerbil-ascent-relation 'left 1 '((0) (1)))
+           (gerbil-ascent-relation 'right 2
+            (map (lambda (n) (list (modulo n 2) n)) (iota width)) provider)
+           (gerbil-ascent-relation 'out 2 []))
+     (list (gerbil-ascent-rule (list (a 'out (list x y)))
+                              (list (a 'left (list x)) (a 'right (list x y)))))
+     256 256 512)))
+(def (rows result) ((.ref result 'rows-of) 'out))
+(def ascent-index-lifecycle-test
+  (test-suite "Complete index lifecycle"
+    (poo-flow-test-case "all ordered subsets and arbitrary columns preserve keys and bucket order"
+      (let (source (map (lambda (n) (map (lambda (c) (modulo (+ n c) 3)) (iota 8))) (iota 40)))
+        (for-each
+         (lambda (columns)
+           (let ((old (old-build source columns))
+                 (new (gerbil-ascent-index-build source columns)))
+             (for-each
+              (lambda (row)
+                (let (key (map (lambda (c) (list-ref row c)) columns))
+                  (check-equal? (hash-get new key) (hash-get old key)))) source)
+             (let (batch (reverse (take source 5)))
+               (old-extend! old batch columns)
+               (gerbil-ascent-index-extend! new batch columns))
+             (hash-for-each (lambda (key bucket) (check-equal? (hash-get new key) bucket)) old)))
+         (append (map (lambda (bits)
+                        (filter (lambda (c) (not (zero? (bitwise-and bits (arithmetic-shift 1 c))))) (iota 8)))
+                      (iota 256))
+                 '((7 0 4) (2 2 0) (7 7) ())))))
+    (poo-flow-test-case "default index crosses threshold and extends without changing retained snapshots"
+      (let* ((p (indexed-program 31 gerbil-ascent-hash-index-provider))
+             (old (ascent-index-reference-make-engine p #t))
+             (new (gerbil-ascent-make-engine p #t))
+             (first-old ((.ref old '.run))) (first-new ((.ref new '.run))))
+        (check-equal? (rows first-new) (rows first-old))
+        (for-each
+         (lambda (n)
+           (for-each (lambda (engine) ((.ref engine '.append-source!) 'right (list (modulo n 2) n))) (list old new))
+           (check-equal? (rows ((.ref new '.run))) (rows ((.ref old '.run)))))
+         (iota 10 31))
+        (check-equal? (length (rows first-new)) 31)
+        (for-each (lambda (engine) ((.ref engine '.replace-source!) 'right '((0 99)))) (list old new))
+        (check-equal? (rows ((.ref new '.run))) (rows ((.ref old '.run))))))
+    (poo-flow-test-case "custom build extend lookup traces and superset candidates remain identical"
+      (let* ((trace [])
+             (provider (.o (:: @ gerbil-ascent-hash-index-provider)
+                           (.build-index (lambda (rs cs) (set! trace (cons (list 'build rs cs) trace)) rs))
+                           (.extend-index! (lambda (idx rs cs)
+                                             (set! trace (cons (list 'extend rs cs) trace))
+                                             (append (reverse rs) idx)))
+                           (.lookup-index (lambda (idx key) (set! trace (cons (list 'lookup key) trace)) idx))))
+             (p (indexed-program 40 provider)))
+        (def (run make)
+          (let (engine (make p #t))
+            (let (first ((.ref engine '.run)))
+              ((.ref engine '.append-source!) 'right '(1 41))
+              (list (rows first) (rows ((.ref engine '.run)))))))
+        (let* ((old (run ascent-index-reference-make-engine)) (old-trace trace))
+          (set! trace [])
+          (check-equal? (run gerbil-ascent-make-engine) old)
+          (check-equal? trace old-trace))))
+    (poo-flow-test-case "custom improper lookup rows retain the exact error boundary"
+      (let* ((provider (.o (:: @ gerbil-ascent-hash-index-provider)
+                           (.lookup-index (lambda (_index _key) (cons '(0 1) 'bad)))))
+             (p (indexed-program 40 provider)))
+        (def (outcome solve)
+          (with-catch (lambda (failure) (error-message failure)) (lambda () (solve p) 'success)))
+        (check-equal? (outcome gerbil-ascent-evaluate-program)
+                      (outcome ascent-index-reference-evaluate-program))
+        (check-equal? (outcome gerbil-ascent-evaluate-program)
+                      "ASCENT index provider returned non-list rows")))))

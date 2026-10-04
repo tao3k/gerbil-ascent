@@ -1,0 +1,7 @@
+{
+  "baseline_head": "57cc611",
+  "evaluate_transformation": "only module import relocation and exported function alpha renames",
+  "analysis_transformation": "none",
+  "evaluate_sha256": "7a7030086d98dbdd6282aadfdcbdd9f08b2613a3839f47e3272fb94e19fa8bce",
+  "analysis_sha256": "1a5c0216db986c29f260a118ac895ebfd9de49a2276864bc26860152f5e15e99"
+}

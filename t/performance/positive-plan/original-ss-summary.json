@@ -1,0 +1,15 @@
+{
+  "passed_scenarios": [
+    "ascent-byods-trrel",
+    "ascent-session-update",
+    "ascent-ten-thousand-appends"
+  ],
+  "failed_scenarios": [
+    "ascent-nonpositive-session-update"
+  ],
+  "p50_ns": 256000,
+  "p95_ns": 2541000,
+  "max_ns": 37274000,
+  "sample_count": 1000,
+  "limit_ns": 1000000
+}

@@ -1,0 +1,71 @@
+#+title: POO ancestry cache experiment
+
+* Boundary
+
+This is an unpublished upstream patch against gerbil-poo commit
+=099b381588360a8a49fd772f666a1a00351366f5=. ASCENT's dependency pin
+is unchanged. Apply =gerbil-poo-099b381-cache.patch= in that exact
+upstream checkout; the included =upstream/= files are review snapshots,
+not ASCENT production modules. Reverse application was checked against
+the candidate checkout. No source in the installed original prefix was edited.
+
+* Change
+
+=compute-precedence-list!= now returns an existing cache before creating
+its invocation-local active hash table. Malformed heads fall through to
+original =for-each= behavior. Cold traversal, C4 ordering, cycle errors,
+and slot invalidation retain the original implementation.
+
+* Qualification
+
+Two alternating 1000-pair runs, 128 repetitions for cached paths and 32
+for fresh diamonds, compare the compiled candidate against a frozen copy
+of the original function using the same object representation and C4 code.
+Each cached path requires at least 900 strict wins and median nonregression.
+The prespecified cold-path allowance is 5 percent median regression.
+Raw arrays, source manifests, and logs are in =receipts/=.
+
+| case | run | old median ns | candidate median ns | wins / 1000 |
+|------+-----+---------------+---------------------+-------------|
+| cached root | 1 | 554 | 148 | 988 |
+| cached root | 2 | 570 | 148 | 959 |
+| cached diamond | 1 | 476 | 148 | 970 |
+| cached diamond | 2 | 484 | 148 | 962 |
+| fresh diamond | 1 | 3625 | 3656 | 324 |
+| fresh diamond | 2 | 3656 | 3687 | 276 |
+
+The two cold medians regress about 0.9 percent. Cached paths qualify
+3.2--3.9x median gains. These are ancestry-function measurements.
+=precedence-cache-test.ss= passes all 1536 three-node graph/root pairs,
+cache list identity, supplied heads, malformed heads, and explicit slot
+uninstantiation. The malformed-head oracle deliberately compares existing
+behavior, including the original acceptance of an improper-list tail.
+
+* ASCENT integration
+
+The final candidate library overlays the unchanged original dependency
+prefix with =GERBIL_LOADPATH=candidate/lib:original/lib=.
+The unchanged indexed-joins SS fixture fails its 1000-sample, 2 ms p95
+gate: median 0.547 ms, p95 14.889 ms, maximum 453.139 ms. Its log retains
+all raw samples. The former 28.703 ms failed experiment is a different
+source/environment run; these values are not a matched A/B comparison.
+No full-suite performance closure is claimed.
+
+The final candidate passes the existing upstream object and MOP suites,
+and all three ASCENT union responsibility admission Cases. Each successful
+module retains MODULE-OK, HARNESS-OK, final OK, and process exit 0.
+A concurrent rule-program repeat fails its unchanged duration budgets;
+that failure is retained rather than discarded. The serial repeat also fails several unchanged duration Cases,
+including mixed-program, source-withdrawal, append, and typed evaluation.
+Its ERROR CHECK records raise PooFlowDebugDurationAnomaly rather than
+a row mismatch; the complete failed log is retained. The earlier guardless candidate pass is not reproducible
+as a qualified final-source duration result; the module remains unqualified.
+
+* Reproduce upstream
+
+Use a separate GERBIL_PATH and original dependencies on GERBIL_LOADPATH;
+set =GERBIL_BUILD_CORES=12=, then run =just build=,
+=just benchmark-precedence-cache= twice, and
+=just test-file t/precedence-cache-test.ss=.
+The benchmark recipe compiles its frozen reference and records hashes.
+The upstream patch includes its own test and benchmark entrypoints.

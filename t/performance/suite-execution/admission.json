@@ -1,0 +1,217 @@
+[
+  {
+    "module": "t/qualification/ascent-aggregate-program-test.ss",
+    "lane": "parallel",
+    "reason": "semantic assertions; process-local state; unchanged default Core Case profile"
+  },
+  {
+    "module": "t/qualification/ascent-binary-program-test.ss",
+    "lane": "parallel",
+    "reason": "semantic assertions; process-local state; unchanged default Core Case profile"
+  },
+  {
+    "module": "t/qualification/ascent-binding-program-test.ss",
+    "lane": "parallel",
+    "reason": "semantic assertions; process-local state; unchanged default Core Case profile"
+  },
+  {
+    "module": "t/qualification/ascent-binding-test.ss",
+    "lane": "parallel",
+    "reason": "semantic assertions; process-local state; unchanged default Core Case profile"
+  },
+  {
+    "module": "t/qualification/ascent-byods-index-test.ss",
+    "lane": "parallel",
+    "reason": "semantic assertions; process-local state; unchanged default Core Case profile"
+  },
+  {
+    "module": "t/qualification/ascent-byods-invariants-test.ss",
+    "lane": "parallel",
+    "reason": "semantic assertions; process-local state; unchanged default Core Case profile"
+  },
+  {
+    "module": "t/qualification/ascent-closure-candidates-test.ss",
+    "lane": "parallel",
+    "reason": "semantic assertions; process-local state; unchanged default Core Case profile"
+  },
+  {
+    "module": "t/qualification/ascent-contract-union-test.ss",
+    "lane": "parallel",
+    "reason": "semantic assertions; process-local state; unchanged default Core Case profile"
+  },
+  {
+    "module": "t/qualification/ascent-eqrel-program-test.ss",
+    "lane": "exclusive",
+    "reason": "internal threaded storage/session checks"
+  },
+  {
+    "module": "t/qualification/ascent-finite-evidence-test.ss",
+    "lane": "parallel",
+    "reason": "semantic assertions; process-local state; unchanged default Core Case profile"
+  },
+  {
+    "module": "t/qualification/ascent-index-program-test.ss",
+    "lane": "parallel",
+    "reason": "semantic assertions; process-local state; unchanged default Core Case profile"
+  },
+  {
+    "module": "t/qualification/ascent-invalid-program-test.ss",
+    "lane": "parallel",
+    "reason": "semantic assertions; process-local state; unchanged default Core Case profile"
+  },
+  {
+    "module": "t/qualification/ascent-lattice-program-test.ss",
+    "lane": "parallel",
+    "reason": "semantic assertions; process-local state; unchanged default Core Case profile"
+  },
+  {
+    "module": "t/qualification/ascent-module-program-test.ss",
+    "lane": "parallel",
+    "reason": "semantic assertions; process-local state; unchanged default Core Case profile"
+  },
+  {
+    "module": "t/qualification/ascent-multi-frontier-test.ss",
+    "lane": "parallel",
+    "reason": "semantic assertions; process-local state; unchanged default Core Case profile"
+  },
+  {
+    "module": "t/qualification/ascent-mutual-program-test.ss",
+    "lane": "exclusive",
+    "reason": "internal threads and custom duration/GC profile"
+  },
+  {
+    "module": "t/qualification/ascent-observability-test.ss",
+    "lane": "exclusive",
+    "reason": "duration rejection and deliberate sleep"
+  },
+  {
+    "module": "t/qualification/ascent-poo-primitives-test.ss",
+    "lane": "parallel",
+    "reason": "semantic assertions; process-local state; unchanged default Core Case profile"
+  },
+  {
+    "module": "t/qualification/ascent-positive-nonmembership-test.ss",
+    "lane": "parallel",
+    "reason": "semantic assertions; process-local state; unchanged default Core Case profile"
+  },
+  {
+    "module": "t/qualification/ascent-positive-provenance-test.ss",
+    "lane": "parallel",
+    "reason": "semantic assertions; process-local state; unchanged default Core Case profile"
+  },
+  {
+    "module": "t/qualification/ascent-reasoning-library-test.ss",
+    "lane": "exclusive",
+    "reason": "large exhaustive reasoning corpus"
+  },
+  {
+    "module": "t/qualification/ascent-request-projection-test.ss",
+    "lane": "parallel",
+    "reason": "semantic assertions; process-local state; unchanged default Core Case profile"
+  },
+  {
+    "module": "t/qualification/ascent-rule-program-test.ss",
+    "lane": "exclusive",
+    "reason": "custom duration/GC profiles"
+  },
+  {
+    "module": "t/qualification/ascent-scc-summary-test.ss",
+    "lane": "parallel",
+    "reason": "semantic assertions; process-local state; unchanged default Core Case profile"
+  },
+  {
+    "module": "t/qualification/ascent-set-batch-test.ss",
+    "lane": "parallel",
+    "reason": "semantic assertions; process-local state; unchanged default Core Case profile"
+  },
+  {
+    "module": "t/qualification/ascent-set-emit-test.ss",
+    "lane": "parallel",
+    "reason": "semantic assertions; process-local state; unchanged default Core Case profile"
+  },
+  {
+    "module": "t/qualification/ascent-set-size-test.ss",
+    "lane": "parallel",
+    "reason": "semantic assertions; process-local state; unchanged default Core Case profile"
+  },
+  {
+    "module": "t/qualification/ascent-set-source-test.ss",
+    "lane": "parallel",
+    "reason": "semantic assertions; process-local state; unchanged default Core Case profile"
+  },
+  {
+    "module": "t/qualification/ascent-size-test.ss",
+    "lane": "parallel",
+    "reason": "semantic assertions; process-local state; unchanged default Core Case profile"
+  },
+  {
+    "module": "t/qualification/ascent-source-admission-test.ss",
+    "lane": "parallel",
+    "reason": "semantic assertions; process-local state; unchanged default Core Case profile"
+  },
+  {
+    "module": "t/qualification/ascent-strata-test.ss",
+    "lane": "parallel",
+    "reason": "semantic assertions; process-local state; unchanged default Core Case profile"
+  },
+  {
+    "module": "t/qualification/ascent-stratified-proof-test.ss",
+    "lane": "parallel",
+    "reason": "semantic assertions; process-local state; unchanged default Core Case profile"
+  },
+  {
+    "module": "t/qualification/ascent-syntax-test.ss",
+    "lane": "parallel",
+    "reason": "semantic assertions; process-local state; unchanged default Core Case profile"
+  },
+  {
+    "module": "t/qualification/ascent-table-expression-test.ss",
+    "lane": "parallel",
+    "reason": "semantic assertions; process-local state; unchanged default Core Case profile"
+  },
+  {
+    "module": "t/qualification/ascent-timeout-test.ss",
+    "lane": "exclusive",
+    "reason": "explicit timeout behavior"
+  },
+  {
+    "module": "t/qualification/ascent-timing-test.ss",
+    "lane": "exclusive",
+    "reason": "per-rule timing measurements"
+  },
+  {
+    "module": "t/qualification/scheme-library-contract-test.ss",
+    "lane": "exclusive",
+    "reason": "large exhaustive library corpus"
+  },
+  {
+    "module": "t/qualification/scheme-native-integration-test.ss",
+    "lane": "parallel",
+    "reason": "semantic assertions; process-local state; unchanged default Core Case profile"
+  },
+  {
+    "module": "t/qualification/scheme-native-language-test.ss",
+    "lane": "parallel",
+    "reason": "semantic assertions; process-local state; unchanged default Core Case profile"
+  },
+  {
+    "module": "t/qualification/scheme-native-reduction-test.ss",
+    "lane": "parallel",
+    "reason": "semantic assertions; process-local state; unchanged default Core Case profile"
+  },
+  {
+    "module": "t/qualification/scheme-operator-retained-test.ss",
+    "lane": "exclusive",
+    "reason": "large exhaustive retained operator corpus"
+  },
+  {
+    "module": "t/qualification/scheme-operator-test.ss",
+    "lane": "exclusive",
+    "reason": "large exhaustive operator corpus"
+  },
+  {
+    "module": "t/qualification/scheme-relational-test.ss",
+    "lane": "parallel",
+    "reason": "semantic assertions; process-local state; unchanged default Core Case profile"
+  }
+]

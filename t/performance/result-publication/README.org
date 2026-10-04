@@ -1,0 +1,157 @@
+#+TITLE: Demand-driven persistent result publication
+
+* One publication lifecycle
+
+Retained engines publish an independent vector of row promises. Each promise
+closes only its persistent row root; forcing it creates the ordered public list.
+Unchanged roots share the same promise across publications. Unread intermediate
+snapshots avoid copying entire relations, and demanded unchanged relations reuse
+their ordered list. A new engine owns a new cache; no global cache is introduced.
+
+This delays row-header materialization, not derivation, validation, storage
+expansion, lattice admission or budget enforcement. The public rows-of and
+relation-sizes methods return the same ordinary lists/counts and memoize the
+row view on demand. Changed roots use new promises. Engine commits prepend new
+owned prefixes or replace lattice roots, so historical promises remain stable.
+Published result vectors and private mutable cache vectors are distinct.
+
+One-shot evaluation retains its original eager representation and object
+construction. The existing private invocation argument carries either the
+one-shot deadline or a retained context with deadline/root/promise vectors.
+This avoids introducing an additional captured engine variable or run parameter
+into the one-shot path. Timeout validation and round-boundary admission remain
+unchanged. A normal retained run resets its context deadline before resuming.
+
+* Exact preceding reference
+
+baseline.txt pins commit 3b25769. verify-reference.py reconstructs the evaluator
+using only relative import relocation and two exported-name alpha renames.
+Analysis, positive plans, public Session, physical indexes and storage code are
+unchanged shared dependencies. The final native runs resolve current evaluator,
+publication kernel and reference evaluator into the same isolated .ssi library;
+module paths and source manifests are retained beside each raw receipt.
+
+qualified.sources also pins the build entrypoints and functional test fixture.
+
+* Complete-output measurement
+
+The probe reuses the nine preceding execution-workspace workloads and adds a
+complete retained workload with 4096 static facts and eight appends to a second
+relation. Every measured call reads all relations of its final result inside
+the timer. Both old and new therefore pay final row materialization and name
+projection before the timing sample ends; semantic checks remain outside timing.
+These consumption costs were outside the earlier probes' timers, so timing and
+allocation numbers are not transferred from those earlier receipts.
+
+Seven one-shot workloads are non-regression controls requiring non-increasing
+median allocation. The two retained append workloads and the new retained-static
+workload require lower median allocation and at least 900 strict paired byte
+wins. This primary/control classification is specific to retained publication;
+the old benchmark recipes and original SS classifications are unchanged.
+
+Each final run uses 20 warmups and 1000 alternating old/new pairs, identical
+inputs and expected outcomes, Gambit cumulative allocation counter slot 7,
+and no forced per-sample GC. Timing claims require a lower median and at least
+900 strict paired time wins in both final runs. Raw samples retain p95 and all
+wins; no uniform tail-latency claim follows from a median improvement.
+
+* Functional publication checks
+
+Five new native Cases cover persistent historical snapshots across 16 updates;
+unchanged-row sharing, duplicate append and source replacement; independent
+engines sharing analysis; exact unknown-relation errors and rule-time metadata;
+and late demand of a timed-out partial snapshot after resuming to completion.
+The earlier focused run passed all five Cases. The final full suite checks
+the corrected shared-analysis fixture and requires all Case completions and
+native module, harness and final OK markers, rejecting native exit-zero errors.
+
+* Rejected attempts and cause boundary
+
+A retention probe on the original engine drops the weakly observed index after
+GC while its result remains readable. It does not reproduce an index leak;
+this change does not claim to fix one. The installed Case profile's periodic
+sampler defaults to collect-before-sample? false; that sampler is not evidence
+of periodic forced GC. ASP itself reconditions groups outside timed attempts,
+and automatic GC remains part of an attempt. No profile or dependency changes.
+
+The first source/test fixtures had missing closing parentheses; their failed
+native logs remain. Moving result-object construction outside the evaluator
+increased one-shot allocation and was rejected. An eager cache in the engine
+scope added captured-variable cost; a separate run parameter still added cost.
+Those samples remain diagnostic failures, excluded from the final claims.
+The first passing representation exceeded the production module line limit.
+Snapshot query helpers were moved into the publication module; pre-extraction
+receipts remain separate and are excluded from exact final-source claims.
+The final representation uses the existing private invocation context, retains
+one-shot construction, and makes retained row views demand-driven.
+
+* Reproduction
+
+#+begin_src sh
+GERBIL_PATH=/private/tmp/ascent-test-scheduling-gerbil GERBIL_BUILD_CORES=12 \
+  python3 t/performance/result-publication/qualify.py
+python3 t/performance/result-publication/verify-reference.py
+#+end_src
+
+The qualifier runs two isolated complete-output pairs, production policy,
+complete functional suite, and four unchanged original Session SS scenarios.
+All timing stages use the existing exclusive test lease, native timeouts and
+1 GiB heap fence. The paired recipe requires ten completed workloads, three
+isolated native module paths, final OK and absence of native errors/overflows.
+
+* Final complete-output results
+
+Both final runs passed all ten allocation gates with exact current source
+manifests. Production policy passed for all 41 selected modules. No workload
+met the timing claim requirement in both runs; these are allocation gains.
+
+| Retained workload | Old median bytes | New median bytes | Reduction | Byte wins first/repeat | Time wins first/repeat |
+|-------------------+------------------+------------------+-----------+------------------------+------------------------|
+| retained-append-16 | 335280 | 328208 | 2.11% | 981/981 | 492/560 |
+| retained-append-64 | 805968 | 626864 | 22.22% | 945/942 | 845/908 |
+| retained-static-4096-8 | 2498176 | 926112 | 62.93% | 970/970 | 806/842 |
+
+All seven one-shot controls kept exactly the same median allocation. This
+does not establish time non-regression: high-fanout 100x100 median time changed
+14.967 to 14.621 ms in the first run and 16.731 to 17.503 ms in the repeat
+(4.6% higher); repeat p95 was 83.593 to 84.148 ms. The small chain median
+changed 20 to 21 microseconds in the repeat. Retained-append-16 p95 was also
+higher in both runs (373 to 434 and 328 to 337 microseconds). No uniform
+latency or tail improvement is claimed; every scalar and raw pair remains
+in final-first.json/sexp and final-repeat.json/sexp.
+
+* Final native qualification
+
+Production policy selected 41 modules and completed with zero findings/errors.
+The exact final functional suite completed 48 modules and 372 Cases; every
+requested module, Case completion, module/harness/final OK and absence of
+native error/overflow was checked by collect-suite.py. Individual raw logs and
+coverage are retained under qualification/, suite-receipt.json and
+suite-coverage.json. Both complete-output pairs and the full suite used the
+same qualified.sources production code. The corrected independence Case
+explicitly gives the second engine the first engine's analysis and schema.
+
+* Original Session SS scope
+
+Four original Session scenarios are rerun without changing fixtures, profiles,
+sampling counts, heap fences or budgets. verify-reference.py checks their
+source/profile equality against the exact preceding commit. Their timed phase
+does not force every final row view; semantic demand follows the timer. A
+pass qualifies the original declared phase only. Complete-output gains above
+come from the paired probe that forces all final relations within the timer.
+The other thirteen original SS scenarios were not rerun here; the previous
+17-scenario receipt and its nine time-gate failures remain an open boundary.
+
+| Original scenario | p95 | Original gate |
+|-------------------+-----+---------------|
+| ascent-session-update | 922us | PASS |
+| ascent-ten-thousand-appends | 104.996ms | FAIL |
+| ascent-nonpositive-session-update | 978us | PASS |
+| ascent-product-session | 1.938ms | PASS |
+
+The 10000-append sample preserved exact output but failed the original
+50 ms gate: p50 25.026 ms, p95 104.996 ms, max 366.140 ms, 238/1000
+above 50 ms. The qualifier consequently exits 1; summary.json retains each
+stage exit independently. This is an unresolved latency gate. Native test
+exit zero did not hide the Case/Harness error: the recipe rejected it.
+No claim is made that publication alone closes the original latency suite.

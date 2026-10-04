@@ -1,0 +1,781 @@
+{
+  "modules": 43,
+  "cases": 345,
+  "results": [
+    {
+      "module": "t/qualification/ascent-aggregate-program-test.ss",
+      "exit": 0,
+      "seconds": 7.358831292003742,
+      "log": "t/performance/suite-execution/final-native/ascent-aggregate-program-test.log",
+      "lane": "parallel",
+      "cases": 6,
+      "case_names": [
+        "builtins and custom aggregator over source rows",
+        "empty input follows Rust aggregate cardinality",
+        "aggregate result destructures a native pattern",
+        "aggregate output pattern rejects a mismatched value",
+        "aggregate a completed recursive closure in a higher stratum",
+        "recursive aggregate dependency rejects"
+      ]
+    },
+    {
+      "module": "t/qualification/ascent-binary-program-test.ss",
+      "exit": 0,
+      "seconds": 6.493700958999398,
+      "log": "t/performance/suite-execution/final-native/ascent-binary-program-test.log",
+      "lane": "parallel",
+      "cases": 9,
+      "case_names": [
+        "recursive copy and join match the existing cyclic closure",
+        "diamond and support withdrawal match the Rust pair fixtures",
+        "seeded recursive head preserves source facts and rule order",
+        "Ascent if-clause parity composes guarded facts with a join",
+        "guarded selection feeds both a copy and a join",
+        "two changing join inputs and multiple heads",
+        "staged recursive closure uses the composable evaluator",
+        "sparse radix retains the same binary join semantics",
+        "invalid declarations and pair budget fail"
+      ]
+    },
+    {
+      "module": "t/qualification/ascent-binding-program-test.ss",
+      "exit": 0,
+      "seconds": 8.116871083999285,
+      "log": "t/performance/suite-execution/final-native/ascent-binding-program-test.log",
+      "lane": "parallel",
+      "cases": 1,
+      "case_names": [
+        "all mixed-program relations match raw binding and goldens"
+      ]
+    },
+    {
+      "module": "t/qualification/ascent-binding-test.ss",
+      "exit": 0,
+      "seconds": 6.464071249996778,
+      "log": "t/performance/suite-execution/final-native/ascent-binding-test.log",
+      "lane": "parallel",
+      "cases": 11,
+      "case_names": [
+        "nullary terms retain existing environments",
+        "all unary terms preserve bindings and rejection",
+        "all binary terms preserve binding order and repeats",
+        "all ternary terms preserve binding order and repeats",
+        "all four-column terms preserve binding order and repeats",
+        "pattern outputs stay bound for later variable comparisons",
+        "row-local expression inputs retain evaluation order",
+        "external bindings still reject mismatches",
+        "false values are bindings rather than missing names",
+        "failed and malformed patterns preserve outcomes",
+        "admission still rejects duplicate pattern bindings"
+      ]
+    },
+    {
+      "module": "t/qualification/ascent-byods-index-test.ss",
+      "exit": 0,
+      "seconds": 9.12807087499823,
+      "log": "t/performance/suite-execution/final-native/ascent-byods-index-test.log",
+      "lane": "parallel",
+      "cases": 2,
+      "case_names": [
+        "grouped eqrel lookup uses custom composite index",
+        "custom BYODS index survives append and replacement"
+      ]
+    },
+    {
+      "module": "t/qualification/ascent-byods-invariants-test.ss",
+      "exit": 0,
+      "seconds": 14.432969958004833,
+      "log": "t/performance/suite-execution/final-native/ascent-byods-invariants-test.log",
+      "lane": "parallel",
+      "cases": 6,
+      "case_names": [
+        "all directed edge subsets preserve closure and insertion order independence",
+        "four-node sparse subsets preserve larger merges",
+        "eight-node cycles and bridges preserve closure",
+        "four-node edges close across every two-producer partition",
+        "eight-node producer partitions retain complete joins",
+        "grouped storage isolates two interleaved edge sets"
+      ]
+    },
+    {
+      "module": "t/qualification/ascent-closure-candidates-test.ss",
+      "exit": 0,
+      "seconds": 4.547486416995525,
+      "log": "t/performance/suite-execution/final-native/ascent-closure-candidates-test.log",
+      "lane": "parallel",
+      "cases": 6,
+      "case_names": [
+        "shortest support and canonical tie selection",
+        "withdrawal selects surviving support and then removes result",
+        "cycle has finite shortest reflexive support",
+        "sixty-four-node chain retains exact shortest supports",
+        "bounded result truncates after complete closure",
+        "input and theoretical pair budgets reject early"
+      ]
+    },
+    {
+      "module": "t/qualification/ascent-contract-union-test.ss",
+      "exit": 0,
+      "seconds": 7.839861749998818,
+      "log": "t/performance/suite-execution/final-native/ascent-contract-union-test.log",
+      "lane": "parallel",
+      "cases": 3,
+      "case_names": [
+        "six clause prototypes retain full responsibility checks",
+        "overlapping prototypes retain ordered fallback admission",
+        "relation and lattice union rejects malformed responsibilities"
+      ]
+    },
+    {
+      "module": "t/qualification/ascent-eqrel-program-test.ss",
+      "exit": 0,
+      "seconds": 4.62641904100019,
+      "log": "t/performance/suite-execution/final-native/ascent-eqrel-program-test.log",
+      "lane": "exclusive",
+      "cases": 24,
+      "case_names": [
+        "binary eqrel yields reflexive symmetric transitive facts",
+        "ternary eqrel isolates leading groups",
+        "source eqrel facts are materialized at initialization",
+        "eqrel component state is private to concurrent runs",
+        "trrel preserves directed reachability without reflexive facts",
+        "trrel excludes cyclic self reachability",
+        "trrel keeps explicit reflexive facts",
+        "trrel_uf exposes reflexive transitive closure",
+        "directed closure state is private to concurrent runs",
+        "BYODS relations join with typed group and wanted facts",
+        "BYODS rules merge independently sourced path segments",
+        "eqrel delta joins two producer rules in one group",
+        "BYODS session joins a later source producer",
+        "nonpositive BYODS session matches fresh state and rejects invalid input",
+        "BYODS source withdrawal rebuilds a larger transitive relation",
+        "BYODS providers emit only new rows across edge prefixes",
+        "BYODS budget rejection leaves provider state reusable",
+        "BYODS session can continue after a rejected append",
+        "invalid storage method output fails at the boundary",
+        "invalid or over-budget Provider batch cannot partially update a session",
+        "mutating Provider failure leaves retained session reusable",
+        "failed run restores the last committed source snapshot",
+        "eqrel output stays within the program fact budget",
+        "materialized source facts count toward total output"
+      ]
+    },
+    {
+      "module": "t/qualification/ascent-finite-evidence-test.ss",
+      "exit": 0,
+      "seconds": 16.78677237500233,
+      "log": "t/performance/suite-execution/final-native/ascent-finite-evidence-test.log",
+      "lane": "parallel",
+      "cases": 9,
+      "case_names": [
+        "negation and count have an exact snapshot-relative closure",
+        "closed absence after negative and aggregate strata",
+        "source correction changes count but not old evidence",
+        "replay mismatch is not certified",
+        "oversized external closure is rejected before replay",
+        "strict dependency cycle has no finite certificate",
+        "all fixed reducers and empty groups",
+        "negated wildcard checks absence of any matching row",
+        "all 64 three-node graphs match a separate reachability model"
+      ]
+    },
+    {
+      "module": "t/qualification/ascent-index-program-test.ss",
+      "exit": 0,
+      "seconds": 9.53771958300058,
+      "log": "t/performance/suite-execution/final-native/ascent-index-program-test.log",
+      "lane": "parallel",
+      "cases": 7,
+      "case_names": [
+        "bound-column index preserves two-hop join semantics",
+        "a custom alist Provider replaces the physical index",
+        "composite group and node index preserves two-hop joins",
+        "source append extends an existing index without rebuilding",
+        "bound composite key reads a merged lattice through its index",
+        "lattice refinement removes obsolete indexed relation rows",
+        "malformed Provider values fail at the boundary"
+      ]
+    },
+    {
+      "module": "t/qualification/ascent-invalid-program-test.ss",
+      "exit": 0,
+      "seconds": 11.548583625000902,
+      "log": "t/performance/suite-execution/final-native/ascent-invalid-program-test.log",
+      "lane": "parallel",
+      "cases": 1,
+      "case_names": [
+        "dependency and safety errors have distinct causes"
+      ]
+    },
+    {
+      "module": "t/qualification/ascent-lattice-program-test.ss",
+      "exit": 0,
+      "seconds": 10.875870834002853,
+      "log": "t/performance/suite-execution/final-native/ascent-lattice-program-test.log",
+      "lane": "parallel",
+      "cases": 11,
+      "case_names": [
+        "recursive shortest paths replace weaker key values",
+        "ordinary projection waits for lattice fixed point",
+        "timeout resumes across the lattice projection stratum",
+        "lattice projection feedback rejects a strict cycle",
+        "empty and invalid lattice declarations",
+        "C4 lattice refinements validate joined values",
+        "session joins direct lattice source values",
+        "direct lattice append rejects before changing state",
+        "mixed lattice source and rule updates match fresh fixed points",
+        "source replacement retracts lattice and derived contributions",
+        "lattice refinement updates a later negative stratum"
+      ]
+    },
+    {
+      "module": "t/qualification/ascent-module-program-test.ss",
+      "exit": 0,
+      "seconds": 7.135899959001108,
+      "log": "t/performance/suite-execution/final-native/ascent-module-program-test.log",
+      "lane": "parallel",
+      "cases": 3,
+      "case_names": [
+        "reused module captures each caller origin",
+        "POO slot refinement creates a second input snapshot",
+        "C4 combines independent ASCENT declaration refinements"
+      ]
+    },
+    {
+      "module": "t/qualification/ascent-multi-frontier-test.ss",
+      "exit": 0,
+      "seconds": 8.085157708999759,
+      "log": "t/performance/suite-execution/final-native/ascent-multi-frontier-test.log",
+      "lane": "parallel",
+      "cases": 9,
+      "case_names": [
+        "three-atom empty frontiers preserve exact fixed points",
+        "indexed prefix callbacks remain observable before an empty third atom",
+        "recursive chains retain exact row order and sizes",
+        "all two-node graphs retain independent reachability goldens",
+        "session appends and replacements keep committed sizes",
+        "custom index Provider callbacks retain their exact count",
+        "guard and generator prefix callback counts are unchanged",
+        "lattice replacement keeps key cardinality and strongest rows",
+        "timeout resumption preserves the final fixed point"
+      ]
+    },
+    {
+      "module": "t/qualification/ascent-mutual-program-test.ss",
+      "exit": 0,
+      "seconds": 3.844406208001601,
+      "log": "t/performance/suite-execution/final-native/ascent-mutual-program-test.log",
+      "lane": "exclusive",
+      "cases": 4,
+      "case_names": [
+        "cycle reaches a fixed point across two relations",
+        "source order does not change the fixed point",
+        "retained multi-head SCC matches fresh snapshots after source additions",
+        "independent fixed-point runs are reentrant across workers"
+      ]
+    },
+    {
+      "module": "t/qualification/ascent-observability-test.ss",
+      "exit": 0,
+      "seconds": 3.118347875002655,
+      "log": "t/performance/suite-execution/final-native/ascent-observability-test.log",
+      "lane": "exclusive",
+      "cases": 2,
+      "case_names": [
+        "a POO slot override rejects an over-budget SS Case",
+        "a POO Case slot interrupts a stalled operation"
+      ]
+    },
+    {
+      "module": "t/qualification/ascent-poo-primitives-test.ss",
+      "exit": 0,
+      "seconds": 5.64373158300441,
+      "log": "t/performance/suite-execution/final-native/ascent-poo-primitives-test.log",
+      "lane": "parallel",
+      "cases": 3,
+      "case_names": [
+        "late refinement supplies a demanded relation slot",
+        "C4 precedence composes a shared prototype once",
+        "standard persistent set builds independent source snapshots"
+      ]
+    },
+    {
+      "module": "t/qualification/ascent-positive-nonmembership-test.ss",
+      "exit": 0,
+      "seconds": 6.53098041699559,
+      "log": "t/performance/suite-execution/final-native/ascent-positive-nonmembership-test.log",
+      "lane": "parallel",
+      "cases": 8,
+      "case_names": [
+        "public receipt carries independently verifiable absence",
+        "closed relation set certifies missing ground target",
+        "mutable or forged snapshot content invalidates certificate",
+        "checker rejects omitted input and broken rule closure",
+        "oversized external certificates fail before rule traversal",
+        "candidate fact is required in closure",
+        "fixed arithmetic is replayed in an absence certificate",
+        "non-ground, nonpositive and incomplete executions abstain"
+      ]
+    },
+    {
+      "module": "t/qualification/ascent-positive-provenance-test.ss",
+      "exit": 0,
+      "seconds": 6.61977512500016,
+      "log": "t/performance/suite-execution/final-native/ascent-positive-provenance-test.log",
+      "lane": "parallel",
+      "cases": 6,
+      "case_names": [
+        "public attempt binds native completion to replayable proof",
+        "recursive rule DAG separates observed and candidate facts",
+        "wrong native answer and insufficient work cannot prove",
+        "repeated variables, multi-source join and derived cap",
+        "fixed filters and computations replay in a proof DAG",
+        "absence and nonpositive clauses have no proof claim"
+      ]
+    },
+    {
+      "module": "t/qualification/ascent-reasoning-library-test.ss",
+      "exit": 0,
+      "seconds": 5.9664388750024955,
+      "log": "t/performance/suite-execution/final-native/ascent-reasoning-library-test.log",
+      "lane": "exclusive",
+      "cases": 12,
+      "case_names": [
+        "complete witness, absent cut, withdrawal, and retained receipt",
+        "hypothetical source fact stays labelled and unpromoted",
+        "structural errors have paths",
+        "compiling wrong join is observed, not repaired",
+        "bounded failure and source declaration validation",
+        "inert data preflight bounds cycles and depth before parsing",
+        "nonreflexive empty graph has complete unsupported evidence",
+        "checked candidate clauses share trusted Scheme semantics",
+        "optional receipt proof follows source and candidate binding",
+        "scripted feedback revision stays bound to exact source and proposal",
+        "candidate modes and stratification reject at their boundary",
+        "all sixty-four three-node graphs match finite reference"
+      ]
+    },
+    {
+      "module": "t/qualification/ascent-request-projection-test.ss",
+      "exit": 0,
+      "seconds": 2.9002395829957095,
+      "log": "t/performance/suite-execution/final-native/ascent-request-projection-test.log",
+      "lane": "parallel",
+      "cases": 2,
+      "case_names": [
+        "projects an opaque source identity without a receipt schema",
+        "rejects a zero evaluation bound"
+      ]
+    },
+    {
+      "module": "t/qualification/ascent-rule-program-test.ss",
+      "exit": 0,
+      "seconds": 5.4894872500008205,
+      "log": "t/performance/suite-execution/final-native/ascent-rule-program-test.log",
+      "lane": "exclusive",
+      "cases": 12,
+      "case_names": [
+        "mixed ternary inputs derive four-column, unary and recursive rows",
+        "source withdrawal recomputes without changing earlier result",
+        "positive session retains rows across source additions",
+        "ten thousand positive appends retain order and recover state",
+        "staged Set rows share one global output budget",
+        "batched Set duplicates retain first source order",
+        "session recomputes negation after source updates",
+        "nonpositive recomputation rejects over-budget source atomically",
+        "empty rule set preserves sources and returns",
+        "POO rule refinement receives its own immutable analysis",
+        "zero-column fact gates typed boolean and string rows",
+        "arity, unsafe heads, and derived budgets reject"
+      ]
+    },
+    {
+      "module": "t/qualification/ascent-scc-summary-test.ss",
+      "exit": 0,
+      "seconds": 7.358721832999436,
+      "log": "t/performance/suite-execution/final-native/ascent-scc-summary-test.log",
+      "lane": "parallel",
+      "cases": 1,
+      "case_names": [
+        "recursive pair and acyclic rules have distinct SCCs"
+      ]
+    },
+    {
+      "module": "t/qualification/ascent-set-batch-test.ss",
+      "exit": 0,
+      "seconds": 7.187332624998817,
+      "log": "t/performance/suite-execution/final-native/ascent-set-batch-test.log",
+      "lane": "parallel",
+      "cases": 4,
+      "case_names": [
+        "finite logs and staged prefixes preserve independent goldens and row identity",
+        "nullary and heterogeneous rows preserve membership",
+        "large duplicate batches preserve first occurrence identity",
+        "unique full logs retain the original spine"
+      ]
+    },
+    {
+      "module": "t/qualification/ascent-set-emit-test.ss",
+      "exit": 0,
+      "seconds": 7.972324957998353,
+      "log": "t/performance/suite-execution/final-native/ascent-set-emit-test.log",
+      "lane": "parallel",
+      "cases": 12,
+      "case_names": [
+        "built-in Set retains two field checks per emission including duplicates",
+        "duplicate emissions retain derived and output budget boundaries",
+        "custom storage expansion preserves callback observations and sizes",
+        "three-atom empty frontiers preserve exact fixed points",
+        "indexed prefix callbacks remain observable before an empty third atom",
+        "recursive chains retain exact row order and sizes",
+        "all two-node graphs retain independent reachability goldens",
+        "session appends and replacements keep committed sizes",
+        "custom index Provider callbacks retain their exact count",
+        "guard and generator prefix callback counts are unchanged",
+        "lattice replacement keeps key cardinality and strongest rows",
+        "timeout resumption preserves the final fixed point"
+      ]
+    },
+    {
+      "module": "t/qualification/ascent-set-size-test.ss",
+      "exit": 0,
+      "seconds": 7.7209306660006405,
+      "log": "t/performance/suite-execution/final-native/ascent-set-size-test.log",
+      "lane": "parallel",
+      "cases": 10,
+      "case_names": [
+        "custom storage expansion preserves callback observations and sizes",
+        "three-atom empty frontiers preserve exact fixed points",
+        "indexed prefix callbacks remain observable before an empty third atom",
+        "recursive chains retain exact row order and sizes",
+        "all two-node graphs retain independent reachability goldens",
+        "session appends and replacements keep committed sizes",
+        "custom index Provider callbacks retain their exact count",
+        "guard and generator prefix callback counts are unchanged",
+        "lattice replacement keeps key cardinality and strongest rows",
+        "timeout resumption preserves the final fixed point"
+      ]
+    },
+    {
+      "module": "t/qualification/ascent-set-source-test.ss",
+      "exit": 0,
+      "seconds": 6.902888500000699,
+      "log": "t/performance/suite-execution/final-native/ascent-set-source-test.log",
+      "lane": "parallel",
+      "cases": 14,
+      "case_names": [
+        "all short three-symbol source logs preserve order and row identity",
+        "custom source expansion retains exact callback snapshots and row order",
+        "identity storage preserves duplicate source order and counts",
+        "source rows mutated after declaration are checked again",
+        "duplicate facts still consume the source budget",
+        "field callbacks retain both source and stored-row checks",
+        "a stateful field predicate still fails its second check",
+        "an inherited custom Provider still receives every source row",
+        "custom Provider row widths are still checked",
+        "custom Provider expansion retains the materialized budget",
+        "nullary Set sources and derived facts retain their multiplicities",
+        "direct staging retains derived and total fact budgets",
+        "derived field callbacks retain their second validation",
+        "derived custom storage still receives each candidate"
+      ]
+    },
+    {
+      "module": "t/qualification/ascent-size-test.ss",
+      "exit": 0,
+      "seconds": 7.642492291000963,
+      "log": "t/performance/suite-execution/final-native/ascent-size-test.log",
+      "lane": "parallel",
+      "cases": 7,
+      "case_names": [
+        "recursive chains retain exact row order and sizes",
+        "all two-node graphs retain independent reachability goldens",
+        "session appends and replacements keep committed sizes",
+        "custom index Provider callbacks retain their exact count",
+        "guard and generator prefix callback counts are unchanged",
+        "lattice replacement keeps key cardinality and strongest rows",
+        "timeout resumption preserves the final fixed point"
+      ]
+    },
+    {
+      "module": "t/qualification/ascent-source-admission-test.ss",
+      "exit": 0,
+      "seconds": 6.41822254100407,
+      "log": "t/performance/suite-execution/final-native/ascent-source-admission-test.log",
+      "lane": "parallel",
+      "cases": 12,
+      "case_names": [
+        "identity storage preserves duplicate source order and counts",
+        "source rows mutated after declaration are checked again",
+        "duplicate facts still consume the source budget",
+        "field callbacks retain both source and stored-row checks",
+        "a stateful field predicate still fails its second check",
+        "an inherited custom Provider still receives every source row",
+        "custom Provider row widths are still checked",
+        "custom Provider expansion retains the materialized budget",
+        "nullary Set sources and derived facts retain their multiplicities",
+        "direct staging retains derived and total fact budgets",
+        "derived field callbacks retain their second validation",
+        "derived custom storage still receives each candidate"
+      ]
+    },
+    {
+      "module": "t/qualification/ascent-strata-test.ss",
+      "exit": 0,
+      "seconds": 5.8905672499968205,
+      "log": "t/performance/suite-execution/final-native/ascent-strata-test.log",
+      "lane": "parallel",
+      "cases": 3,
+      "case_names": [
+        "strict incoming edges lift every member of a positive SCC",
+        "all three-node graphs preserve minimum strata and cycle diagnostics",
+        "empty declarations and duplicate edges retain their strata"
+      ]
+    },
+    {
+      "module": "t/qualification/ascent-stratified-proof-test.ss",
+      "exit": 0,
+      "seconds": 9.219907999999123,
+      "log": "t/performance/suite-execution/final-native/ascent-stratified-proof-test.log",
+      "lane": "parallel",
+      "cases": 12,
+      "case_names": [
+        "hypothetical fact support is bound to its clause label",
+        "founded negation, computation and count rule instances",
+        "recursive producer roots have founded earlier support",
+        "producer handles comparison, identity and negative wildcard",
+        "all sixty-four finite graphs have checked producer roots",
+        "recursive strata track source correction and distinct support",
+        "stale finite certificate cannot produce a proof",
+        "finite replay and proof search expose separate budget caps",
+        "repeated, omitted and forward group support fail",
+        "changed snapshot, closure and proof budget do not certify",
+        "model-study input agrees with Rust and finite expectations",
+        "all reducers require an exact contributing group"
+      ]
+    },
+    {
+      "module": "t/qualification/ascent-syntax-test.ss",
+      "exit": 0,
+      "seconds": 7.739064207999036,
+      "log": "t/performance/suite-execution/final-native/ascent-syntax-test.log",
+      "lane": "parallel",
+      "cases": 24,
+      "case_names": [
+        "lexical literals and multiple fact heads",
+        "program default storage reaches local macro relations",
+        "nested disjunction composes finite rule bodies",
+        "head expressions require bound inputs",
+        "body expression compares after an atom binding",
+        "body expression reads a prior column in one atom",
+        "bound body expression uses the Provider index",
+        "inline pattern binds later columns in one atom",
+        "inline pattern rejects duplicate bindings",
+        "inline pattern cannot bind in rule head",
+        "each wildcard ignores one column independently",
+        "let and for destructure native Gerbil values",
+        "typed relation checks source and derived fields",
+        "typed session update rejects before mutation",
+        "imported Scheme fragment closes recursive path",
+        "POO fragment refinement changes included source",
+        "included relation identity rejects duplicates",
+        "Gerbil macro generates a reusable POO fragment",
+        "inline hygienic macro expands fragments in declaration order",
+        "inline macro emits a relation and rule as one fragment",
+        "typed macro ident parameter rejects a literal",
+        "typed macro rejects an unsupported parameter kind",
+        "included fragment expression is validated once",
+        "included value must satisfy the POO fragment contract"
+      ]
+    },
+    {
+      "module": "t/qualification/ascent-table-expression-test.ss",
+      "exit": 0,
+      "seconds": 5.621004332999291,
+      "log": "t/performance/suite-execution/final-native/ascent-table-expression-test.log",
+      "lane": "parallel",
+      "cases": 8,
+      "case_names": [
+        "indexed composition deduplicates the diamond's two-hop path",
+        "a cycle produces only its bounded two-hop self pairs",
+        "frontier steps deduplicate alternate paths and terminate on a cycle",
+        "empty source has an empty closure",
+        "Dual shortest-distance lattice keeps the minimum path",
+        "Dual lattice stabilizes on a cycle and a sparse radix",
+        "larger radix retains sparse snapshot and membership behavior",
+        "rejects a radix that would alias pair identities"
+      ]
+    },
+    {
+      "module": "t/qualification/ascent-timeout-test.ss",
+      "exit": 0,
+      "seconds": 4.931458457998815,
+      "log": "t/performance/suite-execution/final-native/ascent-timeout-test.log",
+      "lane": "exclusive",
+      "cases": 10,
+      "case_names": [
+        "zero budget commits rounds and resumes",
+        "source changes wait for partial fixed point",
+        "resumed recursion feeds a later negation stratum",
+        "lattice joins survive a partial round boundary",
+        "BYODS closure and downstream copy resume together",
+        "replacement runs honor a zero timeout",
+        "negated source appends honor a zero timeout",
+        "lattice source appends honor a zero timeout",
+        "timeout duration validation leaves session usable",
+        "failed resume restores the accepted source snapshot"
+      ]
+    },
+    {
+      "module": "t/qualification/ascent-timing-test.ss",
+      "exit": 0,
+      "seconds": 3.832733625000401,
+      "log": "t/performance/suite-execution/final-native/ascent-timing-test.log",
+      "lane": "exclusive",
+      "cases": 1,
+      "case_names": [
+        "timed result and retained snapshots"
+      ]
+    },
+    {
+      "module": "t/qualification/scheme-library-contract-test.ss",
+      "exit": 0,
+      "seconds": 6.374121667002328,
+      "log": "t/performance/suite-execution/final-native/scheme-library-contract-test.log",
+      "lane": "exclusive",
+      "cases": 3,
+      "case_names": [
+        "eight diagnostic graphs share one finite model",
+        "multi-source withdrawal and failed transaction are atomic",
+        "resource exhaustion is never a completed answer"
+      ]
+    },
+    {
+      "module": "t/qualification/scheme-native-integration-test.ss",
+      "exit": 0,
+      "seconds": 5.736497167003108,
+      "log": "t/performance/suite-execution/final-native/scheme-native-integration-test.log",
+      "lane": "parallel",
+      "cases": 1,
+      "case_names": [
+        "views, negation, reduction and lattice survive withdrawal"
+      ]
+    },
+    {
+      "module": "t/qualification/scheme-native-language-test.ss",
+      "exit": 0,
+      "seconds": 5.297195917002682,
+      "log": "t/performance/suite-execution/final-native/scheme-native-language-test.log",
+      "lane": "parallel",
+      "cases": 7,
+      "case_names": [
+        "explicit value capture freezes a scalar at construction",
+        "mutable host capture is rejected",
+        "negative read uses completed lower stratum",
+        "negative source withdrawal recomputes without rewriting old result",
+        "a negative cycle is rejected after whole-program composition",
+        "planner reports the actual failing body and head locations",
+        "successful report carries the admitted program"
+      ]
+    },
+    {
+      "module": "t/qualification/scheme-native-reduction-test.ss",
+      "exit": 0,
+      "seconds": 5.559901083994191,
+      "log": "t/performance/suite-execution/final-native/scheme-native-reduction-test.log",
+      "lane": "parallel",
+      "cases": 6,
+      "case_names": [
+        "count and sum group by an already bound key",
+        "numeric reducer rejects a noninteger row",
+        "checked max lattice keeps the best value per key",
+        "lattice fragment composes and remains instance local",
+        "lattice source replacement keeps prior solved snapshot",
+        "unknown lattice join and invalid values reject"
+      ]
+    },
+    {
+      "module": "t/qualification/scheme-operator-retained-test.ss",
+      "exit": 0,
+      "seconds": 14.828643833003298,
+      "log": "t/performance/suite-execution/final-native/scheme-operator-retained-test.log",
+      "lane": "exclusive",
+      "cases": 6,
+      "case_names": [
+        "all finite graphs survive append, duplicate and withdrawal",
+        "fixed captured source and finite mapping share retained solve",
+        "batch replacement commits both sources and nested closure",
+        "failed batch preserves all sources and the prior result",
+        "invalid or over-budget update preserves last result",
+        "failed output budget does not publish an insertion"
+      ]
+    },
+    {
+      "module": "t/qualification/scheme-operator-test.ss",
+      "exit": 0,
+      "seconds": 9.96271883299778,
+      "log": "t/performance/suite-execution/final-native/scheme-operator-test.log",
+      "lane": "exclusive",
+      "cases": 19,
+      "case_names": [
+        "projected join compiles directly to its output relation",
+        "projected join retains zero-arity and repeated columns",
+        "fixed-point union branches target the fixed relation",
+        "sixty-four graph fixed points equal independent closure",
+        "reference change matches finite closure set difference",
+        "both changing join sides and a finite map propagate inserts",
+        "selection after join sees only new paths",
+        "nested fixed points with an outer changing parameter",
+        "zero-change propagation avoids old recursive joins",
+        "select, project, finite flatmap and union share one solve",
+        "fixed-point placeholder is local to its builder",
+        "one relation transformer applies to two distinct inputs",
+        "shared child cannot capture a fixed-point parameter",
+        "one source withdrawal recompiles to a new complete result",
+        "two builder instances retain separate private names",
+        "operator graphs compose as fresh native fragments",
+        "delta prediction matches retained append and withdrawal",
+        "construction rejects hidden code and invalid shapes",
+        "growth budget cannot return a complete fixed point"
+      ]
+    },
+    {
+      "module": "t/qualification/scheme-relational-test.ss",
+      "exit": 0,
+      "seconds": 8.143842124998628,
+      "log": "t/performance/suite-execution/final-native/scheme-relational-test.log",
+      "lane": "parallel",
+      "cases": 28,
+      "case_names": [
+        "two fragment instances retain private identities",
+        "assembled program rejects duplicate instance",
+        "fragment export names are unique and instance scoped",
+        "fragment constructor freezes supplied export list",
+        "source handles must name local declarations",
+        "admission and query isolate source and result rows",
+        "admission copies rows from a mutable Core declaration",
+        "session replaces exported sources with snapshots",
+        "session append isolates caller row and rejects non-scalars",
+        "session restores last completed solve on budget failure",
+        "named program session replaces declared input",
+        "named transaction updates recursion and negation",
+        "named program evaluates a source expression once",
+        "admission rejects opaque host callbacks",
+        "admission rebuilds a claimed checked operator",
+        "whole-program admission rejects an absent import",
+        "solve fails when closure exceeds its fact budget",
+        "checked where and compute match finite Scheme model",
+        "literal scalar clauses bind at native construction",
+        "constant guard and captured symbol stay stable",
+        "checked operator modes reject invalid uses",
+        "recursive compute budget fails without a result",
+        "recursive closure equals independent graph model",
+        "all 64 simple directed graphs on three nodes",
+        "new source snapshot does not mutate old result",
+        "repeated variables and scalar literals",
+        "source replacement retains scalar contract",
+        "unsafe head, invalid source and budget fail"
+      ]
+    }
+  ]
+}

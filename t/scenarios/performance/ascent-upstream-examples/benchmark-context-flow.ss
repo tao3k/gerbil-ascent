@@ -1,0 +1,22 @@
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+((benchmarkKind . scenario-e2e)
+ (max_total . 1000us)
+ (target_total . 700us)
+ (regression_budget . 300us)
+ (expected_over_input_budget . 0us)
+ (sampleCount . 1000)
+ (targetRationale . "Evaluate the complete four-column context-flow program from pinned Rust Ascent.")
+ (unit . "us")
+ (sourcePath . "t/scenarios/performance/ascent-upstream-examples/benchmark-context-flow.ss")
+ (rule . GERBIL-SCHEME-AGENT-R031)
+ (feature . ascent-context-flow)
+ (optimizationFocus . "four-column joins and semi-naive recursive closure")
+ (inputShape . "two isolated three-edge context paths")
+ (expectedOutcome . "twelve flow rows and one ok result")
+ (expectedRepair . "reuse the immutable POO plan and bound-column indexes")
+ (baseline . "rebuild declaration and Provider method selections on every run")
+ (candidate . "cached POO relation schema and rule plan")
+ (measurementPhases candidate-context-flow assert-semantic-gate assert-time-gate)
+ (tags poo ascent context-flow recursion performance))

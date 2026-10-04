@@ -7,7 +7,7 @@
  (target_total . 700us)
  (regression_budget . 300us)
  (expected_over_input_budget . 0us)
- (sampleCount . 20)
+ (sampleCount . 1000)
  (targetRationale . "Materialize the equivalence closure of a twenty-edge chain from a predeclared POO program.")
  (unit . "us")
  (sourcePath . "t/scenarios/performance/ascent-byods-eqrel/benchmark.ss")

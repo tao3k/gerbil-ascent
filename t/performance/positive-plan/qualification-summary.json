@@ -1,0 +1,12 @@
+[
+  {
+    "name": "full-suite",
+    "exit": 0,
+    "seconds": 102.89540958300495
+  },
+  {
+    "name": "original-ss",
+    "exit": 1,
+    "seconds": 61.699042708998604
+  }
+]

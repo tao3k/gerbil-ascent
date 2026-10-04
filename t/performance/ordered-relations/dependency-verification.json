@@ -1,0 +1,6 @@
+{
+  "matched_dependencies": 299,
+  "prior_receipt": "t/performance/session-lifecycle/final-snapshot.json",
+  "current_receipt": "t/performance/ordered-relations/production-snapshot.json",
+  "identical": true
+}

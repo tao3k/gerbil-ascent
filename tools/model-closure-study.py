@@ -96,7 +96,7 @@ def source_closure(imports, log):
     return {record['root']: record['modules'] for record in records}
 
 
-def prepare(output):
+def probe(output):
     subprocess.run([sys.executable, str(ROOT/'tools/dsl-closure-artifact.py'), 'check'], cwd=ROOT, check=True)
     output.mkdir(parents=True, exist_ok=False)
     text = native(HARNESS + RUNTIME + ['t/qualification/scheme-model-closure-test.ss'], output/'preflight.native.log')
@@ -105,6 +105,11 @@ def prepare(output):
         raise ValueError('expected 24 unique independent native truths')
     imports = sorted({name for case in cases for name in case['imports']})
     closures = source_closure(imports, output/'source-closure.native.log')
+    return cases, closures
+
+
+def prepare(output):
+    cases, closures = probe(output)
     modules = {}
     families = list(dict.fromkeys(case['family'] for case in cases))
     if len(families) != 12:
@@ -368,10 +373,13 @@ def main():
     parser=argparse.ArgumentParser()
     modes=parser.add_subparsers(dest='mode',required=True)
     prepare_args=modes.add_parser('prepare');prepare_args.add_argument('output',type=Path)
+    probe_args=modes.add_parser('probe');probe_args.add_argument('output',type=Path)
     validate_args=modes.add_parser('validate');validate_args.add_argument('preview',type=Path);validate_args.add_argument('--approved-sha256',required=True)
     live_args=modes.add_parser('live');live_args.add_argument('preview',type=Path);live_args.add_argument('output',type=Path);live_args.add_argument('--approved-sha256',required=True)
     args=parser.parse_args()
     if args.mode=='prepare':prepare(args.output.resolve())
+    elif args.mode=='probe':
+        probe(args.output.resolve());print('NATIVE-SOURCE-PROBE-OK modelCalls=0',flush=True)
     elif args.mode=='validate':
         validate(args.preview.resolve(),args.approved_sha256);print('OFFLINE-VALID modelCalls=0',flush=True)
     else:live(args.preview.resolve(),args.output.resolve(),args.approved_sha256)

@@ -68,6 +68,40 @@
 
 (def scheme-session-deletion-test
   (test-suite "Native dependency invalidation and source withdrawal"
+    (test-case "source log comparison retains base order, reverse appends, duplicates and nullary facts"
+      (for-each
+       (lambda (fixture)
+         (let* ((base (vector-ref fixture 1)) (additions (vector-ref fixture 2))
+                (before (vector (cons base additions)))
+                (candidate (gerbil-ascent-program
+                            (list (gerbil-ascent-relation 'input (vector-ref fixture 0)
+                                                         (vector-ref fixture 3))) [] 64 64 128)))
+           (check-equal? (vector-ref (gerbil-ascent-update-selection before candidate (vector [] [] [])) 0)
+                         (vector-ref fixture 4))
+           (check-equal? (eq? base (car (vector-ref before 0))) #t)
+           (check-equal? (eq? additions (cdr (vector-ref before 0))) #t)))
+       (list '#(1 ((1) (1) (#f)) () ((1) (1) (#f)) #f)
+             '#(1 ((1) (1) (#f)) () ((1) (#f) (1)) #t)
+             '#(1 ((1) (1) (#f)) ((3) (2)) ((1) (1) (#f) (2) (3)) #f)
+             '#(1 ((1) (1) (#f)) ((3) (2)) ((1) (1) (#f) (3) (2)) #t)
+             '#(1 ((1) (1)) ((3) (2)) ((1) (2) (3)) #t)
+             '#(1 () ((3) (2)) ((2) (3)) #f)
+             '#(1 ((1)) ((3) (2)) () #t)
+             '#(0 (() ()) (()) (() () ()) #f)
+             '#(0 (() ()) (()) (() ()) #t))))
+    (test-case "replacement of a materialized append log retains closure and later updates"
+      (let* ((session (gerbil-ascent-open-session (path-program '((0 1)))))
+             (first (gerbil-ascent-session-run session)))
+        (gerbil-ascent-session-append-source! session 'edge '(1 2))
+        (gerbil-ascent-session-append-source! session 'edge '(2 3))
+        (let (appended (gerbil-ascent-session-run session))
+          (gerbil-ascent-session-replace-source! session 'edge '((0 1) (1 2) (2 3)))
+          (let (same (gerbil-ascent-session-run session))
+            (check-equal? (.ref same 'active-rule-count) 0)
+            (check-equal? (rows same 'path) (rows appended 'path))
+            (check-set (rows first 'path) '((0 1))))
+          (gerbil-ascent-session-replace-source! session 'edge '((0 1) (2 3)))
+          (check-fresh (gerbil-ascent-session-run session) (path-program '((0 1) (2 3)))))))
     (test-case "lowered dependencies agree with matrix reachability for every graph and root"
       ;; Exercise the lowered dependency boundary independently of rule planning.
       ;; Atom, negation and aggregate reads all propagate to every head.

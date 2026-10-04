@@ -26,7 +26,7 @@ open by the [[file:datafun-f16.org][2016 Datafun paper]].
 |---------+--------------------+-----------+----------------|
 | Abstract, PDF p. 1 | Extends semi-naive transformation to higher-order Datafun programs | Higher-order recursion need not lose all delta optimization | Transformation is for Datafun's typed calculus |
 | §1, PDF pp. 2–3 | Uses a modal constraint and type-directed translations | Require an analyzable operator IR | Arbitrary Gerbil closures do not expose this structure |
-| §5, PDF p. 10 | Defines increasing changes for sets and functions | Model deltas at relation/operator level | Current row deltas do not include function changes |
+| §4.2–4.3, PDF pp. 10–11 | Defines increasing changes for sets and functions | Model deltas at relation/operator level | Current row deltas do not include function changes |
 | §9, PDF pp. 25–26 | Raw transformation has modest gains; simplification yields asymptotic gains on selected workloads | Benchmark the full optimization pipeline | No quantitative result transfers to this repository |
 
 * Design consequence

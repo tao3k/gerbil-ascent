@@ -180,3 +180,10 @@ cannot authorize a changed source payload; zero new model calls were made.
 * Research and proof synchronization (2026-10-04)
 
 The [[file:scheme-research-proof-audit.org][research/proof audit]] maps all eight DSL sources to current implementation, formal premises and falsifiable exit gates. It prioritizes compiler preservation, transaction refinement and finite evidence algebra before optimization, paid model validation and MRR integration. Unbounded protocol generations are distinct from finite TLC exploration; abstract proofs do not certify the Scheme compiler.
+
+
+The [[file:scheme-research-proof-audit.org::#joint-research-design-implementation][joint research/design/implementation sequence]] connects each paper premise
+with its Scheme owner, formal obligation and independent native discriminator.
+The next R1 slice is concrete type/term admission, finite semantic cardinality
+and height sufficiency, followed by source-bound normalization qualification.
+All three legs must pass for the stated subset before that slice is closed.

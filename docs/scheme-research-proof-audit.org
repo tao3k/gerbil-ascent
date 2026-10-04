@@ -39,7 +39,7 @@ not results the authors established for Gerbil.
 | [[https://www.cl.cam.ac.uk/~nk480/datafun.pdf][F16 Datafun]], §4–5 | Discrete/stable captures versus monotone recursive inputs; finite domains: =program/scheme-checked.ss= and =program/higher-order.ss= | Prove descriptor typing and domain/cardinality laws supply Lean rank premises. Finite output per call and fact budgets are not termination proofs; reject successor escape and increasing one-key lattice |
 | [[https://www.schemeworkshop.org/2013/papers/HemannMuKanren2013.pdf][H13 µKanren]], §3–5 | Small semantic kernel with Scheme constructors/macros above it: =program/interface.ss= | Scope/hygiene and expanded-IR preservation. Do not transfer stream interleaving/fairness into bottom-up saturation; cyclic answer sets do not prove search equivalence |
 | [[https://plg.uwaterloo.ca/~olhotak/pubs/oopsla20c.pdf][F20 first-class constraints]], typing/composition/stratification | Assemble inert fragments, check the whole dependency graph: =program/scheme-admission.ss= | Mechanize assembled schema and strict negative-edge validation; two valid fragments forming a negative cycle must reject. Current runtime admission is weaker than Flix static typing |
-| [[https://www.rntz.net/files/seminaive-datafun.pdf][S20 higher-order semi-naive]], §5 and correctness development | Admitted typed arrows lower to positive operator IR: =program/higher-order.ss= and =program/operator.ss= | Existing lowering does not implement the paper's typed function-change translation. Prove current lowering first; then define an insertion-only change action and semantic preservation before optimizing function deltas |
+| [[https://www.rntz.net/files/seminaive-datafun.pdf][S20 higher-order semi-naive]], §4.2–4.3, §6–7 | Admitted typed arrows lower to positive operator IR: =program/higher-order.ss= and =program/operator.ss= | Existing lowering does not implement the paper's typed function-change translation. Prove current lowering first; then define an insertion-only change action and semantic preservation before optimizing function deltas |
 | [[https://plg.uwaterloo.ca/~olhotak/pubs/oopsla25b.pdf][L25 Flix design]], §3.7–3.9 / §4 | Fresh private predicate identities, explicit construct/admit/solve/query: =program/objects.ss=, =program/result.ss= | Alpha-renaming/generativity and lexical substitution theorem; repeated constructors and reordered composition must preserve public observations. Purity alone does not establish totality |
 | [[https://ojs.aaai.org/index.php/AAAI/article/view/11554][H18 DRedc]], §3–4 | Multi-support and founded recursion matter: [[file:scheme-support-graph-design.org][support graph]]; native Session uses [[file:scheme-session-deletion-design.org][affected-component rederivation]] | Current Session is not DRedc. Prove source logs exclude derived facts; support completeness and founded rederivation before finer maintenance. Retain last-support, two-path, unrooted-cycle and failed-update cases |
 | [[https://arxiv.org/abs/2203.16684][B22 DBSP]], recursive incremental circuits | Separate retained update cost from full reconstruction: =program/session.ss=, =program/reuse.ss= | No signed-weight stream algebra or derivative circuit exists here. Match initialization, admission, invalidation, solve and publication costs; full semantics first, then work/time/allocation measurements |
@@ -110,3 +110,93 @@ The [[file:scheme-design-framework.org][acceptance matrix]] remains the closure 
 it does not mark them all closed. The [[file:evidence/scheme-proof-audit-20261004/receipt.json][formal receipt]] records this patch's proof and
 model-checker results and identifies the checked files and toolchain. Execution
 logs are excluded under the [[file:evidence/README.org][evidence publication policy]].
+
+* Joint research, design and implementation sequence
+:PROPERTIES:
+:CUSTOM_ID: joint-research-design-implementation
+:END:
+
+This is a refinement of the existing R1–R7 matrix, not a new language version
+or namespace. Each work package must carry one connected argument: a precisely
+located paper premise, our explicit transfer decision, the actual Scheme
+representation and algorithm, a matching formal statement, and an independent
+native discriminator. No leg alone marks the work package closed.
+
+On 2026-10-04 all eight primary sources above were reopened. S20 change
+structures are in §4.2–4.3 (PDF pp. 10–11), not §5. F16 §5.3 Lemma 4
+requires a monotone map on a finite-height pointed poset. These are the next
+semantic prerequisites, not evidence of our implementation's correctness.
+
+** Connected work packages
+
+| Package and paper premise | Architecture decision and Scheme owner | Proof obligation and executable discriminator |
+|---------------------------+----------------------------------------+-----------------------------------------------|
+| Finite signatures and termination: F16 §5.2–5.3, Lemma 4 | =program/higher-order.ss= admits explicit finite relation and arrow types. Stable captured atoms, arity and arrow structure must be validated before normalization; =program/finite-arithmetic.ss= only evaluates capped formulas | Connect semantic inhabitants, relation rank and pointwise function rank to =FiniteHeight= and =CappedArithmetic=. Independently enumerate tiny domains, including empty domain / zero arity, repeated atoms, nested arrows and budget boundaries. Malformed or cyclic type/term descriptors must reject before recursive analysis |
+| Binding and compilation: H13 §3/§5, L25 §3.7/§4.3, A22 §4 | Keep Scheme construction above a small inspectable kernel. =program/operator.ss= owns descriptor identity and environment-sensitive memoization; =program/higher-order.ss= owns captured lexical values and elimination | Relate accepted concrete descriptors to =DescriptorScope=, =LexicalLowering= and =RecursiveLowering=, then emitted rules to the consequence operator. Shared node under different bindings, same printed name under distinct identities, repeated constructors and capture substitution are discriminators |
+| Whole-program composition: F20 §4.2, Definitions 4.3–4.6 / Theorem 4.8; L25 §4.2 | =program/scheme-admission.ss= checks the assembled dependency graph before explicit solve. Our runtime admission is a different assurance from Flix's compile-time analysis | Prove valid admitted strata satisfy positive nonstrict / negative strict dependency inequalities. Compose individually valid fragments into a negative cycle and require rejection; reorder valid composition and compare public observations |
+| Transaction and deletion: H18 §3–4; B22 recursive circuits | =program/session.ss= and reuse/update selection maintain source logs and invalidate affected components. Keep explicit source facts separate from derived facts; current recomputation is not DRedc or DBSP | Map private work and publication to =SessionPublication= and the TLA models. Independent fresh recomputation after each transaction must match; two supports, final-support removal, unrooted cycle, ABA, stale publication and interrupted budget/domain failure preserve their stated visible-state contracts |
+| Complete finite evidence: H18 support distinction; A22 inspectable rule instances | Support/provenance owners represent alternative rule instances and founded witnesses separately; absence refers to a completed closed stratum and exact program/source identity | Test independently enumerated alternatives, cyclic support, duplicate witnesses, negative/group observations, tampering and size exhaustion. Numeric semirings and lattice histories require their own algebra, not a renamed graph |
+| Change semantics and measured benefit: S20 §4.2–4.3/§6–7; B22 | Specify a typed insertion change for every admitted type before implementing higher-order deltas. A function change depends on both base input and input change; deletion remains outside that insertion contract | State and prove application/change and lowering preservation before comparing optimized and full evaluation. Use the same semantics, dependency versions, inputs and lifecycle cost boundary; report work counts, CPU, wall and allocation separately, including negative outcomes |
+
+The support/provenance package specifies our finite evidence product; H18's
+maintenance algorithm is not itself a complete provenance algebra. The change
+package uses S20's logical change relation as its reference. Do not assume an
+ordinary pointwise function delta or a simple monoid action automatically
+implements that relation. B22's signed-weight circuit is a separate design.
+
+** Next concrete slice: type representation to semantic height
+
+The existing native formulas are:
+
+- Relation with =d= distinct atoms and arity =a=: tuple universe size =d^a=,
+  inhabitant cardinality =2^(d^a)= and rank bound =d^a=.
+- Arrow =A -> B=: cardinality upper bound =card(B)^card(A)= and pointwise
+  rank bound =card(A) * height(B)=.
+
+Our design decision is to retain these as conservative bounds. For arrows,
+=card= counts the full finite function space; it need not be the exact number
+of monotone inhabitants. Finite exhaustive enumeration belongs in small native
+truth models and semantic proofs; production normalization must continue using
+saturating arithmetic rather than allocate the full function space.
+
+The first slice has four connected deliverables, in dependency order:
+
+1. Revalidate the actual exposed type/typed-term graph before height analysis.
+   Own admitted domain/row spines and reject malformed arity/domain/children,
+   cycles and escaped captures. The relation-operator preflight does not by
+   itself validate =relational-type= or =relational-typed-term=.
+2. Define the semantic relation/arrow inhabitants and their representation
+   relation. Prove tuple-universe completeness and cardinality bounds,
+   pointwise order/rank boundedness and strict progress. State scalar equality,
+   duplicate elimination and zero-arity empty-tuple conventions explicitly.
+3. Discharge =bounded_bottom_least_fixed= premises for this interpretation;
+   relate exact semantic bounds to capped formula evaluation. A cap rejection
+   is a resource outcome, never a proof of semantic nontermination. A bound on
+   iterations does not by itself bound compiler-node expansion: retain the
+   independent actual work counter and fail without publishing partial output.
+4. Qualify the actual lowering against a Scheme-owned exhaustive truth model
+   on tiny signatures, including nested functions and delayed changes at
+   unsampled arguments. Publish source identity, proof hashes, complete rows,
+   rejection outcomes and original budgets. Neither finite samples nor a
+   historical receipt substitutes for the universal semantic theorem.
+
+Exit condition: all four deliverables agree for the explicitly admitted
+subset. Typed normalization, concrete rule execution, transaction refinement,
+provenance algebras and general benefit keep separate open obligations until
+represented and tested. No arbitrary host callback inherits these proofs.
+
+** Model and integration follow-through
+
+After compiler and publication stabilization, freeze current Scheme source,
+tasks and native truth. Evaluate raw interface acceptance separately from
+semantic correctness and timeout status. Model reasoning and genuine native
+feedback after a response need controlled conditions; no preset semantic
+prompt, tutorial, answer prefill, repair or oracle-selected response extraction.
+New paid calls require a fresh source/cost authorization. MRR Rust integration
+follows those gates and preserves exact ABI bytes/statuses and Scheme semantic
+authority. No model call or runtime change was made by this research-plan edit.
+
+Latest delivery observed for this plan: PR #1 =43fd04d= has =formal= success;
+Scheme and both oracle jobs are still in progress. The 58-Case descriptor
+receipt binds =4412371= after the binary-kernel rebase; it does not qualify the
+subsequent temporal-graph integration or close any of the packages above.

@@ -267,8 +267,36 @@
          (relational-admit (with-relations program
                             (list (.o (:: @ relation) checked-domain: (vector 'opaque '()))))) true)
         (check-exception (relational-finite-lattice 'l 1 '((0)) 'max '((bad))) true)))
+    (test-case "finite height arithmetic preserves empty and nullary function bottoms"
+      (for-each
+       (lambda (arity)
+         (let* ((type (relational-relation-type arity '()))
+                (arrow (relational-arrow-type type type))
+                (fixed
+                 (relational-typed-fix (relational-typed-function arrow values)))
+                (argument (relational-typed-source 'empty type '())))
+           (check-equal? (relational-type-height-expression type)
+                         (list 'expt 0 arity))
+           (check-rows (solve (relational-typed-apply fixed argument)) '())))
+       '(0 1)))
+    (test-case "enormous function height rejects at the finite expansion cap"
+      (let* ((type (relational-relation-type 128 '(0 1)))
+             (arrow (relational-arrow-type type type))
+             (fixed
+              (relational-typed-fix (relational-typed-function arrow values)))
+             (argument (relational-typed-source 'wide type '()))
+             (applied (relational-typed-apply fixed argument)))
+        (check-equal?
+         (with-catch error-message
+           (lambda () (relational-typed-compile applied 32 256 512 200) 'accepted))
+         "typed function fixed-point height exceeds normalization budget")))
     (test-case "height expressions distinguish relation height and higher-order function space"
       (let (type (relational-relation-type 1 '(0 1)))
         (check-equal? (relational-type-height-expression type) '(expt 2 1))
         (check-equal? (relational-type-height-expression (relational-arrow-type type type))
-                      '(* (expt 2 (expt 2 1)) (expt 2 1)))))))
+                      '(* (expt 2 (expt 2 1)) (expt 2 1)))
+        (let (arrow (relational-arrow-type type type))
+          (check-equal?
+           (relational-type-height-expression (relational-arrow-type arrow arrow))
+           '(* (expt (expt 2 (expt 2 1)) (expt 2 (expt 2 1)))
+               (* (expt 2 (expt 2 1)) (expt 2 1)))))))))

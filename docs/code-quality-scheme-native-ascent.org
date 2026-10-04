@@ -1935,3 +1935,44 @@ focused integration checks; the 57-module full-suite result above precedes
 that integration. The selected production-source policy audit exits 0 with
 =findings=0= and =errors=0=; concurrent commits do not change these production
 modules. No AOT application or remote CI qualification is inferred.
+
+* Study: one finite type algebra for symbolic and bounded arithmetic
+
+Gerbil's installed =optimize-xform.ss:17-48= reuses traversal handlers such as
+=apply-body-lambda%=, =apply-body-let-values%= and =apply-operands= across
+expression operations. The mutation collector specializes assignment handling;
+expression substitution supplies reference and assignment handlers on the basic
+transform traversal. The shared structural walk has one owner, while each
+operation supplies its interpretation and state.
+
+ASCENT's higher-order compiler had separate symbolic and bounded implementations
+of finite type cardinality and height. Both described relation powersets and
+pointwise arrow lattices. =type-cardinality= and =type-height= now own those
+structural recursions once. The symbolic height API supplies constructors for
+=expt= and =*= expressions; bounded fixed-point lowering supplies its existing
+saturating power and product operations. These procedures remain private to the
+module that owns the finite type representation.
+
+Relation height remains =domain-size^arity=, relation cardinality remains two
+to that height, arrow cardinality remains output cardinality raised to input
+cardinality, and arrow height remains input cardinality times output height.
+The bounded interpreter retains the expansion-limit-plus-one cap and repeated
+squaring; it does not allocate complete powersets or function spaces. Validation,
+domain accumulation, lexical environments and normalization visit accounting
+are unchanged. No memoization or sample-based termination is introduced.
+
+Native Unit Tests extend the exact symbolic-expression golden to nested arrow
+types. They also solve function fixed points over empty domains at arities zero
+and one, and require the precise height-budget rejection for an arity-128
+two-atom relation. Existing finite-seed closure, recursive function and exact
+normalization-budget checks remain regression gates. This change consolidates
+the mathematical ownership; it makes no performance claim.
+
+Focused native =just test-file= qualification passes the higher-order module's
+20 Cases and model-closure module's 27 Cases. Both invocations exit 0 and have
+complete native/module/harness/final markers, with no Case errors. The selected
+production-source policy audit exits 0 with =findings=0= and =errors=0=.
+Original expansion limits, Case budgets, process deadlines and worker capacity
+are preserved. Logs stay in ignored =.cache/ascent/type-height-algebra/=.
+This is focused local semantic qualification; no new full-suite, performance,
+AOT application or remote CI result is asserted.

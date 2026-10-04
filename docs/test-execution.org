@@ -4,8 +4,10 @@
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 * Ownership
-=build.ss= declares the production modules and the reviewed parallel test modules.
-It uses native =std/make= for compilation and incremental dependency checks.
+=build.ss= declares production modules and the native ASP build specification.
+=t/harness/run.ss= owns test inventories, native test compilation and scheduling.
+It imports the production module list rather than duplicating it; =std/make=
+owns compilation and incremental dependency checks.
 =just= exposes the existing commands and starts separate module processes with
 =xargs -P=. There is no separate test framework in =tools/= and no Python runner
 on the active build/test/performance entrypoints.
@@ -17,13 +19,13 @@ compiled library and propagates the native gxtest return value to the process.
 The temporal harness retains its visible import boundaries.
 
 * Compilation and isolation
-Just invokes =build.ss= through =gerbil env gxi= so native Gerbil selects the
+Just invokes =t/harness/run.ss= through =gerbil env gxi= so native Gerbil selects the
 project dependency environment before resolving build imports. An explicit
 =GERBIL_PATH= is retained. Bare =gxi= can miss dependencies installed by
 =gerbil deps --install= into the project's =.gerbil/= directory; this was the
 first failure in the remote Scheme jobs for commit =53e6691=.
 
-Production and selected =*-test.ss= modules compile through =build.ss= into
+Production and selected =*-test.ss= modules compile through the test entrypoint into
 =.cache/ascent/native-library/lib=. Native =gxtest= directly loads the compiled
 =.ssi= test module and executes the original exported Suites and Cases.
 The compiled library comes before the checkout in =GERBIL_LOADPATH=; otherwise

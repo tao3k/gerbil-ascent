@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 * Module and Case execution
-=build.ss= contains the reviewed parallel module list. Every qualification
+=t/harness/run.ss= contains the reviewed parallel module list. Every qualification
 =*-test.ss= is discovered; modules outside that list run exclusively.
 =std/make= compiles the selected test sources. Native =gxtest= loads their =.ssi=
 modules. =just test= runs 47 independent modules in separate processes, waits for them,
@@ -33,7 +33,8 @@ both test phases. Builds and performance commands use the same lane. This also
 prevents independently launched commands from overlapping duration assertions.
 
 * Entrypoints and evidence
-=build.ss= owns configuration and native compilation. The existing Just recipes
+=build.ss= owns production build declarations. =t/harness/run.ss= owns test
+configuration and native test compilation. The existing Just recipes
 use a standard process pool and =t/harness/gxtest.ss= forwards to =gxtest=.
 The tests assert ASCENT behavior in =t/*-test.ss=; no custom coordinator or
 coordinator self-tests remain in =tools/=.

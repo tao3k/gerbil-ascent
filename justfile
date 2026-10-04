@@ -4,21 +4,21 @@
 set shell := ["bash", "-euo", "pipefail", "-c"]
 
 gerbil_test_runtime_options := "-:max-heap=1G,debug=q"
-build_script := 'GERBIL_LOADPATH="' + justfile_directory() + '${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" gerbil env gxi -:max-heap=1G,debug=q build.ss'
+test_runner := 'GERBIL_LOADPATH="' + justfile_directory() + '${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" gerbil env gxi -:max-heap=1G,debug=q t/harness/run.ss'
 
 default:
     @just --list
 
 build:
-    GERBIL_BUILD_CORES="${GERBIL_BUILD_CORES:-$(getconf NPROCESSORS_ONLN)}" gerbil build
+    GERBIL_BUILD_CORES="${GERBIL_BUILD_CORES:-$(getconf NPROCESSORS_ONLN)}" {{ test_runner }} run -- gerbil build
 
 check-policy:
-    ASP_GERBIL_SCHEME_POLICY=1 GERBIL_BUILD_CORES="${GERBIL_BUILD_CORES:-$(getconf NPROCESSORS_ONLN)}" gerbil build
+    ASP_GERBIL_SCHEME_POLICY=1 GERBIL_BUILD_CORES="${GERBIL_BUILD_CORES:-$(getconf NPROCESSORS_ONLN)}" {{ test_runner }} run -- gerbil build
 
 test-file path:
-    {{ build_script }} test-file "{{ path }}"
+    {{ test_runner }} test-file "{{ path }}"
 
-# Native gxtest owns module execution; the package entrypoint owns the lane.
+# Native gxtest owns module execution; t/harness/run.ss owns the lane.
 _test-file path:
     #!/usr/bin/env bash
     set -euo pipefail
@@ -50,29 +50,29 @@ _test-file path:
 
 # Explicitly admitted modules run in separate processes; native Cases stay serial.
 test-parallel jobs='auto':
-    {{ build_script }} test "{{ jobs }}" parallel
+    {{ test_runner }} test "{{ jobs }}" parallel
 
 # Native Cases stay serial; admitted modules use a process pool.
 test jobs='auto':
-    {{ build_script }} test "{{ jobs }}" all
+    {{ test_runner }} test "{{ jobs }}" all
 
-# Compile through build.ss, then execute the selected native test module.
+# Compile through the test entrypoint, then execute the native test module.
 test-native path:
-    {{ build_script }} test-file "{{ path }}"
+    {{ test_runner }} test-file "{{ path }}"
 
 # Run the same native module inventory with one worker.
 test-serial:
-    {{ build_script }} test 1 all
+    {{ test_runner }} test 1 all
 
 # Independent modules use the standard process pool; native Cases stay serial.
 _test-suite jobs lane:
     #!/usr/bin/env bash
     set -euo pipefail
     case "{{ lane }}" in all|parallel) ;; *) exit 2 ;; esac
-    jobs="$(gxi {{ gerbil_test_runtime_options }} build.ss test-jobs "{{ jobs }}")"
+    jobs="$(gxi {{ gerbil_test_runtime_options }} t/harness/run.ss test-jobs "{{ jobs }}")"
     directory="$(mktemp -d "{{ justfile_directory() }}/.cache/ascent/native-library/test.XXXXXX")"
-    gxi {{ gerbil_test_runtime_options }} build.ss test-modules parallel > "$directory/parallel"
-    gxi {{ gerbil_test_runtime_options }} build.ss test-modules exclusive > "$directory/exclusive"
+    gxi {{ gerbil_test_runtime_options }} t/harness/run.ss test-modules parallel > "$directory/parallel"
+    gxi {{ gerbil_test_runtime_options }} t/harness/run.ss test-modules exclusive > "$directory/exclusive"
     printf '[ascent-test] PLAN parallel=%s exclusive=%s jobs=%s logs=%s\n' "$(wc -l < "$directory/parallel")" "$(wc -l < "$directory/exclusive")" "$jobs" "$directory"
     export ASCENT_TEST_LOG_DIRECTORY="$directory"
     (while sleep 5; do printf '[ascent-test] RUNNING logs=%s\n' "$directory"; done) &
@@ -84,15 +84,15 @@ _test-suite jobs lane:
     fi
 
 test-quick:
-    {{ build_script }} test-quick
+    {{ test_runner }} test-quick
 
 _test-quick:
     #!/usr/bin/env bash
     set -euo pipefail
-    gxi {{ gerbil_test_runtime_options }} build.ss test-modules quick | while IFS= read -r path; do just _test-file "$path"; done
+    gxi {{ gerbil_test_runtime_options }} t/harness/run.ss test-modules quick | while IFS= read -r path; do just _test-file "$path"; done
 
 small-graph-benchmark:
-    {{ build_script }} run -- just _small-graph-benchmark
+    {{ test_runner }} run -- just _small-graph-benchmark
 
 _small-graph-benchmark:
     GERBIL_LOADPATH="{{ justfile_directory() }}${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" timeout 180s gerbil {{ gerbil_test_runtime_options }} env gxi t/performance/small-graph-benchmark.ss
@@ -100,7 +100,7 @@ _small-graph-benchmark:
 # Matched row-copy boundary costs. The probe checks equal rows and isolation
 # after every sample; it does not time a complete retained-session solve.
 admission-copy-benchmark:
-    {{ build_script }} run -- just _admission-copy-benchmark
+    {{ test_runner }} run -- just _admission-copy-benchmark
 
 _admission-copy-benchmark:
     #!/usr/bin/env bash
@@ -130,7 +130,7 @@ check-nonmembership-formal:
 # Matched finite-operator research probe; every sample checks independent
 # closure before reporting cost. This is separate from the SS suite.
 operator-change-probe:
-    {{ build_script }} run -- just _operator-change-probe
+    {{ test_runner }} run -- just _operator-change-probe
 
 _operator-change-probe:
     #!/usr/bin/env bash
@@ -146,7 +146,7 @@ _operator-change-probe:
 
 # Exact-set gate and matched exploratory timing for native retained updates.
 operator-retained-probe:
-    {{ build_script }} run -- just _operator-retained-probe
+    {{ test_runner }} run -- just _operator-retained-probe
 
 _operator-retained-probe:
     #!/usr/bin/env bash
@@ -166,7 +166,7 @@ clock-memory-probe:
     ASCENT_GXTEST_TIMEOUT="${ASCENT_GXTEST_TIMEOUT:-100s}" just test-file t/performance/ascent-clock-memory-probe.ss
 
 binding-benchmark:
-    {{ build_script }} run -- just _binding-benchmark
+    {{ test_runner }} run -- just _binding-benchmark
 
 _binding-benchmark:
     #!/usr/bin/env bash
@@ -190,7 +190,7 @@ _binding-benchmark:
     grep -x 'OK' "$log" >/dev/null
 
 strata-benchmark:
-    {{ build_script }} run -- just _strata-benchmark
+    {{ test_runner }} run -- just _strata-benchmark
 
 _strata-benchmark:
     #!/usr/bin/env bash
@@ -215,11 +215,11 @@ _strata-benchmark:
 
 # Run one unchanged SS fixture through the native qualification harness.
 performance-scenario name:
-    {{ build_script }} performance "{{ name }}"
+    {{ test_runner }} performance "{{ name }}"
 
 # ASCENT owns its 1000-sample SS receipts using ASP's benchmark profile.
 performance:
-    {{ build_script }} performance suite
+    {{ test_runner }} performance suite
 
 _performance-scenario name:
     #!/usr/bin/env bash
@@ -475,7 +475,7 @@ size-benchmark:
     export ASCENT_SIZE_BENCH_LIB="{{ justfile_directory() }}/.gerbil/size-benchmark/lib"
     export ASCENT_SIZE_RECEIPT="${ASCENT_SIZE_RECEIPT:-{{ justfile_directory() }}/.gerbil/size-benchmark/receipt.sexp}"
     shasum -a 256 program/evaluate.ss t/qualification/ascent-size-reference-evaluate.ss t/performance/size-benchmark.ss tools/build-size-benchmark.ss > "$ASCENT_SIZE_RECEIPT.sources"
-    {{ build_script }} run -- just _size-benchmark
+    {{ test_runner }} run -- just _size-benchmark
 
 _size-benchmark:
     timeout 90s gxi {{ gerbil_test_runtime_options }} tools/build-size-benchmark.ss
@@ -489,7 +489,7 @@ multi-frontier-benchmark:
     export ASCENT_MULTI_FRONTIER_LIB="{{ justfile_directory() }}/.gerbil/multi-frontier/lib"
     export ASCENT_MULTI_FRONTIER_RECEIPT="${ASCENT_MULTI_FRONTIER_RECEIPT:-{{ justfile_directory() }}/.gerbil/multi-frontier/receipt.sexp}"
     shasum -a 256 program/evaluate.ss t/qualification/ascent-multi-frontier-reference-evaluate.ss t/performance/multi-frontier-benchmark.ss tools/build-multi-frontier-benchmark.ss > "$ASCENT_MULTI_FRONTIER_RECEIPT.sources"
-    {{ build_script }} run -- just _multi-frontier-benchmark
+    {{ test_runner }} run -- just _multi-frontier-benchmark
 
 _multi-frontier-benchmark:
     timeout 90s gxi {{ gerbil_test_runtime_options }} tools/build-multi-frontier-benchmark.ss
@@ -502,7 +502,7 @@ set-size-benchmark:
     export ASCENT_SET_SIZE_LIB="{{ justfile_directory() }}/.gerbil/set-size/lib"
     export ASCENT_SET_SIZE_RECEIPT="${ASCENT_SET_SIZE_RECEIPT:-{{ justfile_directory() }}/.gerbil/set-size/receipt.sexp}"
     shasum -a 256 program/evaluate.ss t/qualification/ascent-set-size-reference-evaluate.ss t/performance/set-size-benchmark.ss tools/build-set-size-benchmark.ss > "$ASCENT_SET_SIZE_RECEIPT.sources"
-    {{ build_script }} run -- just _set-size-benchmark
+    {{ test_runner }} run -- just _set-size-benchmark
 
 _set-size-benchmark:
     timeout 90s gxi {{ gerbil_test_runtime_options }} tools/build-set-size-benchmark.ss
@@ -515,7 +515,7 @@ set-batch-benchmark:
     export ASCENT_SET_BATCH_LIB="{{ justfile_directory() }}/.gerbil/set-batch/lib"
     export ASCENT_SET_BATCH_RECEIPT="${ASCENT_SET_BATCH_RECEIPT:-{{ justfile_directory() }}/.gerbil/set-batch/receipt.sexp}"
     shasum -a 256 table/storage.ss t/qualification/ascent-set-batch-reference.ss t/performance/set-batch-benchmark.ss tools/build-set-batch-benchmark.ss > "$ASCENT_SET_BATCH_RECEIPT.sources"
-    {{ build_script }} run -- just _set-batch-benchmark
+    {{ test_runner }} run -- just _set-batch-benchmark
 
 _set-batch-benchmark:
     timeout 90s gxi {{ gerbil_test_runtime_options }} tools/build-set-batch-benchmark.ss
@@ -528,7 +528,7 @@ set-emit-benchmark:
     export ASCENT_SET_EMIT_LIB="{{ justfile_directory() }}/.gerbil/set-emit/lib"
     export ASCENT_SET_EMIT_RECEIPT="${ASCENT_SET_EMIT_RECEIPT:-{{ justfile_directory() }}/.gerbil/set-emit/receipt.sexp}"
     shasum -a 256 program/evaluate.ss t/qualification/ascent-set-emit-reference-evaluate.ss t/performance/set-emit-benchmark.ss tools/build-set-emit-benchmark.ss > "$ASCENT_SET_EMIT_RECEIPT.sources"
-    {{ build_script }} run -- just _set-emit-benchmark
+    {{ test_runner }} run -- just _set-emit-benchmark
 
 _set-emit-benchmark:
     timeout 90s gxi {{ gerbil_test_runtime_options }} tools/build-set-emit-benchmark.ss
@@ -541,7 +541,7 @@ set-emit-allocation:
     export ASCENT_SET_EMIT_LIB="{{ justfile_directory() }}/.gerbil/set-emit/lib"
     export ASCENT_SET_EMIT_ALLOCATION_RECEIPT="${ASCENT_SET_EMIT_ALLOCATION_RECEIPT:-{{ justfile_directory() }}/.gerbil/set-emit/allocation.sexp}"
     shasum -a 256 program/evaluate.ss t/qualification/ascent-set-emit-reference-evaluate.ss t/performance/set-emit-allocation.ss tools/build-set-emit-benchmark.ss > "$ASCENT_SET_EMIT_ALLOCATION_RECEIPT.sources"
-    {{ build_script }} run -- just _set-emit-allocation
+    {{ test_runner }} run -- just _set-emit-allocation
 
 _set-emit-allocation:
     timeout 90s gxi {{ gerbil_test_runtime_options }} tools/build-set-emit-benchmark.ss
@@ -554,7 +554,7 @@ set-source-allocation:
     export ASCENT_SET_SOURCE_LIB="{{ justfile_directory() }}/.gerbil/set-source/lib"
     export ASCENT_SET_SOURCE_ALLOCATION_RECEIPT="${ASCENT_SET_SOURCE_ALLOCATION_RECEIPT:-{{ justfile_directory() }}/.gerbil/set-source/allocation.sexp}"
     shasum -a 256 program/evaluate.ss program/admission.ss t/qualification/ascent-set-source-reference-evaluate.ss t/performance/set-source-allocation.ss tools/build-set-source-benchmark.ss > "$ASCENT_SET_SOURCE_ALLOCATION_RECEIPT.sources"
-    {{ build_script }} run -- just _set-source-allocation
+    {{ test_runner }} run -- just _set-source-allocation
 
 _set-source-allocation:
     timeout 90s gxi {{ gerbil_test_runtime_options }} tools/build-set-source-benchmark.ss
@@ -562,7 +562,7 @@ _set-source-allocation:
 
 # Whole-solve positive rule plans: ordered semantics, allocation and raw timing.
 positive-plan-benchmark:
-    {{ build_script }} run -- just _positive-plan-benchmark
+    {{ test_runner }} run -- just _positive-plan-benchmark
 
 _positive-plan-benchmark:
     #!/usr/bin/env bash
@@ -581,7 +581,7 @@ _positive-plan-benchmark:
     grep -x 'OK' "$log" >/dev/null
 
 workspace-benchmark:
-    {{ build_script }} run -- just _workspace-benchmark
+    {{ test_runner }} run -- just _workspace-benchmark
 
 _workspace-benchmark:
     #!/usr/bin/env bash
@@ -600,10 +600,10 @@ _workspace-benchmark:
     grep -x 'OK' "$log" >/dev/null
 
 ordered-relations-benchmark:
-    {{ build_script }} run -- gxi {{ gerbil_test_runtime_options }} t/performance/ordered-relations/qualify.ss
+    {{ test_runner }} run -- gxi {{ gerbil_test_runtime_options }} t/performance/ordered-relations/qualify.ss
 
 materialization-benchmark:
-    {{ build_script }} run -- just _materialization-benchmark
+    {{ test_runner }} run -- just _materialization-benchmark
 
 _materialization-benchmark:
     #!/usr/bin/env bash
@@ -622,7 +622,7 @@ _materialization-benchmark:
     grep -x 'OK' "$log" >/dev/null
 
 index-lifecycle-benchmark:
-    {{ build_script }} run -- just _index-lifecycle-benchmark
+    {{ test_runner }} run -- just _index-lifecycle-benchmark
 
 _index-lifecycle-benchmark:
     #!/usr/bin/env bash
@@ -643,7 +643,7 @@ _index-lifecycle-benchmark:
     grep -x 'OK' "$log" >/dev/null
 
 result-benchmark:
-    {{ build_script }} run -- just _result-benchmark
+    {{ test_runner }} run -- just _result-benchmark
 
 _result-benchmark:
     #!/usr/bin/env bash
@@ -669,7 +669,7 @@ temporal-scale:
 
 # Visible import progress for the composed temporal proof dependency graph.
 test-temporal:
-    {{ build_script }} test-file t/qualification/ascent-temporal-lens-test.ss
+    {{ test_runner }} test-file t/qualification/ascent-temporal-lens-test.ss
 
 _test-temporal:
     #!/usr/bin/env bash

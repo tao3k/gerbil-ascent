@@ -1,0 +1,289 @@
+#+title: Scheme Coding Style: Session state and admission
+
+[[file:../scheme-coding-style.org][Coding Style index]]
+
+Immutable declarations, engine frames, retained updates and checked source admission. Study notes and receipts retain their original revision and scope;
+historical source paths and timings are not current qualification claims.
+
+* Feature: declaration-only preflight for single-source replacement
+
+The installed compiler's =optimize-call.ss:45-56= resolves applicability before
+choosing a specialized transform and retains the general transform for unknown
+or nullable types. The transferable lesson is to distinguish qualification from
+the actual transform. It does not implement ASCENT update transactions.
+
+Single-source replacement previously copied the committed source snapshot,
+constructed a prospective POO Program and computed the full affected dependency
+closure just to decide whether to enter the batch transaction. That transaction
+then validated rows, constructed another Program and computed closure again.
+The dependency graph itself is invocation-local; moving it into shared Analysis
+would add cold admission work and another layout migration.
+
+The preflight now calls =gerbil-ascent-update-eligible?= on the original Session
+declarations. It neither reads rows nor invokes field or rule callbacks. The
+formal transaction still checks eligibility on the actual prospective Program
+and computes source differences and dependency closure after row validation.
+This retains mutation-sensitive field checks, unsupported-provider fallback,
+provisional single-source publication, timeout replay and failure recovery.
+No new cache, mutable shared metadata, Analysis field or build interface is added.
+
+The existing =scheme-session-deletion-test= now exercises single-source replacement
+after its mutation-sensitive batch test, checking unchanged callback counts and
+the retained row value. It also checks that declaration preflight invokes no
+field callback and rejects the forged descriptor on an opaque guard. The full
+module passes with its original 64 graph and 192 withdrawal coverage, native
+module/harness/final markers and exit 0.
+
+A frozen native reference from =f01c7b0= relocates Session, evaluator, reuse and
+selection modules into a separate namespace. Both sides call native exports and
+share unchanged declaration planning and storage implementations. Each of three
+shapes uses 1000 alternating old/new pairs, with explicit GC every 20 pairs outside
+timing. Source rows are prepared outside timing; each interval covers the complete
+replacement transaction, including unrestricted run for the provisional single
+operation. Completion and exact input/output rows are checked after timing.
+The fixture has two unary relations, one source row, and one or eight identical
+positive rules. Session creation and its initial completed run are outside timing.
+
+Median old/new jiffies are 112/98 for one-rule single replacement (931 wins),
+126/111 for eight-rule single replacement (919 wins), and 97/97 for the one-rule
+batch control (484 wins). These support about 12% lower median cost on these
+fixtures, not a general solver or workload-wide speedup. All probes and logs
+remain in ignored =.cache/ascent/replacement-preflight/=. The production policy
+audit exits 0 with one existing =higher-order.ss= typed-contract warning and zero
+errors; that warning and previously recorded SS performance gaps remain open.
+
+Final integrated =just test= against the =f01c7b0= baseline plus this slice exits
+0: 57 modules and 485 Cases pass, with 53 parallel modules, four exclusive
+modules and 12 workers. All 57 logs contain native resolution, module, harness
+and final success markers, with zero error markers. Original Case budgets,
+module deadlines, sample counts and scheduling remain unchanged. This is native
+semantic qualification; new-head remote CI and the SS performance gate are
+separate evidence.
+
+* Feature: immutable activation metadata with engine-owned execution frames
+
+The installed compiler's =optimize-base.ss:16-29= separates optimizer info,
+mutator tracking, local type information and path type information into distinct
+parameters. Its optimizer-info initializer creates fresh tables. The lesson is
+to give state an explicit owner and lifetime; these compiler tables are mutable,
+and this source is not evidence of an ASCENT activation cache.
+
+ASCENT's admitted Analysis now owns the prepared activation descriptors alongside
+its existing plans, strata and active rules. The internal vector migrates directly
+from five fields to six. Prefix vectors and positive slot plans are prepared once
+per admitted Analysis, under the existing weak identity cache. Each engine copies
+the descriptor into its runtime activation and allocates its own variable frame.
+Program admission still invokes no rule or storage callbacks. Mutable frames never
+enter the shared Analysis, and full activation metadata remains available for
+later appends. This adds no cache or build interface.
+
+Retained updates with a subset of heads now filter the positive plan's ordered
+outputs and share its lowered body and slot count. They allocate a fresh frame;
+duplicate heads and output order remain intact. Unsupported full plans retain
+normal selected-head lowering, including cases where the subset becomes eligible.
+The prefix helper moves from update-selection's export to a private positive-plan
+helper. Public engine/session operations retain their behavior.
+
+Two native Unit Test Cases in =ascent-positive-plan-test.ss= check shared Analysis
+and immutable descriptors, private frames, actual engine results, ordered literal
+and duplicate emissions from projected plans, and empty/all-head selection.
+
+A frozen native reference from =89f00fd= uses a separate namespace and Analysis
+cache. Both paths use optimized native libraries. Measurements alternate old/new
+order across 1000 pairs, with explicit GC every 20 pairs outside timing intervals;
+semantic comparisons occur after timing. Raw probes and logs stay in ignored
+=.cache/ascent/activation-lifecycle/=.
+
+Phase measurements batch 64 calls per sample to avoid single-call clock
+quantization. Median old/new jiffies per batch are 49/4 for four-rule activation,
+874/34 for 64-rule activation, 95/7 for eight-column partial-head selection, and
+848/12 for 128-column selection. These measure the isolated phases.
+
+Complete engine measurements include creation, unrestricted execution, completion
+checks and result reads. Their fixture has empty sources, eight columns, three
+relations and three heads per rule, deliberately exercising plan-heavy setup.
+With warm Analysis, 64 rules have median old/new 97/84 jiffies (about 13% lower),
+with 938 of 1000 paired samples faster. Four warm rules have medians 77/76,
+which is too small to support a material improvement claim. A four-rule cold
+control creates distinct Program aliases outside each timed call, forcing fresh
+Analysis in both paths; medians are 136/136. Declarations are prepared outside
+timing. These results do not establish join throughput or a whole-application
+speedup, and do not close the previously recorded SS performance gaps.
+
+The selected production policy audit before integration completes with zero
+findings and errors. After preserving concurrent commits through =6a0d802=,
+the audit exits 0 with one warning and zero errors: =higher-order.ss= lacks
+adjacent typed-combinator contracts. This warning is not a clean policy receipt.
+The first full run exposed test reference cache pollution: eight frozen evaluators
+still inserted their five-field Analysis into the production cache. Their imports
+now use the existing frozen test analysis module, keeping reference and production
+cache layouts separate without adapting the reference algorithms or production
+representation. The failed run is retained in ignored cache evidence.
+The next integrated run clears those cache failures but its exclusive
+=ascent-rule-program-test= hits the existing 5000ms two-snapshot Case budget
+inside POO contract classification. That invocation exits nonzero. An isolated
+native rerun of the complete rule module, with identical source and budgets,
+passes and exits 0 (12 seconds for the module). This does not erase the failed
+full-suite receipt or establish host contention as the cause.
+
+The final integrated =just test= at =2f03c7d= exits 0: 57 modules and 485
+Cases pass, with 53 parallel modules, four exclusive modules and 12 workers.
+All 57 module logs have native resolution, module, harness and final success
+markers, with no error markers. The 64-cut retained-operator module completes
+within its original deadline. The previous failures remain recorded above.
+Concurrent commits through =a68d044= change DSL closure build environment,
+formal proofs and evidence; =program/=, =t/=, =build.ss= and the =just test=
+recipe are unchanged from this final measured test slice. This native receipt
+does not close the existing SS performance gaps or qualify remote CI.
+
+* Feature: bounded dependency traversal and source membership in retained updates
+
+The installed compiler's =optimize-top.ss:703= (=extract-keyword-args=)
+uses an explicit remaining suffix and accumulator in a named tail loop.
+Its lesson here is to make progress and ownership visible in traversal state;
+it is not a dependency invalidation algorithm. The installed runtime's
+=hash.ss:385-387,574-575= gives ordinary hash tables an =equal?= test and
+implements =hash-get= through their reference method. These source contracts
+permit a structurally equal source membership lookup without changing row
+representation or introducing unchecked compiler declarations.
+
+Native retained-update selection previously rescanned every compiled rule
+until no additional relation became affected. Reverse-ordered dependency
+chains require one new full scan per level. Selection now constructs local
+body-to-head adjacency once, seeds a pending list from changed sources, and
+marks a relation before pushing it. Each relation is visited at most once;
+duplicate edges and recursive cycles cannot reenqueue an already marked
+relation. Positive atoms, negation and aggregates preserve their dependency
+roles, including every head of a multi-head rule. Work is bounded by relation
+count plus the constructed dependency edges, independent of source rule
+order. Eligibility checks, immutable analysis layout, rule activation order,
+and the fallback for opaque callbacks/providers are unchanged. No new cache
+or build interface is introduced.
+
+Completed closure seeding previously used =member= against the materialized
+source list for each distinct retained row, producing quadratic membership
+work when an unchanged relation had many source rows. Set source admission
+already owns an =equal?= membership table; reuse now consults that table before
+replacing it with the completed closure's fresh membership. Relations with user
+field checks retain the original linear equality walk, because a callback may
+change a row after source admission. Lattice source
+admission instead joins by key and does not populate that Set membership, so
+reuse builds a separate table from its final joined source rows. This distinction
+preserves derived-budget accounting: joined source rows are source facts,
+and distinct retained rows absent from that source are derived facts. Source
+multiplicity, ordered publication, field checks and all fact limits remain.
+
+Three native Cases in the existing deletion module cover the boundaries. All
+64 subsets of the six non-reflexive three-node edges and each starting relation
+are compared against independent matrix reachability. Synthetic lowered
+plans include duplicate heads and atom/negation/aggregate reads; this isolates
+dependency traversal from planner correctness. A checked lattice program
+with duplicate source keys, duplicate Set rows and a one-fact derived limit
+checks joined-source reuse, ordered duplicates and failure rollback. A raw
+relation with a field callback that mutates a structural term additionally
+checks the original three callback invocations and exact one-fact derived
+budget. It uses the generic relation constructor because the checked DSL
+accepts only scalar row fields. All ten Cases pass, including the existing
+64-graph/192-withdrawal acceptance corpus; the coordinator exits 0 in 36
+seconds. The production policy audit also
+exits 0 with zero findings and errors.
+
+The ignored =.cache/ascent/update-traversal/= experiment freezes the evaluator,
+reuse capsule and update selection from =5d5aec1= under a separate native
+package. Both old and current evaluators resolve to =.ssi= modules. Each sample
+constructs an updated native engine and runs it to completion for two source
+relations: an unchanged 32, 128 or 512-row relation and one changed trigger.
+Initial completion, declarations, schema and analysis are outside timing;
+engine construction, source admission, selection, seeding and publication are
+inside. Full ordered rows and finished status are checked after every sample.
+Each shape has 1000 alternating old/new pairs, with GC every 20 pairs outside
+measurement. No compiler, qualification process or competing probe from this
+turn runs concurrently with the measurement. Host contention and automatic GC
+remain possible and are reflected in the tails.
+
+The final native probe exits 0 with medians in jiffies of =86/82=, =201/113=
+and =1702/232=, respectively (about 5%, 44% and 86% lower). Strict new-faster
+counts are =921/1000=, =951/1000= and =953/1000=. Old/new p95 values are
+=542/274=, =14593/6600= and =73664/11722=. This is a complete retained
+update measurement for unchanged source membership, not an independent
+measurement of dependency propagation or a pass of the existing SS gates.
+No logs or temporary experiment sources are committed.
+
+The normal rebase preserves remote commits through =f1c4827=; they change
+build/CI qualification and documentation without overlapping this production
+algorithm. Final native qualification on that combined tree exits 0 with
+57 modules and 479 successful Cases (53 parallel, four exclusive, 12 jobs).
+Every module has native import, MODULE-OK, HARNESS-OK and final OK receipts.
+The original arbitrary-column duration gate passes in the uninterrupted run;
+the 64-cut retained operator module exits 0 in 64 seconds under its original
+120-second limit. Source policy remains zero findings/errors for the same
+production sources. No Case/module budgets or sample counts change. The
+existing SS suite is not rerun here and its remaining admission gates are
+not claimed closed by these functional and retained-update measurements.
+
+* Study: qualified source validation and engine-owned admission
+
+The installed compiler's =optimize-call.ss:45-56= resolves the operator type
+before selecting a specialized call transform. Unknown and nullable operators
+retain the generic transform. The useful lesson is to make the evidence for a
+specialized path explicit at its owner, rather than assume that an earlier check
+makes every later value safe.
+
+ASCENT source initialization checks each declaration row's proper-list shape and
+arity before admitting input budget. The exact built-in Set provider returns that
+same row. Without a field checker, no user callback or storage extension runs
+between this check and materialization. Only this qualified path can reuse the
+shape validation. Rows mutated after declaration still cross the first check.
+Callback-bearing Set rows retain the second shape and field check, including
+stateful rejection on the second callback. Custom providers, even those inheriting
+Set, retain validation of every generated row; lattice joining is unchanged.
+
+=program/admission.ss= separates checked initialization from admission of an
+already validated row. Both paths share membership insertion, materialized budget
+checking and engine-owned buffer insertion in their original order. Duplicates
+still consume budget and no row is copied or deduplicated by this boundary.
+No cache, shared mutable state, declaration layout or build interface is added.
+The existing native source-admission module adds a 128-column ordered-duplicate
+fixture and its failing budget control. All 13 Cases pass with native resolution,
+module/harness/final success markers and exit 0, retaining callback, custom-provider,
+nullary, source-mutation and derived-budget checks.
+
+The controlled native reference freezes admission, evaluator, reuse and selection
+from =7e0a060=. Each fixture constructs and completes a fresh engine with 128
+source rows, no rules and precomputed schema/Analysis. Declaration construction
+is outside timing. Widths 1, 4, 128 and 512 each use 1000 alternating old/new pairs;
+GC runs every 20 pairs outside timing. Finished status and the complete ordered
+source result are checked after timing. Native =.ssi= resolution is required for
+both implementations. This measures warm-analysis engine initialization and
+completion, not cold declaration validation, retained updates or application
+throughput. Experiments and logs stay in ignored =.cache/ascent/validated-source/=.
+
+Median old/new jiffies are 85/83 (722 strict wins) at width 1, 91/89
+(800 wins) at width 4, 232/196 (852 wins) at width 128 and 436/301
+(873 wins) at width 512. Wide-row medians improve by about 15.5% and 31.0%
+respectively. Corresponding p95 old/new values are 685/506, 1284/1148,
+10318/9737 and 16793/9954. These are wall-clock distributions with visible
+long tails; they establish neither CPU-time savings nor an allocation reduction.
+Both narrow controls improve slightly. The probe completes all original pairs
+within its 180-second deadline and exits 0. Original SS performance gaps remain
+open; this admission result does not qualify the complete performance gate.
+
+The complete native =just test= invocation passes all 57 modules and 488 Cases
+with 53 parallel modules, four exclusive modules and =GERBIL_BUILD_CORES=12.
+All 57 module logs include native, module, harness and final success markers;
+there are no Case errors and the invocation exits 0. The selected library-source
+policy audit exits 0 with =findings=1= and =errors=0=: the existing
+=program/higher-order.ss= adjacent typed-combinator contract warning remains.
+Original Case budgets and module timeouts are unchanged. These local results
+are separate from exact-head remote CI and the remaining SS performance gates.
+
+Before push, the branch integrates concurrent commits through =7103f87= by normal
+rebase. Their changes do not modify =program/=, =table/=, =candidate/= or
+=runtime/= library sources. The optimized production bodies and benchmark
+reference boundary remain unchanged. The two changed qualification modules are
+rerun after integration: =scheme-model-closure-test= passes 24 Cases, including
+function-valued fixed points, and =scheme-session-deletion-test= passes 12 Cases,
+including 64 graphs and 192 successive withdrawals. Both retain native,
+module/harness/final success markers and exit 0. The 57-module/488-Case receipt
+above precedes this integration; it is not relabeled as an integrated full run.
+

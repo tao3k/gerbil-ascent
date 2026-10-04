@@ -8,6 +8,11 @@ Scheme-native ASCENT implementation built on Gerbil POO and POO Flow Core.
 Building API and standard SS benchmark profile. The ASCENT package owns its
 Gerbil build and 1000-sample SS qualification; POO Flow checks only pinned
 consumer integration.
+
+The [Scheme Coding Style index](docs/scheme-coding-style.org) groups compiler
+source studies, production responsibility boundaries and verification history
+into separate topic documents.
+
 Each top-level directory is a Gerbil module namespace:
 
 | Namespace | Current responsibility |

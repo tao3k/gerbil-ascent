@@ -1,0 +1,296 @@
+#+title: Scheme Coding Style: Compiler and Scheme patterns
+
+[[file:../scheme-coding-style.org][Coding Style index]]
+
+Compiler sources, checked calling conventions, lexical scope and finite types. Study notes and receipts retain their original revision and scope;
+historical source paths and timings are not current qualification claims.
+
+* Exact Gerbil source
+
+The active Homebrew executable is =/opt/homebrew/bin/gerbil=, linked to
+=/opt/homebrew/Cellar/gerbil-scheme@0.19/0.19.2591dcd.patchf5cedd8168cb/=.
+Its source root is =2591dcd/src/= under that directory. The tool reports
+=Gerbil 2591dcd on Gambit dcd677c=. The installed release receipt pins
+upstream revision =2591dcd9b7c6d2c4e9dd8611a17c5b1a5d82bbdb= and
+patchset =f5cedd8168cb365ba41289327601d9305738c9a0=. Findings
+below refer to this installed source rather than a newer upstream API.
+
+- =gerbil/compiler/optimize.ss:27=: =optimize!= parameterizes pass-local
+  mutation and type tables before loading dependencies and optimizing
+  module code. This is a useful ownership model for keeping our
+  declaration analysis separate from evaluator state.
+- =gerbil/compiler/optimize-xform.ss:16=: =defcompile-method= dispatches
+  explicitly on syntax forms. It is a model for making supported DSL
+  forms visible, but does not justify introducing a generic pass
+  framework into this repository.
+- =gerbil/compiler/compile.ss= and =optimize-call.ss:50=: direct calls are
+  optimized according to resolved procedure information; the call
+  optimizer may emit unchecked calls for known procedures and handles
+  lambda inlining only under binding/side-effect conditions. A shorter
+  source expression is not by itself evidence of faster generated code.
+- =gerbil/core/match.ss= and =more-syntax-sugar.ss=: available match and
+  hygienic syntax mechanisms. Use them where they express a grammar or
+  variant more clearly without changing expansion-time diagnostics.
+- =std/list/list.ss:9,24,259=: =append-map=, =delete-duplicates/hash=,
+  =butlast=, =group-same=, and length predicates are available.
+  =butlast= returns an empty list for empty input, so
+  =gerbil-ascent-lattice-key= checks the nonempty row contract first.
+- =std/iter/macros.ss:34,289= and =api.ss=: =for= and =for/fold= exist in this
+  version. Their iteration order and temporary allocations need a
+  concrete local use case before replacing a named loop.
+- =std/hash/misc.ss:261=: =hash-ensure-modify!= first ensures a default
+  entry and then modifies it. For an empty-list default,
+  =gerbil/runtime/hash.ss:580= also exposes =hash-update!=, which avoids
+  a separate default thunk. It was tried locally and then reverted;
+  a simpler expression alone was not enough reason to replace the
+  established implementation.
+
+Two direct =gxi= checks on this toolchain returned =(8 7)= after
+updating the same hash key with values 7 and 8 using
+=hash-update!=, and raised a pair-expected error for =(last '())=.
+They confirm the small operations, not the whole evaluator.
+
+* Feature: checked scalar calling conventions
+
+=gerbil/compiler/optimize-call.ss:43= resolves procedure information before
+optimizing an application; its treatment of known procedures and lambda calls
+depends on actual bindings and effects. The transferable lesson is to check
+generated calls and measured behavior instead of assuming a source form creates
+the desired calling convention.
+
+The checked language supports unary =even?= and =identity=, and binary =<=
+and =+=. Their operand descriptors are validated at construction and rebuilt
+at admission. The old callback interpreted those descriptors again on every
+row, assembled a reversed argument list and invoked =apply=.
+=program/scheme-checked.ss= now specializes the six variable/literal calling
+conventions at construction. A small hygienic =checked-call= rule expands the
+runtime parameter check into a short list match and calls the already checked
+operator directly. Numeric validation still executes at row time, including
+literal-only operators. The original argument-mismatch error is retained.
+
+An initial =case-lambda= variant was rejected. With its variadic error fallback,
+this installed toolchain generated a rest-argument lambda, a length check and
+=apply=. In the complete paired run it won only 797, 730 and 546 of 1000 pairs
+for right-literal, left-literal and unary-literal inputs. These failed the
+unchanged 900-win admission criterion. The explicit-match variant generates
+pair/null checks followed by the operator call in its successful path.
+
+The native =t/performance/ascent-checked-call-performance-test.ss= freezes the
+old calling convention from =a97762d=. Both implementations are natively
+compiled; each shape uses 1000 alternating old/new pairs of 256 calls, identical
+inputs and type checks, with GC outside timed samples. All six shapes must win
+at least 900 pairs and retain median nonregression. This is a calling-kernel
+benchmark: construction, admission, environment lookup and full solves are
+excluded. It does not measure individual-call tail latency.
+
+#+begin_src sh
+just test-file t/qualification/scheme-relational-test.ss
+just test-file t/performance/ascent-checked-call-performance-test.ss
+#+end_src
+
+The semantic module adds checks for all binary operand shapes, immutable scalar
+identity values including =#f=, incorrect parameter counts and deferred numeric
+errors. Existing admission, descriptor-tampering, captured-value and retained
+session Cases continue to cover the whole checked-language boundary.
+
+Two local native paired runs qualify every shape. Strict wins in source order
+(binary variables, right literal, left literal, both literals, unary variable,
+unary literal) are =995/996/998/1000/998/998= in the first run and
+=997/992/999/999/998/998= in the repeat. Batch medians decrease by 50--63 percent
+in these runs. This is bounded calling-kernel evidence, not a complete-solve
+speedup claim. Raw measurements remain in ignored =.cache/ascent/=.
+
+Local qualification with the pinned cache SDK and =GERBIL_BUILD_CORES=12=
+also passes standard build, the final 42-module policy check (findings=0,
+errors=0), all 50 semantic modules and 400 Cases, and all 17 original SS
+performance scenarios. Each command exits 0. Original SS sample counts,
+thresholds, module deadlines and Case budgets are unchanged. The paired kernel
+Case is an additional explicit native test-file command, not a replacement for
+those gates. Remote CI remains separate evidence.
+
+* Feature: syntax boundaries
+
+=program/syntax.ss= and =program/scheme-language.ss= both lower atoms,
+negation, and reducers. Their generated objects and error paths must
+be compared production by production before sharing code. Keep
+lexical fragment handles hygienic, preserve source locations and
+diagnostics, and never broaden the public checked scalar grammar
+to accept arbitrary callbacks. An extra macro that hides one runtime
+call would make the layer harder to read.
+
+The current =relational-atom= and =relational-atom/lexical= expansions
+look alike but quote a relation spelling versus evaluate a lexical
+handle. That difference is the ownership boundary, so a common
+expander would need to keep it visible. =relational-copy-row= and the
+operator project constructor use =map identity= to copy list spines
+before retention; these are intentional copies, not redundant maps.
+The contract in =docs/native-library-acceptance.org= also keeps the
+historical =ascent= syntax on the test path, so deleting or folding it
+into the native language would be a separate interface change.
+The same snapshot-copy pattern appears in =candidate/reasoning.ss= and
+=program/scheme-admission.ss=. Its presence across those boundaries
+is evidence of an isolation rule, not a reason for a blanket rewrite.
+
+* Study: compiler phase contracts and higher-order normalization
+
+This study reads the installed Gerbil compiler Scheme directly, rather than
+inferring quality from an optimization result. Three concrete structures matter:
+
+- =compiler/optimize-top.ss:21-86= declares separate visitors for top-level
+  types, declarations, expression types, complete type collection and mutators.
+  The operation determines the visitor, while the AST representation stays
+  shared. ASCENT already separates descriptor validation from lowering inside
+  =relational-typed-compile=; the appropriate improvement is to state their
+  different obligations, rather than introduce another visitor framework.
+- =compiler/optimize-base.ss:15-29,492-503= names optimizer, local and path
+  contexts separately. Type lookup searches path facts, then local facts, then
+  the optimizer table; alias resolution delegates to this lookup. The mutable
+  optimizer tables are fresh in the optimizer-info constructor. ASCENT's
+  compile counters, source tables and domain accumulator likewise belong to
+  one invocation. Reified closure environments use descriptor identity and
+  lexical bindings; source-name equality cannot replace that relation.
+- =compiler/optimize-top.ss:182-194,213-268= still visits an expression when its
+  binding type is already known. Lambda and let handling establish the local
+  environment around the body traversal. Known metadata therefore does not
+  authorize skipping traversal or changing scope. In ASCENT, validation,
+  lowering visits and conservative finite-height expansion keep their original
+  budget charges even when source lowering reuses an existing source node.
+
+The complete =program/higher-order.ss= owner now carries adjacent polymorphic
+and domain signatures for all 21 definitions, including its three representation
+constructors. Comments state the distinct relation/arrow field meanings, source
+spine ownership, builder-once construction, identity-based lexical bindings and
+full graph validation before lowering. These signatures describe runtime checked
+contracts; they do not install a static type checker or change function bodies.
+Removing comment lines from the module yields exactly the previous source bytes.
+
+Two independent native regression Cases specify domain publication order across
+three successive compiles and the existing flatmap normalization budget boundary:
+limit five rejects and limit six accepts. They include false and character atoms
+and retain all previous closure, domain, native Session and rollback tests.
+
+A separate candidate replaced repeated accumulated-domain copy/deduplication
+with an invocation-owned table of each atom's latest position and representative,
+then sorted only at publication. Inspecting =std/list/list.ss:21-30= was necessary:
+=delete-duplicates/hash= keeps the latest occurrence by default, so first-seen
+insertion order would silently change observable domain declarations. The candidate
+passes all 17 native higher-order Cases, including the new order and budget goldens.
+
+The frozen native reference is =bf7b75e=. Whole =relational-typed-compile= calls
+are timed; descriptors are constructed outside timing, and published finite
+domains and source-handle count are checked afterwards. The intended fixtures
+use domain widths/depths 2/0, 2/16, 128/16 and 512/32, each with 1000 alternating
+pairs and explicit GC every 20 pairs outside timing. Both normalizers resolve to
+native =.ssi= files. The completed 2/0 control has median old/new 1126/1134
+jiffies, 445 strict wins and p95 57595/155971. Wall-clock tails vary substantially;
+no causal CPU or allocation conclusion is drawn from them. The 2/16 fixture reaches
+100 pairs before the unchanged 180-second deadline, and the invocation exits 124.
+The remaining fixtures are not measured. No sample count or deadline is relaxed.
+This evidence does not justify the extra collector and sorting machinery; the
+candidate is removed completely. Production execution remains unchanged.
+All candidate source, build output and raw diagnostics remain in ignored
+=.cache/ascent/domain-collection/=. The committed work is module-wide contract
+clarification, independently specified regression tests and this compiler study.
+
+After removing the candidate, all 17 higher-order Cases pass again with native,
+module/harness/final success markers and exit 0. The final selected library policy
+audit has =findings=0=, =errors=0= and exit 0, closing the earlier higher-order
+contract warning. Parser-owned diagnostics identified signature prose being
+concatenated into contracts and a malformed multiline optional-arity declaration.
+Explanations now precede complete signatures; the normalization signature states
+its full parameter list, with the default expansion limit explained separately.
+The representation contracts retain explicit type-variable relationships rather
+than =Any= placeholders. Final comment-stripped source still matches =bf7b75e=.
+No full-suite or application performance result is claimed for this study.
+
+* Study: operator traversal and local rule emission
+
+The installed Gerbil compiler's =optimize-top.ss:244-291= uses named local
+=collect-e= procedures inside =collect-type-let-values%= and
+=collect-type-letrec-values%=. The local procedure handles one binding's type;
+the enclosing procedure owns traversal order and the dynamic local environment.
+Ordinary let expressions are compiled before the body environment is installed.
+Recursive bindings are compiled inside their environment, in two explicit
+passes. The useful lesson is to keep scope and ordering visible in the driver
+while moving a separate responsibility into a small local procedure.
+
+=program/operator.ss= now applies this structure to =lower-operator-graph=.
+Named local definitions replace the manual letrec/lambda binding list.
+=emit= owns graph traversal, active lexical bindings, closed-node memoization,
+fixed-point placeholders and projected-join fusion. =emit-operation-rules!=
+receives already lowered inputs and owns ordinary union, join, selection,
+projection and finite mapping rule emission. Both close over one compilation's
+relation/rule/source accumulators; no public interface or shared context is
+added. The public compilation contract is adjacent to its actual definition.
+
+Free-parameter validation still precedes memo lookup. Fixed-point relations
+are allocated before their bodies, transformer input graphs are emitted before
+their bound bodies, and ordinary inputs are lowered before their output and
+private sources are allocated. The operation clauses and scope traversal match
+the preceding revision after whitespace normalization. Rule construction,
+gensym order, final publication reversal and budget enforcement are preserved.
+
+A native Unit Test exercises a shared selection/project/flatmap pipeline consumed
+by nested unions. It checks that private sources are emitted once, explicit
+sources retain traversal order, union rules retain both shared consumers in
+order, and solved rows agree with the independent descriptor interpreter.
+Existing lexical-escape, fixed-point, projected-join, nullary and fragment tests
+remain semantic gates. This is a responsibility refactor; no speedup is claimed.
+
+Before integrating concurrent test-support commits, the complete native
+=just test= invocation exits 0: 57 modules and 491 Cases pass. All 57 module
+logs contain native, module, harness and final success markers, with no Case
+errors. The original 12-worker scheduling, module deadlines and Case budgets
+remain unchanged. Logs stay in ignored =.cache/ascent/operator-lowering/=.
+
+After normal rebase onto concurrent test-support and proof updates, native
+operator, model-closure, artifact-publication and higher-order modules pass,
+with 20, 27, 6 and 18 Cases respectively, including the newly added exhaustive
+lexical closure capture regression. All four have
+complete native/module/harness/final markers and no Case errors. These are
+focused integration checks; the 57-module full-suite result above precedes
+that integration. The selected production-source policy audit exits 0 with
+=findings=0= and =errors=0=; concurrent commits do not change these production
+modules. No AOT application or remote CI qualification is inferred.
+
+* Study: one finite type algebra for symbolic and bounded arithmetic
+
+Gerbil's installed =optimize-xform.ss:17-48= reuses traversal handlers such as
+=apply-body-lambda%=, =apply-body-let-values%= and =apply-operands= across
+expression operations. The mutation collector specializes assignment handling;
+expression substitution supplies reference and assignment handlers on the basic
+transform traversal. The shared structural walk has one owner, while each
+operation supplies its interpretation and state.
+
+ASCENT's higher-order compiler had separate symbolic and bounded implementations
+of finite type cardinality and height. Both described relation powersets and
+pointwise arrow lattices. =type-cardinality= and =type-height= now own those
+structural recursions once. The symbolic height API supplies constructors for
+=expt= and =*= expressions; bounded fixed-point lowering supplies its existing
+saturating power and product operations. These procedures remain private to the
+module that owns the finite type representation.
+
+Relation height remains =domain-size^arity=, relation cardinality remains two
+to that height, arrow cardinality remains output cardinality raised to input
+cardinality, and arrow height remains input cardinality times output height.
+The bounded interpreter retains the expansion-limit-plus-one cap and repeated
+squaring; it does not allocate complete powersets or function spaces. Validation,
+domain accumulation, lexical environments and normalization visit accounting
+are unchanged. No memoization or sample-based termination is introduced.
+
+Native Unit Tests extend the exact symbolic-expression golden to nested arrow
+types. They also solve function fixed points over empty domains at arities zero
+and one, and require the precise height-budget rejection for an arity-128
+two-atom relation. Existing finite-seed closure, recursive function and exact
+normalization-budget checks remain regression gates. This change consolidates
+the mathematical ownership; it makes no performance claim.
+
+Focused native =just test-file= qualification passes the higher-order module's
+20 Cases and model-closure module's 27 Cases. Both invocations exit 0 and have
+complete native/module/harness/final markers, with no Case errors. The selected
+production-source policy audit exits 0 with =findings=0= and =errors=0=.
+Original expansion limits, Case budgets, process deadlines and worker capacity
+are preserved. Logs stay in ignored =.cache/ascent/type-height-algebra/=.
+This is focused local semantic qualification; no new full-suite, performance,
+AOT application or remote CI result is asserted.
+

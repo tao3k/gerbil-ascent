@@ -119,7 +119,7 @@ The explicit declaration-scope research benchmark lives under =t/performance/=
 and is not part of normal semantic or original SS execution. It compares
 1000 samples per shape on frozen =822348c= and the candidate using the same
 compiled fixture and SDK, with reversed process order on repeat. See
-=docs/code-quality-scheme-native-ascent.org= for the scope invariants and
+=docs/coding-style/planning-and-graphs.org= for the scope invariants and
 measurement boundaries. All generated artifacts and logs stay in =.cache/=.
 
 * DSL closure discriminator

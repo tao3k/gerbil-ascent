@@ -1,0 +1,139 @@
+#+title: Scheme Coding Style: Architecture and responsibility
+
+[[file:../scheme-coding-style.org][Coding Style index]]
+
+Current module boundaries and algorithm ownership. Study notes and receipts retain their original revision and scope;
+historical source paths and timings are not current qualification claims.
+
+* Source picture
+
+#+begin_example
+syntax                    declaration analysis        execution
+program/syntax.ss -------> program/planning.ss ------> program/evaluate.ss
+program/scheme-language.ss        |                          |
+                                 v                          v
+                        core/positive-plan            table/access
+                        core/rule-semantics           table/storage
+                        core/dependency-graph
+
+table/expression --------> core/binary-relation <------ core/binary-program
+POO demand adapter         binary relation algorithms  bounded evaluation
+#+end_example
+
+The two syntax surfaces have different contracts. The historical
+=ascent= form admits general Scheme expressions and patterns and is
+kept for the Rust-oracle qualification path. It is not re-exported by
+=program/interface.ss=. The native public =relational-program= form has
+a checked scalar grammar and an admission boundary. Shared machinery
+must preserve that distinction. =program/analysis.ss= caches immutable
+declaration plans, while =program/evaluate.ss= owns mutable relation
+state and retained-session behavior.
+
+* Study: core kernel ownership and program coordination
+
+The installed compiler's =optimize-top.ss:244-268= defines a small local
+=collect-e= handler inside =collect-type-let-values%=. Its outer traversal owns
+binding order and the body environment; the helper owns one binding's type
+collection. =optimize-xform.ss:202-223= similarly separates body/let traversal
+from reference matching. The transferable structure is an explicit algorithm
+owner and an adapter that supplies scope and traversal, rather than a generic
+"core" bucket containing unrelated public interfaces.
+
+ASCENT previously put only the specialized binary evaluator in =core/=, while
+generic graph, rule-semantics and positive-plan algorithms lived alongside POO
+declarations, language compilation and Session coordination in =program/=.
+The three generic kernels consume private numeric/vector/list data and have no
+POO declaration or Session dependencies. They now belong to a coherent core layer:
+
+| Module | Responsibility | State owner |
+|--------+----------------+-------------|
+| =core/dependency-graph= | Dense-ID SCC traversal | Each traversal |
+| =core/rule-semantics= | Stratification, row binding, expression/head semantics | Caller environment and local traversal |
+| =core/positive-plan= | Immutable positive plans and ordered slot execution | Shared immutable plans; fresh frames per engine |
+| =core/binary-program= | Existing bounded binary evaluator | Each evaluation |
+| =program/planning= | Validate POO declarations and adapt them to lowered plans | One admitted schema/Analysis |
+| =program/evaluate= | Coordinate admitted sources, providers and fixed-point execution | One engine |
+| =program/session= | Update transaction and retained result lifecycle | One Session |
+| =table/*= | Physical indexes and storage providers | Evaluator-owned storage |
+
+Imports migrate directly to the new module identities. No compatibility wrapper
+or second algorithm copy remains in =program/=. The public =program/interface=
+entry point and exported function names remain unchanged. Build entries, native
+qualification references, temporal imports and executable benchmark module paths
+are updated together. Existing frozen local performance implementations and
+historical evidence retain their original internal source structure.
+
+The dependency-graph file is byte-identical to the former graph module.
+Rule-semantics and positive-plan are byte-identical after their sole sibling
+import substitutions. The change adds no cache, layout field, budget exception,
+callback or scheduling policy. Generic core imports have no reverse dependency
+on =program/=. Core organization follows algorithm and state ownership; it does
+not imply that every application rule, public declaration or proof adapter is a
+core concern. No performance improvement is claimed from namespace migration.
+
+The complete native =just test= invocation passes 57 modules and 490 Cases,
+with 53 parallel modules, four exclusive modules and 12 workers. Every module
+log has native, module, harness and final success markers; no Case errors or
+budget exceptions are present, and the invocation exits 0. Generated core =.ssi=
+files confirm =positive-plan -> rule-semantics -> dependency-graph= imports.
+The selected library-source policy audit exits 0 with =findings=0= and
+=errors=0=. Original Case budgets and module timeouts remain unchanged.
+All logs stay in ignored =.cache/ascent/core-ownership/=. This is a namespace
+and responsibility refactor; no new SS or AOT performance qualification is
+asserted from the semantic suite or the existing pre-migration measurements.
+
+* Study: binary relation kernels across core and table boundaries
+
+This study surveys production modules under =core/=, =table/=, =candidate/=,
+=interface/= and =temporal/=, then follows one complete dependency chain.
+Gerbil's =compiler/optimize.ss:15-40= separates its optimization entry point
+from the base, traversal, type, specialization, annotation and call passes.
+The entry point establishes fresh mutation and local-type state; individual
+algorithms own their work. ASCENT's corresponding issue was a reversed owner:
+=core/binary-program= imported =table/expression= for bounded closure, while
+the table expression module contained both the algorithms and the POO adapter.
+
+=core/binary-relation= now owns encoded-pair composition, closure, shortest
+distance, bitmaps and dense path propagation. Its private adjacency and
+frontier state belongs to each invocation or prepared view. The existing POO
+persistent-set input and canonical projection protocol are retained by this
+specialized binary kernel. Generic graph/rule/positive-plan kernels remain
+independent of POO declarations and Session state.
+
+=table/expression= owns the source slots and demand-driven expression adapter:
+it chooses which view to demand, preserves overridden neighbor callbacks, and
+materializes a persistent result set when requested. =core/binary-program=
+calls the kernel directly; no core module imports the table namespace.
+The extracted algorithm forms are unchanged from the preceding revision;
+newly exported view and analysis helpers receive adjacent contract examples.
+The adapter uses Gerbil's =cut= to specialize repeated visitor callbacks.
+Native snapshot provenance checks, private state, publication order and
+budget failure paths are unchanged.
+
+Build ownership and consumers move together: the library list, binary dispatch
+oracle and benchmark native-resolution checks, and materialization benchmark
+build/source fingerprints include the new kernel. Frozen reference algorithms
+are untouched. Direct bounded-closure imports migrate to the new module; no
+compatibility copy of the algorithms remains in the table adapter.
+
+The native table Unit Test adds a budget-isolation check for dense-bitmap and
+sparse relation domains. A failed tight-budget kernel invocation and a failed
+demanded bounded closure must leave subsequent complete projections and
+membership queries intact. Existing callback, distance, dense-path and binary
+program budget tests exercise both consumers of the shared kernel.
+
+The candidate survey retains its independent finite replay and certificate
+checking boundary; it does not redirect that semantic oracle through the
+production evaluator. Interface projection and temporal ownership are separate
+concerns. This change establishes the core/table dependency direction and makes
+no performance claim from moving algorithm code.
+
+The first native pass rejected a missed direct bounded-closure import in the
+materialization test. The next pass exposed self-field recursion in the new
+budget-isolation test: POO implicitly binds the field name in =(radix radix)=.
+The lexical argument is now named =pair-radix= and the field explicitly reads
+that argument. Both failures were repaired without changing kernel bodies or
+budgets; failed logs remain separate from final qualification evidence.
+
+The current local verification boundary is recorded in
+[[file:qualification-history.org::*Binary kernel ownership and Coding Style organization][the qualification history]].

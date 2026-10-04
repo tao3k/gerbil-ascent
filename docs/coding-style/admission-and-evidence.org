@@ -1,0 +1,91 @@
+#+title: Scheme Coding Style: Admission and evidence
+
+[[file:../scheme-coding-style.org][Coding Style index]]
+
+Finite selection, execution receipts and semantic evidence boundaries. Study notes and receipts retain their original revision and scope;
+historical source paths and timings are not current qualification claims.
+
+* Feature: finite selection and admission
+
+=program/operator.ss= lowers =select-eq= into a singleton source relation
+plus an equality join. A direct literal term in the body and head was
+tried locally. It removed one relation and allowed a smaller source
+budget, and it passed the finite selection and operator qualifications.
+A paired native probe then compared the original declaration order and
+source handles with the literal version, under equal budgets and with
+independent expected-row checks. At 64 and 256 source rows, most
+alternating admission-plus-solve samples for the literal version were
+much slower, despite noisy host timing. The experiment was reverted;
+the singleton join remains the implementation. Do not infer a runtime
+gain from the smaller rule shape.
+
+=program/scheme-admission.ss= used to copy Core relation rows before
+calling =relational-source=, which checks and copies them again. The
+snapshot now delegates that single copy to =relational-source=. A
+mutable Core input-row test changes the caller's list after admission
+and confirms the admitted result stays unchanged. Retained replacement
+and append paths had the same duplicate =relational-source= validation
+after =relational-copy-rows= had already checked scalar values, arity,
+and copied the row lists. They now send that checked copy directly to
+the native session. Append uses the existing single-row validator and
+copier directly, without building a temporary one-element list.
+Existing replacement rollback and isolation cases,
+plus a new append isolation and non-scalar case, protect the contract.
+These are fewer copies at the boundaries; their runtime benefit still
+needs a matched measurement rather than an inference from shorter
+source.
+
+The reproducible boundary probe is =just admission-copy-benchmark=. It
+runs the old and new operations in one Gerbil process, checks equal
+rows and independent list spines after every sample, warms both paths,
+and alternates their order for eight pairs per case. Bulk admission
+and replacement use 512 two-column rows, 20 repetitions per timed
+sample; single-row append uses 1000 repetitions. Timing starts inside
+the loaded process, so Gerbil startup is excluded. This measures row
+copy and validation work only; it does not measure a complete retained
+solve, rollback, or application latency.
+
+Two consecutive local runs of =GERBIL_PATH=/private/tmp/ascent-v0121-gerbil
+just admission-copy-benchmark= each completed all three cases, six
+warm-ups, 48 alternating timed samples, final =OK=, and exit 0. Times
+below are median microseconds for one timed sample. Each case has eight
+old/new pairs; "new wins" counts pairs where the new sample was faster.
+
+| run | boundary    | rows x repeats | old median us | new median us | new wins |
+|-----+-------------+----------------+---------------+---------------+----------|
+|   1 | admission   | 512 x 20       |        280082 |        236348 | 4/8      |
+|   1 | replacement | 512 x 20       |        218451 |         61335 | 7/8      |
+|   1 | append      | 1 x 1000       |       6309096 |           760 | 8/8      |
+|   2 | admission   | 512 x 20       |        261153 |        133609 | 6/8      |
+|   2 | replacement | 512 x 20       |        191588 |          4591 | 7/8      |
+|   2 | append      | 1 x 1000       |       4121766 |           366 | 8/8      |
+
+The admission pair counts are inconclusive under host timing noise.
+Replacement and append consistently favor the single-copy boundary.
+These results establish local copy/validation cost, not an end-to-end
+speedup for a retained solve. A broader runtime performance claim
+requires a matched complete workload on an uncontended machine.
+
+* Feature: execution and evidence
+
+The stateful engine is in =program/evaluate.ss=; =program/analysis.ss=
+owns immutable declaration caches. A change that crosses this boundary
+needs retained-session source replacement, cache invalidation,
+provider dispatch, and stale-receipt tests together.
+
+For each code change, record the old and new invariant, the exact
+v0.19 source operation used, a qualifying example including edge
+cases, and the smallest relevant =just test-file= result. A complete
+slice also needs =just test=, =just check-policy=, and =just build=.
+The =justfile= harness requires =MODULE-OK=, =HARNESS-OK=, final =OK=,
+and no error or overflow markers. For a performance claim, compare
+matched runs from =just small-graph-benchmark= and the existing
+scenario recipes, including timing spread and semantic equivalence.
+
+The current code-review reference is PR #1, branch =feature/ascent-scheme-syntax=.
+The published
+small-graph receipts in =docs/small-graph-benchmark.org= include earlier
+source states; rerun the exact head for performance comparisons. They
+cover one positive-closure workload and do not establish general
+Datalog speed.
+

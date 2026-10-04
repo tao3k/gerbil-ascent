@@ -699,7 +699,14 @@ build-dsl-closure:
     export ASCENT_DSL_BUILD_TOKEN="$(python3 -c 'import uuid; print(uuid.uuid4())')"
     export ASCENT_DSL_BUILD_STARTED="$(python3 -c 'import time; print(time.monotonic())')"
     export GERBIL_LOADPATH="{{ justfile_directory() }}${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}"
-    timeout --signal=KILL 180s bash -e -c 'gerbil env gxi {{ gerbil_test_runtime_options }} t/harness/run.ss build-dsl-closure; python3 tools/dsl-closure-artifact.py finalize'
+    compiler=(gerbil env gxi)
+    if [[ -n "${GERBIL_PATH:-}" ]]; then
+        # The captured package environment is already explicit. Match gxpkg's
+        # public env-exec PATH setup without starting its package CLI again.
+        export PATH="$GERBIL_PATH/bin:$PATH"
+        compiler=(gxi)
+    fi
+    timeout --signal=KILL 180s bash -e -c '"$@" {{ gerbil_test_runtime_options }} t/harness/run.ss build-dsl-closure; python3 tools/dsl-closure-artifact.py finalize' build-dsl-closure "${compiler[@]}"
 
 # Run the known Suites through std/test in serial AOT processes with strict progress.
 check-dsl-closure:

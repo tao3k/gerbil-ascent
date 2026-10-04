@@ -64,3 +64,7 @@ limits, native insertion/replacement rollback, rejection of computed values
 outside the universe, and independent admission reconstruction of predicates.
 Acceptance requires the source-bound AOT artifact and unchanged watchdog,
 heap and module deadlines; GitHub checks must match the submitted head.
+
+The [[file:evidence/scheme-higher-order-20261004/receipt.json][frozen receipt]] records 11 native Cases with unchanged bounds,
+source hashes, formal source hash, and excluded 180-second build failures.
+No model calls are included.

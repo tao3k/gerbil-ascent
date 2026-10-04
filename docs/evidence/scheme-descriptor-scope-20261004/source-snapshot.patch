@@ -1,0 +1,275 @@
+diff --git a/packages/proofs/lean/DescriptorScope.lean b/packages/proofs/lean/DescriptorScope.lean
+new file mode 100644
+index 0000000..3b7942d
+--- /dev/null
++++ b/packages/proofs/lean/DescriptorScope.lean
+@@ -0,0 +1,82 @@
++/-
++SPDX-FileCopyrightText: 2026 tao3k team and Contributors
++SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
++
++Identity scope preflight for acyclic descriptor unfoldings. Natural keys model
++stable descriptor identities, not Scheme symbol spelling. Graph revalidation,
++sharing and row typing are separate implementation refinement obligations.
++-/
++import Std
++namespace Ascent.DescriptorScope
++
++inductive Term where
++  | source
++  | parameter : Nat → Term
++  | union : Term → Term → Term
++  | bind : Nat → Term → Term
++
++def Free : Term → Nat → Prop
++  | .source, _ => False
++  | .parameter identity, key => key = identity
++  | .union a b, key => Free a key ∨ Free b key
++  | .bind identity body, key => Free body key ∧ key ≠ identity
++
++def Scoped : List Nat → Term → Prop
++  | _, .source => True
++  | context, .parameter identity => identity ∈ context
++  | context, .union a b => Scoped context a ∧ Scoped context b
++  | context, .bind identity body => Scoped (identity :: context) body
++
++theorem free_bound_iff_scoped (term : Term) (context : List Nat) :
++    (∀ key, Free term key → key ∈ context) ↔ Scoped context term := by
++  induction term generalizing context with
++  | source => simp [Free, Scoped]
++  | parameter identity => simp [Free, Scoped]
++  | union a b ia ib =>
++    simp only [Free, Scoped]
++    constructor
++    · intro h
++      exact ⟨(ia context).mp (fun key hk => h key (Or.inl hk)),
++        (ib context).mp (fun key hk => h key (Or.inr hk))⟩
++    · intro h key hk
++      exact hk.elim ((ia context).mpr h.1 key) ((ib context).mpr h.2 key)
++  | bind identity body ih =>
++    change (∀ key, Free body key ∧ key ≠ identity → key ∈ context) ↔ Scoped (identity :: context) body
++    rw [← ih (identity :: context)]
++    constructor
++    · intro h key hk
++      by_cases eq : key = identity
++      · simp [eq]
++      · exact List.mem_cons_of_mem identity (h key ⟨hk, eq⟩)
++    · intro h key hk
++      have member := h key hk.1
++      simp only [List.mem_cons] at member
++      exact member.elim (fun eq => False.elim (hk.2 eq)) id
++
++theorem closed_iff_scoped (term : Term) :
++    (∀ key, ¬ Free term key) ↔ Scoped [] term := by
++  have h := free_bound_iff_scoped term []
++  simpa using h
++
++theorem escaped_parameter_rejects (term : Term) (key : Nat) (escaped : Free term key) :
++    ¬ Scoped [] term := by
++  intro accepted
++  exact ((closed_iff_scoped term).mpr accepted key) escaped
++
++theorem scope_extension (term : Term) (a b : List Nat)
++    (included : ∀ key, key ∈ a → key ∈ b) (accepted : Scoped a term) : Scoped b term :=
++  (free_bound_iff_scoped term b).mp
++    (fun key free => included key ((free_bound_iff_scoped term a).mpr accepted key free))
++
++theorem binding_capture (key : Nat) : Scoped [] (.bind key (.parameter key)) := by
++  simp [Scoped]
++
++theorem distinct_binding_does_not_capture (a b : Nat) (distinct : a ≠ b) :
++    ¬ Scoped [] (.bind a (.parameter b)) := by
++  simp [Scoped, Ne.symm distinct]
++
++theorem shared_child_cannot_escape (body : Term) (key : Nat)
++    (free : Free body key) : ¬ Scoped [] (.union (.bind key body) body) :=
++  escaped_parameter_rejects _ key (Or.inr free)
++
++end Ascent.DescriptorScope
+diff --git a/program/operator.ss b/program/operator.ss
+index be0dd95..4d9fd5b 100644
+--- a/program/operator.ss
++++ b/program/operator.ss
+@@ -252,12 +252,83 @@
+         (hash-put! cache node free)
+         free))))
+ 
++;;; Public descriptor accessors expose mutable list/vector spines. Recheck
++;;; the complete graph before scope analysis or emission; feedback uses a
++;;; parameter node, never a pointer cycle in the descriptor graph itself.
++(def (check-operator-graph! root)
++  (let ((states (make-hash-table-eq))
++        (checked-rows (make-hash-table-eq)))
++    (def (reject) (error "invalid or mutated operator descriptor"))
++    (def (visit node)
++      (require-op node)
++      (case (hash-get states node)
++        ((visiting) (error "cyclic operator descriptor graph"))
++        ((checked) (void))
++        (else
++         (hash-put! states node 'visiting)
++         (let ((kind (relational-op-kind node))
++               (arity (relational-op-arity node))
++               (inputs (relational-op-inputs node))
++               (data (relational-op-data node)))
++           (unless (and (exact-integer? arity) (>= arity 0) (list? inputs)) (reject))
++           (let (count (case kind ((source parameter) 0) ((union join) 2)
++                            ((select-eq project flatmap fix apply) 1) (else #f)))
++             (unless (and count (= (length inputs) count)) (reject)))
++           (for-each visit inputs)
++           (case kind
++             ((source)
++              (unless (and (vector? data) (= (vector-length data) 2)
++                           (symbol? (vector-ref data 0))) (reject))
++              (hash-put! checked-rows node (relational-copy-rows (vector-ref data 1) arity)))
++             ((parameter) (unless (eq? data #f) (reject)))
++             ((union)
++              (unless (and (eq? data #f)
++                           (andmap (lambda (input) (= arity (relational-op-arity input))) inputs)) (reject)))
++             ((join)
++              (unless (and (vector? data) (= (vector-length data) 2)
++                           (= arity (+ (relational-op-arity (car inputs)) (relational-op-arity (cadr inputs))))
++                           (valid-column? (vector-ref data 0) (relational-op-arity (car inputs)))
++                           (valid-column? (vector-ref data 1) (relational-op-arity (cadr inputs)))) (reject)))
++             ((select-eq)
++              (unless (and (vector? data) (= (vector-length data) 2)
++                           (= arity (relational-op-arity (car inputs)))
++                           (valid-column? (vector-ref data 0) arity)
++                           (relational-scalar? (vector-ref data 1))) (reject)))
++             ((project)
++              (unless (and (list? data) (= arity (length data))
++                           (andmap (lambda (column) (valid-column? column (relational-op-arity (car inputs)))) data)) (reject)))
++             ((flatmap)
++              (unless (and (vector? data) (= (vector-length data) 2)
++                           (equal? (vector-ref data 0) (relational-op-arity (car inputs)))) (reject))
++              (hash-put! checked-rows node
++                         (relational-copy-rows (vector-ref data 1) (+ arity (vector-ref data 0)))))
++             ((fix)
++              (visit data)
++              (unless (and (eq? (relational-op-kind data) 'parameter)
++                           (= arity (relational-op-arity data))
++                           (= arity (relational-op-arity (car inputs)))) (reject)))
++             ((apply)
++              (unless (relational-transform? data) (reject))
++              (let ((parameter (relational-transform-parameter data))
++                    (body (relational-transform-body data)))
++                (visit parameter) (visit body)
++                (unless (and (eq? (relational-op-kind parameter) 'parameter)
++                             (equal? (relational-transform-input-arity data) (relational-op-arity parameter))
++                             (equal? (relational-transform-output-arity data) (relational-op-arity body))
++                             (= (relational-op-arity parameter) (relational-op-arity (car inputs)))
++                             (= arity (relational-op-arity body))) (reject))))))
++         (hash-put! states node 'checked))))
++    (visit root)
++    (unless (null? (free-parameters root (make-hash-table-eq)))
++      (error "operator fixed-point parameter escaped its body"))
++    checked-rows))
++
+ ;;; Compilation is finite and instance-local. A placeholder may be read
+ ;;; only inside its own fix body; distinct source nodes cannot silently
+ ;;; alias the same public name, even when their rows happen to match.
+ (def (lower-operator-graph root fresh-sources?)
+-  (require-op root)
+-  (let ((relations []) (rules []) (sources [])
++  (let ((checked-rows (check-operator-graph! root))
++        (relations []) (rules []) (sources [])
+         (memo (make-hash-table-eq))
+         (free-cache (make-hash-table-eq))
+         (names (make-hash-table-eq))
+@@ -344,7 +415,7 @@
+                (cons (gerbil-ascent-relation
+                       mapping-name
+                       (+ input-arity (relational-op-arity node))
+-                      (vector-ref data 1))
++                      (hash-ref checked-rows node))
+                      relations))
+              (set! sources (cons mapping-name sources))
+              (add-rule
+@@ -388,7 +459,7 @@
+               (set! relations
+                 (cons (gerbil-ascent-relation
+                        name (relational-op-arity node)
+-                       (vector-ref data 1))
++                       (hash-ref checked-rows node))
+                       relations))
+               (remember node name bindings)))
+            ((eq? kind 'fix)
+@@ -501,7 +572,7 @@
+ ;;; never calls the rule planner, index provider, or semi-naive evaluator.
+ ;;; Exceeding a bound raises; it never returns a partial set as closure.
+ (def (relational-op-reference root (row-limit 4096))
+-  (require-op root)
++  (def checked-rows (check-operator-graph! root))
+   (unless (and (exact-integer? row-limit) (> row-limit 0))
+     (error "reference row limit must be positive" row-limit))
+   (def (normalize rows)
+@@ -517,7 +588,7 @@
+           (inputs (relational-op-inputs node))
+           (data (relational-op-data node)))
+       (case kind
+-        ((source) (normalize (vector-ref data 1)))
++        ((source) (normalize (hash-ref checked-rows node)))
+         ((parameter)
+          (let (binding (assq node environment))
+            (unless binding
+@@ -556,7 +627,7 @@
+                (evaluate (car inputs) environment))))
+         ((flatmap)
+          (let ((width (vector-ref data 0))
+-               (table (vector-ref data 1)))
++               (table (hash-ref checked-rows node)))
+            (normalize
+             (append-map
+              (lambda (row)
+diff --git a/t/qualification/scheme-operator-test.ss b/t/qualification/scheme-operator-test.ss
+index cd583e3..281ec9d 100644
+--- a/t/qualification/scheme-operator-test.ss
++++ b/t/qualification/scheme-operator-test.ss
+@@ -5,6 +5,7 @@
+ (import (only-in :std/test check-equal? check-exception test-case test-suite)
+         (only-in :clan/poo/object .ref)
+         (only-in :gerbil-ascent/program/operator
++                 relational-op-data relational-op-inputs
+                  relational-op-source relational-op-union
+                  relational-op-join relational-op-select-eq
+                  relational-op-project relational-op-flatmap
+@@ -574,6 +575,39 @@
+                     edge (relational-op-source 'edge 2 '((2 3)))))
+          true)
+         (check-exception (relational-op-fragment edge 'edge) true)))
++    (test-case "entry points reject mutated descriptor payloads and child signatures"
++      (let (source (relational-op-source 'source 1 '((1))))
++        (vector-set! (relational-op-data source) 1 '((1 2)))
++        (check-exception (relational-op-compile source 32 256 512) true)
++        (check-exception (relational-op-reference source) true))
++      (let* ((source (relational-op-source 'source 1 '((1))))
++             (selected (relational-op-select-eq source 0 1)))
++        (vector-set! (relational-op-data selected) 1 (lambda (_) #t))
++        (check-exception (relational-op-compile selected 32 256 512) true)
++        (check-exception (relational-op-reference selected) true))
++      (let* ((source (relational-op-source 'source 1 '((1))))
++             (union (relational-op-union source source)))
++        (set-car! (relational-op-inputs union)
++                  (relational-op-source 'wide 2 '((1 2))))
++        (check-exception (relational-op-compile union 32 256 512) true)
++        (check-exception (relational-op-reference union) true)))
++    (test-case "descriptor pointer cycles reject before free-parameter analysis"
++      (let* ((source (relational-op-source 'source 1 '((1))))
++             (union (relational-op-union source source)))
++        (set-car! (relational-op-inputs union) union)
++        (check-exception (relational-op-compile union 32 256 512) true)
++        (check-exception (relational-op-reference union) true)
++        (check-exception (relational-op-fragment union 'output) true)))
++    (test-case "compiled source and mapping rows own their validated snapshots"
++      (let* ((source (relational-op-source 'source 1 '((1))))
++             (mapped (relational-op-flatmap source 1 '(((1) (10))))))
++        (let-values (((program output) (relational-op-compile mapped 32 256 512)))
++          (set-car! (car (vector-ref (relational-op-data source) 1)) 2)
++          (set-car! (cdr (car (vector-ref (relational-op-data mapped) 1))) 99)
++          (check-equal?
++           (same-rows? (relational-query-name
++                        (relational-solve (relational-admit program)) output) '((10))) #t)
++          (check-equal? (relational-op-reference mapped) '()))))
+     (test-case "growth budget cannot return a complete fixed point"
+       (let (edge (relational-op-source 'edge 2
+                                         '((0 1) (1 2) (2 3))))

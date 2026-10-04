@@ -5,6 +5,7 @@
 (import (only-in :std/test check-equal? check-exception test-case test-suite)
         (only-in :clan/poo/object .ref)
         (only-in :gerbil-ascent/program/operator
+                 relational-op-data relational-op-inputs
                  relational-op-source relational-op-union
                  relational-op-join relational-op-select-eq
                  relational-op-project relational-op-flatmap
@@ -574,6 +575,39 @@
                     edge (relational-op-source 'edge 2 '((2 3)))))
          true)
         (check-exception (relational-op-fragment edge 'edge) true)))
+    (test-case "entry points reject mutated descriptor payloads and child signatures"
+      (let (source (relational-op-source 'source 1 '((1))))
+        (vector-set! (relational-op-data source) 1 '((1 2)))
+        (check-exception (relational-op-compile source 32 256 512) true)
+        (check-exception (relational-op-reference source) true))
+      (let* ((source (relational-op-source 'source 1 '((1))))
+             (selected (relational-op-select-eq source 0 1)))
+        (vector-set! (relational-op-data selected) 1 (lambda (_) #t))
+        (check-exception (relational-op-compile selected 32 256 512) true)
+        (check-exception (relational-op-reference selected) true))
+      (let* ((source (relational-op-source 'source 1 '((1))))
+             (union (relational-op-union source source)))
+        (set-car! (relational-op-inputs union)
+                  (relational-op-source 'wide 2 '((1 2))))
+        (check-exception (relational-op-compile union 32 256 512) true)
+        (check-exception (relational-op-reference union) true)))
+    (test-case "descriptor pointer cycles reject before free-parameter analysis"
+      (let* ((source (relational-op-source 'source 1 '((1))))
+             (union (relational-op-union source source)))
+        (set-car! (relational-op-inputs union) union)
+        (check-exception (relational-op-compile union 32 256 512) true)
+        (check-exception (relational-op-reference union) true)
+        (check-exception (relational-op-fragment union 'output) true)))
+    (test-case "compiled source and mapping rows own their validated snapshots"
+      (let* ((source (relational-op-source 'source 1 '((1))))
+             (mapped (relational-op-flatmap source 1 '(((1) (10))))))
+        (let-values (((program output) (relational-op-compile mapped 32 256 512)))
+          (set-car! (car (vector-ref (relational-op-data source) 1)) 2)
+          (set-car! (cdr (car (vector-ref (relational-op-data mapped) 1))) 99)
+          (check-equal?
+           (same-rows? (relational-query-name
+                        (relational-solve (relational-admit program)) output) '((10))) #t)
+          (check-equal? (relational-op-reference mapped) '()))))
     (test-case "growth budget cannot return a complete fixed point"
       (let (edge (relational-op-source 'edge 2
                                         '((0 1) (1 2) (2 3))))

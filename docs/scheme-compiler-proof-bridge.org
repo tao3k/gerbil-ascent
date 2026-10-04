@@ -71,6 +71,44 @@ widths. It supports =join_tuple_encoding= over every encoded row. Encoding
 actual immutable Scheme scalars into that finite universe is a remaining bridge;
 the Lean lemma does not establish their runtime hash/equality implementation.
 
+* Descriptor preflight and owned row snapshots
+
+=program/operator.ss= now revalidates the entire exposed descriptor graph
+before compilation, fragment emission or reference interpretation. The DFS
+checks node kinds, child counts, natural arities, matching signatures, column
+indices, finite scalar source/mapping rows and transformer parameter/body
+signatures. A visiting node rejects a descriptor pointer cycle. Legitimate
+feedback is a finite body graph referring to a parameter node; it is not a
+pointer cycle. A shared checked node remains a valid DAG edge.
+
+After structural validation, the root must have no free parameters. This
+check precedes =free-parameters= recursion on an unvalidated graph and precedes
+rule emission. Validation snapshots source and mapping row spines; emission
+uses those owned snapshots, so later mutation through descriptor accessors
+cannot change the generated program's rows. Reference interpretation uses a
+fresh validated snapshot per call. This is a synchronous admission contract,
+not a claim of atomic snapshot acquisition under concurrent mutation.
+
+=packages/proofs/lean/DescriptorScope.lean= proves seven identity-scope laws.
+For finite acyclic descriptor unfoldings, all free identities being bound is
+equivalent to recursive lexical scope validity. Closed roots, binder capture,
+distinct identities, context extension and a shared child escaping its binder
+are covered. Natural keys denote descriptor identities, not source spelling.
+This abstraction models the dependency spine (other operator children combine
+free dependencies); it is not mechanized extraction of the complete native
+validator, row typing, DFS color table or descriptor-to-typed-IR translation.
+
+Native regressions mutate rows, inject an opaque procedure into selection,
+replace a child with an incompatible arity, create a graph pointer cycle and
+modify source/mapping rows after compilation. All relevant entry points must
+reject malformed graphs; a generated program must retain the original owned
+rows while a fresh reference observes the later valid descriptor values.
+The [[file:evidence/scheme-descriptor-scope-20261004/receipt.json][descriptor receipt]] binds the final source and qualification:
+four focused native modules passed 58 Cases with all MODULE/HARNESS/final OK
+markers and exit 0; eight Lean files, both lifecycle models and both expected
+faults passed. This is not a full native-suite rerun or a performance/model
+benefit claim.
+
 * Scoped recursive relation bridge
 
 =packages/proofs/lean/RecursiveLowering.lean= adds a relation-only compiler

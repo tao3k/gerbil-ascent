@@ -252,12 +252,83 @@
         (hash-put! cache node free)
         free))))
 
+;;; Public descriptor accessors expose mutable list/vector spines. Recheck
+;;; the complete graph before scope analysis or emission; feedback uses a
+;;; parameter node, never a pointer cycle in the descriptor graph itself.
+(def (check-operator-graph! root)
+  (let ((states (make-hash-table-eq))
+        (checked-rows (make-hash-table-eq)))
+    (def (reject) (error "invalid or mutated operator descriptor"))
+    (def (visit node)
+      (require-op node)
+      (case (hash-get states node)
+        ((visiting) (error "cyclic operator descriptor graph"))
+        ((checked) (void))
+        (else
+         (hash-put! states node 'visiting)
+         (let ((kind (relational-op-kind node))
+               (arity (relational-op-arity node))
+               (inputs (relational-op-inputs node))
+               (data (relational-op-data node)))
+           (unless (and (exact-integer? arity) (>= arity 0) (list? inputs)) (reject))
+           (let (count (case kind ((source parameter) 0) ((union join) 2)
+                            ((select-eq project flatmap fix apply) 1) (else #f)))
+             (unless (and count (= (length inputs) count)) (reject)))
+           (for-each visit inputs)
+           (case kind
+             ((source)
+              (unless (and (vector? data) (= (vector-length data) 2)
+                           (symbol? (vector-ref data 0))) (reject))
+              (hash-put! checked-rows node (relational-copy-rows (vector-ref data 1) arity)))
+             ((parameter) (unless (eq? data #f) (reject)))
+             ((union)
+              (unless (and (eq? data #f)
+                           (andmap (lambda (input) (= arity (relational-op-arity input))) inputs)) (reject)))
+             ((join)
+              (unless (and (vector? data) (= (vector-length data) 2)
+                           (= arity (+ (relational-op-arity (car inputs)) (relational-op-arity (cadr inputs))))
+                           (valid-column? (vector-ref data 0) (relational-op-arity (car inputs)))
+                           (valid-column? (vector-ref data 1) (relational-op-arity (cadr inputs)))) (reject)))
+             ((select-eq)
+              (unless (and (vector? data) (= (vector-length data) 2)
+                           (= arity (relational-op-arity (car inputs)))
+                           (valid-column? (vector-ref data 0) arity)
+                           (relational-scalar? (vector-ref data 1))) (reject)))
+             ((project)
+              (unless (and (list? data) (= arity (length data))
+                           (andmap (lambda (column) (valid-column? column (relational-op-arity (car inputs)))) data)) (reject)))
+             ((flatmap)
+              (unless (and (vector? data) (= (vector-length data) 2)
+                           (equal? (vector-ref data 0) (relational-op-arity (car inputs)))) (reject))
+              (hash-put! checked-rows node
+                         (relational-copy-rows (vector-ref data 1) (+ arity (vector-ref data 0)))))
+             ((fix)
+              (visit data)
+              (unless (and (eq? (relational-op-kind data) 'parameter)
+                           (= arity (relational-op-arity data))
+                           (= arity (relational-op-arity (car inputs)))) (reject)))
+             ((apply)
+              (unless (relational-transform? data) (reject))
+              (let ((parameter (relational-transform-parameter data))
+                    (body (relational-transform-body data)))
+                (visit parameter) (visit body)
+                (unless (and (eq? (relational-op-kind parameter) 'parameter)
+                             (equal? (relational-transform-input-arity data) (relational-op-arity parameter))
+                             (equal? (relational-transform-output-arity data) (relational-op-arity body))
+                             (= (relational-op-arity parameter) (relational-op-arity (car inputs)))
+                             (= arity (relational-op-arity body))) (reject))))))
+         (hash-put! states node 'checked))))
+    (visit root)
+    (unless (null? (free-parameters root (make-hash-table-eq)))
+      (error "operator fixed-point parameter escaped its body"))
+    checked-rows))
+
 ;;; Compilation is finite and instance-local. A placeholder may be read
 ;;; only inside its own fix body; distinct source nodes cannot silently
 ;;; alias the same public name, even when their rows happen to match.
 (def (lower-operator-graph root fresh-sources?)
-  (require-op root)
-  (let ((relations []) (rules []) (sources [])
+  (let ((checked-rows (check-operator-graph! root))
+        (relations []) (rules []) (sources [])
         (memo (make-hash-table-eq))
         (free-cache (make-hash-table-eq))
         (names (make-hash-table-eq))
@@ -344,7 +415,7 @@
                (cons (gerbil-ascent-relation
                       mapping-name
                       (+ input-arity (relational-op-arity node))
-                      (vector-ref data 1))
+                      (hash-ref checked-rows node))
                      relations))
              (set! sources (cons mapping-name sources))
              (add-rule
@@ -388,7 +459,7 @@
               (set! relations
                 (cons (gerbil-ascent-relation
                        name (relational-op-arity node)
-                       (vector-ref data 1))
+                       (hash-ref checked-rows node))
                       relations))
               (remember node name bindings)))
            ((eq? kind 'fix)
@@ -501,7 +572,7 @@
 ;;; never calls the rule planner, index provider, or semi-naive evaluator.
 ;;; Exceeding a bound raises; it never returns a partial set as closure.
 (def (relational-op-reference root (row-limit 4096))
-  (require-op root)
+  (def checked-rows (check-operator-graph! root))
   (unless (and (exact-integer? row-limit) (> row-limit 0))
     (error "reference row limit must be positive" row-limit))
   (def (normalize rows)
@@ -517,7 +588,7 @@
           (inputs (relational-op-inputs node))
           (data (relational-op-data node)))
       (case kind
-        ((source) (normalize (vector-ref data 1)))
+        ((source) (normalize (hash-ref checked-rows node)))
         ((parameter)
          (let (binding (assq node environment))
            (unless binding
@@ -556,7 +627,7 @@
                (evaluate (car inputs) environment))))
         ((flatmap)
          (let ((width (vector-ref data 0))
-               (table (vector-ref data 1)))
+               (table (hash-ref checked-rows node)))
            (normalize
             (append-map
              (lambda (row)

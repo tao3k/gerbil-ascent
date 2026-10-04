@@ -47,10 +47,10 @@
 
 (def (relational-open-program-session program)
   (let* ((snapshot (relational-snapshot-program program))
-         (relations (.ref snapshot 'relations))
          (arities (relational-source-arities snapshot)))
-    (unless (= (length relations) (length arities))
-      (error "named program session requires source-capable relations"))
+    ;; Compiled programs may contain derived relations. Their query handles
+    ;; are not update authority: every checked mutation uses this immutable
+    ;; source-only arity list, shared with fragment Sessions below.
     (make-relational-program-session
      (gerbil-ascent-open-session snapshot)
      arities)))

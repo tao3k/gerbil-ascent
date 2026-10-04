@@ -122,6 +122,23 @@
           (check-exception (relational-solve (relational-admit program)) true))
         (let-values (((program output) (relational-typed-compile term 2 1 2)))
           (check-exception (relational-solve (relational-admit program)) true))))
+    (test-case "typed retained updates preserve source authority set output and frozen results"
+      (let-values (((program output)
+                    (relational-typed-compile
+                     (relational-typed-source 'editable (relational-relation-type 1 '(0 1)) '((0) (0)))
+                     32 256 512)))
+        (let* ((session (relational-open-program-session program))
+               (initial (relational-program-session-run session)))
+          (check-rows (relational-program-query initial output) '((0)))
+          (check-exception (relational-program-append-source! session output '(0)) true)
+          (check-exception (relational-program-replace-source! session output '()) true)
+          (relational-program-append-source! session 'editable '(1))
+          (check-rows (relational-program-query (relational-program-session-run session) output) '((0) (1)))
+          (relational-program-replace-source! session 'editable '((1) (1)))
+          (let (result (relational-program-session-run session))
+            (check-rows (relational-program-query result output) '((1)))
+            (check-equal? (relational-program-query result 'editable) '((1) (1))))
+          (check-rows (relational-program-query initial output) '((0))))))
     (test-case "finite height formulas match exhaustive tiny tuple and relation universes"
       (for-each
        (lambda (atoms)

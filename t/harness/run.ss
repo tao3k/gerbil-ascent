@@ -4,7 +4,8 @@
 
 ;;; Test compilation and scheduling belong to t/. std/make owns native
 ;;; currentness and gxtest owns Suites and Cases.
-(import (only-in :std/make make)
+(import (only-in :gerbil/compiler compile-module compile-exe execute-pending-compile-jobs!)
+        (only-in :std/make make)
         :std/misc/process :std/os/flock :std/os/device
         (only-in "../../build.ss" gerbil-ascent-library-modules)
         (only-in :asp-gerbil-scheme/src/build-api/core-capacity
@@ -153,11 +154,30 @@
            "t/qualification/ascent-positive-nonmembership-test.ss"))
         ;; Output-dir precedence binds the executable to this current Library,
         ;; even when GERBIL_PATH also contains an older installed ASCENT.
-        (run-command ["gxc" "-:max-heap=1G,debug=q" "-exe"
-                      "-d" (path-expand "lib" test-cache)
-                      "-o" (path-expand "dsl-closure" test-cache)
-                      "t/harness/dsl-closure.ss"])
-        (when (zero? command-exit-status)
+        (let ((source "t/harness/dsl-closure.ss")
+              (options [output-dir: (path-expand "lib" test-cache)
+                        output-file: (path-expand "dsl-closure" test-cache)
+                        parallel: #t verbose: #t invoke-gsc: #t static: #t]))
+          ;; This lane owns the static cache. timeout terminates the previous
+          ;; build process group, but gxc's existence-based object locks can
+          ;; survive SIGTERM. Recover only this lane's object locks, never
+          ;; dependency-prefix locks or the advisory lane lock.
+          (let (static-dir (path-expand "lib/static" test-cache))
+            (when (file-exists? static-dir)
+              (for-each
+               (lambda (name)
+                 (when (string-suffix? ".o.lock" name)
+                   (displayln "RECOVER-OBJECT-LOCK " name)
+                   (delete-file (path-expand name static-dir))))
+               (directory-files static-dir))))
+          ;; An old executable must never survive a no-op/failed compilation.
+          (let (binary (path-expand "dsl-closure" test-cache))
+            (when (file-exists? binary) (delete-file binary)))
+          (compile-module source [invoke-gsc: #f options ...])
+          (compile-exe source options)
+          ;; Drain every queued object and the compiler's link barrier before
+          ;; binding. Compiler exceptions propagate; no partial binary qualifies.
+          (execute-pending-compile-jobs!)
           (run-command ["python3" "tools/dsl-closure-artifact.py" "bind"])))))
     (["test-file" path]
      (with-test-lane

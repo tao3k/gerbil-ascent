@@ -92,7 +92,7 @@ an absence or a completed proof. A founded witness is not all provenance.
 
 Build the known six-Suite AOT entry with =just build-dsl-closure=, then run
 =just check-dsl-closure=. Compilation uses the same std/make Library/currentness
-owner; =gxc -d= makes its current static output take precedence over an older
+owner; the compiler output-dir option makes its current static output take precedence over an older
 installed ASCENT. Native execution uses std/test's TestModule/TestHarness,
 Case implementations and verdicts; it introduces no second evaluator or oracle.
 The executable's source and artifact hashes are checked before each run;

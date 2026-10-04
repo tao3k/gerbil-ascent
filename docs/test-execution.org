@@ -129,7 +129,7 @@ compiles the six known exported Suites into =t/harness/dsl-closure.ss='s
 AOT entry. It uses std/test directly, including its standard Case verdicts,
 MODULE-OK/HARNESS-OK markers and failure propagation. This is a fixed semantic
 qualification entry, not a replacement for general gxtest discovery or the
-full repository suite. =gxc -d= selects the current Library static output
+full repository suite. the compiler output-dir option selects the current Library static output
 before any older installed ASCENT artifact.
 
 =just check-dsl-closure= checks source/artifact hashes, the six-module inventory,
@@ -143,3 +143,17 @@ one-shot solve cannot be reclassified as complete by this entry.
 The ordinary interpreter entry remains separately measurable. Passing the
 AOT gate does not retroactively pass a silent interpreter startup, qualify
 remote CI or establish application/model/performance benefit.
+
+* AOT interrupted-build recovery
+
+The AOT entry uses Gerbil's compile-module/compile-exe API with invoke-gsc,
+static closure and parallel compilation explicitly enabled. Pending compiler
+jobs must drain successfully before byte binding. Output-dir still selects
+the current Library. Under the exclusive test lane, it clears only the
+lane-owned static cache's .o.lock files left by a terminated process group.
+It never clears dependency-prefix locks or the advisory lane lock. All writers
+to this cache must use the test lane. The previous executable is removed
+before compilation so a no-op or failed build cannot bind an older binary.
+The 180-second build, five-second genuine-test-output watchdog and 120-second
+module bounds remain unchanged. The recovery receipt records a real abandoned
+candidate/reasoning object lock and the subsequent six-Suite qualification.

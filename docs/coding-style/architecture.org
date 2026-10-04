@@ -8,6 +8,18 @@ historical source paths and timings are not current qualification claims.
 * Source picture
 
 #+begin_example
+checked language
+program/scheme-language --> program/scheme-admission (public facade)
+                                |
+              +-----------------+-----------------+
+              v                 v                 v
+       scheme-admit        scheme-query      scheme-session
+              |          detached results         |
+              +------> scheme-snapshot <----------+
+              |          checked copies           |
+              v                                   v
+       native evaluate                       native session
+
 syntax                    declaration analysis        execution
 program/syntax.ss -------> program/planning.ss ------> program/evaluate.ss
 program/scheme-language.ss        |                          |
@@ -147,3 +159,96 @@ budgets; failed logs remain separate from final qualification evidence.
 
 The current local verification boundary is recorded in
 [[file:qualification-history.org::*Binary kernel ownership and Coding Style organization][the qualification history]].
+
+* Study: one coordinated checked-runtime lifecycle boundary
+
+Gerbil's =compiler.ss:8-13= is a public aggregation module. It imports driver
+and base owners, reexports the driver's selected entry points and names two
+additional operations explicitly. =compiler/driver.ss:8-13= coordinates the
+expander, base environment, code generation and optimization stages;
+=compiler/compile.ss:8-12= owns code generation. The expander similarly groups
+its internal stages in =expander.ss:16-38=. A facade and a phase owner have
+separate roles in these sources.
+
+The checked ASCENT runtime previously concentrated four lifecycle phases in
+=program/scheme-admission.ss=: reconstructing caller declarations, preparing and
+running an admission, reading detached completed results, and admitting retained
+source updates. Native =evaluate=, =session= and =result= already own distinct
+engine mechanics. The checked public layer now has explicit stage owners that
+coordinate those mechanics without mixing their public contracts:
+
+| Owner | Responsibility | State and dependency boundary |
+|-------+----------------+-------------------------------|
+| =scheme-snapshot= | Reconstruct checked scalar terms, operators, relations and rules | No evaluator or Session construction; rejects host callbacks and forged descriptors |
+| =scheme-admit= | Inert composition, whole-program preparation, diagnostic reports, single-shot solve | Owns admission records and ready/running/failed/complete state; depends on snapshot and native evaluator |
+| =scheme-query= | Resolve fragment exports and read detached completed rows | Owns solved-result records and row copying; constructs no evaluator or Session |
+| =scheme-session= | Checked source append/replacement and atomic transaction admission | Owns checked session handles and source arities; native Session owns rollback and solve state |
+| =scheme-admission= | Preserve the existing public checked-runtime interface | Explicit original export list; imports phase owners, contains no implementation or mutable state |
+
+This batch separates the complete checked lifecycle. It introduces no generic
+runtime utility module or extra state registry. Internal solved-result
+constructors are exported only by their owner for admission/Session producers;
+the public facade does not expose them. Diagnostic records belong to admission,
+source-handle records to Session, and solved-result records to query publication.
+Their fields are unchanged; their private struct namespaces move with their
+owners. Recompiled consumers use the same public procedures and accessor names.
+
+The native POO =program/admission.ss= continues to own row/budget admission.
+The native evaluator owns mutable solve state, =program/session.ss= accepted
+source snapshots and rollback, and =program/result.ss= persistent row publication.
+These semantics remain distinct from checked declaration reconstruction and the
+public source/query interface.
+
+A Scheme reader compares the source forms before and after the migration: all
+37 function/record definitions are structurally equal, and the facade's complete
+export form is equal to the original. Whole-program composition order, planner
+path observation, single-shot failure behavior, complete-result checks,
+copy-before-update and all-source validation-before-transaction order are
+therefore retained in the moved definitions. This source audit cannot qualify
+module linking or record identity across modules; native consumer qualification
+is required as the second gate. The four admission entry points also gain
+explicit lifecycle contract documentation.
+
+BuildSpec adds the four library owners; the build procedure is unchanged.
+Research and verification are recorded as one lifecycle batch. No performance
+or compile-time improvement is claimed from the module split.
+
+** Local verification and remaining budget gate
+
+The source comparison starts from =778fccd=. The intervening =3abb8bc= and
+=f820081= change README and research documentation only. The Scheme source audit preserves all 37 definitions
+and the public export form. The selected native Scheme policy run completes with
+zero errors and three existing warnings (finite arithmetic R009/R013 and
+candidate datum R013); this batch introduces no new warning.
+
+The existing =just test= entry compiles the production owners and all consumers.
+With =GERBIL_BUILD_CORES=12=, its plan is 53 independent parallel modules and
+seven exclusive modules. The first run exits 70: 48 parallel modules pass, four
+hit their original 120-second process deadline, and positive-plan hits its Case
+duration budget. The exclusive lane is consequently skipped. This is a failed
+whole-suite run, not a successful concurrency qualification.
+
+The five failed modules subsequently pass individually against the same native
+library, source fingerprints and original budgets: positive-plan, temporal lens,
+language contract, operator and provenance graph. Six exclusive modules also
+pass, including artifact publication and retained operator updates. Thus 59 of
+the 60 inventory modules have complete native pass evidence across these runs.
+
+The remaining =ascent-rule-program-test= exits 42 during the exclusive recovery:
+the mixed ternary Case exceeds its 2000-millisecond budget and the source
+withdrawal Case exceeds its 5000-millisecond budget. These Cases invoke the
+unchanged native evaluator rather than the checked snapshot/admit/query/Session
+procedures. This narrows the affected execution path, but does not establish the
+cause or qualify the remaining budget gate. No timeout or Case budget is relaxed;
+the whole suite remains unqualified. No semantic assertion or module-linking
+failure is reported in these runs.
+
+All pass evidence requires the existing runner's real exit propagation,
+=NATIVE-MODULES-OK=, =MODULE-OK=, =HARNESS-OK= and final =OK= checks. Logs, baseline
+source, source fingerprints and the inert Scheme reader audit stay under ignored
+=.cache/ascent/checked-runtime-boundaries=; the first parallel-run module logs
+remain under =.cache/ascent/native-library/test.sK4Wo7=. Synthetic pool status
+messages are not Case progress or pass evidence. The public build procedure,
+native test scheduling and testing implementations are unchanged by this batch.
+Final staged review removes three redundant trailing blank lines only; the
+Scheme reader audit is rerun and still preserves every definition and export.

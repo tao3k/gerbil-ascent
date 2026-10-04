@@ -23,6 +23,9 @@ The sources below use different logics and workloads.  Their results
 are design evidence, not proof that our Library already has the API.
 The [[file:reasoning-language-formal-agenda.org][reasoning-language and formal agenda]] ranks the ASCENT/PL language
 papers, maps the MRR boundary, and states the remaining Lean/TLA+ gates.
+The [[file:wikidata-scope-wd26.org][WD26 finite KG fixture]] pins Wikidata entity revisions and tests
+branch-scoped exclusion against an independent set walk; it has no
+model-generated proposal yet.
 The first concrete checker is =gerbil-ascent=; POO Flow owns workflow
 composition, tool selection and runtime handoff.
 The implementation priority is the direct Library contract for LLM

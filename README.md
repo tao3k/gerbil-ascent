@@ -64,6 +64,8 @@ model papers lead the inference section; older PL work remains central where
 it supplies a precise language, fixed-point or incremental-evaluation law.
 The [reasoning-language and formal agenda](docs/research/agent-inference/reasoning-language-formal-agenda.org)
 connects ASCENT, MRR, Lean and TLA+ without treating their boundaries as proved integration.
+The [pinned Wikidata fixture](docs/research/agent-inference/wikidata-scope-wd26.org)
+starts the executor check for branch-scoped exclusion over a finite real-KG extract.
 
 ### Model reasoning and executable inference: current evidence
 

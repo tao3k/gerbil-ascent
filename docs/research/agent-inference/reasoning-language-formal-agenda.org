@@ -174,7 +174,14 @@ fail or never produce a complete result.
 
 * First falsifiable study
 
-Freeze one admitted real-KG extract and two generations. Submit an
+The [[file:wikidata-scope-wd26.org][WD26 fixture]] starts this study with twelve selected claims from
+seven Wikidata entity revisions, a pinned target entity, a gold structured program and
+two local source generations. Its independently computed finite set
+answer discriminates branch-local exclusion from exclusion after union.
+This is a small executor test, not a model benchmark or a transactional
+Wikidata snapshot.
+
+Submit an
 unaltered model proposal once; retain its raw response, then score
 admission, complete relation rows, branch-scoped negation, witness and
 final answer against independent finite data. Remove a direct edge but

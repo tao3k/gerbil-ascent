@@ -23,7 +23,11 @@
                  reasoning-evidence-kind reasoning-evidence-support
                  reasoning-evidence-reachable)
         (only-in :gerbil-ascent/candidate/finite-evidence
-                 finite-evidence-closure))
+                 finite-evidence-closure)
+        (only-in :gerbil-ascent/program/scheme-language
+                 relational-program relational-open-program-session
+                 relational-program-session-run relational-program-query
+                 relational-program-replace-source!))
 
 (export ascent-reasoning-library-test)
 
@@ -122,6 +126,118 @@
          '(blocked 2 ((1 2)))
          '(weight 2 ((1 4) (2 6)))
          '(root 1 ((0))))))
+
+;;; Twelve selected claims from seven revisions, plus pinned target Q30.
+;;; Exact revision URLs and statement IDs are recorded in the research note.
+;;; The city and target rows select a finite question universe; they are not
+;;; asserted to be Wikidata statements. No open-world absence is inferred.
+(def kg-cities '((Q100) (Q62) (Q18013)))
+(def kg-target '((Q30)))
+(def kg-admin
+  '((Q100 Q54072) (Q54072 Q771) (Q771 Q30)
+    (Q62 Q99) (Q18013 Q108131) (Q108131 Q99) (Q99 Q30)))
+(def kg-direct-country '((Q100 Q30) (Q62 Q30) (Q18013 Q30)))
+(def kg-state-capital '((Q771 Q100) (Q99 Q18013)))
+
+(def (kg-snapshot generation direct)
+  (reasoning-source-snapshot
+   'wikidata-entity-revisions-2026-10-05 generation
+   (list (list 'city 1 kg-cities)
+         (list 'target 1 kg-target)
+         (list 'admin 2 kg-admin)
+         (list 'directCountry 2 direct)
+         (list 'stateCapital 2 kg-state-capital))))
+
+;;; Reference reachability walks source pairs, without rule admission,
+;;; relational planning, or the candidate evaluator.
+(def (kg-reaches? origin target edges)
+  (let loop ((pending (list origin)) (seen []))
+    (if (null? pending) #f
+        (let (node (car pending))
+          (cond
+           ((equal? node target) #t)
+           ((member node seen) (loop (cdr pending) seen))
+           (else
+            (loop (append (cdr pending)
+                          (map cadr
+                               (filter (lambda (row)
+                                         (equal? (car row) node)) edges)))
+                  (cons node seen))))))))
+
+(def (kg-distinct rows)
+  (let loop ((remaining rows) (seen []) (out []))
+    (if (null? remaining) (reverse out)
+        (let (row (car remaining))
+          (if (member row seen)
+            (loop (cdr remaining) seen out)
+            (loop (cdr remaining) (cons row seen) (cons row out)))))))
+
+(def (kg-check-rows actual expected)
+  (check-equal? (length actual) (length (kg-distinct actual)))
+  (check-equal? (same-rows? actual expected) #t))
+
+(def (kg-reference direct)
+  (kg-distinct
+   (append
+    (filter-map
+     (lambda (city-row)
+       (let (city (car city-row))
+         (and (kg-reaches? city 'Q30 kg-admin)
+              (not (member city (map cadr kg-state-capital)))
+              (list city 'Q30))))
+     kg-cities)
+    (filter (lambda (row) (equal? (cadr row) 'Q30)) direct))))
+
+(def kg-common-proposal
+  '((relation adminPath 2)
+    (relation viaAdmin 2)
+    (relation excluded 1)
+    (relation unionCandidate 2)
+    (relation answer 2)
+    (rule (adminPath ?x ?y) (admin ?x ?y))
+    (rule (adminPath ?x ?z) (adminPath ?x ?y) (admin ?y ?z))
+    (rule (viaAdmin ?city ?country)
+          (city ?city) (adminPath ?city ?country) (target ?country))
+    (rule (excluded ?city) (stateCapital ?state ?city))))
+
+(def (kg-proposal scope query)
+  (append
+   (list 'candidate)
+   kg-common-proposal
+   (if (eq? scope 'branch)
+     '((rule (answer ?city ?country)
+             (viaAdmin ?city ?country) (not (excluded ?city)))
+       (rule (answer ?city ?country)
+             (directCountry ?city ?country) (target ?country)))
+     '((rule (unionCandidate ?city ?country)
+             (viaAdmin ?city ?country))
+       (rule (unionCandidate ?city ?country)
+             (directCountry ?city ?country) (target ?country))
+       (rule (answer ?city ?country)
+             (unionCandidate ?city ?country) (not (excluded ?city)))))
+   (list query '(limits 32 128 256))))
+
+(def (kg-scheme-program direct)
+  (relational-program
+   (relation city (item) kg-cities)
+   (relation target (item) kg-target)
+   (relation admin (child parent) kg-admin)
+   (relation directCountry (city country) direct)
+   (relation stateCapital (state city) kg-state-capital)
+   (relation adminPath (child ancestor))
+   (relation viaAdmin (city country))
+   (relation excluded (city))
+   (relation answer (city country))
+   (rule (adminPath ?x ?y) (admin ?x ?y))
+   (rule (adminPath ?x ?z) (adminPath ?x ?y) (admin ?y ?z))
+   (rule (viaAdmin ?city ?country)
+     (city ?city) (adminPath ?city ?country) (target ?country))
+   (rule (excluded ?city) (stateCapital ?state ?city))
+   (rule (answer ?city ?country)
+     (viaAdmin ?city ?country) (not (excluded ?city)))
+   (rule (answer ?city ?country)
+     (directCountry ?city ?country) (target ?country))
+   (limits 32 128 256)))
 
 (def ascent-reasoning-library-test
   (test-suite "bounded inert reasoning library"
@@ -463,6 +579,65 @@
         (check-equal? (reasoning-receipt-status cycle) 'rejected)
         (check-equal? (reasoning-diagnostic-code
                        (first-diagnostic cycle)) 'invalid-dependencies)))
+    (test-case "fixed Wikidata entity extract preserves branch-scoped exclusion"
+      (let* ((withdrawn-direct '((Q62 Q30) (Q18013 Q30)))
+             (first-source (kg-snapshot 1 kg-direct-country))
+             (second-source (kg-snapshot 2 withdrawn-direct))
+             (gold (kg-proposal 'branch '(query answer ?city Q30)))
+             (positive (kg-proposal 'branch '(query viaAdmin ?city Q30)))
+             (global (kg-proposal 'global '(query answer ?city Q30)))
+             (first (reasoning-attempt first-source gold 100000 20000))
+             (second (reasoning-attempt second-source gold 100000 20000))
+             (path (reasoning-attempt first-source positive 100000 20000))
+             (wrong (reasoning-attempt first-source global 100000 20000))
+             (evidence (reasoning-receipt-stratified first)))
+        ;; The separate set model has a hard-coded, inspectable expectation.
+        (kg-check-rows (kg-reference kg-direct-country)
+                       '((Q100 Q30) (Q62 Q30) (Q18013 Q30)))
+        (kg-check-rows (kg-reference withdrawn-direct)
+                       '((Q62 Q30) (Q18013 Q30)))
+        (for-each
+         (lambda (receipt)
+           (check-equal? (reasoning-receipt-status receipt) 'complete))
+         (list first second path wrong))
+        (kg-check-rows (reasoning-receipt-rows path)
+                       '((Q100 Q30) (Q62 Q30) (Q18013 Q30)))
+        (kg-check-rows (reasoning-receipt-rows first)
+                       (kg-reference kg-direct-country))
+        ;; Applying negation after the union loses both direct witnesses.
+        (kg-check-rows (reasoning-receipt-rows wrong) '((Q62 Q30)))
+        (kg-check-rows (reasoning-receipt-rows second)
+                       (kg-reference withdrawn-direct))
+        (check-equal? (reasoning-stratified-evidence-status evidence)
+                      'complete)
+        (let (closure (finite-evidence-closure
+                      (reasoning-stratified-evidence-finite evidence)))
+          (kg-check-rows (caddr (assq 'viaAdmin closure))
+                         '((Q100 Q30) (Q62 Q30) (Q18013 Q30)))
+          (kg-check-rows (caddr (assq 'excluded closure))
+                         '((Q100) (Q18013))))
+        (check-equal?
+         (reasoning-verify-stratified-receipt
+          first first-source gold 20000) 'valid)
+        (check-equal?
+         (reasoning-verify-stratified-receipt
+          second second-source gold 20000) 'valid)
+        (check-equal? (reasoning-receipt-bound? first second-source gold) #f)
+        (check-equal?
+         (reasoning-verify-stratified-receipt
+          first second-source gold 20000) 'invalid)
+        (let* ((session (relational-open-program-session
+                         (kg-scheme-program kg-direct-country)))
+               (old (relational-program-session-run session)))
+          (relational-program-replace-source!
+           session 'directCountry withdrawn-direct)
+          (let (new (relational-program-session-run session))
+            (kg-check-rows (relational-program-query old 'answer)
+                           (kg-reference kg-direct-country))
+            (kg-check-rows (relational-program-query new 'answer)
+                           (kg-reference withdrawn-direct))
+            (kg-check-rows (relational-program-query old 'answer)
+                           (kg-reference kg-direct-country))))))
     (test-case "all sixty-four three-node graphs match finite reference"
       (let (possible '((0 1) (0 2) (1 0) (1 2) (2 0) (2 1)))
         (for-each

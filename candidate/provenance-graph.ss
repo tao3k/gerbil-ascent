@@ -20,6 +20,19 @@
         positive-provenance-alternatives candidate-open-provenance-maintenance
         provenance-maintenance? provenance-maintenance-rows candidate-provenance-withdraw!)
 
+;; instantiate-head
+;;   : (forall (a) (-> (Pair Symbol [(Or Symbol a)]) [(Pair Symbol a)] [(Or Symbol a)]))
+;;   : (-> Head GroundBindings GroundRow)
+;;   | doc m%
+;;       Resolve a grounded head in term order, preserving literal values. Callers supply a binding for every head variable after finite positive grounding.
+;;
+;;       # Examples
+;;
+;;       ```scheme
+;;       (instantiate-head '(out ?x 7) '((?x . #f)))
+;;       ;; => '(#f 7)
+;;       ```
+;;     %
 (def (instantiate-head head bindings)
   (map (lambda (term)
          (if (candidate-variable? term) (cdr (assq term bindings)) term))
@@ -226,6 +239,16 @@
 ;;   | doc m%
 ;;       Overdelete affected support, then rederive from remaining founded alternatives
 ;;       Publish only after both bounded phases finish.
+;;
+;;       # Examples
+;;
+;;       ```scheme
+;;       (let (before (provenance-maintenance-rows state))
+;;         (let-values (((after work)
+;;                       (candidate-provenance-withdraw! state [] 100000)))
+;;           (equal? before after)))
+;;       ;; => #t ; no selected source occurrences change the published rows
+;;       ```
 ;;     %
 (def (candidate-provenance-withdraw! state selectors (max-steps 100000))
   (unless (and (provenance-maintenance? state)

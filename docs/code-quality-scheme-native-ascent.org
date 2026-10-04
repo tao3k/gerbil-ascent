@@ -543,6 +543,19 @@ Raw failures and the reference-library source remain in ignored
 this research note, not raw logs. =build.ss=, scheduling, original performance
 limits and original sample counts are not changed by this optimization.
 
+After preserving concurrent support-graph commits through =bc7ade5=, all
+=program/*= bytes, SS fixtures and the positive-plan qualification module
+match the measured optimization commit =db2651f=. The integrated native
+=just test= invocation passes 53 modules and 424 Cases with 50 parallel
+modules, three exclusive modules and 12 workers. All 53 logs contain native
+resolution, module, harness and final success markers; the invocation exits 0.
+The integrated 43-module policy audit identified one missing full public doc
+block on =candidate-provenance-withdraw!=. Its no-source-change example and
+the grounding helper's binding precondition are now documented without
+changing either function body. Final =just check-policy= has
+=findings=0=, =errors=0= and exit 0. The three SS gaps above remain open;
+these local receipts do not establish current-head remote CI or AOT closure.
+
 * Feature: explicit SCC traversal state shared by both graph consumers
 
 The installed compiler's =optimize-top.ss:703= (=extract-keyword-args=)

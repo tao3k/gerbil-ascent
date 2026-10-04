@@ -157,6 +157,7 @@
            "t/qualification/scheme-artifact-test.ss"
            "t/qualification/scheme-provenance-graph-test.ss"
            "t/qualification/scheme-higher-order-test.ss"
+           "t/qualification/ascent-index-lifecycle-test.ss"
     "t/qualification/scheme-session-deletion-test.ss"
     "t/qualification/ascent-timeout-test.ss"
     "t/qualification/scheme-stratified-provenance-test.ss"

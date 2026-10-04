@@ -24,6 +24,9 @@
 (import (only-in :gerbil-ascent/t/qualification/scheme-higher-order-test
                  scheme-higher-order-test))
 
+(import (only-in :gerbil-ascent/t/qualification/ascent-index-lifecycle-test
+                 ascent-index-lifecycle-test))
+
 (import (only-in :gerbil-ascent/t/qualification/scheme-session-deletion-test
                  scheme-session-deletion-test session-benefit-main))
 
@@ -70,6 +73,7 @@
                 (cons "t/qualification/scheme-artifact-test.ss" scheme-artifact-test)
                 (cons "t/qualification/scheme-provenance-graph-test.ss" scheme-provenance-graph-test)
                 (cons "t/qualification/scheme-higher-order-test.ss" scheme-higher-order-test)
+                (cons "t/qualification/ascent-index-lifecycle-test.ss" ascent-index-lifecycle-test)
                 (cons "t/qualification/scheme-session-deletion-test.ss" scheme-session-deletion-test)
                 (cons "t/qualification/ascent-timeout-test.ss" ascent-timeout-test)
                 (cons "t/qualification/scheme-stratified-provenance-test.ss" scheme-stratified-provenance-test)

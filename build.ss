@@ -9,7 +9,8 @@
                  asp-gerbil-scheme-library-package-prototype))
 
 (def gerbil-ascent-library-modules
-  '("table/expression"
+  '("core/binary-relation"
+    "table/expression"
     "table/funs"
     "table/eqrel"
     "table/trrel"

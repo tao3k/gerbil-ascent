@@ -1976,3 +1976,47 @@ Original expansion limits, Case budgets, process deadlines and worker capacity
 are preserved. Logs stay in ignored =.cache/ascent/type-height-algebra/=.
 This is focused local semantic qualification; no new full-suite, performance,
 AOT application or remote CI result is asserted.
+
+* Study: binary relation kernels across core and table boundaries
+
+This study surveys production modules under =core/=, =table/=, =candidate/=,
+=interface/= and =temporal/=, then follows one complete dependency chain.
+Gerbil's =compiler/optimize.ss:15-40= separates its optimization entry point
+from the base, traversal, type, specialization, annotation and call passes.
+The entry point establishes fresh mutation and local-type state; individual
+algorithms own their work. ASCENT's corresponding issue was a reversed owner:
+=core/binary-program= imported =table/expression= for bounded closure, while
+the table expression module contained both the algorithms and the POO adapter.
+
+=core/binary-relation= now owns encoded-pair composition, closure, shortest
+distance, bitmaps and dense path propagation. Its private adjacency and
+frontier state belongs to each invocation or prepared view. The existing POO
+persistent-set input and canonical projection protocol are retained by this
+specialized binary kernel. Generic graph/rule/positive-plan kernels remain
+independent of POO declarations and Session state.
+
+=table/expression= owns the source slots and demand-driven expression adapter:
+it chooses which view to demand, preserves overridden neighbor callbacks, and
+materializes a persistent result set when requested. =core/binary-program=
+calls the kernel directly; no core module imports the table namespace.
+The extracted algorithm block and retained adapter block are byte-identical to
+the preceding revision. Native snapshot provenance checks, private state,
+publication order and budget failure paths are unchanged.
+
+Build ownership and consumers move together: the library list, binary dispatch
+oracle and benchmark native-resolution checks, and materialization benchmark
+build/source fingerprints include the new kernel. Frozen reference algorithms
+are untouched. Direct bounded-closure imports migrate to the new module; no
+compatibility copy of the algorithms remains in the table adapter.
+
+The native table Unit Test adds a budget-isolation check for dense-bitmap and
+sparse relation domains. A failed tight-budget kernel invocation and a failed
+demanded bounded closure must leave subsequent complete projections and
+membership queries intact. Existing callback, distance, dense-path and binary
+program budget tests exercise both consumers of the shared kernel.
+
+The candidate survey retains its independent finite replay and certificate
+checking boundary; it does not redirect that semantic oracle through the
+production evaluator. Interface projection and temporal ownership are separate
+concerns. This change establishes the core/table dependency direction and makes
+no performance claim from moving algorithm code.

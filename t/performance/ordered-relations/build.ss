@@ -1,5 +1,5 @@
 (import (only-in :std/make make))
-(make '("table/expression" "t/performance/ordered-relations/reference")
+(make '("core/binary-relation" "table/expression" "t/performance/ordered-relations/reference")
       srcdir: (current-directory)
       libdir: (getenv "ASCENT_ORDERED_RELATIONS_LIB")
       build-deps: (getenv "ASCENT_ORDERED_RELATIONS_BUILD_DEPS"))

@@ -613,7 +613,7 @@ _materialization-benchmark:
     export ASCENT_MATERIALIZATION_LIB="{{ justfile_directory() }}/.gerbil/relation-materialization/lib"
     export ASCENT_MATERIALIZATION_RECEIPT="${ASCENT_MATERIALIZATION_RECEIPT:-{{ justfile_directory() }}/.gerbil/relation-materialization/receipt.sexp}"
     mkdir -p .gerbil/relation-materialization
-    shasum -a 256 table/expression.ss t/qualification/ascent-materialization-reference.ss t/performance/materialization-benchmark.ss tools/build-materialization-benchmark.ss > "$ASCENT_MATERIALIZATION_RECEIPT.sources"
+    shasum -a 256 core/binary-relation.ss table/expression.ss t/qualification/ascent-materialization-reference.ss t/performance/materialization-benchmark.ss tools/build-materialization-benchmark.ss > "$ASCENT_MATERIALIZATION_RECEIPT.sources"
     timeout 150s gxi {{ gerbil_test_runtime_options }} tools/build-materialization-benchmark.ss
     mkdir -p "{{ justfile_directory() }}/.cache/ascent/tmp"
     log="$(mktemp "{{ justfile_directory() }}/.cache/ascent/tmp/run.XXXXXX")"

@@ -1,5 +1,5 @@
 (import (only-in :std/make make))
-(make '("table/expression" "t/qualification/ascent-materialization-reference")
+(make '("core/binary-relation" "table/expression" "t/qualification/ascent-materialization-reference")
       srcdir: (current-directory)
       libdir: (getenv "ASCENT_MATERIALIZATION_LIB")
       build-deps: ".gerbil/relation-materialization/build-deps")

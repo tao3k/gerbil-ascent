@@ -2,6 +2,7 @@
 (import :gerbil/runtime/gambit :gerbil/expander
         (only-in :clan/poo/object .o .mix .ref .call)
         (only-in :clan/poo/trie UIntTrieSet)
+        :gerbil-ascent/core/binary-relation
         (only-in :gerbil-ascent/table/expression gerbil-ascent-table-expression-prototype)
         (only-in :gerbil-ascent/t/performance/ordered-relations/reference
                  ordered-relations-reference-prototype))
@@ -11,7 +12,7 @@
           (expected (string-append (getenv "ASCENT_ORDERED_RELATIONS_LIB") "/gerbil-ascent/" name ".ssi")))
      (unless (equal? actual expected) (error "ordered relation probe must use native modules" actual expected))
      (displayln "NATIVE-MODULE-OK " actual)))
- '("table/expression" "t/performance/ordered-relations/reference"))
+ '("core/binary-relation" "table/expression" "t/performance/ordered-relations/reference"))
 (def (statistic samples fraction)
   (list-ref (list-sort < samples)
             (- (quotient (* (length samples) fraction) 100) 1)))

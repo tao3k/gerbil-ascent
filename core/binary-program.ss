@@ -12,7 +12,7 @@
         (only-in :clan/poo/trie UIntTrieSet)
         (only-in :clan/poo/support/base until)
         (only-in :std/list/list filter)
-        (only-in :gerbil-ascent/table/expression
+        (only-in :gerbil-ascent/core/binary-relation
                  gerbil-ascent-relation-closure-bounded))
 
 (export gerbil-ascent-binary-relation

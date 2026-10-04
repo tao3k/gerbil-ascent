@@ -1,7 +1,7 @@
 ;;; Independent positive-path Floyd-Warshall oracle for the research kernels.
 (import (only-in :clan/poo/object .o .mix .ref .call)
         (only-in :clan/poo/trie UIntTrieSet)
-        :gerbil-ascent/table/expression
+        :gerbil-ascent/core/binary-relation :gerbil-ascent/table/expression
         :gerbil-ascent/t/performance/distance-rows/reference)
 (def (expression prototype edges width)
   (.mix prototype (.o (source-pairs (.call UIntTrieSet .<-list edges)) (radix width))))

@@ -6,7 +6,8 @@
         (only-in :clan/poo/object .o .mix .ref .call)
         (only-in :clan/poo/trie UIntTrieSet)
         (only-in :gerbil-ascent/table/expression
-                 gerbil-ascent-table-expression-prototype
+                 gerbil-ascent-table-expression-prototype)
+        (only-in :gerbil-ascent/core/binary-relation
                  gerbil-ascent-relation-closure-bounded)
         (only-in :gerbil-ascent/t/qualification/ascent-materialization-reference
                  ascent-materialization-reference-prototype

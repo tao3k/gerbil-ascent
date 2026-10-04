@@ -13,8 +13,8 @@ Each top-level directory is a Gerbil module namespace:
 | Namespace | Current responsibility |
 | --- | --- |
 | `:gerbil-ascent/program/*` | POO declarations, language compilation, admission and Session coordination |
-| `:gerbil-ascent/core/*` | Dependency graph algorithms, lowered rule semantics, positive execution plans and bounded binary evaluation |
-| `:gerbil-ascent/table/*` | Binary relation indexes and projections |
+| `:gerbil-ascent/core/*` | Dependency graph algorithms, lowered rule semantics, positive execution plans, binary relation kernels and bounded binary evaluation |
+| `:gerbil-ascent/table/*` | Physical indexes, storage providers and demand-driven relation expression adapters |
 | `:gerbil-ascent/candidate/*` | Bounded inert candidate evaluation and selected support projection |
 | `:gerbil-ascent/interface/*` | Inert request projection |
 
@@ -23,6 +23,15 @@ They do not import program declarations, POO contracts or Session lifecycle code
 `program/planning.ss`, `program/summary.ss` and `program/evaluate.ss` adapt those
 kernels to admitted programs. Physical row indexes and storage providers belong
 to `table/`; caller-facing request projection belongs to `interface/`.
+
+`core/binary-relation.ss` owns encoded-pair closure, composition, shortest
+distance and dense path algorithms, including their private adjacency and
+read-only projection protocol. `table/expression.ss` supplies the POO source
+slots and demand-driven adapter. `core/binary-program.ss` calls the relation
+kernel directly. The specialized binary kernels consume the existing POO
+persistent-set and projection protocol; the generic core kernels above remain
+independent of it. Bounded closure callers import
+`gerbil-ascent-relation-closure-bounded` from `core/binary-relation` directly.
 
 The internal modules formerly named `program/graph`, `program/funs` and
 `program/positive` now live at `core/dependency-graph`, `core/rule-semantics` and

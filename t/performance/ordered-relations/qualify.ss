@@ -39,9 +39,11 @@
                     [(cons path (sha256 (call-with-input-file path read-all-as-u8vector)))])))
               (list-sort string<? (directory-files directory)))))
 (def (source-manifest)
-  (cons (cons "table/expression.ss"
-              (sha256 (call-with-input-file "table/expression.ss" read-all-as-u8vector)))
-        (artifact-manifest study)))
+  (append
+   (map (lambda (path)
+          (cons path (sha256 (call-with-input-file path read-all-as-u8vector))))
+        '("core/binary-relation.ss" "table/expression.ss"))
+   (artifact-manifest study)))
 (run-process/batch ["mkdir" "-p" output])
 (let (lock (open-output-file/lock (path-expand "lane.lock" output) 120))
   (try (begin
@@ -70,7 +72,7 @@
                   (lines (call-with-input-file log read-all-as-lines)))
              (unless (and (zero? status) (member "OK" lines)
                           (= 10 (length (filter (lambda (line) (string-prefix? "RESULT " line)) lines)))
-                          (= 2 (length (filter (lambda (line) (string-prefix? "NATIVE-MODULE-OK " line)) lines)))
+                          (= 3 (length (filter (lambda (line) (string-prefix? "NATIVE-MODULE-OK " line)) lines)))
                           (not (ormap (lambda (line) (or (string-contains line "ERROR")
                                                         (string-contains line "Heap overflow")
                                                         (string-contains line "Stack overflow"))) lines)))

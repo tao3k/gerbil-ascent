@@ -1,7 +1,7 @@
 (import :gerbil/expander
         (only-in :clan/poo/object .o .ref .call)
         (only-in :clan/poo/trie UIntTrieSet)
-        :gerbil-ascent/table/expression :gerbil-ascent/core/binary-program
+        :gerbil-ascent/core/binary-relation :gerbil-ascent/table/expression :gerbil-ascent/core/binary-program
         :gerbil-ascent/t/performance/binary-dispatch/reference-expression
         :gerbil-ascent/t/performance/binary-dispatch/reference-program)
 (for-each (lambda (name)
@@ -9,7 +9,7 @@
         (expected (string-append (getenv "ASCENT_BINARY_DISPATCH_LIB") "/gerbil-ascent/" name ".ssi")))
     (unless (equal? actual expected) (error "native resolution mismatch" actual expected))
     (displayln "NATIVE-MODULE-OK " actual)))
- '("table/expression" "core/binary-program" "t/performance/binary-dispatch/reference-expression" "t/performance/binary-dispatch/reference-program"))
+ '("core/binary-relation" "table/expression" "core/binary-program" "t/performance/binary-dispatch/reference-expression" "t/performance/binary-dispatch/reference-program"))
 (def (same actual expected)
   (unless (equal? actual expected) (error "dispatch changed semantics" actual expected)))
 (def (set rows) (.call UIntTrieSet .<-list rows))

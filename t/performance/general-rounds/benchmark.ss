@@ -2,7 +2,7 @@
 (import :gerbil/runtime/gambit :gerbil/expander
         (only-in :clan/poo/object .o .mix .ref .call)
         (only-in :clan/poo/trie UIntTrieSet)
-        :gerbil-ascent/table/expression
+        :gerbil-ascent/core/binary-relation :gerbil-ascent/table/expression
         :gerbil-ascent/core/binary-program
         :gerbil-ascent/t/performance/general-rounds/reference-expression
         :gerbil-ascent/t/performance/general-rounds/reference-program)
@@ -11,7 +11,7 @@
    (let* ((actual (gx#module-context-path (gx#import-module (string->symbol (string-append ":gerbil-ascent/" name)))))
           (expected (string-append (getenv "ASCENT_GENERAL_ROUNDS_LIB") "/gerbil-ascent/" name ".ssi")))
      (unless (equal? actual expected) (error "probe must use native modules" actual expected))
-     (displayln "NATIVE-MODULE-OK " actual))) '("table/expression" "core/binary-program" "t/performance/general-rounds/reference-expression" "t/performance/general-rounds/reference-program"))
+     (displayln "NATIVE-MODULE-OK " actual))) '("core/binary-relation" "table/expression" "core/binary-program" "t/performance/general-rounds/reference-expression" "t/performance/general-rounds/reference-program"))
 (def (statistic samples fraction)
   (list-ref (list-sort < samples)
             (- (quotient (* (length samples) fraction) 100) 1)))

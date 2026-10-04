@@ -57,10 +57,17 @@ model call or new accuracy/benefit score belongs to this migration.
 
 R1 now includes the [[file:scheme-compiler-proof-bridge.org][typed lexical lowering proof slice]]: universal normalization
 preservation for the stated positive grammar, logical monotonicity, finite tuple
-join encoding and every finite unrolling iterate. Descriptor admission, relation
-feedback and concrete height/saturation remain open implementation bridges.
+join encoding and every finite unrolling iterate. Scoped relation feedback and
+capped height/saturation arithmetic also have abstract proofs. Concrete native
+descriptor interpretation, feedback execution and compiler-step refinement
+remain open implementation bridges.
 Native qualification binds its exact artifact; no abstract theorem substitutes
 for actual source-bound execution or closes R5/R6.
+
+The [[file:scheme-research-proof-audit.org::#cross-layer-refinement][cross-layer refinement audit]] distinguishes binding identity, public semantic
+equivalence, ordered certificate identity, source occurrences, pending work and
+committed observations. R1/R3/R4 acceptance must preserve those distinctions;
+paper algorithms cannot be transferred by treating all of them as row equality.
 
 * Model interface policy
 

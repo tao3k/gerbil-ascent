@@ -79,5 +79,5 @@ failed publication, callback spoofing and insertion after a deletion. The
 independent branch fixture selects two of three native rule plans for deletion;
 this is evidence of skipped rule work, not a wall-time performance claim.
 
-The [[file:evidence/scheme-stratified-closure-20261004/receipt.json][source-bound receipt]] records both seven-Case Suites, raw logs,
+The [[file:evidence/scheme-stratified-closure-20261004/receipt.json][source-bound receipt]] records both seven-Case Suites,
 independent corpora, fixed bounds and excluded failed runs.

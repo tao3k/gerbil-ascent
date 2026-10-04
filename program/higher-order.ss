@@ -4,7 +4,9 @@
 
 ;;; Typed higher-order descriptors normalize to the existing positive IR.
 ;;; Builders run once during construction; admitted solves hold no callbacks.
-(import (only-in :gerbil-ascent/program/operator
+(import (only-in :gerbil-ascent/program/finite-arithmetic
+                 relational-capped-product relational-capped-power)
+        (only-in :gerbil-ascent/program/operator
                  relational-op-source relational-op-union relational-op-join
                  relational-op-project relational-op-select-eq relational-op-flatmap
                  relational-op-fix relational-op-compile)
@@ -328,14 +330,9 @@
     ;; function-space cardinalities can allocate enormous exact integers.
     (def (bounded-height type)
       (let (cap (+ expansion-limit 1))
-        (def (power base exponent)
-          (let loop ((base base) (exponent exponent) (result 1))
-            (cond ((zero? exponent) result)
-                  ((>= result cap) cap)
-                  (else
-                   (loop (min cap (* base base)) (quotient exponent 2)
-                         (if (odd? exponent) (min cap (* result base)) result))))))
-        (type-height type power (lambda (left right) (min cap (* left right))))))
+        (type-height type
+                     (lambda (base exponent) (relational-capped-power cap base exponent))
+                     (lambda (left right) (relational-capped-product cap left right)))))
     (def (bottom-term type)
       (case (relational-type-kind type)
         ((relation)

@@ -71,6 +71,46 @@ widths. It supports =join_tuple_encoding= over every encoded row. Encoding
 actual immutable Scheme scalars into that finite universe is a remaining bridge;
 the Lean lemma does not establish their runtime hash/equality implementation.
 
+* Native budget arithmetic bridge
+
+=program/finite-arithmetic.ss= now owns natural capped multiplication and
+power; =higher-order.ss= calls these operations while traversing the shared
+finite type formulas. The cap remains =expansion-limit + 1=, a caller-owned
+normalization budget sentinel, not a language Generation limit. A result at
+that sentinel rejects expansion; it is never accepted as the true height.
+
+=packages/proofs/lean/CappedArithmetic.lean= proves:
+
+- Capping either operand preserves the capped product, including zero.
+- The accumulator recurrence computes =min cap (acc * base^exponent)=.
+- Clipping initial inputs preserves that recurrence.
+- Zero cap, zero/one base and saturated positive-base branches are sound.
+- The public power result equals =min cap (base^exponent)= for every natural
+  cap, base and exponent, including =0^0=.
+- Clipping an exponent before a later power preserves its capped result;
+  this is required when nested type cardinalities supply capped exponents.
+- Structural induction preserves entire nested power/product expressions,
+  including the relation/arrow cardinality and height formulas.
+
+Native multiplication clips both operands before multiplication. Power clips
+its factor and accumulator, and exits on zero, one or saturation; it neither
+constructs the full exact power nor decrements an enormous one-base exponent.
+Its remaining exponent decreases on every nonterminal iteration. The proof
+recurrence and native loop share the multiplication step; the optimized exits
+have separate proved equations. Native regression compares all 4,913 triples
+=cap/base/exponent in 0..16= with independent unbounded integer products,
+then checks huge exponents, nullary/empty types, budget rejection and actual
+function-valued fixed-point results.
+
+This bridge proves arithmetic, not the semantic sufficiency of the composite
+type height, descriptor-to-intrinsic binding translation, recursive IR or
+native delta execution. Those compiler obligations remain open. The
+[[file:evidence/scheme-capped-arithmetic-20261004/receipt.json][structured receipt]] binds the checked source and qualification;
+execution logs are excluded. The bound native artifact passed two focused
+modules with 49 Cases and 24 model-task native preflight checks; all six Lean
+files, both TLA models and both expected faults passed. This is not a rerun of
+all native modules or a new model experiment.
+
 * Acceptance and next refinement
 
 The [[file:evidence/scheme-lexical-lowering-20261004/receipt.json][receipt]] binds the checked proof files, source patch, native artifact and
@@ -90,11 +130,13 @@ The preceding GitHub head =aa07037= has a separate failed benefit gate: after
 the solve-only arm, group 0 raised =Stack overflow= in =##structure-instance-of?=
 before fresh-update completion (exit 70). Both Rust oracle jobs and formal
 passed. This is not a successful benefit measurement or an exact-head CI pass
-for this new slice. Candidate construction/update must be diagnosed before the
-three-arm benefit gate can close; its failure stays explicit in the receipt.
+for this new slice. The candidate self-field recursion was subsequently corrected and the
+three-arm gate qualified in the [[file:scheme-retained-benefit.org][fresh-update receipt]]; this historical failure
+stays explicit in its original receipt.
 
 The next compiler proof slice is scoped relation feedback plus finite signature
-enumeration/cardinality and saturating height. After it, descriptor admission
+enumeration/cardinality and height sufficiency; the saturation arithmetic
+sub-obligation above is now proved. After it, descriptor admission
 and lexical-identity translation must establish that an accepted Scheme graph
 is a well-typed expression of the proved calculus. Only then can the abstract
 normalization theorem qualify the actual compiler's accepted grammar.

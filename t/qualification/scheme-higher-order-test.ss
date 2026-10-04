@@ -1,7 +1,9 @@
 ;;; -*- Gerbil -*-
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
-(import (only-in :std/test check-equal? check-exception test-case test-suite)
+(import (only-in :gerbil-ascent/program/finite-arithmetic
+                 relational-capped-product relational-capped-power)
+        (only-in :std/test check-equal? check-exception test-case test-suite)
         (only-in :gerbil-ascent/program/higher-order
                  relational-relation-type relational-arrow-type relational-type=?
                  relational-type-height-expression relational-typed-source
@@ -267,6 +269,31 @@
          (relational-admit (with-relations program
                             (list (.o (:: @ relation) checked-domain: (vector 'opaque '()))))) true)
         (check-exception (relational-finite-lattice 'l 1 '((0)) 'max '((bad))) true)))
+    (test-case "capped arithmetic equals independent exact natural calculations"
+      (for-each
+       (lambda (cap)
+         (for-each
+          (lambda (base)
+            (for-each
+             (lambda (exponent)
+               (check-equal? (relational-capped-power cap base exponent)
+                             (min cap (apply * (make-list exponent base))))
+               (check-equal? (relational-capped-product cap base exponent)
+                             (min cap (* base exponent))))
+             (iota 17)))
+          (iota 17)))
+       (iota 17)))
+    (test-case "capped arithmetic handles enormous exponents without materializing powers"
+      (let (huge (apply * (make-list 100 10)))
+        (check-equal? (relational-capped-power 0 0 0) 0)
+        (check-equal? (relational-capped-power 1 0 huge) 0)
+        (check-equal? (relational-capped-power 7 0 0) 1)
+        (check-equal? (relational-capped-power 7 1 huge) 1)
+        (check-equal? (relational-capped-power 7 2 huge) 7)
+        (check-equal? (relational-capped-product 7 huge 0) 0)
+        (check-equal? (relational-capped-product 7 huge huge) 7))
+      (check-exception (relational-capped-power 4 2 -1) true)
+      (check-exception (relational-capped-product 4 2 1.5) true))
     (test-case "finite height arithmetic preserves empty and nullary function bottoms"
       (for-each
        (lambda (arity)

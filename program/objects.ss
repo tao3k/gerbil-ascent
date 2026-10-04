@@ -73,36 +73,40 @@
 
 (def (indexed-atom plan bound)
   (let loop ((terms (vector-ref plan 1)) (column 0)
-             (columns []) (seen-bound bound) (bindings []))
+             (columns []) (seen-bound bound) (bindings []) (key-terms []))
     (if (null? terms)
       (vector (vector-ref plan 0) (vector-ref plan 1)
-              (reverse columns) (reverse bindings))
+              (reverse columns) (reverse bindings) (reverse key-terms))
       (let* ((term (car terms))
              (kind (car term))
              (inputs (and (eq? kind 'expression)
                           (vector-ref (cdr term) 0))))
         (when inputs (require-bound inputs seen-bound))
-        (loop (cdr terms) (+ column 1)
-              (if (or (eq? kind 'literal)
-                      (and (eq? kind 'variable)
-                           (memq (cdr term) bound))
-                      (and inputs
-                           (andmap (lambda (name) (memq name bound)) inputs)))
-                (cons column columns)
-                columns)
-              (cond
-               ((eq? kind 'variable) (cons (cdr term) seen-bound))
-               ((eq? kind 'pattern)
-                (append (pattern-outputs term) seen-bound))
-               (else seen-bound))
-              ;; Admission establishes which names can already occur in the
-              ;; environment. Only a first variable occurrence can skip assq;
-              ;; repeats and names introduced by a pattern still compare.
-              (cons (if (and (eq? kind 'variable)
-                             (not (memq (cdr term) seen-bound)))
-                      (cons 'fresh-variable (cdr term))
-                      term)
-                    bindings))))))
+        (let (indexed?
+              (or (eq? kind 'literal)
+                  (and (eq? kind 'variable) (memq (cdr term) bound))
+                  (and inputs
+                       (andmap (lambda (name) (memq name bound)) inputs))))
+          (loop (cdr terms) (+ column 1)
+                (if indexed?
+                  (cons column columns)
+                  columns)
+                (cond
+                 ((eq? kind 'variable) (cons (cdr term) seen-bound))
+                 ((eq? kind 'pattern)
+                  (append (pattern-outputs term) seen-bound))
+                 (else seen-bound))
+                ;; Admission establishes which names can already occur in the
+                ;; environment. Only a first variable occurrence can skip assq;
+                ;; repeats and names introduced by a pattern still compare.
+                (cons (if (and (eq? kind 'variable)
+                               (not (memq (cdr term) seen-bound)))
+                        (cons 'fresh-variable (cdr term))
+                        term)
+                      bindings)
+                ;; Bind column positions to their immutable term descriptors
+                ;; once. Values and expression callbacks remain row-time work.
+                (if indexed? (cons term key-terms) key-terms)))))))
 
 (def (atom-clause-plan clause atom-plan bound)
   (let* ((plan (indexed-atom (atom-plan clause) bound))

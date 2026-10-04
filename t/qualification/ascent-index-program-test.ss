@@ -4,6 +4,11 @@
 
 (import (only-in :std/test check-equal? check-exception test-suite)
         (only-in :clan/poo/object .o .ref)
+        (only-in :gerbil-ascent/program/analysis gerbil-ascent-program-schema)
+        (only-in :gerbil-ascent/program/planning gerbil-ascent-prepare-program)
+        (only-in :gerbil-ascent/program/positive gerbil-ascent-index-key/terms)
+        (only-in :gerbil-ascent/t/qualification/ascent-index-reference-evaluate
+                 ascent-index-reference-evaluate-program)
         (only-in :core/observability/testing-case
                  poo-flow-test-case)
         (only-in :gerbil-ascent/t/qualification/ascent-index-program-fixture
@@ -15,6 +20,9 @@
                  gerbil-ascent-hash-index-provider)
         (only-in :gerbil-ascent/program/interface
                  gerbil-ascent-evaluate-program gerbil-ascent-relation
+                 gerbil-ascent-program gerbil-ascent-rule gerbil-ascent-atom
+                 gerbil-ascent-variable gerbil-ascent-literal
+                 gerbil-ascent-expression gerbil-ascent-guard
                  gerbil-ascent-open-session
                  gerbil-ascent-session-append-source!
                  gerbil-ascent-session-run))
@@ -23,6 +31,67 @@
 
 (def ascent-index-program-test
   (test-suite "ASCENT indexed relation access"
+    (poo-flow-test-case "prepared expression keys preserve provider and callback order"
+      (let* ((events [])
+             (provider
+              (.o (:: @ gerbil-ascent-hash-index-provider)
+                  (.build-index
+                   (lambda (rows columns)
+                     (set! events (cons (list 'build columns) events))
+                     ((.ref gerbil-ascent-hash-index-provider '.build-index)
+                      rows columns)))
+                  (.lookup-index
+                   (lambda (index key)
+                     (set! events (cons (list 'lookup key) events))
+                     ((.ref gerbil-ascent-hash-index-provider '.lookup-index)
+                      index key)))))
+             (x (gerbil-ascent-variable 'x))
+             (z (gerbil-ascent-variable 'z))
+             (expression
+              (gerbil-ascent-expression '(x)
+                (lambda (value)
+                  (set! events (cons 'expression events)) (+ value 1))))
+             (program
+              (gerbil-ascent-program
+               (list (gerbil-ascent-relation 'seed 1 '((2)))
+                     (gerbil-ascent-relation 'probe 4
+                       (map (lambda (n) (list 7 n (+ n 1) (* n 2))) (iota 40))
+                       provider)
+                     (gerbil-ascent-relation 'out 1 []))
+               (list (gerbil-ascent-rule
+                      (list (gerbil-ascent-atom 'out (list z)))
+                      (list (gerbil-ascent-atom 'seed (list x))
+                            (gerbil-ascent-guard '(x) (lambda (_x) #t))
+                            (gerbil-ascent-atom 'probe
+                              (list (gerbil-ascent-literal 7) x expression z)))))
+               64 64 128))
+             (relations (.ref program 'relations))
+             (analysis
+              (gerbil-ascent-prepare-program relations (.ref program 'rules)
+                (gerbil-ascent-program-schema program relations) #f))
+             (body (vector-ref (car (vector-ref analysis 2)) 1))
+             (atom (vector-ref (caddr body) 1)))
+        (check-equal? events [])
+        (check-equal? (vector-ref atom 2) '(0 1 2))
+        (check-equal? (vector-ref atom 4)
+                      (map (cut list-ref (vector-ref atom 1) <>) '(0 1 2)))
+        (let* ((old (ascent-index-reference-evaluate-program program))
+               (trace (reverse events)))
+          (set! events [])
+          (let (new (gerbil-ascent-evaluate-program program))
+            (check-equal? ((.ref new 'rows-of) 'out) '((4)))
+            (check-equal? ((.ref new 'rows-of) 'out) ((.ref old 'rows-of) 'out))
+            (check-equal? (reverse events) trace)
+            (check-equal? (car trace) '(build (0 1 2)))
+            (check-equal? (cadr trace) 'expression)
+            (check-equal? (if (member '(lookup (7 2 3)) trace) #t #f) #t)))))
+    (poo-flow-test-case "prepared keys preserve false values and missing-variable errors"
+      (let (terms
+            (list '(literal . 7) '(variable . x)
+                  (cons 'expression (vector '(x) identity))))
+        (check-equal? (gerbil-ascent-index-key/terms terms '((x . #f))) '(7 #f #f))
+        (check-equal? (gerbil-ascent-index-key/terms [] []) [])
+        (check-exception (gerbil-ascent-index-key/terms terms []) true)))
     (poo-flow-test-case "bound-column index preserves two-hop join semantics"
       (let* ((program (ascent-index-fixture-program))
              (rows ((.ref (gerbil-ascent-evaluate-program program) 'rows-of)

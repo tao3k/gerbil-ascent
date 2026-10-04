@@ -13,6 +13,7 @@
         (only-in "planning.ss" gerbil-ascent-prepare-program)
         (only-in "positive.ss" gerbil-ascent-positive-plan
                  gerbil-ascent-run-positive-plan! gerbil-ascent-index-key
+                 gerbil-ascent-index-key/terms
                  gerbil-ascent-emit-heads!)
         (only-in "types.ss" GerbilAscentSessionContract)
         (only-in "analysis.ss" gerbil-ascent-program-analysis
@@ -133,8 +134,11 @@
                         (hash-put! cache columns (cons version built))
                         built)))
                    (terms (vector-ref atom 1))
-                   (key (gerbil-ascent-index-key
-                         terms columns environment slot-terms)))
+                   (key (if slot-terms
+                          (gerbil-ascent-index-key
+                           terms columns environment slot-terms)
+                          (gerbil-ascent-index-key/terms
+                           (vector-ref atom 4) environment))))
               (gerbil-ascent-physical-index-rows
                (vector-ref index-providers index) lookup key)))))
       (def (advance-all-indexes! index new-rows)

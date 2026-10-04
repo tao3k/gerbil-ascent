@@ -6,7 +6,7 @@
 ;;; each engine owns its variable frames, including nested/concurrent solves.
 (import (only-in "funs.ss" gerbil-ascent-expression-value gerbil-ascent-head-row))
 (export gerbil-ascent-positive-plan gerbil-ascent-compile-positive-plan gerbil-ascent-run-positive-plan!
-        gerbil-ascent-index-key gerbil-ascent-emit-heads!)
+        gerbil-ascent-index-key gerbil-ascent-index-key/terms gerbil-ascent-emit-heads!)
 
 (def +positive-plans+ (make-hash-table-eq weak-keys: #t))
 (def +positive-plans-lock+ (make-mutex 'ascent-positive-plans))
@@ -166,17 +166,27 @@
   (if slot-terms
     (map (lambda (term) (term-value term environment)) slot-terms)
     (map (lambda (column)
-           (let (term (list-ref terms column))
-             (case (car term)
-               ((literal) (cdr term))
-               ((expression)
-                (gerbil-ascent-expression-value (cdr term) environment))
-               (else
-                (let (bound (assq (cdr term) environment))
-                  (unless bound
-                    (error "unbound ASCENT index variable" (cdr term)))
-                  (cdr bound))))))
+           (index-term-value (list-ref terms column) environment))
          columns)))
+
+;;; Prepared atom plans already select terms in physical column order.
+;;; Evaluate their values only after index construction, preserving expression
+;;; callbacks and the same missing-variable diagnostic as dynamic column keys.
+;; : (-> Terms Environment Key)
+(def (gerbil-ascent-index-key/terms key-terms environment)
+  (map (lambda (term) (index-term-value term environment)) key-terms))
+
+;;; Both key interfaces share value semantics; selection must not evaluate an
+;;; expression or retain its result across row candidates or source updates.
+;; : (-> Term Environment Value)
+(def (index-term-value term environment)
+  (case (car term)
+    ((literal) (cdr term))
+    ((expression) (gerbil-ascent-expression-value (cdr term) environment))
+    (else
+     (let (bound (assq (cdr term) environment))
+       (unless bound (error "unbound ASCENT index variable" (cdr term)))
+       (cdr bound)))))
 
 ;;; Keep the general interpreter's head order and expression evaluation while
 ;;; sharing one admission boundary with slot-based positive execution.

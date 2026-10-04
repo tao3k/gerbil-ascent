@@ -269,8 +269,13 @@
         name))
     (def (add-rule rule)
       (set! rules (cons rule rules)))
-    (def (remember node name free)
-      (when (null? free) (hash-put! memo node name))
+    ;; Cache a node under the actual lexical relation handles it captures.
+    ;; Descriptor identity owns the outer table; binding lists own instances.
+    (def (remember node name bindings)
+      (let (instances (or (hash-get memo node)
+                          (let (table (make-hash-table))
+                            (hash-put! memo node table) table)))
+        (hash-put! instances bindings name))
       name)
 
     ;; Inputs are already lowered in graph order. This handler only emits
@@ -350,8 +355,8 @@
                                     (append in out)))))))
           (else (error "unsupported operator node" kind)))))
 
-    ;; Scope validation precedes memo lookup: a shared child cannot reuse
-    ;; a relation compiled under a fixed-point or transformer binding.
+    ;; Resolve every free parameter before memo lookup. An escaped child is
+    ;; rejected even if an instance of it was compiled under another binding.
     (def (emit node active)
       (let (free (free-parameters node free-cache))
         (for-each
@@ -359,8 +364,10 @@
            (unless (assq parameter active)
              (error "operator fixed-point parameter escaped its body")))
          free)
-        (let ((kind (relational-op-kind node))
-              (cached (and (null? free) (hash-get memo node))))
+        (let* ((bindings (map (lambda (parameter) (cdr (assq parameter active))) free))
+               (kind (relational-op-kind node))
+               (instances (hash-get memo node))
+               (cached (and instances (hash-get instances bindings))))
           (cond
            ((eq? kind 'parameter)
             (let (binding (assq node active))
@@ -383,12 +390,12 @@
                        name (relational-op-arity node)
                        (vector-ref data 1))
                       relations))
-              (remember node name free)))
+              (remember node name bindings)))
            ((eq? kind 'fix)
             (let* ((name (add-derived (relational-op-arity node)))
                    (body (car (relational-op-inputs node)))
                    (parameter (relational-op-data node)))
-              (remember node name free)
+              (remember node name bindings)
               ;; A fixed point of a union is the least relation receiving
               ;; each branch directly. Materializing the union and copying
               ;; it back into the fixed-point relation adds no tuples.
@@ -414,7 +421,7 @@
                            (cons (relational-transform-parameter transform)
                                  input-name)
                            active))))
-              (remember node result free)))
+              (remember node result bindings)))
            ((and (eq? kind 'project)
                  (eq? (relational-op-kind
                        (car (relational-op-inputs node))) 'join))
@@ -434,13 +441,13 @@
                     (list (variable-atom name selected))
                     (list (variable-atom (car names) left-vars)
                           (variable-atom (cadr names) right-vars))))))
-              (remember node name free)))
+              (remember node name bindings)))
            (else
             (let* ((inputs (relational-op-inputs node))
                    (input-names (map (lambda (input) (emit input active))
                                      inputs))
                    (name (add-derived (relational-op-arity node))))
-              (remember node name free)
+              (remember node name bindings)
               (emit-operation-rules! node name input-names)
               name))))))
     (let (output (emit root []))

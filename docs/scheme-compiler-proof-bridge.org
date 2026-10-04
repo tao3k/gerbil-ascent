@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 #+TITLE: Typed lexical lowering proof and native compiler correspondence
 #+DATE: 2026-10-04
-#+STATUS: lexical positive kernel proved; concrete compiler refinement open
+#+STATUS: lexical and scoped recursive kernels proved; concrete compiler refinement open
 
 * Stated claim
 
@@ -45,7 +45,7 @@ remain in the same native Suite.
 | =select-eq= | Fixed selection predicate | Conjunctive filtered membership preserved | Scalar equality and column extraction must agree with the admitted domain encoding |
 | =flatmap= | Fixed finite mapping membership | Zero/one/many mapped membership preserved | Split mapping rows at input width and preserve set semantics/declared output domain |
 | Function-valued =fix= unroll | =bottom_realizes= and =unrolling_preserves_meaning= | Every finite iteration from pointwise bottom preserves meaning | Establish actual =bounded-height= sufficiency, saturation correctness and remaining-budget admission; relate to =FiniteHeight.bounded_bottom_least_fixed= |
-| Relation-valued =fix= feedback | Existing =FiniteOperators= / =FiniteHeight= laws | Abstract least closure and finite-rank stationarity | Not a constructor of the new lexical calculus yet; scoped recursive IR and native delta-plan semantics still need a preservation proof |
+| Relation-valued =fix= feedback | =RecursiveLowering.feedback=, =lowering_preserves_meaning= and =lowered_feedback_is_least= | Positive scoped recursive IR preserves the least relation, including nested captures; completed accumulation equals that closure | Higher-order elimination to this relation-only grammar, descriptor identity to lexical indices, finite bound sufficiency and native delta-plan/rule refinement remain open |
 | Native =relational-op-compile= | Relational IR interpreter | Formal denotation specified | Named relation allocation, SCC/delta variants, tuple storage and emitted rules are not mechanically refined by this patch |
 
 * Monotonicity and finite domain boundary
@@ -70,6 +70,51 @@ between a pair of such tuples and their concatenation, including empty tuple
 widths. It supports =join_tuple_encoding= over every encoded row. Encoding
 actual immutable Scheme scalars into that finite universe is a remaining bridge;
 the Lean lemma does not establish their runtime hash/equality implementation.
+
+* Scoped recursive relation bridge
+
+=packages/proofs/lean/RecursiveLowering.lean= adds a relation-only compiler
+phase with separate =PositiveExpression= and =ScopedIR= syntaxes. Both have
+intrinsically scoped, row-typed variables and explicit =feedback= binders.
+Sources, union, heterogeneous join, projection, selection and frozen flatmap
+tables coexist with nested feedback. This phase follows lexical function
+elimination; it does not silently extend =LexicalLowering.Expression= with
+unproved general higher-order recursion.
+
+Fourteen proved statements establish environment monotonicity, monotonicity
+of each positive feedback body, lowering preservation for arbitrary captured
+environments, and least-fixed-point equality. Feedback denotes the
+intersection of all pre-fixed relations. =accumulating_least= proves that
+adding current rows to the body result leaves this least closure unchanged.
+=completed_iteration_is_least= establishes exact closure when an iteration
+from bottom is actually stationary. Exhausting an iteration or row budget is
+not this premise, and no termination/finite-height claim is smuggled into it.
+
+The native compiler now keys its memo first by descriptor identity, then by
+the relation handles of every free parameter. Closed nodes use the empty
+binding list. Every free parameter is resolved before cache lookup, so an
+escaped child remains an error even after it was compiled in a valid scope.
+The same open subgraph under the same bindings shares a compiled instance;
+different transformer inputs or outer fixed-point bindings remain distinct.
+This ownership applies to fix, apply and ordinary emission paths.
+
+Native regressions independently enumerate closure rows and inspect emitted
+structure: a shared recursive mapping produces one private mapping source,
+while duplicated consumers remain present. Two separately constructed
+applications to the same source share a pipeline; applications to different
+sources retain separate pipelines and results. Existing nested fixed-point,
+escaped-parameter, source-withdrawal and fragment cases remain acceptance gates.
+This is structural reuse evidence, not a runtime speedup measurement.
+
+The [[file:evidence/scheme-recursive-lowering-20261004/receipt.json][recursive receipt]] binds source, proofs and native qualification.
+The formal model does not mechanize hash-table cache correctness, descriptor
+identity translation, generated rules or native semi-naive execution. These
+implementation refinement obligations remain explicit. No TLA protocol or
+Generation limit changes in this slice; its existing lifecycle models still
+run through the common formal gate. On the bound source, four focused native
+modules passed 55 Cases, with all four MODULE/HARNESS/final OK markers and exit
+0. Seven Lean files, both normal lifecycle models and both expected faults
+passed. No full native-suite rerun or new timing distribution is claimed here.
 
 * Native budget arithmetic bridge
 
@@ -134,9 +179,9 @@ for this new slice. The candidate self-field recursion was subsequently correcte
 three-arm gate qualified in the [[file:scheme-retained-benefit.org][fresh-update receipt]]; this historical failure
 stays explicit in its original receipt.
 
-The next compiler proof slice is scoped relation feedback plus finite signature
-enumeration/cardinality and height sufficiency; the saturation arithmetic
-sub-obligation above is now proved. After it, descriptor admission
+The next compiler proof slice is concrete descriptor/binder translation and
+finite signature enumeration/cardinality and height sufficiency. The scoped
+relation feedback and saturation arithmetic sub-obligations above are proved. After it, descriptor admission
 and lexical-identity translation must establish that an accepted Scheme graph
 is a well-typed expression of the proved calculus. Only then can the abstract
 normalization theorem qualify the actual compiler's accepted grammar.

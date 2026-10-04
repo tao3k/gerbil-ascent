@@ -1,0 +1,154 @@
+{
+  "schema": 1,
+  "sourceBase": "17af39cc8c9d1d79b4e04655bda5e52c3560e23a",
+  "sourceReconstruction": {
+    "patch": "source-snapshot.patch",
+    "patchSHA256": "1f1a05f194ed5b34f01edff631b5697dcbde122963c45ebb518e38241549bd0c"
+  },
+  "native": {
+    "artifactSHA256": "2628c6f4127bcf8565d5a7184f19be8e11ac01e05b13209bfe6ff14589ffce83",
+    "sourceCount": 354,
+    "sourceMapSHA256": "749319ddc867c3f2f4d6740afae2f860b0a29ee5ea59111a5fd7ea9f624548f5",
+    "sourceMapEncoding": "UTF-8 JSON, sorted keys, compact separators",
+    "buildElapsedSeconds": 151.96689891815186,
+    "buildClock": "unix",
+    "compilerExit": 0,
+    "qualificationExit": 0,
+    "qualifiedModules": [
+      "scheme-operator",
+      "scheme-operator-retained",
+      "scheme-library-contract",
+      "scheme-higher-order"
+    ],
+    "counts": {
+      "cases": 55,
+      "suites": 4,
+      "modules": 4,
+      "harnesses": 4,
+      "finalOK": 4
+    },
+    "bounds": {
+      "maxHeap": "1G",
+      "outputSilenceSeconds": 5,
+      "moduleSeconds": 120,
+      "buildSilenceAndCPUIdleSeconds": 60,
+      "buildTotalDeadline": null
+    },
+    "structuralRegressions": [
+      {
+        "condition": "shared recursive pipeline",
+        "relations": 5,
+        "rules": 5,
+        "sources": 2,
+        "independentRows": [
+          [
+            1
+          ],
+          [
+            2
+          ],
+          [
+            3
+          ]
+        ]
+      },
+      {
+        "condition": "two distinct applications, same source binding",
+        "relations": 4,
+        "rules": 3,
+        "sources": 2,
+        "independentRows": [
+          [
+            10
+          ]
+        ]
+      },
+      {
+        "condition": "two distinct applications, different source bindings",
+        "relations": 7,
+        "rules": 4,
+        "sources": 4,
+        "independentRows": [
+          [
+            10
+          ],
+          [
+            20
+          ]
+        ]
+      }
+    ]
+  },
+  "formal": {
+    "exit": 0,
+    "lean": "leanprover/lean4:v4.34.1",
+    "filesSHA256": {
+      "packages/proofs/lean/CappedArithmetic.lean": "72dc9c97c05b32f9b43c71730045e8ec802f830785a22d8a412a4be063c65217",
+      "packages/proofs/lean/FiniteHeight.lean": "5f95e899e66d75b440d0d0c5c56d0572b939f79257f09c8aa8157120a33734ea",
+      "packages/proofs/lean/FiniteOperators.lean": "4d181fe6799b13f1e5e98e0d3a708bed6e668061821365162df79442f819c69d",
+      "packages/proofs/lean/LexicalLowering.lean": "200fef213c1c5ec37be040beba4b9e774ca00a72fbb84efd5a220c3335427f52",
+      "packages/proofs/lean/PositiveNonmembership.lean": "053d50736e8509d80a1faf58a81b4f11a63f5fd3d695718e9c7d5e90ed451484",
+      "packages/proofs/lean/RecursiveLowering.lean": "cf0997a5154d92b29b12e2bf90e006ec6a4e06eb788b07132076473e9ea26f99",
+      "packages/proofs/lean/SessionPublication.lean": "2e65f46352bcf76d4c3ca8a2bd49deb06fbb1bb71032ff7d89aa9eb914dc942a"
+    },
+    "newTheorems": 14,
+    "normalTlaModels": 2,
+    "expectedCounterexamples": [
+      "AtomicSnapshot: early publication",
+      "NoStaleCommit: stale publication"
+    ],
+    "tlcJarSHA256": "936a262061c914694dfd669a543be24573c45d5aa0ff20a8b96b23d01e050e88"
+  },
+  "implementation": {
+    "owner": "program/operator.ss",
+    "memoKey": "Descriptor identity, then ordered actual relation handles of free parameters",
+    "scopeValidation": "Every free parameter resolved before cache lookup",
+    "memoLifetime": "One compilation; no shared cross-call cache",
+    "claims": [
+      "Scoped positive relation feedback lowering preserves meaning for arbitrary captured environments",
+      "Positive feedback bodies are monotone and denote least fixed relations",
+      "Accumulating current rows preserves the least closure",
+      "A genuinely stationary iteration from bottom equals the least closure"
+    ],
+    "remaining": [
+      "Higher-order elimination and concrete descriptor identity translation into this scoped grammar",
+      "Mechanized correctness of native memo table and generated rules",
+      "Finite type height sufficiency and concrete termination",
+      "Native semi-naive/delta execution refinement"
+    ]
+  },
+  "excludedAttempts": [
+    {
+      "stage": "native build",
+      "exit": 70,
+      "cause": "Extra closing parenthesis in new regression; corrected before final build"
+    },
+    {
+      "stage": "native qualification",
+      "exit": 1,
+      "cause": "Different-input fixture expected 3 rules instead of 2 mapping plus 2 union rules; corrected to 4",
+      "finalOK": false,
+      "artifactSHA256": "3f87bd6a31b2c0265025a80e77b919140c092985db7b4eae7b8621e3bc663660"
+    },
+    {
+      "stage": "Lean development",
+      "exit": 1,
+      "cause": "Feedback branch needed denotation reduction; reflexive environment obligation extracted into a dedicated theorem"
+    }
+  ],
+  "previousHeadCI": {
+    "head": "17af39cc8c9d1d79b4e04655bda5e52c3560e23a",
+    "run": "https://github.com/tao3k/gerbil-ascent/actions/runs/37205651648",
+    "conclusion": "success",
+    "checks": [
+      "formal",
+      "scheme",
+      "oracle (byods)",
+      "oracle (other)",
+      "native-and-oracle"
+    ],
+    "scope": "Previous head only, not CI for this patch"
+  },
+  "modelCalls": 0,
+  "performanceClaim": null
+}

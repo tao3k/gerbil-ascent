@@ -352,6 +352,50 @@
             (check-equal? (same-rows? actual '((10) (11) (12) (13))) #t)
             (check-equal?
              (same-rows? actual (relational-op-reference graph)) #t)))))
+    (test-case "shared recursive pipeline emits one instance per lexical binding"
+      (let* ((seed (relational-op-source 'seed 1 '((1))))
+             (fixed
+              (relational-op-fix
+               1 (lambda (current)
+                   (let (mapped (relational-op-flatmap
+                                 current 1 '(((1) (2)) ((2) (3)))))
+                     (relational-op-union
+                      seed (relational-op-union mapped mapped)))))))
+        (let-values (((program output) (relational-op-compile fixed 32 256 512)))
+          (check-equal? (length (.ref program 'relations)) 5)
+          (check-equal? (length (.ref program 'rules)) 5)
+          (check-equal? (length (.ref program 'source-handles)) 2)
+          (check-equal?
+           (same-rows? (relational-query-name
+                        (relational-solve (relational-admit program)) output)
+                       '((1) (2) (3))) #t))
+        (check-equal? (same-rows? (relational-op-reference fixed)
+                                '((1) (2) (3))) #t)))
+    (test-case "separate applications share a pipeline only for the same input binding"
+      (let* ((transform
+              (relational-op-function
+               1 (lambda (input)
+                   (relational-op-flatmap input 1 '(((1) (10)) ((2) (20)))))))
+             (source (relational-op-source 'source 1 '((1))))
+             (same-input
+              (relational-op-union (relational-op-apply transform source)
+                                   (relational-op-apply transform source)))
+             (other (relational-op-source 'other 1 '((2))))
+             (different-inputs
+              (relational-op-union (relational-op-apply transform source)
+                                   (relational-op-apply transform other))))
+        (for-each
+         (lambda (graph expected relations sources rule-count)
+           (let-values (((program output) (relational-op-compile graph 32 256 512)))
+             (check-equal? (length (.ref program 'relations)) relations)
+             (check-equal? (length (.ref program 'rules)) rule-count)
+             (check-equal? (length (.ref program 'source-handles)) sources)
+             (check-equal?
+              (same-rows? (relational-query-name
+                           (relational-solve (relational-admit program)) output)
+                          expected) #t))
+           (check-equal? (same-rows? (relational-op-reference graph) expected) #t))
+         (list same-input different-inputs) '(((10)) ((10) (20))) '(4 7) '(2 4) '(3 4))))
     (test-case "fixed-point placeholder is local to its builder"
       (let* ((seed (relational-op-source 'seed 1 '((1))))
              (identity-fix

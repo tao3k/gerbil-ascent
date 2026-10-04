@@ -110,6 +110,13 @@ native symbol decoding/freshness, actual rule execution and the optimized
 two-body projected-join branch remain separate obligations. The
 [[file:evidence/scheme-projection-rule-20261005/receipt.json][receipt]] distinguishes current formal acceptance from prior native evidence.
 
+The [[file:scheme-compiler-proof-bridge.org][shared-key projected join slice]] extends the rule model to the optimized
+two-body branch. Eight new theorems connect shared variable identity, body-key
+equality, complete assignment reconstruction and projected output to the
+join-then-project IR. Membership equivalence does not imply budget/work equality
+or certify native freshness, decoding and index execution. Its
+[[file:evidence/scheme-projected-join-rule-20261005/receipt.json][receipt]] records the refreshed native artifact and exact formal snapshot.
+
 * Model interface policy
 
 Why might an invocation contain text? Actual source, the user's task and a

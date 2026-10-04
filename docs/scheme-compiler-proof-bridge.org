@@ -496,3 +496,39 @@ native module. The relevant emitter and operator test bytes are compared
 against the preceding native snapshot; those comparisons preserve the scope
 of that evidence and do not qualify newer unrelated source changes. No model
 calls, performance claim or published log is added.
+
+* Shared-key projected join rule
+
+=Lowering.ProjectedJoinRule= models =join-variables= and the optimized
+=project= over =join= branch of =lower-operator-graph=. Left column identities
+inhabit one finite variable bank. Non-key right identities inhabit a disjoint
+bank; the right key is replaced by the left key identity. The head selects
+from the concatenation of these two patterns, exactly as the emitter does.
+
+Eight theorems establish the shared-key alias, equality of instantiated body
+keys, reconstruction of a matching right row, head projection of instantiated
+bodies, rule soundness, rule completeness, their equivalence, and equivalence
+of the descriptor to the existing join-then-project relational IR. Completeness
+constructs one assignment from the two input rows; key equality is necessary
+to recover the right key. Soundness obtains key equality from variable sharing,
+rather than assuming a separate runtime filter. The head can reorder/repeat
+columns or select none; no head injectivity or nonempty projection is required.
+
+This adds a rule-pattern account of the fusion used by the native compiler.
+It proves membership equivalence, not equality of intermediate relation counts,
+resource budgets or work. The optimized path can omit an intermediate join
+relation, and those operational observations are not covered by the theorem.
+Both keys have =Fin= bounds, so a join with a nullary input has no admissible
+key. A zero-column *output* remains valid. Scalar values are generic; native
+equality and symbol identity are separate implementation obligations.
+
+Finite variable banks express the required freshness/capture premises. Their
+correspondence to native =gensym= symbols, atom decoding, matching/index
+execution, memoization and recursive feedback remain open. The new proof is
+not an extraction of Scheme source. The ordinary one-body projection proof
+remains separate, while this slice covers the two-body optimized branch.
+
+The [[file:evidence/scheme-projected-join-rule-20261005/receipt.json][projected-join receipt]] binds the formal snapshot and refreshed native
+qualification after the upstream index lifecycle change. Rejected build or
+qualification attempts, if any, remain excluded. TLA lifecycle models are
+unchanged; no model calls or performance claim is added.

@@ -393,4 +393,120 @@ theorem emitted_projection_iff_descriptor {α : Type} {arity : Nat}
 
 end ProjectionRule
 
+namespace ProjectedJoinRule
+
+/-- Left variables and fresh non-key right variables inhabit disjoint banks.
+    The right key reuses exactly the left key's variable, as join-variables
+    does. Native gensym/symbol decoding remains a separate premise. -/
+def rightVariable (leftKey : Fin m) (rightKey : Fin n) (column : Fin n) :
+    Sum (Fin m) (Fin n) :=
+  if column = rightKey then .inl leftKey else .inr column
+
+def leftBody (assignment : Sum (Fin m) (Fin n) → α) : Fin m → α :=
+  fun column => assignment (.inl column)
+
+def rightBody (leftKey : Fin m) (rightKey : Fin n)
+    (assignment : Sum (Fin m) (Fin n) → α) : Fin n → α :=
+  fun column => assignment (rightVariable leftKey rightKey column)
+
+def headVariables (leftKey : Fin m) (rightKey : Fin n) :
+    Fin (m + n) → Sum (Fin m) (Fin n) :=
+  Fin.addCases Sum.inl (rightVariable leftKey rightKey)
+
+def headValues (leftKey : Fin m) (rightKey : Fin n)
+    (columns : List (Fin (m + n))) (assignment : Sum (Fin m) (Fin n) → α) : List α :=
+  columns.map fun column => assignment (headVariables leftKey rightKey column)
+
+theorem right_key_aliases_left (leftKey : Fin m) (rightKey : Fin n) :
+    rightVariable leftKey rightKey rightKey = .inl leftKey := by
+  simp [rightVariable]
+
+theorem body_keys_equal (leftKey : Fin m) (rightKey : Fin n)
+    (assignment : Sum (Fin m) (Fin n) → α) :
+    leftBody assignment leftKey = rightBody leftKey rightKey assignment rightKey := by
+  simp [leftBody, rightBody, right_key_aliases_left]
+
+theorem matching_right_body_reconstruction (leftKey : Fin m) (rightKey : Fin n)
+    (left : Fin m → α) (right : Fin n → α) (keys : left leftKey = right rightKey) :
+    rightBody leftKey rightKey (Sum.elim left right) = right := by
+  funext column
+  by_cases same : column = rightKey
+  · subst column
+    simpa [rightBody, rightVariable] using keys
+  · simp [rightBody, rightVariable, same]
+
+theorem head_values_are_projected_body (leftKey : Fin m) (rightKey : Fin n)
+    (columns : List (Fin (m + n))) (assignment : Sum (Fin m) (Fin n) → α) :
+    headValues leftKey rightKey columns assignment =
+      columns.map (Fin.addCases (leftBody assignment) (rightBody leftKey rightKey assignment)) := by
+  have same : (fun column => assignment (headVariables leftKey rightKey column)) =
+      Fin.addCases (leftBody assignment) (rightBody leftKey rightKey assignment) := by
+    funext column
+    apply Fin.addCases (m := m) (n := n) (motive := fun i =>
+      assignment (headVariables leftKey rightKey i) =
+        Fin.addCases (leftBody assignment) (rightBody leftKey rightKey assignment) i)
+    · intro i
+      simp [headVariables, leftBody]
+    · intro i
+      simp [headVariables, rightBody]
+  exact congrArg (List.map · columns) same
+
+def emitted (leftInput : (Fin m → α) → Prop) (rightInput : (Fin n → α) → Prop)
+    (leftKey : Fin m) (rightKey : Fin n) (columns : List (Fin (m + n))) (output : List α) : Prop :=
+  ∃ assignment, leftInput (leftBody assignment) ∧
+    rightInput (rightBody leftKey rightKey assignment) ∧
+    headValues leftKey rightKey columns assignment = output
+
+def descriptor (leftInput : (Fin m → α) → Prop) (rightInput : (Fin n → α) → Prop)
+    (leftKey : Fin m) (rightKey : Fin n) (columns : List (Fin (m + n))) (output : List α) : Prop :=
+  ∃ left right, leftInput left ∧ rightInput right ∧ left leftKey = right rightKey ∧
+    columns.map (Fin.addCases left right) = output
+
+theorem emitted_projected_join_sound
+    (leftInput : (Fin m → α) → Prop) (rightInput : (Fin n → α) → Prop)
+    (leftKey : Fin m) (rightKey : Fin n) (columns : List (Fin (m + n))) (output : List α) :
+    emitted leftInput rightInput leftKey rightKey columns output →
+      descriptor leftInput rightInput leftKey rightKey columns output := by
+  rintro ⟨assignment, leftMem, rightMem, result⟩
+  refine ⟨leftBody assignment, rightBody leftKey rightKey assignment,
+    leftMem, rightMem, body_keys_equal leftKey rightKey assignment, ?_⟩
+  rw [← head_values_are_projected_body]
+  exact result
+
+theorem emitted_projected_join_complete
+    (leftInput : (Fin m → α) → Prop) (rightInput : (Fin n → α) → Prop)
+    (leftKey : Fin m) (rightKey : Fin n) (columns : List (Fin (m + n))) (output : List α) :
+    descriptor leftInput rightInput leftKey rightKey columns output →
+      emitted leftInput rightInput leftKey rightKey columns output := by
+  rintro ⟨left, right, leftMem, rightMem, keys, result⟩
+  have reconstructed := matching_right_body_reconstruction leftKey rightKey left right keys
+  refine ⟨Sum.elim left right, leftMem, ?_, ?_⟩
+  · rw [reconstructed]
+    exact rightMem
+  · rw [head_values_are_projected_body, reconstructed]
+    exact result
+
+theorem emitted_projected_join_iff_descriptor
+    (leftInput : (Fin m → α) → Prop) (rightInput : (Fin n → α) → Prop)
+    (leftKey : Fin m) (rightKey : Fin n) (columns : List (Fin (m + n))) (output : List α) :
+    emitted leftInput rightInput leftKey rightKey columns output ↔
+      descriptor leftInput rightInput leftKey rightKey columns output :=
+  ⟨emitted_projected_join_sound leftInput rightInput leftKey rightKey columns output,
+   emitted_projected_join_complete leftInput rightInput leftKey rightKey columns output⟩
+
+theorem descriptor_iff_join_project_ir
+    (leftInput : (Fin m → α) → Prop) (rightInput : (Fin n → α) → Prop)
+    (leftKey : Fin m) (rightKey : Fin n) (columns : List (Fin (m + n))) (output : List α) :
+    descriptor leftInput rightInput leftKey rightKey columns output ↔
+      interpret (RelationalIR.project (fun pair => columns.map (Fin.addCases pair.1 pair.2))
+        (RelationalIR.join (fun left right => left leftKey = right rightKey)
+          (.source leftInput) (.source rightInput))) output := by
+  constructor
+  · rintro ⟨left, right, leftMem, rightMem, keys, result⟩
+    exact ⟨(left, right), ⟨leftMem, rightMem, keys⟩, result⟩
+  · rintro ⟨⟨left, right⟩, ⟨leftMem, rightMem, keys⟩, result⟩
+    exact ⟨left, right, leftMem, rightMem, keys, result⟩
+
+end ProjectedJoinRule
+
 end Ascent.Lowering

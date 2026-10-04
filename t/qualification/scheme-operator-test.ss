@@ -315,6 +315,43 @@
         (check-equal? (same-rows? actual '((10) (11) (12) (13))) #t)
         (check-equal? (same-rows? actual
                                   (relational-op-reference graph)) #t)))
+    (test-case "shared ordinary pipeline emits its private sources once"
+      (let* ((pairs
+              (relational-op-source 'pair 2 '((1 a) (2 b) (2 c))))
+             (selected (relational-op-select-eq pairs 0 2))
+             (letters (relational-op-project selected '(1)))
+             (mapped
+              (relational-op-flatmap
+               letters 1 '(((b) (10)) ((b) (11)) ((c) (12)))))
+             (extra (relational-op-source 'extra 1 '((13))))
+             (graph
+              (relational-op-union mapped
+                                   (relational-op-union mapped extra))))
+        (let-values (((program output)
+                      (relational-op-compile graph 32 64 64)))
+          ;; A repeated consumer shares the finite mapping and selection
+          ;; sources, while retaining both union branches in rule order.
+          (check-equal? (length (.ref program 'relations)) 9)
+          (check-equal? (length (.ref program 'rules)) 7)
+          (let (sources (.ref program 'source-handles))
+            (check-equal? (length sources) 4)
+            (check-equal? (car sources) 'pair)
+            (check-equal? (list-ref sources 3) 'extra))
+          (let* ((rules (.ref program 'rules))
+                 (input-name
+                  (lambda (rule) (.ref (car (.ref rule 'body)) 'relation))))
+            (check-equal? (input-name (list-ref rules 3))
+                          (input-name (list-ref rules 5)))
+            (check-equal? (input-name (list-ref rules 4)) 'extra)
+            (check-equal?
+             (input-name (list-ref rules 6))
+             (.ref (car (.ref (list-ref rules 3) 'heads)) 'relation)))
+          (let (actual
+                (relational-query-name
+                 (relational-solve (relational-admit program)) output))
+            (check-equal? (same-rows? actual '((10) (11) (12) (13))) #t)
+            (check-equal?
+             (same-rows? actual (relational-op-reference graph)) #t)))))
     (test-case "fixed-point placeholder is local to its builder"
       (let* ((seed (relational-op-source 'seed 1 '((1))))
              (identity-fix

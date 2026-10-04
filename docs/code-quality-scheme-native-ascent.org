@@ -1885,3 +1885,53 @@ The selected library-source policy audit exits 0 with =findings=0= and
 All logs stay in ignored =.cache/ascent/core-ownership/=. This is a namespace
 and responsibility refactor; no new SS or AOT performance qualification is
 asserted from the semantic suite or the existing pre-migration measurements.
+
+* Study: operator traversal and local rule emission
+
+The installed Gerbil compiler's =optimize-top.ss:244-291= uses named local
+=collect-e= procedures inside =collect-type-let-values%= and
+=collect-type-letrec-values%=. The local procedure handles one binding's type;
+the enclosing procedure owns traversal order and the dynamic local environment.
+Ordinary let expressions are compiled before the body environment is installed.
+Recursive bindings are compiled inside their environment, in two explicit
+passes. The useful lesson is to keep scope and ordering visible in the driver
+while moving a separate responsibility into a small local procedure.
+
+=program/operator.ss= now applies this structure to =lower-operator-graph=.
+Named local definitions replace the manual letrec/lambda binding list.
+=emit= owns graph traversal, active lexical bindings, closed-node memoization,
+fixed-point placeholders and projected-join fusion. =emit-operation-rules!=
+receives already lowered inputs and owns ordinary union, join, selection,
+projection and finite mapping rule emission. Both close over one compilation's
+relation/rule/source accumulators; no public interface or shared context is
+added. The public compilation contract is adjacent to its actual definition.
+
+Free-parameter validation still precedes memo lookup. Fixed-point relations
+are allocated before their bodies, transformer input graphs are emitted before
+their bound bodies, and ordinary inputs are lowered before their output and
+private sources are allocated. The operation clauses and scope traversal match
+the preceding revision after whitespace normalization. Rule construction,
+gensym order, final publication reversal and budget enforcement are preserved.
+
+A native Unit Test exercises a shared selection/project/flatmap pipeline consumed
+by nested unions. It checks that private sources are emitted once, explicit
+sources retain traversal order, union rules retain both shared consumers in
+order, and solved rows agree with the independent descriptor interpreter.
+Existing lexical-escape, fixed-point, projected-join, nullary and fragment tests
+remain semantic gates. This is a responsibility refactor; no speedup is claimed.
+
+Before integrating concurrent test-support commits, the complete native
+=just test= invocation exits 0: 57 modules and 491 Cases pass. All 57 module
+logs contain native, module, harness and final success markers, with no Case
+errors. The original 12-worker scheduling, module deadlines and Case budgets
+remain unchanged. Logs stay in ignored =.cache/ascent/operator-lowering/=.
+
+After normal rebase onto concurrent test-support and proof updates, native
+operator, model-closure, artifact-publication and higher-order modules pass,
+with 20, 27, 6 and 18 Cases respectively, including the newly added exhaustive
+lexical closure capture regression. All four have
+complete native/module/harness/final markers and no Case errors. These are
+focused integration checks; the 57-module full-suite result above precedes
+that integration. The selected production-source policy audit exits 0 with
+=findings=0= and =errors=0=; concurrent commits do not change these production
+modules. No AOT application or remote CI qualification is inferred.

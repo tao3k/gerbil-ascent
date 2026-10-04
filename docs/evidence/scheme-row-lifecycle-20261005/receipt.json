@@ -1,0 +1,107 @@
+{
+  "schema": 1,
+  "sourceBase": "6d407ea169bb6c2a2681fe961e035e7dfccb1ae3",
+  "qualifiedCommit": "84ba4ac23238edc1af685e46dbc178bfd6a95fc0",
+  "sourceReconstruction": {
+    "patch": "source-snapshot.patch",
+    "patchSHA256": "1084468f7283781b56a998fc9ef2a5d87d01f4271698926a72820a0d9dc26f65",
+    "scope": "Scheme implementation, native qualification and Lean proof changes",
+    "applyOptions": [
+      "--unidiff-zero"
+    ]
+  },
+  "native": {
+    "artifactSHA256": "157d3e32e87e528f2cb6904fbdb7cc4f592d9446be97e455cca903c244e37d67",
+    "sourceCount": 365,
+    "sourceMapSHA256": "c7a0d9f4c4b7c84c9f1028a50de65b2b21ab16bcd15a8f1c0b299c0b85f9ba41",
+    "sourceMapEncoding": "UTF-8 JSON, sorted keys, compact separators",
+    "buildElapsedSeconds": 515.4369699954987,
+    "buildClock": "unix",
+    "compilerExit": 0,
+    "qualificationExit": 0,
+    "qualifiedModules": [
+      "scheme-higher-order",
+      "scheme-model-closure",
+      "scheme-operator",
+      "scheme-operator-retained",
+      "scheme-library-contract",
+      "scheme-session-deletion"
+    ],
+    "counts": {
+      "cases": 109,
+      "suites": 6,
+      "modules": 6,
+      "harnesses": 6,
+      "finalOK": 6
+    },
+    "bounds": {
+      "maxHeap": "1G",
+      "outputSilenceSeconds": 5,
+      "moduleSeconds": 120,
+      "buildSilenceAndCPUIdleSeconds": 60,
+      "buildTotalDeadline": null
+    },
+    "newCases": 6,
+    "buildCores": 2
+  },
+  "formal": {
+    "exit": 0,
+    "lean": "leanprover/lean4:v4.34.1",
+    "filesSHA256": {
+      "packages/proofs/lean/CappedArithmetic.lean": "72dc9c97c05b32f9b43c71730045e8ec802f830785a22d8a412a4be063c65217",
+      "packages/proofs/lean/DescriptorScope.lean": "941cd693cc238d5c732b4c70187af837bf76d0e81dd80d2fa5da3b6337ce2d2d",
+      "packages/proofs/lean/FiniteHeight.lean": "31b5b4eed52ce82b12b874cefe685a017bb160fbfbe6e6fd467027e93d0ca6cf",
+      "packages/proofs/lean/FiniteOperators.lean": "4d181fe6799b13f1e5e98e0d3a708bed6e668061821365162df79442f819c69d",
+      "packages/proofs/lean/LexicalLowering.lean": "200fef213c1c5ec37be040beba4b9e774ca00a72fbb84efd5a220c3335427f52",
+      "packages/proofs/lean/PositiveNonmembership.lean": "053d50736e8509d80a1faf58a81b4f11a63f5fd3d695718e9c7d5e90ed451484",
+      "packages/proofs/lean/RecursiveLowering.lean": "cf0997a5154d92b29b12e2bf90e006ec6a4e06eb788b07132076473e9ea26f99",
+      "packages/proofs/lean/SessionPublication.lean": "2e65f46352bcf76d4c3ca8a2bd49deb06fbb1bb71032ff7d89aa9eb914dc942a"
+    },
+    "newTheorems": 16,
+    "normalTlaModels": 2,
+    "expectedCounterexamples": [
+      "AtomicSnapshot: early publication",
+      "NoStaleCommit: stale publication"
+    ],
+    "tlcJarSHA256": "936a262061c914694dfd669a543be24573c45d5aa0ff20a8b96b23d01e050e88",
+    "qualificationBoundary": "Same exact eight Lean files and TLA models as the fully checked parent snapshot; lifecycle rebase did not change them",
+    "tlaFilesSHA256": {
+      "packages/proofs/tla/PositiveNonmembershipSession.cfg": "0b6788a5a7514564eda6587b45016901bc8b8e9e5be937f3808807dc1be53408",
+      "packages/proofs/tla/PositiveNonmembershipSession.tla": "8a5327d8788dacbe9ad944f3c2972905a1c60d4c1a05578d34f51e47cd47a2a8",
+      "packages/proofs/tla/SessionTransaction.cfg": "e812dc6a3a5fb3320eb681e2e40d717d2376cdcca258cf473b97b7edb1052490",
+      "packages/proofs/tla/SessionTransaction.tla": "986027c07c3657f51556cb1965e9af54ff18a5b87a028118308b0c59d0a9f7fe"
+    }
+  },
+  "implementation": {
+    "owners": [
+      "program/higher-order.ss",
+      "program/scheme-session.ss",
+      "program/scheme-query.ss",
+      "packages/proofs/lean/FiniteHeight.lean",
+      "t/qualification/scheme-higher-order-test.ss"
+    ],
+    "repair": "Materialize a bare source result through an identity projection; typed output is a derived set, source occurrence observations and budgets are retained; named checked Sessions use declared source arities as mutation authority and permit readonly derived query relations",
+    "proved": "Generic lawful-equality list admission, complete tuple enumeration, encoding faithfulness for admitted rows, duplicate/union/nullary laws and rank bounds/monotonicity/strict progress",
+    "remaining": [
+      "Native scalar decoder and universal Gerbil equality/hash correspondence",
+      "Typed closure/capture interpretation and actual compiler-step preservation",
+      "Native memo/rule/delta and transaction refinement, including typed term domains versus compiled pooled schema envelopes",
+      "General provenance valuations and measured benefit"
+    ]
+  },
+  "modelCalls": 0,
+  "performanceClaim": null,
+  "logsPublished": false,
+  "qualifiedDate": "2026-10-05",
+  "parentEvidence": {
+    "path": "../scheme-row-representation-20261004/receipt.json",
+    "SHA256": "742809e0b55ec49eea86a4e18e44390c3dbbd0967bc10f170dc46c1eff811162",
+    "scope": "Earlier native snapshot and all excluded development attempts; not evidence for this lifecycle integration"
+  },
+  "integration": {
+    "preserved": "Latest checked-runtime lifecycle split and research expansion",
+    "migratedRepair": "Source-only named Session mutation authority moved from the facade into program/scheme-session.ss",
+    "newNativeVerification": true,
+    "remoteCI": "Must be queried for the delivered GitHub head separately"
+  }
+}

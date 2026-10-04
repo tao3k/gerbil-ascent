@@ -368,6 +368,11 @@ compiled field predicate is insufficient. Checked retained updates use the
 source-handle whitelist; direct use of the generic native engine is outside
 that typed authority boundary.
 
+The compiler also declares mapping/selection tables as source inputs. The
+whitelist enforces declared mutation authority, rather than proving arbitrary
+changes to those tables preserve the original typed term. Their per-column
+domains and mutation contract belong to the remaining term/rule refinement.
+
 The [[file:evidence/scheme-row-representation-20261004/receipt.json][row-representation receipt]] qualifies =fa521d4=, reconstructed from
 =3abb8bc= plus the published source patch. Six native modules pass 109 Cases,
 with six MODULE/HARNESS/final OK markers and exit 0. Eight Lean files, both
@@ -377,3 +382,13 @@ One compiler subprocess-capacity failure is excluded; the successful build used
 two workers with the original progress and module budgets. Both rejected native
 artifacts and the superseded cancelled build stay excluded in the record. No
 logs, model calls or runtime performance claim are published by this slice.
+
+After the checked runtime was split into lifecycle owners, the repair moved
+into [[file:../program/scheme-session.ss][scheme-session]] and the [[file:../program/scheme-query.ss][query owner]] documents the same authority boundary.
+The [[file:evidence/scheme-row-lifecycle-20261005/receipt.json][lifecycle integration receipt]] independently qualifies =84ba4ac= on source
+base =6d407ea=: 365 Scheme source hashes, a freshly built native artifact and
+the same 109 Cases across six modules, with complete success markers and exit 0.
+The eight Lean files and TLA models are unchanged from the fully checked parent
+snapshot; GitHub =formal= also succeeded for =84ba4ac=. Later documentation-only
+changes do not expand this receipt's runtime scope. The earlier source patch
+and all excluded attempts retain their historical boundary.

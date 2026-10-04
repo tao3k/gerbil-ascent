@@ -81,6 +81,12 @@ observable. Named checked Sessions accept derived query relations and restrict
 mutation to admitted source handles. Rejected duplicate-result and Session
 constructor artifacts remain failures, not acceptance evidence.
 
+The later [[file:evidence/scheme-row-lifecycle-20261005/receipt.json][lifecycle-owner integration]] preserves the upstream snapshot/admit/query/session
+split and requalifies all six modules (109 Cases) on =84ba4ac=. Source-only
+checked mutation now belongs to =program/scheme-session.ss=; the public facade
+keeps its existing exports. Formal sources are byte-identical to the checked
+parent receipt; source/binary binding is independently refreshed.
+
 * Model interface policy
 
 Why might an invocation contain text? Actual source, the user's task and a

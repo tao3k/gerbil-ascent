@@ -1,0 +1,71 @@
+{
+  "excludedRuns": [
+    {
+      "exitStatus": 70,
+      "log": "function-fix-build.log",
+      "reason": "test syntax error; corrected"
+    },
+    {
+      "exitStatus": 124,
+      "log": "function-fix-focused.log",
+      "reason": "four completed computations in one Case lacked intermediate genuine output; no gate pass"
+    },
+    {
+      "exitStatus": 0,
+      "log": "function-fix-diagnostic.log",
+      "reason": "timing diagnosis without idle watchdog, before generated-bottom-domain fix; not qualification"
+    },
+    {
+      "exitStatus": 137,
+      "log": "function-fix-final-build.log",
+      "reason": "180-second build deadline at link object stage"
+    },
+    {
+      "exitStatus": 137,
+      "log": "function-fix-final-cached-build.log",
+      "reason": "180-second build deadline at executable entry object stage"
+    }
+  ],
+  "formal": {
+    "compilerCorrectnessClaim": false,
+    "exitStatus": 0,
+    "files": {
+      "packages/proofs/lean/FiniteHeight.lean": "e227b93c76048ff28908cfa4f1756cfcf650660326e639fcccd05be95f0295b0",
+      "packages/proofs/lean/FiniteOperators.lean": "4d181fe6799b13f1e5e98e0d3a708bed6e668061821365162df79442f819c69d",
+      "packages/proofs/lean/PositiveNonmembership.lean": "3bf1b95dc1e50393a85cddadfb67f51724d3f7f599c736ee2c37472c0a7c6eea"
+    },
+    "newTheorems": 6,
+    "toolchain": "leanprover/lean4:v4.34.1"
+  },
+  "implemented": "finite relation and nested arrow endofunctions; constant pointwise bottom; conservative full-height expansion into existing positive native IR; saturating height arithmetic; exact generated-source domains",
+  "modelCalls": 0,
+  "modelPlanStatus": "previous digest bd7aba6a2eaf22251bb7771a7c0edddada636d6a64cdc2359e149fd6470339f5 is historical and superseded for latest-source acceptance; no calls authorized by changed digest",
+  "native": {
+    "expectedCases": 125,
+    "expectedSuites": 12,
+    "latestAcceptedArtifact": null,
+    "unchangedBounds": {
+      "buildSeconds": 180,
+      "heap": "1G",
+      "moduleSeconds": 120,
+      "outputIdleSeconds": 5
+    }
+  },
+  "previousGithub": {
+    "conclusion": "success",
+    "head": "89f00fd9bd61d6690b745c9679e5fd66cf3988ff",
+    "run": 37185169942,
+    "scope": "before function-valued fixed-point changes"
+  },
+  "remaining": [
+    "latest source native acceptance and exact-head GitHub CI",
+    "concrete type-cardinality and Scheme compiler refinement proofs",
+    "other provenance algebra contracts",
+    "controlled runtime and real-model benefit evidence",
+    "MRR Rust after preceding gates"
+  ],
+  "schema": "ascent.function-fixed-point-acceptance",
+  "sourceHead": "a602671712a66e1c1d4f4fd5606dd5f3be815430",
+  "status": "formal pass; latest native acceptance pending after build deadline failures",
+  "version": 1
+}

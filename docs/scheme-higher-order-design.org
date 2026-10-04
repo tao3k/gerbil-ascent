@@ -111,3 +111,8 @@ changes the argument, recursive nested returned functions, a function-valued
 input, zero-height empty codomain, builder invocation count, and bounded
 rejection of an infeasible function space. Compiled source lifecycle must also
 preserve the declared domains of compiler-created bottom sources.
+
+The [[file:evidence/scheme-function-fix-20261004/receipt.json][function fixed-point receipt]] records the new source and formal hashes,
+excluded watchdog/timing diagnosis, two final-source build deadline failures,
+and the remaining latest-native gate. Prior source or diagnostic results
+cannot qualify this implementation. No paid model calls were made.

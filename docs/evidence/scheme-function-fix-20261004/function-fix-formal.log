@@ -1,0 +1,31 @@
+packages/proofs/lean/FiniteHeight.lean:144:18: error: unsolved goals
+case succ
+α : Type
+step : α → α
+initial : α
+n : Nat
+fixed : step (iterateStep step initial n) = iterateStep step initial n
+extra : Nat
+ih : iterateStep step initial (n + extra) = iterateStep step initial n
+⊢ step (iterateStep step initial (n.add extra)) = iterateStep step initial n
+packages/proofs/lean/FiniteHeight.lean:144:32: warning: This simp argument is unused:
+  Nat.add_succ
+
+Hint: Omit it from the simp argument list.
+  [apply] simp only [iterateStep, ih, fixed]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+packages/proofs/lean/FiniteHeight.lean:144:59: warning: This simp argument is unused:
+  ih
+
+Hint: Omit it from the simp argument list.
+  [apply] simp only [Nat.add_succ, iterateStep, fixed]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+packages/proofs/lean/FiniteHeight.lean:144:63: warning: This simp argument is unused:
+  fixed
+
+Hint: Omit it from the simp argument list.
+  [apply] simp only [Nat.add_succ, iterateStep, ih]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`

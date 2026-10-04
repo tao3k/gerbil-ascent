@@ -103,6 +103,13 @@ descriptor/emitter induction, whose implementation correspondence remains open.
 The [[file:evidence/scheme-primitive-domains-20261005/receipt.json][current receipt]] records formal results and the native operator gate,
 including any rejected supervised runs rather than inheriting a historical pass.
 
+The [[file:scheme-compiler-proof-bridge.org][ordinary projection rule slice]] adds six Lean theorems for body-variable
+reconstruction and soundness/completeness of one emitted positive rule against
+checked column selection. It models the existing emitter's variable patterns;
+native symbol decoding/freshness, actual rule execution and the optimized
+two-body projected-join branch remain separate obligations. The
+[[file:evidence/scheme-projection-rule-20261005/receipt.json][receipt]] distinguishes current formal acceptance from prior native evidence.
+
 * Model interface policy
 
 Why might an invocation contain text? Actual source, the user's task and a

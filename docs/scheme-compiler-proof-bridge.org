@@ -459,3 +459,40 @@ zero-arity/repeated-column projected joins and combined positive operators;
 its current counts and source binding are recorded separately in the
 [[file:evidence/scheme-primitive-domains-20261005/receipt.json][primitive-domain receipt]]. Historical higher-order constructor qualification
 remains in the preceding receipts. Lifecycle TLA models are unchanged.
+
+* Projection descriptor to one positive rule
+
+=Lowering.ProjectionRule= models the ordinary =project= branch of
+=lower-operator-graph= in =program/operator.ss=. The exact implementation seams
+are =fresh-variables=, =variable-atom= and the =project= case in the primitive
+emitter. The input body pattern contains all distinct column variables in
+order; the head pattern selects those variables by the checked column list.
+
+The model uses =Fin arity= for variable identities, a finite assignment for
+their values, and =evaluatePattern= for atom arguments. =bindRow= constructs
+an assignment from a proper row with the declared length. Three bridge laws
+prove complete body length, lookup and reconstruction. The emitted rule means
+there exists an assignment whose instantiated body is an input row and whose
+instantiated head is the output. The descriptor independently means selecting
+the checked columns of an input row of the correct arity.
+
+=emitted_projection_sound= and =emitted_projection_complete= prove both
+directions; =emitted_projection_iff_descriptor= records their equivalence.
+The theorem does not require nonempty columns, unique head columns or an
+inhabited scalar type. It covers repeated/reordered/zero columns and nullary
+inputs. An invalid-arity row is outside both interpretations; the proof must
+not be used to admit malformed native source data by silently ignoring it.
+
+This is a rule-level mathematical model closer to the emitted syntax than the
+previous generic projection IR law. Actual Gerbil descriptor decoding,
+=gensym= freshness and capture avoidance, symbol-to-variable identity mapping,
+native rule matching and incremental execution are still correspondence
+obligations. The optimized projected-join branch has two body atoms and is
+outside this one-body proof. No claim of whole-compiler verification follows.
+
+The [[file:evidence/scheme-projection-rule-20261005/receipt.json][projection-rule receipt]] records the current formal gate and the immutable
+prior native evidence. This slice changes no Scheme source and runs no new
+native module. The relevant emitter and operator test bytes are compared
+against the preceding native snapshot; those comparisons preserve the scope
+of that evidence and do not qualify newer unrelated source changes. No model
+calls, performance claim or published log is added.

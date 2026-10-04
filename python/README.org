@@ -17,6 +17,9 @@ PYTHONPATH=python/src python3 -m ascent_test_support.model_study --help
 python3 -m unittest discover -s python/tests -v
 #+end_src
 
-The package has standard pyproject metadata and a src layout. Model calls still
+The repository defaults to the working directory; set =ASCENT_REPOSITORY= to
+use an explicit checkout when running the installed package elsewhere.
+Producer receipts hash the actual loaded Python modules, not an assumed
+installation path. The package has standard pyproject metadata and a src layout. Model calls still
 require a newly frozen plan and explicit source/cost authorization. Package
 migration does not reuse an older approval or establish a new model score.

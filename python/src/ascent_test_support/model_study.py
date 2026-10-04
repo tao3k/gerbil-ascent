@@ -14,7 +14,7 @@ import http.client
 import statistics
 import shutil
 
-ROOT = Path(__file__).resolve().parents[3]
+ROOT = Path(os.environ.get('ASCENT_REPOSITORY', Path.cwd())).resolve()
 BINARY = ROOT / '.cache/ascent/native-library/dsl-closure'
 HARNESS = [sys.executable, '-m', 'ascent_test_support.supervision', '--', 'timeout', '120s']
 RUNTIME = [str(BINARY), '-:max-heap=1G,debug=q']
@@ -31,9 +31,12 @@ def digest(data):
 
 
 def producer_hashes():
-    paths = [Path(__file__), ROOT/'t/harness/prediction.ss',
-             ROOT/'tools/model-source-closure.ss']
-    return {str(path.relative_to(ROOT)): digest(path.read_bytes()) for path in paths}
+    from . import supervision
+    paths = {'python/src/ascent_test_support/model_study.py': Path(__file__),
+             'python/src/ascent_test_support/supervision.py': Path(supervision.__file__),
+             't/harness/prediction.ss': ROOT/'t/harness/prediction.ss',
+             'tools/model-source-closure.ss': ROOT/'tools/model-source-closure.ss'}
+    return {name: digest(path.read_bytes()) for name, path in paths.items()}
 
 
 def module_path(name):

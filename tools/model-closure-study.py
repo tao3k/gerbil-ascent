@@ -12,6 +12,7 @@ import sys
 import time
 import http.client
 import statistics
+import shutil
 from model_prediction_transport import prediction_from_output
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -64,7 +65,16 @@ def native(command, log):
 def source_environment():
     env = os.environ.copy()
     existing = env.get('GERBIL_LOADPATH', '')
-    env['GERBIL_LOADPATH'] = str(ROOT/'.cache/ascent/native-library/lib') + (':'+existing if existing else '')
+    # Native executables do not inherit gxi's standard-library initialization.
+    # Locate the installed SDK through the actual launcher, never a guessed ABI.
+    launcher = shutil.which('gxi')
+    if launcher is None:
+        raise ValueError('installed Gerbil launcher is unavailable')
+    sdk = Path(launcher).resolve().parent.parent
+    if not (sdk/'lib/gerbil/core.ssi').is_file():
+        raise ValueError('installed Gerbil standard-library interface is unavailable')
+    env['GERBIL_HOME'] = str(sdk)
+    env['GERBIL_LOADPATH'] = str(ROOT/'.cache/ascent/native-library/lib') + (':'+existing if existing else '') + ':' + str(sdk/'lib')
     return env
 
 

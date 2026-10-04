@@ -72,6 +72,54 @@ not counts of every rule invocation, join, allocation or instruction. No
 speed threshold turns a slower but correct sample into an omitted result.
 Shared-host interference remains possible even with counterbalancing.
 
+* Fresh-update construction correction
+
+The former fresh-update helper used =relations: relations=. In a POO object
+expression the field name is an implicit self-field binding; the right-hand
+reference therefore recursively read the candidate field instead of the
+lexically computed replacement list. A minimal native reproduction with an
+empty program exited 70 with heap overflow; the full measurement failed with
+stack overflow. This was a defective comparison-arm construction, not evidence
+that retained source invalidation failed.
+
+The private =fresh-replacement-program= helper now names the lexical list
+=replacement-relations=. The native regression checks replacement rows, empty
+source withdrawal, inherited rules/providers/budgets, and an unchanged original
+program against explicitly enumerated closure results. Actual arm-start
+markers are outside the timers; they identify which operation is executing
+without relaxing the five-second runtime progress rule.
+
+The [[file:evidence/scheme-fresh-update-20261004/receipt.json][construction receipt]] and structured samples bind the integrated
+source, artifact, qualification and all three measurement arms. No execution
+logs are published. These measurements qualify this finite workload only;
+they do not establish general speedup, proof refinement or model benefit.
+
+* Integrated three-arm result
+
+All 13 native modules and 141 Cases passed on source =b8c695d= plus the
+published construction patch. The unchanged measurement gate completed 180
+groups and 5,400 independent native verdicts. Each table entry is the median
+of thirty paired retained/fresh-update ratios; it is not a ratio of medians.
+A ratio below one denotes lower cost for retained replacement.
+
+| Condition | Edges | Wall ratio | CPU ratio | Allocated-byte ratio |
+|-----------+-------+------------+-----------+----------------------|
+| independent | 12 | 1.234 | 1.444 | 1.803 |
+| independent | 48 | 0.526 | 0.525 | 0.814 |
+| recursive | 12 | 2.231 | 1.745 | 1.844 |
+| recursive | 48 | 1.084 | 1.237 | 1.180 |
+| all-inputs | 12 | 2.322 | 2.254 | 1.841 |
+| all-inputs | 48 | 1.074 | 1.074 | 1.179 |
+
+Only the 48-edge independent-source condition shows lower measured costs in
+all three metrics. The other conditions retain a management-cost penalty.
+Every group, including slower retained samples, is published in
+[[file:evidence/scheme-fresh-update-20261004/samples.json][samples.json]]. No speed threshold or significance test is an acceptance
+criterion. Shared-host interference and the limited workload remain explicit;
+these data do not establish a general crossover policy. Allocation counts are
+not peak or retained memory. Formal compiler refinement and model reasoning
+gain remain open.
+
 * Historical solve-boundary receipts
 
 The first accepted 60-pair run reports the following wall-time medians. CPU

@@ -39,6 +39,16 @@ the initial response, when the follow-up task is submitted.
 
 * Frozen paired design
 
+The [[file:evidence/scheme-model-plan-requalified-20261004/receipt.json][requalified public plan]] binds 35 actual ASCENT modules and three
+actual lowered =core/types= files to source head =5c8987d= and a supervised
+native artifact. Its SHA256 is
+=594b9442da7af3fb190ab5b317725397f0081c558187d0ee31ec8b7c6bae8936=.
+All 24 independent native computations, eight compiler import roots, ten native
+scorer controls and offline validation pass. Completed compiler imports emit
+their actual module IDs; no startup heartbeat or replacement inventory is used.
+The previous published plan is superseded, with zero paid calls. This new
+source scope and exhausted call budget require fresh fee/exfiltration approval.
+
 Each family has an initial and a changed task. Five conditions yield 60 calls:
 
 | Arm | Calls | Reasoning | Context |

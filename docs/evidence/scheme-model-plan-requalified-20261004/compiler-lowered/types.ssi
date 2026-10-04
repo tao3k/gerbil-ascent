@@ -1,0 +1,161 @@
+prelude: :gerbil/base
+package: core
+namespace: core/types
+
+(%#begin (%#import
+          (spec:
+           (:clan/poo/object)
+           (0 .cc 0 .cc)
+           (0 .o 0 .o)
+           (0 compute-precedence-list! 0 compute-precedence-list!)
+           (0 object? 0 object?)
+           (0 .slot? 0 .slot?)
+           (0 .all-slots 0 .all-slots)
+           (0 .ref 0 .ref))
+          (spec:
+           (:clan/poo/mop)
+           (0 element? 0 element?)
+           (0 raise-type-error 0 raise-type-error)
+           (0 define-type 0 define-type)
+           (0 .defgeneric 0 .defgeneric)
+           (0 Type. 0 Type.)
+           (0 Type 0 Type)))
+         (%#export
+          (spec: 0 PooFlowType. PooFlowType.)
+          (spec: 0 PooFlowContract. PooFlowContract.)
+          (spec: 0 PooFlowNativeObjectContract. PooFlowNativeObjectContract.)
+          (spec: 0 PooFlowClassificationEvidence PooFlowClassificationEvidence)
+          (spec: 0 PooFlowValidationEvidence PooFlowValidationEvidence)
+          (spec: 0 poo-flow-predicate-type poo-flow-predicate-type)
+          (spec: 0 poo-flow-predicate-contract poo-flow-predicate-contract)
+          (spec: 0 poo-flow-type-classify poo-flow-type-classify)
+          (spec: 0 poo-flow-contract-obligations poo-flow-contract-obligations)
+          (spec: 0 poo-flow-contract-admit poo-flow-contract-admit)
+          (spec:
+           0
+           poo-flow-classification-evidence
+           poo-flow-classification-evidence)
+          (spec:
+           0
+           poo-flow-classification-evidence?
+           poo-flow-classification-evidence?)
+          (spec:
+           0
+           poo-flow-classification-evidence-accepted?
+           poo-flow-classification-evidence-accepted?)
+          (spec:
+           0
+           poo-flow-classification-evidence->alist
+           poo-flow-classification-evidence->alist)
+          (spec: 0 poo-flow-validation-evidence poo-flow-validation-evidence)
+          (spec: 0 poo-flow-validation-evidence? poo-flow-validation-evidence?)
+          (spec:
+           0
+           poo-flow-validation-evidence-accepted?
+           poo-flow-validation-evidence-accepted?)
+          (spec:
+           0
+           poo-flow-validation-evidence->alist
+           poo-flow-validation-evidence->alist))
+         (%#define-runtime
+          poo-flow-type-classify
+          core/types#poo-flow-type-classify)
+         (%#define-runtime
+          poo-flow-contract-obligations
+          core/types#poo-flow-contract-obligations)
+         (%#define-runtime
+          poo-flow-contract-admit
+          core/types#poo-flow-contract-admit)
+         (%#define-runtime
+          poo-flow-evidence-object?
+          core/types#poo-flow-evidence-object?)
+         (%#define-runtime
+          poo-flow-type-identity?
+          core/types#poo-flow-type-identity?)
+         (%#define-runtime
+          poo-flow-classification-evidence-element?
+          core/types#poo-flow-classification-evidence-element?)
+         (%#define-runtime
+          PooFlowClassificationEvidence
+          core/types#PooFlowClassificationEvidence)
+         (%#define-runtime
+          poo-flow-validation-evidence-element?
+          core/types#poo-flow-validation-evidence-element?)
+         (%#define-runtime
+          PooFlowValidationEvidence
+          core/types#PooFlowValidationEvidence)
+         (%#define-runtime
+          poo-flow-classification-evidence
+          core/types#poo-flow-classification-evidence)
+         (%#define-runtime
+          poo-flow-classification-evidence?
+          core/types#poo-flow-classification-evidence?)
+         (%#define-runtime
+          poo-flow-classification-evidence-accepted?
+          core/types#poo-flow-classification-evidence-accepted?)
+         (%#define-runtime
+          poo-flow-classification-evidence->alist
+          core/types#poo-flow-classification-evidence->alist)
+         (%#define-runtime
+          poo-flow-validation-evidence
+          core/types#poo-flow-validation-evidence)
+         (%#define-runtime
+          poo-flow-validation-evidence?
+          core/types#poo-flow-validation-evidence?)
+         (%#define-runtime
+          poo-flow-validation-evidence-accepted?
+          core/types#poo-flow-validation-evidence-accepted?)
+         (%#define-runtime
+          poo-flow-validation-evidence->alist
+          core/types#poo-flow-validation-evidence->alist)
+         (%#define-runtime
+          poo-flow-type-element?
+          core/types#poo-flow-type-element?)
+         (%#define-runtime
+          poo-flow-type-validate
+          core/types#poo-flow-type-validate)
+         (%#define-runtime PooFlowType. core/types#PooFlowType.)
+         (%#define-runtime
+          poo-flow-contract-empty-obligations
+          core/types#poo-flow-contract-empty-obligations)
+         (%#define-runtime
+          poo-flow-contract-admit-evidence
+          core/types#poo-flow-contract-admit-evidence)
+         (%#define-runtime
+          poo-flow-contract-element?
+          core/types#poo-flow-contract-element?)
+         (%#define-runtime
+          poo-flow-contract-validate
+          core/types#poo-flow-contract-validate)
+         (%#define-runtime PooFlowContract. core/types#PooFlowContract.)
+         (%#define-runtime
+          poo-flow-predicate-classifier
+          core/types#poo-flow-predicate-classifier)
+         (%#define-runtime
+          poo-flow-predicate-type-element?
+          core/types#poo-flow-predicate-type-element?)
+         (%#define-runtime
+          PooFlowPredicateType.
+          core/types#PooFlowPredicateType.)
+         (%#define-runtime
+          poo-flow-predicate-type
+          core/types#poo-flow-predicate-type)
+         (%#define-runtime
+          poo-flow-predicate-contract
+          core/types#poo-flow-predicate-contract)
+         (%#define-runtime
+          poo-flow-responsibility-evidence
+          core/types#poo-flow-responsibility-evidence)
+         (%#define-runtime
+          poo-flow-object-admit
+          core/types#poo-flow-object-admit)
+         (%#define-runtime
+          PooFlowResponsibilityContract.
+          core/types#PooFlowResponsibilityContract.)
+         (%#define-runtime
+          poo-flow-native-classify
+          core/types#poo-flow-native-classify)
+         (%#define-runtime
+          PooFlowNativeObjectContract.
+          core/types#PooFlowNativeObjectContract.))
+(%#call (%#ref load-module) (%#quote "core/types~0"))

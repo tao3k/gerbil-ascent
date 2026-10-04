@@ -67,4 +67,71 @@ theorem table_rank_bounded {α : Type} (rank : α → Nat) (height : Nat)
     simp only [tableRank, List.length_cons, Nat.succ_mul]
     omega
 
+/-- A finite relation is a Boolean table over its admitted tuple universe. -/
+def booleanRank : {n : Nat} → (Fin n → Bool) → Nat
+  | 0, _ => 0
+  | n + 1, f => (if f 0 then 1 else 0) + booleanRank (fun i : Fin n => f i.succ)
+
+theorem boolean_rank_bounded {n : Nat} (f : Fin n → Bool) :
+    booleanRank f ≤ n := by
+  induction n with
+  | zero => simp [booleanRank]
+  | succ n ih =>
+    have h := ih (fun i => f i.succ)
+    simp only [booleanRank]
+    split <;> omega
+
+theorem boolean_rank_mono {n : Nat} (f g : Fin n → Bool)
+    (included : ∀ i, f i = true → g i = true) :
+    booleanRank f ≤ booleanRank g := by
+  induction n with
+  | zero => simp [booleanRank]
+  | succ n ih =>
+    have h := ih (fun i => f i.succ) (fun i => g i.succ)
+      (fun i => included i.succ)
+    have h0 := included 0
+    simp only [booleanRank]
+    cases hf : f 0 <;> cases hg : g 0 <;> simp [hf, hg] at * <;> omega
+
+theorem boolean_rank_strict {n : Nat} (f g : Fin n → Bool)
+    (included : ∀ i, f i = true → g i = true)
+    (changed : ∃ i, f i = false ∧ g i = true) :
+    booleanRank f < booleanRank g := by
+  induction n with
+  | zero => obtain ⟨i, _⟩ := changed; exact Fin.elim0 i
+  | succ n ih =>
+    obtain ⟨i, hi⟩ := changed
+    cases i using Fin.cases with
+    | zero =>
+      have h := boolean_rank_mono (fun i : Fin n => f i.succ)
+        (fun i => g i.succ) (fun i => included i.succ)
+      simp only [booleanRank]
+      simp [hi.1, hi.2]
+      omega
+    | succ i =>
+      have h := ih (fun i => f i.succ) (fun i => g i.succ)
+        (fun i => included i.succ) ⟨i, hi⟩
+      have h0 := included 0
+      simp only [booleanRank]
+      cases hf : f 0 <;> cases hg : g 0 <;> simp [hf, hg] at * <;> omega
+
+/-- An inflationary native relation step stabilizes within its tuple count.
+    Monotonicity of each compiled primitive is a separate compiler premise. -/
+theorem finite_relation_stabilizes {n : Nat}
+    (step : (Fin n → Bool) → (Fin n → Bool)) (initial : Fin n → Bool)
+    (inflationary : ∀ f i, f i = true → step f i = true) :
+    ∃ k, k ≤ n ∧ step (iterateStep step initial k) = iterateStep step initial k := by
+  apply bounded_rank_stabilizes step initial booleanRank n boolean_rank_bounded
+  intro f different
+  apply boolean_rank_strict f (step f) (inflationary f)
+  apply Classical.byContradiction
+  intro unchanged
+  apply different
+  funext i
+  cases hf : f i <;> cases hg : step f i
+  · rfl
+  · exact False.elim (unchanged ⟨i, hf, hg⟩)
+  · have := inflationary f i hf; simp [hg] at this
+  · rfl
+
 end Ascent

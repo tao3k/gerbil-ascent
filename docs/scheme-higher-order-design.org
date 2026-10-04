@@ -1,0 +1,66 @@
+#+TITLE: Finite higher-order relational descriptors
+#+AUTHOR: tao3k team
+#+SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+#+SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+* Language and authority
+
+=program/higher-order.ss= admits finite relation types and arbitrarily nested
+arrow types. Functions can accept and return functions. A builder runs once
+at construction and produces a lexical data closure. Native evaluation never
+calls that builder. Application is checked beta lowering into the existing
+positive operator IR; no second query interpreter is authoritative.
+
+Fixed points operate on relation endofunctions. Function-valued fixed points
+and function equality are not admitted. This is a stated language boundary,
+not a claim of termination for arbitrary Scheme procedures. The user has been
+asked whether function-valued fixed points are also required.
+
+* Native finite domains
+
+Sources, mapping inputs and mapping outputs are checked against declared
+immutable scalar domains. Compilation annotates native relations with inert
+finite-domain declarations. Derived relations use the union of the finite
+atom universes actually present in the typed term; named sources retain their
+own declared universe. A normalization budget covers both type traversal and
+beta expansion. Cycles and escaped binders reject.
+
+Admission copies the domain data and reconstructs native membership predicates;
+an incoming predicate procedure is never treated as the finite-domain proof.
+The native evaluator checks inserted, computed, joined and stored rows. A
+value outside a declared domain raises, rather than being clamped or omitted.
+Retained source replacement carries the domain descriptor and reconstructed
+field checks into its new snapshot. Failed replacement retains prior input.
+
+* Termination argument and proof boundary
+
+For each relation of arity a over a finite universe U, the set of possible
+rows is U^a. Positive union, join, selection, projection and fixed finite
+mapping are monotone. Their least fixed point is reached by inflationary set
+admission. A nonstationary round admits a previously absent tuple. Thus the
+sum of materialized relation cardinalities is a bounded increasing rank.
+Nested function application disappears during the checked compiler phase;
+recursive relation feedback remains in the native IR.
+
+=packages/proofs/lean/FiniteHeight.lean= proves bounded-rank stabilization,
+finite Boolean-table rank monotonicity and strict growth, and stabilization
+of an inflationary relation step within its admitted tuple count. It also
+bounds product and finite function-table ranks. These are checked semantic
+lemmas. The bridge from every Scheme compiler branch to the mathematical
+semantics is an explicit implementation obligation; these lemmas do not
+prove compiler correctness or unrestricted Scheme normalization.
+
+Resource exhaustion is failure, not a partial least fixed point. A finite
+semantic universe does not guarantee success under a smaller operational
+budget. Neither an absent output after failure nor a truncated derivation is
+a termination certificate.
+
+* Qualification
+
+The native Suite covers function inputs and returned closures, repeated
+instantiation without capture aliasing, nested signature mismatch, frozen
+data, finite mapping, escaped parameters, callback rejection, expansion
+limits, native insertion/replacement rollback, rejection of computed values
+outside the universe, and independent admission reconstruction of predicates.
+Acceptance requires the source-bound AOT artifact and unchanged watchdog,
+heap and module deadlines; GitHub checks must match the submitted head.

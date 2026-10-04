@@ -90,3 +90,10 @@ provenance remain open. The Lean rank and restricted-deletion theorems provide
 checked abstract premises, not an implementation correctness certificate.
 The submitted AOT recovery head 1d0ce1eb95038696a03b743c1f41dd4b56fc23fd passed
 all four GitHub checks in [[https://github.com/tao3k/gerbil-ascent/actions/runs/37173937141][its exact-head CI run]]. This does not qualify later edits.
+
+The [[file:scheme-higher-order-design.org][higher-order contract]] adds nested function inputs and results through
+checked lexical descriptors and beta lowering into native positive IR.
+Finite-domain declarations survive admission and source replacement.
+Function-valued fixed points remain a scope decision. Lean now also proves
+finite Boolean-table strict rank growth and inflationary relation termination;
+the Scheme compiler-to-semantics bridge remains a separate obligation.

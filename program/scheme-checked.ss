@@ -14,7 +14,7 @@
 
 (export relational-scalar? relational-copy-row relational-copy-rows
         relational-finite-rows
-        relational-source
+        relational-source relational-finite-source relational-finite-lattice
         relational-checked-lattice relational-lattice-fragment
         relational-finite-view relational-captured-value
         relational-term-fingerprint relational-reducer
@@ -65,6 +65,37 @@
    gerbil-ascent-hash-index-provider
    gerbil-ascent-set-storage-provider
    (make-list arity relational-scalar?)))
+
+
+;;; Finite domains are inert declarations. Admission rebuilds membership
+;;; predicates from copied atoms instead of retaining incoming callbacks.
+(def (relational-domain-copy arity domains)
+  (unless (and (list? domains) (= (length domains) arity))
+    (error "finite domain column count mismatch"))
+  (map (lambda (atoms)
+         (unless (and (list? atoms) (<= (length atoms) 4096)
+                      (andmap relational-scalar? atoms))
+           (error "invalid finite scalar domain"))
+         (map identity atoms)) domains))
+
+(def (relational-domain-predicates domains)
+  (map (lambda (atoms) (lambda (value) (and (member value atoms) #t))) domains))
+
+(def (relational-finite-source name arity rows domains)
+  (let (copied (relational-domain-copy arity domains))
+    (gerbil-ascent-relation name arity (relational-copy-rows rows arity)
+     gerbil-ascent-hash-index-provider gerbil-ascent-set-storage-provider
+     (relational-domain-predicates copied) (vector 'finite-domain copied))))
+
+(def (relational-finite-lattice name arity rows mode domains)
+  (unless (> arity 0) (error "finite lattice needs a value column"))
+  (let (copied (relational-domain-copy arity domains))
+    (unless (andmap exact-integer? (last copied))
+      (error "finite lattice value domain must contain exact integers"))
+    (gerbil-ascent-lattice name arity (relational-copy-rows rows arity)
+     (relational-lattice-join mode) gerbil-ascent-hash-index-provider
+     (relational-domain-predicates copied) (vector 'lattice mode)
+     (vector 'finite-domain copied))))
 
 ;;; Lattice joins are chosen by a closed descriptor and rebuilt during
 ;;; admission. The last column is an exact integer; keys stay scalar.

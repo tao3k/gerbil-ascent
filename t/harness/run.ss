@@ -55,6 +55,7 @@
     "t/qualification/ascent-workspace-test.ss"
     "t/qualification/scheme-closure-contract-test.ss"
     "t/qualification/scheme-provenance-graph-test.ss"
+    "t/qualification/scheme-higher-order-test.ss"
     "t/qualification/scheme-library-contract-test.ss"
     "t/qualification/scheme-native-integration-test.ss"
     "t/qualification/scheme-native-language-test.ss"
@@ -149,6 +150,7 @@
         (prepare-test-library!
          '("t/qualification/scheme-closure-contract-test.ss"
            "t/qualification/scheme-provenance-graph-test.ss"
+           "t/qualification/scheme-higher-order-test.ss"
            "t/qualification/scheme-operator-test.ss"
            "t/qualification/scheme-library-contract-test.ss"
            "t/qualification/scheme-operator-retained-test.ss"

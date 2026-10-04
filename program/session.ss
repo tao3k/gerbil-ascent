@@ -100,10 +100,12 @@
                      (types (.ref relation 'field-predicates)))
                 (if (eq? (.ref relation 'storage-kind) 'lattice)
                   (gerbil-ascent-lattice name arity source-rows
-                                         (.ref relation 'join) index types)
+                                         (.ref relation 'join) index types
+                                         (.ref relation 'checked-operator)
+                                         (.ref relation 'checked-domain))
                   (gerbil-ascent-relation name arity source-rows index
                                           (.ref relation 'storage-provider)
-                                          types))))
+                                          types (.ref relation 'checked-domain)))))
             relations (vector->list rows))
        (.ref program 'rules)
        (.ref program 'max-input-facts)

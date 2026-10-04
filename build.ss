@@ -27,6 +27,7 @@
     "program/scheme-admission"
     "program/scheme-language"
     "program/operator"
+    "program/higher-order"
     "program/operator-change"
     "program/operator-session"
     "program/graph"

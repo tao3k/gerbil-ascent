@@ -253,7 +253,8 @@
 (def (gerbil-ascent-relation relation-name column-count source-rows
                              (provider-value gerbil-ascent-hash-index-provider)
                              (storage-value gerbil-ascent-set-storage-provider)
-                             (field-predicates-value []))
+                             (field-predicates-value [])
+                             (domain-descriptor #f))
   (unless (and (symbol? relation-name)
                (exact-integer? column-count) (<= 0 column-count)
                (list? source-rows)
@@ -278,6 +279,7 @@
             (.o (:: @ Relation.)
                 name: relation-name arity: column-count rows: source-rows
                 field-predicates: field-predicates-value
+                checked-domain: domain-descriptor
                 storage-kind: 'relation index-provider: provider-value
                 storage-provider: storage-value)))
 
@@ -285,7 +287,8 @@
                             join-procedure
                             (provider-value gerbil-ascent-hash-index-provider)
                             (field-predicates-value [])
-                            (operator-descriptor #f))
+                            (operator-descriptor #f)
+                            (domain-descriptor #f))
   (unless (and (symbol? relation-name)
                (exact-integer? column-count) (> column-count 0)
                (list? source-rows) (procedure? join-procedure)
@@ -310,6 +313,7 @@
             (.o (:: @ Lattice.)
                 name: relation-name arity: column-count rows: source-rows
                 field-predicates: field-predicates-value
+                checked-domain: domain-descriptor
                 storage-kind: 'lattice join: join-procedure
                 checked-operator: operator-descriptor
                 index-provider: provider-value)))

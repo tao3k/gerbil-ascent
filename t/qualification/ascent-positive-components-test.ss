@@ -6,6 +6,9 @@
         :gerbil-ascent/program/objects
         :gerbil-ascent/program/actor-round
         :gerbil-ascent/program/positive-components
+        (only-in :gerbil-ascent/t/performance/component-scope/fixture
+                 component-scope-program component-scope-request component-scope-plan
+                 component-scope-normalize component-scope-run)
         (only-in :gerbil-ascent/program/evaluate gerbil-ascent-make-engine gerbil-ascent-evaluate-program))
 (export ascent-positive-components-test)
 (def (rejected? call) (with-catch (lambda (_) #t) (lambda () (call) #f)))
@@ -97,6 +100,59 @@
                (displayln "SCC-PLAN-PROBE mode=" mode " repeats=100 jiffies=" elapsed " rate=" (jiffies-per-second))
                (force-output))) modes))
          '((fresh cached) (cached fresh) (fresh cached)))))
+    (test-case "SCC projection shares admitted body slots and ordered output actions"
+      (let* ((request (component-scope-request (component-scope-program 16 8 1 #t)))
+             (full (vector-ref (car (vector-ref (vector-ref (vector-ref request 0) 5) 0)) 5))
+             (components (component-scope-plan #f request)))
+        (for-each
+         (lambda (component)
+           (for-each
+            (lambda (rule)
+              (let (plan (vector-ref rule 0))
+                (check-equal? (eq? (vector-ref plan 1) (vector-ref full 1)) #t)
+                (check-equal? (vector-ref plan 2) (vector-ref full 2))
+                (for-each (lambda (output) (check-equal? (and (memq output (vector-ref full 0)) #t) #t))
+                          (vector-ref plan 0)))) (positive-component-rules component))) components)
+        (check-equal? (length (vector-ref full 0)) 16)))
+    (test-case "full survivors retain plan identity and finite metadata matches baseline"
+      (for-each
+       (lambda (count)
+         (for-each
+          (lambda (multi?)
+            (let* ((request (component-scope-request (component-scope-program count 4 1 multi?)))
+                   (components (component-scope-plan #f request))
+                   (full (map (lambda (rule) (vector-ref rule 5))
+                              (car (vector->list (vector-ref (vector-ref request 0) 5))))))
+              (check-equal? (component-scope-normalize #f components)
+                            (component-scope-normalize #t (component-scope-plan #t request)))
+              (unless multi?
+                (for-each (lambda (component)
+                            (for-each (lambda (rule) (check-equal? (and (memq (vector-ref rule 0) full) #t) #t))
+                                      (positive-component-rules component))) components)))) '(#f #t))) '(1 4 16)))
+    (test-case "duplicate and literal projected heads preserve independent truth"
+      (let* ((x (gerbil-ascent-variable 'x))
+             (p (gerbil-ascent-program
+                 (list (gerbil-ascent-relation 'source 1 '((7)))
+                       (gerbil-ascent-relation 'left 1 []) (gerbil-ascent-relation 'right 1 []))
+                 (list (gerbil-ascent-rule
+                        (list (gerbil-ascent-atom 'left (list x))
+                              (gerbil-ascent-atom 'right (list x))
+                              (gerbil-ascent-atom 'left (list (gerbil-ascent-literal 77)))
+                              (gerbil-ascent-atom 'left (list x)))
+                        (list (gerbil-ascent-atom 'source (list x))))) 64 64 64)))
+        (for-each (lambda (jobs)
+                    (let (result (gerbil-ascent-evaluate-program p workers: jobs))
+                      (check-equal? (canonical result 'left) '((7) (77)))
+                      (check-equal? (canonical result 'right) '((7))))) '(1 2 4))))
+    (test-case "assigned SCC state preserves caller roots across independent runs"
+      (let* ((request (component-scope-request (component-scope-program 4 1 32)))
+             (initial (vector-ref request 2)) (before (vector-copy initial))
+             (truth (make-vector 5 (map list (iota 32)))))
+        (for-each (lambda (jobs)
+                    (check-equal? (component-scope-run #f request jobs) truth)
+                    (check-equal? initial before)
+                    (for-each (lambda (index) (check-equal? (eq? (vector-ref initial index) (vector-ref before index)) #t))
+                              (iota 5))) '(1 2 4))))
     (test-case "chain closure and independent outputs match exact truth one two four workers"
       (for-each
        (lambda (n)

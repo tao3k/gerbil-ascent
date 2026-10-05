@@ -121,6 +121,20 @@ check-actor-pool:
       echo "NATIVE-REGISTRY-CONTROL-OK $control exit=$code"
     done
 
+# Paired SCC planning and complete coordinator/worker component closures.
+performance-component-scope:
+    {{ test_runner }} run -- just _performance-component-scope
+
+_performance-component-scope:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    library="{{ justfile_directory() }}/.cache/ascent/native-library/lib"
+    mkdir -p .cache/ascent/component-scope
+    gxi {{ gerbil_test_runtime_options }} -e '(add-load-path! (path-expand ".cache/ascent/native-library/lib"))' -e '(import :std/make)' -e '(make ["program/component-plan" "program/component-worker" "program/positive-components" "program/evaluate" "t/performance/component-scope/reference" "t/performance/component-scope/fixture" "t/performance/component-scope-benchmark"] srcdir: (current-directory) libdir: (path-expand ".cache/ascent/native-library/lib") build-deps: (path-expand ".cache/ascent/native-library/build-deps"))'
+    for scenario in sparse-plan multihead-plan closure-one closure-four small; do
+        timeout 90s gxi {{ gerbil_test_runtime_options }} -e '(add-load-path! (path-expand ".cache/ascent/native-library/lib"))' :gerbil-ascent/t/performance/component-scope-benchmark "$scenario" "$library" ".cache/ascent/component-scope/$scenario.sexp"
+    done
+
 # Paired strict-dependency admission and complete cold/warm public solves.
 performance-strata-preflight:
     {{ test_runner }} run -- just _performance-strata-preflight

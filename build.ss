@@ -49,6 +49,8 @@
     "program/update-selection"
     "program/reuse"
     "program/actor-round"
+    "program/component-plan"
+    "program/component-worker"
     "program/positive-components"
     "program/evaluate"
     "program/session"

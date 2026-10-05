@@ -144,6 +144,10 @@
                           (if (member "t/qualification/scheme-bounded-datum-test.ss" tests)
                             '("t/performance/bounded-datum/reference")
                             [])
+                          (if (member "t/qualification/ascent-positive-components-test.ss" tests)
+                            '("t/performance/component-scope/reference"
+                              "t/performance/component-scope/fixture")
+                            [])
                           (if (member "t/qualification/ascent-strata-preflight-test.ss" tests)
                             '("t/performance/strata-preflight/reference-semantics"
                               "t/performance/strata-preflight/reference-planning"

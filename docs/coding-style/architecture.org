@@ -68,6 +68,108 @@ must preserve that distinction. =program/analysis.ss= caches immutable
 declaration plans, while =program/evaluate.ss= owns mutable relation
 state and retained-session behavior.
 
+* Study: separate component planning, assigned state and owner publication
+
+This change concerns production SCC execution. The former 142-line
+=program/positive-components.ss= mixed immutable planning, each worker's
+fixed-point state and global admission/publication. For every rule it visited
+every SCC and filtered all heads, then lowered the same body for each projected
+head group. Every worker copied its admitted root vector again, counted all
+relations and rebuilt membership for external inputs and unrelated outputs.
+
+Installed Gerbil =2591dcd=, =compiler/optimize-base.ss:24-29=, names optimizer
+state and identity-keyed tables with =optimizer-info=. Its
+=optimize-top.ss:244-268= separates per-binding type collection from the
+outer binding/body traversal, which owns local scope. These examples guide
+explicit state ownership. They do not suggest that mutable execution state
+belongs in an immutable declaration cache.
+
+| Production owner | Responsibility | Data lifetime |
+|------------------+----------------+---------------|
+| =program/component-plan.ss= | Eligibility, weak Analysis identity cache, SCC grouping and output projection | Immutable admitted metadata |
+| =program/component-worker.ss= | One SCC's frames, indexes, deltas, pending rows and output membership | One assigned worker |
+| =program/positive-components.ss= | Global unique-row merge, ready snapshots and predecessor completion | One coordinator invocation |
+
+The coordinator is now 64 lines. Its public exports remain available, including
+the remote cache and eligibility entrypoints. =build.ss= lists the two new
+production owners. It contains no new test dispatch or configuration switches.
+The existing native component Suite is extended; A/B freezes only the former
+142-line component owner rather than copying the entire evaluator.
+
+Planning groups compiled outputs by SCC in one head pass, instead of scanning
+every SCC for every rule. It preserves duplicate/literal outputs, predecessor
+order and reverse source-rule order. Body slot actions and slot counts come
+from the existing admitted plan. A full survivor retains plan identity;
+partial projections allocate only ordered output headers and a plan header.
+This is valid because body lowering precedes output lowering and head safety
+was already checked. Mutable variable frames are still created per assignment.
+
+Ready admission captures separate root/size vectors on the owner. Each pair
+is transferred to one worker; the owner retains an opaque reference and never
+reads or mutates those vectors afterwards. Persistent row roots are borrowed
+read-only. Sizes are maintained once by the global merge owner instead of
+recounting all rows in each worker. Workers create membership tables only for
+their SCC's output relations. External inputs still use private physical
+indexes. The global owner retains all-relation membership for unique charging;
+it admits successors only after terminal join and credited predecessor merges.
+Cancellation, budget failure and worker draining keep the existing actor-round
+protocol. The metadata cache retains no rows, frames or snapshots.
+
+** Matched qualification and measurement correction
+
+=just performance-component-scope= freezes the component owner at
+=f2d41a3018425c9eb103c1242177ebc2d4cb7daf=, changing only its two relative
+imports. Both sides share the current actor/index/runtime owners and compile
+to native code with exact module checks. Planning calls the uncached compile
+entry on both sides. Coordinator runs warm each side's independent immutable
+cache before measurement. Ordered metadata is compared completely; closures
+also check independent per-relation expected rows.
+
+Five scenarios use 50 alternating CPU pairs and a separate 50 alternating
+allocation pairs each. CPU user+system timing retains natural GC. The initial
+actor allocation metric was rejected: processor-local counter deltas included
+negative values. Gambit's =lib/_kernel.scm= assigns counter 7 from
+=___bytes_allocated(___PSPNC)=; =lib/mem.c='s =determine_occupied_words=
+sums processor allocation counters into =latest_gc_alloc=. The separate
+allocation lane reads that VM total after completed collections before/after
+each batch and rejects negative deltas. Those forced collections are outside
+the CPU lane. The original raw counters and failed forecasts remain under
+ignored =.cache/ascent/component-scope/=; actor processor-local medians are
+not allocation evidence.
+
+| Scenario | Old CPU us | New CPU us | Old VM bytes | New VM bytes | CPU wins |
+|----------+------------+------------+--------------+--------------+----------|
+| 128 independent rule projections | 572.250 | 165.500 | 3394476 | 465708 | 49/50 |
+| One rule with 128 heads | 430.250 | 129.250 | 1565676 | 120472 | 50/50 |
+| Complete coordinator closure, one worker | 4521.000 | 2121.000 | 3967568 | 3228672 | 48/50 |
+| Complete coordinator closure, four workers | 4080.000 | 2151.000 | 3792560 | 3140832 | 50/50 |
+| One-output closure control | 5.000 | 5.000 | 37104 | 36240 | 16/50 |
+
+Cold planning saves 86.3% / 92.3% allocation and 71.1% / 70.0% CPU. It
+uses 128 outputs and 32 body atoms with one source row. The complete cached
+coordinator fixture has 16 independent outputs reading 256 source rows.
+It measures SCC planning cache access, ready snapshots, worker creation,
+private closure, credited merging, terminal joins and canonical row forcing.
+It observes 53.1% / 47.3% less CPU and 18.6% / 17.2% less VM allocation.
+Initial POO admission/analysis and the public evaluator's final publication
+are outside this interval. These figures qualify this component execution
+path, not whole public Session throughput. The small control has unchanged
+median CPU. Planning admission requires 70% less allocation, 30% less CPU
+and 35 wins. Cached-baseline execution admission requires 40% less CPU,
+35 wins and allocation nonincrease. The separate original 30% allocation
+forecast was missed in both closures and remains explicitly false in receipts.
+
+Native qualification passed nine modules / 88 Cases in the existing actor
+pool (=jobs=12=), with module execution taking 1-8 seconds. The component
+Suite verifies admitted body/action identity, full-plan identity, complete
+frozen metadata, duplicate/literal heads, source-root stability, independent
+frames, recursive truth, exact unique budgets, cancellation and draining.
+Existing actor/session, positive-plan, selected-activation, BYODS index and
+invariant, lattice and deletion Suites passed. Selected production policy
+reported zero findings/errors. The frozen owner matches the declared Git
+revision after its two import redirects; source hashes identify the qualified
+production and both benchmark graphs.
+
 * Study: core kernel ownership and program coordination
 
 The installed compiler's =optimize-top.ss:244-268= defines a small local

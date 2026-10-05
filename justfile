@@ -103,7 +103,23 @@ _test-suite jobs lane:
 
 # Small native registry and actor lifecycle qualification before the full pool.
 check-actor-pool:
+    #!/usr/bin/env bash
+    set -euo pipefail
     {{ test_runner }} test-pool 2 t/harness/native-entry-test.ss t/harness/actor-pool-test.ss
+    export PYTHONPATH="{{ justfile_directory() }}/python/src${PYTHONPATH:+:$PYTHONPATH}"
+    output=$(mktemp)
+    trap 'rm -f "$output"' EXIT
+    for control in missing unknown extra; do
+      args=()
+      marker='native pool requires one registry key'
+      if [[ "$control" == unknown ]]; then args=(t/harness/not-in-registry.ss); marker='unknown native test registry key'; fi
+      if [[ "$control" == extra ]]; then args=(t/harness/native-entry-test.ss other); fi
+      code=0
+      python3 -m ascent_test_support.supervision --startup-seconds 5 --idle-seconds 5 -- .cache/ascent/native-library/test-pool {{ gerbil_test_runtime_options }} "${args[@]}" > "$output" 2>&1 || code=$?
+      [[ "$code" == 70 ]] && grep -F "$marker" "$output" >/dev/null
+      if grep -E '^(HARNESS|MODULE|CASE) ' "$output" >/dev/null; then cat "$output"; exit 1; fi
+      echo "NATIVE-REGISTRY-CONTROL-OK $control exit=$code"
+    done
 
 # Paired native finite evidence generation and verification.
 performance-finite-replay:

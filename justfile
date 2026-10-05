@@ -121,6 +121,20 @@ check-actor-pool:
       echo "NATIVE-REGISTRY-CONTROL-OK $control exit=$code"
     done
 
+# Paired ordered index build/extension/lookup and complete native solve control.
+performance-index-build:
+    {{ test_runner }} run -- just _performance-index-build
+
+_performance-index-build:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    library="{{ justfile_directory() }}/.cache/ascent/native-library/lib"
+    mkdir -p .cache/ascent/index-build
+    gxi {{ gerbil_test_runtime_options }} -e '(add-load-path! (path-expand ".cache/ascent/native-library/lib"))' -e '(import :std/make)' -e '(make ["table/funs" "table/access" "program/index" "program/evaluate" "t/performance/index-build/reference-funs" "t/performance/index-build/reference-access" "t/performance/index-build/reference-index" "t/performance/index-build/reference-evaluate" "t/performance/index-build/fixture" "t/performance/index-build-benchmark"] srcdir: (current-directory) libdir: (path-expand ".cache/ascent/native-library/lib") build-deps: (path-expand ".cache/ascent/native-library/build-deps"))'
+    for scenario in scalar-dense scalar-unique composite-dense composite-unique empty small solve; do
+        timeout 90s gxi {{ gerbil_test_runtime_options }} -e '(add-load-path! (path-expand ".cache/ascent/native-library/lib"))' :gerbil-ascent/t/performance/index-build-benchmark "$scenario" "$library" ".cache/ascent/index-build/$scenario.sexp"
+    done
+
 # Paired persistent source-log kernels and complete public source transactions.
 performance-source-log:
     {{ test_runner }} run -- just _performance-source-log

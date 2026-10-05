@@ -4,9 +4,8 @@
 
 ;;; Physical index access owned by one engine. Only the canonical built-in
 ;;; provider has trusted hash buckets; every other receiver keeps dispatch.
-(import (only-in "funs.ss" gerbil-ascent-index-build gerbil-ascent-index-extend!
-                 gerbil-ascent-index-order!)
-        (only-in "provider.ss" gerbil-ascent-canonical-hash-index-provider?
+(import (only-in :gerbil-ascent/t/performance/index-build/reference-funs gerbil-ascent-index-build gerbil-ascent-index-extend!)
+        (only-in :gerbil-ascent/table/provider gerbil-ascent-canonical-hash-index-provider?
                  gerbil-ascent-index-provider-build gerbil-ascent-index-provider-extend!
                  gerbil-ascent-index-provider-lookup))
 (export gerbil-ascent-physical-index-build gerbil-ascent-physical-index-extend!
@@ -34,8 +33,8 @@
 (def (gerbil-ascent-physical-index-build provider rows columns)
   (if (gerbil-ascent-canonical-hash-index-provider? provider)
     (if (and (pair? columns) (null? (cdr columns)))
-      (gerbil-ascent-index-order!
-       (extend-scalar-index! (make-hash-table) rows (car columns)))
+      (extend-scalar-index!
+       (make-hash-table) (reverse rows) (car columns))
       (gerbil-ascent-index-build rows columns))
     (gerbil-ascent-index-provider-build provider rows columns)))
 

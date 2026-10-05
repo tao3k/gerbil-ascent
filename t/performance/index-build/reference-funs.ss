@@ -4,7 +4,7 @@
 
 ;;; Private index algorithms. The evaluator owns cache invalidation.
 
-(export gerbil-ascent-index-build gerbil-ascent-index-extend! gerbil-ascent-index-order!
+(export gerbil-ascent-index-build gerbil-ascent-index-extend!
         gerbil-ascent-index-key)
 
 ;; : (-> Row (List ColumnIndex) Key)
@@ -14,30 +14,7 @@
 ;; : (-> (List Row) (List ColumnIndex) Index)
 (def (gerbil-ascent-index-build rows columns)
   (let (index (make-hash-table))
-    (gerbil-ascent-index-extend! index rows columns)
-    (gerbil-ascent-index-order! index)))
-
-;; gerbil-ascent-index-order!
-;; : (forall (k r) (-> (HashTable k [r]) (HashTable k [r])))
-;; : (-> FreshOwnedBuckets OrderedIndex)
-;; | doc m%
-;;     Restore source order only in freshly constructed private bucket spines.
-;;     Rows and keys remain caller-owned; existing published indexes must never
-;;     pass through this operation. Singleton buckets already have source order.
-;;
-;;     # Examples
-;;
-;;     ```scheme
-;;     (gerbil-ascent-index-order! fresh-index)
-;;     ;; => the same index with each owned bucket in source order
-;;     ```
-;;   %
-(def (gerbil-ascent-index-order! index)
-  (hash-for-each
-   (lambda (key rows)
-     (when (pair? (cdr rows))
-       (hash-put! index key (reverse! rows)))) index)
-  index)
+    (gerbil-ascent-index-extend! index (reverse rows) columns)))
 
 ;;; Ordered planner columns can be projected with one forward row cursor.
 ;;; Unordered or repeated columns retain the public arbitrary-column semantics.

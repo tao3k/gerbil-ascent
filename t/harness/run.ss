@@ -58,6 +58,7 @@
     "t/qualification/ascent-timing-test.ss"
     "t/qualification/ascent-workspace-test.ss"
     "t/qualification/scheme-closure-contract-test.ss"
+    "t/qualification/scheme-bounded-datum-test.ss"
     "t/qualification/scheme-provenance-graph-test.ss"
     "t/qualification/scheme-higher-order-test.ss"
     "t/qualification/scheme-session-deletion-test.ss"
@@ -174,6 +175,9 @@
                             [])
                           (if (member "t/qualification/scheme-provenance-graph-test.ss" tests)
                             '("t/performance/provenance-index/reference")
+                            [])
+                          (if (member "t/qualification/scheme-bounded-datum-test.ss" tests)
+                            '("t/performance/bounded-datum/reference")
                             []))))
     (call-with-output-file [path: module-file truncate: #t]
       (lambda (out) (write modules out) (newline out)))

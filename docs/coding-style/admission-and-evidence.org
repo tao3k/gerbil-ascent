@@ -5,6 +5,146 @@
 Finite selection, execution receipts and semantic evidence boundaries. Study notes and receipts retain their original revision and scope;
 historical source paths and timings are not current qualification claims.
 
+* Study: bounded datum cursors and private return frames
+
+The installed Gerbil =2591dcd= runtime's =table.ss:141-152= walks the owned
+table with an index cursor instead of allocating a task for each key/value.
+The compiler's =compile.ss:1446-1469= builds and reverses its own accumulator
+without mutating incoming syntax. These examples distinguish traversal state
+from input state; they do not prescribe a particular tree-walk algorithm.
+The compiler's =optimize-base.ss:24-29= names owned state with an
+=optimizer-info= record. The guard likewise uses a private =datum-frame=
+record instead of exposing numbered event-vector slots. As in
+=optimize-base.ss:572-573=, =using (frame :- datum-frame)= projects slots
+directly after the constructor and private ownership establish the record
+type. The specialization covers only return records; caller-owned data keeps
+its explicit type, cycle, depth and budget checks.
+
+=candidate/datum.ss= owns the inert pair-tree guard used by snapshot admission,
+candidate parsing and proof checking. It accepts integers, booleans, symbols,
+characters and null, rejects executable/mutable opaque leaves, and checks
+cycles using the current path rather than a global visited set. Shared acyclic
+subtrees consume their occurrence budgets again when revisited.
+
+The guard previously allocated three event vectors and three list cells per
+pair. Single-branch chains now use budgeted cursors and double-speed cursors
+for cycle rejection, without per-pair frames or active-table entries. These
+are scalar-car/cdr spines and car chains with null cdrs. On reaching a branch,
+the guard activates the already charged prefix once, then continues
+depth-first traversal with private return records. Each record
+holds the input pair, its original depth and whether the cdr is being visited.
+The input remains read only. Scalar children are charged directly.
+
+A completed single-branch scan cannot contain an active ancestor: that
+ancestor's pending branch either makes the chain cyclic or forces a branch
+fallback before completion. Fallback checks each prefix pair's active identity
+before entering the branch. Prefix activation is bounded by the number of
+pairs just scanned; it does not traverse their subtrees again. This applies
+to both cdr spines and unary car chains. A unary step charges its pair and null
+cdr before the car, retaining the same occurrence total and Boolean verdict;
+pair depth is checked at every step. No unbounded =list?= preflight or repeated
+suffix replay is involved.
+
+The work budget still counts every entered pair and leaf, including null.
+Unwinding a completed pair does not consume a node. Pair depth increases only
+through car edges; cdr edges retain their original depth, and leaves have no
+pair-depth constraint. The active identity entry stays true until both
+branches finish, then becomes false. No frame, table or input pointer escapes
+the Boolean result, and early rejection discards only private state.
+
+The independent structural oracle in =scheme-bounded-datum-test.ss= enumerates
+147 scalar/pair terms against 18 node budgets and five pair-depth limits:
+13,230 combinations, each checked against the original and current guard.
+Additional Cases cover admitted scalar leaves, exact shared-subtree budgets,
+car/cdr cycles, mixed-prefix ancestor cycles, exact late-fallback budgets,
+arbitrary-precision budgets, input identity preservation, 4096-element/deep
+structures and procedure rejection without invocation. Parser-owned candidate descriptions
+and the complete provenance/deletion Suite provide consumer checks.
+
+=just performance-bounded-datum= compiles both guards and both verifier
+variants into one native prefix. Arguments select the scenario and library;
+no new environment switch controls traversal. The original =b622b50= guard
+is frozen byte-for-byte under =t/performance/bounded-datum/reference.ss=.
+The verifier reference copies that revision's =provenance-graph.ss= with only
+its datum import redirected. Both variants share the same current witness
+replay and other dependencies. Its A/B measures the complete verifier call
+while isolating its direct guard calls; it is not a before/after measurement
+of the entire historical dependency graph or complete solving.
+
+Every scenario has 50 alternating pairs and ten calls per sample. Kernel
+fixtures cover flat, shared, deep and rejected data, plus four-element and
+late-mixed-prefix controls. The latter must remain linear when specialization
+falls back near the tail. Guards must match independent expected verdicts. The verifier uses
+equivalent 192-edge certificates, checks exact witness/alternative parity
+before timing, and must accept both variants on every pair. Initial GC precedes
+warm-up; natural collection remains in the measured batches. Compilation,
+startup and fixture/certificate construction are outside timing. Native
+resolution and =.o1= files are asserted before measuring.
+
+Predeclared large-kernel gates require 30% less allocation, 10% lower median
+CPU and 35/50 CPU wins; the small control requires nonincreasing allocation
+and permits at most 10% CPU regression. Complete verification requires at
+least 5% less allocation and at most 5% CPU regression. No wall-clock or peak
+memory improvement is inferred from =##process-statistics= samples.
+
+The selected ASP policy additionally flags generic arithmetic in the bounded
+cursor loop. The node/depth budgets retain the existing integer domain,
+including rejection at nonpositive node budgets and negative pair-depth
+limits. No unchecked fixnum arithmetic is substituted: an arbitrary-precision
+budget must not overflow or silently change the old verdict. This is an
+advisory performance finding, not an absent input validation gate.
+
+The first implementation delegated every leaf to =visit/resume=. Its flat
+fixture allocated =1609156.8 -> 691540.8= bytes but median CPU was
+=894.1 -> 825.2= microseconds with 33/50 wins. It failed the original CPU
+gates and the remaining scenarios did not run. Fusing leaf visits reached
+=1021.5 -> 910.1= microseconds but only 34/50 wins, also failing. The scalar
+spine/vector-frame version passed flat and shared fixtures, but deep nesting
+reached only =145.9 -> 141.6= microseconds with 30/50 wins, failing the same
+gate. Ordinary checked record access likewise failed the deep CPU gate
+=(70.9 -> 70.7 microseconds, 29/50 wins)=. Typed projection alone failed too
+=(65.9 -> 73.2 microseconds, 27/50 wins)=; no speedup is attributed to it.
+These failures motivate specializing both single-branch shapes rather than
+allocating return state for every nested pair. They are not successful
+qualification receipts.
+Raw transcripts and the rejected implementation stay in ignored
+=.cache/ascent/bounded-datum/=.
+
+The final single-branch implementation passed the unchanged gates in all
+seven scenarios (350 alternating pairs). Each row reports median process CPU
+microseconds and allocated bytes per call, not startup or wall time:
+
+| Scenario | Old CPU us | New CPU us | Old bytes | New bytes | CPU wins |
+|----------+------------+------------+-----------+-----------+----------|
+| Flat 4096 | 761.0 | 12.3 | 1609156.8 | 2788.8 | 50/50 |
+| Shared 64 x 64 | 214.7 | 19.1 | 1414244.8 | 19300.8 | 49/50 |
+| Deep 512 | 61.1 | 2.6 | 210428.8 | 2788.8 | 50/50 |
+| Rejected tail | 795.5 | 13.0 | 1609156.8 | 2788.8 | 50/50 |
+| Late mixed control | 481.8 | 505.9 | 847676.8 | 420908.8 | 22/50 |
+| Small control | 0.6 | 0.4 | 4244.8 | 2788.8 | 47/50 |
+| Complete verifier | 1202.7 | 1001.3 | 1903369.6 | 1158316.8 | 39/50 |
+
+Complete verification improves median CPU by 16.7% and allocation by 39.1%
+within the direct-guard comparison boundary above. Late mixed input allocates
+50.3% less but consumes 5.0% more median CPU; no universal traversal speedup
+is claimed. Typed projection alone remains a rejected performance hypothesis.
+
+Native qualification passes 18 Cases through the existing =std/test= entry:
+
+| Suite | Cases | Execution seconds, excluding compilation |
+|-------+-------+------------------------------------------|
+| =scheme-bounded-datum-test.ss= | 6 | 2 |
+| =ascent-candidate-description-test.ss= | 5 | 3 |
+| =scheme-provenance-graph-test.ss= | 7 | 68 |
+
+The final Suite includes 64 graphs, 192 withdrawals and 72 budget/cap
+combinations; these are conformance counts, not end-to-end speedup evidence.
+Every run has explicit Case, Suite, Module, Harness and final =OK= markers,
+native module resolution, and successful process exit. Existing execution
+deadlines remain intact; graph/withdrawal progress is real work output.
+The selected production policy completes with zero errors and the single
+generic-arithmetic advisory explained above.
+
 * Study: private indexes for ordered complete provenance
 
 The installed Gerbil =2591dcd= compiler's =optimize-base.ss:334-343=

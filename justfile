@@ -115,6 +115,19 @@ _test-suite jobs lane:
         while IFS= read -r path; do just _test-file "$path" 2>&1 | tee "$directory/$(basename "$path").log"; done < "$directory/exclusive"
     fi
 
+# Paired native inert traversal and complete certificate verification.
+performance-bounded-datum:
+    {{ test_runner }} run -- just _performance-bounded-datum
+
+_performance-bounded-datum:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    library="{{ justfile_directory() }}/.cache/ascent/native-library/lib"
+    gxi {{ gerbil_test_runtime_options }} -e '(add-load-path! (path-expand ".cache/ascent/native-library/lib"))' -e '(import :std/make)' -e '(make ["candidate/datum" "candidate/types" "candidate/provenance" "candidate/provenance-graph" "t/performance/bounded-datum/reference" "t/performance/bounded-datum/reference-graph" "t/performance/bounded-datum-benchmark"] srcdir: (current-directory) libdir: (path-expand ".cache/ascent/native-library/lib") build-deps: (path-expand ".cache/ascent/native-library/build-deps"))'
+    for scenario in kernel verifier; do
+        timeout 90s gxi {{ gerbil_test_runtime_options }} -e '(add-load-path! (path-expand ".cache/ascent/native-library/lib"))' :gerbil-ascent/t/performance/bounded-datum-benchmark "$scenario" "$library"
+    done
+
 # Paired native complete-provenance generation.
 performance-provenance-index:
     {{ test_runner }} run -- just _performance-provenance-index

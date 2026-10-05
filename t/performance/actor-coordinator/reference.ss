@@ -19,7 +19,7 @@
 ;;
 ;;     ```scheme
 ;;     (run-task owner key task execute)
-;;     ;; => (finished . candidates), transferring the bounded final tail
+;;     ;; => 'finished only after credit for the last nonempty batch
 ;;     ```
 ;;   %
 (def (run-task owner key task execute)
@@ -47,9 +47,7 @@
              (when (= ticks 64)
                (set! ticks 0) (request! 'checkpoint #f)))
            (execute task emit! checkpoint!)
-           ;; Execution has ended: transfer the bounded tail with completion.
-           ;; The worker waits for its next assignment instead of another credit.
-           (cons 'finished (reverse batch))))))))
+           (flush!) 'finished))))))
 
 ;; gerbil-ascent-run-actor-round!
 ;; : (forall (task atom row) (-> RoundKey (List task) PositiveInteger (Execute task atom row) (Merge atom row) Cancel (Ready task) (Completed task) Void))
@@ -85,9 +83,9 @@
                       (pending (cons #f (map values tasks)))
                       (assigned (make-hash-table-eq))
                       (active (make-hash-table-eq)) (active-count 0)
-                      (workers []) (idle []) (awaiting #f) (failed? #f) (failure #f))
+                      (workers []) (idle []) (failure #f))
                   (def (stop! exception)
-                    (unless failed? (set! failure exception) (set! failed? #t))
+                    (unless failure (set! failure exception))
                     (set-cdr! pending []))
                   (def (take-ready!)
                     (let scan ((previous pending) (rest (cdr pending)))
@@ -129,66 +127,55 @@
                       (hash-put! active worker task)
                       (set! active-count (+ active-count 1))
                       (thread-send worker ['task task])))
-                  ;; Recovery refuses the outstanding credit before resuming
-                  ;; the drain loop. Successful iterations capture no continuation.
-                  (def (run!)
-                    (with-catch
-                     (lambda (exception)
-                       (stop! exception)
-                       (when awaiting
-                         (thread-send awaiting 'stop)
-                         (set! awaiting #f))
-                       (run!))
-                     (lambda ()
-                       (let loop ()
-                         (unless failed?
-                           (when (canceled?) (error "ASCENT actor round canceled"))
+                  (try
+                   (let loop ()
+                     (unless failure
+                       (with-catch stop!
+                         (lambda () (when (canceled?) (error "ASCENT actor round canceled")))))
+                     (unless failure
+                       (with-catch stop!
+                         (lambda ()
                            (let admit ()
                              (when (and (pair? (cdr pending)) (< active-count jobs))
                                (let (task (take-ready!))
-                                 (when task (start! task) (admit))))))
-                         (unless (zero? active-count)
-                           (match (thread-receive)
-                             ([kind received-key worker task payload]
-                              (when (eq? received-key key)
-                                (let (assignment (hash-get active worker))
-                                  (cond
-                                   ((eq? kind 'exited)
-                                    (when assignment
-                                      (hash-remove! active worker)
-                                      (set! active-count (- active-count 1)))
-                                    (if (and (pair? payload) (eq? (car payload) 'failed))
-                                      (stop! (cdr payload))
-                                      (error "ASCENT worker exited before pool shutdown")))
-                                   ((and assignment (eq? task assignment))
-                                    (case kind
-                                      ((batch checkpoint)
-                                       (set! awaiting worker)
-                                       (unless failed?
-                                         (when (canceled?) (error "ASCENT actor round canceled"))
-                                         (when (eq? kind 'batch)
-                                           (for-each (lambda (candidate) (merge (car candidate) (cdr candidate))) payload)))
-                                       (thread-send worker (if failed? 'stop 'credit))
-                                       (set! awaiting #f))
-                                      ((done)
-                                       (hash-remove! active worker)
-                                       (set! active-count (- active-count 1))
-                                       (set! idle (cons worker idle))
-                                       (if (and (pair? payload) (eq? (car payload) 'failed))
-                                         (stop! (cdr payload))
-                                         (unless failed?
-                                           (when (and (pair? payload) (eq? (car payload) 'finished))
-                                             (unless (null? (cdr payload))
-                                               (when (canceled?) (error "ASCENT actor round canceled"))
-                                               (for-each (lambda (candidate) (merge (car candidate) (cdr candidate)))
-                                                         (cdr payload))))
-                                           (completed! task))))))))))
-                             (else (void)))
-                           (loop))))))
-                  (try
-                   (run!)
-                   (cond (failed? (raise failure))
-                         ((pair? (cdr pending)) (error "ASCENT ready task dependency deadlock")))
+                                 (when task (start! task) (admit))))))))
+                     (if (zero? active-count)
+                       (cond (failure (raise failure))
+                             ((null? (cdr pending)) (void))
+                             (else (error "ASCENT ready task dependency deadlock")))
+                       (begin
+                         (match (thread-receive)
+                           ([kind received-key worker task payload]
+                            (when (eq? received-key key)
+                              (let (assignment (hash-get active worker))
+                                (cond
+                                 ((eq? kind 'exited)
+                                  (when assignment
+                                    (hash-remove! active worker)
+                                    (set! active-count (- active-count 1)))
+                                  (if (and (pair? payload) (eq? (car payload) 'failed))
+                                    (stop! (cdr payload))
+                                    (with-catch stop!
+                                      (lambda () (error "ASCENT worker exited before pool shutdown")))))
+                                 ((and assignment (eq? task assignment))
+                                  (case kind
+                                    ((batch checkpoint)
+                                     (unless failure
+                                       (with-catch stop!
+                                         (lambda ()
+                                           (when (canceled?) (error "ASCENT actor round canceled"))
+                                           (when (eq? kind 'batch)
+                                             (for-each (lambda (candidate) (merge (car candidate) (cdr candidate))) payload)))))
+                                     (thread-send worker (if failure 'stop 'credit)))
+                                    ((done)
+                                     (hash-remove! active worker)
+                                     (set! active-count (- active-count 1))
+                                     (set! idle (cons worker idle))
+                                     (if (and (pair? payload) (eq? (car payload) 'failed))
+                                       (stop! (cdr payload))
+                                       (unless failure (with-catch stop! (lambda () (completed! task))))))))))))
+                           (else (void)))
+                         (loop))))
                    (finally
                     (for-each (lambda (entry) (thread-send (car entry) 'stop)) workers)
                     (for-each (lambda (entry) (thread-join! (cdr entry))) workers))))))))))

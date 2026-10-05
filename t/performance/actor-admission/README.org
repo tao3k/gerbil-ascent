@@ -1,5 +1,14 @@
 #+title: Native actor admission and round worker lifetime
 
+* Entry revision
+
+The measurements below describe the earlier gxi-hosted native-library runner.
+The current recipe builds a static executable and isolates allocation samples
+in fresh processes. [[file:../actor-coordinator/README.org][Coordinator qualification]] records direct A/B
+against the pushed pool implementation, rejected measurements and entry-context
+limits. =just performance-actor-admission= retains the original three scenarios;
+=just performance-actor-admission coordinator stream= runs the stream experiment.
+
 * Production change and upstream study
 
 =program/actor-round.ss= owns a private pending spine, identity admission index,
@@ -41,8 +50,10 @@ Wide means 1024 tasks and capacity 2; backlog means 1024 tasks and capacity 64
 repeated 20 times per sample. These are explicit benchmark capacities, not
 production defaults. CPU and allocation use separate lanes of 50 alternating
 pairs. Warmup/initial GC are outside CPU timing; natural collection is inside.
-Allocation is the delta of Gambit's cumulative allocated bytes at completed
-GC boundaries (process-statistics field 16), not retained memory or RSS.
+The table below retains historical last-GC snapshot observations (field 16).
+Later actor measurements produced negative deltas with that endpoint; these
+byte values are not current allocation qualification. The current runner uses
+field 7/9 and fresh native children as documented in coordinator qualification.
 
 Gates declared before the first sample: wide/backlog require >=15% less CPU,
 >=20% less allocation and >=35/50 CPU wins. Small permits at most 5% + 15 us
@@ -54,7 +65,7 @@ CPU overhead and 2 KiB extra allocation. Gates were not relaxed.
 | Backlog | 5744 | 1146 | 191675088 | 144436528 | 39/50 |
 | Small | 8.05 | 7.90 | 85274.4 | 77242.4 | 18/50 |
 
-All semantic pairs and the three gates passed. The current installed VM has
+The historical run passed semantic pairs and its then-used gates. The installed VM has
 one processor. This qualifies complete-round coordination/allocation for these
 fixtures; it does not establish multicore speedup, general solver throughput,
 wall-clock speed or deployment behavior. The SDK was not rebuilt or changed.

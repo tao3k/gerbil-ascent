@@ -5,6 +5,28 @@
 Immutable declarations, engine frames, retained updates and checked source admission. Study notes and receipts retain their original revision and scope;
 historical source paths and timings are not current qualification claims.
 
+* Study: one recovery boundary and bounded completion transfer
+
+Gerbil =2591dcd= =runtime/error.ss:67-73= captures a continuation at an exception
+boundary; =std/make.ss:292-298,350-358= separates work completion from worker
+loop failure and pool join. The actor coordinator now has one recovery boundary
+for ready/cancel/merge/completion callbacks. Recovery refuses outstanding credit
+before draining; final propagation is outside that boundary. A task transfers
+its final partial batch with done. Owner merge precedes completed! and successor
+admission; full batches still require credit during execution.
+Like =std/sync/completion.ss:15-18= readiness/value fields, failure presence has
+its own bit: a raised =#f= is preserved even when later worker cleanup fails.
+
+[[file:../../t/performance/actor-coordinator/README.org][Direct native A/B]] freezes the pushed =cf658f9= kernel and links both sides
+into one static executable. Three launches passed the unchanged wide/backlog
+and small-control gates, with about 63-65% less CPU for wide tasks and 60% for
+active backlog. Allocation uses one cold round per fresh native child and
+Gambit's =time= field 7/9 endpoint; claims remain limited to that entry context.
+Hosted allocation failures and negative last-GC field 16 deltas are recorded
+and rejected. The explicit stream experiment fails CPU/stability gates;
+no qualified stream CPU improvement is claimed. Four native modules pass 46
+Cases covering final-batch boundaries, first-failure values and drain transitions.
+
 * Study: separate task completion from worker lifetime
 
 Gerbil =2591dcd= =std/make.ss:292-298,350-358= runs a bounded group of workers
@@ -24,8 +46,10 @@ their existing contracts.
 
 [[file:../../t/performance/actor-admission/README.org][Matched native qualification]] freezes the original kernel at =6b42951=.
 Two 1024-task scenarios passed 50 paired CPU and allocation samples each,
-with 78.7%/80.0% less CPU and 23.1%/24.6% less allocation. The small control
-also passed. These are single-VM-processor round coordination measurements.
+with historical CPU reductions of 78.7%/80.0%. Its last-GC allocation
+observations predate the corrected endpoint and are not current allocation
+qualification. The small control also passed. These are single-VM-processor
+round coordination measurements.
 Queue-only and double-continuation candidates failed their original gates;
 the record retains both failures and the rejected exception-marker approach.
 

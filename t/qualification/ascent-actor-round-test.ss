@@ -23,6 +23,56 @@
              ((.ref result 'rows-of) 'reach)))
 (def ascent-actor-round-test
   (test-suite "Positive actor rounds and drain barrier"
+    (test-case "false first failure survives later worker cleanup failures"
+      (let ((drained 0) (completed #f) (lock (make-mutex)))
+        (check-equal?
+         (with-catch (lambda (exception) (eq? exception #f))
+          (lambda ()
+            (gerbil-ascent-run-actor-round! (vector 'false-failure) '(a b c) 2
+             (lambda (task emit! checkpoint!)
+               (try (for-each (lambda (n) (emit! task (list n))) (iota 64))
+                    (finally
+                     (mutex-lock! lock) (set! drained (+ drained 1)) (mutex-unlock! lock)
+                     (raise 'later-cleanup-failure))))
+             (lambda (_ row) (raise #f)) (lambda () #f) (lambda (_) #t)
+             (lambda (_) (set! completed #t))) #f)) #t)
+        (check-equal? drained 2)
+        (check-equal? completed #f)))
+    (test-case "completion observes every row across final batch boundaries"
+      (for-each
+       (lambda (size)
+         (let (rows [])
+           (gerbil-ascent-run-actor-round! (vector size) '(a) 1
+            (lambda (task emit! checkpoint!)
+              (for-each (lambda (n) (emit! task (list n))) (iota size)))
+            (lambda (_ row) (set! rows (cons (car row) rows)))
+            (lambda () #f) (lambda (_) #t)
+            (lambda (_) (check-equal? (reverse rows) (iota size))))
+           (check-equal? (reverse rows) (iota size)))) '(0 1 31 32 33 64 65)))
+    (test-case "coordinator callback faults refuse credit and preserve first failure"
+      (for-each
+       (lambda (control)
+         (let ((phase (car control)) (size (cadr control)) (failure (vector control)) (started []) (drained []) (checks 0)
+               (lock (make-mutex)))
+           (check-equal?
+            (with-catch (lambda (exception) (eq? exception failure))
+             (lambda ()
+               (gerbil-ascent-run-actor-round! (vector phase) '(a b c d) 2
+                (lambda (task emit! checkpoint!)
+                  (mutex-lock! lock) (set! started (cons task started)) (mutex-unlock! lock)
+                  (try (for-each (lambda (n) (checkpoint!) (emit! task (list n))) (iota size))
+                       (finally (mutex-lock! lock) (set! drained (cons task drained)) (mutex-unlock! lock))))
+                (lambda (_ row) (when (eq? phase 'merge) (raise failure)))
+                (lambda ()
+                  (set! checks (+ checks 1))
+                  (when (and (eq? phase 'cancel) (= checks 3)) (raise failure)) #f)
+                (lambda (task) (when (and (eq? phase 'ready) (eq? task 'c)) (raise failure)) #t)
+                (lambda (_) (when (eq? phase 'completed) (raise failure)))) #f)) #t)
+           (check-equal? (length started) 2)
+           (check-equal? (list-sort (lambda (a b) (string<? (symbol->string a) (symbol->string b))) drained)
+                         '(a b))))
+       '((ready 1) (ready 96) (merge 1) (merge 96)
+         (completed 1) (completed 96) (cancel 1) (cancel 96))))
     (test-case "refused credit bypasses task exception handlers and unwinds cleanup"
       (let ((caught #f) (returned #f) (drained #f))
         (check-equal?

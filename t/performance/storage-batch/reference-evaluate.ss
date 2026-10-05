@@ -7,21 +7,21 @@
 (import (only-in :clan/poo/object .o .ref object?)
         (only-in :clan/poo/mop validate)
         (only-in :std/iter for iter Iterator &Iterator-next!)
-        (only-in "admission.ss" gerbil-ascent-initialize-source-row!
+        (only-in :gerbil-ascent/program/admission gerbil-ascent-initialize-source-row!
                  gerbil-ascent-admit-source-row!
-                 gerbil-ascent-check-replacement-rows! gerbil-ascent-prepare-storage-batch)
-        (only-in "result.ss" gerbil-ascent-publication-cache
+                 gerbil-ascent-check-replacement-rows!)
+        (only-in :gerbil-ascent/program/result gerbil-ascent-publication-cache
                  gerbil-ascent-publish-rows gerbil-ascent-snapshot-rows gerbil-ascent-snapshot-sizes
                  gerbil-ascent-result-observation)
-        (only-in "planning.ss" gerbil-ascent-prepare-program)
+        (only-in :gerbil-ascent/program/planning gerbil-ascent-prepare-program)
         (only-in :gerbil-ascent/core/positive-plan gerbil-ascent-run-positive-plan!
                  gerbil-ascent-emit-heads!)
-        (only-in "index.ss" gerbil-ascent-make-row-indexes row-indexes-rows row-indexes-advance!)
-        (only-in "types.ss" GerbilAscentSessionContract)
-        (only-in "reuse.ss" gerbil-ascent-prepare-native-reuse
+        (only-in :gerbil-ascent/program/index gerbil-ascent-make-row-indexes row-indexes-rows row-indexes-advance!)
+        (only-in :gerbil-ascent/program/types GerbilAscentSessionContract)
+        (only-in :gerbil-ascent/program/reuse gerbil-ascent-prepare-native-reuse
                  gerbil-ascent-activate-rules gerbil-ascent-reuse-active-rules native-reuse?
                  native-reuse-result native-reuse-affected)
-        (only-in "analysis.ss" gerbil-ascent-program-analysis
+        (only-in :gerbil-ascent/program/analysis gerbil-ascent-program-analysis
                  gerbil-ascent-program-schema)
         (only-in :gerbil-ascent/core/rule-semantics gerbil-ascent-lattice-feeds-relation?
                  gerbil-ascent-lattice-key
@@ -812,27 +812,41 @@
                          (vector-ref delta index) row
                          (- output-limit
                             (+ source-materialized-count derived-count))))
-                       (present (vector-ref seen index)))
-                    ;; Preflight owns its forward list; no retained membership,
-                    ;; source counter or row buffer changes before it succeeds.
-                    (let-values (((new-rows added-count)
-                                  (gerbil-ascent-prepare-storage-batch
-                                   expanded width (vector-ref field-checkers index)
-                                   present (+ source-materialized-count derived-count)
-                                   output-limit)))
-                      (set! source-count (+ source-count 1))
-                      (let ((new-all (vector-ref all index))
-                            (new-delta (vector-ref delta index)))
-                        (for-each
-                         (lambda (stored)
-                           (hash-put! present stored #t)
-                           (set! new-all (cons stored new-all))
-                           (set! new-delta (cons stored new-delta)))
-                         new-rows)
-                        (vector-set! all index new-all)
-                        (vector-set! delta index new-delta))
-                      (set! source-materialized-count
-                        (+ source-materialized-count added-count))
+                       (batch-seen
+                        (and (pair? expanded) (pair? (cdr expanded))
+                             (make-hash-table)))
+                       (new-rows []))
+                  (unless (list? expanded)
+                    (error "ASCENT storage provider returned non-list rows"))
+                  ;; Validate the complete Provider batch before changing the
+                  ;; evaluator's retained session, including its input counter.
+                  (for-each
+                   (lambda (stored)
+                     (unless (and (list? stored) (= (length stored) width))
+                       (error "invalid ASCENT storage provider row" stored))
+                     (let (check (vector-ref field-checkers index))
+                       (when check (check stored)))
+                     (unless (or (hash-get (vector-ref seen index) stored)
+                                 (and batch-seen (hash-get batch-seen stored)))
+                       (when batch-seen (hash-put! batch-seen stored #t))
+                       (set! new-rows (cons stored new-rows))))
+                   expanded)
+                  (set! new-rows (reverse new-rows))
+                  (let (added-count (length new-rows))
+                    (when (> (+ source-materialized-count derived-count
+                                added-count) output-limit)
+                      (error "ASCENT session output fact budget exceeded"))
+                    (set! source-count (+ source-count 1))
+                    (for-each
+                     (lambda (stored)
+                       (hash-put! (vector-ref seen index) stored #t)
+                       (set! source-materialized-count
+                         (+ source-materialized-count 1))
+                       (vector-set! all index
+                         (cons stored (vector-ref all index)))
+                       (vector-set! delta index
+                         (cons stored (vector-ref delta index))))
+                     new-rows)
                     (when (pair? new-rows)
                       (set! dirty? #t)
                       (set! materialized-dirty? #t)

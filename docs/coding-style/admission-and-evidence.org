@@ -5,6 +5,70 @@
 Finite selection, execution receipts and semantic evidence boundaries. Study notes and receipts retain their original revision and scope;
 historical source paths and timings are not current qualification claims.
 
+* Study: private ordered storage batch admission
+
+Gerbil =2591dcd=, =std/list/list-builder.ss:8-22=, appends through an owned
+head/tail queue. Its documentation at =25-32= warns that exposing a peek
+before construction ends exposes subsequent mutations. Provider preflight
+has a suitable lifetime: no partial accepted list escapes before the whole
+batch has passed its ordered row checks and fact-budget check.
+
+=program/admission.ss= now owns =gerbil-ascent-prepare-storage-batch=.
+It validates every row, including duplicates and existing rows, in provider
+order. It retains the first new row object and returns fresh forward list
+headers plus the private deduplication table's cardinality. Gerbil's
+=runtime/hash.ss:564-566= reads that stored count directly. Empty/singleton
+expansions require no private deduplication table; their count is 0 or 1.
+Existing membership, provider list headers and row objects remain unchanged.
+=program/evaluate.ss= owns the later membership, source-count, all/delta,
+index, size and version publication. The two all/delta header sequences remain
+separate after appending; custom providers can observe their identity.
+The private standard builder replaces cons/reverse copying, not persistent
+source logs or published solver frontiers.
+
+The frozen full engine is =program/evaluate.ss= at
+=fcb9ed1117cf597b7acdcc2c9b5895cd1bffb1c3=, with only relative imports
+made absolute. The isolated baseline exposes that revision's preflight slice
+through explicit membership/count arguments. =just performance-storage-batch=
+compiles both sides natively and checks exact module resolution. Each scenario
+uses 50 alternating pairs; initial collection and warm semantic checks are
+outside timing, natural collections remain inside. The batch gate requires
+at least 3800 bytes saved for 256 accepted rows, with CPU overhead at most
+5% + 20 microseconds. Small/empty controls allow at most 512 extra bytes and
+the same CPU bound. These gates are fixed before sampling.
+
+All seven gates passed on the final implementation:
+
+| Scenario | Old CPU us | New CPU us | Old bytes | New bytes | CPU wins |
+|----------+------------+------------+-----------+-----------+----------|
+| Preflight, 256 scalar rows | 40.328 | 39.297 | 43763.25 | 31523.25 | 36/50 |
+| Preflight, 256 eight-field rows | 157.703 | 156.562 | 43763.25 | 31523.25 | 33/50 |
+| Preflight, 512 rows / 256 unique | 65.000 | 63.766 | 43763.25 | 31523.25 | 38/50 |
+| Complete engine create/run/append/run, 256 rows | 138.000 | 135.300 | 302740.8 | 290612.8 | 34/50 |
+| Singleton preflight control | 0.094 | 0.078 | 227.25 | 227.25 | 31/50 |
+| Empty preflight control | 0.031 | 0.031 | 131.25 | 179.25 | 30/50 |
+| Complete singleton engine control | 76.200 | 75.900 | 216612.8 | 216724.8 | 21/50 |
+
+The qualified improvement is allocation: preflight saves 12240 bytes (28.0%)
+for 256 accepted rows; the complete engine update saves 12128 bytes (4.0%).
+The small CPU differences are nonregression evidence, not a qualified speedup.
+Empty preflight adds 48 bytes and the complete singleton control adds 112
+bytes. The earlier explicit-counter implementation's duplicate scenario was
+1.6% slower; its receipts remain available rather than being discarded.
+The engine scenario includes native construction, initial run, provider
+expansion, admission, publication and the final run. It does not time the
+public retained wrapper's recovery or arbitrary rule solving.
+Logs and raw pairs remain in ignored =.cache/ascent/storage-batch/=.
+
+After integrating the remote bitmap proof and source-withdrawal tests, the
+existing native actor pool passed six modules / 43 Cases with =jobs=12=.
+Module execution took 1-7 seconds with real Case/withdrawal progress. The new
+Suite includes 1944 independent finite duplicate traces, first-row identity,
+ordered checker/budget failures, provider header identity, complete updates
+and retained recovery. Selected production policy found zero findings/errors.
+The production and frozen benchmark files retained identical hashes across
+integration. No additional environment controls or build entry logic was added.
+
 * Study: ordered finite replay with private row indexes
 
 The installed Gerbil =2591dcd= compiler's =optimize-base.ss:24-29= owns

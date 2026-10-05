@@ -4,8 +4,10 @@
 
 ;;; Initialization mutates only buffers owned by the constructing engine.
 ;;; Source multiplicity and row identity are preserved, including duplicates.
+(import (only-in :std/list/list-builder with-list-builder))
+
 (export gerbil-ascent-initialize-source-row! gerbil-ascent-admit-source-row!
-        gerbil-ascent-check-replacement-rows!)
+        gerbil-ascent-check-replacement-rows! gerbil-ascent-prepare-storage-batch)
 
 ;; : (forall (a) (-> Symbol [a] Integer (Maybe (-> a Any)) Void))
 ;; gerbil-ascent-check-replacement-rows!
@@ -76,3 +78,44 @@
       (error "ASCENT source fact budget exceeded"))
     (vector-set! all index (cons stored (vector-ref all index)))
     next-count))
+
+;; : (forall (a m) (-> [a] Integer (Maybe (-> a Any)) m Integer Integer (Values [a] Integer)))
+;; gerbil-ascent-prepare-storage-batch
+;;   : (-> Rows Arity (Maybe RowChecker) Membership Nat Nat (Values Rows Nat))
+;;   | doc m%
+;;       Validate the complete provider expansion in order, retaining the first
+;;       new row for each value. Only private list headers are mutated. Existing
+;;       membership and provider list headers remain unchanged, even on failure.
+;;       Budget rejection follows all row checks, before publication.
+;;
+;;       # Examples
+;;
+;;       ```scheme
+;;       (gerbil-ascent-prepare-storage-batch '((1) (1)) 1 #f (make-hash-table) 0 8)
+;;       ;; => values '((1)) 1
+;;       ```
+;;     %
+(def (gerbil-ascent-prepare-storage-batch expanded width check present count output-limit)
+  (unless (list? expanded)
+    (error "ASCENT storage provider returned non-list rows"))
+  (let* ((batch-seen (and (pair? expanded) (pair? (cdr expanded))
+                          (make-hash-table)))
+         (accepted
+          (with-list-builder (put!)
+            (for-each
+             (lambda (stored)
+               (unless (and (list? stored) (= (length stored) width))
+                 (error "invalid ASCENT storage provider row" stored))
+               (when check (check stored))
+               (unless (or (hash-get present stored)
+                           (and batch-seen (hash-get batch-seen stored)))
+                 (when batch-seen (hash-put! batch-seen stored #t))
+                 (put! stored)))
+             expanded)))
+         ;; The private table contains exactly the accepted new rows. Empty
+         ;; and singleton expansions do not need a second membership table.
+         (added-count (if batch-seen (hash-length batch-seen)
+                         (if (pair? accepted) 1 0))))
+    (when (> (+ count added-count) output-limit)
+      (error "ASCENT session output fact budget exceeded"))
+    (values accepted added-count)))

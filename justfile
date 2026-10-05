@@ -121,6 +121,20 @@ check-actor-pool:
       echo "NATIVE-REGISTRY-CONTROL-OK $control exit=$code"
     done
 
+# Paired native storage batch preflight and complete retained-engine updates.
+performance-storage-batch:
+    {{ test_runner }} run -- just _performance-storage-batch
+
+_performance-storage-batch:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    library="{{ justfile_directory() }}/.cache/ascent/native-library/lib"
+    mkdir -p .cache/ascent/storage-batch
+    gxi {{ gerbil_test_runtime_options }} -e '(add-load-path! (path-expand ".cache/ascent/native-library/lib"))' -e '(import :std/make)' -e '(make ["program/admission" "program/evaluate" "t/performance/storage-batch/reference" "t/performance/storage-batch/reference-evaluate" "t/performance/storage-batch/fixture" "t/performance/storage-batch-benchmark"] srcdir: (current-directory) libdir: (path-expand ".cache/ascent/native-library/lib") build-deps: (path-expand ".cache/ascent/native-library/build-deps"))'
+    for scenario in batch wide duplicates engine single empty engine-small; do
+        timeout 90s gxi {{ gerbil_test_runtime_options }} -e '(add-load-path! (path-expand ".cache/ascent/native-library/lib"))' :gerbil-ascent/t/performance/storage-batch-benchmark "$scenario" "$library" ".cache/ascent/storage-batch/$scenario.sexp"
+    done
+
 # Paired native engine-owned physical index entries and complete indexed solves.
 performance-index-entry:
     {{ test_runner }} run -- just _performance-index-entry

@@ -144,7 +144,13 @@
                           (if (member "t/qualification/scheme-bounded-datum-test.ss" tests)
                             '("t/performance/bounded-datum/reference")
                             [])
-                          (if (member "t/qualification/ascent-component-index-test.ss" tests)
+                          (if (member "t/qualification/ascent-actor-credit-test.ss" tests)
+                            '("t/performance/actor-credit/reference"
+                              "t/performance/actor-credit/coordinator-reference"
+                              "t/performance/actor-credit/fixture")
+                            [])
+                          (if (or (member "t/qualification/ascent-component-index-test.ss" tests)
+                                  (member "t/qualification/ascent-actor-credit-test.ss" tests))
                             '("t/performance/component-index/reference"
                               "t/performance/component-index/coordinator-reference"
                               "t/performance/component-index/fixture")

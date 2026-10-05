@@ -37,9 +37,6 @@
                            (def (flush!)
                              (unless (zero? size)
                                (request! 'batch (reverse batch))
-                               ;; Successful owner credit already observed cancellation.
-                               ;; Restart the traversal window from that observation.
-                               (set! ticks 0)
                                (set! batch []) (set! size 0)))
                            (def (emit! atom row)
                              (set! batch (cons (cons atom row) batch))

@@ -122,6 +122,39 @@ theorem acknowledged_absent (state : DrainState) (task : Nat) :
 
 end Ascent.RoundAdmission
 
+/-! Traversal distance since the most recent successful owner credit.
+The period is any positive natural number; these laws do not bound generations
+or assert a wall-clock cancellation latency or native mailbox refinement. -/
+namespace Ascent.CreditObservation
+
+def traversal (period ticks : Nat) : Nat :=
+  if ticks + 1 ≥ period then 0 else ticks + 1
+
+def batchCredit (ticks : Nat) (accepted : Bool) : Nat :=
+  if accepted then 0 else ticks
+
+theorem traversal_bounded (period ticks : Nat) (positive : 0 < period) :
+    traversal period ticks < period := by
+  unfold traversal
+  split <;> omega
+
+theorem credit_bounded (period ticks : Nat) (positive : 0 < period)
+    (bounded : ticks < period) (accepted : Bool) :
+    batchCredit ticks accepted < period := by
+  cases accepted <;> simp [batchCredit] <;> assumption
+
+theorem refused_credit_preserves_distance (ticks : Nat) :
+    batchCredit ticks false = ticks := rfl
+
+theorem successful_credit_restarts_distance (ticks : Nat) :
+    batchCredit ticks true = 0 := rfl
+
+theorem traversal_requires_observation_at_boundary (period ticks : Nat)
+    (boundary : ticks + 1 ≥ period) : traversal period ticks = 0 := by
+  simp [traversal, boundary]
+
+end Ascent.CreditObservation
+
 /-! Ready-component safety is separate from one component's least fixed point.
 These unbounded laws use completed predecessor membership as a premise; they do
 not prove Tarjan, canonical head projection or native mailbox refinement. -/

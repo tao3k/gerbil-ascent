@@ -169,9 +169,9 @@
    (rule (path ?x ?z) (path ?x ?y) (edge ?y ?z))
    (rule (seen ?x) (cold ?x))
    (limits 32 256 512)))
-(def (stratified-program banned supplied-weights)
+(def (stratified-program banned supplied-weights (edges '((0 1) (1 2))))
   (relational-program
-   (relation edge (from to) '((0 1) (1 2)))
+   (relation edge (from to) edges)
    (relation blocked (to) banned) (relation weight (to value) supplied-weights)
    (relation root (from) '((0))) (relation path (from to) '())
    (relation allowed (from to) '()) (relation weighted (from value) '())
@@ -638,6 +638,80 @@
           (check-equal? (and (memq 'path (.ref result 'reused-relations)) #t) #t)
           (check-equal? (and (memq 'summary (.ref result 'reused-relations)) #t) #f)
           (check-set (rows result 'summary) '((0 20))))))
+    (test-case "stratified source cuts agree with independent negative and aggregate oracle"
+      ;; Source values and expected rows are computed from finite matrices and
+      ;; scalar arithmetic, without asking the rule compiler for dependencies.
+      (let ((base-edges '((0 1) (1 2)))
+            (base-weights '((1 2) (2 4)))
+            (names '(edge blocked weight root path allowed weighted summary)))
+        (for-each
+         (lambda (edges)
+           (for-each
+            (lambda (blocked-mask)
+              (let (blocked
+                    (filter-map (lambda (node)
+                                  (and (odd? (quotient blocked-mask (expt 2 (- node 1))))
+                                       (list node))) '(1 2)))
+                (for-each
+                 (lambda (weights)
+                   (let* ((path (matrix-closure edges))
+                          (allowed (filter (lambda (pair)
+                                             (not (member (list (cadr pair)) blocked))) path))
+                          (weighted
+                           (filter-map
+                            (lambda (pair)
+                              (let (weight (assv (cadr pair) weights))
+                                (and weight (even? (cadr weight))
+                                     (list (car pair) (* 2 (cadr weight))))))
+                            allowed))
+                          (summary
+                           (list (list 0
+                                       (foldl + 0
+                                              (map cadr
+                                                   (filter (lambda (row) (= (car row) 0))
+                                                           weighted))))))
+                          (changed-edge? (not (equal? edges base-edges)))
+                          (changed-blocked? (pair? blocked))
+                          (changed-weight? (not (equal? weights base-weights)))
+                          (affected
+                           (append (if changed-edge? '(edge path) [])
+                                   (if changed-blocked? '(blocked) [])
+                                   (if changed-weight? '(weight) [])
+                                   (if (or changed-edge? changed-blocked?) '(allowed) [])
+                                   (if (or changed-edge? changed-blocked? changed-weight?)
+                                     '(weighted summary) [])))
+                          (base (stratified-program [] base-weights))
+                          (session (gerbil-ascent-open-session base)))
+                     (gerbil-ascent-session-run session)
+                     (let* ((replacements
+                             (list (cons 'edge edges) (cons 'blocked blocked)
+                                   (cons 'weight weights)))
+                            (updated (gerbil-ascent-session-replace-sources!
+                                      session replacements))
+                            (fresh (gerbil-ascent-evaluate-program
+                                    (stratified-program blocked weights edges))))
+                       (for-each
+                        (lambda (name)
+                          (let (expected
+                                (case name
+                                  ((edge) edges) ((blocked) blocked)
+                                  ((weight) weights) ((root) '((0)))
+                                  ((path) path) ((allowed) allowed)
+                                  ((weighted) weighted) ((summary) summary)))
+                            (check-set (rows updated name) expected)
+                            (check-set (rows updated name) (rows fresh name))
+                            (check-equal?
+                             (and (memq name (.ref updated 'reused-relations)) #t)
+                             (not (memq name affected)))))
+                        names)
+                       (check-equal? (.ref updated 'evaluation-path)
+                                     'stratified-dependency-invalidation)
+                       (displayln "STRATIFIED-READ-CHECKED edge=" edges
+                                  " blocked=" blocked-mask " weights=" weights)
+                       (force-output))))
+                 (list base-weights '((1 3) (2 4)) '((1 2)) []))))
+            (iota 4)))
+         (list base-edges '((0 2)) '((0 1) (0 2)) []))))
     (test-case "lattice replacement retracts an old maximum and preserves independent final rows"
       (let (session (gerbil-ascent-open-session (lattice-program '((1 2) (1 5)) '((7)))))
         (gerbil-ascent-session-run session)

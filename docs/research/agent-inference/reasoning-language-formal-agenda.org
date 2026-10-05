@@ -328,16 +328,23 @@ matrix; the retained relation names agree with the matrix's unaffected
 set. This exercises rule execution, selected-head activation, and
 completed-result reuse together for finite positive recursion. The stratified
 Session qualification now requires the actual dependency-invalidation
-path: a changed blocker recomputes negative and aggregate dependents,
-retains the completed recursive path, and agrees with a fresh solve on
-*all* result relations; a subsequent combined blocker/weight replacement
-checks the same property. These are execution checks, not a proof that
+path. In addition to the directed blocker and combined blocker/weight
+cases, a 4-edge-set by 4-blocker-set by 4-weight-set matrix checks 64
+source cuts. For each cut, independently computed transitive reachability,
+negative filtering, even-weight projection and sum give the expected rows
+of all eight relations; Session replacement agrees with those rows and a
+fresh solve. Retained relation names agree with the hand-derived read
+dependencies: a changed edge selects path and all downstream heads, a
+changed blocker selects the negative and aggregate dependents, and a
+changed weight selects the weighted and aggregate heads. The independent
+root stays retained. These are finite execution checks, not a proof that
 Gerbil's mutable vectors and evaluator refine the Lean model. The open
 bridge is concrete: admitted IDs must be in range, source row ownership
 must preserve the compared cut, and each native rule's actual reads must
-be included in =readsMatch=. The exhaustive native matrix covers three
-relations and positive atoms; negative and aggregate reads have separate
-directed qualifications but no analogous exhaustive evaluator bridge.
+be included in =readsMatch=. The positive matrix exhausts all directed
+three-node non-self edge subsets; the stratified matrix samples four edge
+sets, four blockers and four weight sets. Neither establishes a general
+native evaluator refinement.
 A custom index Provider can capture mutable
 state beyond that graph. Reuse admission now accepts only the private
 canonical hash Provider, and a native regression uses a 32-row indexed

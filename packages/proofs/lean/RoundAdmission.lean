@@ -87,4 +87,37 @@ theorem canceled_generation_after_resume (state : State Row) (task : Nat) :
   apply stale_generation
   simp [cancel]
 
+/-- Pending admission and assigned work are different resources. Stopping
+admission cannot certify the return barrier while an assigned worker remains.
+These laws describe the native coordinator ownership, not a VM refinement. -/
+structure DrainState where
+  queued : List Nat
+  assigned : List Nat
+  stopped : Bool
+
+def stopAdmission (state : DrainState) : DrainState :=
+  { state with queued := [], stopped := true }
+
+def returnable (state : DrainState) : Prop :=
+  state.queued = [] ∧ state.assigned = []
+
+theorem stop_preserves_assigned (state : DrainState) :
+    (stopAdmission state).assigned = state.assigned := rfl
+
+theorem stopped_not_drained (state : DrainState) (task : Nat)
+    (running : task ∈ state.assigned) : ¬ returnable (stopAdmission state) := by
+  intro returned
+  have empty : state.assigned = [] := returned.2
+  simp [empty] at running
+
+def acknowledge (state : DrainState) (task : Nat) : DrainState :=
+  { state with assigned := state.assigned.filter (fun next => next != task) }
+
+theorem acknowledgment_preserves_stopped (state : DrainState) (task : Nat) :
+    (acknowledge state task).stopped = state.stopped := rfl
+
+theorem acknowledged_absent (state : DrainState) (task : Nat) :
+    task ∉ (acknowledge state task).assigned := by
+  simp [acknowledge]
+
 end Ascent.RoundAdmission

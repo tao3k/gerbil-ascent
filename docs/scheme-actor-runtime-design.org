@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 #+TITLE: Scheme actor runtime: ownership, round merge, cancellation and publication
 #+DATE: 2026-10-05
-#+STATUS: native actor test carrier implemented; solver round scheduler pending
+#+STATUS: native test carrier and opt-in positive Set round workers implemented; Session/SCC scheduling pending
 
 * Architecture decision
 
@@ -12,8 +12,9 @@ construction lives in =t/harness/native-entry.ss= and test admission, output
 credits, monitoring and draining live in =t/harness/actor-pool.ss=. The shell
 =xargs= pool and timer-only RUNNING output have been removed.
 
-This implements the test carrier boundary. The Session's positive round worker
-protocol below remains a separate implementation obligation. A test module
+The carrier implements the test boundary; the positive Set worker slice below
+now implements one solver stratum round. Session/SCC scheduling remains a
+separate implementation obligation. A test module
 child runs its original =std/test= Suites and setup/cleanup in an isolated native
 process. It does not execute parallel Cases or parallelize the solver.
 
@@ -209,3 +210,81 @@ owner with the complete 64-module/566-Case Suite. Future solver workers must use
 these admitted binding operations with evaluation-local frames rather than
 introducing an alternative callback/binding evaluator. Thread safety of arbitrary
 callback payloads remains a separate admission obligation.
+
+* Native positive Set solver rounds (2026-10-05)
+
+=program/actor-round.ss= now coordinates actual solver tasks, independently of
+=t/harness/actor-pool.ss=. =gerbil-ascent-evaluate-program= accepts =workers:=;
+the default 1 retains serial evaluation. For >1, an entire active stratum must
+have compiled pure positive plans; all relations must use canonical Set storage
+and hash indexing, without lattice joins or field checker callbacks. Otherwise
+that stratum uses its original serial path. Rule timing and retained Session
+engines reject the parallel option rather than silently changing ownership.
+
+The owner freezes total/delta row roots, size and version vectors for a round.
+Each assigned rule owns a fresh slot frame and its own mutable physical index
+cache. It executes the existing =core/positive-plan.ss= evaluator. Canonical
+plans continue to share the existing rule-binding compilation; no second
+callback interpreter was added. No shared mutable index cache is passed to a
+worker. This assumes the admitted caller values are not mutated concurrently;
+it does not deep-freeze arbitrary Scheme values.
+
+One fresh coordinator mailbox and key bind program, stratum, round and frozen
+frontier within the invocation. Sender identity and assigned task identity are
+checked before accepting messages. A worker buffers at most 32 candidates and
+waits for owner credit before continuing. Every 64 candidate traversal steps it
+also requests checkpoint credit, including non-emitting scans. Only the owner
+runs existing row validation, deduplication and unique-row budget charging into
+tentative pending storage. It returns only after every assigned worker and its
+joining monitor have terminated; the engine then commits the completed round.
+The round barrier is a semantic condition, not a serial rule execution loop.
+
+Merge failure, worker failure or the coordinator's cancellation predicate stops
+pending admission. Outstanding requests receive stop credit; later batches are
+refused, private candidates discarded, assigned workers drained, then the
+original failure is raised in the caller. Tagged exception outcomes prevent
+Gerbil's actor default error printer from polluting native acceptance output.
+The generic coordinator's merge function must write tentative state; it provides
+no rollback for arbitrary caller side effects. The engine's merge targets pending
+rows, never a public result.
+
+Output set membership is preserved; opt-in parallel row enumeration order is
+arrival-dependent. Tests canonicalize sets rather than require serial ordering.
+Callback trace/order remains serial through the eligibility gate. A single large
+rule is still one task: skew partitioning, persistent worker reuse, ready-SCC
+scheduling, Session actor generation/cancel publication and custom Provider
+concretization are outstanding. This slice must not be called whole-runtime
+closure or native refinement of all =ActorRound.tla= actions.
+
+** Paper obligations mapped to this slice
+
+[[https://thomas.gilray.org/pdf/seamless-deductive.pdf][A22]], §4, printed pp.82–83, derives SCC dependency ordering and partitions
+new/delta/total before semi-naive traversal. Frozen round views and the complete
+merge barrier preserve that separation. This implementation still schedules the
+existing stratum, not the paper's SCC DAG independently; SCC scheduling therefore
+remains an explicit next obligation.
+
+[[https://kmicinski.com/assets/byods.pdf][B23]], §3.3, printed pp.264:8–9, requires total/delta concretizations to expose
+all implied facts; a new implied tuple may not bypass delta. Canonical Set is the
+first admitted parallel subset. Custom Provider/lattice paths retain serial
+execution until their concretization and ordering contracts have a native
+worker-safe representation. Plain concurrent tuple union does not establish it.
+
+** Formal/evidence boundary
+
+=RoundAdmission.lean= now distinguishes queued admission from assigned work:
+stop preserves assigned work, assigned membership forbids return, and terminal
+ack removes that task. Naturals remain unbounded. =ActorRoundCredits.tla= checks
+assignment capacity, one outstanding credit per worker and return only after
+drain at exploration capacities 1/2/3. An injected early return must produce a
+=CompleteReturn= counterexample. These are safety abstractions, without scheduler
+fairness, arbitrary callback termination or a proven Scheme/VM refinement.
+
+The native Suite covers real two-worker rendezvous; multi-batch order; stop and
+join after merge failure; non-emitting cancellation; recursive graph truth for
+1/2/4 workers (including an indexed 33-edge chain); independent candidates at
+each frozen toy round; unchanged callback traces; unique-row budgets and private
+caller mailbox preservation. =docs/evidence/scheme-actor-round-20261005/receipt.json=
+binds the qualified source and verification results. No speedup, multicore VM
+scaling or model accuracy gain is inferred from worker count. Model calls: 0;
+MRR Rust integration remains deferred.

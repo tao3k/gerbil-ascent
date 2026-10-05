@@ -133,14 +133,14 @@
 ;;       ;; => void after admitting the matching heads
 ;;       ```
 ;;     %
-(def (gerbil-ascent-run-positive-plan! plan frame delta-at rows-access emit-row!)
+(def (gerbil-ascent-run-positive-plan! plan frame delta-at rows-access emit-row! (checkpoint! #f))
   (visit-positive-atoms! (vector-ref plan 1) (vector-ref plan 0)
                         frame
-                        delta-at 0 rows-access emit-row!))
+                        delta-at 0 rows-access emit-row! checkpoint!))
 
 ;;; Recursion passes the frame explicitly; no closure is allocated per pivot.
 ;; : (-> Atoms Heads Frame Integer Nat RowsAccess EmitRow Void)
-(def (visit-positive-atoms! atoms heads frame delta-at depth rows-access emit-row!)
+(def (visit-positive-atoms! atoms heads frame delta-at depth rows-access emit-row! checkpoint!)
   (if (null? atoms)
     (let outputs ((remaining heads))
       (unless (null? remaining)
@@ -154,9 +154,10 @@
                               (= depth delta-at) (vector-ref atom 2))))
       (let candidates ((remaining rows))
         (unless (null? remaining)
+          (when checkpoint! (checkpoint!))
           (when (match-row! (vector-ref atom 1) (car remaining) frame)
             (visit-positive-atoms! (cdr atoms) heads frame delta-at (+ depth 1)
-                                   rows-access emit-row!))
+                                   rows-access emit-row! checkpoint!))
           (candidates (cdr remaining)))))))
 
 ;;; Build the provider's ordered key after index construction. Compiled terms

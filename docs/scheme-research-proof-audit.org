@@ -370,3 +370,13 @@ the index Suite's independent native reference assertions. Abstract compiler
 refinement, module-pool startup, controlled runtime benefit and actual model
 comprehension remain explicit subsequent gates. No new model calls accompany
 this carrier slice.
+
+* Positive Set actor round implementation update (2026-10-05)
+
+The [[file:scheme-actor-runtime-design.org][actor runtime design]] now maps the A22 round/SCC and B23 concretization
+premises to actual =program/actor-round.ss= integration: frozen frontiers,
+private frames/indexes, credit-bounded candidates, one owner merge and terminal
+drain before commit. Native tests and Lean/TLA+ gates cover this admitted pure
+Set subset. Ready-SCC scheduling, custom Provider workers, Session cancellation
+publication and matched performance remain separate obligations. No whole-runtime
+closure, model gain or MRR integration is asserted.

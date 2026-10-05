@@ -339,3 +339,13 @@ The final rebased registry also includes =a890b99='s canonical
 the six complete callback binding controls and corrected real-memory control.
 The receipt binds this snapshot separately from both earlier accepted runs and
 the rejected GitHub head. No performance speedup is inferred from worker count.
+
+* Positive Set actor round implementation update (2026-10-05)
+
+The [[file:scheme-actor-runtime-design.org][actor runtime design]] now maps the A22 round/SCC and B23 concretization
+premises to actual =program/actor-round.ss= integration: frozen frontiers,
+private frames/indexes, credit-bounded candidates, one owner merge and terminal
+drain before commit. Native tests and Lean/TLA+ gates cover this admitted pure
+Set subset. Ready-SCC scheduling, custom Provider workers, Session cancellation
+publication and matched performance remain separate obligations. No whole-runtime
+closure, model gain or MRR integration is asserted.

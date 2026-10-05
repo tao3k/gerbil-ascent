@@ -379,6 +379,24 @@ check-actor-round-formal: check-nonmembership-formal
     done
     echo 'ACTOR-ROUND-CHECK-OK'
 
+# Solver streaming credits and terminal drain safety.
+check-actor-credit-formal:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [[ -n "${TLC_BIN:-}" ]]; then tlc=("$TLC_BIN"); else tlc=(java -XX:+UseParallelGC -cp "${TLC_JAR:-.cache/ascent/tools/tla2tools-v1.7.4.jar}" tlc2.TLC); fi
+    temp=$(mktemp -d)
+    trap 'rm -rf "$temp"' EXIT
+    for capacity in 1 2 3; do
+      sed "s/Capacity = 2/Capacity = $capacity/" packages/proofs/tla/ActorRoundCredits.cfg > "$temp/$capacity.cfg"
+      "${tlc[@]}" -workers 1 -config "$temp/$capacity.cfg" -metadir "$temp/$capacity" packages/proofs/tla/ActorRoundCredits.tla
+    done
+    sed 's/EarlyReturn = FALSE/EarlyReturn = TRUE/' packages/proofs/tla/ActorRoundCredits.cfg > "$temp/early.cfg"
+    code=0
+    "${tlc[@]}" -workers 1 -config "$temp/early.cfg" -metadir "$temp/early" packages/proofs/tla/ActorRoundCredits.tla > "$temp/early.out" 2>&1 || code=$?
+    [[ "$code" = 12 ]] && grep -q 'Invariant CompleteReturn is violated' "$temp/early.out"
+    echo 'COUNTEREXAMPLE-OK actor-credit-early CompleteReturn'
+    echo 'ACTOR-CREDIT-CHECK-OK'
+
 # Test-pool protocol safety is distinct from solver round safety.
 check-actor-pool-formal:
     #!/usr/bin/env bash

@@ -47,6 +47,7 @@
     "program/activation"
     "program/update-selection"
     "program/reuse"
+    "program/actor-round"
     "program/evaluate"
     "program/session"
     "program/interface"

@@ -4,7 +4,8 @@
 
 ;;; Generic stratified semi-naive evaluator. Mutable row buffers belong to one
 ;;; session; public declarations and returned snapshots are POO values.
-(import (only-in :clan/poo/object .o .ref object?)
+(import (only-in "actor-round.ss" gerbil-ascent-run-actor-round!)
+        (only-in :clan/poo/object .o .ref object?)
         (only-in :clan/poo/mop validate)
         (only-in :std/iter for iter Iterator &Iterator-next!)
         (only-in "admission.ss" gerbil-ascent-initialize-source-row!
@@ -83,7 +84,11 @@
                                 (schema-override #f)
                                 (measure-rule-times? #f)
                                 (plan-error #f)
-                                (reuse #f))
+                                (reuse #f)
+                                (workers 1))
+  (unless (and (exact-integer? workers) (> workers 0)
+               (or (= workers 1) (and (not session?) (not reuse) (not measure-rule-times?))))
+    (error "invalid ASCENT parallel evaluation option" workers))
   ;; The declaration constructor validates the full Core contract.
   ;; Evaluation checks mutable rows and clause bindings for this snapshot.
   (unless (object? program)
@@ -579,6 +584,47 @@
           (until (not active?)
           (set! round (+ round 1))
           (set! pending-count 0)
+            ;; The admitted pure positive subset has no evaluation callbacks.
+            ;; Custom index/storage and lattice semantics remain on the serial path.
+            (if (and (> workers 1)
+                     (andmap (lambda (rule) (vector-ref rule 5)) active-rules)
+                     (andmap gerbil-ascent-canonical-set-storage-provider?
+                             (vector->list storage-providers))
+                     (andmap gerbil-ascent-canonical-hash-index-provider?
+                             (vector->list index-providers))
+                     (andmap not (vector->list lattice-joins))
+                     (andmap not (vector->list field-checkers)))
+              (let ((frozen-all (vector-copy all)) (frozen-delta (vector-copy delta))
+                    (frozen-all-size (vector-copy all-size)) (frozen-delta-size (vector-copy delta-size))
+                    (frozen-all-version (vector-copy all-version)) (frozen-delta-version (vector-copy delta-version)))
+                (gerbil-ascent-run-actor-round!
+                 ;; Fresh invocation identity binds this program/frontier/round;
+                 ;; no runtime generation or round upper bound is introduced.
+                 (vector program stratum round frozen-all frozen-delta)
+                 active-rules workers
+                 (lambda (rule emit! checkpoint!)
+                   (let* ((plan (vector-ref rule 5))
+                          (frame (make-vector (vector-ref plan 2) #f))
+                          (private-indexes
+                           (gerbil-ascent-make-row-indexes
+                            frozen-all frozen-delta frozen-all-size frozen-delta-size
+                            frozen-all-version frozen-delta-version index-providers))
+                          (rows (row-indexes-rows private-indexes))
+                          (pivots (vector-ref rule 2))
+                          (prunable (vector-ref rule 4)))
+                     (def (visit! pivot)
+                       (gerbil-ascent-run-positive-plan! plan frame pivot rows emit! checkpoint!))
+                     (if (null? pivots)
+                       (when (and (= round 1) first-run?) (visit! -1))
+                       (if (and (= round 1) (or first-run? (> stratum 0)))
+                         (visit! -1)
+                         (for-each
+                          (lambda (pivot)
+                            (unless (and (< pivot (vector-length prunable))
+                                         (= (vector-ref frozen-delta-size (vector-ref prunable pivot)) 0))
+                              (visit! pivot))) pivots)))))
+                 emit-row!))
+              (begin
             (for-each
              (lambda (rule)
                (let ((started (and rule-ticks (current-jiffy)))
@@ -627,6 +673,7 @@
                        (+ (vector-ref rule-ticks index)
                           (- (current-jiffy) started)))))))
              active-rules)
+              ))
             (set! active? #f)
             (let commit ((index 0))
               (when (< index count)
@@ -927,7 +974,8 @@
 
 ;; : (-> Program EvaluationResult)
 (def (gerbil-ascent-evaluate-program program
-                                      measure-rule-times?: (measure-rule-times? #f))
+                                      measure-rule-times?: (measure-rule-times? #f)
+                                      workers: (workers 1))
   (unless (boolean? measure-rule-times?)
     (error "invalid ASCENT rule timing option" measure-rule-times?))
-  ((gerbil-ascent-make-engine program #f #f #f measure-rule-times?)))
+  ((gerbil-ascent-make-engine program #f #f #f measure-rule-times? #f #f workers)))

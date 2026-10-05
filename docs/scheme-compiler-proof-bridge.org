@@ -578,3 +578,17 @@ The synchronized proof check includes the upstream unbounded native Session
 publication model. Lean's generation argument ranges over natural numbers;
 =TLCGenerationCutoff= configures finite enumeration. This model check and
 native carrier qualification retain their respective abstraction boundaries.
+
+The [[file:evidence/scheme-native-entry-20261005/session-repair.json][Session follow-up receipt]] records a failed exact-head CI at =53df4c1=:
+the newly added replacement-ownership Case lacked two closing parentheses,
+so the full Scheme and native differential preparations could not read that
+module. The repair preserves every assertion and closes the =check-fresh=
+call and its enclosing Case. After integrating the immutable dependency-graph
+update, the full Session Suite passed all 15 Cases with exit 0 in 41 seconds
+of execution under the original five-second output and 120-second deadline
+gates. It includes caller row-spine isolation, a 4096-node graph, all 64
+three-node graphs and 192 successive withdrawals compared with fresh closure.
+The earlier receipt keeps its original snapshot and scope. The follow-up binds
+373 Scheme files plus three controls, and confirms the earlier proof source
+hashes remain unchanged. Final GitHub CI must independently qualify the
+submitted descendant of this repair snapshot.

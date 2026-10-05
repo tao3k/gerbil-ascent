@@ -444,12 +444,25 @@
         (check-set (rows (gerbil-ascent-session-run session) 'path) '())))
     (test-case "negation and aggregate dependencies invalidate lower-stratum changes"
       (let (session (gerbil-ascent-open-session (stratified-program '() '((1 2) (2 4)))))
-        (gerbil-ascent-session-run session)
+        (let (initial (gerbil-ascent-session-run session))
+          (check-equal? (.ref initial 'finished) #t))
         (let (result (gerbil-ascent-session-replace-sources! session '((blocked (2)))))
           (check-fresh result (stratified-program '((2)) '((1 2) (2 4))))
+          ;; This checks the actual reuse path, not just coincidentally equal
+          ;; rows from a full fresh evaluation. The recursive path is framed;
+          ;; the negative read and downstream aggregate must be recomputed.
+          (check-equal? (.ref result 'evaluation-path) 'stratified-dependency-invalidation)
+          (check-equal? (.ref result 'active-rule-count) 3)
+          (check-equal? (and (memq 'path (.ref result 'reused-relations)) #t) #t)
+          (check-equal? (and (memq 'allowed (.ref result 'reused-relations)) #t) #f)
+          (check-equal? (and (memq 'summary (.ref result 'reused-relations)) #t) #f)
           (check-set (rows result 'summary) '((0 4))))
         (let (result (gerbil-ascent-session-replace-sources! session '((blocked) (weight (1 6) (2 4)))))
           (check-fresh result (stratified-program '() '((1 6) (2 4))))
+          (check-equal? (.ref result 'evaluation-path) 'stratified-dependency-invalidation)
+          (check-equal? (.ref result 'active-rule-count) 3)
+          (check-equal? (and (memq 'path (.ref result 'reused-relations)) #t) #t)
+          (check-equal? (and (memq 'summary (.ref result 'reused-relations)) #t) #f)
           (check-set (rows result 'summary) '((0 20))))))
     (test-case "lattice replacement retracts an old maximum and preserves independent final rows"
       (let (session (gerbil-ascent-open-session (lattice-program '((1 2) (1 5)) '((7)))))

@@ -29,6 +29,33 @@ example : Ascent.RuleGraphClosure.ruleSuccessors mixedReadPlans true = [] := by 
 #print axioms Ascent.NativeGraphWorklist.runFuel_compiled_closed
 #print axioms Ascent.NativeBitmapWorklist.runFuel_compiled_exact
 #print axioms Ascent.NativeBitmapWorklist.runFuel_compiled_closed
+#print axioms Ascent.SourceUpdateFrame.completed_reuse
+
+/-- One changed source in an ordered append log reaches a recursive head,
+then heads with negative and aggregate reads, while an independent relation
+stays outside the computed frame. -/
+def updateChain : List (Ascent.RuleGraphClosure.Rule (Fin 5)) :=
+  [{ heads := [1], body := [⟨.atom, some 0⟩, ⟨.atom, some 1⟩] },
+   { heads := [2], body := [⟨.negation, some 1⟩] },
+   { heads := [3], body := [⟨.aggregate, some 2⟩] }]
+
+def updateCut : Ascent.SourceUpdateFrame.Cut 5 Nat where
+  base := fun key => if key = 0 then [1] else if key = 4 then [99] else []
+  newestFirstAppends := fun key => if key = 0 then [3, 2] else []
+  candidate := fun key => if key = 0 then [1, 2] else if key = 4 then [99] else []
+
+example : updateCut.before 0 = [1, 2, 3] := by decide
+example : updateCut.seeds = [0] := by decide
+example : Ascent.SourceUpdateFrame.affected updateChain updateCut 3 := by
+  change (Ascent.NativeBitmapWorklist.runFuel
+    (Ascent.RuleGraphClosure.ruleSuccessors updateChain) 6
+    (Ascent.NativeBitmapWorklist.initial updateCut.seeds)).selected[3] = true
+  decide
+example : ¬ Ascent.SourceUpdateFrame.affected updateChain updateCut 4 := by
+  change (Ascent.NativeBitmapWorklist.runFuel
+    (Ascent.RuleGraphClosure.ruleSuccessors updateChain) 6
+    (Ascent.NativeBitmapWorklist.initial updateCut.seeds)).selected[4] ≠ true
+  decide
 
 def cycleAdj : Fin 3 → List (Fin 3)
   | 0 => [1, 1]

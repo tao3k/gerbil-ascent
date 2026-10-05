@@ -276,69 +276,57 @@ discharges =negation_indexed_iff=; changing the source relation selects
 that certificate for revalidation. Native hash-bucket fidelity remains
 an independent premise.
 
-The [[file:../../../packages/proofs/lean/DependencyInvalidation.lean][dependency-invalidation theorem]] now states the
-precise frame condition for retaining completed relations. If the
-affected set is closed under every rule-read edge and one evaluation
-round is local to those reads, two source cuts that agree outside the
-affected set keep agreeing there through *any number* of recursive
-rounds. If they reach fixed points after different round counts, their
-completed rows still agree outside the affected set. A concrete
-negation counterexample in =AscentProofTests= changes a source while
-omitting its negative-read edge; the purportedly unaffected derived
-relation then changes after one round. The
-[[file:../../../packages/proofs/lean/FunctionalDependency.lean][Functional bridge]] imports
-=LeanPoo.Functional.Requirements= from PR #8's pinned commit and makes
-each target consume only its typed read checklist. LeanPoo's
-=prepare_congr= then proves the locality premise, so the completed
-frame theorem follows for this checklist-defined model. The
-[[file:../../../packages/proofs/lean/RuleGraphClosure.lean][rule-graph module]] now models the private lowered shape used by
-=core/rule-semantics.ss=: every atom, negation or aggregate read contributes
-an edge from its source to every rule head; guard, generator and binding
-contribute none. =mem_ruleSuccessors_iff= proves exact membership for this abstract
-compiler, including repeated heads. A mark-before-enqueue worklist model
-preserves four invariants under any visit order. When its pending set is
-empty, =completed_compiled_exact= proves selected relations are precisely
-the least reachability closure, and =completed_compiled_closed= supplies
-the closure premise of =DependencyInvalidation.completed_frame=. The
-=completed_reuse_frame= theorem composes both statements with evaluator
-locality and completed fixed-point premises. The
-[[file:../../../packages/proofs/lean/NativeGraphWorklist.lean][native-shaped list model]] now refines each pop and full adjacency scan to
-the abstract worklist, including the selected and pending membership sets.
-It preserves unique pending keys and proves a popped key cannot be queued
-again by cycles or duplicate edges. For dense =Fin count= relation IDs,
-every finite trace has at most =count= pops; =runFuel_complete= proves an
-executable =count + 1= fuel driver clears pending. Consequently,
-=runFuel_compiled_exact= removes the prior completion premise *for this
-Lean list machine* and yields exactly the compiler's rule-read closure.
-The derived =runFuel_compiled_closed= discharges the affected-set closure
-premise used by the fixed-point frame theorem for this same model.
-The [[file:../../../packages/proofs/lean/NativeBitmapWorklist.lean][fixed-length bitmap model]] represents selected keys by a =Vector Bool count=
-and keeps the LIFO pending list. Its =enqueue_corresponds=,
-=scan_corresponds=, =pop_corresponds= and =runFuel_corresponds= prove that
-every typed cell update and complete scan corresponds to the list machine.
-=runFuel_compiled_exact= and =runFuel_compiled_closed= therefore carry the
-finite closure result through this vector representation, including cycles
-and duplicate edges. The initial Boolean vector is built from the seed
-list; native seeding order can differ without changing this proof's
-selected set or completion, provided it enumerates each true bit once.
-The fuel is a proof device for graph traversal, not a native fixed-point
-or model-reasoning limit. The native qualification compares all 64
-directed non-self-edge masks over three relations and all eight
-changed-source seed subsets against an independent matrix oracle. The
-lowered-plan case separately covers every
-single root and mixed read kinds; non-reading clauses add no edges, and a
-4,096-relation chain exercises the long traversal. What remains is an
-explicit refinement from
-admitted Gerbil vectors and mutable bitmap/list operations to the typed
-Lean vector machine, including in-range target IDs and snapshot ownership.
-The Lean =Vector.set= step is a functional model of one native cell mutation,
-not an extraction or a proof about Gerbil's runtime. Native
-evaluation must also satisfy the modeled local =step= and completed-result
-premises before this becomes a runtime reuse-correctness claim. The
-Functional module reduces the model's per-rule selection code; no native
-maintenance-cost or runtime saving has been measured. Lake pins lean-poo
-PR #8 at =9e160953=; its named provider-transaction API is distinct from
-ASCENT relation invalidation and is not used to infer a native equivalence.
+The source-update result is now one compositional contract rather than a
+collection of unrelated graph lemmas. For each admitted relation, the old
+source cut is =base ++ reverse(newest-first appends)=; the prospective rows
+form the new cut. Changed source IDs seed a directed graph in which every
+positive, negative and aggregate body read points to every rule head.
+The selected set is the least reachability closure of those seeds. This
+includes a recursive path head, then negative and aggregate dependents,
+while an independent relation remains outside the selected set.
+
+The [[file:../../../packages/proofs/lean/SourceUpdateFrame.lean][SourceUpdateFrame.completed_reuse theorem]] composes that source comparison
+with the typed bitmap worklist, the read-checklist evaluator and the
+completed fixed-point frame theorem. It proves that, for two runs which
+may finish after different numbers of rounds, *every unselected relation*
+has the same completed value. =affected_iff= proves exact membership in
+the computed closure; =source_frame= proves the initial rows agree outside
+it. The proof requires =readsMatch=: each evaluator read appears in the
+compiled graph. It also requires both results to be stable completed
+fixed points. =FunctionalDependency.Program.local= discharges per-step
+locality from LeanPOO's typed =Requirements= checklist; it does not infer
+=readsMatch= from the native evaluator. The finite =count + 1= fuel proves
+termination of graph traversal only, not of recursive evaluation.
+
+The constituent proofs make the contract auditable. The
+[[file:../../../packages/proofs/lean/RuleGraphClosure.lean][rule compiler]] proves exact source-to-head membership, including repeated
+heads and all three read kinds. The
+[[file:../../../packages/proofs/lean/NativeGraphWorklist.lean][list worklist]] proves mark-before-enqueue termination for dense relation
+IDs and exact closure even with cycles and duplicate edges. The
+[[file:../../../packages/proofs/lean/NativeBitmapWorklist.lean][bitmap refinement]] relates each typed =Vector Bool= update to that list
+machine. The
+[[file:../../../packages/proofs/lean/DependencyInvalidation.lean][fixed-point frame]] carries equality outside the closed set through
+arbitrary rounds and then through differently timed completed results.
+=AscentProofTests= includes a concrete source-log/recursive/negative/
+aggregate chain with an independent relation, plus the counterexample
+where omitting a negative-read edge incorrectly retains a changed result.
+Lake pins LeanPOO PR #8 at =9e160953=; only its typed Requirements
+contract is used here.
+
+Native evidence exercises the same public update behavior. The graph
+qualification compares all 64 three-relation directed graphs and all
+eight seed subsets with an independent matrix oracle, checks mixed
+lowered read kinds, and traverses a 4,096-relation chain. The stratified
+Session qualification now requires the actual dependency-invalidation
+path: a changed blocker recomputes negative and aggregate dependents,
+retains the completed recursive path, and agrees with a fresh solve on
+*all* result relations; a subsequent combined blocker/weight replacement
+checks the same property. These are execution checks, not a proof that
+Gerbil's mutable vectors and evaluator refine the Lean model. The open
+bridge is concrete: admitted IDs must be in range, source row ownership
+must preserve the compared cut, and each native rule's actual reads must
+be included in =readsMatch=. Opaque callbacks and providers continue to
+use full evaluation. No performance claim follows from this proof.
 
 The =TLCGenerationCutoff= constant is a finite *model-checking* search
 parameter, supplied by =ASCENT_TLC_GENERATION_CUTOFF= in the =Justfile= (four

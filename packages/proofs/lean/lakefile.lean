@@ -18,7 +18,7 @@ lean_lib AscentProof where
              `NativeBitmapWorklist, `NativeGraphWorklist, `NativeSessionPublication,
              `PositiveNonmembership,
              `RecursiveLowering, `SessionPublication,
-             `StratifiedNegation, `SourceCertificates, `RoundAdmission,
+             `StratifiedNegation, `SourceCertificates, `SourceUpdateFrame, `RoundAdmission,
              `RuleGraphClosure]
 
 lean_lib AscentProofTests where

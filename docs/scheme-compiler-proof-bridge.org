@@ -11,8 +11,17 @@ proves declarative soundness/completeness and initial-binding preservation, then
 composes known-column key soundness with =StratifiedNegation.BucketRep= to prove
 indexed positive-atom equivalence. The native discriminator uses an independent
 total-assignment enumeration and canonical physical buckets. Actual decoding,
-fresh-variable/slot specialization, hash/cache ownership and round execution
+fresh-variable association-list specialization, hash/cache ownership and round execution
 remain explicit obligations; this is not a complete compiler refinement.
+
+[[file:../packages/proofs/lean/PositiveSlots.lean][PositiveSlots]] adds the dense slot matcher refinement: first-occurrence
+lowering preserves ordinary binding success/failure, successful frames preserve
+head observations, and even failed candidates preserve the initialized prefix.
+This proves why partial fresh writes need no rollback. Compiled slot IDs fit
+the final dense extent. The native runner's 125-term corpus and a missing-fresh
+fault compare complete ordered emissions with ordinary binding on dirty frames.
+Whole slot traversal, symbol/hash-map decoding, native vector mutation, indexed
+selection and semi-naive pivots remain open implementation correspondences.
 
 * Stated claim
 

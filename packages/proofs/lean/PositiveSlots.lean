@@ -1,0 +1,309 @@
+-- SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+-- SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+import AtomicBinding
+
+/-!
+Dense first-occurrence lowering and the callback-free in-place slot matcher.
+Frames outside the known prefix may contain arbitrary stale values. Failure
+keeps partial fresh writes, as in core/positive-plan.ss; it does not roll back.
+The total frame function abstracts a sufficiently large native vector. Raw
+hash-map identity, vector bounds and lawful native scalar equality remain
+representation obligations.
+-/
+
+namespace Ascent.PositiveSlots
+
+open AtomicBinding
+
+inductive Action (Value : Type) where
+  | fresh (slot : Nat)
+  | bound (slot : Nat)
+  | literal (value : Value)
+  | wildcard
+  deriving DecidableEq
+
+variable {Value : Type}
+abbrev Frame (Value : Type) := Nat → Value
+
+def slot : Nat → List Nat → Option Nat
+  | _, [] => none
+  | name, first :: rest =>
+      if name = first then some 0 else (slot name rest).map (· + 1)
+
+def lower (term : Term Value) (names : List Nat) : Action Value × List Nat :=
+  match term with
+  | .literal value => (.literal value, names)
+  | .wildcard => (.wildcard, names)
+  | .variable name => match slot name names with
+    | some index => (.bound index, names)
+    | none => (.fresh names.length, names ++ [name])
+
+def compile : List (Term Value) → List Nat → List (Action Value) × List Nat
+  | [], names => ([], names)
+  | term :: rest, names =>
+      let next := lower term names
+      let tail := compile rest next.2
+      (next.1 :: tail.1, tail.2)
+
+def write (frame : Frame Value) (index : Nat) (value : Value) : Frame Value :=
+  fun key => if key = index then value else frame key
+
+def run [DecidableEq Value] : List (Action Value) → List Value → Frame Value → Bool × Frame Value
+  | [], _, frame => (true, frame)
+  | _ :: _, [], frame => (false, frame)
+  | action :: rest, value :: tail, frame =>
+      match action with
+      | .fresh index => run rest tail (write frame index value)
+      | .bound index => if frame index = value then run rest tail frame else (false, frame)
+      | .literal expected => if expected = value then run rest tail frame else (false, frame)
+      | .wildcard => run rest tail frame
+
+def Represents (names : List Nat) (env : Env Value) (frame : Frame Value) : Prop :=
+  ∀ name, lookup name env = (slot name names).map frame
+
+def PrefixEq (count : Nat) (before after : Frame Value) : Prop :=
+  ∀ index, index < count → after index = before index
+
+theorem slot_lt (name : Nat) (names : List Nat) (index : Nat)
+    (found : slot name names = some index) : index < names.length := by
+  induction names generalizing index with
+  | nil => simp [slot] at found
+  | cons first rest ih =>
+      simp only [slot] at found
+      split at found
+      · cases found; simp
+      · cases next : slot name rest with
+        | none => simp [next] at found
+        | some previous =>
+            simp only [next, Option.map_some, Option.some.injEq] at found
+            subst index
+            have := ih previous next
+            simpa using Nat.succ_lt_succ this
+
+theorem slot_append (name fresh : Nat) (names : List Nat) :
+    slot name (names ++ [fresh]) =
+      match slot name names with
+      | some index => some index
+      | none => if name = fresh then some names.length else none := by
+  induction names with
+  | nil => simp [slot]
+  | cons first rest ih =>
+      by_cases same : name = first
+      · simp [slot, same]
+      · simp only [List.cons_append, slot, same, ↓reduceIte, ih]
+        cases slot name rest <;> by_cases last : name = fresh <;> simp [last]
+
+theorem represents_write (names : List Nat) (env : Env Value) (frame : Frame Value)
+    (rep : Represents names env frame) (fresh : Nat) (value : Value)
+    (absent : slot fresh names = none) :
+    Represents (names ++ [fresh]) ((fresh, value) :: env)
+      (write frame names.length value) := by
+  intro name
+  rw [lookup, slot_append]
+  by_cases same : name = fresh
+  · subst name
+    simp [absent, write]
+  · simp only [same, ↓reduceIte]
+    cases found : slot name names with
+    | none => simpa [found, same] using rep name
+    | some index =>
+        have bound := slot_lt name names index found
+        have different : index ≠ names.length := by omega
+        simpa [found, write, different] using rep name
+
+theorem represents_prefix (names : List Nat) (env : Env Value)
+    (before after : Frame Value) (rep : Represents names env before)
+    (same : PrefixEq names.length before after) : Represents names env after := by
+  intro name
+  rw [rep name]
+  cases found : slot name names with
+  | none => rfl
+  | some index =>
+      simp only [Option.map_some]
+      exact congrArg some (same index (slot_lt name names index found)).symm
+
+def FreshAbove (count : Nat) (actions : List (Action Value)) : Prop :=
+  ∀ index, Action.fresh index ∈ actions → count ≤ index
+
+theorem lower_length (term : Term Value) (names : List Nat) :
+    names.length ≤ (lower term names).2.length := by
+  cases term <;> simp only [lower]
+  · exact Nat.le_refl _
+  · cases slot _ names <;> simp
+  · exact Nat.le_refl _
+
+theorem compile_length (terms : List (Term Value)) (names : List Nat) :
+    names.length ≤ (compile terms names).2.length := by
+  induction terms generalizing names with
+  | nil => exact Nat.le_refl _
+  | cons term rest ih => exact Nat.le_trans (lower_length term names) (ih _)
+
+def Action.InRange (count : Nat) : Action Value → Prop
+  | .fresh index | .bound index => index < count
+  | .literal _ | .wildcard => True
+
+theorem compile_slots_bounded (terms : List (Term Value)) (names : List Nat) :
+    ∀ action ∈ (compile terms names).1,
+      action.InRange (compile terms names).2.length := by
+  induction terms generalizing names with
+  | nil => simp [compile]
+  | cons term rest ih =>
+      intro action member
+      simp only [compile, List.mem_cons] at member
+      simp only [compile]
+      rcases member with first | later
+      · subst action
+        have extent := compile_length rest (lower term names).2
+        cases term with
+        | literal value => trivial
+        | wildcard => trivial
+        | «variable» name =>
+            cases found : slot name names with
+            | none =>
+                simp only [lower, found, Action.InRange, List.length_append,
+                  List.length_singleton] at extent ⊢
+                omega
+            | some index =>
+                have limit := slot_lt name names index found
+                simp only [lower, found] at extent
+                simpa [lower, found, Action.InRange] using Nat.lt_of_lt_of_le limit extent
+      · exact ih _ action later
+
+theorem compile_fresh_above (terms : List (Term Value)) (names : List Nat) :
+    FreshAbove names.length (compile terms names).1 := by
+  induction terms generalizing names with
+  | nil => simp [FreshAbove, compile]
+  | cons term rest ih =>
+      intro index member
+      simp only [compile, List.mem_cons] at member
+      rcases member with first | later
+      · cases term with
+        | literal value => simp [lower] at first
+        | wildcard => simp [lower] at first
+        | «variable» name =>
+            cases found : slot name names <;> simp [lower, found] at first
+            omega
+      · exact Nat.le_trans (lower_length term names) (ih _ index later)
+
+/-- Every failure path preserves the pre-existing initialized prefix. New
+slots may retain writes from a rejected candidate. -/
+theorem run_preserves_prefix [DecidableEq Value] (actions : List (Action Value))
+    (row : List Value) (frame : Frame Value) (count : Nat)
+    (safe : FreshAbove count actions) : PrefixEq count frame (run actions row frame).2 := by
+  induction actions generalizing row frame with
+  | nil => intro index _; rfl
+  | cons action rest ih =>
+      have tailSafe : FreshAbove count rest :=
+        fun index member => safe index (List.mem_cons_of_mem action member)
+      cases row with
+      | nil => intro index _; rfl
+      | cons value tail =>
+          cases action with
+          | fresh index =>
+              have limit := safe index List.mem_cons_self
+              have kept := ih tail (write frame index value) tailSafe
+              intro key bound
+              have different : key ≠ index := by omega
+              simpa [run, write, different] using kept key bound
+          | bound index =>
+              by_cases sameValue : frame index = value
+              · simpa [run, sameValue] using ih tail frame tailSafe
+              · intro key _; simp [run, sameValue]
+          | literal expected =>
+              by_cases sameValue : expected = value
+              · simpa [run, sameValue] using ih tail frame tailSafe
+              · intro key _; simp [run, sameValue]
+          | wildcard => exact ih tail frame tailSafe
+
+/-- Dense lowering agrees with ordinary association-list binding. A success
+represents the complete extended environment; prior stale frame contents do
+not affect the Boolean result. Arity is an admission premise. -/
+theorem compiled_binding [DecidableEq Value] (terms : List (Term Value))
+    (row : List Value) (names : List Nat) (env : Env Value) (frame : Frame Value)
+    (arity : terms.length = row.length) (rep : Represents names env frame) :
+    (run (compile terms names).1 row frame).1 = (AtomicBinding.bind terms row env).isSome ∧
+    ∀ output, AtomicBinding.bind terms row env = some output →
+      Represents (compile terms names).2 output (run (compile terms names).1 row frame).2 := by
+  induction terms generalizing row names env frame with
+  | nil =>
+      cases row with
+      | nil =>
+          constructor
+          · rfl
+          · intro output success
+            have same : env = output := by simpa [AtomicBinding.bind] using success
+            subst output
+            exact rep
+      | cons _ _ => simp at arity
+  | cons term rest ih =>
+      cases row with
+      | nil => simp at arity
+      | cons value tail =>
+          have tailArity : rest.length = tail.length := by simpa using arity
+          cases term with
+          | wildcard => simpa [compile, lower, run, AtomicBinding.bind] using ih tail names env frame tailArity rep
+          | literal expected =>
+              by_cases sameValue : expected = value
+              · simpa [compile, lower, run, AtomicBinding.bind, sameValue] using ih tail names env frame tailArity rep
+              · simp [compile, lower, run, AtomicBinding.bind, sameValue]
+          | «variable» name =>
+              cases found : slot name names with
+              | none =>
+                  have absent : lookup name env = none := by simpa [found] using rep name
+                  have nextRep := represents_write names env frame rep name value found
+                  simpa [compile, lower, run, AtomicBinding.bind, found, absent] using
+                    ih tail (names ++ [name]) ((name, value) :: env)
+                      (write frame names.length value) tailArity nextRep
+              | some index =>
+                  have bound : lookup name env = some (frame index) := by
+                    simpa [found] using rep name
+                  by_cases sameValue : frame index = value
+                  · simpa [compile, lower, run, AtomicBinding.bind, found, bound, sameValue] using
+                      ih tail names env frame tailArity rep
+                  · simp [compile, lower, run, AtomicBinding.bind, found, bound, sameValue]
+
+/-- Reusing a frame after any candidate, including a failed partial write,
+still represents the original input environment at the next candidate. -/
+theorem candidate_reuse [DecidableEq Value] (terms : List (Term Value))
+    (row : List Value) (names : List Nat) (env : Env Value) (frame : Frame Value)
+    (rep : Represents names env frame) :
+    Represents names env (run (compile terms names).1 row frame).2 :=
+  represents_prefix names env frame _ rep
+    (run_preserves_prefix _ row frame names.length (compile_fresh_above terms names))
+
+def observeHead (terms : List (Term Value)) (env : Env Value) : List (Option Value) :=
+  terms.map (wanted env)
+
+def observeSlots (terms : List (Term Value)) (names : List Nat)
+    (frame : Frame Value) : List (Option Value) :=
+  terms.map fun term => match term with
+    | .literal value => some value
+    | .variable name => (slot name names).map frame
+    | .wildcard => none
+
+/-- Declared bound variables and literals have identical ordered head values.
+Wildcard/unbound outputs remain explicit `none`, outside native admission. -/
+theorem head_observations (terms : List (Term Value)) (names : List Nat)
+    (env : Env Value) (frame : Frame Value) (rep : Represents names env frame) :
+    observeHead terms env = observeSlots terms names frame := by
+  apply List.map_congr_left
+  intro term _
+  cases term with
+  | literal value => rfl
+  | wildcard => rfl
+  | «variable» name => exact rep name
+
+/-- The success branch supplies the same head observations as ordinary binding.
+This is the emission boundary used by the positive traversal's continuation. -/
+theorem compiled_head [DecidableEq Value] (terms outputs : List (Term Value))
+    (row : List Value) (names : List Nat) (env result : Env Value) (frame : Frame Value)
+    (arity : terms.length = row.length) (rep : Represents names env frame)
+    (success : AtomicBinding.bind terms row env = some result) :
+    (run (compile terms names).1 row frame).1 = true ∧
+    observeHead outputs result = observeSlots outputs (compile terms names).2
+      (run (compile terms names).1 row frame).2 := by
+  have refined := compiled_binding terms row names env frame arity rep
+  exact ⟨by simpa [success] using refined.1,
+    head_observations outputs _ result _ (refined.2 result success)⟩
+
+end Ascent.PositiveSlots

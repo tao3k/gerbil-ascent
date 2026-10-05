@@ -325,6 +325,30 @@ observations; the finite native matrix supplies independent bounded evidence.
 The theorem assumes stable completed results and supplies neither general
 termination nor a native extraction claim.
 
+The [[file:../../../packages/proofs/lean/PositiveSlots.lean][PositiveSlots refinement]] now establishes the positive matcher boundary
+against =AtomicBinding.bind=. First occurrences allocate dense =fresh= slots;
+later occurrences become =bound= reads. =compiled_binding= proves identical
+success/failure and an extended-environment representation on success, for
+admitted equal-arity rows and an arbitrary frame representing the input
+prefix. =candidate_reuse= proves that any candidate, including a failed partial
+write, preserves that prefix. Stale values in newly allocated slots therefore
+need no clearing: the next candidate overwrites each slot before reading it.
+=compiled_head= transports ordered literal/variable head observations, and
+=compile_slots_bounded= puts all emitted slot IDs below the dense extent.
+
+The [[file:../../../t/qualification/ascent-positive-plan-test.ss][native slot qualification]] checks all 125 three-term combinations of a
+previously bound variable, a new variable, two literals and a wildcard.
+Each compiled two-atom plan receives the 27 rows over =#f, 0, 1=, four initial
+stale frame values, and a second traversal of the same dirty frame. Its entire
+ordered emission stream, including repeated and reversed heads, must agree
+with ordinary association-list binding. A fault changing the first new
+variable's =fresh= action to =bound= rejects the valid row after a failed
+partial write; the ordinary binder still emits it. The matcher theorem and
+this native discriminator establish one optimization boundary. Whole slot
+traversal, indexed row selection and semi-naive pivots still need refinement;
+the corpus supplies raw rows with no delta pivot. Native symbol/hash-map
+decoding, scalar equality and actual vector ownership remain premises.
+
 The constituent proofs make the contract auditable. The
 [[file:../../../packages/proofs/lean/RuleGraphClosure.lean][rule compiler]] proves exact source-to-head membership, including repeated
 heads and all three read kinds. The

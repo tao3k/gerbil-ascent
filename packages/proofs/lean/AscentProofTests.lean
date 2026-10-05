@@ -2,6 +2,7 @@
 -- SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 import AscentProof
 import RuleBodyFrameTests
+import PositiveSlotsTests
 
 /-! Compile-time qualification for LeanPoo source patches, invalidation,
 certificate reuse and source-count algebra. Temporal publication belongs to TLA+. -/

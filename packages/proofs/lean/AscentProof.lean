@@ -18,5 +18,6 @@ import StratifiedNegation
 import SourceCertificates
 import SourceUpdateFrame
 import RuleBodyFrame
+import PositiveSlots
 import ProviderFrontier
 import TransitiveComponents

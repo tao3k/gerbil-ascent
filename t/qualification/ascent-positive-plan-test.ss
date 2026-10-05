@@ -2,6 +2,7 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 (import (only-in :std/test test-suite check-equal? check-exception)
+        (only-in :std/list/list append-map)
         (only-in :core/observability/testing-case poo-flow-test-case)
         (only-in :clan/poo/object .o .ref)
         (only-in :gerbil-ascent/program/interface
@@ -14,6 +15,8 @@
                  gerbil-ascent-program-analysis gerbil-ascent-program-schema)
         (only-in :gerbil-ascent/core/positive-plan gerbil-ascent-compile-positive-plan
                  gerbil-ascent-run-positive-plan!)
+        (only-in :gerbil-ascent/core/rule-bindings gerbil-ascent-bind-row
+                 gerbil-ascent-head-row)
         (only-in :gerbil-ascent/program/reuse gerbil-ascent-activate-rules)
         (only-in :gerbil-ascent/program/update-selection gerbil-ascent-update-active-plans)
         (only-in :gerbil-ascent/table/storage gerbil-ascent-set-storage-provider)
@@ -40,8 +43,107 @@
            (gerbil-ascent-rule (list (a 'path x z))
                               (list (a 'path x y) (a 'edge y z))))
      32 64 96)))
+
+;; The reference binds association-list environments and emits declared heads;
+;; it never inspects compiled actions or the mutable slot frame.
+(def (binding-stream terms heads first-rows second-rows)
+  (let (emitted [])
+    (for-each
+     (lambda (first-row)
+       (let (initial (gerbil-ascent-bind-row '((variable . a)) first-row []))
+         (for-each
+          (lambda (second-row)
+            (let (bound (gerbil-ascent-bind-row terms second-row initial))
+              (when bound
+                (for-each
+                 (lambda (head)
+                   (set! emitted
+                     (cons (cons (vector-ref head 0)
+                                 (gerbil-ascent-head-row (vector-ref head 1) bound))
+                           emitted))) heads))))
+          second-rows))) first-rows)
+    (reverse emitted)))
+
+(def (slot-stream plan frame first-rows second-rows)
+  (let (emitted [])
+    (gerbil-ascent-run-positive-plan!
+     plan frame -1
+     (lambda (atom environment delta? slot-terms)
+       (case (vector-ref atom 0)
+         ((0) first-rows) ((1) second-rows)
+         (else (error "unexpected slot corpus read" atom))))
+     (lambda (head row)
+       (set! emitted (cons (cons (vector-ref head 0) row) emitted))))
+    (reverse emitted)))
+
 (def ascent-positive-plan-test
   (test-suite "Complete positive rule slot plans"
+    (poo-flow-test-case "dirty slot frames preserve ordered bindings across the finite term corpus"
+      (let* ((palette '(#f 0 1))
+             (terms '((variable . a) (variable . b) (literal . #f)
+                      (literal . 0) (wildcard . #f)))
+             (first-rows (map list palette))
+             (second-rows
+              (append-map (lambda (x)
+                            (append-map (lambda (y)
+                                          (map (lambda (z) (list x y z)) palette))
+                                        palette)) palette))
+             (checked 0))
+        (for-each
+         (lambda (one)
+           (for-each
+            (lambda (two)
+              (for-each
+               (lambda (three)
+                 (let* ((patterns (list one two three))
+                        (outputs
+                         (append '((literal . #f) (variable . a))
+                                 (if (member '(variable . b) patterns)
+                                   '((variable . b)) [])))
+                        (heads (list (vector 2 outputs) (vector 3 (reverse outputs))
+                                     (vector 2 outputs)))
+                        (body (list (vector 'atom (vector 0 '((variable . a)) []))
+                                    (vector 'atom (vector 1 patterns []))))
+                        (plan (gerbil-ascent-compile-positive-plan heads body))
+                        (expected (binding-stream patterns heads first-rows second-rows)))
+                   (for-each
+                    (lambda (stale)
+                      (let (frame (make-vector (vector-ref plan 2) stale))
+                        (check-equal? (slot-stream plan frame first-rows second-rows) expected)
+                        ;; A second whole traversal starts with the prior run's
+                        ;; genuinely dirty frame; no artificial clearing occurs.
+                        (check-equal? (slot-stream plan frame first-rows second-rows) expected)))
+                    '(#f 0 1 stale-slot))
+                   (set! checked (+ checked 1))
+                   (displayln "SLOT-READ-CHECKED " checked " terms=" patterns)
+                   (force-output))) terms)) terms)) terms)
+        (check-equal? checked 125)))
+    (poo-flow-test-case "failed partial writes require the next fresh overwrite"
+      (let* ((patterns '((variable . b) (variable . a) (variable . b)))
+             (heads (list (vector 2 '((variable . a) (variable . b)))))
+             (plan (gerbil-ascent-compile-positive-plan heads
+                     (list (vector 'atom (vector 0 '((variable . a)) []))
+                           (vector 'atom (vector 1 patterns [])))))
+             (atoms (vector-ref plan 1))
+             (second (cadr atoms))
+             (actions (vector-ref second 1))
+             (frame (make-vector 2 'stale))
+             (first-rows '((0)))
+             (second-rows '((7 1 7) (4 0 4)))
+             (fault
+              (vector (vector-ref plan 0)
+                      (list (car atoms)
+                            (vector (vector-ref second 0)
+                                    (cons '(bound . 1) (cdr actions))
+                                    (vector-ref second 2)))
+                      (vector-ref plan 2))))
+        (check-equal? actions '((fresh . 1) (bound . 0) (bound . 1)))
+        (check-equal? (slot-stream plan frame first-rows second-rows) '((2 0 4)))
+        (check-equal? (vector->list frame) '(0 4))
+        (check-equal? (binding-stream patterns heads first-rows second-rows) '((2 0 4)))
+        ;; Faulted lowering reads the rejected row's old slot rather than
+        ;; initializing it. The independent ordinary binder still succeeds.
+        (check-equal? (slot-stream fault (vector 0 7) first-rows second-rows) [])))
     (poo-flow-test-case "analysis builds stay reentrant and failure leaves cached versions usable"
       (let* ((program (path-program '((0 1))))
              (relations (.ref program 'relations))

@@ -527,3 +527,8 @@ planning batch medians (100 operations) were fresh 0.989 ms and cached 0.012 ms.
 Fresh-solve medians were serial 1.780 ms, SCC 1/2/4 workers 7.796/8.274/7.859 ms.
 These retain the end-to-end negative result; three samples cannot establish
 stable CPU/throughput improvement.
+
+Rebased concurrent strict-dependency preflight optimization =0d19eca=. The new
+source/carrier snapshot passed six targeted modules and 43 Cases, including
+SCC/cache, Session/round, strata and lattice controls. Its separate receipt does
+not claim a full rerun of the earlier 72-module/617-Case suite.

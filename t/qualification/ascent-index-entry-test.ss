@@ -52,6 +52,20 @@
     (list (reverse events) answers)))
 (def ascent-index-entry-test
   (test-suite "Engine-owned stable physical index entries"
+    (test-case "first index after unindexed updates observes the published version"
+      (let* ((events []) (rows (map list (iota 31)))
+             (h (index-entry-harness #f rows
+                  (index-entry-provider (lambda (event) (set! events (cons event events))))))
+             (lookup (vector-ref h 0)) (advance! (vector-ref h 1))
+             (atom (index-entry-atom '(0) '(31))))
+        (advance! 0 '((31)))
+        (check-equal? events [])
+        (vector-set! (vector-ref h 2) 0 (cons '(31) rows))
+        (vector-set! (vector-ref h 4) 0 32)
+        (vector-set! (vector-ref h 6) 0 1)
+        (check-equal? (lookup atom [] #f #f) '((31)))
+        (check-equal? (map car (reverse events)) '(build lookup))
+        (check-equal? (lookup atom [] #t #f) rows)))
     (test-case "all delta shared atoms and returned extension values preserve traces"
       (check-equal? (run-lifecycle #f #f) (run-lifecycle #t #f)))
     (test-case "failed extension and rebuild preserve retryable versions"

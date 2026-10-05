@@ -4,8 +4,8 @@
 
 ;;; One assigned SCC owns its transferred root/size vectors, fresh frames,
 ;;; physical indexes and output membership. Borrowed row roots stay persistent.
-(import (only-in "component-plan.ss" positive-component-members positive-component-rules)
-        (only-in "index.ss" gerbil-ascent-make-row-indexes row-indexes-rows row-indexes-advance!)
+(import (only-in :gerbil-ascent/program/component-plan positive-component-members positive-component-rules)
+        (only-in "reference-index.ss" gerbil-ascent-make-row-indexes row-indexes-rows row-indexes-advance!)
         (only-in :gerbil-ascent/core/positive-plan gerbil-ascent-run-positive-plan!))
 (export make-component-snapshot gerbil-ascent-run-positive-component!)
 (defstruct component-snapshot (rows sizes))
@@ -38,7 +38,6 @@
          (rows-access (row-indexes-rows indexes))
          (advance! (row-indexes-advance! indexes))
          (seen (make-vector count #f))
-         (pending (make-vector count []))
          (members (positive-component-members component))
          (rules (map (lambda (rule)
                        (vector (vector-ref rule 0) (vector-ref rule 1)
@@ -50,7 +49,7 @@
          (for-each (lambda (row) (hash-put! table row #t)) (vector-ref all index))
          (vector-set! seen index table))) members)
     (let rounds ((first? #t))
-      (let (new? #f)
+      (let ((pending (make-vector count [])) (new? #f))
         (def (candidate! atom row)
           (let* ((index (vector-ref atom 0)) (table (vector-ref seen index)))
             (unless (hash-get table row)
@@ -77,9 +76,6 @@
                (vector-set! all-size index (+ (vector-ref all-size index) size))
                (vector-set! all-version index (+ 1 (vector-ref all-version index))))
              (vector-set! delta index batch)
-             ;; The delta owns this persistent batch spine. Reuse only the
-             ;; candidate vector header; never clear or mutate the row spine.
-             (vector-set! pending index [])
              (vector-set! delta-size index size)
              (vector-set! delta-version index (+ 1 (vector-ref delta-version index))))) members)
         (when new? (rounds #f))))))

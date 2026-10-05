@@ -5,6 +5,25 @@
 Immutable declarations, engine frames, retained updates and checked source admission. Study notes and receipts retain their original revision and scope;
 historical source paths and timings are not current qualification claims.
 
+* Study: allocate SCC working state at its actual owner
+
+Gerbil =2591dcd= =compiler/optimize-base.ss:334-340= creates method tables on
+first use; =compiler/optimize-top.ss:1269-1281= preserves expressions when no
+wrapper is needed. The SCC execution path applies that ownership discipline
+across its three existing modules: physical cache vectors are independently
+lazy; a worker reuses its candidate vector between recursive rounds without
+mutating published delta spines; coordinator membership covers only output
+SCCs and completion releases the transferred snapshot reference.
+
+[[file:../../t/performance/component-workspace/README.org][Matched native SCC round A/B]] freezes all three prior owners at =0f2fb51=.
+The initial recursive allocation result failed its preset gate and is retained.
+Completing coordinator membership scoping gives 57.3% less cold allocation in
+the padded recursive fixture and 18.7% in independent scan SCCs. Real keyed
+joins and small-round controls pass nonregression gates. These measurements
+include round preparation, closure, merge, joins and sorting; they do not
+establish universal solver or multicore gains. Native Cases check threshold
+version publication and seeded-output/source-root ownership.
+
 * Study: one recovery boundary and bounded completion transfer
 
 Gerbil =2591dcd= =runtime/error.ss:67-73= captures a continuation at an exception

@@ -32,9 +32,8 @@
 ;;       ```
 ;;     %
 (def (gerbil-ascent-make-row-indexes all delta all-size delta-size all-version delta-version index-providers)
-  ;; Scans and small relations own no physical cache vectors. Allocate each
-  ;; lane only when its first indexed lookup crosses the size threshold.
-  (let ((all-indexes #f) (delta-indexes #f)
+  (let ((all-indexes (make-vector (vector-length all) #f))
+        (delta-indexes (make-vector (vector-length delta) #f))
         (all-atoms #f) (delta-atoms #f))
       (def (indexed-rows atom environment use-delta? slot-terms)
         (let* ((index (vector-ref atom 0))
@@ -57,14 +56,7 @@
                              (if use-delta? delta-version all-version) index))
                    (entry
                     (or (hash-get identities atom)
-                        (let* ((caches
-                                (if use-delta?
-                                  (or delta-indexes
-                                      (let (fresh (make-vector (vector-length delta) #f))
-                                        (set! delta-indexes fresh) fresh))
-                                  (or all-indexes
-                                      (let (fresh (make-vector (vector-length all) #f))
-                                        (set! all-indexes fresh) fresh))))
+                        (let* ((caches (if use-delta? delta-indexes all-indexes))
                                (cache
                                 (or (vector-ref caches index)
                                     (let (fresh (make-hash-table))
@@ -102,7 +94,7 @@
                              (vector-ref atom 4) environment)))
                   (gerbil-ascent-physical-index-rows provider lookup key)))))))
       (def (advance-all-indexes! index new-rows (reverse-order? #f))
-        (let (cache (and all-indexes (vector-ref all-indexes index)))
+        (let (cache (vector-ref all-indexes index))
           (when (and cache (pair? new-rows))
             (let ((rows (if reverse-order? (reverse new-rows) new-rows))
                   (version (vector-ref all-version index))

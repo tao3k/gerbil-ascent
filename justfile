@@ -154,6 +154,19 @@ _performance-actor-admission baseline lane:
     done
 
 # Paired SCC planning and complete coordinator/worker component closures.
+performance-component-workspace:
+    {{ test_runner }} run -- just _performance-component-workspace
+
+_performance-component-workspace:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    library="{{ justfile_directory() }}/.cache/ascent/native-library/lib"
+    mkdir -p .cache/ascent/component-workspace
+    gxi {{ gerbil_test_runtime_options }} t/performance/component-workspace-build.ss "$library" "{{ justfile_directory() }}/.cache/ascent/component-workspace/native-entry"
+    for scenario in scan recursive indexed small; do
+        timeout 90s .cache/ascent/component-workspace/native-entry {{ gerbil_test_runtime_options }} "$scenario" "$library" ".cache/ascent/component-workspace/$scenario.sexp"
+    done
+
 performance-component-scope:
     {{ test_runner }} run -- just _performance-component-scope
 

@@ -29,6 +29,27 @@
              ((.ref result 'rows-of) name)))
 (def ascent-positive-components-test
   (test-suite "Ready positive SCCs and projected heads"
+    (test-case "output membership preserves seeded rows and leaves source-only roots intact"
+      (let* ((x (gerbil-ascent-variable 'x))
+             (p (gerbil-ascent-program
+                 (list (gerbil-ascent-relation 'source 1 '((0) (1) (1)))
+                       (gerbil-ascent-relation 'out 1 '((0)))
+                       (gerbil-ascent-relation 'unused 1 '((7) (7))))
+                 (list (gerbil-ascent-rule (list (gerbil-ascent-atom 'out (list x)))
+                                           (list (gerbil-ascent-atom 'source (list x))))) 64 64 64))
+             (request (component-scope-request p))
+             (initial (vector-ref request 2)) (before (vector-copy initial)))
+        (for-each
+         (lambda (jobs)
+           (let (emitted [])
+             (gerbil-ascent-run-positive-components!
+              (vector-ref request 0) (vector-ref request 1) initial jobs
+              (lambda (atom row) (set! emitted (cons (cons (vector-ref atom 0) row) emitted)))
+              (lambda () #f))
+             (check-equal? emitted '((1 1)))
+             (check-equal? initial before)
+             (for-each (lambda (i) (check-equal? (eq? (vector-ref initial i) (vector-ref before i)) #t)) (iota 3))))
+         '(1 2 4))))
     (test-case "successor runs while an independent component remains assigned"
       (let ((peers (make-hash-table-eq)) (lock (make-mutex)) (done []) (merged []))
         (gerbil-ascent-run-actor-round! (vector 'dag) '(a b c) 2

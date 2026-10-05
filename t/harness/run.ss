@@ -112,7 +112,7 @@
   (let* ((library (path-expand "lib" test-cache))
          (module-file (path-expand "modules.sexp" test-cache))
          (modules (append gerbil-ascent-library-modules
-                          '("t/performance/native-library"
+                          '("t/performance/native-library" "t/performance/ascent-ss-profile"
                             "t/scenarios/performance/ascent-table-expression/baseline"
                             "t/harness/artifact" "t/harness/prediction" "t/harness/actor-pool")
                           ;; Compile the complete independent reference graph

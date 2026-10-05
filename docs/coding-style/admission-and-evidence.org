@@ -5,6 +5,125 @@
 Finite selection, execution receipts and semantic evidence boundaries. Study notes and receipts retain their original revision and scope;
 historical source paths and timings are not current qualification claims.
 
+* Study: ordered finite replay with private row indexes
+
+The installed Gerbil =2591dcd= compiler's =optimize-base.ss:24-29= owns
+lookup tables in an =optimizer-info= record. Its =compile.ss:1446-1469=
+collects generated items with cons and reverses its private accumulator.
+These are separate choices for lookup and ordered publication.
+
+The native =std/list/list-builder.ss:8-22= instead appends through a shared
+tail; its documentation at =25-32= explicitly says that peek returns the
+shared queue that later puts mutate. This is suitable for its builder
+contract. Finite replay needs a different contract: a rule keeps the rows
+visible at the start of each relation traversal while its bindings derive
+later rows. A mutable-tail builder would change that frontier and its work
+budget even when the final set happens to be equal.
+
+=candidate/finite-evidence.ss= now keeps one private =replay-relation= record
+per schema entry:
+
+| State | Owner and purpose |
+|-------+-------------------|
+| Arity | The inspected schema, unchanged in the published closure |
+| Present | Structural membership table keyed by replay-owned row copies |
+| Reversed | Private cons accumulator in reverse insertion order |
+| Frontier | Ordered list captured by callers; its spine is never mutated |
+| Dirty | New rows require rebuilding the next requested frontier |
+
+Insertion checks membership before copying or incrementing the derived-row
+count. It copies a new row once, then indexes and accumulates that owned
+copy. A rows request reverses the accumulator only when dirty; subsequent
+reads reuse the published frontier until another insertion. Old frontiers
+remain unchanged while recursive bindings run. Final closure publication
+uses schema order and first-insertion row order, never hash iteration order.
+Unlike the compiler's finished accumulator, this accumulator is still used
+after a frontier is published, so publication uses nonmutating =reverse=,
+not =reverse!=. Frontier cells are fresh; their row values remain replay-owned.
+Generator detachment and the independently verified closure boundary retain
+their existing roles. Relation lookup remains the small inspected schema
+association list; this change targets repeated row scans and append copying.
+
+=candidate/funs.ss= also replaces repeated bidirectional =member= scans in
+=candidate-same-row-set?=. It first retains the old proper-list length check,
+then returns directly for ordered equality. Otherwise two private structural
+indexes compare distinct support counts and left membership in right. Equal
+support sizes and inclusion establish both directions. This deliberately
+retains the old length-and-support semantics: =((0) (0) (1))= and
+=((0) (1) (1))= compare true. It does not introduce multiset comparison.
+
+The new native Suite checks all 14,641 pairs of row lists of length zero
+through four over three rows against a separate bit-support oracle. It also
+covers scalar kinds, duplicate seeds and exact replay order, recursively
+growing frontiers, derived-row exhaustion and detached verified closures.
+The recursive fixture binds seed, one and the upper bound through source
+relations, following the inspected grammar's source-only facts,
+derived-only rule heads and bound-variable-only fixed operands. At size n
+its retained p frontier lengths are 1 through n. Each round probes the seed;
+each p row probes p/one/bound, computes and checks the limit. The independent
+exact work count is =n+5*n*(n+1)/2=. One less must be bounded, which detects a live-tail traversal
+that might still produce the same final row set with a different work count.
+
+=just performance-finite-replay= compiles current and frozen reference
+modules into one native prefix and checks resolution plus =.o1= existence.
+The =306aa91= reference keeps =candidate/funs.ss= byte-for-byte and changes
+only the finite-evidence import to use that frozen helper. Snapshot checking,
+datum traversal, candidate inspection and other dependencies are shared.
+Inputs, inspected programs, model answers and verifier certificates are
+prepared outside timing. Each generator call must produce the independent
+expected ordered closure; each verifier call must return valid. These model
+answers are independent fixtures, not timed native-solver outputs.
+
+Each scenario uses 50 alternating pairs with ten calls per sample, initial
+GC and natural collections during sampling. Fixed gates require 20% lower
+median CPU and allocation plus 35/50 CPU wins for wide and duplicate-support
+workloads. Small and constant-support controls admit at most 8 KiB allocation
+and 20 microseconds CPU setup increase. Gates were fixed before timing and
+all eight passed. Process statistics report allocation and CPU per call;
+startup, compilation, wall time and complete native solving are separate.
+
+| Scenario | Old CPU us | New CPU us | Old bytes | New bytes | CPU wins |
+|----------+------------+------------+-----------+-----------+----------|
+| Wide generate, 256 distinct source rows | 3076.6 | 446.7 | 3587036.8 | 554764.8 | 50/50 |
+| Wide verify | 4543.6 | 445.3 | 3537468.8 | 505004.8 | 50/50 |
+| Duplicate generate, 256 source rows / 64 supports | 499.3 | 290.8 | 414084.8 | 253748.8 | 49/50 |
+| Duplicate verify | 597.3 | 247.0 | 401380.8 | 240852.8 | 49/50 |
+| Small generate, 2 supports | 14.1 | 15.2 | 29556.8 | 31860.8 | 3/50 |
+| Small verify | 14.2 | 15.1 | 28756.8 | 30868.8 | 9/50 |
+| Constant generate, 64 source rows / 1 support | 45.5 | 49.4 | 65268.8 | 67572.8 | 4/50 |
+| Constant verify | 46.5 | 50.5 | 64660.8 | 66772.8 | 8/50 |
+
+Wide generation improves median CPU by 85.5% and allocation by 84.5%; wide
+verification improves CPU by 90.2% and allocation by 85.7%. Duplicate-support
+generation/verification improve CPU by 41.8%/58.6%. The controls expose fixed
+index setup and lookup overhead; no universal small-input benefit is claimed.
+
+The first benchmark launch was rejected before sampling: its input limit was
+64 for a 256-row snapshot. The fixture now declares the existing allowed
+1024-row input budget; no timing gate or execution deadline changed.
+Logs stay in ignored =.cache/ascent/finite-replay/=. The selected production
+policy for both modified owners completes with zero findings and zero errors.
+The first qualification launch passed support and detachment Cases but
+rejected two fixture programs for putting candidate facts in derived
+relations. The corrected programs use source facts and derived rule heads;
+the failed transcript is retained alongside the corrected qualification.
+
+Native qualification passes all 20 Cases with native resolution, explicit
+Case/Suite/Module/Harness/final =OK= markers and successful process exits:
+
+| Suite | Cases | Execution seconds, excluding compilation |
+|-------+-------+------------------------------------------|
+| =scheme-finite-replay-test.ss= | 4 | 1 |
+| =ascent-finite-evidence-test.ss= | 9 | 6 |
+| =scheme-stratified-provenance-test.ss= | 7 | 2 |
+
+The consumer Suites independently enumerate 64 reachability graphs and
+64 grounded-alternative graphs, including negation, empty reducer groups,
+strict cycles, resource exhaustion and mutated evidence. These are semantic
+checks; their execution durations are not a matched A/B performance claim.
+All eight performance scenarios pass 400 alternating pairs; both frozen
+reference files were compared against the original revision/import rewrite.
+
 * Study: bounded datum cursors and private return frames
 
 The installed Gerbil =2591dcd= runtime's =table.ss:141-152= walks the owned

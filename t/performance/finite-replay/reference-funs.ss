@@ -12,19 +12,10 @@
         candidate-schema-of candidate-required-entry
         candidate-bind-atom candidate-fixed-clause candidate-strata-of)
 
-;;; Proper, stable row lists: retain the original length-and-support semantics,
-;;; including equal supports with different duplicate multiplicities. Ordered
-;;; equality needs no index; otherwise private structural indexes own lookup.
-;; : (forall (row) (-> (List row) (List row) Boolean))
-;; : (-> GroundRows GroundRows Boolean)
 (def (candidate-same-row-set? left right)
   (and (= (length left) (length right))
-       (or (equal? left right)
-           (let ((a (make-hash-table)) (b (make-hash-table)))
-             (for-each (lambda (row) (hash-put! a row #t)) left)
-             (for-each (lambda (row) (hash-put! b row #t)) right)
-             (and (= (hash-length a) (hash-length b))
-                  (andmap (lambda (row) (and (hash-get b row) #t)) left))))))
+       (andmap (lambda (row) (and (member row right) #t)) left)
+       (andmap (lambda (row) (and (member row left) #t)) right)))
 
 (def (candidate-schema-of snapshot spec)
   (append

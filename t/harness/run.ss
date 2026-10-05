@@ -59,6 +59,7 @@
     "t/qualification/ascent-workspace-test.ss"
     "t/qualification/scheme-closure-contract-test.ss"
     "t/qualification/scheme-bounded-datum-test.ss"
+    "t/qualification/scheme-finite-replay-test.ss"
     "t/qualification/scheme-provenance-graph-test.ss"
     "t/qualification/scheme-higher-order-test.ss"
     "t/qualification/scheme-session-deletion-test.ss"
@@ -178,6 +179,10 @@
                             [])
                           (if (member "t/qualification/scheme-bounded-datum-test.ss" tests)
                             '("t/performance/bounded-datum/reference")
+                            [])
+                          (if (member "t/qualification/scheme-finite-replay-test.ss" tests)
+                            '("t/performance/finite-replay/reference-funs"
+                              "t/performance/finite-replay/reference")
                             []))))
     (call-with-output-file [path: module-file truncate: #t]
       (lambda (out) (write modules out) (newline out)))

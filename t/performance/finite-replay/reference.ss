@@ -21,7 +21,7 @@
                  reasoning-candidate-rules reasoning-candidate-query
                  reasoning-candidate-limits)
         (only-in :gerbil-ascent/candidate/program candidate-variable? scalar?)
-        (only-in :gerbil-ascent/candidate/funs
+        (only-in :gerbil-ascent/t/performance/finite-replay/reference-funs
                  candidate-same-row-set?
                  candidate-schema-of candidate-required-entry
                  candidate-bind-atom candidate-fixed-clause
@@ -35,11 +35,6 @@
 (defstruct finite-evidence
   (status snapshot-identity snapshot-generation snapshot-digest
           candidate-digest program query work-budget closure))
-
-;;; Replay owns the row copies, reversed accumulator, membership index and
-;;; published frontier. Published spines are never mutated: a rule can retain
-;;; its current frontier while another binding inserts a later row.
-(defstruct replay-relation (arity reversed present frontier dirty?) final: #t)
 
 ;; : (forall (row) (-> (Closure row) Schema Boolean))
 ;; : (-> CertificateClosure Schema Boolean)
@@ -92,24 +87,16 @@
          (rules (reasoning-candidate-rules spec))
          (levels (candidate-strata-of schema rules))
          (tables
-          (map (lambda (entry)
-                 (cons (car entry)
-                       (make-replay-relation (cdr entry) [] (make-hash-table) [] #f)))
-               schema))
+          (map (lambda (entry) (list (car entry) (cdr entry) [])) schema))
          (steps 0)
          (bounded? #f)
          (derived-count 0)
          (derived-limit (cadr (reasoning-candidate-limits spec))))
         (def (rows name)
-          ;; The record is constructed above and stays local to this replay.
-          (using (relation (cdr (candidate-required-entry name tables)) :- replay-relation)
-            (when relation.dirty?
-              (set! relation.frontier (reverse relation.reversed))
-              (set! relation.dirty? #f))
-            relation.frontier))
+          (caddr (candidate-required-entry name tables)))
         (def (add-row! name row derived?)
-          (using (relation (cdr (candidate-required-entry name tables)) :- replay-relation)
-            (if (hash-get relation.present row)
+          (let (entry (candidate-required-entry name tables))
+            (if (member row (caddr entry))
               #f
               (begin
                 (when derived?
@@ -118,10 +105,9 @@
                     (set! bounded? #t)))
                 (if bounded?
                   #f
-                  (let (owned (candidate-copy-pairs row))
-                    (hash-put! relation.present owned #t)
-                    (set! relation.reversed (cons owned relation.reversed))
-                    (set! relation.dirty? #t)
+                  (begin
+                    (set-car! (cddr entry)
+                              (append (caddr entry) (list (candidate-copy-pairs row))))
                     #t))))))
         (def (step!)
           (set! steps (+ steps 1))
@@ -226,11 +212,7 @@
                 (when (and changed? (not bounded?)) (repeat))))
             (stratum (+ level 1) maximum)))
         (values (if bounded? 'bounded 'complete)
-                (if bounded? []
-                    (map (lambda (entry)
-                           (list (car entry) (replay-relation-arity (cdr entry))
-                                 (rows (car entry))))
-                         tables)))))))
+                (if bounded? [] tables))))))
 
 ;; : (-> InspectedCandidate Closure Rows)
 (def (query-rows spec closure)

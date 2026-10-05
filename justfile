@@ -115,6 +115,19 @@ _test-suite jobs lane:
         while IFS= read -r path; do just _test-file "$path" 2>&1 | tee "$directory/$(basename "$path").log"; done < "$directory/exclusive"
     fi
 
+# Paired native finite evidence generation and verification.
+performance-finite-replay:
+    {{ test_runner }} run -- just _performance-finite-replay
+
+_performance-finite-replay:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    library="{{ justfile_directory() }}/.cache/ascent/native-library/lib"
+    gxi {{ gerbil_test_runtime_options }} -e '(add-load-path! (path-expand ".cache/ascent/native-library/lib"))' -e '(import :std/make)' -e '(make ["candidate/funs" "candidate/finite-evidence" "candidate/types" "candidate/datum" "t/performance/finite-replay/reference-funs" "t/performance/finite-replay/reference" "t/performance/finite-replay-benchmark"] srcdir: (current-directory) libdir: (path-expand ".cache/ascent/native-library/lib") build-deps: (path-expand ".cache/ascent/native-library/build-deps"))'
+    for scenario in wide duplicates small constant; do
+        timeout 90s gxi {{ gerbil_test_runtime_options }} -e '(add-load-path! (path-expand ".cache/ascent/native-library/lib"))' :gerbil-ascent/t/performance/finite-replay-benchmark "$scenario" "$library"
+    done
+
 # Paired native inert traversal and complete certificate verification.
 performance-bounded-datum:
     {{ test_runner }} run -- just _performance-bounded-datum

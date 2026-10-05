@@ -157,7 +157,9 @@ path. Sources, generated entry and executable are checked before/after execution
 under the existing lane lock. Fixture and independent reference modules are
 compiled into the native library rather than recovered through runtime source
 loading. The temporal Suite follows the native path in the registry; its legacy
-incremental import wrapper remains available to interpreted invocations.
+incremental import wrapper remains available to interpreted invocations. The
+syntax diagnostic module initializes the real Gerbil interpreter/expander before
+its original eval-based Cases; the default AOT minimal evaluator is insufficient.
 
 Each invocation starts a private coordinator actor, protecting the caller's
 mailbox and nested invocations. It admits at most =jobs= isolated children.
@@ -184,3 +186,9 @@ external cancellation and source-to-model refinement remain open obligations.
 
 No speedup is inferred from two-worker overlap. Matched preparation, queue,
 worker execution and throughput measurements remain the performance gate.
+
+The [[file:evidence/scheme-actor-pool-20261005/receipt.json][native actor pool receipt]] retains the initial macro diagnostic failure and
+separately binds full-suite and control snapshots. The full Suite passed 63
+modules/560 Cases. The affected mode-reset and registry gates passed alongside
+the six actor lifecycle Cases. GitHub exact-head CI is a separate publication
+gate rather than an inferred consequence of these qualification commands.

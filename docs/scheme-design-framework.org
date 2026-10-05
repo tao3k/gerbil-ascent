@@ -272,9 +272,10 @@ to require concrete compiler refinement and controlled real-model benefit.
 
 The [[file:scheme-actor-runtime-design.org][actor runtime decision]] places preparation, test dispatch, Session ownership,
 frozen positive rounds, candidate merge, cancellation draining and publication
-in one architecture. Native actor scheduling and measured parallel benefit are
-implementation gates. The single-module carrier remains the qualified executor;
-the module pool still requires unique precompiled entries and native dispatch.
+in one architecture. The native actor test carrier now provides a frozen AOT
+registry, bounded admission/output credits, monitored exits and failure draining.
+The concurrent solver round implementation and measured parallel benefit remain
+separate gates.
 
 =AtomicBinding.lean= adds soundness and completeness of the admitted ordinary
 variable/literal/wildcard binder against simultaneous substitution, preservation
@@ -296,3 +297,27 @@ native module, four normal TLA models and ten counterexample controls. Raw
 development failures stay excluded. Native actor execution, parallel benefit
 and model comprehension retain their separate gates; this round uses no model
 calls.
+
+* Native actor module pool qualification (2026-10-05)
+
+The [[file:evidence/scheme-actor-pool-20261005/receipt.json][actor pool receipt]] records 63 native modules and 560 successful Cases from
+source =8ce6412= (55 parallel-lane modules, 8 exclusive, 2 workers). The affected
+single-module SDK mode reset and registry control gate are independently checked
+at source =b37e903=: two pooled modules/eight Cases, six actor lifecycle Cases,
+the original single Suite's two positive Cases, four native failure controls and
+three invalid registry controls. Source, generated entry and executable hashes
+are bound separately for each invocation. No raw logs are committed.
+
+The two typed macro diagnostic failures in the earlier AOT attempt are retained
+as rejected evidence. The carrier initializes the real Gerbil expander for this
+module; native generation does not substitute expected diagnostics or assertions.
+The current Lean library and concrete tests build with LeanPoo =9e16095=.
+=ActorTestPool.tla= checks capacities 1/2/3 and rejects premature return. This is
+protocol safety over a finite exploration, not worker liveness or a native
+refinement theorem. Existing unbounded solver round laws remain unchanged.
+
+The next implementation gate is the positive set SCC worker protocol: immutable
+frontiers, private batches, a single merge owner, a complete round barrier and
+cancellation draining. Provider/lattice/negative semantics retain their existing
+ownership until matched semantic tests and concrete refinement close their gates.
+No model calls or Rust integration occurred; parallel speedup remains unmeasured.

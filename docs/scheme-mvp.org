@@ -55,16 +55,16 @@ isolated tests or renaming a version.
 Run in the repository's declared Gerbil environment:
 
 #+begin_src sh
-bash tools/check-mvp.sh 2
+just test 2
 #+end_src
 
 In the owning development workspace, run this through its captured
-=.devenv/devenv-profile-exec= environment. The entry delegates to the existing
-Scheme native pool. Scheme owns all semantic verdicts, source/carrier hashes,
-child isolation and drain decisions. Python remains process supervision only.
-Seven admitted modules use the native pool; artifact tamper controls run in
-their separate exclusive phase. The profile preserves existing lane policy.
-It runs eight existing modules with these obligations:
+=.devenv/devenv-profile-exec= environment. The existing =just test= recipe runs
+=t/harness/run.ss= and discovers the full native qualification suite. Scheme
+owns module admission, semantic verdicts, source/carrier hashes, child isolation
+and drain decisions. Python remains process supervision only. The Scheme
+runner preserves admitted parallel and exclusive lanes. The MVP obligations
+are covered by these existing modules within that full suite:
 
 | Module | Obligation |
 |--------+------------|
@@ -77,13 +77,12 @@ It runs eight existing modules with these obligations:
 | ascent-byods-invariants | Built-in storage/frontiers, SCC structure and refusal atomicity |
 | scheme-artifact | Source/carrier binding and tamper controls |
 
-=MVP-NATIVE-OK= is emitted only after the Scheme parent returns success.
-Original Cases, module verdicts and per-child watchdogs are retained. Building
-with continuous real progress may exceed 180 seconds. The entry does not
-extend child timeouts or add synthetic progress. A positive profile result is
-a focused native acceptance result, not the full repository release verdict.
-The existing CI =just test= includes these modules; this profile does not
-replace its complete Suite discovery or other CI jobs.
+Acceptance requires Scheme parent exit status zero, actual Case and module
+verdicts, and unchanged source/carrier identity. Building with continuous real
+progress may exceed 180 seconds; child watchdogs retain their existing limits.
+The same =just test= entry runs in CI. Exact-head Scheme, oracle, formal and
+performance gates remain required for release. MVP delivery uses this existing
+native execution path and adds no Shell wrapper or separate success marker.
 
 * Finish in three integrated deliveries
 
@@ -125,17 +124,16 @@ it resolves a named failing or missing obligation on the admitted path.
 
 * Release receipt and claim discipline
 
-The [[file:evidence/scheme-mvp-20261005/receipt.json][integrated native receipt]] records the final profile: eight modules,
-79 =CASE-OK= verdicts and parent exit status zero, seven concurrent-lane
-modules followed by isolated artifact controls. It binds the profile, native
-sources and final phase carrier. No new formal, performance or model result is
-claimed. Final-head GitHub CI remains a separate pending release gate.
+The [[file:evidence/scheme-trrel-uf-20261005/receipt.json][existing full native qualification receipt]] records its own frozen
+source and full-suite result. Preserve that evidence boundary; it does not
+certify later commits. MVP sequencing introduces no new formal, performance
+or model result. Final-head GitHub CI remains a separate release gate.
 
 Use one release summary for the admitted MVP, with the exact GitHub PR head,
 capability boundary, scenario identity, source/carrier binding, explicit native
 parent status, independent comparison result, same-head CI URLs, formal
 premises, paired costs and remaining gates. Historical JSON receipts remain
 source-bound references; they are not silently regraded as current evidence.
-Do not upload raw =*.log= files. The native profile changes no semantics and
-performs zero model calls. A complete native MVP must be described as such;
+Do not upload raw =*.log= files. This sequencing change modifies no runtime
+semantics and performs zero model calls. A complete native MVP must be described as such;
 full ASCENT/BYODS replication and model usefulness require their own evidence.

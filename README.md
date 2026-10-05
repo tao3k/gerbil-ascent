@@ -53,8 +53,8 @@ just test
 `just oracle` runs the Rust comparison; `just performance` runs the
 benchmark suite. See `just --list` for focused checks.
 
-`bash tools/check-mvp.sh 2` qualifies the integrated native MVP boundaries
-using eight existing Scheme modules. Full same-head CI remains the release gate.
+The MVP uses the existing native `just test` entry. Full same-head CI remains
+the release gate.
 
 ## Papers studied
 

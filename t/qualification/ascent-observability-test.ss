@@ -28,9 +28,14 @@
                 ;; startup can have no such sample yet; request real collection
                 ;; instead of relying on interpreted import allocation pressure.
                 (collect-before-sample? #t)))
-        (check-equal? (> (.ref (poo-flow-debug-memory-snapshot
-                               'zero-budget-preflight collect?: #t)
-                              'heap-size-bytes) 0) #t)
+        (let* ((before (poo-flow-debug-memory-snapshot 'zero-budget-before))
+               (observed (poo-flow-debug-memory-snapshot
+                          'zero-budget-preflight collect?: #t)))
+          (displayln "NATIVE-MEMORY-SAMPLE before-heap=" (.ref before 'heap-size-bytes)
+                     " collected-heap=" (.ref observed 'heap-size-bytes)
+                     " collected-live=" (.ref observed 'live-bytes))
+          (force-output)
+          (check-equal? (> (.ref observed 'heap-size-bytes) 0) #t))
         (check-equal? (poo-flow-testing-case-profile? rejected-profile) #t)
         (check-equal?
          (with-catch

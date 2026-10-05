@@ -592,3 +592,13 @@ The earlier receipt keeps its original snapshot and scope. The follow-up binds
 373 Scheme files plus three controls, and confirms the earlier proof source
 hashes remain unchanged. Final GitHub CI must independently qualify the
 submitted descendant of this repair snapshot.
+
+The [[file:evidence/scheme-native-entry-20261005/integrated.json][merged qualification]] retains the incoming append row-spine Case and
+LeanPoo-backed source-certificate package. All 16 Session Cases pass with exit
+0 in 38 seconds of execution under the same bounds. =just
+check-nonmembership-formal= builds =AscentProof= and =AscentProofTests=
+successfully (34 Lake jobs; 13 ASCENT proof/test modules), then checks three
+TLA models and seven required counterexamples. The package's toolchain and
+LeanPoo revision are fixed by its checked-in Lake metadata. This supersedes
+the earlier shell proof runner for current qualification; historical receipts
+keep their original toolchain, source hashes and result counts.

@@ -82,6 +82,13 @@
       ;; spines after validation so later set-car! cannot rewrite a committed
       ;; snapshot. Field payload ownership is a separate admission contract.
       (map (lambda (row) (map (lambda (value) value) row)) rows))
+    (def (copy-append-row index name row)
+      ;; Validate shape before copying; the engine still owns the one field
+      ;; callback check and the fact-budget check on this captured row.
+      (unless (and (list? row)
+                   (= (length row) (vector-ref (vector-ref engine-schema 2) index)))
+        (error "invalid ASCENT session source row" name row))
+      (map (lambda (value) value) row))
     (def (engine-source-snapshot)
       (list->vector
        (map (lambda (index)
@@ -155,21 +162,24 @@
       (when partial?
         (error "finish ASCENT partial run before changing sources"))
       (let* ((index (position-of name))
-             (source-state (vector-ref pending index)))
+             (source-state (vector-ref pending index))
+             (owned-row (copy-append-row index name row)))
         (if (vector-ref atomic-appends index)
           (begin
-           (engine-append name row)
+           (engine-append name owned-row)
            (record-append! index source-state))
           (with-catch
            (lambda (failure)
              (recover! pending failure))
            (lambda ()
-             (engine-append name row)
+             (engine-append name owned-row)
              (record-append! index source-state))))))
     (def (direct-append-source! name row)
       (when partial?
         (error "finish ASCENT partial run before changing sources"))
-      (engine-append name row)
+      (let* ((index (position-of name))
+             (owned-row (copy-append-row index name row)))
+        (engine-append name owned-row))
       (set! clean? #f))
     (def (replace-source! name rows)
       (when partial?

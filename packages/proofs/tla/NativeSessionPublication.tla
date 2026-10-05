@@ -26,8 +26,9 @@ Init ==
   /\ outcome = "complete"
 
 \* replace-source!: a successful single-source replacement stays pending
-\* until an unrestricted or completed timed run. A wrong early publication
-\* is the first negative control.
+\* until an unrestricted or completed timed run. An append of an owned row
+\* has the same public cut transition; private incremental engine steps are
+\* outside this model. A wrong early publication is the first negative control.
 SingleReplace ==
   /\ phase # "partial"
   /\ \E cut \in Cuts :

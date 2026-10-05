@@ -319,7 +319,14 @@ contract is used here.
 Native evidence exercises the same public update behavior. The graph
 qualification compares all 64 three-relation directed graphs and all
 eight seed subsets with an independent matrix oracle, checks mixed
-lowered read kinds, and traverses a 4,096-relation chain. The stratified
+lowered read kinds, and traverses a 4,096-relation chain. A second native
+qualification compiles each of those 64 graphs into real recursive Core
+rules, then runs all eight changed-source subsets through completed
+Session replacement. For each of the 512 cuts, every relation's rows
+agree with both a fresh evaluation and an independent reachability
+matrix; the retained relation names agree with the matrix's unaffected
+set. This exercises rule execution, selected-head activation, and
+completed-result reuse together for finite positive recursion. The stratified
 Session qualification now requires the actual dependency-invalidation
 path: a changed blocker recomputes negative and aggregate dependents,
 retains the completed recursive path, and agrees with a fresh solve on
@@ -328,7 +335,10 @@ checks the same property. These are execution checks, not a proof that
 Gerbil's mutable vectors and evaluator refine the Lean model. The open
 bridge is concrete: admitted IDs must be in range, source row ownership
 must preserve the compared cut, and each native rule's actual reads must
-be included in =readsMatch=. A custom index Provider can capture mutable
+be included in =readsMatch=. The exhaustive native matrix covers three
+relations and positive atoms; negative and aggregate reads have separate
+directed qualifications but no analogous exhaustive evaluator bridge.
+A custom index Provider can capture mutable
 state beyond that graph. Reuse admission now accepts only the private
 canonical hash Provider, and a native regression uses a 32-row indexed
 join to show that changing an opaque lookup forces fresh evaluation.

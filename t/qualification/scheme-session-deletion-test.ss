@@ -272,6 +272,72 @@
                       (iota 3)))))
             (iota 8))))
        (iota 64)))
+    (test-case "completed reuse matches real finite rule evaluation and matrix oracle"
+      ;; Each graph is compiled into actual recursive Core rules. For every
+      ;; source cut, compare the retained result, a fresh solve, and a matrix
+      ;; oracle which never reads the compiler's successor vector.
+      (let (names '(a b c))
+        (for-each
+         (lambda (mask)
+           (let* ((edges (edges-for-mask mask))
+                  (closure (matrix-closure edges))
+                  (x (gerbil-ascent-variable 'x))
+                  (base
+                   (gerbil-ascent-program
+                    (map (lambda (name) (gerbil-ascent-relation name 1 '((0)))) names)
+                    (map (lambda (edge)
+                           (gerbil-ascent-rule
+                            (list (gerbil-ascent-atom (list-ref names (cadr edge)) (list x)))
+                            (list (gerbil-ascent-atom (list-ref names (car edge)) (list x)))))
+                         edges)
+                    8 16 32)))
+             (for-each
+              (lambda (seed-mask)
+                (def (seeded? source)
+                  (odd? (quotient seed-mask (expt 2 source))))
+                (def (reaches? source target)
+                  (or (= source target)
+                      (and (member (list source target) closure) #t)))
+                (let* ((changed
+                        (filter-map (lambda (index)
+                                      (and (seeded? index)
+                                           (cons (list-ref names index) '((1)))))
+                                    (iota 3)))
+                       (replacements (if (null? changed) '((a (0))) changed))
+                       (session (gerbil-ascent-open-session base))
+                       (initial (gerbil-ascent-session-run session))
+                       (updated (gerbil-ascent-session-replace-sources!
+                                 session replacements))
+                       (fresh (gerbil-ascent-evaluate-program
+                               (fresh-replacement-program base replacements))))
+                  (for-each
+                   (lambda (target)
+                     (let ((name (list-ref names target))
+                           (expected
+                            (append
+                             (if (ormap (lambda (source)
+                                          (and (not (seeded? source))
+                                               (reaches? source target))) (iota 3))
+                               '((0)) [])
+                             (if (ormap (lambda (source)
+                                          (and (seeded? source)
+                                               (reaches? source target))) (iota 3))
+                               '((1)) []))))
+                       (check-set (rows initial name) '((0)))
+                       (check-set (rows updated name) expected)
+                       (check-set (rows updated name) (rows fresh name))
+                       (check-equal?
+                        (and (memq name (.ref updated 'reused-relations)) #t)
+                        (not (ormap (lambda (source)
+                                      (and (seeded? source)
+                                           (reaches? source target))) (iota 3))))))
+                   (iota 3))
+                  (check-equal? (.ref updated 'evaluation-path)
+                                'stratified-dependency-invalidation)))
+              (iota 8))
+             (displayln "READ-FRAME-CHECKED graph=" mask " seed-cuts=8")
+             (force-output)))
+         (iota 64))))
     (test-case "fresh replacement reads lexical candidate rows without self-field recursion"
       (let* ((base (path-program '((0 1) (1 2))))
              (candidate (fresh-replacement-program

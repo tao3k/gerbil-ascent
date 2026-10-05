@@ -44,6 +44,7 @@
     "program/summary"
     "program/admission"
     "program/result"
+    "program/source-log"
     "program/activation"
     "program/update-selection"
     "program/reuse"

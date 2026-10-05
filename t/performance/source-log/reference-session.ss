@@ -3,13 +3,12 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 ;;; Retained source snapshots, failure recovery, and timeout admission.
-(import (only-in "source-log.ss" gerbil-ascent-source-log-rows)
-        (only-in :clan/poo/object .o .ref)
+(import (only-in :clan/poo/object .o .ref)
         (only-in :clan/poo/mop validate)
-        (only-in "types.ss" GerbilAscentSessionContract)
-        (only-in "admission.ss" gerbil-ascent-check-replacement-rows!)
-        (only-in "update-selection.ss" gerbil-ascent-update-eligible?)
-        (only-in "evaluate.ss" gerbil-ascent-make-engine gerbil-ascent-make-updated-engine)
+        (only-in :gerbil-ascent/program/types GerbilAscentSessionContract)
+        (only-in :gerbil-ascent/program/admission gerbil-ascent-check-replacement-rows!)
+        (only-in :gerbil-ascent/program/update-selection gerbil-ascent-update-eligible?)
+        (only-in :gerbil-ascent/t/performance/source-log/reference-evaluate gerbil-ascent-make-engine gerbil-ascent-make-updated-engine)
         (only-in :gerbil-ascent/table/storage
                  gerbil-ascent-canonical-set-storage-provider?))
 
@@ -111,7 +110,7 @@
     (def (snapshot-program rows)
       (let (next-relations
             (map (lambda (relation source-state)
-                   (let (source-rows (gerbil-ascent-source-log-rows (car source-state) (cdr source-state)))
+                   (let (source-rows (append (car source-state) (reverse (cdr source-state))))
                      (.o (:: @ relation) rows: source-rows)))
                  relations (vector->list rows)))
         (.o (:: @ program) relations: next-relations)))

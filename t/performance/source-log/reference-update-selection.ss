@@ -4,10 +4,9 @@
 
 ;;; Native dependency invalidation selects components; the evaluator owns
 ;;; reuse capsules, mutable rows, budget accounting and atomic publication.
-(import (only-in "source-log.ss" gerbil-ascent-source-log-equal?)
-        (only-in "activation.ss" gerbil-ascent-activate-rule)
+(import (only-in :gerbil-ascent/program/activation gerbil-ascent-activate-rule)
         (only-in :clan/poo/object .ref)
-        (only-in "scheme-checked.ss" relational-stable-procedure?)
+        (only-in :gerbil-ascent/program/scheme-checked relational-stable-procedure?)
         (only-in :gerbil-ascent/core/positive-plan gerbil-ascent-positive-plan)
         (only-in :gerbil-ascent/core/dependency-graph gerbil-ascent-graph-close!)
         (only-in :gerbil-ascent/table/storage gerbil-ascent-canonical-set-storage-provider?))
@@ -81,7 +80,7 @@
           (begin
             (for-each
              (lambda (old new index)
-               (unless (gerbil-ascent-source-log-equal? (car old) (cdr old) (.ref new 'rows))
+               (unless (equal? (append (car old) (reverse (cdr old))) (.ref new 'rows))
                  (vector-set! affected index #t)))
              old-relations relations (iota count))
             (gerbil-ascent-graph-close! (vector-ref analysis 6) affected)

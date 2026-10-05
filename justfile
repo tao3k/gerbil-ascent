@@ -121,6 +121,20 @@ check-actor-pool:
       echo "NATIVE-REGISTRY-CONTROL-OK $control exit=$code"
     done
 
+# Paired persistent source-log kernels and complete public source transactions.
+performance-source-log:
+    {{ test_runner }} run -- just _performance-source-log
+
+_performance-source-log:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    library="{{ justfile_directory() }}/.cache/ascent/native-library/lib"
+    mkdir -p .cache/ascent/source-log
+    gxi {{ gerbil_test_runtime_options }} -e '(add-load-path! (path-expand ".cache/ascent/native-library/lib"))' -e '(import :std/make)' -e '(make ["core/positive-plan" "program/actor-round" "program/source-log" "program/evaluate" "program/session" "t/performance/source-log/reference-update-selection" "t/performance/source-log/reference-reuse" "t/performance/source-log/reference-evaluate" "t/performance/source-log/reference-session" "t/performance/source-log/fixture" "t/performance/source-log-benchmark"] srcdir: (current-directory) libdir: (path-expand ".cache/ascent/native-library/lib") build-deps: (path-expand ".cache/ascent/native-library/build-deps"))'
+    for scenario in join equal pending mismatch update appended-update small; do
+        timeout 90s gxi {{ gerbil_test_runtime_options }} -e '(add-load-path! (path-expand ".cache/ascent/native-library/lib"))' :gerbil-ascent/t/performance/source-log-benchmark "$scenario" "$library" ".cache/ascent/source-log/$scenario.sexp"
+    done
+
 # Paired native selected frames and complete dependency updates/append lifecycle.
 performance-selected-activation:
     {{ test_runner }} run -- just _performance-selected-activation

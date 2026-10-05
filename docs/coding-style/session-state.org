@@ -5,6 +5,74 @@
 Immutable declarations, engine frames, retained updates and checked source admission. Study notes and receipts retain their original revision and scope;
 historical source paths and timings are not current qualification claims.
 
+* Study: compose persistent source logs without copying unchanged bases
+
+Installed Gerbil =2591dcd=, =compiler/optimize-top.ss:1269-1281=, returns
+the existing expression when there are no lifted bindings to wrap.
+=runtime/util.ss:268-283= implements =foldl= with a list cursor and one
+accumulator. These two examples guide this change: reuse admitted immutable
+data when there is nothing to compose, and carry the comparison cursor as
+the fold state. Gerbil's =andmap2= truncates to the shorter list; it is not
+an exact ordered-list equality operation.
+
+Previously the session snapshot, evaluator source lookup and update selection
+each reconstructed =(append base (reverse additions))=. Even an unchanged
+source copied every base header; equality allocated that list solely to compare
+it. =program/source-log.ss= now owns both operations. Empty additions return
+the admitted persistent base. Nonempty composition still creates new list
+headers in source order, preserving row identity. Comparison folds over the
+base with the remaining candidate suffix or =#f= as its only state, then
+compares reversed additions after a successful prefix. Order, duplicate
+multiplicity, missing rows and excess rows retain their previous semantics.
+
+This relies on the existing admission contract: captured source bases,
+addition spines and rows are read-only. Session snapshots own their vector
+headers; sharing an unchanged base does not authorize mutation. Nonempty
+composition retains detached headers. Session, evaluator and update selection
+use the common owner; =build.ss= adds only that production module.
+
+=just performance-source-log= freezes session, evaluator, reuse and update
+selection at =42fce45e9ba2e19de68eb88cdd62badddcbed9d3=. Frozen files differ
+only in module paths and redirects among those owners. Both sides share the
+same current positive-plan and actor-round modules, compile to native code
+and verify module resolution. Seven scenarios use 50 alternating pairs each.
+Warmup and initial collection are outside timing; natural collection remains
+inside. Gates fixed before sampling: unchanged composition/equality and early
+mismatch require 90% less allocation, 30% less CPU and 35 wins; pending
+comparison requires 90% less allocation; public updates require 8% less
+allocation. Other CPU overhead is bounded by 5% + 20 us; the small control
+allows at most 1 KiB additional allocation.
+
+| Scenario | Old CPU us | New CPU us | Old bytes | New bytes | CPU wins |
+|----------+------------+------------+-----------+-----------+----------|
+| Unchanged source composition | 15.641 | 0.016 | 196611.25 | 3.25 | 50/50 |
+| Unchanged source equality | 29.938 | 12.891 | 196611.25 | 3.25 | 50/50 |
+| Equality with pending additions | 25.563 | 28.563 | 202981 | 6147.25 | 15/50 |
+| Early source mismatch | 12.906 | 0.031 | 196611.25 | 3.25 | 50/50 |
+| Public session source replacement | 4633.250 | 4496.500 | 6292324 | 4816164 | 43/50 |
+| Public replacement after an append | 4638.500 | 4522.000 | 6292564 | 4865556 | 37/50 |
+| Small public replacement control | 98.500 | 97.500 | 287860 | 287668 | 35/50 |
+
+All 350 pairs passed semantic parity and the declared gates. Public replacement
+uses 16 independent relations with 1024 rows each and alternates actual r0
+replacements. The timed interval includes the public replacement method,
+source checks, admission, engine closure, publication and forcing all result
+rows. Initial session creation/run and optional initial r1 append/run are
+outside timing. This fixture has no rules: it qualifies source transactions,
+not general rule-solving speed. Allocation falls 23.5% / 22.7%; the modest
+CPU differences are not a general speedup claim. Pending comparison saves
+97.0% allocation but costs 3.0 us more CPU (11.7%); its negative result remains
+visible. Logs, raw pairs and failed fixture/compile attempts remain under
+ignored =.cache/ascent/source-log/=. Production source budgets are unchanged.
+
+Native qualification passed ten modules / 60 Cases in the existing actor
+pool (=jobs=12=); module execution took 0-6 seconds. The source-log Suite
+checks 675 finite comparisons, list/header identity, captured caller rows,
+prior snapshot stability and repeated public replacements after appending.
+Deletion, index, aggregate, workspace, selected-activation, observation and
+actor-round and cancelable session-actor Suites passed. Selected production policy reported zero findings
+and errors. Both frozen-owner normalization and native A/B resolution passed.
+
 * Study: select immutable plans before instantiating runtime frames
 
 Installed Gerbil =2591dcd=, =compiler/optimize-call.ss:822-831=, delays

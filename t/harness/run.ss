@@ -19,6 +19,8 @@
 ;; its original process deadline isolated from the module pool's CPU load.
 (def parallel-modules
   '("t/qualification/ascent-aggregate-program-test.ss"
+    "t/qualification/ascent-actor-round-test.ss"
+    "t/qualification/ascent-actor-session-test.ss"
     "t/qualification/ascent-binary-program-test.ss"
     "t/qualification/ascent-binding-program-test.ss"
     "t/qualification/ascent-binding-test.ss"
@@ -36,6 +38,7 @@
     "t/qualification/ascent-index-entry-test.ss"
     "t/qualification/ascent-storage-batch-test.ss"
     "t/qualification/ascent-selected-activation-test.ss"
+    "t/qualification/ascent-source-log-test.ss"
     "t/qualification/ascent-invalid-program-test.ss"
     "t/qualification/ascent-lattice-program-test.ss"
     "t/qualification/ascent-materialization-test.ss"
@@ -137,6 +140,13 @@
                             [])
                           (if (member "t/qualification/scheme-bounded-datum-test.ss" tests)
                             '("t/performance/bounded-datum/reference")
+                            [])
+                          (if (member "t/qualification/ascent-source-log-test.ss" tests)
+                            '("t/performance/source-log/reference-update-selection"
+                              "t/performance/source-log/reference-reuse"
+                              "t/performance/source-log/reference-evaluate"
+                              "t/performance/source-log/reference-session"
+                              "t/performance/source-log/fixture")
                             [])
                           (if (member "t/qualification/ascent-selected-activation-test.ss" tests)
                             '("t/performance/selected-activation/reference-selection"

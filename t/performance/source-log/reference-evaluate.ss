@@ -4,26 +4,25 @@
 
 ;;; Generic stratified semi-naive evaluator. Mutable row buffers belong to one
 ;;; session; public declarations and returned snapshots are POO values.
-(import (only-in "actor-round.ss" gerbil-ascent-run-actor-round!)
-        (only-in "source-log.ss" gerbil-ascent-source-log-rows)
+(import (only-in :gerbil-ascent/program/actor-round gerbil-ascent-run-actor-round!)
         (only-in :clan/poo/object .o .ref object?)
         (only-in :clan/poo/mop validate)
         (only-in :std/iter for iter Iterator &Iterator-next!)
-        (only-in "admission.ss" gerbil-ascent-initialize-source-row!
+        (only-in :gerbil-ascent/program/admission gerbil-ascent-initialize-source-row!
                  gerbil-ascent-admit-source-row!
                  gerbil-ascent-check-replacement-rows! gerbil-ascent-prepare-storage-batch)
-        (only-in "result.ss" gerbil-ascent-publication-cache
+        (only-in :gerbil-ascent/program/result gerbil-ascent-publication-cache
                  gerbil-ascent-publish-rows gerbil-ascent-snapshot-rows gerbil-ascent-snapshot-sizes
                  gerbil-ascent-result-observation)
-        (only-in "planning.ss" gerbil-ascent-prepare-program)
+        (only-in :gerbil-ascent/program/planning gerbil-ascent-prepare-program)
         (only-in :gerbil-ascent/core/positive-plan gerbil-ascent-run-positive-plan!
                  gerbil-ascent-emit-heads!)
-        (only-in "index.ss" gerbil-ascent-make-row-indexes row-indexes-rows row-indexes-advance!)
-        (only-in "types.ss" GerbilAscentSessionContract)
-        (only-in "reuse.ss" gerbil-ascent-prepare-native-reuse
+        (only-in :gerbil-ascent/program/index gerbil-ascent-make-row-indexes row-indexes-rows row-indexes-advance!)
+        (only-in :gerbil-ascent/program/types GerbilAscentSessionContract)
+        (only-in :gerbil-ascent/t/performance/source-log/reference-reuse gerbil-ascent-prepare-native-reuse
                  gerbil-ascent-activate-rules gerbil-ascent-activate-selected-rules native-reuse?
                  native-reuse-result native-reuse-affected)
-        (only-in "analysis.ss" gerbil-ascent-program-analysis
+        (only-in :gerbil-ascent/program/analysis gerbil-ascent-program-analysis
                  gerbil-ascent-program-schema)
         (only-in :gerbil-ascent/core/rule-semantics gerbil-ascent-lattice-feeds-relation?
                  gerbil-ascent-lattice-key
@@ -796,8 +795,8 @@
           (let (published (gerbil-ascent-publication-cache count))
             (def (source-rows-at index)
               (or (vector-ref source-overrides index)
-                  (gerbil-ascent-source-log-rows (vector-ref source-originals index)
-                                                (vector-ref source-additions index))))
+                  (append (vector-ref source-originals index)
+                          (reverse (vector-ref source-additions index)))))
             (def (source-program-with index replacement)
               (let (next-relations
                     (map (lambda (relation position)

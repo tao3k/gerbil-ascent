@@ -121,6 +121,20 @@ check-actor-pool:
       echo "NATIVE-REGISTRY-CONTROL-OK $control exit=$code"
     done
 
+# Paired native general callbacks, ordered pattern bindings and complete solves.
+performance-rule-bindings:
+    {{ test_runner }} run -- just _performance-rule-bindings
+
+_performance-rule-bindings:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    library="{{ justfile_directory() }}/.cache/ascent/native-library/lib"
+    mkdir -p .cache/ascent/rule-bindings
+    gxi {{ gerbil_test_runtime_options }} -e '(add-load-path! (path-expand ".cache/ascent/native-library/lib"))' -e '(import :std/make)' -e '(make ["core/rule-bindings" "core/positive-plan" "program/evaluate" "t/performance/rule-bindings/reference" "t/performance/rule-bindings/reference-positive" "t/performance/rule-bindings/reference-evaluate" "t/performance/rule-bindings/fixture" "t/performance/rule-bindings-benchmark"] srcdir: (current-directory) libdir: (path-expand ".cache/ascent/native-library/lib") build-deps: (path-expand ".cache/ascent/native-library/build-deps"))'
+    for scenario in call-two call-six bind-wide guards patterns small; do
+        timeout 90s gxi {{ gerbil_test_runtime_options }} -e '(add-load-path! (path-expand ".cache/ascent/native-library/lib"))' :gerbil-ascent/t/performance/rule-bindings-benchmark "$scenario" "$library" ".cache/ascent/rule-bindings/$scenario.sexp"
+    done
+
 # Paired native finite evidence generation and verification.
 performance-finite-replay:
     {{ test_runner }} run -- just _performance-finite-replay

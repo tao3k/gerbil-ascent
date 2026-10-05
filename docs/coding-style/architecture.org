@@ -5,6 +5,22 @@
 Current module boundaries and algorithm ownership. Study notes and receipts retain their original revision and scope;
 historical source paths and timings are not current qualification claims.
 
+* Runtime bindings have one core owner
+
+=core/rule-bindings.ss= owns environment projection, callback invocation,
+ordered pattern extension and head construction over admitted terms.
+=core/rule-semantics.ss= owns dependency planning and lattice row semantics;
+its original binding exports remain compatibility forwards. =positive-plan=
+imports the binding owner directly. The public evaluator delegates guard,
+binding, generator, expression and aggregate-pattern operations to that owner.
+No core module depends on public POO declarations or engine relation storage.
+
+This separation removes the evaluator's duplicate argument-list reader and
+aggregate pattern builder. The runtime module does not cache callback values,
+share an environment across solves or alter callback admission. Numeric slot
+frames still belong to each engine; this change concerns the general callback
+path. Namespace migration itself carries no performance claim.
+
 * Source picture
 
 #+begin_example
@@ -26,6 +42,7 @@ program/scheme-language.ss        |                          |
                                  v                          v
                         core/positive-plan            table/access
                         core/rule-semantics           table/storage
+                        core/rule-bindings
                         core/dependency-graph
 
 table/expression --------> core/binary-relation <------ core/binary-program

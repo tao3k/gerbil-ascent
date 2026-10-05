@@ -38,6 +38,7 @@
     "program/operator-change"
     "program/operator-session"
     "core/dependency-graph"
+    "core/rule-bindings"
     "core/rule-semantics"
     "program/analysis"
     "program/summary"

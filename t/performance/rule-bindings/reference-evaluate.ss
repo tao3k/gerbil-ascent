@@ -7,29 +7,28 @@
 (import (only-in :clan/poo/object .o .ref object?)
         (only-in :clan/poo/mop validate)
         (only-in :std/iter for iter Iterator &Iterator-next!)
-        (only-in "admission.ss" gerbil-ascent-initialize-source-row!
+        (only-in :gerbil-ascent/program/admission gerbil-ascent-initialize-source-row!
                  gerbil-ascent-admit-source-row!
                  gerbil-ascent-check-replacement-rows!)
-        (only-in "result.ss" gerbil-ascent-publication-cache
+        (only-in :gerbil-ascent/program/result gerbil-ascent-publication-cache
                  gerbil-ascent-publish-rows gerbil-ascent-snapshot-rows gerbil-ascent-snapshot-sizes
                  gerbil-ascent-result-observation)
-        (only-in "planning.ss" gerbil-ascent-prepare-program)
-        (only-in :gerbil-ascent/core/positive-plan gerbil-ascent-run-positive-plan!
+        (only-in :gerbil-ascent/program/planning gerbil-ascent-prepare-program)
+        (only-in :gerbil-ascent/t/performance/rule-bindings/reference-positive gerbil-ascent-run-positive-plan!
                  gerbil-ascent-emit-heads!)
-        (only-in "index.ss" gerbil-ascent-make-row-indexes row-indexes-rows row-indexes-advance!)
-        (only-in "types.ss" GerbilAscentSessionContract)
-        (only-in "reuse.ss" gerbil-ascent-prepare-native-reuse
+        (only-in :gerbil-ascent/program/index gerbil-ascent-make-row-indexes row-indexes-rows row-indexes-advance!)
+        (only-in :gerbil-ascent/program/types GerbilAscentSessionContract)
+        (only-in :gerbil-ascent/program/reuse gerbil-ascent-prepare-native-reuse
                  gerbil-ascent-activate-rules gerbil-ascent-reuse-active-rules native-reuse?
                  native-reuse-result native-reuse-affected)
-        (only-in "analysis.ss" gerbil-ascent-program-analysis
+        (only-in :gerbil-ascent/program/analysis gerbil-ascent-program-analysis
                  gerbil-ascent-program-schema)
         (only-in :gerbil-ascent/core/rule-semantics gerbil-ascent-lattice-feeds-relation?
                  gerbil-ascent-lattice-key
                  gerbil-ascent-lattice-value
                  gerbil-ascent-joined-row)
-        (only-in :gerbil-ascent/core/rule-bindings gerbil-ascent-bind-row
-                 gerbil-ascent-binding-values
-                 gerbil-ascent-call-with-bindings gerbil-ascent-extend-pattern)
+        (only-in :gerbil-ascent/t/performance/rule-bindings/reference
+                 gerbil-ascent-expression-value gerbil-ascent-bind-row)
         (only-in :gerbil-ascent/table/provider gerbil-ascent-canonical-hash-index-provider?)
         (only-in :gerbil-ascent/table/storage
                  gerbil-ascent-storage-make-state
@@ -449,6 +448,13 @@
                             derived-count pending-count)
                          output-limit)
                   (error "ASCENT output fact budget exceeded"))))
+            (def (clause-inputs variables environment)
+              (map (lambda (name)
+                     (let (binding (assq name environment))
+                       (unless binding
+                         (error "unbound ASCENT clause variable" name))
+                       (cdr binding)))
+                   variables))
             (def (visit-body body delta-at depth environment consume)
               (if (null? body)
                 (consume environment)
@@ -487,8 +493,7 @@
                                                 row environment))
                            (when bound
                              (set! tuples
-                               (cons (gerbil-ascent-binding-values
-                                      variables bound "unbound ASCENT clause variable")
+                               (cons (clause-inputs variables bound)
                                      tuples)))))
                        rows)
                       (let (values ((vector-ref clause 4)
@@ -503,27 +508,31 @@
                                   (next-environment
                                    (if matcher
                                      (let (matched (matcher value))
-                                       (gerbil-ascent-extend-pattern
-                                        output matched environment
-                                        "ASCENT aggregate pattern returned invalid bindings"))
+                                       (unless (and (list? matched)
+                                                    (= (length matched)
+                                                       (length output)))
+                                         (error "ASCENT aggregate pattern returned invalid bindings"
+                                                matched output))
+                                       (append (map cons output matched)
+                                               environment))
                                      (cons (cons output value)
                                            environment))))
                              (visit-body (cdr body) delta-at depth
                                          next-environment consume)))
                          values))))
                    ((eq? (vector-ref clause 0) 'guard)
-                    (let (pass? (gerbil-ascent-call-with-bindings
-                                  (vector-ref clause 2) (vector-ref clause 1)
-                                  environment "unbound ASCENT clause variable"))
+                    (let (pass? (apply (vector-ref clause 2)
+                                       (clause-inputs (vector-ref clause 1)
+                                                      environment)))
                       (unless (boolean? pass?)
                         (error "ASCENT guard must return a boolean" pass?))
                       (when pass?
                         (visit-body (cdr body) delta-at depth
                                     environment consume))))
                    ((eq? (vector-ref clause 0) 'generator)
-                    (let (values (gerbil-ascent-call-with-bindings
-                                  (vector-ref clause 3) (vector-ref clause 2)
-                                  environment "unbound ASCENT clause variable"))
+                    (let (values (apply (vector-ref clause 3)
+                                         (clause-inputs (vector-ref clause 2)
+                                                        environment)))
                       (for (value values)
                         (let* ((output (vector-ref clause 1))
                                (next-environment
@@ -542,9 +551,9 @@
                           (visit-body (cdr body) delta-at depth
                                       next-environment consume)))))
                    ((eq? (vector-ref clause 0) 'binding)
-                    (let (value (gerbil-ascent-call-with-bindings
-                                  (vector-ref clause 3) (vector-ref clause 2)
-                                  environment "unbound ASCENT clause variable"))
+                    (let (value (apply (vector-ref clause 3)
+                                       (clause-inputs (vector-ref clause 2)
+                                                      environment)))
                       (visit-body (cdr body) delta-at depth
                                   (cons (cons (vector-ref clause 1) value)
                                         environment)

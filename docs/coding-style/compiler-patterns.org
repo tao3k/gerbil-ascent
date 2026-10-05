@@ -5,6 +5,84 @@
 Compiler sources, checked calling conventions, lexical scope and finite types. Study notes and receipts retain their original revision and scope;
 historical source paths and timings are not current qualification claims.
 
+* Study: admitted callback arguments and ordered pattern extension
+
+The installed compiler's =optimize-call.ss:90-131= only substitutes lambda
+arguments after proving equal arity and stable bindings; other operands retain
+explicit lexical bindings. =compile.ss:557-628= separately lowers fixed/rest
+case-lambda dispatch. The transferable rule is to specialize a proved calling
+shape while preserving operand evaluation, rather than assuming that =apply=
+or a shorter source expression will disappear in native code.
+
+=core/rule-bindings.ss= applies this at the admitted rule boundary. Zero,
+one and two input names use direct calls; larger callbacks retain =apply= and
+an ordered argument list. All names are resolved before invoking user code,
+missing-name diagnostics retain their first failing input, and a bound =#f=
+is a value. No user callback becomes an unchecked call or a cached value.
+The evaluator shares this operation for guard, binding and generator clauses;
+expressions use the same core owner. Aggregate input tuples still require
+lists and use its ordered projection helper.
+
+The compiler's =generate-meta-define-values%= (=compile.ss:1446-1469=)
+constructs only its owned output and preserves publication order. Our pattern
+operation combines finite output-name traversal, result arity validation and
+fresh binding construction. It produces two fresh pairs per output rather
+than the old map-plus-append's three, retains output order and the caller's
+original environment tail, and never mutates callback-owned tuples. A cyclic
+or improper callback result is bounded by the admitted output count and still
+raises the original pattern diagnostic. Row and aggregate patterns share it.
+
+Baseline =02d84463482a266c9dcc0196a0d2da0c5b5dfb9f= is frozen in
+=t/performance/rule-bindings/=. Runtime functions are verbatim source extraction (final newline normalized);
+the positive runner and full evaluator differ only in import routing to that
+baseline. All mutable relation/index/result machinery is shared symmetrically.
+=just performance-rule-bindings= compiles both graphs and verifies native
+=.ssi= resolution plus =.o1= presence before sampling. Scenario, library prefix
+and ignored receipt path are explicit command arguments.
+
+Final matched native receipts after integration of remote actor-pool changes:
+50 alternating pairs per scenario (300 total),
+CPU user+system and allocation from =##process-statistics=. Warm-up/initial GC,
+program construction and semantic checks are outside each timed batch;
+natural GC remains inside. Complete scenarios time ten full warm-declaration
+solves per batch, including engine state, traversal, storage and result
+publication. Kernels use 512 calls (argument projection) or 64 (pattern binding).
+
+| Scenario | Baseline CPU us | New CPU us | Baseline bytes | New bytes | CPU wins |
+|----------+-----------------+------------+----------------+-----------+----------|
+| Two-input expression | 0.0313 | 0.0195 | 96.4 | 0.4 | 50/50 |
+| Six-input fallback control | 0.0723 | 0.0781 | 480.4 | 480.4 | 8/50 |
+| 64-output pattern binding | 0.4531 | 0.1875 | 9219.3 | 6147.3 | 50/50 |
+| Complete 128-row / 32-guard pipeline | 239.5 | 191.6 | 631332.8 | 207396.8 | 48/50 |
+| Complete 128-row / 64-output pattern | 169.4 | 125.2 | 1257924.8 | 864708.8 | 47/50 |
+| Complete two-row small control | 3.8 | 3.7 | 14804.8 | 14132.8 | 37/50 |
+
+The large gates were fixed before sampling: at least 10% median CPU and
+allocation reduction and 35/50 wins. Controls admit at most 8 KiB and 20 us
+absolute per-call overhead. Every gate passed. The six-input fallback retained
+allocation and was slightly slower; no universal callback speedup is claimed.
+The two complete gains qualify these callback-heavy and pattern-heavy shapes,
+not arbitrary programs, cold analysis or end-to-end application latency.
+
+Native tests compare argument arities 0 through 6, every missing-input prefix,
+false bindings, detached pattern outputs and retained prior tails, malformed
+and cyclic patterns, complete callback traces, aggregate pattern diagnostics,
+wide full solves and concurrent engine ownership. Independent expected rows
+supplement baseline parity. Receipts and the initial fixture syntax failure
+remain in ignored =.cache/ascent/rule-bindings/=; execution logs are not tracked.
+
+Qualification: the selected native actor pool passed six modules / 53 Cases
+with =test-pool auto= resolving the existing core-capacity setting to 12;
+module execution took 2-4 seconds. This includes 512 finite directed graphs,
+slot-frame concurrency and the original binding, aggregate and index consumers.
+The new six-Case Suite also passed independently. Final edits after that pool
+were documentation contracts and source formatting; the complete final native
+A/B graph compiled and all six gates passed again. Selected production policy
+reported =findings=0 errors=0= after repairing an invalid heterogeneous Vector
+type annotation and documenting the finite pattern loop. No suppression was
+added. The initial 300-pair run also passed and remains in ignored receipts;
+its complete CPU gains were 20.8% and 27.5%, versus final 20.0% and 26.1%.
+
 * Exact Gerbil source
 
 The active Homebrew executable is =/opt/homebrew/bin/gerbil=, linked to

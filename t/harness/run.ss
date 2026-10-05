@@ -22,6 +22,7 @@
     "t/qualification/ascent-binary-program-test.ss"
     "t/qualification/ascent-binding-program-test.ss"
     "t/qualification/ascent-binding-test.ss"
+    "t/qualification/ascent-rule-bindings-test.ss"
     "t/qualification/ascent-byods-index-test.ss"
     "t/qualification/ascent-byods-invariants-test.ss"
     "t/qualification/ascent-candidate-description-test.ss"
@@ -133,6 +134,12 @@
                             [])
                           (if (member "t/qualification/scheme-bounded-datum-test.ss" tests)
                             '("t/performance/bounded-datum/reference")
+                            [])
+                          (if (member "t/qualification/ascent-rule-bindings-test.ss" tests)
+                            '("t/performance/rule-bindings/reference"
+                              "t/performance/rule-bindings/reference-positive"
+                              "t/performance/rule-bindings/reference-evaluate"
+                              "t/performance/rule-bindings/fixture")
                             [])
                           (if (member "t/qualification/scheme-finite-replay-test.ss" tests)
                             '("t/performance/finite-replay/reference-funs"

@@ -930,6 +930,20 @@
       "kind": "tlc-configuration",
       "failure": "shell-style comments are invalid TLC cfg syntax",
       "acceptedRepair": "use TLA line comments"
+    },
+    {
+      "kind": "github-ci-native-observation",
+      "sourceCommit": "964feb3eccd1241852947bc0d763715476190026",
+      "runUrl": "https://github.com/tao3k/gerbil-ascent/actions/runs/37264906773",
+      "failedJob": "scheme",
+      "passedModules": 57,
+      "parallelJobs": 4,
+      "failedAssertion": "zero-budget memory policy must reject fast native thunk",
+      "observedResult": "unexpected-admission",
+      "gambitCommit": "dcd677c",
+      "measurementBoundary": "Gambit heap/live fields are latest-GC counters; failing CI did not print their numeric values",
+      "acceptedRepair": "request actual collection for zero-budget control and assert a positive observed heap; no deadline or heap budget relaxed",
+      "localAffectedModulePass": true
     }
   ],
   "evidenceBoundary": {
@@ -943,5 +957,27 @@
     "rustIntegrationChanged": false,
     "uploadedRawLogs": false,
     "externalToolchainSourcesIncludedInRepositoryDigestMap": false
+  },
+  "coldNativeMemoryControl": {
+    "sourceCommit": "dd6319f14d3b540cdb822e38959322a42be8dbe6",
+    "sourceDigests": {
+      "t/qualification/ascent-observability-test.ss": "c09638c0b3c0c709c9a24598f4c25f8fc3229545d8f5cdb43ca07bdb07419be7",
+      "t/harness/native-entry.ss": "76f0dd8bfe59fee42de4b107734186b4a34f3217d445af5299d3c188b87745a9",
+      "t/harness/actor-pool.ss": "657e117e32c3d232325375b55ee828b4881a991799865bbb305740108630ef9f",
+      "t/harness/run.ss": "9fa8a414397cbde7a679d90686b138d4481e3e2109938a1735f3a3617a2165ac",
+      "justfile": "ae80937bbdf401ee3d1c993e33d4ad49afc688c390329476a2ec50e4675dbaa9"
+    },
+    "publicExit": 0,
+    "caseCount": 2,
+    "zeroBudgetUnchanged": true,
+    "maxDurationMilliseconds": 25,
+    "actualSamples": {
+      "beforeHeapBytes": 7391688,
+      "collectedHeapBytes": 7391080,
+      "collectedLiveBytes": 1524328
+    },
+    "collectionRequestedByScheme": true,
+    "generatedEntrySha256": "0edd701879254a24d8b281cfb7b6debcbcebe90903bb0d822dc9ea72a025bf79",
+    "binarySha256": "435796d5f62d86f89e9af5fab0540035053b16aa9b26c508dfc5efcf217091f6"
   }
 }

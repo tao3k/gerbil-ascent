@@ -192,3 +192,14 @@ separately binds full-suite and control snapshots. The full Suite passed 63
 modules/560 Cases. The affected mode-reset and registry gates passed alongside
 the six actor lifecycle Cases. GitHub exact-head CI is a separate publication
 gate rather than an inferred consequence of these qualification commands.
+
+* Native memory observation boundary
+
+The native Linux cold-start gate exposed an ambient-GC assumption in the zero
+budget control. POO Core's heap/live sample reads Gambit's latest-GC fields.
+The negative fixture explicitly requests collection and validates positive
+observed heap before testing rejection. Its actual before/after sample is emitted
+as evidence; no budget or assertion is relaxed. This controls the observation
+premise rather than assuming interpreted module import pressure. The runtime
+process's independent 1G heap bound and 5/5/120 progress/deadline gates remain.
+A latest-GC sample is not a proof of instantaneous RSS/live heap monitoring.

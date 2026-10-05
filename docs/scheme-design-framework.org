@@ -321,3 +321,14 @@ frontiers, private batches, a single merge owner, a complete round barrier and
 cancellation draining. Provider/lattice/negative semantics retain their existing
 ownership until matched semantic tests and concrete refinement close their gates.
 No model calls or Rust integration occurred; parallel speedup remains unmeasured.
+
+The first GitHub run at =964feb3= passed 57 modules before its zero-budget
+observability control failed on the native Linux entry. The fixed POO Core
+uses Gambit's latest-GC heap/live counters. An AOT cold start must not be assumed
+to have the same prior collection history as interpreted imports. The negative
+control now requests actual collection, checks positive observed heap and emits
+its real before/collected heap/live values; the zero heap/live-growth budgets and
+25 ms duration-interruption control are unchanged. The affected native module's
+two Cases pass at =dd6319f=; the rejected CI run remains recorded, not promoted.
+Latest-GC memory observations are not equivalent to instantaneous RSS or live
+heap accounting. That representation boundary remains explicit in runtime claims.

@@ -27,6 +27,8 @@ example : Ascent.RuleGraphClosure.ruleSuccessors mixedReadPlans true = [] := by 
 #print axioms Ascent.RuleGraphClosure.completed_reuse_frame
 #print axioms Ascent.NativeGraphWorklist.runFuel_compiled_exact
 #print axioms Ascent.NativeGraphWorklist.runFuel_compiled_closed
+#print axioms Ascent.NativeBitmapWorklist.runFuel_compiled_exact
+#print axioms Ascent.NativeBitmapWorklist.runFuel_compiled_closed
 
 def cycleAdj : Fin 3 → List (Fin 3)
   | 0 => [1, 1]
@@ -40,6 +42,23 @@ example : (Ascent.NativeGraphWorklist.runFuel cycleAdj 4
 
 example : (2 : Fin 3) ∈ (Ascent.NativeGraphWorklist.runFuel cycleAdj 4
     (Ascent.NativeGraphWorklist.initial ([0] : List (Fin 3)))).selected := by
+  decide
+
+example : (Ascent.NativeBitmapWorklist.runFuel cycleAdj 4
+    (Ascent.NativeBitmapWorklist.initial ([0] : List (Fin 3)))).pending = [] := by
+  have rep := Ascent.NativeBitmapWorklist.runFuel_corresponds cycleAdj 4
+    (Ascent.NativeBitmapWorklist.initial [0])
+    (Ascent.NativeGraphWorklist.initial [0])
+    (Ascent.NativeBitmapWorklist.initial_corresponds [0])
+  rw [rep.2]
+  exact Ascent.NativeGraphWorklist.runFuel_complete 3 cycleAdj _
+    (Ascent.NativeGraphWorklist.initial_wellformed [0] (by decide))
+
+example : Ascent.NativeBitmapWorklist.marked
+    (Ascent.NativeBitmapWorklist.runFuel cycleAdj 4
+      (Ascent.NativeBitmapWorklist.initial ([0] : List (Fin 3)))) (2 : Fin 3) := by
+  change (Ascent.NativeBitmapWorklist.runFuel cycleAdj 4
+    (Ascent.NativeBitmapWorklist.initial ([0] : List (Fin 3)))).selected[2] = true
   decide
 
 /-- If the negation read `source → derived` is absent from the dependency

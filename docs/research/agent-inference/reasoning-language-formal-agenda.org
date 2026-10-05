@@ -312,13 +312,24 @@ executable =count + 1= fuel driver clears pending. Consequently,
 Lean list machine* and yields exactly the compiler's rule-read closure.
 The derived =runFuel_compiled_closed= discharges the affected-set closure
 premise used by the fixed-point frame theorem for this same model.
+The [[file:../../../packages/proofs/lean/NativeBitmapWorklist.lean][fixed-length bitmap model]] represents selected keys by a =Vector Bool count=
+and keeps the LIFO pending list. Its =enqueue_corresponds=,
+=scan_corresponds=, =pop_corresponds= and =runFuel_corresponds= prove that
+every typed cell update and complete scan corresponds to the list machine.
+=runFuel_compiled_exact= and =runFuel_compiled_closed= therefore carry the
+finite closure result through this vector representation, including cycles
+and duplicate edges. The initial Boolean vector is built from the seed
+list; native seeding order can differ without changing this proof's
+selected set or completion, provided it enumerates each true bit once.
 The fuel is a proof device for graph traversal, not a native fixed-point
 or model-reasoning limit. The native qualification checks all 64
 three-relation graphs against an independent matrix oracle, all roots and
 mixed read kinds; it also checks that non-reading clauses add no edges and
 tests a 4,096-relation chain. What remains is an explicit refinement from
-admitted Gerbil vectors and mutable bitmap/list operations to the Lean
-machine, including in-range target IDs and snapshot ownership. Native
+admitted Gerbil vectors and mutable bitmap/list operations to the typed
+Lean vector machine, including in-range target IDs and snapshot ownership.
+The Lean =Vector.set= step is a functional model of one native cell mutation,
+not an extraction or a proof about Gerbil's runtime. Native
 evaluation must also satisfy the modeled local =step= and completed-result
 premises before this becomes a runtime reuse-correctness claim. The
 Functional module reduces the model's per-rule selection code; no native

@@ -82,3 +82,13 @@ A concrete implementation gap is recorded: =trrel_uf= currently calls the same
 =trrel-extend= with reflexive mode enabled, using the same membership and
 predecessor/successor tables. It is not the paper's SCC/union-find representation.
 Output/frontier qualification does not close that storage or memory-cost claim.
+
+* Native union-find implementation follow-up (2026-10-05)
+
+The earlier algorithm gap is addressed by [[file:../../scheme-trrel-uf-design.org][a new Scheme SCC owner]] with
+weighted parent links, component members and reachability, exact frontier
+preflight and atomic budget rejection. [[file:../../evidence/scheme-trrel-uf-20261005/receipt.json][Its receipt]] binds actual native tests,
+Lean edge/quotient laws and finite TLA remapping/refusal controls. The earlier
+frontier receipt remains a historical snapshot. Full native refinement and
+whole-engine/application cost evidence remain open; representation counts are
+not allocator or end-to-end memory measurements.

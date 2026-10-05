@@ -15,7 +15,8 @@
         (only-in "eqrel.ss" gerbil-ascent-eqrel-state
                  gerbil-ascent-eqrel-extension)
         (only-in "trrel.ss" gerbil-ascent-trrel-state
-                 gerbil-ascent-trrel-extension
+                 gerbil-ascent-trrel-extension)
+        (only-in "trrel-uf.ss" gerbil-ascent-trrel-uf-state
                  gerbil-ascent-trrel-uf-extension))
 
 (export GerbilAscentStorageProviderContract
@@ -150,5 +151,5 @@
 (def gerbil-ascent-trrel-uf-storage-provider
   (validate GerbilAscentStorageProviderContract
             (.o (:: @ gerbil-ascent-set-storage-provider)
-                (.make-state gerbil-ascent-trrel-state)
+                (.make-state gerbil-ascent-trrel-uf-state)
                 (.extend-rows gerbil-ascent-trrel-uf-extension))))

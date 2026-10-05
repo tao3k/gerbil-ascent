@@ -1,0 +1,60 @@
+;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+(import :gerbil/runtime/gambit
+        (only-in :std/test check-equal? test-case test-suite)
+        (only-in :gerbil-ascent/table/trrel-uf gerbil-ascent-trrel-uf-state gerbil-ascent-trrel-uf-extension)
+        (rename-in (only-in :gerbil-ascent/t/performance/trrel-uf/reference
+                           gerbil-ascent-trrel-state gerbil-ascent-trrel-uf-extension)
+          (gerbil-ascent-trrel-state old-state) (gerbil-ascent-trrel-uf-extension old-extend)))
+(export ascent-trrel-uf-test)
+(def (run old? cycle? n)
+  (let ((state ((if old? old-state gerbil-ascent-trrel-uf-state))) (rows []))
+    (for-each (lambda (i)
+      (set! rows (append ((if old? old-extend gerbil-ascent-trrel-uf-extension)
+                         state rows [] (list i (modulo (+ i 1) n)) (* n n)) rows)))
+      (iota (if cycle? n (- n 1))))
+    rows))
+(def (truth cycle? n)
+  (apply append (map (lambda (a) (map (lambda (b) (list a b))
+                             (filter (lambda (b) (or cycle? (<= a b))) (iota n)))) (iota n))))
+(def (verify rows expected)
+  (check-equal? (length rows) (length expected))
+  (let (seen (make-hash-table))
+    (for-each (lambda (row) (hash-put! seen row #t)) rows)
+    (check-equal? (hash-length seen) (length expected))
+    (for-each (lambda (row) (check-equal? (hash-get seen row) #t)) expected)))
+(def (sample old? cycle?)
+  (let* ((before (##process-statistics)) (start (current-jiffy)) (rows (run old? cycle? 32))
+         (elapsed (- (current-jiffy) start)) (after (##process-statistics)))
+    (vector rows
+      (* 1000000 (- (+ (f64vector-ref after 0) (f64vector-ref after 1))
+                    (+ (f64vector-ref before 0) (f64vector-ref before 1))))
+      (* 1000000 (/ elapsed (jiffies-per-second))))))
+(def (allocation old? cycle?)
+  (##gc)
+  (let* ((before (f64vector-ref (##process-statistics) 16)) (rows (run old? cycle? 32)))
+    (##gc)
+    (let (bytes (- (f64vector-ref (##process-statistics) 16) before))
+      (when (< bytes 0) (error "nonmonotonic allocation counter"))
+      (vector rows bytes))))
+(def ascent-trrel-uf-test
+  (test-suite "SCC union-find matched provider costs"
+    (test-case "every timing and allocation sample matches independent chain/cycle truth"
+      (for-each (lambda (cycle?)
+        (let ((expected (truth cycle? 32)) (mode (if cycle? 'cycle 'dag)))
+          (for-each (lambda (pair)
+            (let* ((old-first? (even? pair)) (a (sample old-first? cycle?)) (b (sample (not old-first?) cycle?))
+                   (old (if old-first? a b)) (new (if old-first? b a)))
+              (verify (vector-ref old 0) expected) (verify (vector-ref new 0) expected)
+              (displayln "TRREL-UF-TIME mode=" mode " pair=" pair
+                " old-cpu-us=" (vector-ref old 1) " new-cpu-us=" (vector-ref new 1)
+                " old-wall-us=" (vector-ref old 2) " new-wall-us=" (vector-ref new 2))
+              (force-output))) (iota 50))
+          (for-each (lambda (pair)
+            (let* ((old-first? (even? pair)) (a (allocation old-first? cycle?)) (b (allocation (not old-first?) cycle?))
+                   (old (if old-first? a b)) (new (if old-first? b a)))
+              (verify (vector-ref old 0) expected) (verify (vector-ref new 0) expected)
+              (displayln "TRREL-UF-ALLOC mode=" mode " pair=" pair
+                " old-bytes=" (vector-ref old 1) " new-bytes=" (vector-ref new 1))
+              (force-output))) (iota 10)))) '(#f #t)))))

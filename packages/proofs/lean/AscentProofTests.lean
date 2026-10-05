@@ -312,3 +312,7 @@ end Ascent.AtomicBinding.Tests
 #print axioms Ascent.ProviderFrontier.concrete_partition
 #print axioms Ascent.ProviderFrontier.new_fact_must_be_emitted
 #print axioms Ascent.ProviderFrontier.binary_join_partition
+
+#print axioms Ascent.TransitiveComponents.insertion_transitive
+#print axioms Ascent.TransitiveComponents.insertion_least
+#print axioms Ascent.TransitiveComponents.quotient_exact

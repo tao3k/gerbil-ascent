@@ -20,3 +20,4 @@ import StratifiedNegation
 import SourceCertificates
 import SourceUpdateFrame
 import ProviderFrontier
+import TransitiveComponents

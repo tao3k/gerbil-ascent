@@ -1167,3 +1167,23 @@ check-provider-frontier-formal:
       echo "COUNTEREXAMPLE-OK provider-frontier-$mutation $invariant"
     done
     echo 'PROVIDER-FRONTIER-CHECK-OK'
+
+# SCC union-find insertion/remapping and refusal, with discriminating mutations.
+check-transitive-components-formal:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [[ -n "${TLC_BIN:-}" ]]; then tlc=("$TLC_BIN"); else tlc=(java -XX:+UseParallelGC -cp "${TLC_JAR:-.cache/ascent/tools/tla2tools-v1.7.4.jar}" tlc2.TLC); fi
+    temp=$(mktemp -d)
+    trap 'rm -rf "$temp"' EXIT
+    "${tlc[@]}" -workers 1 -config packages/proofs/tla/TransitiveComponents.cfg -metadir "$temp/good" packages/proofs/tla/TransitiveComponents.tla
+    for mutation in split stale reject; do
+      invariant=SCCExact
+      if [[ "$mutation" == stale ]]; then invariant=ReachExact; fi
+      if [[ "$mutation" == reject ]]; then invariant=RefusalAtomic; fi
+      sed -e "s/Mutation = \"none\"/Mutation = \"$mutation\"/" -e "s/INVARIANTS .*/INVARIANTS $invariant/" packages/proofs/tla/TransitiveComponents.cfg > "$temp/$mutation.cfg"
+      code=0
+      "${tlc[@]}" -workers 1 -config "$temp/$mutation.cfg" -metadir "$temp/$mutation" packages/proofs/tla/TransitiveComponents.tla > "$temp/$mutation.out" 2>&1 || code=$?
+      [[ "$code" = 12 ]] && grep -q "Invariant $invariant is violated" "$temp/$mutation.out"
+      echo "COUNTEREXAMPLE-OK transitive-components-$mutation $invariant"
+    done
+    echo 'TRANSITIVE-COMPONENTS-CHECK-OK'

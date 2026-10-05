@@ -14,6 +14,7 @@
     "table/funs"
     "table/eqrel"
     "table/trrel"
+    "table/trrel-uf"
     "table/provider"
     "table/access"
     "table/storage"

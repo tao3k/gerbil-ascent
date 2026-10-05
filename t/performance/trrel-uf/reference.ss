@@ -5,8 +5,6 @@
 ;;; Per-relation transitive closure state. Index emitted reachability pairs so
 ;;; a new edge combines its known predecessors and successors directly.
 
-(import (only-in "trrel-uf.ss" gerbil-ascent-trrel-uf-extension))
-
 (export gerbil-ascent-trrel-state
         gerbil-ascent-trrel-extension
         gerbil-ascent-trrel-uf-extension)
@@ -105,3 +103,7 @@
 ;; : (-> TransitiveClosureState Rows Rows Row Nat Rows)
 (def (gerbil-ascent-trrel-extension state _all _pending row budget)
   (gerbil-ascent-trrel-extend state row budget #f))
+
+;; : (-> TransitiveClosureState Rows Rows Row Nat Rows)
+(def (gerbil-ascent-trrel-uf-extension state _all _pending row budget)
+  (gerbil-ascent-trrel-extend state row budget #t))

@@ -1,7 +1,8 @@
 ;;; -*- Gerbil -*-
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
-(import :std/test :std/misc/process :std/encoding/json "../harness/artifact")
+(import :std/test :std/misc/process :std/encoding/json "../harness/artifact"
+        (only-in :std/crypto/digest sha256) (only-in :std/encoding/hex hex-encode))
 (export scheme-artifact-test)
 (def (put path text)
   (call-with-output-file [path: path truncate: #t] (lambda (out) (display text out))))
@@ -31,6 +32,15 @@
   (with-catch (lambda (_) #t) (lambda () (thunk) #f)))
 (def scheme-artifact-test
   (test-suite "Scheme native artifact publication"
+    (test-case "streamed hashes preserve empty binary and buffer-boundary bytes"
+      (with-artifact-fixture (lambda ()
+        (for-each (lambda (size)
+          (let (bytes (make-u8vector size))
+            (for-each (lambda (i) (u8vector-set! bytes i (modulo i 256))) (iota size))
+            (call-with-output-file [path: "bytes" truncate: #t]
+              (lambda (port) (write-subu8vector bytes 0 size port)))
+            (check (artifact-digest "bytes") => (hex-encode (sha256 bytes)))))
+          '(0 8191 8192 8193 16385)))))
     (test-case "completed build beyond 180 seconds is accepted"
       (with-artifact-fixture (lambda ()
         (stage) (artifact-main "finalize") (artifact-main "check")

@@ -450,3 +450,13 @@ mutation controls. It does not complete B23 Theorem 3.5. Bounded native graph
 frontier traces are checked at each insertion rather than only at final closure.
 Overall replication remains open until the listed implementation and proof gaps
 are closed; previous passing suite counts are not full-paper coverage evidence.
+
+* Native transitive SCC storage (2026-10-05)
+
+=table/trrel-uf.ss= now owns a distinct union-find SCC representation instead
+of reflexive ordinary trrel state. =TransitiveComponents= Lean proves abstract
+one-edge closure and quotient laws; TLA checks component normalization and
+refusal with split/stale/rejected-write mutations. Native prefix truth and
+structural/atomicity tests connect this slice to actual storage execution;
+complete VM/hash/parent refinement remains open. [[file:scheme-trrel-uf-design.org][Design]] and [[file:evidence/scheme-trrel-uf-20261005/receipt.json][receipt]] retain
+matched Provider cost controls and whole-engine performance boundaries.

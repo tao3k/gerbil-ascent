@@ -4,6 +4,7 @@
 
 (import (only-in :std/test check-equal? check-exception test-suite)
         (only-in :std/hash/misc hash-ensure-modify!)
+        (only-in :gerbil-ascent/table/trrel-uf gerbil-ascent-trrel-uf-observation)
         (only-in :clan/poo/object .ref)
         (only-in :core/observability/testing-case poo-flow-test-case)
         (only-in :gerbil-ascent/t/qualification/ascent-byods-query-fixture
@@ -141,6 +142,45 @@
 
 (def ascent-byods-invariants-test
   (test-suite "ASCENT BYODS exhaustive three-node invariants"
+    (poo-flow-test-case "union-find false nodes and false groups have distinct identities"
+      (let ((state (gerbil-ascent-storage-make-state gerbil-ascent-trrel-uf-storage-provider)))
+        (def (extend edge budget)
+          (gerbil-ascent-storage-extend gerbil-ascent-trrel-uf-storage-provider state [] [] edge budget))
+        (check-equal? (length (extend '(#f #t) 3)) 3)
+        (check-equal? (length (extend '(#f #f #t) 3)) 3)
+        (check-equal? (extend '(#f #t #f) 1) '((#f #t #f)))
+        (check-equal? (extend '(#t #f) 1) '((#t #f)))
+        (check-equal? (gerbil-ascent-trrel-uf-observation state) '#(4 2 0))))
+    (poo-flow-test-case "union-find compresses a cycle without retaining concrete pairs"
+      (let ((state (gerbil-ascent-storage-make-state gerbil-ascent-trrel-uf-storage-provider)) (rows []))
+        (for-each (lambda (n)
+          (set! rows (append (gerbil-ascent-storage-extend gerbil-ascent-trrel-uf-storage-provider
+                              state rows [] (list n (modulo (+ n 1) 64)) 4096) rows))) (iota 64))
+        (check-equal? (length rows) 4096)
+        (check-equal? (gerbil-ascent-trrel-uf-observation state) '#(64 1 0))
+        (for-each (lambda (n)
+          (check-equal? (gerbil-ascent-storage-extend gerbil-ascent-trrel-uf-storage-provider
+                          state rows [] (list n (modulo (+ n 1) 64)) 0) [])) (iota 64))
+        (check-equal? (gerbil-ascent-trrel-uf-observation state) '#(64 1 0))))
+    (poo-flow-test-case "union-find budget refusal preserves SCC state and exact retry frontier"
+      (let ((state (gerbil-ascent-storage-make-state gerbil-ascent-trrel-uf-storage-provider)) (rows []))
+        (def (extend edge budget)
+          (gerbil-ascent-storage-extend gerbil-ascent-trrel-uf-storage-provider state rows [] edge budget))
+        (check-exception (extend '(0 1) 2) true)
+        (check-equal? (gerbil-ascent-trrel-uf-observation state) '#(0 0 0))
+        (set! rows (append (extend '(0 1) 3) rows))
+        (set! rows (append (extend '(1 2) 3) rows))
+        (check-equal? (gerbil-ascent-trrel-uf-observation state) '#(3 3 3))
+        (check-exception (extend '(2 0) 2) true)
+        (check-equal? (gerbil-ascent-trrel-uf-observation state) '#(3 3 3))
+        (set! rows (append (extend '(2 0) 3) rows))
+        (check-equal? (length rows) 9)
+        (check-equal? (gerbil-ascent-trrel-uf-observation state) '#(3 1 0))
+        (check-exception (extend '(3 0) 3) true)
+        (check-equal? (gerbil-ascent-trrel-uf-observation state) '#(3 1 0))
+        (set! rows (append (extend '(3 0) 4) rows))
+        (check-equal? (length rows) 13)
+        (check-equal? (gerbil-ascent-trrel-uf-observation state) '#(4 2 1))))
     (poo-flow-test-case "each provider frontier equals the independent new concrete facts"
       (let (checked 0)
         (for-each

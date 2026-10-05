@@ -1,0 +1,76 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+#+TITLE: Native trrel_uf SCC union-find storage
+#+DATE: 2026-10-05
+#+STATUS: implemented; native qualification and bounded proof scope recorded separately
+
+* Semantics and owner
+
+=table/trrel-uf.ss= owns per-run, per-group SCC state. =table/storage.ss= now
+constructs that state for =trrel_uf=; ordinary =trrel= retains its own owner.
+The existing =table/trrel.ss= export forwards the UF extension to the new owner.
+Direct internal callers must pair the UF extension with its UF constructor,
+not the ordinary transitive-state constructor. Binary and grouped ternary rows
+retain the admitted Provider's reflexive directed-closure behavior and exact
+new concrete frontier, including false-valued/grouped keys and duplicates.
+
+The design follows B23 §5.4's SCC/union-find representation seam, adapted to
+Scheme's storage extension interface. It does not claim the original Rust
+algorithm has been copied instruction-for-instruction or its complexity and
+application measurements reproduced. See [[https://kmicinski.com/assets/byods.pdf][the paper]] and [[file:scheme-paper-closure.org][whole-paper closure matrix]].
+
+* Insertion, refusal and compression
+
+A group owns a value-to-node map and current component roots. Nodes carry
+parent links, root-only immutable member lists, cached root size and a private
+identity-keyed reachability table. There is no retained concrete-row membership
+map or per-node predecessor/successor tuple index in the UF Provider.
+
+For a new a->b edge, the missing frontier is computed from component rectangles
+Pred(a) × Succ(b). Each missing rectangle expands to the member Cartesian
+product; new admitted nodes supply their reflexive facts. Exact counting occurs
+before frontier materialization or mutation. A budget rejection therefore
+cannot install new nodes, change parents or mutate component reachability.
+Parent lookups are read-only, so even unsuccessful preflight does not perform
+path compression. No caller callback runs between counting and commit.
+
+If b reaches a, exactly Pred(a) intersect Succ(b) forms the new SCC. Union
+chooses the largest existing component, joins losing members and releases their
+root tables. Surviving component edges are normalized to current roots;
+internal edges disappear. Cached size avoids repeated member-list length scans,
+and member concatenation copies losing spines while retaining the winner's
+spine. Weighted union is an engineering design choice; a native logarithmic
+parent-depth bound is not a proved claim in this patch.
+
+A completed 64-node cycle concretizes to 4,096 rows while this Provider retains
+64 node entries, one component and zero inter-component arcs. The public engine
+still materializes rows for rule evaluation and results. This structural
+compression observation is not a measured whole-engine memory saving. For a
+DAG with many singleton SCCs, stored component reachability may remain quadratic;
+rectangle traversal and merge normalization have costs that require controls.
+
+* Verification chain and its limits
+
+- Native: every insertion prefix of all 512 three-node graphs for all three
+  Providers and two source orders; larger existing graph/group/producer tests;
+  cycle structure, refusal before new-node insertion, refusal before SCC merge,
+  exact retry and zero-budget duplicates.
+- Lean =TransitiveComponents=: edge insertion retains old facts, inserts the
+  edge, remains transitive and is least among transitive supersets. SCC quotient
+  concretization is exact given a root partition matching mutual reachability.
+  This premise is not a proof of actual mutable parent/hash code.
+- TLA =TransitiveComponents=: three already admitted nodes, component rectangles,
+  SCC remapping, root identity, concrete reachability and refusal. Mutations
+  retaining split SCCs, stale edges and refusal writes must produce counterexamples.
+  The finite node set is a fixture; no generation limit is introduced.
+- Matched old Provider control: frozen =0e2540c= ordinary-index/reflexive UF
+  implementation versus the new implementation, 32-node DAG and cycle, 50
+  alternating CPU/wall pairs plus 10 separate forced-GC allocation pairs each.
+  Every sample is checked against independent chain/cycle truth. The module uses
+  the exclusive suite lane. These measure Provider execution/frontier only,
+  excluding public engine, Rust transport, LLM and multicore behavior.
+
+Results and source/carrier binding belong to [[file:evidence/scheme-trrel-uf-20261005/receipt.json][the receipt]]. Native VM/hash/row
+refinement, arbitrary user Provider conformance, concurrent Provider/lattice
+execution, index-sharing and full paper applications remain separate gates.
+No Prompt, repair, model calls or MRR Rust integration are added.

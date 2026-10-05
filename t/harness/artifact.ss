@@ -9,7 +9,16 @@
 (def (file name) (string-append cache name))
 (def (clock) (time->seconds (current-time)))
 (def (artifact-digest path)
-  (hex-encode (sha256 (call-with-input-file path read-all-as-u8vector))))
+  ;; Final verification must not allocate another full native executable in
+  ;; the compiler parent's heap. Hash bytes with a bounded reusable buffer.
+  (call-with-input-file path
+    (lambda (port)
+      (let ((digest (Digest::sha256)) (buffer (make-u8vector 8192)))
+        (let loop ()
+          (let (count (read-subu8vector buffer 0 (u8vector-length buffer) port))
+            (if (zero? count)
+              (hex-encode (digest-final! digest))
+              (begin (digest-update! digest buffer 0 count) (loop)))))))))
 (def (artifact-read-json path)
   (parameterize ((current-json-read-options (JSONReadOptions object-as-hash: #t)))
     (call-with-input-file path read-json)))

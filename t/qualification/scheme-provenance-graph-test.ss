@@ -9,6 +9,14 @@
                  positive-provenance-status positive-provenance-alternatives
                  candidate-open-provenance-maintenance provenance-maintenance-rows
                  candidate-provenance-withdraw!))
+(import (rename-in (only-in :gerbil-ascent/t/performance/provenance-index/reference
+                           candidate-positive-provenance positive-provenance-status
+                           positive-provenance-alternatives positive-provenance-witness)
+                   (candidate-positive-provenance reference-provenance)
+                   (positive-provenance-status reference-status)
+                   (positive-provenance-alternatives reference-alternatives)
+                   (positive-provenance-witness reference-witness))
+        (only-in :gerbil-ascent/candidate/provenance-graph positive-provenance-witness))
 (import (only-in :gerbil-ascent/program/scheme-language
                  relational-program relational-admit relational-solve relational-query-name))
 
@@ -62,6 +70,33 @@
 
 (def scheme-provenance-graph-test
   (test-suite "Complete grounded provenance and deletion"
+    (test-case "indexed enumeration preserves order and exact budget boundaries"
+      (let* ((snapshot (reasoning-source-snapshot 'ordered-index 1
+                         '((s 1 ((#f) (#f) (#\a) (#\b)))
+                           (unused 1 ((7) (8) (9))))))
+             (spec (recursive-provenance-spec)))
+        (for-each
+         (lambda (budget)
+           (for-each
+            (lambda (cap)
+              (let ((old (reference-provenance snapshot spec 'program 'complete
+                                              '((#f) (#\a) (#\b)) budget cap))
+                    (new (candidate-positive-provenance snapshot spec 'program 'complete
+                                                        '((#f) (#\a) (#\b)) budget cap)))
+                (check-equal? (positive-provenance-status new) (reference-status old))
+                (check-equal? (positive-provenance-alternatives new)
+                              (reference-alternatives old))
+                (check-equal? (positive-provenance-witness new) (reference-witness old))))
+            '(1 7 8 11 12 13 14 16 32)))
+         '(1 2 4 8 16 32 64 128))
+        (let (graph (candidate-positive-provenance snapshot spec 'program 'complete
+                                                 '((#f) (#\a) (#\b)) 128 13))
+          (check-equal? (positive-provenance-status graph) 'complete)
+          (check-equal? (length (positive-provenance-alternatives graph)) 13)
+          (check-equal?
+           (map caddr (filter (lambda (edge) (eq? (cadr edge) 'source))
+                              (positive-provenance-alternatives graph)))
+           '((s 1) (s 2) (s 3) (s 4) (unused 1) (unused 2) (unused 3))))))
     (test-case "recursive provenance retains every source and cyclic alternative"
       (let* ((snapshot (reasoning-source-snapshot 'complete-graph 1
                                                   '((s 1 ((1) (1))))))
@@ -144,6 +179,8 @@
                        (vector '(path ?x ?y) 12) '(16 64 128)))
                 (graph (candidate-positive-provenance
                         snapshot spec 'corpus 'complete native 10000))
+                (reference (reference-provenance
+                            snapshot spec 'corpus 'complete native 10000))
                 (state (candidate-open-provenance-maintenance
                         snapshot spec 'corpus 'complete native graph 10000))
                 (recursive-alternatives
@@ -152,6 +189,9 @@
                                                    (= (cadr path) (car edge))) edges)))
                                expected))))
            (check-row-set native expected)
+           (check-equal? (positive-provenance-alternatives graph)
+                         (reference-alternatives reference))
+           (check-equal? (positive-provenance-witness graph) (reference-witness reference))
            (check-equal? (positive-provenance-status graph) 'complete)
            (check-equal? (length (positive-provenance-alternatives graph))
                          (+ (* 2 (length edges)) recursive-alternatives))

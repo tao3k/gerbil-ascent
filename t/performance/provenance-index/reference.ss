@@ -60,36 +60,17 @@
     (if (not (memq status '(complete closed-absent)))
       (make-positive-provenance status witness [])
       (let ((nodes (positive-proof-nodes witness))
-            (by-row (make-hash-table))
-            (by-relation (make-hash-table-eq))
-            (seen-edges (make-hash-table))
-            (alternatives []) (edge-count 0) (steps 0) (bounded? #f))
-        ;; Index only this completed witness. Lists retain witness order for
-        ;; grounding and budget probes; hash iteration never emits evidence.
-        ;; Structural row keys match the former equal? lookup, and the first
-        ;; node wins if the witness contains repeated relation/row keys.
-        (for-each
-         (lambda (node)
-           (let* ((name (proof-node-relation node))
-                  (key (cons name (proof-node-row node))))
-             (unless (hash-get by-row key) (hash-put! by-row key node))
-             (hash-put! by-relation name
-                        (cons node (or (hash-get by-relation name) [])))))
-         nodes)
-        (hash-for-each
-         (lambda (name bucket) (hash-put! by-relation name (reverse bucket)))
-         by-relation)
+            (alternatives []) (steps 0) (bounded? #f))
         (def (node-for name row)
-          (hash-get by-row (cons name row)))
+          (find (lambda (node)
+                  (and (eq? name (proof-node-relation node))
+                       (equal? row (proof-node-row node)))) nodes))
         (def (add! output kind label inputs)
           (let (edge (list (proof-node-id output) kind label inputs))
-            (unless (hash-get seen-edges edge)
-              (if (>= edge-count edge-limit)
+            (unless (member edge alternatives)
+              (if (>= (length alternatives) edge-limit)
                 (set! bounded? #t)
-                (begin
-                  (hash-put! seen-edges edge #t)
-                  (set! edge-count (+ edge-count 1))
-                  (set! alternatives (cons edge alternatives)))))))
+                (set! alternatives (cons edge alternatives))))))
         (for-each
          (lambda (entry)
            (for-each
@@ -138,7 +119,9 @@
                               (when next
                                 (walk (cdr remaining) next
                                       (cons (proof-node-id node) inputs)))))))
-                      (or (hash-get by-relation (car clause)) [])))))))
+                      (filter (lambda (node)
+                                (eq? (car clause) (proof-node-relation node)))
+                              nodes)))))))
            (walk (vector-ref rule 1) [] []))
          (reasoning-candidate-rules spec)
          (iota (length (reasoning-candidate-rules spec))))

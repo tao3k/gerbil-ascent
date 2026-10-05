@@ -5,6 +5,95 @@
 Finite selection, execution receipts and semantic evidence boundaries. Study notes and receipts retain their original revision and scope;
 historical source paths and timings are not current qualification claims.
 
+* Study: private indexes for ordered complete provenance
+
+The installed Gerbil =2591dcd= compiler's =optimize-base.ss:334-343=
+keeps a class's method table with the class that owns it. At
+=435-453=, type/class declarations populate private lookup tables rather
+than rediscovering metadata from output lists. The useful pattern is an
+explicit owner and a lookup representation chosen for its queries.
+
+In =candidate/provenance-graph.ss=, the completed witness is immutable input
+to a single enumeration call. That call now owns three temporary indexes:
+
+| Index | Equality and purpose | Ordered evidence |
+|-------+----------------------+------------------|
+| Relation/row to first node | Structural equality, matching the former row lookup | Witness node identities remain unchanged |
+| Relation to nodes | Symbol identity; bucket spine is private | Buckets are reversed once into witness order |
+| Seen alternatives | Structural equality of the entire edge | Accepted edges still accumulate in a list |
+
+The third index replaces repeated =member= scans. A private counter replaces
+repeated =length= scans without changing the cap: a duplicate edge consumes
+no capacity; the first distinct edge beyond the limit returns =bounded= with
+no alternatives. Source labels retain their occurrence positions, including
+duplicate source rows. Rule occurrence positions and input-node order also
+retain their original meaning. Hash iteration never determines wire output.
+
+Relation buckets replace repeated full-witness filtering during grounding.
+They retain node order, so body-row probes and fixed-clause evaluations hit
+the same work budget at the same position. No index escapes into a certificate
+or retained maintenance object. Verification and opening maintenance benefit
+through their existing reconstruction call; withdrawal publication and its
+work accounting remain separate responsibilities.
+
+The original =8b926e2= implementation is frozen byte-for-byte at
+=t/performance/provenance-index/reference.ss=. Native A/B runs through
+=just performance-provenance-index=, with explicit scenario and library
+arguments. Both modules must resolve to the same native prefix and have
+compiled =.o1= files. Each scenario performs 50 alternating pairs with exact
+status, witness and ordered-alternative comparisons outside the timers,
+plus an independent alternative-count assertion.
+
+The timed boundary is the complete =candidate-positive-provenance= call,
+including closed-absence witness replay and index construction. Snapshot and
+candidate construction, process startup, verification, opening maintenance,
+and subsequent withdrawals are excluded. Private indexes have a fixed
+memory cost; the small graph is a diagnostic control, not a speedup claim.
+Before sampling, larger scenarios require at least 10% median CPU improvement,
+35/50 CPU wins and no more than 50% additional allocation. CPU and allocation
+are measured with =##process-statistics=; wall-clock is not a qualification.
+
+The original Scheme Suite adds exact reference comparisons to all 64 graphs
+and checks every successive source withdrawal against a separate matrix
+closure and a fresh native relational solve. A separate 72-combination
+budget/cap Case includes duplicate =#f= rows, characters and unrelated relations;
+it also asserts the independent source-label sequence and exact 13-edge cap.
+Generated transcripts stay under ignored =.cache/ascent/provenance-index/=.
+
+Local native A/B on 2026-10-05 completed all three scenarios, with exact
+parity on all 150 pairs and process exit 0:
+
+| Scenario | Old bytes | New bytes | Old CPU us | New CPU us | CPU wins |
+|----------+-----------+-----------+------------+------------+----------|
+| One source row | 18880 | 23712 | 8 | 10 | 11/50 |
+| 256 distinct source rows | 4407272 | 4562968 | 16162 | 6155 | 49/50 |
+| 256 identical source rows | 436528 | 471824 | 1039 | 320 | 50/50 |
+
+For distinct rows, median CPU falls 61.9% with 3.5% more allocation; for
+identical rows, it falls 69.2% with 8.1% more allocation. The tiny graph pays
+2 microseconds and 4832 bytes of fixed overhead. These results qualify
+complete provenance generation for these workloads, not full solving,
+certificate verification, retained-update latency or peak memory. They do
+not claim an allocation reduction. No adaptive cutoff or environment switch
+was added to hide the small-graph result. The selected production policy
+completed with =findings=0 errors=0=.
+
+The first semantic run rejected the new fixture before enumeration because
+Reasoning Snapshot's scalar domain excludes strings. The six existing Cases,
+including all 64 graphs and 192 successive withdrawals, completed, but the
+invocation exited 70 and is retained as a failure. The fixture now uses
+admitted characters; the domain and test deadlines were not widened.
+
+The corrected native AOT invocation exited 0 with all seven =CASE-OK=
+markers, 64 complete-graph markers, 192 withdrawal markers, final =OK= and
+the outer source/executable consistency check. The module reported =PASS=
+at 83 seconds under its original 120-second deadline. The new 72-combination
+Case passed with the independently asserted exact cap and label sequence.
+The reference target is also registered in the existing test owner's selected
+native build list, so a clean test prefix need not run the benchmark first.
+This last declarative target registration is separate from the local AOT
+receipt; clean-prefix integration is checked by the exact commit's CI.
+
 * Feature: finite selection and admission
 
 =program/operator.ss= lowers =select-eq= into a singleton source relation

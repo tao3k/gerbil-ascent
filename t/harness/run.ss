@@ -171,6 +171,9 @@
                             '("t/performance/finite-mapping/reference-types"
                               "t/performance/finite-mapping/reference-objects"
                               "t/performance/finite-mapping/reference")
+                            [])
+                          (if (member "t/qualification/scheme-provenance-graph-test.ss" tests)
+                            '("t/performance/provenance-index/reference")
                             []))))
     (call-with-output-file [path: module-file truncate: #t]
       (lambda (out) (write modules out) (newline out)))

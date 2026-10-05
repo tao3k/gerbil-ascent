@@ -146,15 +146,14 @@
                (list-sort string<?
                  (filter (lambda (name)
                            (and (string-suffix? ".ss" name)
-                                (not (string-suffix? "-test.ss" name))
-                                (not (string-suffix? "-output.ss" name))))
+                                (not (string-suffix? "-test.ss" name))))
                          (directory-files "t/qualification")))))
       (set! modules (append modules (filter (lambda (module) (not (member module modules))) support))))
     (call-with-output-file [path: module-file truncate: #t]
       (lambda (out) (write modules out) (newline out)))
     ;; Compile both sides of the paired performance fixture. Native make also
     ;; performs the incremental dependency check on every test invocation.
-    (make (append modules (map path-strip-extension tests)) srcdir: (current-directory) libdir: library
+    (make (append modules (filter (lambda (module) (not (member module modules))) (map path-strip-extension tests))) srcdir: (current-directory) libdir: library
           build-deps: (path-expand "build-deps" test-cache))
     (force-output)
     (setenv "ASCENT_TEST_LIBRARY" library)

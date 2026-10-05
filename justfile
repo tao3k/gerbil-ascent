@@ -1148,3 +1148,22 @@ check-component-index-formal:
       echo "COUNTEREXAMPLE-OK component-index-$mutation Consistent"
     done
     echo 'COMPONENT-INDEX-CHECK-OK'
+
+# BYODS concrete frontier coverage and consumer visibility; finite eqrel model.
+check-provider-frontier-formal:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [[ -n "${TLC_BIN:-}" ]]; then tlc=("$TLC_BIN"); else tlc=(java -XX:+UseParallelGC -cp "${TLC_JAR:-.cache/ascent/tools/tla2tools-v1.7.4.jar}" tlc2.TLC); fi
+    temp=$(mktemp -d)
+    trap 'rm -rf "$temp"' EXIT
+    "${tlc[@]}" -workers 1 -config packages/proofs/tla/ProviderFrontier.cfg -metadir "$temp/good" packages/proofs/tla/ProviderFrontier.tla
+    for mutation in raw omit; do
+      sed "s/Mutation = \"none\"/Mutation = \"$mutation\"/" packages/proofs/tla/ProviderFrontier.cfg > "$temp/$mutation.cfg"
+      code=0
+      "${tlc[@]}" -workers 1 -config "$temp/$mutation.cfg" -metadir "$temp/$mutation" packages/proofs/tla/ProviderFrontier.tla > "$temp/$mutation.out" 2>&1 || code=$?
+      invariant=FrontierComplete
+      if [[ "$mutation" == omit ]]; then invariant=DeliveredExact; fi
+      [[ "$code" = 12 ]] && grep -q "Invariant $invariant is violated" "$temp/$mutation.out"
+      echo "COUNTEREXAMPLE-OK provider-frontier-$mutation $invariant"
+    done
+    echo 'PROVIDER-FRONTIER-CHECK-OK'

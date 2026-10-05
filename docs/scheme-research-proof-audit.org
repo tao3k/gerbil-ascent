@@ -439,3 +439,14 @@ performance lane. See [[file:evidence/scheme-credit-observation-20261005/receipt
 This advances the A22 planning implementation without expanding B23 Provider
 concurrency claims. Persistent workers, large SCC partitioning and whole-runtime
 model gains remain separate open gates; no model calls or Rust integration.
+
+* Full ASCENT/BYODS closure audit (2026-10-05)
+
+The [[file:scheme-paper-closure.org][current closure matrix]] lists every core feature family, BYODS protocol,
+index-sharing/lattice/application obligations and remaining native refinement
+seams. =ProviderFrontier= adds local concrete partition, required new-fact
+emission and binary-join partition laws plus finite injection/consumer and
+mutation controls. It does not complete B23 Theorem 3.5. Bounded native graph
+frontier traces are checked at each insertion rather than only at final closure.
+Overall replication remains open until the listed implementation and proof gaps
+are closed; previous passing suite counts are not full-paper coverage evidence.

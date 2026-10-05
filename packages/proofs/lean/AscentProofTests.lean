@@ -308,3 +308,7 @@ example : bind [.variable 0] [1, 2] [] = none := by decide
 example : bind [.variable 0, .wildcard] [1] [] = none := by decide
 
 end Ascent.AtomicBinding.Tests
+
+#print axioms Ascent.ProviderFrontier.concrete_partition
+#print axioms Ascent.ProviderFrontier.new_fact_must_be_emitted
+#print axioms Ascent.ProviderFrontier.binary_join_partition

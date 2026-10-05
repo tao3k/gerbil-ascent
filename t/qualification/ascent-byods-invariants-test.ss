@@ -127,8 +127,37 @@
        (check-equal? (not (not (member row actual))) #t))
      wanted)))
 
+(def (check-frontier-trace kind provider ordered)
+  (let ((state (gerbil-ascent-storage-make-state provider)) (inputs []) (seen []))
+    (for-each
+     (lambda (edge)
+       (set! inputs (cons edge inputs))
+       (let* ((wanted (reference-rows kind inputs))
+              (fresh (filter (lambda (row) (not (member row seen))) wanted))
+              (emitted (gerbil-ascent-storage-extend provider state seen [] edge 9)))
+         (check-equal? (length emitted) (length fresh))
+         (for-each (lambda (row) (check-equal? (not (not (member row emitted))) #t)) fresh)
+         (set! seen (append emitted seen)))) ordered)))
+
 (def ascent-byods-invariants-test
   (test-suite "ASCENT BYODS exhaustive three-node invariants"
+    (poo-flow-test-case "each provider frontier equals the independent new concrete facts"
+      (let (checked 0)
+        (for-each
+         (lambda (edges)
+           (for-each
+            (lambda (kind provider)
+              (check-frontier-trace kind provider edges)
+              (check-frontier-trace kind provider (reverse edges)))
+            '(eqrel trrel trrel-uf)
+            (list gerbil-ascent-eqrel-storage-provider
+                  gerbil-ascent-trrel-storage-provider
+                  gerbil-ascent-trrel-uf-storage-provider))
+           (set! checked (+ checked 1))
+           (when (zero? (modulo checked 64))
+             (displayln "PROGRESS independent BYODS frontier graphs " checked "/512")
+             (force-output)))
+         (subsets +possible-edges+))))
     (poo-flow-test-case "eqrel preflight preserves state and deterministic emission order"
       (let (state (gerbil-ascent-storage-make-state
                    gerbil-ascent-eqrel-storage-provider))

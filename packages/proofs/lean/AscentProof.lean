@@ -19,3 +19,4 @@ import SessionPublication
 import StratifiedNegation
 import SourceCertificates
 import SourceUpdateFrame
+import ProviderFrontier

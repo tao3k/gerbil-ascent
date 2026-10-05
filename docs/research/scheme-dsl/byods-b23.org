@@ -67,3 +67,13 @@ the paper's Rust performance results or prove the contract for every
 possible user-supplied Provider.
 
 [[file:index.org][Scheme research index]]; [[file:../../related-work-matrix.org][related-work matrix]].
+
+* Frontier verification and full-paper closure (2026-10-05)
+
+The [[file:../../scheme-paper-closure.org][paper closure matrix]] distinguishes the entire B23 target from bounded
+built-in Provider receipts. =ProviderFrontier.lean= proves three local laws;
+=ProviderFrontier.tla= explores eqrel injection and delivery, rejecting raw-only
+frontiers and dropped consumption. Native tests compare each expansion against
+an independent graph model for all 512 three-node inputs, all three built-in
+Providers and both insertion orders. These checks do not prove Theorem 3.5,
+user-defined Providers, lattice concurrency or index-sharing applications.

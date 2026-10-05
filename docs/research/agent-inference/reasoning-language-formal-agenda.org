@@ -245,16 +245,16 @@ equivalence. The native correspondence is currently a review obligation:
 An added =alias= fault changes a committed source cut without changing
 its published result; TLC and Lean both reject it. This is a concrete
 counterexample to extending the proof to arbitrary mutable host values:
-=program/session.ss= previously retained caller-owned row pairs during
-batch replacement and append. It now copies replacement list/row spines
-after validation and captures each appended row spine before handing it
-to the engine. The native regressions mutate caller-owned rows after
-both operations, then compare completed output with fresh solves. The
-checked language admits only exact integers, booleans,
-symbols and characters as scalar fields, and copies constructed rows.
+=program/session.ss= now captures initial source list/row spines before
+building its first engine, copies replacement spines after validation,
+and captures each appended row spine before handing it to the engine.
+The native regressions mutate caller-owned rows before the first run and
+after accepted replacements/appends, then check the captured source cut.
+The checked language admits only exact integers, booleans, symbols and
+characters as scalar fields, and copies constructed rows.
 Nested host objects remain shared; opaque callbacks/providers require
 an ownership or copying contract before their completed results inherit
-this proof. A passing native regression qualifies this ownership boundary;
+this proof. Native checks qualify the row-spine ownership boundary;
 a full native trace refinement is still open.
 
 The proof package now uses LeanPOO directly through Lake. The
@@ -335,14 +335,13 @@ join to show that changing an opaque lookup forces fresh evaluation.
 Opaque rule callbacks and custom storage Providers also use full
 evaluation. The same cut now rejects field predicates other than the
 exact built-in =relational-scalar?= and =exact-integer?= checks. A
-native counterexample has a checker mutate an independent source row:
+native counterexample has a checker mutate a shared nested source value:
 without the gate, source-log equality selected reuse while a fresh
 solve observed the changed input. Qualification requires fresh evaluation
 and agreement with that input's newly derived output. This closes the
 field-callback effect in reuse admission, while caller mutation of raw
-Core source values and Gerbil-to-Lean evaluator refinement remain open.
-No performance claim follows
-from this proof.
+Core nested host values and Gerbil-to-Lean evaluator refinement remain
+open. No performance claim follows from this proof.
 
 The =TLCGenerationCutoff= constant is a finite *model-checking* search
 parameter, supplied by =ASCENT_TLC_GENERATION_CUTOFF= in the =Justfile= (four

@@ -8,11 +8,13 @@
         (only-in :clan/poo/object .o .ref)
         (only-in :gerbil-ascent/program/scheme-language relational-program)
         (only-in :gerbil-ascent/program/objects gerbil-ascent-program gerbil-ascent-guard
-                 gerbil-ascent-relation)
+                 gerbil-ascent-relation gerbil-ascent-atom gerbil-ascent-rule
+                 gerbil-ascent-variable gerbil-ascent-literal)
         (only-in :gerbil-ascent/program/evaluate gerbil-ascent-evaluate-program)
         (only-in :gerbil-ascent/program/update-selection gerbil-ascent-update-selection
                  gerbil-ascent-update-eligible?)
         (only-in :gerbil-ascent/table/provider gerbil-ascent-hash-index-provider)
+        (only-in :gerbil-ascent/table/storage gerbil-ascent-set-storage-provider)
         (only-in :gerbil-ascent/program/session gerbil-ascent-open-session
                  gerbil-ascent-session-run gerbil-ascent-session-append-source!
                  gerbil-ascent-session-replace-source! gerbil-ascent-session-replace-sources!))
@@ -417,34 +419,55 @@
           (check-equal? checks 4)
           (check-equal? (rows updated 'item) '(((11))))
           (check-equal? (rows updated 'out) '((1))))))
-    (test-case "field callback cannot silently change an independent source during reuse"
-      (let* ((armed? #f)
-             (base (relational-program
-                    (relation input (value) '((1)))
-                    (relation probe (value) '((0)))
-                    (relation trigger (value) '((0)))
-                    (relation out (value) '())
-                    (rule (out ?v) (input ?v)) (limits 8 16 32)))
-             (declarations (.ref base 'relations))
-             (input-row (car (.ref (car declarations) 'rows)))
-             (probe (cadr declarations))
+    (test-case "field callback changing a shared payload requires fresh evaluation"
+      (let* ((cell (list 1)) (armed? #f)
              (checker (lambda (_)
-                        (when armed? (set-car! input-row 2))
+                        (when armed? (set-car! cell 2))
                         #t))
-             (checked-probe
-              (gerbil-ascent-relation
-               'probe 1 '((0)) (.ref probe 'index-provider)
-               (.ref probe 'storage-provider) (list checker)))
-             (program (.o (:: @ base)
-                          relations: (cons (car declarations)
-                                           (cons checked-probe (cddr declarations)))))
+             (program
+              (gerbil-ascent-program
+               (list (gerbil-ascent-relation 'input 1 (list (list cell)))
+                     (gerbil-ascent-relation 'probe 1 '((0))
+                                             gerbil-ascent-hash-index-provider
+                                             gerbil-ascent-set-storage-provider
+                                             (list checker))
+                     (gerbil-ascent-relation 'trigger 1 '((0)))
+                     (gerbil-ascent-relation 'out 1 []))
+               (list (gerbil-ascent-rule
+                      (list (gerbil-ascent-atom 'out
+                              (list (gerbil-ascent-literal 'hit))))
+                      (list (gerbil-ascent-atom 'input
+                              (list (gerbil-ascent-literal (list 1)))))))
+               8 16 32))
              (session (gerbil-ascent-open-session program)))
-        (check-set (rows (gerbil-ascent-session-run session) 'out) '((1)))
+        (check-set (rows (gerbil-ascent-session-run session) 'out) '((hit)))
         (set! armed? #t)
         (let (updated (gerbil-ascent-session-replace-sources! session '((trigger (1)))))
-          (check-set (rows updated 'input) '((2)))
-          (check-set (rows updated 'out) '((2)))
+          (check-set (rows updated 'input) '(((2))))
+          (check-set (rows updated 'out) '())
           (check-equal? (.ref updated 'evaluation-path) 'stratified-semi-naive))))
+    (test-case "initial source snapshot owns caller row spines before first run"
+      (let* ((row (list 1)) (x (gerbil-ascent-variable 'x))
+             (program
+              (gerbil-ascent-program
+               (list (gerbil-ascent-relation 'input 1 (list row))
+                     (gerbil-ascent-relation 'trigger 1 '((0)))
+                     (gerbil-ascent-relation 'out 1 []))
+               (list (gerbil-ascent-rule
+                      (list (gerbil-ascent-atom 'out (list x)))
+                      (list (gerbil-ascent-atom 'input (list x)))))
+               8 16 32))
+             (session (gerbil-ascent-open-session program)))
+        (set-car! row 2)
+        (let (initial (gerbil-ascent-session-run session))
+          (check-set (rows initial 'input) '((1)))
+          (check-set (rows initial 'out) '((1))))
+        (set-car! row 3)
+        (let (updated (gerbil-ascent-session-replace-sources! session '((trigger (1)))))
+          (check-set (rows updated 'input) '((1)))
+          (check-set (rows updated 'out) '((1)))
+          (check-equal? (.ref updated 'evaluation-path)
+                        'stratified-dependency-invalidation))))
     (test-case "deletion skips an independent component and restores all rules for later append"
       (let* ((session (gerbil-ascent-open-session (path-program '((0 1) (1 2)))))
              (old (gerbil-ascent-session-run session))

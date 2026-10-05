@@ -28,10 +28,24 @@
                                  measure-rule-times?: (measure-rule-times? #f))
   (unless (boolean? measure-rule-times?)
     (error "invalid ASCENT rule timing option" measure-rule-times?))
+  (def (copy-source-rows rows)
+    ;; Own both the outer list and every row pair before an engine can observe
+    ;; them. Nested host values remain shared and need a separate contract.
+    (unless (list? rows) (error "invalid ASCENT source rows" rows))
+    (map (lambda (row)
+           (unless (list? row) (error "invalid ASCENT source row" row))
+           (map identity row))
+         rows))
   ;; A Provider may mutate its private state before returning an invalid
   ;; batch or raising. Keep the accepted source snapshot outside the engine
   ;; so a failed operation can rebuild all evaluation-local state from it.
   (let* ((relations (.ref program 'relations))
+         (initial-relations
+          (map (lambda (relation)
+                 (.o (:: @ relation)
+                     rows: (copy-source-rows (.ref relation 'rows))))
+               relations))
+         (initial-program (.o (:: @ program) relations: initial-relations))
          (single-relation-name
           (and (pair? relations) (null? (cdr relations))
                (.ref (car relations) 'name)))
@@ -39,7 +53,7 @@
          (initial (list->vector
                    (map (lambda (relation)
                           (cons (.ref relation 'rows) []))
-                        relations)))
+                        initial-relations)))
          (atomic-appends
           (list->vector
            (map (lambda (relation)
@@ -58,13 +72,13 @@
          (partial? #f)
          (replay-on-timeout? #f)
          (last-result #f)
-         (engine (gerbil-ascent-make-engine program #t #f #f
+         (engine (gerbil-ascent-make-engine initial-program #t #f #f
                                           measure-rule-times?))
          (engine-analysis (.ref engine '.analysis))
          (engine-schema (.ref engine '.schema))
          (engine-base-rows
           (list->vector (map (lambda (relation) (.ref relation 'rows))
-                             relations)))
+                             initial-relations)))
          (engine-append (.ref engine '.append-source!))
          (engine-additions (.ref engine '.source-additions))
          (engine-overrides (.ref engine '.source-overrides)))
@@ -78,11 +92,6 @@
       ;; Nested host values are shared: immutability of admitted row values is
       ;; a separate premise, especially for opaque callbacks and providers.
       (vector-map (lambda (state) (cons (car state) (cdr state))) rows))
-    (def (copy-source-rows rows)
-      ;; The caller retains its replacement list and row pairs. Capture their
-      ;; spines after validation so later set-car! cannot rewrite a committed
-      ;; snapshot. Field payload ownership is a separate admission contract.
-      (map (lambda (row) (map (lambda (value) value) row)) rows))
     (def (copy-append-row index name row)
       ;; Validate shape before copying; the engine still owns the one field
       ;; callback check and the fact-budget check on this captured row.

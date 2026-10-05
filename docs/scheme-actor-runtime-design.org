@@ -466,7 +466,8 @@ samples per mode, wall jiffies only, one skewed graph and unmeasured VM processo
 topology make this exploratory evidence, not a stable CPU/allocation/throughput
 or general speedup claim. The receipt retains raw numbers and any negative result.
 
-The observed solve medians were serial 1.773 ms, SCC 1 worker 7.876 ms,
+The full-suite snapshot before the concurrent index-build rebase observed
+solve medians of serial 1.773 ms, SCC 1 worker 7.876 ms,
 2 workers 7.966 ms and 4 workers 7.647 ms. This small skewed fixture is a
 negative performance result: component planning, private state and actor merge
 cost more than serial evaluation. Ready dispatch is qualified, but performance
@@ -477,3 +478,9 @@ results. Remaining gates include large SCC rule/row partitioning, persistent
 workers/index reuse, immutable component-plan caching, custom Provider workers,
 retained actor engine reuse and matched scale/CPU/allocation/latency measurements.
 Model calls remain 0 and MRR Rust integration remains deferred.
+
+After rebasing the concurrent index-build optimization =d471339=, the fresh
+native SCC, actor Session, actor round and index-build modules passed all 28
+Cases. This targeted receipt binds the rebased source/carrier independently;
+it does not relabel the earlier 71-module/610-Case suite as a full new-head run.
+The repeated timing probe still establishes no performance benefit.

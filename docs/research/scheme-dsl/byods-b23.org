@@ -77,3 +77,8 @@ frontiers and dropped consumption. Native tests compare each expansion against
 an independent graph model for all 512 three-node inputs, all three built-in
 Providers and both insertion orders. These checks do not prove Theorem 3.5,
 user-defined Providers, lattice concurrency or index-sharing applications.
+
+A concrete implementation gap is recorded: =trrel_uf= currently calls the same
+=trrel-extend= with reflexive mode enabled, using the same membership and
+predecessor/successor tables. It is not the paper's SCC/union-find representation.
+Output/frontier qualification does not close that storage or memory-cost claim.

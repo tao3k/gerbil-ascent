@@ -54,6 +54,7 @@ B23 §3 的 concretization 与 total/delta 条件、§4 接口以及 §5 的数�
 |--------+------------------+----------------------+------------|
 | 自定义 index / storage 接口 | POO Provider、hash/alist、Set/eqrel/trrel/trrel_uf | frontier 接口义务明确列出 | 任意 caller Provider 的 monotone concretization、lookup 完整性及 emitted frontier 无法由接口声明证明 |
 | 内置 eqrel/trrel/trrel_uf 的 concrete rows | 三/四/八节点、两 producer 分区、分组隔离与 scale 语料 | 每次插入后的独立 concrete difference，512 图 × 3 Provider × 正反两个顺序 | 更大分组 arity、一般图上的 native 算法 refinement、规模/内存与复杂度收益 |
+| trrel_uf 的存储算法 | table/trrel.ss 中 uf-extension 调用同一 trrel-extend 并传 #t；private state 仍是 known/predecessors/successors | 本轮只验收现有声明的输出与每步 frontier | 尚未实现论文 §5.4 的 SCC/DAG union-find 压缩表示；当前返回行一致不等于存储算法或空间收益已复刻 |
 | delta 可见性 | 独立闭包及 split-producer discriminator；Rust eqrel 缺漏差异保留 | ProviderFrontier Lean：concrete partition、fresh fact 必须交付、二元 join 分解；TLA eqrel 注入/消费与两个遗漏负对照 | B23 Theorem 3.5 的完整任意 body/迭代证明及 native frontier 到抽象 gamma 的对应；本轮三个局部定理不冒充该定理 |
 | 重复输入、budget、失败原子性、保留更新 | 原生 preflight/retry、byods_session 与 timeout 差分 | 每步 frontier 同时检查无重复与不遗漏 | Provider external state 与 timeout/换源/分层交互的完整模型/refinement |
 | index sharing (ind_share) | 当前 solve-private index cache/增量扩张 | 无论文 index-sharing 算法验收 | 尚无 B23 对应索引共享设计、共享布局/选择算法和端到端应用证据；不能把普通缓存称作完成 |
@@ -76,11 +77,16 @@ F20/L25 embedding、H18 deletion、B22 change maintenance 和 provenance 的
    的 refinement，连接现有局部命题；输入能力/退出状态和 semantic budgets 同步。
 2. 连接内置 Provider gamma、逐步 emitted frontier 与任意 body/迭代，完成
    semi-naive/naive 等价链；格与普通关系分别定义语义。
-3. 实现并验证论文对应 index-sharing 及用户 Provider 并发协议，保留 owner、
+3. 实现并验证论文对应 trrel_uf SCC/union-find 表示、index-sharing 及用户 Provider 并发协议，保留 owner、
    取消和发布隔离；不能以限制测试规模替代这些实现。
 4. 补齐论文应用程序、组合交互、数据集与性能/内存对照，记录上游差异。
 5. 在全部收口项有当前源码、native/Rust/Lean/TLA+、负对照及收益证据后，
    完成最终 head 和 consumer pin CI，才宣布 ASCENT/BYODS 整体收口。
+
+本轮新增 frontier 检查在初次五模块验证中通过 50 Cases；同步最新
+source-cut、默认 actor 容量和 completed-reuse 并发提交后，六模块通过
+76 Cases。Lean 完整 roots 完成 63 jobs；TLC 正例生成 3,169 状态、
+1,376 distinct 状态，并正确检出两个 mutation。
 
 本轮精确结果见 [[file:evidence/scheme-provider-frontier-20261005/receipt.json][Provider frontier receipt]]。
 此前 75-module/638-Case 全量结果仅属于其原提交，不移作本轮完整验收。

@@ -532,3 +532,57 @@ Rebased concurrent strict-dependency preflight optimization =0d19eca=. The new
 source/carrier snapshot passed six targeted modules and 43 Cases, including
 SCC/cache, Session/round, strata and lattice controls. Its separate receipt does
 not claim a full rerun of the earlier 72-module/617-Case suite.
+
+* Worker-owned incremental total indexes (2026-10-05)
+
+After the =eb4378d= ownership refactor, each SCC worker owns its physical index
+cache and version vectors. It previously installed new row roots and advanced
+the all-version without extending valid cached total indexes. The worker now
+calls =row-indexes-advance!= against the old version before installing roots,
+sizes and the next version. Delta indexes retain their round-local invalidation.
+Only canonical positive Set/hash workers use this path; custom Provider and
+lattice concurrency remain separate gates.
+
+The admitted batch is in reverse candidate order and is appended before old
+rows. Physical bucket extension prepends each visited row, so the worker uses
+reverse traversal to preserve exactly the order of a full rebuild over the new
+root. Empty batches leave the total version unchanged. All indexes are private;
+a failed extension cannot publish a completed SCC. Existing credit, join,
+cancellation and owner global budget/publication rules remain in force.
+
+[[https://thomas.gilray.org/pdf/seamless-deductive.pdf][A22]], §4, pp.82–83, assigns indexes to relation usage and maintains them
+when generated kernels insert derived rows. We apply that obligation to the
+worker's dynamic total relation. The paper does not prove our native physical
+cache/version installation, which is a separate qualification boundary.
+
+=RoundAdmission.lean= proves ordered bucket extension equals rebuilding over
+=batch ++ old=, including the reverse-traversal law, for an arbitrary Boolean
+key predicate. =ComponentIndex.tla= explores two independent private owners and
+an extension/install pair, rejecting wrong bucket order and premature install.
+The two owners and fixed batch are exploration fixtures, not runtime bounds.
+Native pointer aliasing, hash key encoding and VM mutation are not refined by
+these models. Native tests separately compare single/composite keys (including
+=#f=), cyclic/chain truth, unchanged source roots and exact bucket order.
+
+The frozen =eb4378d= worker/coordinator provide matched native controls. The
+worker lane uses a no-op checkpoint on both sides to isolate local evaluation;
+50 alternating CPU/wall pairs and 10 separate forced-GC allocation pairs are
+checked against independent truth per key shape. The coordinator lane uses
+real actors, credits and checkpoints for 20 alternating pairs. Its output merge
+collects rows but excludes public engine construction/budget checking and LLM
+latency, so it cannot establish whole-application or multicore benefit.
+
+Wall measurements use native jiffies. An earlier statistics-vector field was
+mislabelled as wall time and is discarded; no result from that field is promoted.
+Preflight duplicate support registration, Lean reserved identifier, test syntax
+and host =ps= timeout failures are retained in the [[file:evidence/scheme-component-index-20261005/receipt.json][qualification receipt]]. The
+successful build requires continuous real compiler output under the unchanged
+60-second output watchdog; runtime 5/5/120-second checks remain unchanged.
+Model calls remain 0; MRR Rust integration remains deferred.
+
+The full snapshot passed 74 modules and 629 Cases. Composite-key worker
+CPU median decreased 11.822 to 11.141 ms (46/50 pairs won); allocation median
+decreased 9,626,816 to 9,206,272 bytes. Actor coordinator CPU/wall medians
+decreased 14.139/14.178 to 13.602/13.606 ms (17/20 pairs won). Single-key CPU
+median decreased but only 27/50 pairs won, so this lane remains unstable. These
+fixture-specific observations do not establish overall Runtime or LLM gains.

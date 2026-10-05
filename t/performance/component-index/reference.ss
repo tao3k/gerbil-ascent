@@ -2,10 +2,11 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
+;;; Frozen pre-extension worker from eb4378d; matched native control.
 ;;; One assigned SCC owns its transferred root/size vectors, fresh frames,
 ;;; physical indexes and output membership. Borrowed row roots stay persistent.
-(import (only-in "component-plan.ss" positive-component-members positive-component-rules)
-        (only-in "index.ss" gerbil-ascent-make-row-indexes row-indexes-rows row-indexes-advance!)
+(import (only-in :gerbil-ascent/program/component-plan positive-component-members positive-component-rules)
+        (only-in :gerbil-ascent/program/index gerbil-ascent-make-row-indexes row-indexes-rows)
         (only-in :gerbil-ascent/core/positive-plan gerbil-ascent-run-positive-plan!))
 (export make-component-snapshot gerbil-ascent-run-positive-component!)
 (defstruct component-snapshot (rows sizes))
@@ -36,7 +37,6 @@
          (indexes (gerbil-ascent-make-row-indexes all delta all-size delta-size all-version delta-version
                                                   (vector-ref schema 5)))
          (rows-access (row-indexes-rows indexes))
-         (advance! (row-indexes-advance! indexes))
          (seen (make-vector count #f))
          (members (positive-component-members component))
          (rules (map (lambda (rule)
@@ -68,10 +68,6 @@
          (lambda (index)
            (let* ((batch (vector-ref pending index)) (size (length batch)))
              (unless (null? batch)
-               ;; Extend against the old version before publishing new roots.
-               ;; Buckets prepend rows; reverse traversal preserves batch order
-               ;; exactly as a rebuild over (append batch old) would do.
-               (advance! index batch #t)
                (vector-set! all index (append batch (vector-ref all index)))
                (vector-set! all-size index (+ (vector-ref all-size index) size))
                (vector-set! all-version index (+ 1 (vector-ref all-version index))))

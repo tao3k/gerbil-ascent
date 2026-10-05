@@ -144,6 +144,11 @@
                           (if (member "t/qualification/scheme-bounded-datum-test.ss" tests)
                             '("t/performance/bounded-datum/reference")
                             [])
+                          (if (member "t/qualification/ascent-component-index-test.ss" tests)
+                            '("t/performance/component-index/reference"
+                              "t/performance/component-index/coordinator-reference"
+                              "t/performance/component-index/fixture")
+                            [])
                           (if (member "t/qualification/ascent-positive-components-test.ss" tests)
                             '("t/performance/component-scope/reference"
                               "t/performance/component-scope/fixture")
@@ -179,7 +184,8 @@
                               "t/performance/storage-batch/reference-evaluate"
                               "t/performance/storage-batch/fixture")
                             [])
-                          (if (member "t/qualification/ascent-index-entry-test.ss" tests)
+                          (if (or (member "t/qualification/ascent-index-entry-test.ss" tests)
+                                  (member "t/qualification/ascent-component-index-test.ss" tests))
                             '("t/performance/index-entry/reference"
                               "t/performance/index-entry/reference-evaluate"
                               "t/performance/index-entry/fixture")

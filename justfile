@@ -1119,3 +1119,19 @@ check-ready-components-formal:
       echo "COUNTEREXAMPLE-OK ready-components-$mutation $invariant"
     done
     echo 'READY-COMPONENTS-CHECK-OK'
+
+check-component-index-formal:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [[ -n "${TLC_BIN:-}" ]]; then tlc=("$TLC_BIN"); else tlc=(java -XX:+UseParallelGC -cp "${TLC_JAR:-.cache/ascent/tools/tla2tools-v1.7.4.jar}" tlc2.TLC); fi
+    temp=$(mktemp -d)
+    trap 'rm -rf "$temp"' EXIT
+    "${tlc[@]}" -workers 1 -config packages/proofs/tla/ComponentIndex.cfg -metadir "$temp/correct" packages/proofs/tla/ComponentIndex.tla
+    for mutation in order early; do
+      sed "s/Mutation = \"none\"/Mutation = \"$mutation\"/" packages/proofs/tla/ComponentIndex.cfg > "$temp/$mutation.cfg"
+      code=0
+      "${tlc[@]}" -workers 1 -config "$temp/$mutation.cfg" -metadir "$temp/$mutation" packages/proofs/tla/ComponentIndex.tla > "$temp/$mutation.out" 2>&1 || code=$?
+      [[ "$code" = 12 ]] && grep -q 'Invariant Consistent is violated' "$temp/$mutation.out"
+      echo "COUNTEREXAMPLE-OK component-index-$mutation Consistent"
+    done
+    echo 'COMPONENT-INDEX-CHECK-OK'

@@ -415,3 +415,14 @@ abstract Lean identity/publication laws, and replayed TLA scheduling safety are
 recorded in [[file:evidence/scheme-component-cache-20261005/receipt.json][the qualification receipt]]. Planning-only timing is not an end-to-end
 claim. Remaining gates include persistent worker/index reuse, large SCC
 partitioning, custom Provider concurrency and matched scale/CPU/allocation tests.
+
+* SCC worker incremental index ownership (2026-10-05)
+
+The worker now extends valid total indexes against the old version before
+installing admitted row roots and next versions; delta stays round-local.
+Reverse batch traversal preserves rebuilt bucket order. Native independent
+closure, input immutability and single/composite key controls accompany Lean
+ordered extension laws and TLA private extension/install safety with negative
+controls. [[file:evidence/scheme-component-index-20261005/receipt.json][CPU, wall and VM allocation receipts]] distinguish local worker cost,
+real actor coordinator cost and unmeasured public/LLM latency. Custom Provider
+concurrency, large SCC partitioning and persistent worker reuse remain open.

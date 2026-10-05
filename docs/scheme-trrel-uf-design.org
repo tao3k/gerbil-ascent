@@ -74,3 +74,23 @@ Results and source/carrier binding belong to [[file:evidence/scheme-trrel-uf-202
 refinement, arbitrary user Provider conformance, concurrent Provider/lattice
 execution, index-sharing and full paper applications remain separate gates.
 No Prompt, repair, model calls or MRR Rust integration are added.
+
+* Qualified result at the rebased source snapshot
+
+76 native modules and 648 Cases pass with parent exit 0 under the unchanged
+1 GiB limit. Lean completes 64 jobs; the SCC TLC model explores 17,929 distinct
+states (77,398 generated) and detects all three mutations. The first full run
+had 76 passing children but failed parent final hashing with heap overflow and
+is explicitly rejected. Hashing now streams through an 8,192-byte buffer;
+an independent SHA-256 comparison covers empty/boundary files and the roughly
+42 MiB native carrier using only a 128 MiB probe heap. Byte-boundary and tamper
+checks remain permanent native suite cases.
+
+In the 32-node matched Provider lane, DAG CPU median decreases 262.5 to 171 us
+(43/50 paired wins); cycle CPU decreases 592.5 to 352.5 us (47/50 wins).
+Wall wins are 42/50 and 48/50 respectively. Allocation moves in the opposite
+direction: DAG 210,080 to 328,848 bytes; cycle 429,584 to 765,360 bytes, with no
+allocation pair won. Thus structural SCC compression and fixture CPU reduction
+are established, but allocation regresses about 57%/78%; overall Runtime net
+benefit remains unestablished. Allocation/merge temporary reduction is the next
+cost gate, alongside larger application and retained-state memory measurements.

@@ -96,3 +96,10 @@ source-cut、默认 actor 容量和 completed-reuse 并发提交后，六模块�
 [[file:scheme-trrel-uf-design.org][Implementation design]] and [[file:evidence/scheme-trrel-uf-20261005/receipt.json][qualification receipt]] supersede the previously
 identified missing UF representation. That historical receipt remains immutable;
 this follow-up closes the implementation gap, not all B23 formal/performance gaps.
+
+The subsequent rebased union-find snapshot passes 76 native modules and 648
+Cases with successful parent final verification. It has native SCC compression
+and matched 32-node Provider CPU improvements, but allocation regresses in both
+DAG and cycle controls. This closes the missing storage implementation slice;
+allocation, full native refinement, index sharing and paper application gates
+remain open. The earlier full run with a parent heap failure is not admitted.

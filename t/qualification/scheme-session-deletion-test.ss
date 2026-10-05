@@ -409,6 +409,27 @@
           (check-exception (gerbil-ascent-session-replace-sources! session '((unknown))) true)
           (gerbil-ascent-session-replace-source! session 'edge '((0 1)))
           (check-fresh (gerbil-ascent-session-run session) (path-program '((0 1)))))))
+    (test-case "batch replacement owns caller row spines"
+      (let* ((session (gerbil-ascent-open-session (path-program '((0 1) (1 2)))))
+             (replacement-row (list 0 1))
+             (replacement-rows (list replacement-row)))
+        (gerbil-ascent-session-run session)
+        (let (updated
+              (gerbil-ascent-session-replace-sources!
+               session (list (cons 'edge replacement-rows))))
+          (set-car! replacement-row 7)
+          (set-car! replacement-rows '(9 10))
+          (check-set (rows updated 'edge) '((0 1)))
+          (check-fresh
+           (gerbil-ascent-session-replace-sources! session '((cold (8))))
+           (path-program '((0 1)) '((8)))
+          (let* ((provisional-row (list 1 2))
+                 (provisional-rows (list provisional-row)))
+            (gerbil-ascent-session-replace-source!
+             session 'edge provisional-rows)
+            (set-car! provisional-row 9)
+            (check-fresh (gerbil-ascent-session-run session)
+                         (path-program '((1 2)) '((8)))))))
     (test-case "a forged descriptor cannot authorize an opaque callback for result reuse"
       (let* ((allow? #t)
              (base (path-program '((0 1))))

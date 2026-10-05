@@ -89,7 +89,8 @@ The tracked =packages/proofs/lean/= modules currently include
 =LexicalLowering= (typed lexical preservation), =RecursiveLowering=
 (positive scoped feedback), =FiniteOperators= and =FiniteHeight=
 (monotone/finite-rank laws), =DescriptorScope=, =CappedArithmetic=,
-=PositiveNonmembership=, =SessionPublication= and =StratifiedNegation=. The
+=PositiveNonmembership=, =SessionPublication=, =NativeSessionPublication=
+and =StratifiedNegation=. The
 [[file:../../scheme-compiler-proof-bridge.org][proof bridge]] states their hypotheses and concrete omissions. These
 proofs are valuable but do not yet relate native Scheme scalars,
 descriptor graphs, emitted rules or table steps to the Lean objects.
@@ -101,6 +102,7 @@ descriptor graphs, emitted rules or table steps to the Lean objects.
 | =FiniteHeight.bounded_bottom_least_fixed= | An ascending finite-rank orbit reaches the least fixed point under its premises | Native type/domain interpretation supplies the rank and every native step preserves its order |
 | =PositiveNonmembership.ground_why_not_sound= | Ground absence follows from the model's closure premises | Native certificate checking and caller source-completeness are separate |
 | =SessionPublication.publication_consistent= and =publications_consistent= | One or any finite sequence of qualified publications retains source/result consistency over unbounded natural-number generations | Native Session steps implement the abstraction and qualification is independently established |
+| =NativeSessionPublication.reachable_good= | For arbitrary immutable cuts and natural-number generations, every finite sequence of the six synchronous normal actions preserves committed result consistency, clean alignment and bounded status | Gerbil entrypoints must refine those actions; complete solves must be qualified, and failed recovery, source appends and mutable host values are outside the model |
 | =StratifiedNegation.visit_iff= and =evaluateBranches_iff= | A frozen-stratum atom/negation clause walk has the stated branch-local set meaning; a direct witness survives a blocker on the via branch | =gerbil-ascent-bind-row= and =indexed-rows= must refine the modeled match and index-exactness premises; no recursive stratum or aggregation is covered |
 
 The new clause proof follows the control path in =program/evaluate.ss=:
@@ -211,6 +213,36 @@ replacement, completed runs, bounded runs, and failure restoration.
 native public generation token. Source appends, callback failures inside
 adoption, opaque providers and native trace refinement remain outside
 this model.
+
+The matching [[file:../../../packages/proofs/lean/NativeSessionPublication.lean][Lean transition model]] proves =reachable_good= by induction for
+arbitrary cuts and any finite trace. It also proves that provisional,
+bounded, rejected and restored-failure actions leave the committed
+public triple unchanged. This proves the transition model, not a
+mechanically extracted Gerbil implementation or a Lean/TLA syntax
+equivalence. The native correspondence is currently a review obligation:
+
+| Native entrypoint / path | Abstract action | Unproved condition |
+|--------------------------+-----------------+--------------------|
+| =replace-source!= after completed preflight | =SingleReplace= | Internal batch work is unobservable before the synchronous method returns; committed result and source are restored together |
+| =replace-sources!= completed | =BatchComplete= | =fresh.run= is complete and its rows equal a fresh solve for the prospective admitted snapshot |
+| =replace-sources!= rejected | =BatchReject= | No accepted source/result pair changes on validation or solve failure |
+| =run!= or completed =run-timeout!= | =RunComplete= | The engine result is complete and matches the pending source snapshot |
+| bounded =run-timeout!= | =RunBounded= | =committed-result= stays fixed, even though the returned =last-result= is partial |
+| failed run with successful restore | =RunFailure= | Rebuilding from =committed= succeeds; a second restoration failure needs a separate fail-closed state |
+
+An added =alias= fault changes a committed source cut without changing
+its published result; TLC and Lean both reject it. This is a concrete
+counterexample to extending the proof to arbitrary mutable host values:
+=program/session.ss= previously retained caller-owned row pairs during
+batch replacement. It now copies replacement list/row spines after
+validation; the native regression mutates the caller's row and outer
+list, then performs an unrelated replacement and compares with a fresh
+solve. The checked language admits only exact integers, booleans,
+symbols and characters as scalar fields, and copies constructed rows.
+Nested host objects remain shared; opaque callbacks/providers require
+an ownership or copying contract before their completed results inherit
+this proof. A passing native regression qualifies this ownership boundary;
+a full native trace refinement is still open.
 
 The =TLCGenerationCutoff= constant is a finite *model-checking* search
 parameter, supplied by =ASCENT_TLC_GENERATION_CUTOFF= in =check.sh= (four

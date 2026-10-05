@@ -82,8 +82,20 @@ RunFailure ==
   /\ outcome' = "rejected"
   /\ UNCHANGED <<generation, committed, published>>
 
+\* Fault injection: changing the contents of a committed source value through
+\* a shared mutable alias is not a legal Session transition. It demonstrates
+\* the immutable-cut premise needed by the normal publication invariant.
+SourceAlias ==
+  /\ Mutation = "alias"
+  /\ phase = "clean"
+  /\ \E cut \in Cuts :
+       /\ cut # committed
+       /\ committed' = cut
+       /\ pending' = cut
+  /\ UNCHANGED <<generation, published, phase, outcome>>
+
 Next == SingleReplace \/ BatchComplete \/ BatchReject \/ RunComplete
-        \/ RunBounded \/ RunFailure
+        \/ RunBounded \/ RunFailure \/ SourceAlias
 Spec == Init /\ [][Next]_vars
 
 TypeOK ==

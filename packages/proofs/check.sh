@@ -22,7 +22,7 @@ for model in PositiveNonmembershipSession SessionTransaction NativeSessionPublic
   echo "TLA-CHECK $model generation-cutoff=$cutoff (TLC enumeration only)"
   "${tlc[@]}" -workers 2 -config "$temp/$model.cfg" -metadir "$temp/$model" "packages/proofs/tla/$model.tla"
 done
-for mutation in early bounded; do
+for mutation in early bounded alias; do
   sed "s/Mutation = \"none\"/Mutation = \"$mutation\"/" "$temp/NativeSessionPublication.cfg" > "$temp/native-$mutation.cfg"
   if "${tlc[@]}" -workers 2 -config "$temp/native-$mutation.cfg" -metadir "$temp/native-$mutation" packages/proofs/tla/NativeSessionPublication.tla > "$temp/native-$mutation.log" 2>&1; then
     cat "$temp/native-$mutation.log"

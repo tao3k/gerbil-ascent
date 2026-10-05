@@ -74,7 +74,14 @@
     (def (snapshot-copy rows)
       ;; Each accepted snapshot owns its source-log headers. Row spines remain
       ;; persistent, so later appends cannot change a committed snapshot.
+      ;; Nested host values are shared: immutability of admitted row values is
+      ;; a separate premise, especially for opaque callbacks and providers.
       (vector-map (lambda (state) (cons (car state) (cdr state))) rows))
+    (def (copy-source-rows rows)
+      ;; The caller retains its replacement list and row pairs. Capture their
+      ;; spines after validation so later set-car! cannot rewrite a committed
+      ;; snapshot. Field payload ownership is a separate admission contract.
+      (map (lambda (row) (map (lambda (value) value) row)) rows))
     (def (engine-source-snapshot)
       (list->vector
        (map (lambda (index)
@@ -224,7 +231,7 @@
               name (cdr replacement) (vector-ref (vector-ref engine-schema 2) index)
               (vector-ref (vector-ref engine-schema 3) index))
              (vector-set! prospective index
-                          (cons (cdr replacement) []))))
+                          (cons (copy-source-rows (cdr replacement)) []))))
          replacements)
         (let* ((candidate (snapshot-program prospective))
                (fresh (gerbil-ascent-make-updated-engine

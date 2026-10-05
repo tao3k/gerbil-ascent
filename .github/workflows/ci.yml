@@ -113,7 +113,7 @@ jobs:
       - name: Check Lean contracts, TLA publication and counterexamples
         env:
           TLC_JAR: /tmp/ascent-tla2tools.jar
-          ASCENT_PROOF_EXPLORATION_DEPTH: '4'
+          ASCENT_TLC_GENERATION_CUTOFF: '4'
         run: bash packages/proofs/check.sh
       - name: Qualify Python byte IO and process supervision
         run: python3 -m unittest discover -s python/tests -v

@@ -54,4 +54,24 @@ theorem publication_consistent {Source Result : Type}
     | some result => simpa [publish, current, complete] using qualified result complete
   · simpa [publish, current] using previous
 
+/-- A sequence of qualified work items preserves publication consistency at
+    every length. There is no generation or trace-length cutoff in this proof. -/
+theorem publications_consistent {Source Result : Type}
+    (solve : Source → Result) (initial : Snapshot Source Result)
+    (works : List (Work Source Result))
+    (initial_consistent : initial.result = solve initial.source)
+    (qualified : ∀ work ∈ works, ∀ result,
+      work.completed = some result → result = solve work.source) :
+    (works.foldl publish initial).result =
+      solve (works.foldl publish initial).source := by
+  induction works generalizing initial with
+  | nil => simpa using initial_consistent
+  | cons work rest ih =>
+      simp only [List.foldl_cons]
+      apply ih (initial := publish initial work)
+      · apply publication_consistent solve initial work initial_consistent
+        exact qualified work (by simp)
+      · intro next hnext result hcomplete
+        exact qualified next (by simp [hnext]) result hcomplete
+
 end Ascent.Publication

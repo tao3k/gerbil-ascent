@@ -162,6 +162,182 @@ theorem keyed_negation_iff [DecidableEq key] (full : List row)
   negation_indexed_iff full (keyedRows full keyOf wanted) bind input output
     (keyed_rows_exact full keyOf wanted bind input matching_key)
 
+/-- Set-membership model of the canonical hash provider's `cons` update.
+    A native `hash-get`/`hash-put!` representation relation is still required;
+    row order and duplicate occurrences are outside this set observation. -/
+def Buckets (key row : Type) := key → List row
+
+def emptyBuckets : Buckets key row := fun _ => []
+
+def insertBucket [DecidableEq key] (keyOf : row → key)
+    (buckets : Buckets key row) (value : row) : Buckets key row :=
+  fun wanted => if keyOf value = wanted
+    then value :: buckets wanted else buckets wanted
+
+def extendBuckets [DecidableEq key] (keyOf : row → key) :
+    List row → Buckets key row → Buckets key row
+  | [], buckets => buckets
+  | value :: rest, buckets =>
+      extendBuckets keyOf rest (insertBucket keyOf buckets value)
+
+def buildBuckets [DecidableEq key] (keyOf : row → key)
+    (full : List row) : Buckets key row :=
+  extendBuckets keyOf full.reverse emptyBuckets
+
+def BucketRep (full : List row) (keyOf : row → key)
+    (buckets : Buckets key row) : Prop :=
+  ∀ wanted value, value ∈ buckets wanted ↔
+    value ∈ full ∧ keyOf value = wanted
+
+theorem insert_bucket_iff [DecidableEq key] (keyOf : row → key)
+    (buckets : Buckets key row) (added value : row) (wanted : key) :
+    value ∈ insertBucket keyOf buckets added wanted ↔
+      (value = added ∧ keyOf added = wanted) ∨ value ∈ buckets wanted := by
+  by_cases h : keyOf added = wanted <;> simp [insertBucket, h]
+
+theorem extend_buckets_iff [DecidableEq key] (keyOf : row → key)
+    (newRows : List row) (buckets : Buckets key row)
+    (wanted : key) (value : row) :
+    value ∈ extendBuckets keyOf newRows buckets wanted ↔
+      (value ∈ newRows ∧ keyOf value = wanted) ∨
+        value ∈ buckets wanted := by
+  induction newRows generalizing buckets with
+  | nil => simp [extendBuckets]
+  | cons added rest ih =>
+      rw [extendBuckets, ih, insert_bucket_iff]
+      simp only [List.mem_cons]
+      constructor
+      · rintro (⟨member, key⟩ | (⟨same, key⟩ | old))
+        · exact Or.inl ⟨Or.inr member, key⟩
+        · subst value
+          exact Or.inl ⟨Or.inl rfl, key⟩
+        · exact Or.inr old
+      · rintro (⟨head | tail, key⟩ | old)
+        · subst value
+          exact Or.inr (Or.inl ⟨rfl, key⟩)
+        · exact Or.inl ⟨tail, key⟩
+        · exact Or.inr (Or.inr old)
+
+theorem build_bucket_rep [DecidableEq key] (keyOf : row → key)
+    (full : List row) : BucketRep full keyOf (buildBuckets keyOf full) := by
+  intro wanted value
+  simp [buildBuckets, extend_buckets_iff, emptyBuckets]
+
+theorem extend_bucket_rep [DecidableEq key] (keyOf : row → key)
+    (full newRows : List row) (buckets : Buckets key row)
+    (rep : BucketRep full keyOf buckets) :
+    BucketRep (newRows ++ full) keyOf
+      (extendBuckets keyOf newRows buckets) := by
+  intro wanted value
+  rw [extend_buckets_iff, rep wanted value]
+  simp only [List.mem_append]
+  constructor
+  · rintro (⟨newMember, key⟩ | ⟨oldMember, key⟩)
+    · exact ⟨Or.inl newMember, key⟩
+    · exact ⟨Or.inr oldMember, key⟩
+  · rintro ⟨newMember | oldMember, key⟩
+    · exact Or.inl ⟨newMember, key⟩
+    · exact Or.inr ⟨oldMember, key⟩
+
+theorem bucket_index_exact (full : List row) (keyOf : row → key)
+    (buckets : Buckets key row) (rep : BucketRep full keyOf buckets)
+    (bind : env → row → Option env) (input : env) (wanted : key)
+    (matching_key : ∀ value output,
+      bind input value = some output → keyOf value = wanted) :
+    IndexExact full (buckets wanted) bind input := by
+  constructor
+  · intro value member
+    exact ((rep wanted value).mp member).1
+  · intro value output member bound
+    exact (rep wanted value).mpr
+      ⟨member, matching_key value output bound⟩
+
+theorem bucket_negation_iff (full : List row) (keyOf : row → key)
+    (buckets : Buckets key row) (rep : BucketRep full keyOf buckets)
+    (bind : env → row → Option env) (input output : env) (wanted : key)
+    (matching_key : ∀ value result,
+      bind input value = some result → keyOf value = wanted) :
+    ClauseHolds (.negation (buckets wanted) bind) input output ↔
+      ClauseHolds (.negation full bind) input output :=
+  negation_indexed_iff full (buckets wanted) bind input output
+    (bucket_index_exact full keyOf buckets rep bind input wanted matching_key)
+
+/-- The callback-free, admitted negation term subset. A `bound` term stores
+    the value already resolved from the preceding clause environment; a
+    wildcard contributes no index column. Expression callbacks and custom
+    patterns are deliberately outside this correspondence. -/
+inductive GroundTerm (value : Type) where
+  | literal (expected : value)
+  | bound (expected : value)
+  | wildcard
+
+def termKey : List (GroundTerm value) → List value
+  | [] => []
+  | .literal expected :: rest => expected :: termKey rest
+  | .bound expected :: rest => expected :: termKey rest
+  | .wildcard :: rest => termKey rest
+
+def rowKey : List (GroundTerm value) → List value → List value
+  | .literal _ :: rest, observed :: tail => observed :: rowKey rest tail
+  | .bound _ :: rest, observed :: tail => observed :: rowKey rest tail
+  | .wildcard :: rest, _ :: tail => rowKey rest tail
+  | _, _ => []
+
+def matchGround [DecidableEq value] :
+    List (GroundTerm value) → List value → Bool
+  | [], [] => true
+  | .literal expected :: rest, observed :: tail =>
+      decide (expected = observed) && matchGround rest tail
+  | .bound expected :: rest, observed :: tail =>
+      decide (expected = observed) && matchGround rest tail
+  | .wildcard :: rest, _ :: tail => matchGround rest tail
+  | _, _ => false
+
+def bindGround [DecidableEq value] (terms : List (GroundTerm value))
+    (input : env) (row : List value) : Option env :=
+  if matchGround terms row then some input else none
+
+theorem match_ground_key [DecidableEq value]
+    (terms : List (GroundTerm value)) (row : List value)
+    (matched : matchGround terms row = true) :
+    rowKey terms row = termKey terms := by
+  induction terms generalizing row with
+  | nil =>
+      cases row <;> simp [matchGround, rowKey, termKey] at matched ⊢
+  | cons term rest ih =>
+      cases row with
+      | nil => simp [matchGround] at matched
+      | cons observed tail =>
+          cases term with
+          | literal expected =>
+              simp only [matchGround, Bool.and_eq_true, decide_eq_true_eq] at matched
+              simp [rowKey, termKey, matched.1, ih tail matched.2]
+          | bound expected =>
+              simp only [matchGround, Bool.and_eq_true, decide_eq_true_eq] at matched
+              simp [rowKey, termKey, matched.1, ih tail matched.2]
+          | wildcard =>
+              simpa [rowKey, termKey] using ih tail matched
+
+theorem bind_ground_key [DecidableEq value]
+    (terms : List (GroundTerm value)) (input output : env)
+    (row : List value) (bound : bindGround terms input row = some output) :
+    rowKey terms row = termKey terms := by
+  by_cases matched : matchGround terms row = true
+  · exact match_ground_key terms row matched
+  · simp [bindGround, matched] at bound
+
+theorem ground_bucket_negation_iff [DecidableEq value]
+    (terms : List (GroundTerm value)) (full : List (List value))
+    (buckets : Buckets (List value) (List value))
+    (rep : BucketRep full (rowKey terms) buckets)
+    (input output : env) :
+    ClauseHolds (.negation (buckets (termKey terms))
+      (bindGround terms)) input output ↔
+      ClauseHolds (.negation full (bindGround terms)) input output :=
+  bucket_negation_iff full (rowKey terms) buckets rep
+    (bindGround terms) input output (termKey terms)
+    (fun row result bound => bind_ground_key terms input result row bound)
+
 def overwrite (_input value : row) : Option row := some value
 
 def equalBind [DecidableEq row] (input value : row) : Option row :=

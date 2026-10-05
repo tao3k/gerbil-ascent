@@ -13,14 +13,27 @@ if [[ -n "${TLC_JAR:-}" ]]; then
 else
   tlc=("${TLC_BIN:-tlc}")
 fi
-depth="${ASCENT_PROOF_EXPLORATION_DEPTH:-2}"
-[[ "$depth" =~ ^[0-9]+$ ]] && (( depth >= 2 )) || { echo 'Exploration depth must be an integer >= 2' >&2; exit 2; }
+cutoff="${ASCENT_TLC_GENERATION_CUTOFF:-2}"
+[[ "$cutoff" =~ ^[0-9]+$ ]] && (( cutoff >= 2 )) || { echo 'TLC generation cutoff must be an integer >= 2' >&2; exit 2; }
 temp="$(mktemp -d)"
 trap 'rm -rf "$temp"' EXIT
-for model in PositiveNonmembershipSession SessionTransaction; do
-  sed "s/ExplorationDepth = [0-9][0-9]*/ExplorationDepth = $depth/" "packages/proofs/tla/$model.cfg" > "$temp/$model.cfg"
-  echo "TLA-CHECK $model exploration=$depth (not a protocol limit)"
+for model in PositiveNonmembershipSession SessionTransaction NativeSessionPublication; do
+  sed "s/TLCGenerationCutoff = [0-9][0-9]*/TLCGenerationCutoff = $cutoff/" "packages/proofs/tla/$model.cfg" > "$temp/$model.cfg"
+  echo "TLA-CHECK $model generation-cutoff=$cutoff (TLC enumeration only)"
   "${tlc[@]}" -workers 2 -config "$temp/$model.cfg" -metadir "$temp/$model" "packages/proofs/tla/$model.tla"
+done
+for mutation in early bounded; do
+  sed "s/Mutation = \"none\"/Mutation = \"$mutation\"/" "$temp/NativeSessionPublication.cfg" > "$temp/native-$mutation.cfg"
+  if "${tlc[@]}" -workers 2 -config "$temp/native-$mutation.cfg" -metadir "$temp/native-$mutation" packages/proofs/tla/NativeSessionPublication.tla > "$temp/native-$mutation.log" 2>&1; then
+    cat "$temp/native-$mutation.log"
+    echo "Missing native Session counterexample for $mutation" >&2
+    exit 1
+  else
+    code=$?
+  fi
+  cat "$temp/native-$mutation.log"
+  [[ "$code" = 12 ]] && grep -q 'Invariant CommittedSnapshot is violated' "$temp/native-$mutation.log"
+  echo "COUNTEREXAMPLE-OK native-$mutation"
 done
 for mutation in early stale global reuse; do
   sed "s/Mutation = \"none\"/Mutation = \"$mutation\"/" "$temp/SessionTransaction.cfg" > "$temp/$mutation.cfg"

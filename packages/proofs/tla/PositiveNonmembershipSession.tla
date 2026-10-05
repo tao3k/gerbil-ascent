@@ -6,7 +6,7 @@
 \* completeness belong to the caller/POO Temporal model.
 EXTENDS Naturals, Integers, TLC
 
-CONSTANT ExplorationDepth
+CONSTANT TLCGenerationCutoff
 
 Cuts == {<<a, b>> : a \in 0..1, b \in 0..1}
 NoCut == <<-1, -1>>
@@ -117,7 +117,7 @@ TypeOK ==
   /\ used \in BOOLEAN
 
 \* TLC-only exploration constraint. The protocol itself has unbounded generations.
-ExplorationBound == generation <= ExplorationDepth
+ExplorationBound == generation <= TLCGenerationCutoff
 
 NoStalePublished ==
   certificateStatus = "valid" =>

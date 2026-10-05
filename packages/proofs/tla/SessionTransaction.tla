@@ -4,7 +4,7 @@
 \* Publication protocol over one symbolic row of a branch-scoped rule.
 \* This is not a Datalog evaluator or a Gerbil refinement proof.
 EXTENDS Naturals, Integers, TLC
-CONSTANTS ExplorationDepth, Mutation
+CONSTANTS TLCGenerationCutoff, Mutation
 \* Direct, via, and lower-stratum exclusion membership for one row.
 Cuts == {<<d, v, b>> : d \in 0..1, v \in 0..1, b \in 0..1}
 \* Negation belongs to the via branch before union with direct.
@@ -80,7 +80,7 @@ TypeOK ==
   /\ phase \in {"idle", "solving", "ready"}
   /\ complete \in BOOLEAN
 \* TLC-only exploration constraint. Spec does not reference this bound.
-ExplorationBound == generation <= ExplorationDepth
+ExplorationBound == generation <= TLCGenerationCutoff
 AtomicSnapshot == result = ResultOf(source)
 NoStaleCommit == [][Commit => base = generation]_vars
 AbortPreservesSnapshot == [][Abort => UNCHANGED <<generation, source, result>>]_vars

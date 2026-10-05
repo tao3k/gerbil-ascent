@@ -100,7 +100,7 @@ descriptor graphs, emitted rules or table steps to the Lean objects.
 | =RecursiveLowering.lowered_feedback_is_least= | Scoped positive feedback preserves the least relation | Emitted rules, SCC/delta plans and concrete table steps refine the IR |
 | =FiniteHeight.bounded_bottom_least_fixed= | An ascending finite-rank orbit reaches the least fixed point under its premises | Native type/domain interpretation supplies the rank and every native step preserves its order |
 | =PositiveNonmembership.ground_why_not_sound= | Ground absence follows from the model's closure premises | Native certificate checking and caller source-completeness are separate |
-| =SessionPublication.publication_consistent= | Publication retains source/result consistency when a completed solve is qualified | Native Session steps implement the abstraction and qualification is independently established |
+| =SessionPublication.publication_consistent= and =publications_consistent= | One or any finite sequence of qualified publications retains source/result consistency over unbounded natural-number generations | Native Session steps implement the abstraction and qualification is independently established |
 | =StratifiedNegation.visit_iff= and =evaluateBranches_iff= | A frozen-stratum atom/negation clause walk has the stated branch-local set meaning; a direct witness survives a blocker on the via branch | =gerbil-ascent-bind-row= and =indexed-rows= must refine the modeled match and index-exactness premises; no recursive stratum or aggregation is covered |
 
 The new clause proof follows the control path in =program/evaluate.ss=:
@@ -114,6 +114,21 @@ one condition: every row accepted by the binder has the key computed
 from the current environment. =keyed_negation_iff= then preserves the
 negative clause. Actual hash buckets, custom providers and the plan's
 key selection still need representation proofs against this filter.
+The next slice makes the canonical bucket algorithm explicit:
+=build_bucket_rep= and =extend_bucket_rep= prove that prepend-based
+build/extension retain exactly the full relation's matching members
+at every key. =ground_bucket_negation_iff= composes that invariant with
+the callback-free admitted negation subset (literal, previously bound
+variable, wildcard): successful row binding entails the same ordered
+key as the index lookup. This is set-membership semantics, so duplicate
+source occurrences and bucket order remain separate observations.
+The actual =hash-get=/=hash-put!= implementation, column extraction,
+scalar equality, cache versioning and custom provider contracts are
+still native interpretation obligations. The existing
+=t/qualification/ascent-index-lifecycle-test.ss= compares physical
+buckets with a frozen reference across build, extension, arbitrary
+columns and retained Session updates; it is finite native evidence,
+not a proof of these obligations for all admitted programs.
 The =frozen_blocker_step_monotone= theorem states the corresponding
 fixed-point premise: with a fixed lower-stratum blocker, growth of the
 positive current-stratum input cannot retract branch results if its
@@ -180,6 +195,30 @@ The actual checked invariants here are =AtomicSnapshot= in the
 transaction model and =NoStalePublished/NoStaleUse= in the certificate
 model. They speak about protocol state and the symbolic branch result,
 not a native least-fixed-point computation.
+
+The [[file:../../../packages/proofs/tla/NativeSessionPublication.tla][NativeSessionPublication]] slice follows the *synchronous* retained
+Session entrypoints more closely. =committed=, =pending= and =published=
+abstract =program/session.ss='s accepted committed source, pending source
+and =committed-result=, respectively. =published= deliberately does not
+map to =last-result=: =run-timeout!= may return a receipt whose =finished=
+flag is false while retaining the previous completed result. The model
+distinguishes atomic completed batches, provisional single-source
+replacement, completed runs, bounded runs, and failure restoration.
+=CommittedSnapshot=, =CleanAligned=, =PartialBounded= and
+=NoPrematurePublication= are checked over its finite cuts; =early= and
+=bounded= mutations must expose premature publication. Its logical
+=generation= counts completed commits, but there is no corresponding
+native public generation token. Source appends, callback failures inside
+adoption, opaque providers and native trace refinement remain outside
+this model.
+
+The =TLCGenerationCutoff= constant is a finite *model-checking* search
+parameter, supplied by =ASCENT_TLC_GENERATION_CUTOFF= in =check.sh= (four
+generations in CI). Direct =.cfg= invocation samples two generations.
+Neither value limits a native Session, an ASCENT fixed point, or a model's
+reasoning budget. Lean's =publications_consistent= proves the abstract
+publication invariant for a list of any length; that theorem still assumes
+each completed result is qualified and does not establish native refinement.
 
 The next cross-owner safety model belongs at the ASCENT-to-MRR
 publication boundary. Model =Propose=, =Solve=, =SourceChange=,

@@ -23,6 +23,89 @@
              ((.ref result 'rows-of) 'reach)))
 (def ascent-actor-round-test
   (test-suite "Positive actor rounds and drain barrier"
+    (test-case "refused credit bypasses task exception handlers and unwinds cleanup"
+      (let ((caught #f) (returned #f) (drained #f))
+        (check-equal?
+         (rejected? (lambda ()
+          (gerbil-ascent-run-actor-round! (vector 'stop-boundary) '(a b) 1
+           (lambda (task emit! checkpoint!)
+             (try
+              (with-catch (lambda (_) (set! caught #t))
+                (lambda () (for-each (lambda (n) (emit! task (list n))) (iota 64))))
+              (set! returned #t)
+              (finally (set! drained #t))))
+           (lambda (_ row) (error "planned refusal"))))) #t)
+        (check-equal? caught #f)
+        (check-equal? returned #f)
+        (check-equal? drained #t)))
+    (test-case "one worker is reused and joined after all tasks"
+      (let ((workers []) (completed []))
+        (gerbil-ascent-run-actor-round! (vector 'reuse) '(a b c d) 1
+         (lambda (task emit! checkpoint!)
+           (set! workers (cons (current-thread) workers)) (emit! task '(1)))
+         (lambda (_ row) (void)) (lambda () #f) (lambda (_) #t)
+         (lambda (task) (set! completed (cons task completed))))
+        (check-equal? completed '(d c b a))
+        (check-equal? (andmap (lambda (worker) (eq? worker (car workers))) workers) #t)
+        (check-equal? (thread-join! (car workers) 0 'alive) 'finished)))
+    (test-case "failure after reuse preserves the exception and closes the pool"
+      (let ((workers []) (completed []) (failure (vector 'planned)))
+        (check-equal?
+         (with-catch (lambda (exception) (eq? exception failure))
+          (lambda ()
+            (gerbil-ascent-run-actor-round! (vector 'reuse-failure) '(a b c) 1
+             (lambda (task emit! checkpoint!)
+               (set! workers (cons (current-thread) workers))
+               (when (eq? task 'b) (raise failure)) (emit! task '(1)))
+             (lambda (_ row) (void)) (lambda () #f) (lambda (_) #t)
+             (lambda (task) (set! completed (cons task completed)))) #f)) #t)
+        (check-equal? completed '(a))
+        (check-equal? (length workers) 2)
+        (check-equal? (eq? (car workers) (cadr workers)) #t)
+        (check-equal? (thread-join! (car workers) 0 'alive) 'finished)))
+    (test-case "joining monitor detects a worker that exits without completion"
+      (check-equal?
+       (rejected? (lambda ()
+                   (gerbil-ascent-run-actor-round! (vector 'terminated) '(a b) 1
+                    (lambda (_ emit! checkpoint!) (thread-terminate! (current-thread)))
+                    (lambda (_ row) (void))))) #t))
+    (test-case "ready admission preserves blocked prefixes and caller task spines"
+      (let* ((tasks '(later first last)) (done []) (started []))
+        (gerbil-ascent-run-actor-round! (vector 'dependencies) tasks 4
+         (lambda (task emit! checkpoint!) (emit! task '(1)))
+         (lambda (task row) (set! started (cons task started)))
+         (lambda () #f)
+         (lambda (task)
+           (case task
+             ((first) #t)
+             ((later) (memq 'first done))
+             ((last) (memq 'later done))))
+         (lambda (task) (set! done (cons task done))))
+        (check-equal? (reverse started) '(first later last))
+        (check-equal? tasks '(later first last))))
+    (test-case "identity aliases admit once and equal distinct tasks both execute"
+      (let* ((a (vector 1)) (b (vector 1)) (tasks (list a a b a b)) (started []))
+        (gerbil-ascent-run-actor-round! (vector 'aliases) tasks 1
+         (lambda (task emit! checkpoint!) (emit! task '(1)))
+         (lambda (task row) (set! started (cons task started))))
+        (check-equal? (length started) 2)
+        (check-equal? (eq? (car started) b) #t)
+        (check-equal? (eq? (cadr started) a) #t)
+        (check-equal? (map (lambda (task) (eq? task a)) tasks) '(#t #t #f #t #f))))
+    (test-case "wide ready tasks are neither lost nor assigned twice"
+      (let ((tasks (iota 256)) (seen (make-hash-table-eq))
+            (workers (make-hash-table-eq)) (lock (make-mutex)))
+        (gerbil-ascent-run-actor-round! (vector 'wide) tasks 16
+         (lambda (task emit! checkpoint!)
+           (mutex-lock! lock) (hash-put! workers (current-thread) #t) (mutex-unlock! lock)
+           (emit! task '(1)))
+         (lambda (task row)
+           (when (hash-get seen task) (error "duplicate assignment" task))
+           (hash-put! seen task #t)))
+        (check-equal? (andmap (lambda (task) (hash-get seen task)) tasks) #t)
+        (check-equal? (<= (length (hash-keys workers)) 16) #t)
+        (for-each (lambda (worker) (check-equal? (thread-join! worker 0 'alive) 'finished))
+                  (hash-keys workers))))
     (test-case "two workers rendezvous before owner merge"
       (let ((peer #f) (lock (make-mutex)) (merged []))
         (gerbil-ascent-run-actor-round! (vector 'round) '(a b) 2

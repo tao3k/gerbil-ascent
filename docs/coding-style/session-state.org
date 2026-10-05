@@ -5,6 +5,30 @@
 Immutable declarations, engine frames, retained updates and checked source admission. Study notes and receipts retain their original revision and scope;
 historical source paths and timings are not current qualification claims.
 
+* Study: separate task completion from worker lifetime
+
+Gerbil =2591dcd= =std/make.ss:292-298,350-358= runs a bounded group of workers
+over multiple work items, closes admission, then joins the group. Its
+=runtime/error.ss:67-73= transfers exceptions through a captured continuation.
+=program/actor-round.ss= applies these lifetime boundaries: one round owns its
+worker pool; each assignment owns fresh batch/checkpoint state. One shared
+continuation handles both task errors and refused credit, preserving cleanup
+and an exit that task exception handlers cannot swallow.
+
+The coordinator owns the private pending spine and identity indexes. A task
+completion releases its worker for reuse; round exit stops and joins the pool.
+Capacity remains the explicit =jobs= argument supplied by the resource policy.
+No SDK configuration or production environment variable was added. Dependency
+readiness, owner-only merge, bounded credits and first-failure draining retain
+their existing contracts.
+
+[[file:../../t/performance/actor-admission/README.org][Matched native qualification]] freezes the original kernel at =6b42951=.
+Two 1024-task scenarios passed 50 paired CPU and allocation samples each,
+with 78.7%/80.0% less CPU and 23.1%/24.6% less allocation. The small control
+also passed. These are single-VM-processor round coordination measurements.
+Queue-only and double-continuation candidates failed their original gates;
+the record retains both failures and the rejected exception-marker approach.
+
 * Study: compose persistent source logs without copying unchanged bases
 
 Installed Gerbil =2591dcd=, =compiler/optimize-top.ss:1269-1281=, returns

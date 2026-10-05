@@ -134,6 +134,20 @@ _performance-source-cut:
         timeout 90s gxi {{ gerbil_test_runtime_options }} -e '(add-load-path! (path-expand ".cache/ascent/native-library/lib"))' :gerbil-ascent/t/performance/source-cut-benchmark "$scenario" ".cache/ascent/source-cut/$scenario-final.sexp"
     done
 
+# Paired complete actor rounds with wide ready queues and active assignments.
+performance-actor-admission:
+    {{ test_runner }} run -- just _performance-actor-admission
+
+_performance-actor-admission:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    library="{{ justfile_directory() }}/.cache/ascent/native-library/lib"
+    mkdir -p .cache/ascent/actor-admission
+    gxi {{ gerbil_test_runtime_options }} -e '(add-load-path! (path-expand ".cache/ascent/native-library/lib"))' -e '(import :std/make)' -e '(make ["program/actor-round" "t/performance/actor-admission/reference" "t/performance/actor-admission-benchmark"] srcdir: (current-directory) libdir: (path-expand ".cache/ascent/native-library/lib") build-deps: (path-expand ".cache/ascent/native-library/build-deps"))'
+    for scenario in wide backlog small; do
+        timeout 90s gxi {{ gerbil_test_runtime_options }} -e '(add-load-path! (path-expand ".cache/ascent/native-library/lib"))' :gerbil-ascent/t/performance/actor-admission-benchmark "$scenario" "$library" ".cache/ascent/actor-admission/$scenario.sexp"
+    done
+
 # Paired SCC planning and complete coordinator/worker component closures.
 performance-component-scope:
     {{ test_runner }} run -- just _performance-component-scope

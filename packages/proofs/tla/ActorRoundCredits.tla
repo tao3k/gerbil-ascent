@@ -19,8 +19,10 @@ Offer(t) == /\ ~returned /\ t \in active \ waiting
 Credit(t) == /\ t \in waiting /\ ~returned
              /\ waiting' = waiting \ {t}
              /\ UNCHANGED <<queued, active, terminal, stopped, returned>>
-\* Stop refuses merge and returns stop credit. The worker remains assigned
-\* until its joining monitor reports terminal; an empty queue is insufficient.
+\* Stop refuses merge and returns stop credit. A task remains assigned until
+\* its completion is observed; an empty queue is insufficient. In the native
+\* pool, task completion precedes worker reuse. Joining the pool at round exit
+\* is a separate lifecycle obligation, checked by native tests, not this model.
 Stop == /\ ~returned /\ ~stopped /\ stopped' = TRUE
         /\ UNCHANGED <<queued, active, waiting, terminal, returned>>
 Finish(t) == /\ t \in active \ waiting /\ ~returned

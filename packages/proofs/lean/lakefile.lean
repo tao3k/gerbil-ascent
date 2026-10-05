@@ -8,11 +8,12 @@ package «gerbil-ascent-proof» where
 
 require LeanPoo from git
   "https://github.com/tao3k/lean-poo.git"
-  @ "02da82f00ccb7012e33d1ac8c79e4ff791e7dac4"
+  @ "0cf9b7683f76c09bb410e313538d6d89a50752ba"
 
 @[default_target]
 lean_lib AscentProof where
-  roots := #[`AscentProof, `CappedArithmetic, `DescriptorScope,
+  roots := #[`AscentProof, `CappedArithmetic, `DependencyInvalidation, `DescriptorScope,
+             `FunctionalDependency,
              `FiniteHeight, `FiniteOperators, `LexicalLowering,
              `NativeSessionPublication, `PositiveNonmembership,
              `RecursiveLowering, `SessionPublication,

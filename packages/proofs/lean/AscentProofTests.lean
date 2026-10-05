@@ -10,6 +10,44 @@ namespace Ascent.ProofTests
 open LeanPoo.Proof
 open Ascent.SourceCertificates
 
+/-- If the negation read `source → derived` is absent from the dependency
+graph, retaining `derived` after a source change is unsound. -/
+def negationStep (state : Bool → Bool) (key : Bool) : Bool :=
+  if key then !state false else state false
+
+def negationBefore : Bool → Bool := fun _ => false
+def negationAfter : Bool → Bool := fun key => !key
+def onlySourceAffected (key : Bool) : Prop := key = false
+
+example : Ascent.DependencyInvalidation.AgreeOutside onlySourceAffected
+    negationBefore negationAfter := by
+  intro key untouched
+  cases key <;> simp [onlySourceAffected, negationBefore, negationAfter] at *
+
+example : ¬ Ascent.DependencyInvalidation.AgreeOutside onlySourceAffected
+    (Ascent.DependencyInvalidation.iterate negationStep 1 negationBefore)
+    (Ascent.DependencyInvalidation.iterate negationStep 1 negationAfter) := by
+  intro preserved
+  have impossible := preserved true (by simp [onlySourceAffected])
+  simp [Ascent.DependencyInvalidation.iterate, negationStep,
+    negationBefore, negationAfter] at impossible
+
+/-- A Functional.Requirements checklist can expose exactly one typed source
+to a relation consumer without hand-written tuple selection. -/
+def ownRead : Ascent.FunctionalDependency.Program Bool (fun _ => Bool) where
+  reads := fun key => [key]
+  empty := fun _ => false
+  evaluate := fun _ factories => factories.1 ()
+
+example : ownRead.step negationAfter true = negationAfter true := rfl
+example : Ascent.DependencyInvalidation.Closed ownRead.edge onlySourceAffected := by
+  intro source target read selected
+  simp [ownRead, Ascent.FunctionalDependency.Program.edge] at read
+  simpa [onlySourceAffected] using read.symm.trans selected
+
+#print axioms Ascent.DependencyInvalidation.completed_frame
+#print axioms Ascent.FunctionalDependency.Program.completed_frame
+
 def sampleUpdates : List (Sigma fun _ : Bool => Nat) := [⟨true, 7⟩]
 def sampleSource : State Bool (fun _ => Nat) := fun _ => 0
 

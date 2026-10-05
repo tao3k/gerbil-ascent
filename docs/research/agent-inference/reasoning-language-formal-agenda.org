@@ -265,6 +265,29 @@ discharges =negation_indexed_iff=; changing the source relation selects
 that certificate for revalidation. Native hash-bucket fidelity remains
 an independent premise.
 
+The [[file:../../../packages/proofs/lean/DependencyInvalidation.lean][dependency-invalidation theorem]] now states the
+precise frame condition for retaining completed relations. If the
+affected set is closed under every rule-read edge and one evaluation
+round is local to those reads, two source cuts that agree outside the
+affected set keep agreeing there through *any number* of recursive
+rounds. If they reach fixed points after different round counts, their
+completed rows still agree outside the affected set. A concrete
+negation counterexample in =AscentProofTests= changes a source while
+omitting its negative-read edge; the purportedly unaffected derived
+relation then changes after one round. The
+[[file:../../../packages/proofs/lean/FunctionalDependency.lean][Functional bridge]] imports
+=LeanPoo.Functional.Requirements= from PR #8's pinned commit and makes
+each target consume only its typed read checklist. LeanPoo's
+=prepare_congr= then proves the locality premise, so the completed
+frame theorem follows for this checklist-defined model. This justifies
+the graph direction and closure condition used by
+=program/update-selection.ss=; it does not yet prove that
+=gerbil-ascent-rule-successors= enumerates all body reads, that
+=gerbil-ascent-graph-close!= computes exactly that closure, or that the
+native evaluator is this Functional consumer. The Functional module
+reduces the model's per-rule selection code; no native maintenance-cost
+or runtime saving has been measured.
+
 The =TLCGenerationCutoff= constant is a finite *model-checking* search
 parameter, supplied by =ASCENT_TLC_GENERATION_CUTOFF= in the =Justfile= (four
 generations in CI). Direct =.cfg= invocation samples two generations.

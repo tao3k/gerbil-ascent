@@ -48,6 +48,7 @@
     "t/qualification/ascent-poo-primitives-test.ss"
     "t/qualification/ascent-positive-nonmembership-test.ss"
     "t/qualification/ascent-positive-plan-test.ss"
+    "t/qualification/ascent-positive-components-test.ss"
     "t/qualification/ascent-positive-provenance-test.ss"
     "t/qualification/ascent-reasoning-library-test.ss"
     "t/qualification/ascent-request-projection-test.ss"
@@ -60,6 +61,7 @@
     "t/qualification/ascent-size-test.ss"
     "t/qualification/ascent-source-admission-test.ss"
     "t/qualification/ascent-strata-test.ss"
+    "t/qualification/ascent-strata-preflight-test.ss"
     "t/qualification/ascent-stratified-proof-test.ss"
     "t/qualification/ascent-syntax-test.ss"
     "t/qualification/ascent-table-expression-test.ss"
@@ -141,6 +143,12 @@
                             [])
                           (if (member "t/qualification/scheme-bounded-datum-test.ss" tests)
                             '("t/performance/bounded-datum/reference")
+                            [])
+                          (if (member "t/qualification/ascent-strata-preflight-test.ss" tests)
+                            '("t/performance/strata-preflight/reference-semantics"
+                              "t/performance/strata-preflight/reference-planning"
+                              "t/performance/strata-preflight/reference-evaluate"
+                              "t/performance/strata-preflight/fixture")
                             [])
                           (if (member "t/qualification/ascent-index-build-test.ss" tests)
                             '("t/performance/index-build/reference-funs"

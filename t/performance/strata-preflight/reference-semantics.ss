@@ -4,10 +4,10 @@
 
 ;;; Dependency planning and lattice row semantics over private lowered plans.
 ;;; Original runtime exports forward to the separate binding owner.
-(import (only-in "rule-bindings.ss" gerbil-ascent-expression-value
+(import (only-in :gerbil-ascent/core/rule-bindings gerbil-ascent-expression-value
                  gerbil-ascent-bind-row gerbil-ascent-head-row)
         (only-in :std/list/list butlast)
-        (only-in "dependency-graph.ss" gerbil-ascent-graph-components))
+        (only-in :gerbil-ascent/core/dependency-graph gerbil-ascent-graph-components))
 
 (export gerbil-ascent-rule-strata
         gerbil-ascent-rule-successors
@@ -96,40 +96,37 @@
 ;;     %
 (def (gerbil-ascent-rule-strata rule-plans relation-count kinds)
   (let ((strata (make-vector relation-count 0))
-        (dependencies []))
-    ;; Decide whether any dependency needs a later stratum before constructing
-    ;; head/body edge records. Pure positive dependencies need only zero strata.
-    (when (or (ormap (lambda (rule)
-                       (ormap (lambda (clause)
-                                (memq (vector-ref clause 0) '(negation aggregate)))
-                              (vector-ref rule 1))) rule-plans)
-              (gerbil-ascent-lattice-feeds-relation? rule-plans kinds))
-      (for-each
-       (lambda (rule)
-         (for-each
-          (lambda (head)
-            (for-each
-             (lambda (clause)
-               (when (memq (vector-ref clause 0)
-                           '(atom negation aggregate))
-                 (let* ((body-atom (vector-ref clause 1))
-                        (kind (vector-ref clause 0))
-                        (head-index (vector-ref head 0))
-                        (body-index (vector-ref body-atom 0))
-                        (lattice-projection?
-                         (and (eq? kind 'atom)
-                              (eq? (vector-ref kinds body-index) 'lattice)
-                              (eq? (vector-ref kinds head-index) 'relation)))
-                        (strict? (or (not (eq? kind 'atom)) lattice-projection?)))
-                   (set! dependencies
-                     (cons (vector head-index body-index
-                                   (if strict? 1 0)
-                                   (if lattice-projection?
-                                     'lattice-projection kind))
-                           dependencies)))))
-             (vector-ref rule 1)))
-          (vector-ref rule 0)))
-       rule-plans)
+        (dependencies [])
+        (has-strict? #f))
+    (for-each
+     (lambda (rule)
+       (for-each
+        (lambda (head)
+          (for-each
+           (lambda (clause)
+             (when (memq (vector-ref clause 0)
+                         '(atom negation aggregate))
+               (let* ((body-atom (vector-ref clause 1))
+                      (kind (vector-ref clause 0))
+                      (head-index (vector-ref head 0))
+                      (body-index (vector-ref body-atom 0))
+                      (lattice-projection?
+                       (and (eq? kind 'atom)
+                            (eq? (vector-ref kinds body-index) 'lattice)
+                            (eq? (vector-ref kinds head-index) 'relation)))
+                      (strict? (or (not (eq? kind 'atom)) lattice-projection?)))
+                 (when strict? (set! has-strict? #t))
+                 (set! dependencies
+                   (cons (vector head-index body-index
+                                 (if strict? 1 0)
+                                 (if lattice-projection?
+                                   'lattice-projection kind))
+                         dependencies)))))
+           (vector-ref rule 1)))
+        (vector-ref rule 0)))
+     rule-plans)
+    ;; Positive dependencies alone always admit stratum zero.
+    (when has-strict?
       (let ((successors (make-vector relation-count []))
             (outgoing (make-vector relation-count []))
             (component-of (make-vector relation-count #f)))

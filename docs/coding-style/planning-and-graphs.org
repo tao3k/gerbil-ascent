@@ -5,6 +5,74 @@
 Declaration lowering, names, dependency components and stratification. Study notes and receipts retain their original revision and scope;
 historical source paths and timings are not current qualification claims.
 
+* Study: decide strict dependencies before constructing edge records
+
+Installed Gerbil =2591dcd=, =compiler/optimize-call.ss:822-831=, delays
+compilation of conditional branches until the transformed test is available.
+For a folded constant it forces only the selected branch; an unknown test
+retains both branches. The transferable pattern is to make the admission
+decision before allocating the specialized branch's intermediate data.
+
+=core/rule-semantics.ss= previously built a dependency vector and list header
+for every reading clause/head pair, even when a pure positive declaration
+necessarily had stratum zero. It then discarded those records. Stratification
+now first checks for negation/aggregate reads or lattice-to-relation
+projection. The latter reuses the existing semantic predicate. Without
+strict dependencies it returns fresh zero strata immediately. Otherwise it
+constructs exactly the previous ordered edges and runs the existing SCC,
+cycle-diagnostic and minimum-stratum propagation path. Multihead declarations,
+duplicate heads, nonreading clauses and mixed relation/lattice kinds retain
+their semantics. This decision reads admitted immutable plans, not source
+rows, runtime frames or callbacks. Invalidation successors still retain all
+reading edges; only unused stratification records are omitted.
+
+=just performance-strata-preflight= freezes semantics, planning and evaluator
+at =1de7af462fafc1b90fe475fbfd9b4ed821f79eb1=, changing only module paths and
+redirects among those owners. Both sides share the same current component
+scheduler and other runtime modules. All owners compile to native code with
+exact resolution checks. Seven scenarios use 50 alternating pairs each.
+Initial collection and four warmup checks are outside timing; natural
+collection remains inside. Gates fixed before sampling: the positive kernel
+requires 90% less allocation, 30% less CPU and 35 wins; cold solves require
+10% less allocation. Controls allow 4 KiB extra allocation; nonkernel CPU
+overhead is bounded by 5% + 20 us. Independent strata/output oracles run
+outside timing.
+
+| Scenario | Old CPU us | New CPU us | Old bytes | New bytes | CPU wins |
+|----------+------------+------------+-----------+-----------+----------|
+| Positive dependency kernel | 5.125 | 1.000 | 132154 | 1482 | 50/50 |
+| Negation kernel control | 24.625 | 24.250 | 237178 | 237146 | 22/50 |
+| Aggregate kernel control | 25.125 | 24.625 | 237178 | 237146 | 28/50 |
+| Lattice projection kernel control | 25.750 | 27.375 | 237178 | 237290 | 11/50 |
+| Cold public solve | 339.500 | 317.000 | 1415672 | 893256 | 44/50 |
+| Cached public solve control | 86.000 | 86.000 | 114776 | 114776 | 25/50 |
+| Small cold public solve control | 19.188 | 19.000 | 68253 | 68237 | 22/50 |
+
+All 350 pairs passed parity and gates. The positive kernel uses four rules
+with 16 heads and 16 reading clauses: allocation falls 98.9% and CPU 80.5%.
+The cold public solve uses four rules with 32 heads and 32 body atoms, one
+source row and 32 independently checked output relations. Base declaration
+construction is outside timing. Every timed cold call creates a fresh POO
+program identity, validates the schema, lowers rules, constructs analysis and
+engine state, closes the actual rule computation, publishes and forces all
+rows. It saves 522416 bytes (36.9%) and observes 6.6% less CPU. This is a
+declaration-heavy cold-start workload, not a general warm-solver throughput
+claim. Cached solving has identical median CPU/allocation. Lattice preflight
+adds 112 bytes and 1.625 us CPU; the negative control remains visible. Logs,
+raw pairs and pre-integration results remain under ignored
+=.cache/ascent/strata-preflight/=.
+
+Native qualification passed ten modules / 86 Cases in the existing actor
+pool (=jobs=12=), with module execution taking 1-8 seconds. The new Suite
+checks 144 multihead/mixed-clause/storage-kind combinations, nonreading
+clauses, exact competing cycle-error priority and cold/warm public solves.
+The existing SCC Suite independently checks all 512 three-node graphs with
+strict edge and lattice variants against its reference propagation algorithm.
+Positive-plan/component, lattice, aggregate, selected-activation, deletion,
+actor-round and session-actor Suites passed. Selected production policy
+reported zero findings/errors. Frozen-owner normalization and final source
+hashes were checked separately from successful native Suite/module exits.
+
 * Feature: declaration compilation and ordered stratum grouping
 
 The installed compiler makes pass ownership visible in its entrypoints.

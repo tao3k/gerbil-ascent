@@ -121,6 +121,20 @@ check-actor-pool:
       echo "NATIVE-REGISTRY-CONTROL-OK $control exit=$code"
     done
 
+# Paired strict-dependency admission and complete cold/warm public solves.
+performance-strata-preflight:
+    {{ test_runner }} run -- just _performance-strata-preflight
+
+_performance-strata-preflight:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    library="{{ justfile_directory() }}/.cache/ascent/native-library/lib"
+    mkdir -p .cache/ascent/strata-preflight
+    gxi {{ gerbil_test_runtime_options }} -e '(add-load-path! (path-expand ".cache/ascent/native-library/lib"))' -e '(import :std/make)' -e '(make ["core/rule-semantics" "program/actor-round" "program/positive-components" "program/planning" "program/evaluate" "t/performance/strata-preflight/reference-semantics" "t/performance/strata-preflight/reference-planning" "t/performance/strata-preflight/reference-evaluate" "t/performance/strata-preflight/fixture" "t/performance/strata-preflight-benchmark"] srcdir: (current-directory) libdir: (path-expand ".cache/ascent/native-library/lib") build-deps: (path-expand ".cache/ascent/native-library/build-deps"))'
+    for scenario in positive negation aggregate lattice cold warm small; do
+        timeout 90s gxi {{ gerbil_test_runtime_options }} -e '(add-load-path! (path-expand ".cache/ascent/native-library/lib"))' :gerbil-ascent/t/performance/strata-preflight-benchmark "$scenario" "$library" ".cache/ascent/strata-preflight/$scenario.sexp"
+    done
+
 # Paired ordered index build/extension/lookup and complete native solve control.
 performance-index-build:
     {{ test_runner }} run -- just _performance-index-build

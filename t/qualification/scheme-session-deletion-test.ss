@@ -447,14 +447,14 @@
           (check-set (rows updated 'edge) '((0 1)))
           (check-fresh
            (gerbil-ascent-session-replace-sources! session '((cold (8))))
-           (path-program '((0 1)) '((8)))
+           (path-program '((0 1)) '((8))))
           (let* ((provisional-row (list 1 2))
                  (provisional-rows (list provisional-row)))
             (gerbil-ascent-session-replace-source!
              session 'edge provisional-rows)
             (set-car! provisional-row 9)
             (check-fresh (gerbil-ascent-session-run session)
-                         (path-program '((1 2)) '((8)))))))
+                         (path-program '((1 2)) '((8))))))))
     (test-case "a forged descriptor cannot authorize an opaque callback for result reuse"
       (let* ((allow? #t)
              (base (path-program '((0 1))))

@@ -329,6 +329,13 @@ to have the same prior collection history as interpreted imports. The negative
 control now requests actual collection, checks positive observed heap and emits
 its real before/collected heap/live values; the zero heap/live-growth budgets and
 25 ms duration-interruption control are unchanged. The affected native module's
-two Cases pass at =dd6319f=; the rejected CI run remains recorded, not promoted.
+two Cases pass in the rebased full registry at =a0c5aa7=; the rejected CI run remains recorded, not promoted.
 Latest-GC memory observations are not equivalent to instantaneous RSS or live
 heap accounting. That representation boundary remains explicit in runtime claims.
+
+The final rebased registry also includes =a890b99='s canonical
+=core/rule-bindings.ss= callback/row environment owner. Source =a0c5aa7= passes
+64 modules/566 Cases (56 parallel-lane modules, 8 exclusive, 2 workers), including
+the six complete callback binding controls and corrected real-memory control.
+The receipt binds this snapshot separately from both earlier accepted runs and
+the rejected GitHub head. No performance speedup is inferred from worker count.

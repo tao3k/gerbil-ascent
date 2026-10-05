@@ -203,3 +203,9 @@ as evidence; no budget or assertion is relaxed. This controls the observation
 premise rather than assuming interpreted module import pressure. The runtime
 process's independent 1G heap bound and 5/5/120 progress/deadline gates remain.
 A latest-GC sample is not a proof of instantaneous RSS/live heap monitoring.
+
+The latest registry at =a0c5aa7= qualifies =a890b99='s canonical callback binding
+owner with the complete 64-module/566-Case Suite. Future solver workers must use
+these admitted binding operations with evaluation-local frames rather than
+introducing an alternative callback/binding evaluator. Thread safety of arbitrary
+callback payloads remains a separate admission obligation.

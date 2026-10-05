@@ -209,3 +209,55 @@ memory/allocation distributions, larger and varied workload families and
 reproducible measurements on an isolated host. R6 still requires a newly
 frozen actual-source plan and explicit source-disclosure/cost authorization.
 No paid model calls belong to this experiment. MRR integration remains gated.
+
+* Initialization-inclusive composed lifecycle
+
+The existing =scheme-library-contract-test= extends the checked recursive
+program through nine source cuts: alternative/final-support withdrawal,
+blocker and weight changes, a recursive cycle and removal of its last base
+support. Fresh constructs a new program and Session for every cut; retained
+constructs its first program and Session, then applies atomic four-source
+replacements. Both arms create identical inert-candidate receipts and check
+snapshot binding, finite replay and stratified replay at every cut. Initial
+construction, solve, updates, publication, receipt generation, replay and
+identical completed-cut progress output are inside the timer. AOT compilation,
+process startup, forced pre-sample GC and independent model checks are outside.
+Rejected-transaction checks follow timing; no failure/cancellation latency
+claim is made.
+
+An independent three-node Boolean matrix model supplies all eight native
+relation sets, including sources, recursive paths, excluded paths, weighted
+rows and grouped sums. Twenty-four arms across twelve alternating pairs check
+1,728 native relation sets, 216 candidate =summary= answer sets and 192 relation
+sets after rejection: 2,136 complete-set comparisons. Earlier saved snapshots
+are checked after the whole sequence and rejected update. Candidate evidence
+has separate binding and replay checks; its query does not cover every native
+relation. The [[file:evidence/scheme-application-lifecycle-20261005/receipt.json][lifecycle receipt]] retains every raw pair, source binding,
+formal source hashes and the discarded test-wrapper error. The focused native
+module passed six Cases in 22 seconds with parent exit status zero.
+
+| Whole nine-cut workflow | Fresh median | Retained median | Median reduction | Retained wins |
+|-------------------------+--------------+-----------------+------------------+---------------|
+| CPU | 867.716 ms | 492.522 ms | 43.24% | 12/12 |
+| Wall | 885.737 ms | 494.673 ms | 44.15% | 12/12 |
+| Cumulative allocation | 1,520,942,240 bytes | 849,843,028 bytes | 44.12% | 12/12 |
+
+These are complete workflow medians, not per-update latency. Retained amortizes
+initial construction over nine cuts. Cumulative allocation includes reclaimed
+objects and is neither live heap nor peak RSS. No speed threshold, selected
+retry or significance claim was used. Shared-host interference remains possible;
+timings from parallel CI are not automatically new qualified cost receipts.
+
+The support-withdrawal and cyclic cases connect H18's support distinction to
+the admitted source-update path; they do not implement DRedc or DBSP signed
+circuits. =SourceUpdateFrame.source_frame= / =completed_reuse= retain
+=readsMatch= and completed-fixed-point premises. Rejection and old-snapshot
+checks discriminate the publication contract modeled by
+=SessionTransaction.AtomicSnapshot= and
+=NativeSessionPublication.CommittedSnapshot= / =NoPrematurePublication=.
+Those unchanged formal results do not establish native heap refinement.
+
+This finite canonical-Set workflow does not establish production-scale or
+general runtime benefit. Timed actor/cancellation, specialized BYODS Providers,
+larger applications and real-model comprehension remain open. This run made
+zero model calls. Final-head GitHub CI remains a separate release gate.

@@ -91,9 +91,9 @@ parse/tool crashes cannot count as successful fault detection.
 
 * Ordered implementation plan and exit conditions
 
-Current sequencing is controlled by the [[file:scheme-mvp.org][integrated MVP delivery]]. The
-obligations below remain open where stated; advance their connections to the
-same usable lifecycle before adding independent proof or optimization slices.
+Advance the implementation and formal connections on the same usable native
+lifecycle. The obligations below remain open where stated; independent proof
+or optimization slices must resolve a named obligation on that path.
 
 | Order | Work package / owner | Concrete next deliverable | Exit condition |
 |-------+----------------------+---------------------------+----------------|

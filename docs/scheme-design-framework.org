@@ -7,9 +7,9 @@
 
 * Acceptance rule
 
-The [[file:scheme-mvp.org][integrated MVP delivery]] now controls the order of implementation and
-acceptance across these rows. Advance one usable lifecycle before additional
-isolated optimization or proof slices; full R1--R7 closure remains separate.
+Advance one usable native lifecycle across admission, solve, source updates,
+publication and evidence, then qualify its application costs and model
+comprehension. Full R1--R7 closure retains the obligations below.
 
 This matrix defines the scope of design closure. An implemented interface,
 a semantic argument, a passing discriminator and measured application benefit
@@ -121,7 +121,7 @@ join-then-project IR. Membership equivalence does not imply budget/work equality
 or certify native freshness, decoding and index execution. Its
 [[file:evidence/scheme-projected-join-rule-20261005/receipt.json][receipt]] records the refreshed native artifact and exact formal snapshot.
 
-R5 now also has [[file:scheme-mvp.org][initialization-inclusive composed lifecycle evidence]]:
+R5 now also has [[file:scheme-retained-benefit.org][initialization-inclusive composed lifecycle evidence]]:
 the same checked program and evidence path cross nine source cuts, with all
 eight native relation sets checked independently. This finite workflow result
 does not close general benefit or the actor/Provider performance obligations.

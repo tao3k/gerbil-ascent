@@ -29,8 +29,6 @@ source or causal authority remain open research gates.
 
 ## Read the work
 
-- [Integrated MVP delivery](docs/scheme-mvp.org) — one native reasoning
-  lifecycle, whole-system audit, acceptance entry and remaining release gates.
 - [Native Library contract](docs/native-library-acceptance.org) — implemented
   language, admission, and result boundaries.
 - [Research and proof audit](docs/scheme-research-proof-audit.org) — papers,
@@ -52,9 +50,6 @@ just test
 
 `just oracle` runs the Rust comparison; `just performance` runs the
 benchmark suite. See `just --list` for focused checks.
-
-The MVP uses the existing native `just test` entry. Full same-head CI remains
-the release gate.
 
 ## Papers studied
 

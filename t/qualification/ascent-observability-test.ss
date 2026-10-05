@@ -3,8 +3,9 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 (import (only-in :std/test check-equal? test-case test-suite)
-        (only-in :clan/poo/object .o .call)
+        (only-in :clan/poo/object .o .call .ref)
         (only-in :core/observability/debug
+                 poo-flow-debug-memory-snapshot
                  PooFlowDebugMemoryAnomaly?
                  PooFlowDebugDurationAnomaly?)
         (only-in :core/observability/testing-case
@@ -22,7 +23,14 @@
                 (identity 'ascent-ss-probe)
                 (heap-limit-bytes 0)
                 (live-growth-limit-bytes 0)
-                (sample-interval-milliseconds 1)))
+                (sample-interval-milliseconds 1)
+                ;; Gambit heap/live fields describe the latest GC. Native cold
+                ;; startup can have no such sample yet; request real collection
+                ;; instead of relying on interpreted import allocation pressure.
+                (collect-before-sample? #t)))
+        (check-equal? (> (.ref (poo-flow-debug-memory-snapshot
+                               'zero-budget-preflight collect?: #t)
+                              'heap-size-bytes) 0) #t)
         (check-equal? (poo-flow-testing-case-profile? rejected-profile) #t)
         (check-equal?
          (with-catch

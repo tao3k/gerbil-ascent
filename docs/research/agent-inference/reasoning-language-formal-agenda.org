@@ -322,10 +322,12 @@ and duplicate edges. The initial Boolean vector is built from the seed
 list; native seeding order can differ without changing this proof's
 selected set or completion, provided it enumerates each true bit once.
 The fuel is a proof device for graph traversal, not a native fixed-point
-or model-reasoning limit. The native qualification checks all 64
-three-relation graphs against an independent matrix oracle, all roots and
-mixed read kinds; it also checks that non-reading clauses add no edges and
-tests a 4,096-relation chain. What remains is an explicit refinement from
+or model-reasoning limit. The native qualification compares all 64
+three-relation graphs and all eight changed-source seed subsets with an
+independent matrix oracle. The lowered-plan case separately covers every
+single root and mixed read kinds; non-reading clauses add no edges, and a
+4,096-relation chain exercises the long traversal. What remains is an
+explicit refinement from
 admitted Gerbil vectors and mutable bitmap/list operations to the typed
 Lean vector machine, including in-range target IDs and snapshot ownership.
 The Lean =Vector.set= step is a functional model of one native cell mutation,

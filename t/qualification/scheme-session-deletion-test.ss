@@ -238,6 +238,37 @@
         (check-equal? (andmap identity (vector->list selected)) #t)
         (check-equal? (vector-ref graph 0) '(1))
         (check-equal? (vector-ref graph (- count 1)) [])))
+    (test-case "every changed-source subset closes to independent matrix reachability"
+      ;; The Lean bitmap model permits any seed subset. Compare the actual
+      ;; mutable vector/list loop with a separate transitive-closure oracle.
+      (for-each
+       (lambda (mask)
+         (let* ((edges (edges-for-mask mask))
+                (closure (matrix-closure edges))
+                (graph
+                 (list->vector
+                  (map (lambda (source)
+                         (map cadr (filter (lambda (edge) (= (car edge) source)) edges)))
+                       (iota 3)))))
+           (for-each
+            (lambda (seed-mask)
+              (def (seeded? index)
+                (odd? (quotient seed-mask (expt 2 index))))
+              (let (selected (list->vector (map seeded? (iota 3))))
+                (gerbil-ascent-graph-close! graph selected)
+                (check-equal?
+                 (vector->list selected)
+                 (map (lambda (target)
+                        (or (seeded? target)
+                            (and (ormap
+                                  (lambda (source)
+                                    (and (seeded? source)
+                                         (member (list source target) closure)))
+                                  (iota 3))
+                                 #t)))
+                      (iota 3)))))
+            (iota 8))))
+       (iota 64)))
     (test-case "fresh replacement reads lexical candidate rows without self-field recursion"
       (let* ((base (path-program '((0 1) (1 2))))
              (candidate (fresh-replacement-program

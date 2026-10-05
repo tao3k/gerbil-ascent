@@ -25,6 +25,22 @@ example : Ascent.RuleGraphClosure.ruleSuccessors mixedReadPlans true = [] := by 
 
 #print axioms Ascent.RuleGraphClosure.completed_compiled_exact
 #print axioms Ascent.RuleGraphClosure.completed_reuse_frame
+#print axioms Ascent.NativeGraphWorklist.runFuel_compiled_exact
+#print axioms Ascent.NativeGraphWorklist.runFuel_compiled_closed
+
+def cycleAdj : Fin 3 → List (Fin 3)
+  | 0 => [1, 1]
+  | 1 => [2]
+  | 2 => [0]
+
+example : (Ascent.NativeGraphWorklist.runFuel cycleAdj 4
+    (Ascent.NativeGraphWorklist.initial ([0] : List (Fin 3)))).pending = [] := by
+  exact Ascent.NativeGraphWorklist.runFuel_complete 3 cycleAdj _
+    (Ascent.NativeGraphWorklist.initial_wellformed [0] (by decide))
+
+example : (2 : Fin 3) ∈ (Ascent.NativeGraphWorklist.runFuel cycleAdj 4
+    (Ascent.NativeGraphWorklist.initial ([0] : List (Fin 3)))).selected := by
+  decide
 
 /-- If the negation read `source → derived` is absent from the dependency
 graph, retaining `derived` after a source change is unsound. -/

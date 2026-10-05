@@ -11,6 +11,7 @@ import FiniteHeight
 import FiniteOperators
 import LexicalLowering
 import NativeSessionPublication
+import NativeGraphWorklist
 import PositiveNonmembership
 import RecursiveLowering
 import SessionPublication

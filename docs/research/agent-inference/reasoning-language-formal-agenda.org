@@ -301,18 +301,30 @@ empty, =completed_compiled_exact= proves selected relations are precisely
 the least reachability closure, and =completed_compiled_closed= supplies
 the closure premise of =DependencyInvalidation.completed_frame=. The
 =completed_reuse_frame= theorem composes both statements with evaluator
-locality and completed fixed-point premises. The native qualification
-checks all 64 three-relation graphs against an independent matrix oracle,
-all roots and mixed read kinds; it also checks that non-reading clauses
-add no edges. The proof does not establish that Gerbil vectors refine the
-abstract =Rule=, that the native pending list terminates, or that native
-evaluation is the modeled local =step=. A concrete native trace bridge
-and completed-result comparison remain necessary before this becomes a
-runtime correctness claim. The Functional module reduces the model's
-per-rule selection code; no native maintenance-cost or runtime saving has
-been measured. Lake now pins lean-poo PR #8 at =9e160953=; its new named
-provider-transaction API is distinct from ASCENT relation invalidation
-and is not used to infer a native equivalence.
+locality and completed fixed-point premises. The
+[[file:../../../packages/proofs/lean/NativeGraphWorklist.lean][native-shaped list model]] now refines each pop and full adjacency scan to
+the abstract worklist, including the selected and pending membership sets.
+It preserves unique pending keys and proves a popped key cannot be queued
+again by cycles or duplicate edges. For dense =Fin count= relation IDs,
+every finite trace has at most =count= pops; =runFuel_complete= proves an
+executable =count + 1= fuel driver clears pending. Consequently,
+=runFuel_compiled_exact= removes the prior completion premise *for this
+Lean list machine* and yields exactly the compiler's rule-read closure.
+The derived =runFuel_compiled_closed= discharges the affected-set closure
+premise used by the fixed-point frame theorem for this same model.
+The fuel is a proof device for graph traversal, not a native fixed-point
+or model-reasoning limit. The native qualification checks all 64
+three-relation graphs against an independent matrix oracle, all roots and
+mixed read kinds; it also checks that non-reading clauses add no edges and
+tests a 4,096-relation chain. What remains is an explicit refinement from
+admitted Gerbil vectors and mutable bitmap/list operations to the Lean
+machine, including in-range target IDs and snapshot ownership. Native
+evaluation must also satisfy the modeled local =step= and completed-result
+premises before this becomes a runtime reuse-correctness claim. The
+Functional module reduces the model's per-rule selection code; no native
+maintenance-cost or runtime saving has been measured. Lake pins lean-poo
+PR #8 at =9e160953=; its named provider-transaction API is distinct from
+ASCENT relation invalidation and is not used to infer a native equivalence.
 
 The =TLCGenerationCutoff= constant is a finite *model-checking* search
 parameter, supplied by =ASCENT_TLC_GENERATION_CUTOFF= in the =Justfile= (four

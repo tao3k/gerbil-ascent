@@ -134,3 +134,13 @@ acceptance is idempotent; receive/cancel preserve publication; re-enabling
 acceptance after cancellation still rejects the old generation. The planned
 native coordinator must implement these transitions before inheriting those
 claims. Draining, credits and worker liveness are not proved by that module.
+
+* Qualified slice
+
+The [[file:evidence/scheme-actor-binding-20261005/receipt.json][qualification receipt]] binds implementation/proof snapshot =bb2edaf=:
+seven native index/binding Cases, 9,999 independent assignment decisions,
+125 known-column programs, the full Lean package, four normal TLA models and
+ten required counterexamples. The actor model explores 41,763 distinct states
+at the recorded tool cutoffs. Rejected compiler/proof/sandbox attempts remain
+in the receipt; no execution logs are published. Native execution's two-second
+shell observation is qualification data, not an end-to-end or parallel gain.

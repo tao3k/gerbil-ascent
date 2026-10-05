@@ -290,3 +290,9 @@ generations. =ActorRound.tla= checks a small parallel positive-round protocol,
 including frozen frontiers, replay, draining and publication; three faulty
 protocol variants are required counterexamples. Neither proves worker liveness,
 backpressure or correspondence with a native actor implementation.
+
+The [[file:evidence/scheme-actor-binding-20261005/receipt.json][actor/binding receipt]] binds source snapshot =bb2edaf=, the seven-Case
+native module, four normal TLA models and ten counterexample controls. Raw
+development failures stay excluded. Native actor execution, parallel benefit
+and model comprehension retain their separate gates; this round uses no model
+calls.

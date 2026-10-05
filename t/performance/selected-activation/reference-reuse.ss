@@ -3,12 +3,11 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 ;;; Completed-closure reuse admission and engine-local rule activation.
-(import (only-in "activation.ss" gerbil-ascent-activate-plans)
-        (only-in :clan/poo/object .ref)
-        (only-in "update-selection.ss" gerbil-ascent-update-selection
-                 gerbil-ascent-update-active-plans gerbil-ascent-select-rule-plans))
+(import (only-in :clan/poo/object .ref)
+        (only-in :gerbil-ascent/t/performance/selected-activation/reference-selection gerbil-ascent-update-selection
+                 gerbil-ascent-update-active-plans))
 (export gerbil-ascent-prepare-native-reuse gerbil-ascent-reuse-active-rules
-        gerbil-ascent-activate-rules gerbil-ascent-activate-selected-rules
+        gerbil-ascent-activate-rules
         native-reuse? native-reuse-result native-reuse-affected)
 
 ;;; Only completed native snapshots may seed an update. The capsule is private
@@ -61,25 +60,17 @@
 ;;     ```
 ;;   %
 (def (gerbil-ascent-activate-rules analysis)
-  (gerbil-ascent-activate-plans (vector-ref analysis 5)))
-
-;; : (forall (a r) (-> a Vector (Vector [r])))
-;; gerbil-ascent-activate-selected-rules
-;;   : (-> Analysis AffectedRelations ActiveRulesByStratum)
-;;   | doc m%
-;;       Select immutable affected plans before creating engine-owned frames.
-;;       No frame is allocated for discarded rules or unselected output heads.
-;;
-;;       # Examples
-;;
-;;       ```scheme
-;;       (gerbil-ascent-activate-selected-rules analysis affected)
-;;       ;; => fresh frames only for the selected plans
-;;       ```
-;;     %
-(def (gerbil-ascent-activate-selected-rules analysis affected)
-  (gerbil-ascent-activate-plans
-   (gerbil-ascent-select-rule-plans (vector-ref analysis 5) affected)))
+  (vector-map
+   (lambda (rules)
+     (map (lambda (rule)
+            (let (plan (vector-ref rule 5))
+              (vector (vector-ref rule 0) (vector-ref rule 1)
+                      (vector-ref rule 2) (vector-ref rule 3)
+                      (vector-ref rule 4)
+                      plan
+                      (and plan (make-vector (vector-ref plan 2) #f)))))
+          rules))
+   (vector-ref analysis 5)))
 
 ;; gerbil-ascent-reuse-active-rules
 ;; : (forall (r c) (-> (Vector [r]) (Maybe c) (Vector [r])))

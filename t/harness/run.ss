@@ -35,6 +35,7 @@
     "t/qualification/ascent-index-program-test.ss"
     "t/qualification/ascent-index-entry-test.ss"
     "t/qualification/ascent-storage-batch-test.ss"
+    "t/qualification/ascent-selected-activation-test.ss"
     "t/qualification/ascent-invalid-program-test.ss"
     "t/qualification/ascent-lattice-program-test.ss"
     "t/qualification/ascent-materialization-test.ss"
@@ -136,6 +137,12 @@
                             [])
                           (if (member "t/qualification/scheme-bounded-datum-test.ss" tests)
                             '("t/performance/bounded-datum/reference")
+                            [])
+                          (if (member "t/qualification/ascent-selected-activation-test.ss" tests)
+                            '("t/performance/selected-activation/reference-selection"
+                              "t/performance/selected-activation/reference-reuse"
+                              "t/performance/selected-activation/reference-evaluate"
+                              "t/performance/selected-activation/fixture")
                             [])
                           (if (member "t/qualification/ascent-storage-batch-test.ss" tests)
                             '("t/performance/storage-batch/reference"

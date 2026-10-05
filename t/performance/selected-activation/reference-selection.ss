@@ -4,14 +4,13 @@
 
 ;;; Native dependency invalidation selects components; the evaluator owns
 ;;; reuse capsules, mutable rows, budget accounting and atomic publication.
-(import (only-in "activation.ss" gerbil-ascent-activate-rule)
-        (only-in :clan/poo/object .ref)
-        (only-in "scheme-checked.ss" relational-stable-procedure?)
+(import (only-in :clan/poo/object .ref)
+        (only-in :gerbil-ascent/program/scheme-checked relational-stable-procedure?)
         (only-in :gerbil-ascent/core/positive-plan gerbil-ascent-positive-plan)
         (only-in :gerbil-ascent/core/dependency-graph gerbil-ascent-graph-close!)
         (only-in :gerbil-ascent/table/storage gerbil-ascent-canonical-set-storage-provider?))
 (export gerbil-ascent-update-eligible? gerbil-ascent-update-selection
-        gerbil-ascent-update-active-plans gerbil-ascent-select-rule-plans)
+        gerbil-ascent-update-active-plans)
 
 ;; gerbil-ascent-update-eligible?
 ;; : (forall (p) (-> p Boolean))
@@ -86,21 +85,21 @@
             (gerbil-ascent-graph-close! (vector-ref analysis 6) affected)
             affected)))))
 
+;; gerbil-ascent-update-active-plans
 ;; : (forall (a) (-> (Vector [a]) Vector (Vector [a])))
-;; gerbil-ascent-select-rule-plans
-;;   : (-> RulePlansByStratum AffectedRelations RulePlansByStratum)
-;;   | doc m%
-;;       Project affected outputs in order without allocating variable frames.
-;;       Full survivors retain identity; partial heads share lowered body slots.
+;; : (-> ActiveStrata AffectedRelations ActiveStrata)
+;; | doc m%
+;;     A selected rule preserves its immutable plan when every head survives;
+;;     partial-head rules receive a new plan and a fresh engine-owned frame.
 ;;
-;;       # Examples
+;;     # Examples
 ;;
-;;       ```scheme
-;;       (gerbil-ascent-select-rule-plans '#() '#())
-;;       ;; => '#()
-;;       ```
-;;     %
-(def (gerbil-ascent-select-rule-plans full-active-by-stratum affected)
+;;     ```scheme
+;;     (gerbil-ascent-update-active-plans '#() '#())
+;;     ;; => '#()
+;;     ```
+;;   %
+(def (gerbil-ascent-update-active-plans full-active-by-stratum affected)
   (vector-map
    (lambda (rules)
      (filter-map
@@ -127,30 +126,7 @@
                             (vector heads (vector-ref rule 1)
                                     (vector-ref rule 2) (vector-ref rule 3))))))
                    (vector heads (vector-ref rule 1) (vector-ref rule 2)
-                           (vector-ref rule 3) (vector-ref rule 4) plan))))))
+                           (vector-ref rule 3) (vector-ref rule 4) plan
+                           (and plan (make-vector (vector-ref plan 2) #f))))))))
       rules))
    full-active-by-stratum))
-
-;; gerbil-ascent-update-active-plans
-;; : (forall (a) (-> (Vector [a]) Vector (Vector [a])))
-;; : (-> ActiveStrata AffectedRelations ActiveStrata)
-;; | doc m%
-;;     A selected rule preserves its immutable plan when every head survives;
-;;     partial-head rules receive a new plan and a fresh engine-owned frame.
-;;
-;;     # Examples
-;;
-;;     ```scheme
-;;     (gerbil-ascent-update-active-plans '#() '#())
-;;     ;; => '#()
-;;     ```
-;;   %
-(def (gerbil-ascent-update-active-plans full-active-by-stratum affected)
-  (vector-map
-   (lambda (rules)
-     (map (lambda (rule)
-            ;; Full survivors retain their original frame and identity. A
-            ;; projected six-slot plan needs a fresh private activation.
-            (if (= (vector-length rule) 7) rule
-              (gerbil-ascent-activate-rule rule))) rules))
-   (gerbil-ascent-select-rule-plans full-active-by-stratum affected)))

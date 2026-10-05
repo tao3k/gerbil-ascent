@@ -121,6 +121,20 @@ check-actor-pool:
       echo "NATIVE-REGISTRY-CONTROL-OK $control exit=$code"
     done
 
+# Paired native selected frames and complete dependency updates/append lifecycle.
+performance-selected-activation:
+    {{ test_runner }} run -- just _performance-selected-activation
+
+_performance-selected-activation:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    library="{{ justfile_directory() }}/.cache/ascent/native-library/lib"
+    mkdir -p .cache/ascent/selected-activation
+    gxi {{ gerbil_test_runtime_options }} -e '(add-load-path! (path-expand ".cache/ascent/native-library/lib"))' -e '(import :std/make)' -e '(make ["program/activation" "program/update-selection" "program/reuse" "program/evaluate" "t/performance/selected-activation/reference-selection" "t/performance/selected-activation/reference-reuse" "t/performance/selected-activation/reference-evaluate" "t/performance/selected-activation/fixture" "t/performance/selected-activation-benchmark"] srcdir: (current-directory) libdir: (path-expand ".cache/ascent/native-library/lib") build-deps: (path-expand ".cache/ascent/native-library/build-deps"))'
+    for scenario in sparse partial all update lifecycle small; do
+        timeout 90s gxi {{ gerbil_test_runtime_options }} -e '(add-load-path! (path-expand ".cache/ascent/native-library/lib"))' :gerbil-ascent/t/performance/selected-activation-benchmark "$scenario" "$library" ".cache/ascent/selected-activation/$scenario.sexp"
+    done
+
 # Paired native storage batch preflight and complete retained-engine updates.
 performance-storage-batch:
     {{ test_runner }} run -- just _performance-storage-batch

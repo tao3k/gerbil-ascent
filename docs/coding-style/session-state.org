@@ -5,6 +5,77 @@
 Immutable declarations, engine frames, retained updates and checked source admission. Study notes and receipts retain their original revision and scope;
 historical source paths and timings are not current qualification claims.
 
+* Study: select immutable plans before instantiating runtime frames
+
+Installed Gerbil =2591dcd=, =compiler/optimize-call.ss:822-831=, delays
+compilation of each conditional branch until the transformed test determines
+which branches are needed. Its =optimize-base.ss:334-340= constructs a class
+method table only on demand. Both keep immutable decisions separate from
+allocating mutable state. These examples guide lifetime boundaries, not a
+claim that ASCENT's evaluator is a Gerbil compiler.
+
+The previous update engine instantiated every cached rule before projecting
+affected heads. Partial-head rules then allocated another frame, and all full
+frames remained retained for possible future appends. The new responsibilities
+are explicit:
+
+| Owner | Responsibility |
+|-------+----------------|
+| =program/update-selection.ss= | Project ordered immutable outputs, sharing body slots |
+| =program/activation.ss= | Instantiate fresh seven-slot engine activations from six-slot plans |
+| =program/reuse.ss= | Admit completed reuse and activate only selected plans |
+| =program/evaluate.ss= | Retain selected frames across partial timeout resumes; restore full activation for later dirty work |
+
+After publishing a completed selected update, the engine clears its active
+frame reference and reuse capsule. Clean calls retain the cached result.
+Staged duplicate-only appends can clear dirty work before full activation is
+needed. A later dirty append instantiates all original rules before executing
+them, including previously unaffected components. Immutable cached metadata
+never owns frames. The existing =update-active-plans= entry retains full-rule
+identity and creates fresh partial frames through the common activation owner.
+=build.ss= adds only the production module, without test dispatch or options.
+
+=just performance-selected-activation= freezes the three previous owners at
+=210bc01eba1e80c5c1073ff300099d24a0f1852f=, changing only relative imports
+and redirects between those frozen owners. Both sides compile to native code
+and assert exact module resolution. All six scenarios use 50 alternating pairs.
+Initial collection/warm checks are outside timing; natural collection remains
+inside. Gates fixed before sampling: sparse/partial kernels require 70% less
+allocation, 15% less CPU and 35 wins; complete updates require 15% less
+allocation. Update/control CPU overhead is bounded by 5% + 20 us; controls
+allow at most 4 KiB additional allocation.
+
+| Scenario | Old CPU us | New CPU us | Old bytes | New bytes | CPU wins |
+|----------+------------+------------+-----------+-----------+----------|
+| Sparse metadata activation | 365.672 | 17.625 | 1294547.25 | 50579.25 | 50/50 |
+| Partial-head metadata activation | 390.000 | 29.422 | 1295923.25 | 50899.25 | 49/50 |
+| All-head activation control | 7.938 | 7.938 | 168099.25 | 168099.25 | 20/50 |
+| Complete update engine | 1912.000 | 1869.400 | 1847492.8 | 1537412.8 | 34/50 |
+| Update then clean call and append control | 1903.500 | 1886.000 | 1890116.8 | 1891364.8 | 31/50 |
+| Small complete update control | 87.400 | 87.700 | 236132.8 | 235924.8 | 22/50 |
+
+All gates passed. The 1024-rule/64-slot synthetic metadata kernels save
+95.2% / 92.5% CPU and about 96.1% allocation. These are frame selection and
+construction measurements. The complete update uses actual compiled rules
+for 256 independent components with 64 source columns: native engine creation,
+reuse admission, row initialization, solving, publication and ordered row
+forcing are measured. It saves 310080 bytes (16.8%); its small CPU difference
+is nonregression evidence. Prospective declaration construction and the public
+session wrapper are outside that interval. The append control deliberately
+pays full activation and adds 1248 bytes; the small update is 0.3 us slower.
+These controls prevent promoting deferred work into a universal solver gain.
+Logs, earlier failed test expectations and raw pairs remain in ignored
+=.cache/ascent/selected-activation/=.
+
+Native qualification passed seven modules / 56 Cases in the existing actor
+pool (=jobs=12=), with module execution taking 1-7 seconds. The new Suite
+covers all 64 masks over duplicate outputs for positive and generic plans,
+separate frames, complete updates, previously unaffected appends and zero
+deadline resumes. Existing positive-plan, deletion, workspace, observation,
+callback and index Suites passed, including 512 directed-graph controls.
+Selected production policy reported zero findings/errors. The production and
+paired benchmark hashes remained unchanged throughout final qualification.
+
 * Feature: declaration-only preflight for single-source replacement
 
 The installed compiler's =optimize-call.ss:45-56= resolves applicability before

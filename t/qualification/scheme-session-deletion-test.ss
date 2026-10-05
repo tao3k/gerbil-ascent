@@ -202,6 +202,22 @@
 
 (def scheme-session-deletion-test
   (test-suite "Native dependency invalidation and source withdrawal"
+    (test-case "only reading clauses compile source-to-every-head edges"
+      (let* ((plans
+              (list (vector (list (vector 1 []) (vector 2 []))
+                            (list (vector 'atom (vector 0 []))
+                                  (vector 'negation (vector 0 []))
+                                  (vector 'aggregate (vector 0 []))
+                                  (vector 'guard #f)
+                                  (vector 'generator #f)
+                                  (vector 'binding #f)))))
+             (successors (gerbil-ascent-rule-successors plans 3)))
+        (check-equal? (andmap (lambda (target)
+                                (and (member target (vector-ref successors 0)) #t))
+                              '(1 2))
+                      #t)
+        (check-equal? (vector-ref successors 1) [])
+        (check-equal? (vector-ref successors 2) [])))
     (test-case "cached adjacency remains read-only across independent closures"
       (let ((graph '#((0 1 1) (2) (2)))
             (first (vector #t #f #f))

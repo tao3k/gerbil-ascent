@@ -10,6 +10,22 @@ namespace Ascent.ProofTests
 open LeanPoo.Proof
 open Ascent.SourceCertificates
 
+/-- Every positive, negative and aggregate read contributes a source-to-head
+edge; guard, generator and binding clauses contribute none. Duplicate heads
+are harmless to reachability, as in the native adjacency. -/
+def mixedReadPlans : List (Ascent.RuleGraphClosure.Rule Bool) :=
+  [{ heads := [true, true]
+     body := [⟨.atom, some false⟩, ⟨.negation, some false⟩,
+              ⟨.aggregate, some false⟩, ⟨.guard, none⟩,
+              ⟨.generator, none⟩,
+              ⟨.binding, none⟩] }]
+
+example : true ∈ Ascent.RuleGraphClosure.ruleSuccessors mixedReadPlans false := by decide
+example : Ascent.RuleGraphClosure.ruleSuccessors mixedReadPlans true = [] := by decide
+
+#print axioms Ascent.RuleGraphClosure.completed_compiled_exact
+#print axioms Ascent.RuleGraphClosure.completed_reuse_frame
+
 /-- If the negation read `source → derived` is absent from the dependency
 graph, retaining `derived` after a source change is unsound. -/
 def negationStep (state : Bool → Bool) (key : Bool) : Bool :=

@@ -3,6 +3,7 @@
 import CappedArithmetic
 import AtomicBinding
 import RoundAdmission
+import RuleGraphClosure
 import DependencyInvalidation
 import FunctionalDependency
 import DescriptorScope

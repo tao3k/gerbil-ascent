@@ -290,14 +290,29 @@ relation then changes after one round. The
 =LeanPoo.Functional.Requirements= from PR #8's pinned commit and makes
 each target consume only its typed read checklist. LeanPoo's
 =prepare_congr= then proves the locality premise, so the completed
-frame theorem follows for this checklist-defined model. This justifies
-the graph direction and closure condition used by
-=program/update-selection.ss=; it does not yet prove that
-=gerbil-ascent-rule-successors= enumerates all body reads, that
-=gerbil-ascent-graph-close!= computes exactly that closure, or that the
-native evaluator is this Functional consumer. The Functional module
-reduces the model's per-rule selection code; no native maintenance-cost
-or runtime saving has been measured.
+frame theorem follows for this checklist-defined model. The
+[[file:../../../packages/proofs/lean/RuleGraphClosure.lean][rule-graph module]] now models the private lowered shape used by
+=core/rule-semantics.ss=: every atom, negation or aggregate read contributes
+an edge from its source to every rule head; guard, generator and binding
+contribute none. =mem_ruleSuccessors_iff= proves exact membership for this abstract
+compiler, including repeated heads. A mark-before-enqueue worklist model
+preserves four invariants under any visit order. When its pending set is
+empty, =completed_compiled_exact= proves selected relations are precisely
+the least reachability closure, and =completed_compiled_closed= supplies
+the closure premise of =DependencyInvalidation.completed_frame=. The
+=completed_reuse_frame= theorem composes both statements with evaluator
+locality and completed fixed-point premises. The native qualification
+checks all 64 three-relation graphs against an independent matrix oracle,
+all roots and mixed read kinds; it also checks that non-reading clauses
+add no edges. The proof does not establish that Gerbil vectors refine the
+abstract =Rule=, that the native pending list terminates, or that native
+evaluation is the modeled local =step=. A concrete native trace bridge
+and completed-result comparison remain necessary before this becomes a
+runtime correctness claim. The Functional module reduces the model's
+per-rule selection code; no native maintenance-cost or runtime saving has
+been measured. Lake now pins lean-poo PR #8 at =9e160953=; its new named
+provider-transaction API is distinct from ASCENT relation invalidation
+and is not used to infer a native equivalence.
 
 The =TLCGenerationCutoff= constant is a finite *model-checking* search
 parameter, supplied by =ASCENT_TLC_GENERATION_CUTOFF= in the =Justfile= (four

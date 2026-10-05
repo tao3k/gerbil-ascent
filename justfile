@@ -1176,12 +1176,13 @@ check-provider-frontier-formal:
     temp=$(mktemp -d)
     trap 'rm -rf "$temp"' EXIT
     "${tlc[@]}" -workers 1 -config packages/proofs/tla/ProviderFrontier.cfg -metadir "$temp/good" packages/proofs/tla/ProviderFrontier.tla
-    for mutation in raw omit; do
+    for mutation in raw omit early old; do
       sed "s/Mutation = \"none\"/Mutation = \"$mutation\"/" packages/proofs/tla/ProviderFrontier.cfg > "$temp/$mutation.cfg"
       code=0
       "${tlc[@]}" -workers 1 -config "$temp/$mutation.cfg" -metadir "$temp/$mutation" packages/proofs/tla/ProviderFrontier.tla > "$temp/$mutation.out" 2>&1 || code=$?
       invariant=FrontierComplete
       if [[ "$mutation" == omit ]]; then invariant=DeliveredExact; fi
+      if [[ "$mutation" == early || "$mutation" == old ]]; then invariant=ConsumerSnapshot; fi
       [[ "$code" = 12 ]] && grep -q "Invariant $invariant is violated" "$temp/$mutation.out"
       echo "COUNTEREXAMPLE-OK provider-frontier-$mutation $invariant"
     done

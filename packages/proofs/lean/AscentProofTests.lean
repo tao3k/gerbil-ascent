@@ -306,6 +306,32 @@ end Ascent.AtomicBinding.Tests
 #print axioms Ascent.ProviderFrontier.concrete_partition
 #print axioms Ascent.ProviderFrontier.new_fact_must_be_emitted
 #print axioms Ascent.ProviderFrontier.binary_join_partition
+#print axioms Ascent.ProviderFrontier.body_partition
+#print axioms Ascent.ProviderFrontier.projected_partition
+#print axioms Ascent.ProviderFrontier.projected_frontier
+#print axioms Ascent.ProviderFrontier.new_consequence_pivot
+
+/-- Repeated keys and multiple fresh occurrences yield a pivot derivation. -/
+example : Ascent.ProviderFrontier.pivots
+    (fun (_ : Bool) (a b : Bool) => a = b)
+    (fun (_ : Bool) (_ _ : Bool) => True) [true, false, true] false true := by
+  exact Or.inl ⟨true, ⟨True.intro, by decide⟩,
+    true, True.intro, true, True.intro, rfl⟩
+
+/-- Fresh witnesses are not necessarily fresh heads after projection. -/
+example : ¬ Ascent.ProviderFrontier.delta
+    (Ascent.ProviderFrontier.output
+      (Ascent.ProviderFrontier.body (fun (_ : Bool) (a b : Bool) => a = b)
+        [true, false, true] false) (fun _ => true))
+    (Ascent.ProviderFrontier.output
+      (Ascent.ProviderFrontier.body (fun (_ : Bool) (_ _ : Bool) => True)
+        [true, false, true] false) (fun _ => true)) true := by
+  intro fresh
+  exact fresh.2 ⟨false, ⟨false, rfl, false, rfl, false, rfl, rfl⟩, rfl⟩
+
+example (old next : Bool → Bool → Bool → Prop) (seed output : Bool) :
+    ¬ Ascent.ProviderFrontier.pivots old next [] seed output := by
+  simp [Ascent.ProviderFrontier.pivots]
 
 #print axioms Ascent.TransitiveComponents.insertion_transitive
 #print axioms Ascent.TransitiveComponents.insertion_least

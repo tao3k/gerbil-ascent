@@ -494,3 +494,15 @@ refusal with split/stale/rejected-write mutations. Native prefix truth and
 structural/atomicity tests connect this slice to actual storage execution;
 complete VM/hash/parent refinement remains open. [[file:scheme-trrel-uf-design.org][Design]] and [[file:evidence/scheme-trrel-uf-20261005/receipt.json][receipt]] retain
 matched Provider cost controls and whole-engine performance boundaries.
+
+* Arbitrary positive-body frontier follow-up
+
+The [[file:scheme-paper-closure.org][paper closure matrix]] and [[file:evidence/scheme-body-frontier-20261005/receipt.json][source-bound receipt]] extend
+ProviderFrontier beyond its earlier binary join. Lean proves arbitrary finite
+positive-body decomposition, projection and output subtraction. Omitting
+all-old derivations explicitly requires prior heads to be covered by the known
+database; the iteration-history proof remains open. TLA+ owns the staged
+frontier/consumer publication sequence, with early-publication and old-snapshot
+fault controls. Native Scheme checks delayed producers and repeated Provider
+atoms against independent complete output sets. These are complementary claims,
+not duplicate protocol proofs or whole-engine refinement.

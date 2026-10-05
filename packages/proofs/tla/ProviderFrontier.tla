@@ -4,8 +4,16 @@
 \* Finite eqrel injection/frontier/consumer exploration, not native refinement.
 EXTENDS Naturals, FiniteSets
 CONSTANTS Nodes, Mutation
-VARIABLES inputs, total, delta, pending, delivered, phase
-vars == <<inputs, total, delta, pending, delivered, phase>>
+VARIABLES inputs, total, delta, pending, delivered, answers, phase
+vars == <<inputs, total, delta, pending, delivered, answers, phase>>
+\* A three-occurrence downstream body; snapshot ownership is the temporal
+\* obligation. Universal body decomposition belongs to ProviderFrontier.lean.
+Join3(left, middle, right) ==
+  {p \in Nodes \X Nodes : \E b, c \in Nodes :
+     <<p[1], b>> \in left /\ <<b, c>> \in middle /\ <<c, p[2]>> \in right}
+BodyOf(rows) == Join3(rows, rows, rows)
+Pivots(fresh, rows) == Join3(fresh, rows, rows)
+                      \cup Join3(rows, fresh, rows) \cup Join3(rows, rows, fresh)
 RECURSIVE Close(_)
 Close(edges) == LET next == edges \cup
                  {p \in Nodes \X Nodes : \E b \in Nodes :
@@ -15,21 +23,27 @@ Concrete(edges) == LET members == {n \in Nodes : \E p \in edges : n = p[1] \/ n 
                   IN Close(edges \cup {<<p[2], p[1]>> : p \in edges}
                            \cup {<<n, n>> : n \in members})
 Init == /\ inputs = {} /\ total = {} /\ delta = {}
-        /\ pending = {} /\ delivered = {} /\ phase = "idle"
+        /\ pending = {} /\ delivered = {} /\ answers = {} /\ phase = "idle"
 Inject(edge) == /\ phase = "idle" /\ edge \notin inputs
                 /\ inputs' = inputs \cup {edge}
                 /\ pending' = Concrete(inputs')
                 /\ delta' = IF Mutation = "raw" THEN {edge} \ total
                              ELSE pending' \ total
                 /\ phase' = "pending"
+                /\ answers' = IF Mutation = "early" THEN BodyOf(pending') ELSE answers
                 /\ UNCHANGED <<total, delivered>>
 Consume == /\ phase = "pending"
            /\ delivered' = IF Mutation = "omit" THEN delivered ELSE delivered \cup delta
            /\ total' = pending /\ delta' = {} /\ phase' = "idle"
+           /\ answers' = answers \cup Pivots(delta,
+                              IF Mutation = "old" THEN total ELSE pending)
            /\ UNCHANGED <<inputs, pending>>
 Next == (\E edge \in Nodes \X Nodes : Inject(edge)) \/ Consume
 Spec == Init /\ [][Next]_vars
 FrontierComplete == phase = "pending" =>
                       pending = total \cup delta /\ delta = pending \ total
 DeliveredExact == phase = "idle" => delivered = total /\ total = Concrete(inputs)
+\* The visible consumer stays on the committed total until Consume. Even
+\* pending phases cannot expose answers derived from a private new frontier.
+ConsumerSnapshot == answers = BodyOf(total)
 ====

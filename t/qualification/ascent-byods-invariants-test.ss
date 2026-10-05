@@ -6,6 +6,11 @@
         (only-in :std/hash/misc hash-ensure-modify!)
         (only-in :gerbil-ascent/table/trrel-uf gerbil-ascent-trrel-uf-observation)
         (only-in :clan/poo/object .ref)
+        (only-in :gerbil-ascent/program/interface
+                 gerbil-ascent-relation gerbil-ascent-variable gerbil-ascent-atom
+                 gerbil-ascent-rule gerbil-ascent-program)
+        (only-in :gerbil-ascent/program/evaluate gerbil-ascent-evaluate-program)
+        (only-in :gerbil-ascent/table/provider gerbil-ascent-hash-index-provider)
         (only-in :core/observability/testing-case poo-flow-test-case)
         (only-in :gerbil-ascent/t/qualification/ascent-byods-query-fixture
                  ascent-byods-query-evaluate)
@@ -140,8 +145,68 @@
          (for-each (lambda (row) (check-equal? (not (not (member row emitted))) #t)) fresh)
          (set! seen (append emitted seen)))) ordered)))
 
+;;; Repeated Provider reads share variables; a relay delays the second producer
+;;; to a later frontier. Expected heads come from independent graph closure,
+;;; then explicit three-edge witness enumeration, not another evaluator.
+(def (three-body-program provider first second)
+  (let ((x (gerbil-ascent-variable 'x)) (b (gerbil-ascent-variable 'b))
+        (c (gerbil-ascent-variable 'c)) (z (gerbil-ascent-variable 'z)))
+    (gerbil-ascent-program
+     (list (gerbil-ascent-relation 'first 2 first)
+           (gerbil-ascent-relation 'second 2 second)
+           (gerbil-ascent-relation 'relay 2 [])
+           (gerbil-ascent-relation 'closed 2 [] gerbil-ascent-hash-index-provider provider)
+           (gerbil-ascent-relation 'answer 2 []))
+     (list
+      (gerbil-ascent-rule (list (gerbil-ascent-atom 'relay (list x z)))
+                         (list (gerbil-ascent-atom 'second (list x z))))
+      (gerbil-ascent-rule (list (gerbil-ascent-atom 'closed (list x z)))
+                         (list (gerbil-ascent-atom 'first (list x z))))
+      (gerbil-ascent-rule (list (gerbil-ascent-atom 'closed (list x z)))
+                         (list (gerbil-ascent-atom 'relay (list x z))))
+      (gerbil-ascent-rule (list (gerbil-ascent-atom 'answer (list x z)))
+                         (list (gerbil-ascent-atom 'closed (list x b))
+                               (gerbil-ascent-atom 'closed (list b c))
+                               (gerbil-ascent-atom 'closed (list c z)))))
+     64 256 512)))
+
+(def (three-body-rows closed)
+  (filter
+   (lambda (pair)
+     (ormap (lambda (b)
+              (and (member (list (car pair) b) closed)
+                   (ormap (lambda (c)
+                            (and (member (list b c) closed)
+                                 (member (list c (cadr pair)) closed)))
+                          '(0 1 2))))
+            '(0 1 2)))
+   +possible-edges+))
+
 (def ascent-byods-invariants-test
   (test-suite "ASCENT BYODS exhaustive three-node invariants"
+    (poo-flow-test-case "three repeated Provider atoms consume delayed frontiers exactly"
+      (for-each
+       (lambda (edges)
+         (for-each
+          (lambda (first)
+            (let (second (filter (lambda (edge) (not (member edge first))) edges))
+              (for-each
+               (lambda (kind provider)
+                 (let* ((closed (reference-rows kind edges))
+                        (wanted (three-body-rows closed))
+                        (result (gerbil-ascent-evaluate-program
+                                 (three-body-program provider first second)))
+                        (actual ((.ref result 'rows-of) 'answer)))
+                   (check-equal? (.ref result 'finished) #t)
+                   (check-equal? (length actual) (length wanted))
+                   (for-each (lambda (row)
+                               (check-equal? (not (not (member row actual))) #t)) wanted)))
+               '(eqrel trrel trrel-uf)
+               (list gerbil-ascent-eqrel-storage-provider
+                     gerbil-ascent-trrel-storage-provider
+                     gerbil-ascent-trrel-uf-storage-provider))))
+          (subsets edges)))
+       (subsets '((0 1) (1 2) (2 0)))))
     (poo-flow-test-case "union-find false nodes and false groups have distinct identities"
       (let ((state (gerbil-ascent-storage-make-state gerbil-ascent-trrel-uf-storage-provider)))
         (def (extend edge budget)

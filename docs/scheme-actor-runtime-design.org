@@ -484,3 +484,46 @@ native SCC, actor Session, actor round and index-build modules passed all 28
 Cases. This targeted receipt binds the rebased source/carrier independently;
 it does not relabel the earlier 71-module/610-Case suite as a full new-head run.
 The repeated timing probe still establishes no performance benefit.
+
+* Component plan identity cache and CI owner boundary (2026-10-05)
+
+The previous exact head =1de7af4= failed Scheme CI before execution because
+=evaluate.ss= had 1004 effective lines under =GERBIL-SCHEME-MOD-R002=.
+SCC eligibility now belongs to =positive-components.ss=; the evaluator calls
+that policy once. The threshold is preserved. Source size alone is not native
+or performance qualification; the exact-head GitHub check remains required.
+
+A weak identity table stores only fully compiled component metadata keyed by
+immutable program analysis. Cache hits reuse component membership, predecessor
+ids and canonical projected rule plans. A new analysis identity cannot hit an
+old entry. Source-only engines may share analysis but continue to own distinct
+rows, indexes, budgets, delta buffers, snapshots and variable frames. Component
+metadata is built privately and is read-only after publication. Primitive hash
+operations own a mutex; lowering is outside critical sections. Concurrent cold
+callers may build equivalent duplicate metadata. Single-flight compilation,
+weak-key lifetime and native allocation ownership are not proven here.
+
+[[https://thomas.gilray.org/pdf/seamless-deductive.pdf][A22]], §4, pp.82–83, computes SCCs and incrementalization before generated
+execution. We infer an ownership requirement for our architecture: immutable
+component lowering belongs to the declaration lifetime, while relation state
+belongs to a solve. This cache implements that separation for our relation SCC
+projection; the paper does not prove equivalence of that projection to its rule
+SCC transformation. Existing multi-head truth tests remain a separate gate.
+
+Native tests check exact analysis identity hits, independent analysis misses,
+unchanged output truth, and equality of fresh/cached projected metadata. A paired
+100-repeat planning probe measures uncached lowering versus a cache hit; the
+64-edge fresh-solve probe still checks all output relations for every sample.
+The planning probe cannot establish end-to-end or multicore benefit.
+
+=RoundAdmission.lean= now adds abstract identity hit/miss and completed/failed
+cache publication laws. =ReadyComponents.tla= is replayed unchanged because the
+cache adds no active/done/return transitions. Neither proves the native weak
+hash/mutex implementation. The [[file:evidence/scheme-component-cache-20261005/receipt.json][cache qualification receipt]] records outcomes,
+negative measurements and the preceding CI failure. Model calls remain 0.
+
+The repaired full suite passed 72 modules and 617 Cases. The matched
+planning batch medians (100 operations) were fresh 0.989 ms and cached 0.012 ms.
+Fresh-solve medians were serial 1.780 ms, SCC 1/2/4 workers 7.796/8.274/7.859 ms.
+These retain the end-to-end negative result; three samples cannot establish
+stable CPU/throughput improvement.

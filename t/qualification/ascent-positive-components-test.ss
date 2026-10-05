@@ -62,6 +62,41 @@
                                    (check-equal? (and (memv (vector-ref (vector-ref output 0) 0) (positive-component-members component)) #t) #t))
                                  (vector-ref (vector-ref rule 0) 0)))
                      (positive-component-rules component))) components)))
+    (test-case "plan cache shares only the exact immutable analysis identity"
+      (let* ((p (program '((0 1))))
+             (first (gerbil-ascent-make-engine p #t))
+             (second (gerbil-ascent-make-engine p #t))
+             (analysis (.ref first '.analysis))
+             (cached (gerbil-ascent-positive-components analysis))
+             (fresh (gerbil-ascent-positive-components (.ref (gerbil-ascent-make-engine (program '((1 2))) #t) '.analysis))))
+        (check-equal? (eq? analysis (.ref second '.analysis)) #t)
+        (check-equal? (eq? cached (gerbil-ascent-positive-components (.ref second '.analysis))) #t)
+        (check-equal? (eq? cached fresh) #f)
+        (check-equal? (canonical (gerbil-ascent-evaluate-program p workers: 2) 'reach) '((0 1)))
+        (check-equal? (canonical (gerbil-ascent-evaluate-program (program '((1 2))) workers: 2) 'reach) '((1 2)))
+        (check-equal? (eq? cached (gerbil-ascent-positive-components analysis)) #t)))
+    (test-case "cached and freshly compiled plans retain identical projected rules"
+      (let* ((p (program '((0 1) (1 2))))
+             (analysis (.ref (gerbil-ascent-make-engine p #t) '.analysis))
+             (cached (gerbil-ascent-positive-components analysis)))
+        (def (shape components)
+          (map (lambda (c) (list (positive-component-id c) (positive-component-members c)
+                                (positive-component-rules c) (positive-component-predecessors c))) components))
+        (check-equal? (shape cached) (shape (gerbil-ascent-compile-positive-components analysis)))
+        ;; Planning-only paired control: native compilation versus a cache hit.
+        ;; No timer threshold; every batch is checked before reporting.
+        (for-each
+         (lambda (modes)
+           (for-each (lambda (mode)
+             (let* ((start (current-jiffy))
+                    (last (let loop ((left 100) (last #f))
+                            (if (zero? left) last
+                              (loop (- left 1) ((if (eq? mode 'cached) gerbil-ascent-positive-components gerbil-ascent-compile-positive-components) analysis)))))
+                    (elapsed (- (current-jiffy) start)))
+               (check-equal? (shape cached) (shape last))
+               (displayln "SCC-PLAN-PROBE mode=" mode " repeats=100 jiffies=" elapsed " rate=" (jiffies-per-second))
+               (force-output))) modes))
+         '((fresh cached) (cached fresh) (fresh cached)))))
     (test-case "chain closure and independent outputs match exact truth one two four workers"
       (for-each
        (lambda (n)

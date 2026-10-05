@@ -3,15 +3,41 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 (import (only-in :gerbil-ascent/core/dependency-graph gerbil-ascent-graph-components)
         (only-in :gerbil-ascent/core/positive-plan gerbil-ascent-compile-positive-plan gerbil-ascent-run-positive-plan!)
+        (only-in :gerbil-ascent/table/provider gerbil-ascent-canonical-hash-index-provider?)
+        (only-in :gerbil-ascent/table/storage gerbil-ascent-canonical-set-storage-provider?)
         (only-in "index.ss" gerbil-ascent-make-row-indexes row-indexes-rows)
         (only-in "actor-round.ss" gerbil-ascent-run-actor-round!))
-(export gerbil-ascent-positive-components gerbil-ascent-run-positive-components!
+(export gerbil-ascent-positive-components gerbil-ascent-compile-positive-components
+        gerbil-ascent-component-mode? gerbil-ascent-run-positive-components!
         positive-component-id positive-component-members positive-component-rules positive-component-predecessors)
 (defstruct positive-component (id members rules predecessors))
 
 ;;; Project each admitted head to its relation SCC. Canonical lowering retains
 ;;; the complete ordered body and fresh variable frame for every projection.
+;;; Cache only fully built immutable plans. Primitive table operations own the
+;;; lock; lowering stays outside critical sections, so competing cold callers
+;;; may build equivalent plans. No source rows or runtime frames enter the cache.
+(def +positive-components-cache+
+  (make-hash-table-eq weak-keys: #t lock: (make-mutex 'ascent-positive-components)))
+;; : (-> ImmutableAnalysis ImmutableComponents)
 (def (gerbil-ascent-positive-components analysis)
+  (or (hash-get +positive-components-cache+ analysis)
+      (let (fresh (gerbil-ascent-compile-positive-components analysis))
+        (hash-put! +positive-components-cache+ analysis fresh)
+        fresh)))
+
+;; : (-> Boolean PositiveInteger (Maybe Cancellation) ImmutableAnalysis ProgramSchema Boolean)
+(def (gerbil-ascent-component-mode? session? workers canceled? analysis schema)
+  (and (not session?) (or (> workers 1) canceled?)
+       (andmap (lambda (rules) (andmap (lambda (rule) (vector-ref rule 5)) rules))
+               (vector->list (vector-ref analysis 5)))
+       (andmap gerbil-ascent-canonical-set-storage-provider? (vector->list (vector-ref schema 9)))
+       (andmap gerbil-ascent-canonical-hash-index-provider? (vector->list (vector-ref schema 5)))
+       (andmap not (vector->list (vector-ref schema 7)))
+       (andmap not (vector->list (vector-ref schema 3)))))
+
+;; : (-> ImmutableAnalysis ImmutableComponents)
+(def (gerbil-ascent-compile-positive-components analysis)
   (let* ((successors (vector-ref analysis 6)) (count (vector-length successors))
          (groups (gerbil-ascent-graph-components successors))
          (membership (make-vector count #f))

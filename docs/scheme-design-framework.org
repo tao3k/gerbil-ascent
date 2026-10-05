@@ -372,3 +372,14 @@ Cases and Lean/TLA+ prerequisite/drain gates accompany this slice. A22's SCC
 order/local state is implemented for pure Set cuts; B23 Provider concretization
 remains a separate contract. A matched exploratory native timing probe retains
 serial and SCC 1/2/4 observations without asserting general multicore speedup.
+
+* Component metadata cache qualification (2026-10-05)
+
+Immutable analysis identity now keys a weak component-plan cache. SCC admission
+policy is owned by the component module, repairing the prior CI module-size
+failure without changing its threshold. Runtime rows/frames/indexes remain
+solve-private. Native exact-identity and fresh-versus-cached projection controls,
+abstract Lean identity/publication laws, and replayed TLA scheduling safety are
+recorded in [[file:evidence/scheme-component-cache-20261005/receipt.json][the qualification receipt]]. Planning-only timing is not an end-to-end
+claim. Remaining gates include persistent worker/index reuse, large SCC
+partitioning, custom Provider concurrency and matched scale/CPU/allocation tests.

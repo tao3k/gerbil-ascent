@@ -168,3 +168,38 @@ theorem independent_active_does_not_block (predecessors : Nat → List Nat)
     ready predecessors left.done task = ready predecessors right.done task := by
   rw [sameDone]
 end Ascent.ReadyComponents
+
+/-! Cache identity laws use unbounded natural identities as an abstraction of
+native object identity. Only completed immutable metadata is published; these
+laws do not refine native weak-key lifetime, mutexes or allocation ownership. -/
+namespace Ascent.ComponentPlanCache
+
+abbrev Slot (α : Type) := Option (Nat × α)
+
+def lookup (slot : Slot α) (identity : Nat) : Option α :=
+  match slot with
+  | none => none
+  | some (key, plan) => if key = identity then some plan else none
+
+def publish (slot : Slot α) (identity : Nat) (completed : Option α) : Slot α :=
+  match completed with
+  | none => slot
+  | some plan => some (identity, plan)
+
+theorem exact_identity_hit (identity : Nat) (plan : α) :
+    lookup (some (identity, plan)) identity = some plan := by
+  simp [lookup]
+
+theorem different_identity_miss (key identity : Nat) (plan : α)
+    (changed : key ≠ identity) : lookup (some (key, plan)) identity = none := by
+  simp [lookup, changed]
+
+theorem failed_build_preserves (slot : Slot α) (identity : Nat) :
+    publish slot identity none = slot := by
+  rfl
+
+theorem completed_build_hit (slot : Slot α) (identity : Nat) (plan : α) :
+    lookup (publish slot identity (some plan)) identity = some plan := by
+  simp [publish, lookup]
+
+end Ascent.ComponentPlanCache

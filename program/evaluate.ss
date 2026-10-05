@@ -4,7 +4,7 @@
 
 ;;; Generic stratified semi-naive evaluator. Mutable row buffers belong to one
 ;;; session; public declarations and returned snapshots are POO values.
-(import (only-in "positive-components.ss" gerbil-ascent-run-positive-components!)
+(import (only-in "positive-components.ss" gerbil-ascent-run-positive-components! gerbil-ascent-component-mode?)
         (only-in "actor-round.ss" gerbil-ascent-run-actor-round!)
         (only-in "source-log.ss" gerbil-ascent-source-log-rows)
         (only-in :clan/poo/object .o .ref object?)
@@ -401,14 +401,7 @@
                (pending-seen (make-vector count #f))
                (pending-lattice-keys (make-vector count []))
                (pending-count 0)
-               (component-mode?
-                (and (not session?) (or (> workers 1) canceled?)
-                     (andmap (lambda (rules) (andmap (lambda (rule) (vector-ref rule 5)) rules))
-                             (vector->list (vector-ref analysis 5)))
-                     (andmap gerbil-ascent-canonical-set-storage-provider? (vector->list storage-providers))
-                     (andmap gerbil-ascent-canonical-hash-index-provider? (vector->list index-providers))
-                     (andmap not (vector->list lattice-joins))
-                     (andmap not (vector->list field-checkers)))))
+               (component-mode? (gerbil-ascent-component-mode? session? workers canceled? analysis schema)))
             (def (admit-stored! index pending-table stored)
               (unless (and (list? stored)
                            (= (length stored) (vector-ref arity index)))

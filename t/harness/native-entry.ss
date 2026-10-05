@@ -77,5 +77,5 @@
       (unless (equal? generated (artifact-digest source))
         (error "generated native test entry changed during compilation")))
     (setenv "ASCENT_NATIVE_TEST_ENTRY" binary)
-    (if single? (setenv "ASCENT_NATIVE_TEST_REGISTRY" #f) (setenv "ASCENT_NATIVE_TEST_REGISTRY" "1"))
+    (if single? (setenv "ASCENT_NATIVE_TEST_REGISTRY" "") (setenv "ASCENT_NATIVE_TEST_REGISTRY" "1"))
     source))

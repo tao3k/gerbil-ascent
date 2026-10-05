@@ -239,9 +239,11 @@ The [[file:scheme-research-proof-audit.org][research/proof audit]] maps all eigh
 
 The [[file:scheme-research-proof-audit.org::#joint-research-design-implementation][joint research/design/implementation sequence]] connects each paper premise
 with its Scheme owner, formal obligation and independent native discriminator.
-The next R1 slice is concrete type/term admission, finite semantic cardinality
-and height sufficiency, followed by source-bound normalization qualification.
-All three legs must pass for the stated subset before that slice is closed.
+The later type, finite-signature, row and source-root slices below supersede
+that first work item. The next R1 bridge is the concrete scalar/identity decoder,
+descriptor-to-typed-grammar translation and emitted rule/index/delta execution.
+Existing finite-height laws must be instantiated for those actual steps before
+native compiler closure is claimed.
 
 * Native single-module test carrier (2026-10-05)
 
@@ -265,3 +267,26 @@ four injected failure controls and integrated proof check. Startup admission,
 native semantic conformance, proof-model validity and measured application
 benefit remain separate evidence. The research/proof sequence above continues
 to require concrete compiler refinement and controlled real-model benefit.
+
+* Actor runtime and ordinary atom binding (2026-10-05)
+
+The [[file:scheme-actor-runtime-design.org][actor runtime decision]] places preparation, test dispatch, Session ownership,
+frozen positive rounds, candidate merge, cancellation draining and publication
+in one architecture. Native actor scheduling and measured parallel benefit are
+implementation gates. The single-module carrier remains the qualified executor;
+the module pool still requires unique precompiled entries and native dispatch.
+
+=AtomicBinding.lean= adds soundness and completeness of the admitted ordinary
+variable/literal/wildcard binder against simultaneous substitution, preservation
+of preexisting bindings, known-column key soundness and indexed atom equivalence
+under the physical bucket membership premise. The native exhaustive assignment
+and bucket discriminators extend =ascent-index-lifecycle-test.ss=. Private fresh
+variables, the positive slot machine, callbacks, scalar/identity decoding and
+actual hash/cache representation remain separate bridges.
+
+=RoundAdmission.lean= checks work-key rejection, duplicate reply idempotence,
+unchanged publication and cancellation/resume rejection over unbounded natural
+generations. =ActorRound.tla= checks a small parallel positive-round protocol,
+including frozen frontiers, replay, draining and publication; three faulty
+protocol variants are required counterexamples. Neither proves worker liveness,
+backpressure or correspondence with a native actor implementation.

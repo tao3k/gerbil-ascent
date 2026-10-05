@@ -12,12 +12,12 @@ require LeanPoo from git
 
 @[default_target]
 lean_lib AscentProof where
-  roots := #[`AscentProof, `CappedArithmetic, `DependencyInvalidation, `DescriptorScope,
+  roots := #[`AscentProof, `AtomicBinding, `CappedArithmetic, `DependencyInvalidation, `DescriptorScope,
              `FunctionalDependency,
              `FiniteHeight, `FiniteOperators, `LexicalLowering,
              `NativeSessionPublication, `PositiveNonmembership,
              `RecursiveLowering, `SessionPublication,
-             `StratifiedNegation, `SourceCertificates]
+             `StratifiedNegation, `SourceCertificates, `RoundAdmission]
 
 lean_lib AscentProofTests where
   roots := #[`AscentProofTests]

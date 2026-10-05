@@ -15,6 +15,7 @@
                  gerbil-ascent-variable gerbil-ascent-atom gerbil-ascent-rule)
         (only-in :gerbil-ascent/program/evaluate gerbil-ascent-make-engine gerbil-ascent-evaluate-program)
         (only-in :gerbil-ascent/table/provider gerbil-ascent-hash-index-provider)
+        (only-in :gerbil-ascent/core/rule-semantics gerbil-ascent-bind-row)
         (only-in :gerbil-ascent/t/qualification/ascent-index-reference-evaluate
                  ascent-index-reference-make-engine ascent-index-reference-evaluate-program))
 (export ascent-index-lifecycle-test)
@@ -30,8 +31,98 @@
                               (list (a 'left (list x)) (a 'right (list x y)))))
      256 256 512)))
 (def (rows result) ((.ref result 'rows-of) 'out))
+
+;; An exhaustive assignment model, independent of the sequential native binder.
+;; Every candidate assignment is total over x/y; constraints are simultaneous.
+(def (binding-products choices width)
+  (if (zero? width) (list [])
+      (apply append
+             (map (lambda (value)
+                    (map (lambda (tail) (cons value tail))
+                         (binding-products choices (- width 1)))) choices))))
+(def (binding-assignments)
+  (map (lambda (values) (map cons '(x y) values))
+       (binding-products '(0 #f) 2)))
+(def (binding-set rows)
+  (let loop ((rest rows) (seen []))
+    (if (null? rest) seen
+        (loop (cdr rest) (if (member (car rest) seen) seen (cons (car rest) seen))))))
+(def (binding-term-satisfied? term value assignment)
+  (case (car term)
+    ((wildcard) #t)
+    ((literal) (equal? (cdr term) value))
+    (else (equal? (cdr (assq (cdr term) assignment)) value))))
+(def (binding-model terms row input)
+  (filter
+   (lambda (assignment)
+     (and (andmap (lambda (entry)
+                    (equal? (cdr entry) (cdr (assq (car entry) assignment)))) input)
+          (andmap (lambda (pair)
+                    (binding-term-satisfied? (car pair) (cdr pair) assignment))
+                  (map cons terms row))))
+   (binding-assignments)))
+
 (def ascent-index-lifecycle-test
   (test-suite "Complete index lifecycle"
+    (poo-flow-test-case "ordinary atom binding agrees with exhaustive simultaneous assignments"
+      (let* ((choices (list (cons 'variable 'x) (cons 'variable 'y)
+                            (cons 'literal 0) (cons 'literal #f) (cons 'wildcard #f)))
+             (inputs (map (lambda (values)
+                            (filter (lambda (entry) (not (eq? (cdr entry) 'unbound)))
+                                    (map cons '(x y) values)))
+                          (binding-products '(unbound 0 #f) 2)))
+             (decisions 0))
+        (for-each
+         (lambda (width)
+           (for-each
+            (lambda (terms)
+              (for-each
+               (lambda (row)
+                 (for-each
+                  (lambda (input)
+                    (let* ((solutions (binding-model terms row input))
+                           (output (gerbil-ascent-bind-row terms row input)))
+                      (set! decisions (+ decisions 1))
+                      (check-equal? (and output #t) (pair? solutions))
+                      (when output
+                        (check-equal?
+                         (ormap (lambda (assignment)
+                                  (andmap (lambda (entry)
+                                            (equal? (cdr entry)
+                                                    (cdr (assq (car entry) assignment)))) output))
+                                solutions) #t)
+                        (for-each (lambda (entry)
+                                    (check-equal? (assq (car entry) output) entry)) input)))) inputs))
+               (binding-products '(0 #f) width)))
+            (binding-products choices width))) '(0 1 2 3))
+        (check-equal? decisions 9999)))
+    (poo-flow-test-case "known-column buckets retain all simultaneous atom solutions"
+      (let* ((choices (list (cons 'variable 'x) (cons 'variable 'y)
+                            (cons 'literal 0) (cons 'literal #f) (cons 'wildcard #f)))
+             (input (list (cons 'x 0)))
+             (source (apply append (map (lambda (_) (binding-products '(0 #f) 3)) (iota 5)))))
+        (for-each
+         (lambda (terms)
+           (let* ((known (filter (lambda (column)
+                                   (let (term (list-ref terms column))
+                                     (or (eq? (car term) 'literal)
+                                         (and (eq? (car term) 'variable)
+                                              (assq (cdr term) input))))) '(0 1 2)))
+                  (key (map (lambda (column)
+                              (let (term (list-ref terms column))
+                                (if (eq? (car term) 'literal) (cdr term)
+                                    (cdr (assq (cdr term) input))))) known))
+                  (physical (gerbil-ascent-physical-index-build
+                             gerbil-ascent-hash-index-provider source known))
+                  (bucket (gerbil-ascent-physical-index-rows
+                           gerbil-ascent-hash-index-provider physical key))
+                  (expected (binding-set
+                             (filter (lambda (row) (pair? (binding-model terms row input))) source)))
+                  (actual (binding-set
+                           (filter (lambda (row) (gerbil-ascent-bind-row terms row input)) bucket))))
+             (check-equal? (list-sort (lambda (a b) (string<? (object->string a) (object->string b))) actual)
+                           (list-sort (lambda (a b) (string<? (object->string a) (object->string b))) expected))))
+         (binding-products choices 3))))
     (poo-flow-test-case "physical single-column keys preserve equality and incremental bucket order"
       (let* ((source (list (list #f 0) (list '() 1) (list "same" 2)
                            (list (string-copy "same") 3) (list '(a b) 4)))

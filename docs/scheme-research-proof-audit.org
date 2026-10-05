@@ -148,7 +148,7 @@ package uses S20's logical change relation as its reference. Do not assume an
 ordinary pointwise function delta or a simple monoid action automatically
 implements that relation. B22's signed-weight circuit is a separate design.
 
-** Next concrete slice: type representation to semantic height
+** Historical first slice: type representation to semantic height
 
 The existing native formulas are:
 
@@ -311,6 +311,39 @@ benefit. Use native Scheme truth models and the existing proof suite for each
 slice. A shared final row set alone does not qualify intermediate identities,
 publication behavior, support completeness or cost. Model comprehension and
 MRR Rust integration keep their existing later gates.
+
+* Rebased implementation sequence (2026-10-05)
+
+This continuation rebases onto PR revision
+=b622b50a7c36f036ac304268d1cb5725bc763aab=, retaining the new
+=DependencyInvalidation=/=FunctionalDependency= proofs and complete-provenance
+index implementation. The earlier first-slice plan above is historical: owned
+type admission, abstract signature/height, scalar/row laws and source-root
+materialization already have their stated receipts. Their remaining concrete
+decoding and compiler-step bridges are the active R1 gate.
+
+| Priority | Next owner slice | Falsifiable completion condition |
+|----------+------------------+----------------------------------|
+| 1 | Native actor test carrier and Session protocol | Separate build preparation and execution; unique source-bound native entries; actor-owned task state; failure, cancel/late/duplicate reply controls; existing progress and verdict gates retained |
+| 2 | Descriptor, binder, index and positive slot/delta refinement | Connect actual admitted source identities, scalar equality and plan steps to semantic substitution/consequence; every completed public result equals independent native truth |
+| 3 | Session trace and dependency/evidence correspondence | Map batch and provisional/resume behavior separately; prove native read-graph completeness; compare each deletion/publication with fresh solve and independent support enumeration |
+| 4 | Typed changes and measured actor/runtime benefit | Define the actual change algebra before optimization; matched serial/parallel and fresh/retained cost boundaries; retain negative results |
+| 5 | Source-frozen model study, then Rust binding | Raw Scheme comprehension with independent truth and genuine after-response feedback; fresh paid-call authorization; exact ABI statuses and identity conformance only after acceptance |
+
+The [[file:scheme-actor-runtime-design.org][actor protocol decision]] is the required architecture gate before parallel
+solver mutation. =AtomicBinding= closes ordinary callback-free binder/key laws
+at the modeled level. =RoundAdmission= adds unbounded work-key cancellation
+laws; =ActorRound= adds a finite scheduling discriminator. These scopes stay
+distinct from the future native actor implementation and a performance receipt.
+
+The twelve DSL ledger sources were revisited at their current owner seams:
+A22/B23 for binder, index and frontier completeness; F16/S20 for monotonicity,
+finite height and typed changes; F20/L25/H13 for composition, private identity
+and Scheme construction; H18/B22 for source deletion and transaction/iteration
+separation; X25/FL25/S24 for container, physical-plan and nested-fact boundaries.
+FlowLog's publisher PDF could not be fetched this round; its
+[[https://arxiv.org/pdf/2511.00865][author preprint]] supplies the logical/physical IR reading. No source is taken
+as proof of Gerbil actor scheduling, multicore execution or model benefit.
 
 The subsequent [[file:scheme-compiler-proof-bridge.org][scalar/row slice]] defines =RowRepresentation.admitted=,
 =tuples= and =encode= and proves the list-to-Boolean-table interpretation laws.

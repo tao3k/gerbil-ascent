@@ -4,6 +4,16 @@
 #+DATE: 2026-10-04
 #+STATUS: lexical, recursive and finite-signature kernels proved; native refinement open
 
+The current [[file:scheme-actor-runtime-design.org][actor runtime decision]] adds scheduling, cancellation and
+publication obligations to the refinement plan. =AtomicBinding.lean= specifies
+ordinary association-list variable/literal/wildcard binding on equal-arity rows,
+proves declarative soundness/completeness and initial-binding preservation, then
+composes known-column key soundness with =StratifiedNegation.BucketRep= to prove
+indexed positive-atom equivalence. The native discriminator uses an independent
+total-assignment enumeration and canonical physical buckets. Actual decoding,
+fresh-variable/slot specialization, hash/cache ownership and round execution
+remain explicit obligations; this is not a complete compiler refinement.
+
 * Stated claim
 
 [[file:../packages/proofs/lean/LexicalLowering.lean][LexicalLowering]] supplies a typed expression calculus, lexical environments,

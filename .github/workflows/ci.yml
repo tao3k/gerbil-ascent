@@ -111,7 +111,7 @@ jobs:
       - name: Check Lean contracts, TLA publication and counterexamples
         env:
           ASCENT_TLC_GENERATION_CUTOFF: '4'
-        run: just check-nonmembership-formal
+        run: just check-actor-round-formal
       - name: Qualify Python byte IO and process supervision
         run: python3 -m unittest discover -s python/tests -v
   native-and-oracle:

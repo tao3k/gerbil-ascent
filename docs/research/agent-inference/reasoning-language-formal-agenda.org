@@ -85,6 +85,17 @@ identity and representation obligations in more detail.
 
 * Lean: proved kernels and next theorem
 
+The [[file:../../scheme-actor-runtime-design.org][actor runtime decision]] now requires source-bound work keys, frozen
+rounds, merge barriers, cancellation draining and unchanged completed publication.
+=RoundAdmission= checks stale/duplicate/canceled reply rejection over unbounded
+natural generations, including re-enabling acceptance after cancellation.
+=ActorRound= is a finite protocol model with early-barrier, stale-reply and
+canceled-publication fault controls. These are scheduling specifications;
+native worker correspondence, termination and measured benefit remain open.
+=AtomicBinding= connects ordinary positive atom substitution and known-column
+keys to indexed clause equivalence under =BucketRep=. The separate native
+assignment model keeps this proof premise falsifiable before actor parallelism.
+
 The tracked =packages/proofs/lean/= modules currently include
 =LexicalLowering= (typed lexical preservation), =RecursiveLowering=
 (positive scoped feedback), =FiniteOperators= and =FiniteHeight=

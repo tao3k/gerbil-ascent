@@ -268,6 +268,29 @@ check-nonmembership-formal: check-lean-proofs
     done
     echo 'FORMAL-CHECK-OK'
 
+# Proposed actor protocol plus the existing unbounded Lean and Session gates.
+check-actor-round-formal: check-nonmembership-formal
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [[ -n "${TLC_BIN:-}" ]]; then tlc=("$TLC_BIN"); else tlc=(java -XX:+UseParallelGC -cp "${TLC_JAR:-.cache/ascent/tools/tla2tools-v1.7.4.jar}" tlc2.TLC); fi
+    temp=$(mktemp -d)
+    trap 'rm -rf "$temp"' EXIT
+    generations="${ASCENT_ACTOR_TLC_GENERATION_CUTOFF:-2}"
+    rounds="${ASCENT_ACTOR_TLC_ROUND_CUTOFF:-4}"
+    [[ "$generations" =~ ^[0-9]+$ && "$rounds" =~ ^[0-9]+$ && "$generations" -ge 2 && "$rounds" -ge 3 ]]
+    sed -e "s/TLCGenerationCutoff = [0-9][0-9]*/TLCGenerationCutoff = $generations/" -e "s/TLCRoundCutoff = [0-9][0-9]*/TLCRoundCutoff = $rounds/" packages/proofs/tla/ActorRound.cfg > "$temp/normal.cfg"
+    echo "TLA-CHECK ActorRound generation-cutoff=$generations round-cutoff=$rounds (TLC enumeration only)"
+    "${tlc[@]}" -workers 2 -config "$temp/normal.cfg" -metadir "$temp/normal" packages/proofs/tla/ActorRound.tla
+    for mutation in early stale cancel; do
+      sed "s/Mutation = \"none\"/Mutation = \"$mutation\"/" "$temp/normal.cfg" > "$temp/$mutation.cfg"
+      code=0
+      "${tlc[@]}" -workers 2 -config "$temp/$mutation.cfg" -metadir "$temp/$mutation" packages/proofs/tla/ActorRound.tla > "$temp/$mutation.out" 2>&1 || code=$?
+      if [[ "$mutation" = stale ]]; then expected=NoStaleCompletion; else expected=CompletePublication; fi
+      [[ "$code" = 12 ]] && grep -q "Invariant $expected is violated" "$temp/$mutation.out"
+      echo "COUNTEREXAMPLE-OK actor-$mutation $expected"
+    done
+    echo 'ACTOR-ROUND-CHECK-OK'
+
 # Matched finite-operator research probe; every sample checks independent
 # closure before reporting cost. This is separate from the SS suite.
 operator-change-probe:

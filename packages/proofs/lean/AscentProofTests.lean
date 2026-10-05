@@ -188,3 +188,15 @@ example : ¬ NativePublication.Good NativePublication.symbolicResult
   NativePublication.mutable_source_counterexample
 
 end Ascent.ProofTests
+
+namespace Ascent.AtomicBinding.Tests
+
+example : bind [.variable 0, .variable 0] [1, 2] [] = none := by decide
+example : bind [.variable 0, .variable 0] [1, 1] [] = some [(0, 1)] := by decide
+example : bind [.variable 0] [2] [(0, 1)] = none := by decide
+example : bind [.literal false, .wildcard] [false, true] [] = some [] := by decide
+example : bind ([] : List (Term Nat)) [] [] = some [] := by decide
+example : bind [.variable 0] [1, 2] [] = none := by decide
+example : bind [.variable 0, .wildcard] [1] [] = none := by decide
+
+end Ascent.AtomicBinding.Tests

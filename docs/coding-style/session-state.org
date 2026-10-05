@@ -567,3 +567,26 @@ and refilling different source slots, detached initial/replacement spines,
 cancel/failure rollback, result publication, batch credit and SCC execution. Selected
 production policy reports one existing actor branch-shape warning and zero
 errors; lifecycle pattern matching remains owned by the protocol.
+
+* Actor Session default capacity follows the host
+
+The fixed =workers: 2= default in =gerbil-ascent-open-actor-session= is removed.
+An omitted capacity now evaluates Gambit's =##cpu-count= at Session creation,
+with a minimum of one. Explicit =workers:= still overrides the default and
+must be an exact positive integer. The ready-round scheduler uses this as an
+admission ceiling; it launches workers only for available component tasks.
+
+The existing Build API also obtains host capacity with =##cpu-count=, but its
+=initialize-native-build-core-capacity!= mutates build environment/compiler
+state. Session capacity reads the runtime directly and creates no environment
+switch or Build API dependency. The local host reports 12 processors. This is
+CPU-based admission, not a memory-aware or host-wide multi-Session scheduler.
+No throughput improvement is inferred from selecting a larger capacity.
+
+The native Actor Session and actor-round Suites pass 19 Cases, jobs=12, with
+module runtime one second each, command exit 0 and explicit final OK. Controls
+cover omitted capacity, explicit 1/2/4 workers, invalid explicit capacities,
+cancellation/drain and completed publication. Logs remain in ignored
+=.cache/ascent/session-capacity/=. Concurrent remote =e9dc14e= changes only a
+separate retained Session test and documentation; production dependencies are
+unchanged from the qualified run.

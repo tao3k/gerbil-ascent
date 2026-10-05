@@ -1,7 +1,8 @@
 ;;; -*- Gerbil -*-
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
-(import (only-in "source-cut.ss" gerbil-ascent-make-source-cut
+(import :gerbil/runtime/gambit
+        (only-in "source-cut.ss" gerbil-ascent-make-source-cut
                  gerbil-ascent-source-cut-rows gerbil-ascent-source-cut-update)
         (only-in :clan/poo/object .o .ref)
         (only-in :clan/poo/mop validate)
@@ -28,6 +29,8 @@
 ;;     Admit detached source cuts before transferring them to the Session owner.
 ;;     Only that owner publishes a prepared transaction or a completed run;
 ;;     canceled and failed runs restore the last committed cut.
+;;     Omitted workers use the runtime's host CPU count (at least one).
+;;     Explicit workers remain a caller-owned positive capacity limit.
 ;;
 ;;     # Examples
 ;;
@@ -36,7 +39,7 @@
 ;;     ;; => a Session with isolated source ownership and bounded workers
 ;;     ```
 ;;   %
-(def (gerbil-ascent-open-actor-session program workers: (workers 2))
+(def (gerbil-ascent-open-actor-session program workers: (workers (max 1 (##cpu-count))))
   (unless (and (exact-integer? workers) (> workers 0))
     (error "invalid ASCENT actor Session capacity" workers))
   (let* ((admitted (gerbil-ascent-make-engine program #t))

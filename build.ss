@@ -54,6 +54,7 @@
     "program/positive-components"
     "program/evaluate"
     "program/session"
+    "program/source-cut"
     "program/actor-session"
     "program/interface"
     "core/binary-program"

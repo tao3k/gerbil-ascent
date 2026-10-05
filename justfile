@@ -121,6 +121,19 @@ check-actor-pool:
       echo "NATIVE-REGISTRY-CONTROL-OK $control exit=$code"
     done
 
+# Paired actor source transactions; evaluator work is outside this interval.
+performance-source-cut:
+    {{ test_runner }} run -- just _performance-source-cut
+
+_performance-source-cut:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    mkdir -p .cache/ascent/source-cut
+    gxi {{ gerbil_test_runtime_options }} -e '(add-load-path! (path-expand ".cache/ascent/native-library/lib"))' -e '(import :std/make)' -e '(make ["program/source-cut" "t/performance/source-cut-benchmark"] srcdir: (current-directory) libdir: (path-expand ".cache/ascent/native-library/lib") build-deps: (path-expand ".cache/ascent/native-library/build-deps"))'
+    for scenario in untouched wide-batch small; do
+        timeout 90s gxi {{ gerbil_test_runtime_options }} -e '(add-load-path! (path-expand ".cache/ascent/native-library/lib"))' :gerbil-ascent/t/performance/source-cut-benchmark "$scenario" ".cache/ascent/source-cut/$scenario-final.sexp"
+    done
+
 # Paired SCC planning and complete coordinator/worker component closures.
 performance-component-scope:
     {{ test_runner }} run -- just _performance-component-scope

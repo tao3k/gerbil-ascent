@@ -492,3 +492,78 @@ The workspace advances to concurrent README-only commit =ede87c4= during this
 run. That change is retained; it modifies no qualified Scheme source or test.
 These focused local Cases do not establish full-suite, AOT application,
 performance or exact-head remote CI closure.
+
+* Study: separate Actor source transactions from lifecycle ownership
+
+Gerbil =2591dcd= uses a named =optimizer-info= record with identity tables in
+=compiler/optimize-base.ss:24-29=. Its =collect-type-let-values%= in
+=compiler/optimize-top.ss:244-263= separates per-binding collection from the
+outer traversal and lexical publication scope. The lesson applied here is
+explicit state ownership and bounded preparation, rather than copying a
+compiler algorithm into the Session.
+
+** Production change and ownership
+
+Previously =program/actor-session.ss= mixed source validation/copying, name
+association scans and whole-source budget recounting into its mailbox owner.
+For R relations and K replacements, it searched the replacement alist R times;
+a snapshot also searched all source names R times. Every transaction counted
+all source row spines, including unrelated relations.
+
+=program/source-cut.ss= now owns a named cut of dense source slots. Each slot
+owns detached row list spines and their multiplicity count; the cut carries
+the total input count. Batch preparation resolves admitted names by schema
+position, validates and copies every incoming row before duplicate admission,
+then copies only the slot vector header. Unchanged slots remain read-only.
+Replacement adjusts the total by new minus old counts. Append copies the
+changed old source spine, preserving the existing order and ownership contract.
+An empty/single batch cannot duplicate a name and needs no membership table.
+
+The Session retains sole ownership of pending/committed cut publication,
+generation changes, cancellation, monitor joins and completed results. A
+rejected transaction never replaces pending or advances generation. A failed
+or canceled run restores the committed cut, including its counts. Snapshots
+now read source rows directly by declaration position. These changes remove
+quadratic name searches and whole-source row recounting; they do not change
+actor messaging, rule scheduling or callback eligibility.
+
+=build.ss= gains only the production module declaration. Semantic regressions
+remain in =t/qualification/ascent-actor-session-test.ss=. The A/B benchmark
+contains only the prior source transaction kernel (from =eb4378d244a9464=),
+with its enclosing state passed as arguments; it does not freeze another full
+evaluator or Session implementation.
+
+** Native controls and scope
+
+=just performance-source-cut= runs three matched scenarios with 50 alternating
+CPU pairs and 50 separate VM allocation pairs each. Fixtures and parity checks
+are outside timing. All old/new outputs retain identical ordered rows. CPU is
+process user+system time. VM allocation uses the cumulative field 16 after GC;
+forced collections are outside CPU intervals. Each call replaces against the
+same admitted initial source state; Session opening, mailboxes, snapshot POO
+objects, evaluation and final publication are excluded from this interval.
+
+Fixed before measurement: large controls require >=50% CPU reduction,
+>=15% allocation reduction and >=35/50 CPU wins. Small control permits
+<=2 KiB extra allocation and <=5%+10 us CPU overhead. Initial small allocation
+failed (1554.4 -> 3618.4 bytes, 2064 extra bytes); that result is retained.
+Removing the needless single-batch hash table repairs the production path,
+without relaxing the gate.
+
+Final local sample:
+
+| Scenario | Old CPU us | New CPU us | Old VM bytes | New VM bytes | CPU wins |
+|----------+------------+------------+--------------+--------------+----------|
+| 128 sources x 512 rows, replace one | 69.95 | 0.31 | 19794.4 | 2466.4 | 50/50 |
+| 128 sources x 512 rows, replace all | 37.35 | 17.99 | 78350.72 | 47950.72 | 46/50 |
+| One source, one row | 0.43 | 0.15 | 1554.4 | 434.4 | 50/50 |
+
+These are source-transaction CPU/allocation results, not end-to-end solve or
+wall-clock gains. Retained logs and raw pairs are in ignored
+=.cache/ascent/source-cut/=. After integrating remote c8fc3cf, six native Suites pass 43 Cases, jobs=12,
+runtime 1-5 seconds per module, with explicit Case/Module/Harness/final OK and command exit 0. They cover
+multi-source atomic rejection, duplicate input multiplicity budget, clearing
+and refilling different source slots, detached initial/replacement spines,
+cancel/failure rollback, result publication, batch credit and SCC execution. Selected
+production policy reports one existing actor branch-shape warning and zero
+errors; lifecycle pattern matching remains owned by the protocol.

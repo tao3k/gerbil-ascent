@@ -1,7 +1,8 @@
 ;;; -*- Gerbil -*-
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
-(import (only-in :std/list/list delete-duplicates/hash)
+(import (only-in "source-cut.ss" gerbil-ascent-make-source-cut
+                 gerbil-ascent-source-cut-rows gerbil-ascent-source-cut-update)
         (only-in :clan/poo/object .o .ref)
         (only-in :clan/poo/mop validate)
         (only-in "types.ss" GerbilAscentSessionContract)
@@ -21,6 +22,20 @@
 ;;; a fresh evaluator; its monitor cannot publish. Cancel credit is observed by
 ;;; the evaluator's round owner at traversal/batch checkpoints, never by polling
 ;;; the Session mailbox from a compute worker. Generation Naturals are unbounded.
+;; gerbil-ascent-open-actor-session
+;; : (-> PurePositiveSetProgram workers: PositiveInteger ActorSession)
+;; | doc m%
+;;     Admit detached source cuts before transferring them to the Session owner.
+;;     Only that owner publishes a prepared transaction or a completed run;
+;;     canceled and failed runs restore the last committed cut.
+;;
+;;     # Examples
+;;
+;;     ```scheme
+;;     (gerbil-ascent-open-actor-session program workers: 4)
+;;     ;; => a Session with isolated source ownership and bounded workers
+;;     ```
+;;   %
 (def (gerbil-ascent-open-actor-session program workers: (workers 2))
   (unless (and (exact-integer? workers) (> workers 0))
     (error "invalid ASCENT actor Session capacity" workers))
@@ -35,14 +50,9 @@
                  (andmap (lambda (rules) (andmap (lambda (rule) (vector-ref rule 5)) rules))
                          (vector->list (vector-ref analysis 5))))
       (error "ASCENT actor Session requires pure positive Set rules"))
-    (def (copy-rows name rows)
-      (let (slot (hash-get (vector-ref schema 4) name))
-        (unless slot (error "unknown ASCENT relation" name))
-        (let (width (vector-ref (vector-ref schema 2) (- slot 1)))
-          (unless (and (list? rows) (andmap (lambda (row) (and (list? row) (= (length row) width))) rows))
-            (error "invalid ASCENT actor Session source rows" name rows))
-          (map (lambda (row) (map (lambda (value) value) row)) rows))))
-    (let* ((initial (map (lambda (relation) (cons (.ref relation 'name) (copy-rows (.ref relation 'name) (.ref relation 'rows)))) relations))
+    (let* ((positions (vector-ref schema 4)) (arities (vector-ref schema 2))
+           (initial (gerbil-ascent-make-source-cut positions arities
+                      (map (lambda (relation) (cons (.ref relation 'name) (.ref relation 'rows))) relations)))
            (gate (make-mutex 'ascent-session-lifecycle)) (closed? #f)
            (owner
             (spawn/name 'ascent-session-owner
@@ -54,8 +64,9 @@
                    ;; Compute outside the POO slot scope: `relations` inside its
                    ;; own slot expression would resolve recursively to that slot.
                    (let (next-relations
-                         (map (lambda (relation)
-                                (.o (:: @ relation) rows: (cdr (assq (.ref relation 'name) pending)))) relations))
+                         (map (lambda (relation position)
+                                (.o (:: @ relation) rows: (gerbil-ascent-source-cut-rows pending position)))
+                              relations (iota (length relations))))
                      (.o (:: @ program) relations: next-relations)))
                  (def (mark-canceled!)
                    (when running
@@ -66,18 +77,8 @@
                        (mutex-unlock! (vector-ref token 0)))))
                  (def (update! replacements append?)
                    (when running (error "ASCENT actor Session source update while running"))
-                   (let* ((owned (map (lambda (replacement)
-                                       (cons (car replacement) (copy-rows (car replacement) (cdr replacement)))) replacements))
-                          (names (map car owned)))
-                     (unless (= (length names) (length (delete-duplicates/hash names)))
-                       (error "duplicate ASCENT actor Session replacement"))
-                     (let (next (map (lambda (entry)
-                                      (let (replacement (assq (car entry) owned))
-                                        (if replacement
-                                          (cons (car entry) (if append? (append (cdr entry) (cdr replacement)) (cdr replacement))) entry))) pending))
-                       (when (> (apply + (map (lambda (entry) (length (cdr entry))) next)) input-limit)
-                         (error "ASCENT actor Session input fact budget exceeded"))
-                       (set! pending next) (set! generation (+ generation 1)) (void))))
+                   (let (next (gerbil-ascent-source-cut-update pending positions arities replacements append? input-limit))
+                     (set! pending next) (set! generation (+ generation 1)) (void)))
                  (let loop ()
                    (match (thread-receive)
                      (['request channel operation args]

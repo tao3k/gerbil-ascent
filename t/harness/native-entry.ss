@@ -43,6 +43,7 @@
         (for-each (lambda (form) (write form out) (newline out))
          `((import :std/test/base
                    (only-in :gerbil-ascent/t/performance/native-library assert-native-library!)
+                   (only-in :gerbil/runtime/init __load-gxi)
                    ,@(reverse imports))
            (export main)
            (def registry (list ,@(reverse entries)))
@@ -53,6 +54,13 @@
                     (entry (assoc path registry)))
                (unless entry (error "unknown native test registry key" path))
                (assert-native-library!)
+               ;; Macro diagnostic Cases use real Gerbil eval. AOT entries
+               ;; default to the minimal evaluator; initialize the same gxi
+               ;; expander environment explicitly for this registry key.
+               (when (equal? path "t/qualification/ascent-syntax-test.ss")
+                 (displayln "INIT-GERBIL-EXPANDER") (force-output)
+                 (__load-gxi)
+                 (displayln "INIT-GERBIL-EXPANDER-OK") (force-output))
                (let* ((config (TestConfig verbosity: 5 capture-output?: #f))
                       (module ((cdr entry)))
                       (harness (TestHarness path config (list module)))

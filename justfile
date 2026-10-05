@@ -1022,3 +1022,24 @@ check-dsl-closure:
     test "$(grep -c '^MODULE-OK ' "$output_file")" -eq 15
     test "$(grep -c '^HARNESS-OK ' "$output_file")" -eq 15
     test "$(grep -cx 'OK' "$output_file")" -eq 15
+
+# Unbounded Session protocol with configurable finite TLC exploration.
+check-actor-session-formal:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [[ -n "${TLC_BIN:-}" ]]; then tlc=("$TLC_BIN"); else tlc=(java -XX:+UseParallelGC -cp "${TLC_JAR:-.cache/ascent/tools/tla2tools-v1.7.4.jar}" tlc2.TLC); fi
+    temp=$(mktemp -d)
+    trap 'rm -rf "$temp"' EXIT
+    generations="${ASCENT_SESSION_TLC_GENERATION_CUTOFF:-4}"
+    [[ "$generations" =~ ^[0-9]+$ && "$generations" -ge 3 ]]
+    sed "s/TLCGenerationCutoff = [0-9][0-9]*/TLCGenerationCutoff = $generations/" packages/proofs/tla/ActorSession.cfg > "$temp/normal.cfg"
+    "${tlc[@]}" -workers 1 -config "$temp/normal.cfg" -metadir "$temp/normal" packages/proofs/tla/ActorSession.tla
+    for mutation in stale early; do
+      sed "s/Mutation = \"none\"/Mutation = \"$mutation\"/" "$temp/normal.cfg" > "$temp/$mutation.cfg"
+      code=0
+      "${tlc[@]}" -workers 1 -config "$temp/$mutation.cfg" -metadir "$temp/$mutation" packages/proofs/tla/ActorSession.tla > "$temp/$mutation.out" 2>&1 || code=$?
+      if [[ "$mutation" = stale ]]; then invariant=NoStalePublication; else invariant=DrainedClose; fi
+      [[ "$code" = 12 ]] && grep -q "Invariant $invariant is violated" "$temp/$mutation.out"
+      echo "COUNTEREXAMPLE-OK actor-session-$mutation $invariant"
+    done
+    echo 'ACTOR-SESSION-CHECK-OK'

@@ -75,3 +75,67 @@ theorem publications_consistent {Source Result : Type}
         exact qualified next (by simp [hnext]) result hcomplete
 
 end Ascent.Publication
+
+/-! Native actor Session ownership fragment. `finish` is called only after the
+monitor joins the evaluator; success is a completed-solve premise. No VM or
+scheduler liveness refinement is asserted. Generation is an unbounded Nat. -/
+namespace Ascent.ActorPublication
+structure State (Cut Result : Type) where
+  generation : Nat
+  pending : Cut
+  committed : Cut
+  published : Option (Cut × Result)
+  running : Option (Nat × Cut)
+
+def start (state : State Cut Result) : State Cut Result :=
+  { state with generation := state.generation + 1,
+               running := some (state.generation + 1, state.pending) }
+
+def cancel (state : State Cut Result) : State Cut Result :=
+  match state.running with
+  | none => state
+  | some _ => { state with generation := state.generation + 1 }
+
+def finish (state : State Cut Result) (epoch : Nat)
+    (outcome : Option Result) : State Cut Result :=
+  match state.running with
+  | none => state
+  | some (assigned, cut) =>
+    if epoch = assigned then
+      match outcome with
+      | some result =>
+        if epoch = state.generation then
+          { state with running := none, committed := cut, published := some (cut, result) }
+        else { state with running := none, pending := state.committed }
+      | none => { state with running := none, pending := state.committed }
+    else state
+
+theorem cancel_preserves_publication (state : State Cut Result) :
+    (cancel state).published = state.published := by
+  simp only [cancel]; split <;> rfl
+
+theorem idle_reply (state : State Cut Result) (epoch : Nat) (result : Option Result)
+    (idle : state.running = none) : finish state epoch result = state := by
+  simp [finish, idle]
+
+theorem mismatched_assigned_reply (state : State Cut Result) (epoch assigned : Nat)
+    (cut : Cut) (outcome : Option Result) (running : state.running = some (assigned, cut))
+    (foreign : epoch ≠ assigned) : finish state epoch outcome = state := by
+  simp [finish, running, foreign]
+
+theorem failed_preserves_publication (state : State Cut Result) (epoch : Nat) :
+    (finish state epoch none).published = state.published := by
+  unfold finish; split
+  · rfl
+  · split <;> rfl
+
+theorem canceled_completion_preserves_publication (state : State Cut Result)
+    (cut : Cut) (result : Result) (running : state.running = some (state.generation, cut)) :
+    (finish (cancel state) state.generation (some result)).published = state.published := by
+  simp [finish, cancel, running]
+
+theorem canceled_completion_drained (state : State Cut Result)
+    (cut : Cut) (result : Result) (running : state.running = some (state.generation, cut)) :
+    (finish (cancel state) state.generation (some result)).running = none := by
+  simp [finish, cancel, running]
+end Ascent.ActorPublication

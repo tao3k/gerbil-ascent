@@ -1,0 +1,97 @@
+;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+(import (only-in :std/test check-equal? test-case test-suite)
+        (only-in :clan/poo/object .ref)
+        (only-in :gerbil-ascent/program/evaluate gerbil-ascent-evaluate-program)
+        :gerbil-ascent/program/objects
+        :gerbil-ascent/program/session
+        :gerbil-ascent/program/actor-session)
+(export ascent-actor-session-test)
+(def (outcome call) (with-catch (lambda (_) 'rejected) call))
+(def (program edges (budget 200000))
+  (let ((x (gerbil-ascent-variable 'x)) (y (gerbil-ascent-variable 'y)) (z (gerbil-ascent-variable 'z)))
+    (gerbil-ascent-program
+     (list (gerbil-ascent-relation 'edge 2 edges) (gerbil-ascent-relation 'reach 2 []))
+     (list (gerbil-ascent-rule (list (gerbil-ascent-atom 'reach (list x y))) (list (gerbil-ascent-atom 'edge (list x y))))
+           (gerbil-ascent-rule (list (gerbil-ascent-atom 'reach (list x z)))
+                              (list (gerbil-ascent-atom 'reach (list x y)) (gerbil-ascent-atom 'edge (list y z)))))
+     1000 budget 400000)))
+(def (rows result) ((.ref result 'rows-of) 'reach))
+(def (wait-running session)
+  (let loop ((attempts 0))
+    (unless (eq? (cadr (gerbil-ascent-session-state session)) 'running)
+      (when (= attempts 1000) (error "actor Session did not start"))
+      (thread-yield!) (loop (+ attempts 1)))))
+(def ascent-actor-session-test
+  (test-suite "Session actor generation and completed publication"
+    (test-case "one two four workers match source updates and detached inputs"
+      (for-each
+       (lambda (jobs)
+         (let (session (gerbil-ascent-open-actor-session (program '((0 1))) workers: jobs))
+           (try
+            (let (first (gerbil-ascent-session-run session))
+              (check-equal? (rows first) '((0 1)))
+              (let (row (list 1 2))
+                (gerbil-ascent-session-append-source! session 'edge row)
+                (set-car! row 99))
+              (let (next (gerbil-ascent-session-run session))
+                (check-equal?
+                 (list-sort (lambda (a b) (or (< (car a) (car b)) (and (= (car a) (car b)) (< (cadr a) (cadr b))))) (rows next))
+                 '((0 1) (0 2) (1 2)))
+                (check-equal? (rows first) '((0 1)))
+                (check-equal? (eq? next (gerbil-ascent-session-last-completed session)) #t))
+              (gerbil-ascent-session-replace-sources! session '((edge (4 5)) (reach)))
+              (check-equal? (rows (gerbil-ascent-session-run session)) '((4 5))))
+            (finally (gerbil-ascent-session-close! session))))) '(1 2 4)))
+    (test-case "cancel drains old work preserves publication and permits next generation"
+      (let (session (gerbil-ascent-open-actor-session (program '((0 1)))))
+        (try
+         (let* ((first (gerbil-ascent-session-run session))
+                (edges (map (lambda (n) (list n (+ n 1))) (iota 400))))
+           (gerbil-ascent-session-replace-source! session 'edge edges)
+           (let (runner (spawn (lambda () (outcome (lambda () (gerbil-ascent-session-run session))))))
+             (wait-running session)
+             (check-equal? (outcome (lambda () (gerbil-ascent-session-append-source! session 'edge '(8 9)))) 'rejected)
+             (check-equal? (gerbil-ascent-session-cancel! session) 'draining)
+             (check-equal? (eq? first (gerbil-ascent-session-last-completed session)) #t)
+             (check-equal? (thread-join! runner 3 'timeout) 'rejected)
+             (check-equal? (cadr (gerbil-ascent-session-state session)) 'idle)
+             (check-equal? (rows (gerbil-ascent-session-run session)) '((0 1)))
+             (check-equal? (> (car (gerbil-ascent-session-state session)) 2) #t)))
+         (finally (gerbil-ascent-session-close! session)))))
+    (test-case "failed computation cannot publish tentative candidates"
+      (let (session (gerbil-ascent-open-actor-session (program '((0 1)) 2)))
+        (try
+         (let (first (gerbil-ascent-session-run session))
+           (gerbil-ascent-session-append-source! session 'edge '(1 2))
+           (check-equal? (outcome (lambda () (gerbil-ascent-session-run session))) 'rejected)
+           (check-equal? (eq? first (gerbil-ascent-session-last-completed session)) #t)
+           (check-equal? (rows (gerbil-ascent-session-run session)) '((0 1))))
+         (finally (gerbil-ascent-session-close! session)))))
+    (test-case "close during run cancels drains and rejects further requests"
+      (let (session (gerbil-ascent-open-actor-session (program (map (lambda (n) (list n (+ n 1))) (iota 400)))))
+        (let (runner (spawn (lambda () (outcome (lambda () (gerbil-ascent-session-run session))))))
+          (wait-running session)
+          (gerbil-ascent-session-close! session)
+          (check-equal? (thread-join! runner 3 'timeout) 'rejected)
+          (check-equal? (outcome (lambda () (gerbil-ascent-session-run session))) 'rejected))))
+    (test-case "replacement admission is atomic and caller mailbox is isolated"
+      (let (session (gerbil-ascent-open-actor-session (program '((0 1)))))
+        (try
+         (thread-send (current-thread) 'caller-message)
+         (check-equal? (outcome (lambda () (gerbil-ascent-session-replace-sources! session '((edge (3 4)) (reach (9)))))) 'rejected)
+         (check-equal? (rows (gerbil-ascent-session-run session)) '((0 1)))
+         (check-equal? (thread-receive) 'caller-message)
+         (finally (gerbil-ascent-session-close! session)))))
+    (test-case "cancellation options reject incompatible timing and invalid predicates"
+      (let (p (program '((0 1))))
+        (check-equal? (outcome (lambda () (gerbil-ascent-evaluate-program p workers: 1
+                                        measure-rule-times?: #t canceled?: (lambda () #f)))) 'rejected)
+        (check-equal? (outcome (lambda () (gerbil-ascent-evaluate-program p canceled?: 10))) 'rejected)))
+    (test-case "callbacks rejected before actor Session creation"
+      (let* ((x (gerbil-ascent-variable 'x))
+             (p (gerbil-ascent-program (list (gerbil-ascent-relation 'edge 1 '((1))))
+                  (list (gerbil-ascent-rule (list (gerbil-ascent-atom 'edge (list x)))
+                      (list (gerbil-ascent-atom 'edge (list x)) (gerbil-ascent-guard '(x) (lambda (_) #t))))) 4 4 8)))
+        (check-equal? (outcome (lambda () (gerbil-ascent-open-actor-session p))) 'rejected)))))

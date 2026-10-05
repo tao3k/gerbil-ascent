@@ -380,3 +380,14 @@ drain before commit. Native tests and Lean/TLA+ gates cover this admitted pure
 Set subset. Ready-SCC scheduling, custom Provider workers, Session cancellation
 publication and matched performance remain separate obligations. No whole-runtime
 closure, model gain or MRR integration is asserted.
+
+* Cancelable positive Set Session actor update (2026-10-05)
+
+The [[file:scheme-actor-runtime-design.org][actor runtime design]] now has an implemented source-cut owner and independent
+compute worker. Cancel increments generation, refuses old publication and waits
+for assigned worker/monitor drain; failure restores committed sources. Native
+lifecycle tests and Lean/TLA+ publication/drain laws accompany the code. B22's
+outer/inner natural time distinction motivates generation versus round; A22's
+ready-SCC dependency scheduling remains a next implementation obligation.
+The actor constructor uses fresh engines, not retained incremental reuse. No
+performance gain or whole-runtime closure is asserted.

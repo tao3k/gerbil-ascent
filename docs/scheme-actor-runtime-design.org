@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 #+TITLE: Scheme actor runtime: ownership, round merge, cancellation and publication
 #+DATE: 2026-10-05
-#+STATUS: native test carrier and opt-in positive Set round workers implemented; Session/SCC scheduling pending
+#+STATUS: native carrier, positive Set round workers and cancelable Session actor implemented; ready-SCC scheduling pending
 
 * Architecture decision
 
@@ -288,3 +288,100 @@ caller mailbox preservation. =docs/evidence/scheme-actor-round-20261005/receipt.
 binds the qualified source and verification results. No speedup, multicore VM
 scaling or model accuracy gain is inferred from worker count. Model calls: 0;
 MRR Rust integration remains deferred.
+
+* Native cancelable Session actor (2026-10-05)
+
+=program/actor-session.ss= exports =gerbil-ascent-open-actor-session= for the
+admitted pure positive Set subset. It implements the existing Session source
+append/replace/run receivers and adds explicit cancel, last-completed, state and
+close receivers. =program/interface.ss= exposes these operations. Existing
+synchronous retained Sessions keep their established timeout/reuse semantics;
+this constructor owns a fresh evaluator for each frozen cut. It does not yet
+retain a completed engine or support custom Provider/lattice/callback execution.
+
+A persistent owner receives requests through a private mailbox. Each caller
+uses a fresh private reply actor, so unrelated caller messages cannot be consumed
+by the Session protocol. Source row/list spines are copied after native shape
+admission; immutable nested payloads remain a caller premise. Multi-relation
+replacement admits the whole prospective input budget before changing pending
+sources. Source updates and a second run are rejected during active computation;
+result/state/cancel/close remain available.
+
+The owner increments an unbounded natural generation for accepted source edits,
+run admission and cancellation. It freezes the cut before spawning an evaluator
+and joining monitor. A mutex-protected cancellation token is independent of the
+compute mailbox; =program/evaluate.ss= forwards its predicate to the existing
+credit/checkpoint round coordinator, including the one-worker execution case.
+The cancellation predicate requires pure Set worker rules, rather than silently
+falling back to a serial callback that cannot honor cooperative cancellation.
+The owner reports =draining= until the monitor joins the evaluator, which itself
+joins every assigned round worker. A cancel acknowledgment means admission has
+stopped; joining the run or closing the Session confirms drain completion.
+
+Only a terminal reply from the assigned evaluator with the current generation
+can change committed sources and the last-completed publication. Failure or
+cancellation restores pending sources from the committed cut and leaves the
+last-completed result object unchanged. An initial Session has no completed
+publication until its first successful run. Cancel may win over a computed
+result that has not yet been accepted by the owner. This is intentional: an
+unaccepted terminal reply has no publication authority.
+
+Close disables new request admission under a lifecycle mutex, cancels active
+work, waits for its terminal monitor, rejects requests already queued at closure,
+replies to admitted close callers and joins the owner. It does not return while
+assigned work remains. Cancellation is cooperative at native traversal and batch
+credit boundaries, not a hard interrupt of arbitrary Scheme code or an assurance
+of bounded index-build/payload comparison latency.
+
+The first native attempt exposed missing Session prototype instantiation; the
+next exposed POO self-slot recursion from constructing =relations:= inside that
+slot scope. The accepted implementation computes =next-relations= before entering
+the POO slot expression. Both rejected attempts remain in the evidence receipt.
+
+** Research and proof correspondence
+
+[[https://arxiv.org/pdf/2203.16684][B22]], §6, pp.9–10, separates the outer update time from inner recursive time
+through nested streams indexed by pairs of naturals. Our Session generation and
+inner solver round are distinct coordinates inspired by that separation. The
+fresh-cut Set implementation is not DBSP signed-change incrementalization, and
+the generation counter is not a runtime cutoff.
+
+[[https://thomas.gilray.org/pdf/seamless-deductive.pdf][A22]], §4, pp.82–83, traverses the SCC graph in dependency order. The current
+Session actor owns a complete cut and runs the existing stratum worker engine;
+it does not yet dispatch ready independent SCCs. That future scheduler must
+retain component-local round completion while releasing independent ready SCCs.
+Cancel cannot be made effective by deleting the complete-publication condition.
+
+=SessionPublication.lean= now has an explicit actor ownership fragment: idle or
+foreign assigned replies are inert; failed/canceled completion preserves the
+publication; canceled completion clears assigned work. Completion correctness is
+still a premise, and native/VM refinement and fairness are separate. The
+=ActorSession.tla= model checks publication consistency, stale rejection and
+close-after-drain. TLC uses a configurable generation exploration cutoff; Lean
+and protocol definitions are unbounded. Stale-accept and early-close mutations
+must fail their respective invariants.
+
+The [[file:evidence/scheme-actor-session-20261005/receipt.json][Session actor qualification receipt]] records source/carrier/proof hashes,
+native lifecycle tests and model controls. No new model calls or MRR Rust work
+were performed. Matched throughput/CPU/allocation and cancellation latency probes,
+retained-engine reuse and independent SCC scheduling remain performance/design
+gates; correctness tests do not establish a speedup.
+
+** Ready-SCC scheduler prerequisites after Session ownership
+
+The current strict-stratum analysis computes components only when strict edges
+exist. Pure positive programs therefore need an explicit SCC inventory from the
+canonical dependency graph, rather than treating all stratum-zero rules as one
+SCC. Each multi-head activation must project heads to their component and compile
+that projection through the existing canonical plan path. A whole rule cannot
+be assigned to one output component when it also writes another.
+
+Ready components need their own frozen predecessor cut and local delta/round
+state. The Session owner admits component completions, deduplicates global
+unique-row budget charging and releases newly ready successors. Independent
+components may progress without a shared iteration barrier; each component must
+still complete its assigned local round before advancing delta. A cut publishes
+only when every required component closes under its current Session generation.
+Qualification must compare each component frontier and the final result against
+independent serial truth, inject stale/duplicate completions and failures, and
+measure skewed tasks with 1/2/4 workers before claiming throughput gains.

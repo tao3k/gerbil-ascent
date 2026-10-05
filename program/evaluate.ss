@@ -85,7 +85,11 @@
                                 (measure-rule-times? #f)
                                 (plan-error #f)
                                 (reuse #f)
-                                (workers 1))
+                                (workers 1) (canceled? #f))
+  (unless (or (not canceled?) (procedure? canceled?))
+    (error "invalid ASCENT cancellation predicate" canceled?))
+  (when (and canceled? (or session? reuse measure-rule-times?))
+    (error "ASCENT cancellation requires a fresh untimed evaluator"))
   (unless (and (exact-integer? workers) (> workers 0)
                (or (= workers 1) (and (not session?) (not reuse) (not measure-rule-times?))))
     (error "invalid ASCENT parallel evaluation option" workers))
@@ -586,7 +590,7 @@
           (set! pending-count 0)
             ;; The admitted pure positive subset has no evaluation callbacks.
             ;; Custom index/storage and lattice semantics remain on the serial path.
-            (if (and (> workers 1)
+            (if (and (or (> workers 1) canceled?)
                      (andmap (lambda (rule) (vector-ref rule 5)) active-rules)
                      (andmap gerbil-ascent-canonical-set-storage-provider?
                              (vector->list storage-providers))
@@ -623,8 +627,9 @@
                             (unless (and (< pivot (vector-length prunable))
                                          (= (vector-ref frozen-delta-size (vector-ref prunable pivot)) 0))
                               (visit! pivot))) pivots)))))
-                 emit-row!))
+                 emit-row! (or canceled? (lambda () #f))))
               (begin
+            (when canceled? (error "ASCENT cancellation requires pure Set worker rules"))
             (for-each
              (lambda (rule)
                (let ((started (and rule-ticks (current-jiffy)))
@@ -975,7 +980,8 @@
 ;; : (-> Program EvaluationResult)
 (def (gerbil-ascent-evaluate-program program
                                       measure-rule-times?: (measure-rule-times? #f)
-                                      workers: (workers 1))
+                                      workers: (workers 1)
+                                      canceled?: (canceled? #f))
   (unless (boolean? measure-rule-times?)
     (error "invalid ASCENT rule timing option" measure-rule-times?))
-  ((gerbil-ascent-make-engine program #f #f #f measure-rule-times? #f #f workers)))
+  ((gerbil-ascent-make-engine program #f #f #f measure-rule-times? #f #f workers canceled?)))

@@ -50,6 +50,7 @@
     "program/actor-round"
     "program/evaluate"
     "program/session"
+    "program/actor-session"
     "program/interface"
     "core/binary-program"
     "candidate/closure"

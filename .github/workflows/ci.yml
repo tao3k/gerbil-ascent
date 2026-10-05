@@ -34,6 +34,8 @@ jobs:
         run: ASP_GERBIL_SCHEME_POLICY=1 gerbil build
       - name: Qualify Scheme rules
         run: just test
+      - name: Qualify native single-module entry and failure controls
+        run: just check-native-entry
       - name: Build native DSL closure entry
         run: just build-dsl-closure
       - name: Qualify native DSL closure

@@ -36,10 +36,18 @@ _test-file path:
         test -f "$compiled"
         test_module="$compiled"
         runner=(gxi {{ gerbil_test_runtime_options }} t/harness/gxtest.ss)
+        if [[ -n "${ASCENT_NATIVE_TEST_ENTRY:-}" ]]; then
+            test -x "$ASCENT_NATIVE_TEST_ENTRY"
+            runner=("$ASCENT_NATIVE_TEST_ENTRY" {{ gerbil_test_runtime_options }})
+        fi
     else
         runner=(gerbil {{ gerbil_test_runtime_options }} test)
     fi
-    timeout "${ASCENT_GXTEST_TIMEOUT:-120s}" "${runner[@]}" -v 5 "$test_module" 2>&1 | tee "$output_file"
+    if [[ -n "${ASCENT_NATIVE_TEST_ENTRY:-}" ]]; then
+        timeout "${ASCENT_GXTEST_TIMEOUT:-120s}" "${runner[@]}" 2>&1 | tee "$output_file"
+    else
+        timeout "${ASCENT_GXTEST_TIMEOUT:-120s}" "${runner[@]}" -v 5 "$test_module" 2>&1 | tee "$output_file"
+    fi
     if grep -E 'ERROR (CHECK|CASE|HARNESS|MODULE)|Heap overflow|Stack overflow' "$output_file" >/dev/null; then exit 1; fi
     awk -f "{{ justfile_directory() }}/tools/assert-test-cases.awk" "$output_file"
     grep -Fx "MODULE-OK $test_module" "$output_file" >/dev/null
@@ -59,6 +67,28 @@ test jobs='auto':
 # Compile through the test entrypoint, then execute the native test module.
 test-native path:
     {{ test_runner }} test-file "{{ path }}"
+
+# Positive native lifecycle plus independently injected failure controls.
+check-native-entry:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    just test-native t/harness/native-entry-test.ss
+    export ASCENT_TEST_LIBRARY="{{ justfile_directory() }}/.cache/ascent/native-library/lib"
+    export ASCENT_PERFORMANCE_MODULES="{{ justfile_directory() }}/.cache/ascent/native-library/modules.sexp"
+    export ASCENT_NATIVE_TEST_ENTRY="{{ justfile_directory() }}/.cache/ascent/native-library/single-test"
+    export PYTHONPATH="{{ justfile_directory() }}/python/src${PYTHONPATH:+:$PYTHONPATH}"
+    output_file="$(mktemp "{{ justfile_directory() }}/.cache/ascent/tmp/native-control.XXXXXX")"
+    trap 'rm -f "$output_file"' EXIT
+    for control in setup case cleanup empty; do
+        expected=42
+        marker='ERROR MODULE'
+        if [[ "$control" == case ]]; then marker='ERROR CASE'; fi
+        if [[ "$control" == empty ]]; then expected=1; marker='FAIL no discovered Cases'; fi
+        status=0
+        ASCENT_NATIVE_ENTRY_CONTROL="$control" python3 -m ascent_test_support.supervision --startup-seconds 5 --idle-seconds 5 -- just _test-file t/harness/native-entry-test.ss > "$output_file" 2>&1 || status=$?
+        if [[ "$status" != "$expected" ]] || ! grep -F "$marker" "$output_file" >/dev/null; then cat "$output_file"; exit 1; fi
+        printf 'NATIVE-ENTRY-CONTROL-OK %s exit=%s\n' "$control" "$status"
+    done
 
 # Run the same native module inventory with one worker.
 test-serial:

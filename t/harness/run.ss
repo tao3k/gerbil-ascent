@@ -5,9 +5,10 @@
 ;;; Test compilation and scheduling belong to t/. std/make owns native
 ;;; currentness and gxtest owns Suites and Cases.
 (import (only-in :gerbil/compiler compile-module compile-exe execute-pending-compile-jobs!)
+        :gerbil/expander
         (only-in :std/make make)
         :std/misc/process :std/os/flock :std/os/device
-        (only-in "artifact.ss" artifact-main)
+        (only-in "artifact.ss" artifact-main artifact-sources artifact-matching-sources? artifact-digest)
         (only-in "../../build.ss" gerbil-ascent-library-modules)
         (only-in :asp-gerbil-scheme/src/build-api/core-capacity
                  initialize-native-build-core-capacity!))
@@ -102,11 +103,61 @@
        (list-sort string<?
                   (filter (lambda (name) (string-suffix? "-test.ss" name))
                           (directory-files "t/qualification")))))
+
+;;; Discover exports during compilation, not before the first Case. The
+;;; generated entry binds the original Suites and setup/cleanup procedures;
+;;; std/test remains the only executor and verdict owner.
+(def (prepare-native-test! path)
+  (let* ((library (path-expand "lib" test-cache))
+         (module-path (path-expand (string-append "gerbil-ascent/" (path-strip-extension path) ".ssi") library))
+         (context (import-module module-path))
+         (names (filter-map (lambda (exported)
+                             (let (name (module-export-name exported))
+                               (and (fx= (module-export-phi exported) 0)
+                                    (or (memq name '(test-setup! test-cleanup!))
+                                        (string-suffix? "-test" (symbol->string name)))
+                                    name)))
+                           (module-context-export context)))
+         (suites (filter (lambda (name) (string-suffix? "-test" (symbol->string name))) names))
+         (source (path-expand "single-test.ss" test-cache))
+         (binary (path-expand "single-test" test-cache)))
+    (when (null? suites) (error "native test module exports no Suites" path))
+    (call-with-output-file [path: source truncate: #t]
+      (lambda (out)
+        (display "package: gerbil-ascent/t/harness\nnamespace: gerbil-ascent/t/harness/native-entry\n" out)
+        (for-each
+         (lambda (form) (write form out) (newline out))
+         `((import :std/test/base
+                   (only-in :gerbil-ascent/t/performance/native-library assert-native-library!)
+                   (only-in ,(string->symbol (string-append ":gerbil-ascent/" (path-strip-extension path))) ,@names))
+           (export main)
+           (def (main . args)
+             (unless (null? args) (error "native single test accepts no arguments" args))
+             (assert-native-library!)
+             (let* ((config (TestConfig verbosity: 5 capture-output?: #f))
+                    (module (TestModule ,module-path (list ,@suites) []
+                                        ,(if (memq 'test-setup! names) 'test-setup! 'void)
+                                        ,(if (memq 'test-cleanup! names) 'test-cleanup! 'void)))
+                    (harness (TestHarness (object->string (list ,module-path)) config (list module)))
+                    (result (test-run! harness)))
+               (if (test-result-ok? result)
+                 (begin (displayln "OK") (force-output) (exit 0))
+                 (exit 42))))))))
+    (when (file-exists? binary) (delete-file binary))
+    (let ((generated (artifact-digest source))
+          (options [output-dir: library output-file: binary parallel: #t verbose: #t invoke-gsc: #t static: #t]))
+      (compile-module source [invoke-gsc: #f options ...])
+      (compile-exe source options)
+      (execute-pending-compile-jobs!)
+      (unless (equal? generated (artifact-digest source))
+        (error "generated native test entry changed during compilation")))
+    (setenv "ASCENT_NATIVE_TEST_ENTRY" binary)))
 (def (prepare-test-library! (tests []))
   (let* ((library (path-expand "lib" test-cache))
          (module-file (path-expand "modules.sexp" test-cache))
          (modules (append gerbil-ascent-library-modules
-                          '("t/scenarios/performance/ascent-table-expression/baseline"
+                          '("t/performance/native-library"
+                            "t/scenarios/performance/ascent-table-expression/baseline"
                             "t/harness/artifact" "t/harness/prediction")
                           ;; Compile the complete independent reference graph
                           ;; for both ordinary module tests and AOT linkage.
@@ -227,8 +278,23 @@
           (artifact-main "bind")))))
     (["test-file" path]
      (with-test-lane
-      (lambda () (prepare-test-library! [path])
-                 (run-command ["just" "_test-file" path]))))
+      (lambda ()
+        (let (sources (artifact-sources))
+          (prepare-test-library! [path])
+          (prepare-native-test! path)
+          (unless (artifact-matching-sources? sources (artifact-sources))
+            (error "source changed during native test compilation"))
+          (let* ((binary (getenv "ASCENT_NATIVE_TEST_ENTRY"))
+                 (digest (artifact-digest binary))
+                 (generated (artifact-digest (path-expand "single-test.ss" test-cache))))
+            (setenv "PYTHONPATH" (string-append (path-expand "python/src") ":" (getenv "PYTHONPATH" "")))
+            (run-command ["python3" "-m" "ascent_test_support.supervision"
+                          "--startup-seconds" "5" "--idle-seconds" "5"
+                          "--" "just" "_test-file" path])
+            (unless (and (equal? digest (artifact-digest binary))
+                         (equal? generated (artifact-digest (path-expand "single-test.ss" test-cache)))
+                         (artifact-matching-sources? sources (artifact-sources)))
+              (error "native test sources or executable changed during execution")))))))
     (["performance" name]
      (with-test-lane
       (lambda () (prepare-test-library! performance-modules)

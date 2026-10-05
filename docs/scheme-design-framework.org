@@ -242,3 +242,26 @@ with its Scheme owner, formal obligation and independent native discriminator.
 The next R1 slice is concrete type/term admission, finite semantic cardinality
 and height sufficiency, followed by source-bound normalization qualification.
 All three legs must pass for the stated subset before that slice is closed.
+
+* Native single-module test carrier (2026-10-05)
+
+=just test-file= and =just test-native= now discover the requested module's
+Suite exports during the locked build phase and compile a dedicated Scheme
+entry. That entry binds the original Suite objects and module setup/cleanup
+procedures and executes them through =std/test= at verbosity 5. The general
+gxtest command-line parser and runtime metadata discovery are absent from this
+execution phase. The module pool still uses its existing gxtest route.
+
+The build removes the previous executable, drains compiler jobs, checks the
+generated entry digest and checks the repository's bound source inputs before
+execution. Execution uses the existing five-second output supervisor and the
+120-second module deadline. Source, generated entry and executable identities
+are checked again after execution. Python owns process supervision; Scheme
+owns every test assertion, callback and verdict. Builds retain their separate
+real-output/CPU-progress supervision and have no total 180-second deadline.
+
+The [[file:evidence/scheme-native-entry-20261005/receipt.json][native entry receipt]] records the index discriminator, lifecycle fixture,
+four injected failure controls and integrated proof check. Startup admission,
+native semantic conformance, proof-model validity and measured application
+benefit remain separate evidence. The research/proof sequence above continues
+to require concrete compiler refinement and controlled real-model benefit.

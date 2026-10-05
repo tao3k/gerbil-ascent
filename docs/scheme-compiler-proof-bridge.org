@@ -554,3 +554,27 @@ The final snapshot has 365 Scheme sources plus =justfile=, the supervision
 module and its package metadata: 368 inputs. Historical receipt hashes and
 counts remain intact; the lifecycle narrative above corrects this count's
 description without expanding its qualification scope.
+
+* Single-module native carrier qualification (2026-10-05)
+
+The [[file:evidence/scheme-native-entry-20261005/receipt.json][new carrier receipt]] follows the startup failure above. Correcting the
+diagnostic's omitted =ASCENT_PERFORMANCE_MODULES= variable still reproduced
+the five-second failure. Separate import probes completed the native library
+preflight and located substantial startup work in the gxtest CLI dependency
+graph, including =std/cli/getopt= and =std/format=. A narrower interpreted
+adapter still failed the output gate while discovering the target module;
+those attempts remain excluded.
+
+The supported single-module commands now move export discovery and binding
+to native compilation. The generated entry uses the original =std/test=
+objects and callbacks, and returns 42 on a failed native verdict. The outer
+recipe additionally rejects a successful empty Suite by requiring actual
+Cases. Independent setup, Case, cleanup and empty-Suite controls exercise
+these boundaries. The index Suite retains its five independent reference
+Cases. This carrier work closes the qualified single-module execution path;
+the general gxtest/module-pool startup path has its own remaining gate.
+
+The synchronized proof check includes the upstream unbounded native Session
+publication model. Lean's generation argument ranges over natural numbers;
+=TLCGenerationCutoff= configures finite enumeration. This model check and
+native carrier qualification retain their respective abstraction boundaries.

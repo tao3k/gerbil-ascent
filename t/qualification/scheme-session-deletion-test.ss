@@ -12,6 +12,7 @@
         (only-in :gerbil-ascent/program/evaluate gerbil-ascent-evaluate-program)
         (only-in :gerbil-ascent/program/update-selection gerbil-ascent-update-selection
                  gerbil-ascent-update-eligible?)
+        (only-in :gerbil-ascent/table/provider gerbil-ascent-hash-index-provider)
         (only-in :gerbil-ascent/program/session gerbil-ascent-open-session
                  gerbil-ascent-session-run gerbil-ascent-session-append-source!
                  gerbil-ascent-session-replace-source! gerbil-ascent-session-replace-sources!))
@@ -523,6 +524,48 @@
         (set-car! added 9)
         (check-fresh (gerbil-ascent-session-run session)
                      (path-program '((0 1) (1 2))))))
+    (test-case "opaque index lookup cannot authorize completed-result reuse"
+      ;; A custom Provider may capture state outside the declared rule graph.
+      ;; With 32 candidate rows, the bound second atom must use its index.
+      ;; The opaque lookup then hides that match after the first completed
+      ;; solve. Full evaluation must observe it; retaining joined is stale.
+      (let* ((lookup-open? #t)
+             (lookups 0)
+             (provider
+              (.o (:: @ gerbil-ascent-hash-index-provider)
+                  (.lookup-index (lambda (index key)
+                                   (set! lookups (+ lookups 1))
+                                   (if lookup-open?
+                                     (or (hash-get index key) []) [])))))
+             (right-rows (map (lambda (n) (list n n)) (iota 32)))
+             (base
+              (relational-program
+               (relation left (key) '((0)))
+               (relation right (key value) right-rows)
+               (relation joined (key value) '())
+               (relation cold (value) '((7)))
+               (relation seen (value) '())
+               (rule (joined ?k ?v) (left ?k) (right ?k ?v))
+               (rule (seen ?v) (cold ?v))
+               (limits 128 128 256)))
+             (source-relations (.ref base 'relations))
+             (custom-right (.o (:: @ (cadr source-relations)) index-provider: provider))
+             (program (.o (:: @ base)
+                          relations: (cons (car source-relations)
+                                           (cons custom-right (cddr source-relations)))))
+             (session (gerbil-ascent-open-session program)))
+        (check-equal? (gerbil-ascent-update-eligible? program) #f)
+        (check-set (rows (gerbil-ascent-session-run session) 'joined) '((0 0)))
+        (check-equal? (> lookups 0) #t)
+        (let (before-update-lookups lookups)
+          (set! lookup-open? #f)
+          (let* ((replacements '((cold (8))))
+                 (updated (gerbil-ascent-session-replace-sources! session replacements)))
+            (check-equal? (> lookups before-update-lookups) #t)
+            (check-equal? (.ref updated 'evaluation-path) 'stratified-semi-naive)
+            (check-equal? (.ref updated 'reused-relations) '())
+            (check-set (rows updated 'joined) '())
+            (check-fresh updated (fresh-replacement-program program replacements))))))
     (test-case "a forged descriptor cannot authorize an opaque callback for result reuse"
       (let* ((allow? #t)
              (base (path-program '((0 1))))

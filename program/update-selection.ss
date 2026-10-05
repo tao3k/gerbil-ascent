@@ -10,6 +10,7 @@
         (only-in "scheme-checked.ss" relational-stable-procedure?)
         (only-in :gerbil-ascent/core/positive-plan gerbil-ascent-positive-plan)
         (only-in :gerbil-ascent/core/dependency-graph gerbil-ascent-graph-close!)
+        (only-in :gerbil-ascent/table/provider gerbil-ascent-canonical-hash-index-provider?)
         (only-in :gerbil-ascent/table/storage gerbil-ascent-canonical-set-storage-provider?))
 (export gerbil-ascent-update-eligible? gerbil-ascent-update-selection
         gerbil-ascent-update-active-plans gerbil-ascent-select-rule-plans)
@@ -19,8 +20,12 @@
 ;; : (-> Program Boolean)
 ;; | doc m%
 ;;     Check declaration eligibility without constructing a source snapshot,
-;;     reading rows or computing dependency closure. Only registered closed
-;;     procedures and built-in storage qualify; no callback is invoked.
+;;     reading rows or computing dependency closure. Rule callbacks and lattice
+;;     joins must be registered closed procedures; storage and index providers
+;;     must be the built-ins. This predicate invokes no callback. Relation
+;;     field checks still run during source/result admission and are a separate
+;;     refinement obligation. An opaque lookup may depend on state outside the
+;;     rule-read graph, so its completed rows cannot be retained across a cut.
 ;;
 ;;     # Examples
 ;;
@@ -42,10 +47,12 @@
       ((binding) (relational-stable-procedure? (.ref clause 'compute)))
       (else #f)))
   (and (andmap (lambda (relation)
-                 (if (eq? (.ref relation 'storage-kind) 'lattice)
-                   (relational-stable-procedure? (.ref relation 'join))
-                   (gerbil-ascent-canonical-set-storage-provider?
-                    (.ref relation 'storage-provider))))
+                 (and (gerbil-ascent-canonical-hash-index-provider?
+                       (.ref relation 'index-provider))
+                      (if (eq? (.ref relation 'storage-kind) 'lattice)
+                        (relational-stable-procedure? (.ref relation 'join))
+                        (gerbil-ascent-canonical-set-storage-provider?
+                         (.ref relation 'storage-provider)))))
                (.ref candidate 'relations))
        (andmap (lambda (rule)
                  (and (andmap (lambda (head) (pure-terms? (.ref head 'terms)))
@@ -58,8 +65,9 @@
 ;;   : (-> SourceSnapshot Program Analysis (Maybe AffectedRelations))
 ;;   | doc m%
 ;;       Compare source logs and close the affected set through native plans.
-;;       Only built-in storage and registered closed procedures qualify. An
-;;       opaque callback/provider returns false and keeps full recomputation.
+;;       Only built-in storage/index providers and registered closed procedures
+;;       qualify. An opaque callback/provider returns false and keeps full
+;;       recomputation.
 ;;
 ;;       # Examples
 ;;

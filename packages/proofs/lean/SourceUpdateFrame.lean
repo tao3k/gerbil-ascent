@@ -87,13 +87,16 @@ theorem source_frame [DecidableEq Row]
 
 /-- This is the complete modeled chain: source-log comparison, exact
 read-graph closure, checklist-local evaluation, and differently timed
-completed fixed points. `readsMatch` is the explicit compiler/evaluator
-correspondence premise, not an inferred native fact. -/
+completed fixed points. A rule head may also read its own old value during
+deduplication or lattice join. That self-read needs no graph edge: successor
+closure is trivially closed under identity. `readsMatch` is the explicit
+compiler/evaluator correspondence premise, not an inferred native fact. -/
 theorem completed_reuse [DecidableEq Row]
     (plans : List (Rule (Fin count))) (cut : Cut count Row)
     (program : FunctionalDependency.Program (Fin count) (fun _ => List Row))
     (readsMatch : ∀ source target,
-      program.edge source target → ReadsInto plans source target)
+      program.edge source target →
+        source = target ∨ ReadsInto plans source target)
     (oldRounds newRounds : Nat)
     (oldStable : program.step
       (iterate program.step oldRounds cut.before) =
@@ -106,8 +109,10 @@ theorem completed_reuse [DecidableEq Row]
       (iterate program.step newRounds cut.candidate) := by
   have closed : Closed program.edge (affected plans cut) := by
     intro source target read selected
-    exact runFuel_compiled_closed count plans cut.seeds
-      cut.seeds_nodup source target (readsMatch source target read) selected
+    rcases readsMatch source target read with self | bodyRead
+    · simpa [self] using selected
+    · exact runFuel_compiled_closed count plans cut.seeds
+        cut.seeds_nodup source target bodyRead selected
   exact program.completed_frame (affected plans cut) closed
     (source_frame plans cut) oldRounds newRounds oldStable newStable
 

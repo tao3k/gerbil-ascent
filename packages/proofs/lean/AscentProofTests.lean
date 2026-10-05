@@ -57,6 +57,36 @@ example : ¬ Ascent.SourceUpdateFrame.affected updateChain updateCut 4 := by
     (Ascent.NativeBitmapWorklist.initial updateCut.seeds)).selected[4] ≠ true
   decide
 
+/-- Native head admission checks its own prior rows. This modeled evaluator
+has only that implicit self-read, so no explicit rule-graph edge is needed. -/
+def selfReadProgram : Ascent.FunctionalDependency.Program (Fin 5)
+    (fun _ => List Nat) where
+  reads := fun target => [target]
+  empty := fun _ => []
+  evaluate := fun _ selected => selected.1 ()
+
+theorem selfReadMatches (source target : Fin 5)
+    (read : selfReadProgram.edge source target) :
+    source = target ∨ Ascent.RuleGraphClosure.ReadsInto updateChain source target := by
+  left
+  simpa [selfReadProgram, Ascent.FunctionalDependency.Program.edge] using read
+
+theorem selfReadStep (state : (key : Fin 5) → List Nat) :
+    selfReadProgram.step state = state := by
+  funext target
+  rfl
+
+example : Ascent.DependencyInvalidation.AgreeOutside
+    (Ascent.SourceUpdateFrame.affected updateChain updateCut)
+    (Ascent.DependencyInvalidation.iterate selfReadProgram.step 0 updateCut.before)
+    (Ascent.DependencyInvalidation.iterate selfReadProgram.step 0 updateCut.candidate) := by
+  exact Ascent.SourceUpdateFrame.completed_reuse updateChain updateCut
+    selfReadProgram selfReadMatches 0 0
+    (by simpa [Ascent.DependencyInvalidation.iterate] using
+      selfReadStep updateCut.before)
+    (by simpa [Ascent.DependencyInvalidation.iterate] using
+      selfReadStep updateCut.candidate)
+
 def cycleAdj : Fin 3 → List (Fin 3)
   | 0 => [1, 1]
   | 1 => [2]

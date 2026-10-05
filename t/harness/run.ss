@@ -141,7 +141,8 @@
                               "t/performance/finite-mapping/reference")
                             [])
                           (if (member "t/qualification/scheme-provenance-graph-test.ss" tests)
-                            '("t/performance/provenance-index/reference")
+                            '("t/performance/provenance-index/reference"
+                              "t/performance/provenance-maintenance/reference")
                             [])
                           (if (member "t/qualification/scheme-bounded-datum-test.ss" tests)
                             '("t/performance/bounded-datum/reference")

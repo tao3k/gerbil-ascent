@@ -586,3 +586,8 @@ decreased 9,626,816 to 9,206,272 bytes. Actor coordinator CPU/wall medians
 decreased 14.139/14.178 to 13.602/13.606 ms (17/20 pairs won). Single-key CPU
 median decreased but only 27/50 pairs won, so this lane remains unstable. These
 fixture-specific observations do not establish overall Runtime or LLM gains.
+
+After rebasing concurrent source/reuse fixes through =894ee13=, six targeted
+modules passed 60 Cases and the complete Lean library/test roots built in
+60/61 jobs. The receipt separately binds this source/carrier and repeated raw
+measurements; it does not relabel the earlier 74-module/629-Case snapshot.

@@ -54,7 +54,7 @@
 (def (unique-values values)
   (foldl (lambda (value prior) (if (memv value prior) prior (cons value prior))) [] values))
 
-(def (model-summary edges blocked supplied-weights supplied-roots)
+(def (model-paths edges)
   (let (matrix (make-vector 9 #f))
     (def (index from to) (+ (* 3 from) to))
     (for-each (lambda (edge)
@@ -72,6 +72,14 @@
            vertices))
         vertices))
      vertices)
+    (apply append
+           (map (lambda (from)
+                  (map (lambda (to) (list from to))
+                       (filter (lambda (to) (vector-ref matrix (index from to))) vertices)))
+                vertices))))
+
+(def (model-summary edges blocked supplied-weights supplied-roots)
+  (let (paths (model-paths edges))
     (map
      (lambda (root)
        (let (origin (car root))
@@ -81,13 +89,34 @@
                            (filter
                             (lambda (weight)
                               (and (even? (cadr weight))
-                                   (vector-ref matrix
-                                               (index origin (car weight)))
+                                   (member (list origin (car weight)) paths)
                                    (not (member
                                          (list origin (car weight))
                                          blocked))))
                             supplied-weights)))))))
      supplied-roots)))
+
+(def (unique-rows rows)
+  (foldl (lambda (row prior) (if (member row prior) prior (cons row prior))) [] rows))
+
+(def (model-relations edges blocked supplied-weights supplied-roots)
+  (let* ((paths (model-paths edges))
+         (allowed (filter (lambda (row) (not (member row blocked))) paths))
+         (weighted
+          (unique-rows
+           (apply append
+                  (map (lambda (row)
+                         (map (lambda (weight) (list (car row) (* 2 (cadr weight))))
+                              (filter (lambda (weight)
+                                        (and (= (car weight) (cadr row))
+                                             (even? (cadr weight))))
+                                      supplied-weights)))
+                       allowed)))))
+    (map cons '(edge blocked weight root path allowed weighted summary)
+         (list (unique-rows edges) (unique-rows blocked)
+               (unique-rows supplied-weights) (unique-rows supplied-roots)
+               paths allowed weighted
+               (model-summary edges blocked supplied-weights supplied-roots)))))
 
 (def (native-program edges blocked supplied-weights supplied-roots)
   (relational-program
@@ -214,8 +243,98 @@
                    expected) #t)
     (displayln "CONTRACT-CHECKED candidate " generation) (force-output)))
 
+;;; The same composed application across cold construction, source updates,
+;;; candidate evidence production and replay. No preinitialized Session is
+;;; supplied to either arm. Candidate work is identical in both arms.
+(def lifecycle-states
+  (append study-cases
+          (list (list '((0 1) (1 2) (2 0)) '() weights '((0)))
+                (list '() '() weights '((0))))))
+
+(def (application-lifecycle retained?)
+  (let ((session #f) (results (make-vector (length lifecycle-states) #f)))
+    (for-each
+     (lambda (generation state)
+       (let (native
+             (if (and retained? session)
+               (relational-program-transaction!
+                session (map cons '(edge blocked weight root) state))
+               (begin
+                 (set! session
+                       (relational-open-program-session
+                        (apply native-program state)))
+                 (relational-program-session-run session))))
+         (vector-set! results generation
+                      (list native (apply candidate-result generation state)))
+         ;; Genuine completed work, identical output cost in both arms.
+         (displayln "APPLICATION-COMPLETED arm=" (if retained? 'retained 'fresh)
+                    " state=" generation)
+         (force-output)))
+     (iota (length lifecycle-states)) lifecycle-states)
+    (vector results session)))
+
+(def (check-lifecycle measured)
+  (let* ((results (vector-ref measured 0)) (session (vector-ref measured 1))
+         (last (- (vector-length results) 1)))
+    (check-exception
+     (relational-program-transaction! session '((edge (0)))) true)
+    (let (after-failure (relational-program-session-run session))
+      (for-each
+       (lambda (binding)
+         (check-equal?
+          (same-set? (relational-program-query after-failure (car binding))
+                     (cdr binding)) #t))
+       (apply model-relations (list-ref lifecycle-states last))))
+    ;; Check every old published snapshot after the full sequence and a
+    ;; rejected transaction, not just the latest answer.
+    (for-each
+     (lambda (generation state)
+       (let* ((observed (vector-ref results generation))
+              (expected (apply model-summary state)))
+         ;; Public Session APIs return completed solution wrappers; bounded
+         ;; native results throw before that wrapper is constructed.
+         (for-each
+          (lambda (binding)
+            (check-equal?
+             (same-set? (relational-program-query (car observed) (car binding))
+                        (cdr binding)) #t))
+          (apply model-relations state))
+         (check-equal? (same-set? (cadr observed) expected) #t)))
+     (iota (length lifecycle-states)) lifecycle-states)))
+
+(def (sample-lifecycle retained?)
+  (let (counter (make-f64vector 2 0.0))
+    (##gc)
+    (let ((wall (current-jiffy)) (cpu (cpu-time)))
+      (##get-bytes-allocated! counter 0)
+      (let (result (application-lifecycle retained?))
+        (##get-bytes-allocated! counter 1)
+        (let ((cpu-us (* 1000000 (- (cpu-time) cpu)))
+              (wall-us (* 1000000 (/ (- (current-jiffy) wall) (jiffies-per-second))))
+              (bytes (- (f64vector-ref counter 1) (f64vector-ref counter 0))))
+          (check-equal? (>= bytes 0) #t)
+          (check-lifecycle result)
+          (vector cpu-us wall-us bytes))))))
+
 (def scheme-library-contract-test
   (test-suite "native and candidate common semantic contract"
+    (test-case "composed application lifecycle includes initialization and replay costs"
+      (for-each
+       (lambda (pair)
+         (let* ((retained-first? (even? pair))
+                (a (sample-lifecycle retained-first?))
+                (b (sample-lifecycle (not retained-first?)))
+                (retained (if retained-first? a b))
+                (fresh (if retained-first? b a)))
+           (displayln "APPLICATION-LIFECYCLE pair=" pair
+                      " fresh-cpu-us=" (vector-ref fresh 0)
+                      " retained-cpu-us=" (vector-ref retained 0)
+                      " fresh-wall-us=" (vector-ref fresh 1)
+                      " retained-wall-us=" (vector-ref retained 1)
+                      " fresh-bytes=" (vector-ref fresh 2)
+                      " retained-bytes=" (vector-ref retained 2))
+           (force-output)))
+       (iota 12)))
     (test-case "eight diagnostic graphs share one finite model"
       (for-each
        (lambda (mask)

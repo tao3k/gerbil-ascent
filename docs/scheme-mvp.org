@@ -122,6 +122,71 @@ For each delivery, update this central acceptance result and the corresponding
 paper matrix row together. Add implementation or formal machinery only when
 it resolves a named failing or missing obligation on the admitted path.
 
+* Composed application lifecycle acceptance
+
+The existing =scheme-library-contract-test= now measures the same composed
+program across nine source cuts: alternative-support and final-support
+withdrawal, blocker and weight changes, a recursive cycle and removal of its
+last base support. Each arm constructs its first program and Session inside
+the timer. The fresh arm constructs and solves a new Session for each cut;
+the retained arm applies atomic four-source replacements after its initial
+solve. Both arms create identical inert-candidate receipts at every cut and
+check snapshot binding, finite replay and stratified replay inside the timer.
+No model answers, prompts or external calls participate.
+
+Twelve pairs alternate which arm runs first. Each sample reports native CPU,
+wall time and cumulative allocated bytes for the full nine-cut workflow.
+Forced GC and the independent model checks are outside the timer. Completed
+cut output is real progress and is included identically in both arms. Rejected
+transaction checks run after timing, followed by verification of every saved
+snapshot and the unchanged latest state. These costs are not presented as
+timed failure/cancellation latency. Cumulative allocation is not live heap or
+peak RSS; cold program/Session construction is included, AOT compilation and
+process startup are excluded.
+
+The independent three-node matrix model supplies all eight native relation
+sets, including copied sources, recursive paths, excluded paths, checked
+weighted rows and grouped sums. A matching final sum alone is insufficient.
+For 24 arms, the scenario checks 1,728 complete native relation sets, 216
+candidate answer sets and 192 relation sets after rejected transactions:
+2,136 complete-set comparisons. Candidate evidence has separate binding and
+replay checks; the candidate query is =summary=, not every native relation.
+
+| Connection | Native discriminator in this workflow | Formal boundary |
+|------------+---------------------------------------+-----------------|
+| ASCENT / first-class checked language | Admit, solve and query through public solution wrappers; compare all derived relations | Current lowering laws retain native interpretation premises |
+| H18 source support and frame semantics | Alternative support, final support, cycle removal and independent complete outputs | =SourceUpdateFrame.source_frame= / =completed_reuse= retain =readsMatch= and completed-fixed-point premises; this is not DRedc |
+| Atomic publication | Rejected source transaction leaves the latest complete relations unchanged; all earlier results remain readable | =SessionTransaction.AtomicSnapshot= and =NativeSessionPublication.CommittedSnapshot= / =NoPrematurePublication= model the publication contract, not native heap refinement |
+| Finite evidence | Exact per-cut snapshot and inert program binding, independent complete answer set, both replay validators | Finite stratified replay is the admitted scope; general semiring/intent truth is not implied |
+
+This is one finite composed workflow, not a production application or general
+runtime benefit claim. Actor cancellation and specialized BYODS Providers
+retain their existing separate native gates; they are not silently counted as
+timed arms here. The unchanged proof sources are not reclassified as newly
+proved native correctness. Full same-head CI remains required.
+
+The [[file:evidence/scheme-application-lifecycle-20261005/receipt.json][source-bound lifecycle receipt]] retains all twelve raw pairs and the
+source delta against the existing full-suite source manifest. The focused
+native module passed six Cases with parent exit status zero in 22 seconds;
+all 2,136 complete-set comparisons and per-cut evidence checks passed.
+
+| Whole nine-cut workflow | Fresh median | Retained median | Median reduction | Retained wins |
+|-------------------------+--------------+-----------------+------------------+---------------|
+| CPU | 867.716 ms | 492.522 ms | 43.24% | 12/12 |
+| Wall | 885.737 ms | 494.673 ms | 44.15% | 12/12 |
+| Cumulative allocation | 1,520,942,240 bytes | 849,843,028 bytes | 44.12% | 12/12 |
+
+These are complete workflow medians, not per-update latency. Initial Session
+construction is included in both arms; the retained arm amortizes it across
+the nine cuts. The allocation totals include reclaimed objects and can exceed
+the live 1 GiB heap cap. No speed threshold, retry selection or significance
+claim was used. Delivery 2 has this scoped evidence; timed actor/cancellation,
+specialized-Provider and larger application evidence remain open.
+The focused run avoids other native modules in its own pool; shared-host
+interference remains possible. CI may run this Case with other admitted
+modules, so CI timing output is not automatically a replacement for this
+focused paired receipt.
+
 * Release receipt and claim discipline
 
 The [[file:evidence/scheme-trrel-uf-20261005/receipt.json][existing full native qualification receipt]] records its own frozen

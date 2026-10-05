@@ -8,6 +8,9 @@
 
 * Delivery boundary
 
+The [[file:scheme-mvp.org][integrated MVP contract]] specifies the current delivery order and native
+acceptance entry. Historical measurements below retain their original scope.
+
 The public language is the =relational-program= and
 =relational-fragment= API exported by =program/interface.ss=. Trusted
 Scheme code constructs finite program values before admission. Its
@@ -86,7 +89,9 @@ idle watchdog and the ordinary 45-second batch cap.
 
 Retained positive insertion may reuse the native Session's state.
 Source replacement and withdrawal currently solve a prospective
-snapshot and publish it only after completion. The paired
+snapshot with [[file:scheme-session-deletion-design.org][affected-component rederivation]] for eligible checked programs;
+opaque effects and custom Providers require fresh recomputation. Publication
+occurs only after completion. The paired
 =just operator-retained-probe= checks identical complete outputs
 against an independent model. Its single-update timing excludes the
 retained initialization; its lifecycle timing includes it. Timing

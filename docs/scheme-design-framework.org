@@ -7,6 +7,10 @@
 
 * Acceptance rule
 
+The [[file:scheme-mvp.org][integrated MVP delivery]] now controls the order of implementation and
+acceptance across these rows. Advance one usable lifecycle before additional
+isolated optimization or proof slices; full R1--R7 closure remains separate.
+
 This matrix defines the scope of design closure. An implemented interface,
 a semantic argument, a passing discriminator and measured application benefit
 are separate obligations. A row closes only the claim stated in that row.

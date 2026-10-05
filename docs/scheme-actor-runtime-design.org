@@ -12,9 +12,11 @@ construction lives in =t/harness/native-entry.ss= and test admission, output
 credits, monitoring and draining live in =t/harness/actor-pool.ss=. The shell
 =xargs= pool and timer-only RUNNING output have been removed.
 
-The carrier implements the test boundary; the positive Set worker slice below
-now implements one solver stratum round. Session/SCC scheduling remains a
-separate implementation obligation. A test module
+The carrier implements the test boundary. The runtime separately implements
+ready-SCC scheduling for pure positive canonical Set cuts and cancelable
+Session publication; persistent workers, index reuse and parallel custom
+Providers remain open. The [[file:scheme-mvp.org][integrated MVP]] admits these boundaries together.
+A test module
 child runs its original =std/test= Suites and setup/cleanup in an isolated native
 process. It does not execute parallel Cases or parallelize the solver.
 

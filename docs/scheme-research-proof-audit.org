@@ -91,6 +91,10 @@ parse/tool crashes cannot count as successful fault detection.
 
 * Ordered implementation plan and exit conditions
 
+Current sequencing is controlled by the [[file:scheme-mvp.org][integrated MVP delivery]]. The
+obligations below remain open where stated; advance their connections to the
+same usable lifecycle before adding independent proof or optimization slices.
+
 | Order | Work package / owner | Concrete next deliverable | Exit condition |
 |-------+----------------------+---------------------------+----------------|
 | 1 | Compiler semantics: =program/higher-order.ss= | Formal descriptor AST and environment interpretation matching actual source/variable/lambda/apply/fix/union/join/project/select/map branches; per-phase relation to normalized positive IR | Structural typing, substitution and lowering preservation proven for the stated subset; source-domain/cardinality lemmas discharge finite-height premises; native phase discriminators still pass |

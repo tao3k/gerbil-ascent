@@ -17,5 +17,6 @@ import RecursiveLowering
 import StratifiedNegation
 import SourceCertificates
 import SourceUpdateFrame
+import RuleBodyFrame
 import ProviderFrontier
 import TransitiveComponents

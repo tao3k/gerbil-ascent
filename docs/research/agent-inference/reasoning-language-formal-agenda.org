@@ -295,6 +295,34 @@ locality from LeanPOO's typed =Requirements= checklist; it does not infer
 =readsMatch= from the native evaluator. The finite =count + 1= fuel proves
 termination of graph traversal only, not of recursive evaluation.
 
+The [[file:../../../packages/proofs/lean/RuleBodyFrame.lean][RuleBodyFrame interpreter]] now closes semantic read locality for an explicit
+closed rule grammar. An atom branches over matched source rows; negation
+continues only when no row matches; an aggregate receives the entire ordered
+matched group, including an empty group. Pure guards and bindings consume
+only the current environment. Each surviving environment emits the selected
+heads, and head admission receives only its own old rows and new emissions.
+=evalBody_congr= proves whole-body equality by structural induction;
+=step_local= derives the complete self-or-body read condition. Its
+=completed_reuse= theorem composes that interpreter with the existing source
+log and bitmap proofs without a separate =readsMatch= hypothesis.
+
+The [[file:../../../packages/proofs/lean/RuleBodyFrameTests.lean][interpreter qualification]] executes the same eight-relation shape used by
+the native stratified matrix. The old cut reaches a recursive path and sum
+12; a blocker/odd-weight replacement keeps that path but produces an empty
+weighted group and sum 0. The theorem is instantiated with completed runs
+of six and five rounds. Ordered branching and repeated/distinct heads have
+separate examples. Dropping either a negative or aggregate read from the
+graph gives a completed stale-result counterexample, not merely a failed
+graph-membership check.
+
+This closes the locality obligation for the typed full-row interpreter.
+Gerbil's admitted plan representation and closed-procedure registry must
+still refine that grammar. Indexed row access, semi-naive pivots, positive
+slot plans, mutable admission and actor scheduling must preserve its
+observations; the finite native matrix supplies independent bounded evidence.
+The theorem assumes stable completed results and supplies neither general
+termination nor a native extraction claim.
+
 The constituent proofs make the contract auditable. The
 [[file:../../../packages/proofs/lean/RuleGraphClosure.lean][rule compiler]] proves exact source-to-head membership, including repeated
 heads and all three read kinds. The

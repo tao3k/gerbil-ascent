@@ -15,7 +15,7 @@
                  gerbil-ascent-check-replacement-rows! gerbil-ascent-prepare-storage-batch)
         (only-in "result.ss" gerbil-ascent-publication-cache
                  gerbil-ascent-publish-rows gerbil-ascent-snapshot-rows gerbil-ascent-snapshot-sizes
-                 gerbil-ascent-result-observation)
+                 gerbil-ascent-result-observation gerbil-ascent-public-snapshot-rows)
         (only-in "planning.ss" gerbil-ascent-prepare-program)
         (only-in :gerbil-ascent/core/positive-plan gerbil-ascent-run-positive-plan!
                  gerbil-ascent-emit-heads!)
@@ -791,15 +791,8 @@
                  (rule-time-nanoseconds (vector-ref observation 3))
                  (relation-sizes (lambda () (gerbil-ascent-snapshot-sizes names snapshots)))
                  (rows-of (lambda (name)
-                            (let (stored (gerbil-ascent-snapshot-rows
-                                         (vector-ref snapshots (position-of name))))
-                              ;; A Session result is public while its completed
-                              ;; rows may seed a later source replacement. Do
-                              ;; not expose the retained row/list spines to a
-                              ;; caller that can mutate them between solves.
-                              (if session?
-                                (map (lambda (row) (map identity row)) stored)
-                                stored))))))))
+                            (gerbil-ascent-public-snapshot-rows
+                             (vector-ref snapshots (position-of name)) session?)))))))
          (when (and reuse complete?)
            (set! active-by-stratum #f)
            (set! reuse #f))

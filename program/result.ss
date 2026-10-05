@@ -8,7 +8,7 @@
 ;;; Slot zero carries the invocation deadline and is never captured by results.
 (export gerbil-ascent-publication-cache gerbil-ascent-publish-rows
         gerbil-ascent-snapshot-rows gerbil-ascent-snapshot-sizes
-        gerbil-ascent-result-observation)
+        gerbil-ascent-result-observation gerbil-ascent-public-snapshot-rows)
 
 ;; gerbil-ascent-publication-cache
 ;;   : (-> Nat PublicationCache)
@@ -60,6 +60,12 @@
 ;; : (-> RowSnapshot Rows)
 (def (gerbil-ascent-snapshot-rows rows)
   (if (promise? rows) (force rows) rows))
+
+;; Session results can seed later replacements. Public list and row spines
+;; must not alias those retained roots; immutable scalar values remain shared.
+(def (gerbil-ascent-public-snapshot-rows snapshot session?)
+  (let (stored (gerbil-ascent-snapshot-rows snapshot))
+    (if session? (map (lambda (row) (map identity row)) stored) stored)))
 
 ;; gerbil-ascent-snapshot-sizes
 ;;   : (-> Names SnapshotVector RelationSizes)

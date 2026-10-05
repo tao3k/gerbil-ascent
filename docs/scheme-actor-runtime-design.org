@@ -591,3 +591,39 @@ After rebasing concurrent source/reuse fixes through =894ee13=, six targeted
 modules passed 60 Cases and the complete Lean library/test roots built in
 60/61 jobs. The receipt separately binds this source/carrier and repeated raw
 measurements; it does not relabel the earlier 74-module/629-Case snapshot.
+
+* Credit observations and traversal distance (2026-10-05)
+
+A successful batch credit is already a cancellation observation made by the
+owner. The worker now restarts its traversal counter after that credit. Batch
+size remains 32 and the no-output traversal checkpoint period remains 64;
+failed credit exits the worker instead of restarting an unchecked window.
+Key/sender/task validation, owner merge and terminal drain remain the authority.
+The bound counts traversal calls since the last successful owner observation,
+not wall-clock latency and not the number of derived rows.
+
+The frozen actor-round control keeps the previous counter behavior while both
+coordinators import the same current component worker and indexes. Native tests
+check independent stream and recursive closure truth for every alternating
+sample and verify cancellation rejects further rows and drains assigned workers.
+Lean proves the counter bound for every positive natural period, successful
+reset and refused-credit preservation. Existing TLA credit/drain checks cover
+capacities 1/2/3 plus an early-return negative control; they do not model this
+counter or refine the native VM. Generations remain unbounded.
+
+This is an implementation inference from our owner-credit protocol. A22's
+SCC/delta planning and B23's Provider contracts do not establish a cancellation
+protocol or authorize concurrent custom Providers. Measurements and limits are
+recorded in [[file:evidence/scheme-credit-observation-20261005/receipt.json][the receipt]]. No overall Runtime, LLM or multicore benefit is established.
+
+Public Session row-spine isolation is owned by =program/result.ss=. Moving the
+existing copy from =evaluate.ss= preserves the concurrent alias-safety fix and
+repairs the CI module-size violation without relaxing its policy threshold.
+
+The final source snapshot, rebased through =1556fba=, passes 75 native modules
+and 638 Cases. Lean completes 62 build jobs. TLC explores 73/121/137 distinct
+states for capacities 1/2/3 and rejects the early-return mutation. Dense stream
+owner cancellation checks decrease 51 to 35 for the same 512 rows. CPU/wall
+paired wins are only 32/50 (stream) and 30/50 (recursive coordinator), so these
+noisy measurements do not support a timing speedup claim. The receipt retains
+all final pairs, source/carrier hashes and unchanged resource limits.

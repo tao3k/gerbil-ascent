@@ -426,3 +426,16 @@ ordered extension laws and TLA private extension/install safety with negative
 controls. [[file:evidence/scheme-component-index-20261005/receipt.json][CPU, wall and VM allocation receipts]] distinguish local worker cost,
 real actor coordinator cost and unmeasured public/LLM latency. Custom Provider
 concurrency, large SCC partitioning and persistent worker reuse remain open.
+
+* Successful credit observation qualification (2026-10-05)
+
+Native owner credit now restarts the worker traversal distance window. The
+32-row output bound and 64-call no-output checkpoint window are retained.
+Lean's =CreditObservation= laws quantify over any positive natural period;
+the replayed TLA model proves abstract credit/drain safety only. Native matched
+controls freeze the old round protocol while sharing current worker/index
+implementation. Independent truth and cancellation/drain gates accompany every
+performance lane. See [[file:evidence/scheme-credit-observation-20261005/receipt.json][receipt]] for actual samples and unstable timing results.
+This advances the A22 planning implementation without expanding B23 Provider
+concurrency claims. Persistent workers, large SCC partitioning and whole-runtime
+model gains remain separate open gates; no model calls or Rust integration.

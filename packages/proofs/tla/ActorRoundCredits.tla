@@ -5,32 +5,31 @@
 \* task inventory is TLC exploration, not a runtime generation restriction.
 EXTENDS Naturals, FiniteSets
 CONSTANTS Tasks, Capacity, EarlyReturn
-VARIABLES queued, active, waiting, terminal, stopped, returned, badMerge
-vars == <<queued, active, waiting, terminal, stopped, returned, badMerge>>
+VARIABLES queued, active, waiting, terminal, stopped, returned
+vars == <<queued, active, waiting, terminal, stopped, returned>>
 Init == /\ queued = Tasks /\ active = {} /\ waiting = {} /\ terminal = {}
-        /\ stopped = FALSE /\ returned = FALSE /\ badMerge = FALSE
+        /\ stopped = FALSE /\ returned = FALSE
 Dispatch(t) == /\ ~stopped /\ ~returned /\ t \in queued
                /\ Cardinality(active) < Capacity
                /\ queued' = queued \ {t} /\ active' = active \cup {t}
-               /\ UNCHANGED <<waiting, terminal, stopped, returned, badMerge>>
+               /\ UNCHANGED <<waiting, terminal, stopped, returned>>
 Offer(t) == /\ ~returned /\ t \in active \ waiting
             /\ waiting' = waiting \cup {t}
-            /\ UNCHANGED <<queued, active, terminal, stopped, returned, badMerge>>
+            /\ UNCHANGED <<queued, active, terminal, stopped, returned>>
 Credit(t) == /\ t \in waiting /\ ~returned
              /\ waiting' = waiting \ {t}
-             /\ badMerge' = badMerge
              /\ UNCHANGED <<queued, active, terminal, stopped, returned>>
 \* Stop refuses merge and returns stop credit. The worker remains assigned
 \* until its joining monitor reports terminal; an empty queue is insufficient.
 Stop == /\ ~returned /\ ~stopped /\ stopped' = TRUE
-        /\ UNCHANGED <<queued, active, waiting, terminal, returned, badMerge>>
+        /\ UNCHANGED <<queued, active, waiting, terminal, returned>>
 Finish(t) == /\ t \in active \ waiting /\ ~returned
              /\ active' = active \ {t} /\ terminal' = terminal \cup {t}
-             /\ UNCHANGED <<queued, waiting, stopped, returned, badMerge>>
+             /\ UNCHANGED <<queued, waiting, stopped, returned>>
 Return == /\ ~returned
           /\ (EarlyReturn \/ (active = {} /\ (stopped \/ queued = {})))
           /\ returned' = TRUE
-          /\ UNCHANGED <<queued, active, waiting, terminal, stopped, badMerge>>
+          /\ UNCHANGED <<queued, active, waiting, terminal, stopped>>
 Next == Stop \/ Return \/ (\E t \in Tasks : Dispatch(t) \/ Offer(t) \/ Credit(t) \/ Finish(t))
 Spec == Init /\ [][Next]_vars
 Partition == /\ queued \cup active \cup terminal = Tasks

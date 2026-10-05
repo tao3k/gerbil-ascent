@@ -568,25 +568,57 @@ cancel/failure rollback, result publication, batch credit and SCC execution. Sel
 production policy reports one existing actor branch-shape warning and zero
 errors; lifecycle pattern matching remains owned by the protocol.
 
-* Actor Session default capacity follows the host
+* Study: delegate green-thread scheduling and admit CPU work by VM capacity
 
-The fixed =workers: 2= default in =gerbil-ascent-open-actor-session= is removed.
-An omitted capacity now evaluates Gambit's =##cpu-count= at Session creation,
-with a minimum of one. Explicit =workers:= still overrides the default and
-must be an exact positive integer. The ready-round scheduler uses this as an
-admission ceiling; it launches workers only for available component tasks.
+The prior =3de5b12= change selected =##cpu-count= instead of the constant two.
+That fixes the hardcoded count but confuses host capacity with active VM
+parallelism. The current default reads =max(1, ##current-vm-processor-count)=
+at Session creation. Explicit positive integer =workers:= still wins.
 
-The existing Build API also obtains host capacity with =##cpu-count=, but its
-=initialize-native-build-core-capacity!= mutates build environment/compiler
-state. Session capacity reads the runtime directly and creates no environment
-switch or Build API dependency. The local host reports 12 processors. This is
-CPU-based admission, not a memory-aware or host-wide multi-Session scheduler.
-No throughput improvement is inferred from selecting a larger capacity.
+** Official sources and application-specific inference
 
-The native Actor Session and actor-round Suites pass 19 Cases, jobs=12, with
-module runtime one second each, command exit 0 and explicit final OK. Controls
-cover omitted capacity, explicit 1/2/4 workers, invalid explicit capacities,
-cancellation/drain and completed publication. Logs remain in ignored
-=.cache/ascent/session-capacity/=. Concurrent remote =e9dc14e= changes only a
-separate retained Session test and documentation; production dependencies are
-unchanged from the qualified run.
+[[https://gerbil.scheme.org/guide/intro.html][Gerbil's actor introduction]] describes an actor as a thread reacting to messages.
+[[https://gerbil.scheme.org/reference/std/misc/threads#on-all-processors][Gerbil's thread utilities]] state that multiple OS-thread runtime support must
+be enabled to use multiple cores, and show =##current-vm-processor-count=.
+The historical documented =on-all-processors= module path is absent in the
+installed 0.19 tree; the VM primitive itself is present and tested.
+
+[[https://raw.githubusercontent.com/gambit/gambit/master/doc/gambit.txi][Gambit's thread fairness specification]] describes scheduling runnable
+threads, blocking, priority and quantum expiry. Its memory-coherency section
+requires application synchronization around concurrent mutable writes.
+[[https://mailman.iro.umontreal.ca/pipermail/gambit-list/2020-March/009357.html][Marc Feeley's scheduler explanation (2020)]] distinguishes VM processors from
+Scheme threads and describes SMP work stealing between runnable-thread queues.
+Its 2020 stability comparison is historical and not a claim about this SDK.
+
+For our CPU-intensive component closures, selecting the active VM processor
+count is an application choice informed by those sources. It is not a
+universal actor-count rule: blocking I/O actors can outnumber processors.
+The runtime schedules Scheme threads. Our round owner admits dependency-ready
+components, replenishes work after terminal messages and serializes merges.
+Each compute worker has at most one 32-row batch awaiting credit; checkpoint
+messages bound cancellation observations. These credits are application
+backpressure, not replacements for Gambit's scheduler or its thread quantum.
+No additional priority/affinity policy or manually inserted yields is added.
+
+** Local runtime evidence and remaining performance boundary
+
+Current =gxi= reports host CPUs=12, VM processors=1. With =-:p4= it still
+reports one; the installed =current/bin/gsc -:p4= also returns =(12 1)=.
+=gsc -v= records =--enable-smp=, but that flag alone is insufficient evidence
+of an active multi-processor VM. Startup/resource changes require a fresh
+processor-count check and a native parallel execution control before claiming
+multi-core gains. This change does not rebuild or replace the shared SDK.
+
+Existing 1/2/4-worker tests establish message/credit correctness and semantic
+parity; they do not establish simultaneous execution on 1/2/4 CPU cores.
+A runtime with one processor still multiplexes multiple Scheme actors.
+The default capacity is captured per Session and ready work is admitted
+dynamically up to that bound. It does not automatically retune memory budgets,
+SCC granularity, throughput or resource sharing across multiple Sessions.
+All run logs remain in ignored =.cache/ascent/session-scheduling/=.
+
+Actor Session, actor-round and actor-credit native Suites pass 22 Cases with
+jobs=12, module execution 0-3 seconds, explicit final OK and command exit 0.
+The independent test-process pool capacity is separate from VM processors in
+one Session process. Concurrent remote =0e2540c= changes proofs, BYODS tests,
+CI and documentation; it changes none of these production/test dependencies.

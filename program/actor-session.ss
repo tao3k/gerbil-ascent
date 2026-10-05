@@ -29,7 +29,7 @@
 ;;     Admit detached source cuts before transferring them to the Session owner.
 ;;     Only that owner publishes a prepared transaction or a completed run;
 ;;     canceled and failed runs restore the last committed cut.
-;;     Omitted workers use the runtime's host CPU count (at least one).
+;;     Omitted workers use the active VM processor count (at least one).
 ;;     Explicit workers remain a caller-owned positive capacity limit.
 ;;
 ;;     # Examples
@@ -39,7 +39,7 @@
 ;;     ;; => a Session with isolated source ownership and bounded workers
 ;;     ```
 ;;   %
-(def (gerbil-ascent-open-actor-session program workers: (workers (max 1 (##cpu-count))))
+(def (gerbil-ascent-open-actor-session program workers: (workers (max 1 (##current-vm-processor-count))))
   (unless (and (exact-integer? workers) (> workers 0))
     (error "invalid ASCENT actor Session capacity" workers))
   (let* ((admitted (gerbil-ascent-make-engine program #t))

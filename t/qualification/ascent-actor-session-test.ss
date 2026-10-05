@@ -25,7 +25,7 @@
       (thread-yield!) (loop (+ attempts 1)))))
 (def ascent-actor-session-test
   (test-suite "Session actor generation and completed publication"
-    (test-case "host capacity default runs and invalid explicit capacities reject"
+    (test-case "VM capacity default runs and invalid explicit capacities reject"
       (let (session (gerbil-ascent-open-actor-session (program '((0 1)))))
         (try
          (check-equal? (rows (gerbil-ascent-session-run session)) '((0 1)))

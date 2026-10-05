@@ -10,12 +10,10 @@ import DescriptorScope
 import FiniteHeight
 import FiniteOperators
 import LexicalLowering
-import NativeSessionPublication
 import NativeGraphWorklist
 import NativeBitmapWorklist
 import PositiveNonmembership
 import RecursiveLowering
-import SessionPublication
 import StratifiedNegation
 import SourceCertificates
 import SourceUpdateFrame

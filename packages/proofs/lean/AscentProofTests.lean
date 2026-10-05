@@ -3,7 +3,7 @@
 import AscentProof
 
 /-! Compile-time qualification for LeanPoo source patches, invalidation,
-certificate reuse and atomic ASCENT publication. -/
+certificate reuse and source-count algebra. Temporal publication belongs to TLA+. -/
 
 namespace Ascent.ProofTests
 
@@ -288,13 +288,6 @@ example : exactIndex ∈ pending indexObject (Patch.setMany sourceOnly) := by
   · simp [exactIndex, indexExactObligation]
   · simp [sourceOnly]
 
-example : ¬ NativePublication.Good NativePublication.symbolicResult
-    (NativePublication.sourceAlias
-      (NativePublication.initial NativePublication.symbolicResult
-        NativePublication.emptyCut)
-      NativePublication.viaCut) :=
-  NativePublication.mutable_source_counterexample
-
 end Ascent.ProofTests
 
 namespace Ascent.AtomicBinding.Tests
@@ -316,6 +309,6 @@ end Ascent.AtomicBinding.Tests
 #print axioms Ascent.TransitiveComponents.insertion_transitive
 #print axioms Ascent.TransitiveComponents.insertion_least
 #print axioms Ascent.TransitiveComponents.quotient_exact
-#print axioms Ascent.NativePublication.source_count_balance
-#print axioms Ascent.NativePublication.refused_source_budget
-#print axioms Ascent.NativePublication.admitted_source_budget
+#print axioms Ascent.SourceUpdateFrame.source_count_balance
+#print axioms Ascent.SourceUpdateFrame.refused_source_budget
+#print axioms Ascent.SourceUpdateFrame.admitted_source_budget

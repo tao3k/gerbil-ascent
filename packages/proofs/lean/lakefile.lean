@@ -15,9 +15,9 @@ lean_lib AscentProof where
   roots := #[`AscentProof, `AtomicBinding, `CappedArithmetic, `DependencyInvalidation, `DescriptorScope,
              `FunctionalDependency,
              `FiniteHeight, `FiniteOperators, `LexicalLowering,
-             `NativeBitmapWorklist, `NativeGraphWorklist, `NativeSessionPublication,
+             `NativeBitmapWorklist, `NativeGraphWorklist,
              `PositiveNonmembership,
-             `RecursiveLowering, `SessionPublication,
+             `RecursiveLowering,
              `StratifiedNegation, `SourceCertificates, `SourceUpdateFrame, `RoundAdmission,
              `RuleGraphClosure, `ProviderFrontier, `TransitiveComponents]
 

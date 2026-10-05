@@ -47,6 +47,36 @@ not results the authors established for Gerbil.
 | [[https://ojs.aaai.org/index.php/AAAI/article/view/11554][H18 DRedc]], §3–4 | Multi-support and founded recursion matter: [[file:scheme-support-graph-design.org][support graph]]; native Session uses [[file:scheme-session-deletion-design.org][affected-component rederivation]] | Current Session is not DRedc. Prove source logs exclude derived facts; support completeness and founded rederivation before finer maintenance. Retain last-support, two-path, unrooted-cycle and failed-update cases |
 | [[https://arxiv.org/abs/2203.16684][B22 DBSP]], recursive incremental circuits | Separate retained update cost from full reconstruction: =program/session.ss=, =program/reuse.ss= | No signed-weight stream algebra or derivative circuit exists here. Match initialization, admission, invalidation, solve and publication costs; full semantics first, then work/time/allocation measurements |
 
+* Current proof ownership
+
+Lean and TLA+ have disjoint acceptance claims. Lean owns universally quantified
+semantic and algebraic laws; TLA+ owns reachable protocol states, interleavings,
+cancellation, draining and publication. Native execution remains a third
+independent implementation discriminator, not a theorem from either collection.
+
+| Concern | Lean claim | TLA+ claim |
+|---------+------------+------------|
+| Language and evaluation | Typing, lexical lowering, monotonicity, least fixed points and finite-height laws | No duplicate language/fixed-point calculus |
+| Source updates | Dependency/certificate frames and exact source-count arithmetic in SourceUpdateFrame | Session transaction, provisional/bounded work, failure and publication traces |
+| Actors | Checkpoint-distance arithmetic; no mailbox or task state machine | Work-key admission, stale/duplicate replies, ready dispatch, credits, cancel/drain/close |
+| Indexes and caches | Immutable identity lookup and ordered bucket extension equations | Private staged installation, version/root alignment and visible-state isolation |
+| Providers / SCCs | Abstract frontier, closure and quotient laws | Concrete finite injection/consume/merge/remap/refusal sequences; semantic oracles are checks on those sequences, not extra universal algebra proofs |
+| Evidence | Certificate/closed-model absence validity and dependency reuse | Receipt generation/source binding across changes and provisional/bounded status |
+
+The Lean SessionPublication and NativeSessionPublication transition replicas,
+RoundAdmission protocol state and ReadyComponents task-completion state have
+been removed. Source-count laws remain in SourceUpdateFrame. The publication
+wrapper theorem in SourceCertificates was removed; typed patch/certificate
+laws remain. TLA models and their negative controls retain protocol ownership.
+Historical receipts still certify their original sources, not the current set.
+Removing those Lean replicas retires their universal protocol-trace claims;
+finite TLC exploration does not inherit them. A future unbounded temporal
+claim needs a TLA proof/refinement, not another Lean state-machine copy.
+
+The [[file:evidence/scheme-proof-ownership-20261005/receipt.json][ownership qualification receipt]] binds the current collections: Lean's
+62 build jobs pass, and all existing TLA gates across eleven models and
+23 negative controls pass. Runtime code and historical receipts are unchanged.
+
 * Formal coverage and what this patch adds
 
 | Artifact | Checked statement | Uncovered implementation obligation |
@@ -58,8 +88,6 @@ not results the authors established for Gerbil.
 | [[file:../packages/proofs/lean/RecursiveLowering.lean][RecursiveLowering]] | Row-typed scoped relation feedback, nested captured environments, monotonicity, lowering preservation, least closure and actual completed accumulation; 14 theorems | Higher-order elimination into this grammar, concrete binder translation, memo/rule/delta refinement and finite termination remain open |
 | [[file:../packages/proofs/lean/CappedArithmetic.lean][CappedArithmetic]] | Natural capped product/power, optimized exits, clipped exponents and entire nested cardinality/height expressions preserve the exact formula below the cap; 15 theorems | Concrete descriptor-to-formula correspondence, semantic height sufficiency and native compiler refinement; [[file:scheme-compiler-proof-bridge.org][native arithmetic bridge]] has independent finite regression |
 | [[file:../packages/proofs/lean/PositiveNonmembership.lean][PositiveNonmembership]] | Closed-model absence and restricted deletion; new input-inclusion and deletion-preserves-absence lemmas | Executable certificate coverage, exact source/program binding, founded support reconstruction |
-| [[file:../packages/proofs/lean/SessionPublication.lean][SessionPublication]] | For arbitrary natural-number generations: stale/incomplete work preserves the snapshot; qualified completion publishes a consistent source/result pair | Solver qualification is an explicit premise; the imperative Gerbil implementation still needs a refinement relation |
-| [[file:../packages/proofs/lean/NativeSessionPublication.lean][NativeSessionPublication]] | Every finite trace of six synchronous transition actions preserves committed source/result consistency, clean alignment and bounded status for arbitrary immutable cuts; early/bounded/alias mutations have counterexamples | Lean actions restate the TLA model, not mechanically extracted Gerbil steps. Complete solves, successful restoration and immutable row values remain premises |
 | [[file:../packages/proofs/lean/RuleGraphClosure.lean][RuleGraphClosure]] | Abstract compiler adjacency iff positive/negative/aggregate rule-read edge; completed mark-before-enqueue worklist equals least reachability closure; this supplies the closed affected-set premise to the completed fixed-point frame theorem | Native lowered-vector correspondence, concrete bitmap/list refinement, source snapshot identity and evaluator locality remain separate obligations; the independent matrix oracle checks bounded native graphs |
 | [[file:../packages/proofs/lean/NativeGraphWorklist.lean][NativeGraphWorklist]] | List-based mark-before-enqueue scan refines the abstract transition; valid dense-key runs cannot requeue a popped ID, have at most =count= pops, and the executable =count + 1= driver reaches exact compiled read closure | Still requires a Gerbil vector/bitmap/list-to-Lean state refinement, in-range admitted IDs, source snapshot identity and native evaluator locality; native finite graph and long-chain tests are independent checks, not extraction |
 | [[file:../packages/proofs/lean/NativeBitmapWorklist.lean][NativeBitmapWorklist]] | Fixed-length Boolean vector and LIFO list each simulate the list machine's enqueue, full scan, pop and fuel driver; exact compiled closure and affected-set closure follow for typed in-range IDs | Gerbil's mutable vector/list steps, raw ID admission, seed enumeration, snapshot identity and evaluator locality still need a concrete refinement; Lean's functional vector update is not source extraction. Native qualification compares 64 non-self-edge graph masks and all eight seed subsets against a matrix oracle |
@@ -288,8 +316,7 @@ single-source API deliberately leaves replacement provisional until =run!=;
 even a precomputed checked result must respect timed-run round boundaries.
 These are different observable contracts and need separate trace refinements.
 
-The [[file:../packages/proofs/lean/SessionPublication.lean][Lean publication contract]] assumes a qualified completed solve and rejects
-stale work using a generation premise. The [[file:../packages/proofs/tla/SessionTransaction.tla][TLA transaction model]] has symbolic
+Publication safety is owned by the TLA+ protocol collection. The [[file:../packages/proofs/tla/SessionTransaction.tla][TLA transaction model]] has symbolic
 source cuts and an external-commit action. The inspected native Session has no
 corresponding public generation token or asynchronous commit protocol. A future
 refinement must map synchronous clean batch boundaries to abstract snapshots
@@ -340,8 +367,8 @@ decoding and compiler-step bridges are the active R1 gate.
 
 The [[file:scheme-actor-runtime-design.org][actor protocol decision]] is the required architecture gate before parallel
 solver mutation. =AtomicBinding= closes ordinary callback-free binder/key laws
-at the modeled level. =RoundAdmission= adds unbounded work-key cancellation
-laws; =ActorRound= adds a finite scheduling discriminator. These scopes stay
+at the modeled level. =ActorRound= owns work-key, cancellation and publication
+protocol checks; Lean retains the separate checkpoint and index algebra. These scopes stay
 distinct from the future native actor implementation and a performance receipt.
 
 The twelve DSL ledger sources were revisited at their current owner seams:

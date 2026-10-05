@@ -354,14 +354,11 @@ it does not yet dispatch ready independent SCCs. That future scheduler must
 retain component-local round completion while releasing independent ready SCCs.
 Cancel cannot be made effective by deleting the complete-publication condition.
 
-=SessionPublication.lean= now has an explicit actor ownership fragment: idle or
-foreign assigned replies are inert; failed/canceled completion preserves the
-publication; canceled completion clears assigned work. Completion correctness is
-still a premise, and native/VM refinement and fairness are separate. The
-=ActorSession.tla= model checks publication consistency, stale rejection and
-close-after-drain. TLC uses a configurable generation exploration cutoff; Lean
-and protocol definitions are unbounded. Stale-accept and early-close mutations
-must fail their respective invariants.
+=ActorSession.tla= owns idle/foreign reply handling, failed/canceled publication
+and close-after-drain protocol checks. The duplicate Lean actor state machine
+has been retired. Native/VM refinement and fairness remain separate. TLC's
+configurable generation constraint limits exploration, not the runtime or
+specification. Stale-accept and early-close mutations must fail their invariants.
 
 The [[file:evidence/scheme-actor-session-20261005/receipt.json][Session actor qualification receipt]] records source/carrier/proof hashes,
 native lifecycle tests and model controls. No new model calls or MRR Rust work
@@ -657,7 +654,7 @@ Concurrent-pool lifecycle timing output does not replace the earlier focused
 cost receipt. The [[file:evidence/scheme-source-preflight-20261005/receipt.json][source-bound preflight receipt]] records the resource
 observations and source/carrier identities.
 
-The existing =NativeSessionPublication.lean= now proves exact replacement count
+=SourceUpdateFrame.lean= proves exact replacement count
 balance under valid removal, refusal above the budget, and bounded accepted
 counts. Native correspondence still assumes unique slots and correct cached
 row counts; these are not proofs of native allocation or heap ownership.

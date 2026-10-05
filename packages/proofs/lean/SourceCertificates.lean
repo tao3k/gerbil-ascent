@@ -9,7 +9,6 @@ the native dependency planner is not proved by this module.
 -/
 import LeanPoo.Proof.Batch
 import LeanPoo.Proof.Invalidation
-import NativeSessionPublication
 import StratifiedNegation
 
 namespace Ascent.SourceCertificates
@@ -89,24 +88,6 @@ theorem close_after_batch [DecidableEq Key]
       obligation.holds (append object (Patch.setMany updates added)).state) :
     Certificate (append object (Patch.setMany updates added)) :=
   closePending object (Patch.setMany updates added) certificate discharged
-
-/-- An atomic Session publication of a typed LeanPoo source patch installs
-    the derived result for the new cut, while every untouched source keeps
-    its old value. A completed solve is an explicit premise in `resultOf`. -/
-theorem published_batch_frame [DecidableEq Key]
-    (resultOf : State Key Value → Result)
-    (session : NativePublication.State (State Key Value) Result)
-    (updates : List (Sigma Value)) :
-    let next := NativePublication.batchComplete resultOf session
-      ((Patch.setMany updates).apply session.committed)
-    next.published = resultOf next.committed ∧
-      (∀ key, key ∉ updates.map Sigma.fst →
-        next.committed key = session.committed key) := by
-  constructor
-  · rfl
-  · intro key untouched
-    exact (Patch.setMany updates).frame session.committed key
-      (by simpa [Patch.setMany_touched] using untouched)
 
 /-- The index-exactness premise from the negation proof is a LeanPoo
     obligation over two typed slots: the frozen full relation and the

@@ -1,0 +1,125 @@
+{
+  "schema": "ascent.formal-ownership-qualification",
+  "version": 1,
+  "qualifiedBaseHead": "64dc812eb53e789353ca1033ed69047f9ebe678c",
+  "lean": {
+    "buildExitStatus": 0,
+    "buildJobs": 62,
+    "sourceSha256": {
+      "packages/proofs/lean/AscentProof.lean": "1948d61af3e5d55947494b72f5bc08a43a0d91ca810f45e01344bb3c05dee283",
+      "packages/proofs/lean/AscentProofTests.lean": "5ccc543182f4516f3f822a3fc80b75a0cfba075e2c100200eb8462483d1d2e2f",
+      "packages/proofs/lean/AtomicBinding.lean": "5249177555d43df70517c5a04aabe7365500e2b8691dd314e466793af88a6e70",
+      "packages/proofs/lean/CappedArithmetic.lean": "72dc9c97c05b32f9b43c71730045e8ec802f830785a22d8a412a4be063c65217",
+      "packages/proofs/lean/DependencyInvalidation.lean": "9a4a7d1c59200f2b75eeadbde10831dcffc1ddcd3d65b41d80f900f192cdc779",
+      "packages/proofs/lean/DescriptorScope.lean": "941cd693cc238d5c732b4c70187af837bf76d0e81dd80d2fa5da3b6337ce2d2d",
+      "packages/proofs/lean/FiniteHeight.lean": "2769bf31367d45ba9eae23c54c60e4cd8e8c428f00ddf2c4294107d5b4c5396b",
+      "packages/proofs/lean/FiniteOperators.lean": "4d181fe6799b13f1e5e98e0d3a708bed6e668061821365162df79442f819c69d",
+      "packages/proofs/lean/FunctionalDependency.lean": "2085ca50a3e7e0c46f282135610147c5281371a766fd0287e7cc7d87583703ca",
+      "packages/proofs/lean/LexicalLowering.lean": "fa78437bed21928cd42323d00a743b2f5ef189d28b172e0a0c8135c20770afce",
+      "packages/proofs/lean/NativeBitmapWorklist.lean": "c4ebbe5549b4e73b411b6cdad1c087d3285821c0433a8cf81bffea6990aecb18",
+      "packages/proofs/lean/NativeGraphWorklist.lean": "f671f8893f875e8a58bf9a2e85f995c68acfb9808580d7a9164f082703f3e9b7",
+      "packages/proofs/lean/PositiveNonmembership.lean": "053d50736e8509d80a1faf58a81b4f11a63f5fd3d695718e9c7d5e90ed451484",
+      "packages/proofs/lean/ProviderFrontier.lean": "ca684288e7b5263061362c334bfd9453b0192006e700fb0fd670c1ae3c73e3a5",
+      "packages/proofs/lean/RecursiveLowering.lean": "cf0997a5154d92b29b12e2bf90e006ec6a4e06eb788b07132076473e9ea26f99",
+      "packages/proofs/lean/RoundAdmission.lean": "8f24a7e2c40b93d487513f619937ca082f886787d4d14d954af8f8efa31b50bf",
+      "packages/proofs/lean/RuleGraphClosure.lean": "cbad359a81d876369dd2a599102e6b9058a1e8ddb015f1f78ada5158473fe876",
+      "packages/proofs/lean/SourceCertificates.lean": "4c1ffd55b4d520a53ae66f04ef30e50606f5c329bbe4b333bc7554d83e015f3d",
+      "packages/proofs/lean/SourceUpdateFrame.lean": "0d81c8727e3b3285815ff8147b789013dde3ca351e595c9b7e10247887cf7c00",
+      "packages/proofs/lean/StratifiedNegation.lean": "2755101728403aa13aab06547068ef49fec87b1925556f533e01af064a14dadb",
+      "packages/proofs/lean/TransitiveComponents.lean": "f2ab1ca2542f91a63dd52aa96e8ac8900aecc5342655e6f63ebc261e9f78f486",
+      "packages/proofs/lean/lakefile.lean": "6d735637c08508ae7fc16d1dc0c6cf632f497bd3e0a9cd622089a905e17d5f0d"
+    },
+    "removedProtocolFiles": [
+      "packages/proofs/lean/SessionPublication.lean",
+      "packages/proofs/lean/NativeSessionPublication.lean"
+    ],
+    "removedProtocolNamespaces": [
+      "Ascent.RoundAdmission",
+      "Ascent.ReadyComponents"
+    ],
+    "movedArithmeticNamespace": "Ascent.SourceUpdateFrame",
+    "removedWrapper": "Ascent.SourceCertificates.published_batch_frame",
+    "roles": [
+      "typing and lowering",
+      "fixed-point and finite-height semantics",
+      "dependency/certificate frames",
+      "budget and checkpoint arithmetic",
+      "immutable cache and index equations",
+      "abstract Provider frontier and SCC quotient laws"
+    ]
+  },
+  "tla": {
+    "completeGateExitStatus": 0,
+    "sourceSha256": {
+      "packages/proofs/tla/ActorRound.tla": "1df9aa7fbd49e52264827b7350ca6d0d6378ff68a0ec276a6ecdb04fff4aaeab",
+      "packages/proofs/tla/ActorRoundCredits.tla": "3b5de69e5b610222a5628105bc2cba104a8f42e304d7fc069f94307a57c90175",
+      "packages/proofs/tla/ActorSession.tla": "4d1d4bbef1fa4c5058ac027e99b3855ef7f0f8f578ca102c0fd4fc1ca3eefefc",
+      "packages/proofs/tla/ActorTestPool.tla": "b249b84e54f7243361c16a81bd57a91d0acbf37b15b94b7f6c10ca13f169d843",
+      "packages/proofs/tla/ComponentIndex.tla": "79ab7329f483c87e9d3e1607c4abb0a7172dd4cbb2a706a1f6c0a3d6ed48008b",
+      "packages/proofs/tla/NativeSessionPublication.tla": "272f7cc46a27298f6350662f19fd352f290312fe8beea94d387e3abecefdc29b",
+      "packages/proofs/tla/PositiveNonmembershipSession.tla": "53f5afdb56165a0ff9622ae0c478f4e28bccfa7e41581b8ba29f6136019e7c4b",
+      "packages/proofs/tla/ProviderFrontier.tla": "ac24c82cddd62547956b15b5b7621bdaabc16fed9925ed355c71cf32ecae719d",
+      "packages/proofs/tla/ReadyComponents.tla": "0e7314ab4f0a52e2564324417944d3eae8395e1348b695932d9724fcae6b643d",
+      "packages/proofs/tla/SessionTransaction.tla": "59451973b5516acf3525c4990174cb78da9e30b1cb0a0732af13b86f15ae8822",
+      "packages/proofs/tla/TransitiveComponents.tla": "50d7aa66dbbf1567a6e54bee0248df418e3d5f3338e4d994ac40cc0e1edba1f8"
+    },
+    "modelsChanged": false,
+    "gateMarkers": [
+      "FORMAL-CHECK-OK",
+      "ACTOR-ROUND-CHECK-OK",
+      "ACTOR-POOL-CHECK-OK",
+      "ACTOR-CREDIT-CHECK-OK",
+      "ACTOR-SESSION-CHECK-OK",
+      "READY-COMPONENTS-CHECK-OK",
+      "COMPONENT-INDEX-CHECK-OK",
+      "PROVIDER-FRONTIER-CHECK-OK",
+      "TRANSITIVE-COMPONENTS-CHECK-OK"
+    ],
+    "negativeControlCount": 23,
+    "negativeControls": [
+      "COUNTEREXAMPLE-OK native-early",
+      "COUNTEREXAMPLE-OK native-bounded",
+      "COUNTEREXAMPLE-OK native-alias",
+      "COUNTEREXAMPLE-OK early",
+      "COUNTEREXAMPLE-OK stale",
+      "COUNTEREXAMPLE-OK global",
+      "COUNTEREXAMPLE-OK reuse",
+      "COUNTEREXAMPLE-OK actor-early CompletePublication",
+      "COUNTEREXAMPLE-OK actor-stale NoStaleCompletion",
+      "COUNTEREXAMPLE-OK actor-cancel CompletePublication",
+      "COUNTEREXAMPLE-OK actor-pool-early CompleteReturn",
+      "COUNTEREXAMPLE-OK actor-credit-early CompleteReturn",
+      "COUNTEREXAMPLE-OK actor-session-stale NoStalePublication",
+      "COUNTEREXAMPLE-OK actor-session-early DrainedClose",
+      "COUNTEREXAMPLE-OK ready-components-prerequisite Prerequisites",
+      "COUNTEREXAMPLE-OK ready-components-early CompleteReturn",
+      "COUNTEREXAMPLE-OK component-index-order Consistent",
+      "COUNTEREXAMPLE-OK component-index-early Consistent",
+      "COUNTEREXAMPLE-OK provider-frontier-raw FrontierComplete",
+      "COUNTEREXAMPLE-OK provider-frontier-omit DeliveredExact",
+      "COUNTEREXAMPLE-OK transitive-components-split SCCExact",
+      "COUNTEREXAMPLE-OK transitive-components-stale ReachExact",
+      "COUNTEREXAMPLE-OK transitive-components-reject RefusalAtomic"
+    ],
+    "roles": [
+      "transaction and receipt lifecycle",
+      "dispatch and completion",
+      "work identity and reply admission",
+      "credit and drain",
+      "cancel and close",
+      "publication",
+      "concrete staged index/Provider/SCC operation sequences"
+    ]
+  },
+  "coverageBoundary": "Universal temporal trace claims from removed Lean replicas are retired, not transferred to finite TLC exploration. TLA unbounded temporal refinement remains open. Semantic oracles inside operational models are finite checks on transitions, not additional universal algebra proofs.",
+  "runtimeChanged": false,
+  "nativeRerun": false,
+  "modelCalls": 0,
+  "rustRuntimeIntegrated": false,
+  "historicalReceiptsModified": false,
+  "finalHeadGitHubCI": "pending after push",
+  "rebasedLatestChanges": [
+    "cf658f9 perf: reuse bounded actor workers across round tasks",
+    "64dc812 Qualify stratified Session reads across source cuts"
+  ]
+}

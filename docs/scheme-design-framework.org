@@ -294,12 +294,11 @@ and bucket discriminators extend =ascent-index-lifecycle-test.ss=. Private fresh
 variables, the positive slot machine, callbacks, scalar/identity decoding and
 actual hash/cache representation remain separate bridges.
 
-=RoundAdmission.lean= checks work-key rejection, duplicate reply idempotence,
-unchanged publication and cancellation/resume rejection over unbounded natural
-generations. =ActorRound.tla= checks a small parallel positive-round protocol,
-including frozen frontiers, replay, draining and publication; three faulty
-protocol variants are required counterexamples. Neither proves worker liveness,
-backpressure or correspondence with a native actor implementation.
+=ActorRound.tla= owns work-key rejection, duplicate/stale replies, cancellation,
+frozen frontiers, drain and publication protocol checks. =RoundAdmission.lean=
+retains checkpoint-distance arithmetic, immutable cache identity and bucket
+extension equations. It contains no matching actor state machine. Neither
+collection alone establishes native worker liveness or VM correspondence.
 
 The [[file:evidence/scheme-actor-binding-20261005/receipt.json][actor/binding receipt]] binds source snapshot =bb2edaf=, the seven-Case
 native module, four normal TLA models and ten counterexample controls. Raw

@@ -44,9 +44,9 @@
 | negation 与 aggregate | program/strata、aggregation；有限交互语料 | StratifiedNegation、PositiveNonmembership | 实际分层读图、aggregate 行编码与 completed-stratum 对应 |
 | lattice 与下游普通关系 | table/storage、evaluate；min/union/product/LCM 有限语料 | 抽象有限高度及单调性命题 | 任意用户 join 法则、部分序/domain/native 值对应；lattice 不可套用普通 Set 的 delta 命题 |
 | indexes / physical plan | table/provider、program/index；hash/alist/composite 与 scale 差分 | AtomicBinding indexed_atom_iff；RoundAdmission.ComponentIndex 顺序扩张 | 原生 bucket/key 编码 refinement、用户 lookup 完整性、更多 scale/成本结果 |
-| timeout、resume、重复 run、source replacement | Session、source log、reuse；保留状态及删除语料 | SessionPublication、SourceUpdateFrame、NativeSessionPublication；SessionTransaction TLA | completed 求解仍是证明前提；native 状态与模型的 trace refinement、external Provider rollback 范围 |
+| timeout、resume、重复 run、source replacement | Session、source log、reuse；保留状态及删除语料 | SourceUpdateFrame 的依赖帧/计数代数；SessionTransaction / NativeSessionPublication TLA 时序 | completed 求解仍是证明前提；native 状态与模型的 trace refinement、external Provider rollback 范围 |
 | module / fragment / macro embedding | Gerbil syntax 与 include fixture | DescriptorScope / lowering 局部对应 | 更广宏捕获与诊断、剩余 Rust attribute 的 Scheme API 对应 |
-| actor 并发扩展 | 纯正 canonical Set SCC 支持 ready/credit/drain；原矩阵“仍串行”已过期 | RoundAdmission / ReadyComponents / ActorRoundCredits / ActorSession | custom Provider 与 lattice 并发、单大 SCC 分区、真实多核收益、native mailbox/mutex refinement |
+| actor 并发扩展 | 纯正 canonical Set SCC 支持 ready/credit/drain；原矩阵“仍串行”已过期 | TLA: ActorRound / ReadyComponents / ActorRoundCredits / ActorSession；Lean: checkpoint/index 代数 | custom Provider 与 lattice 并发、单大 SCC 分区、真实多核收益、native mailbox/mutex refinement |
 
 * BYODS 设计覆盖
 

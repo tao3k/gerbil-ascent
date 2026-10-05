@@ -87,8 +87,8 @@ identity and representation obligations in more detail.
 
 The [[file:../../scheme-actor-runtime-design.org][actor runtime decision]] now requires source-bound work keys, frozen
 rounds, merge barriers, cancellation draining and unchanged completed publication.
-=RoundAdmission= checks stale/duplicate/canceled reply rejection over unbounded
-natural generations, including re-enabling acceptance after cancellation.
+TLA+ owns stale/duplicate/canceled reply admission and cancellation/resume
+protocol checks. Lean retains mathematical checkpoint and bucket laws.
 =ActorRound= is a finite protocol model with early-barrier, stale-reply and
 canceled-publication fault controls. These are scheduling specifications;
 native worker correspondence, termination and measured benefit remain open.
@@ -100,8 +100,7 @@ The tracked =packages/proofs/lean/= modules currently include
 =LexicalLowering= (typed lexical preservation), =RecursiveLowering=
 (positive scoped feedback), =FiniteOperators= and =FiniteHeight=
 (monotone/finite-rank laws), =DescriptorScope=, =CappedArithmetic=,
-=PositiveNonmembership=, =SessionPublication=, =NativeSessionPublication=
-and =StratifiedNegation=. The
+=PositiveNonmembership=, =SourceUpdateFrame= and =StratifiedNegation=. The
 [[file:../../scheme-compiler-proof-bridge.org][proof bridge]] states their hypotheses and concrete omissions. These
 proofs are valuable but do not yet relate native Scheme scalars,
 descriptor graphs, emitted rules or table steps to the Lean objects.
@@ -112,8 +111,6 @@ descriptor graphs, emitted rules or table steps to the Lean objects.
 | =RecursiveLowering.lowered_feedback_is_least= | Scoped positive feedback preserves the least relation | Emitted rules, SCC/delta plans and concrete table steps refine the IR |
 | =FiniteHeight.bounded_bottom_least_fixed= | An ascending finite-rank orbit reaches the least fixed point under its premises | Native type/domain interpretation supplies the rank and every native step preserves its order |
 | =PositiveNonmembership.ground_why_not_sound= | Ground absence follows from the model's closure premises | Native certificate checking and caller source-completeness are separate |
-| =SessionPublication.publication_consistent= and =publications_consistent= | One or any finite sequence of qualified publications retains source/result consistency over unbounded natural-number generations | Native Session steps implement the abstraction and qualification is independently established |
-| =NativeSessionPublication.reachable_good= | For arbitrary immutable cuts and natural-number generations, every finite sequence of the six synchronous normal actions preserves committed result consistency, clean alignment and bounded status | Gerbil entrypoints must refine those actions; complete solves must be qualified, and failed recovery, source appends and mutable host values are outside the model |
 | =StratifiedNegation.visit_iff= and =evaluateBranches_iff= | A frozen-stratum atom/negation clause walk has the stated branch-local set meaning; a direct witness survives a blocker on the via branch | =gerbil-ascent-bind-row= and =indexed-rows= must refine the modeled match and index-exactness premises; no recursive stratum or aggregation is covered |
 
 The new clause proof follows the control path in =program/evaluate.ss=:
@@ -225,12 +222,10 @@ native public generation token. Source appends, callback failures inside
 adoption, opaque providers and native trace refinement remain outside
 this model.
 
-The matching [[file:../../../packages/proofs/lean/NativeSessionPublication.lean][Lean transition model]] proves =reachable_good= by induction for
-arbitrary cuts and any finite trace. It also proves that provisional,
-bounded, rejected and restored-failure actions leave the committed
-public triple unchanged. This proves the transition model, not a
-mechanically extracted Gerbil implementation or a Lean/TLA syntax
-equivalence. The native correspondence is currently a review obligation:
+The synchronous protocol belongs to =NativeSessionPublication.tla=. Its former
+Lean transition replica is retired. Finite TLC exploration does not acquire
+the replica's universal-trace theorem; unbounded temporal refinement remains
+open. Current native correspondence is a review obligation:
 
 | Native entrypoint / path | Abstract action | Unproved condition |
 |--------------------------+-----------------+--------------------|
@@ -264,9 +259,8 @@ A derived-result =Obligation= declares its source dependencies and a
 locality premise. LeanPOO's =reuse= transports a certificate across a
 disjoint batch; =pending= selects affected and new obligations;
 =closePending= requires fresh evidence for those selected. The module
-composes a batch patch with =NativePublication.batchComplete= and proves
-the published result belongs to the new cut while untouched source
-keys retain their values. Concrete qualification cases live in
+retains typed patch/certificate reuse and invalidation laws. Atomic publication
+belongs to the TLA+ Session models; no Lean publication wrapper is counted. Concrete qualification cases live in
 [[file:../../../packages/proofs/lean/AscentProofTests.lean][AscentProofTests]]. These statements require an accurate dependency
 list and completed =resultOf=; native source-dependency closure, typed
 row representation and evaluator correspondence remain open. The same

@@ -197,4 +197,31 @@ theorem mutable_source_counterexample :
       (sourceAlias (initial symbolicResult emptyCut) viaCut) := by
   simp [Good, sourceAlias, initial, symbolicResult, emptyCut, viaCut]
 
+/-! Source-count preflight for detached actor cuts. Unique replacement slots
+and correct cached row counts are native correspondence premises. `removed`
+is zero for append and the sum of old replaced slot counts for replacement.
+These arithmetic laws do not prove allocation or native heap ownership. -/
+def sourceCount (before removed added : Nat) : Nat := before - removed + added
+
+def prepareSourceCount (before removed added limit : Nat) : Option Nat :=
+  let count := sourceCount before removed added
+  if count ≤ limit then some count else none
+
+theorem source_count_balance (before removed added : Nat)
+    (validRemoval : removed ≤ before) :
+    sourceCount before removed added + removed = before + added := by
+  unfold sourceCount
+  omega
+
+theorem refused_source_budget (before removed added limit : Nat)
+    (over : limit < sourceCount before removed added) :
+    prepareSourceCount before removed added limit = none := by
+  simp [prepareSourceCount, Nat.not_le_of_gt over]
+
+theorem admitted_source_budget (before removed added limit count : Nat)
+    (accepted : prepareSourceCount before removed added limit = some count) :
+    count ≤ limit := by
+  dsimp only [prepareSourceCount] at accepted
+  split at accepted <;> simp_all
+
 end Ascent.NativePublication

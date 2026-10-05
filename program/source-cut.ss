@@ -14,12 +14,15 @@
     (unless slot (error "unknown ASCENT relation" name))
     (- slot 1)))
 
-(def (source-copy-rows arities position name rows)
+(def (source-check-rows! arities position name rows)
   (let (width (vector-ref arities position))
     (unless (and (list? rows)
                  (andmap (lambda (row) (and (list? row) (= (length row) width))) rows))
-      (error "invalid ASCENT actor Session source rows" name rows))
-    (map (lambda (row) (map (lambda (value) value) row)) rows)))
+      (error "invalid ASCENT actor Session source rows" name rows))))
+
+(def (source-copy-rows arities position name rows)
+  (source-check-rows! arities position name rows)
+  (map (lambda (row) (map (lambda (value) value) row)) rows))
 
 ;; : (-> NamePositions Arities [(Name . Rows)] SourceCut)
 (def (gerbil-ascent-make-source-cut positions arities sources)
@@ -53,29 +56,41 @@
 ;;     ```
 ;;   %
 (def (gerbil-ascent-source-cut-update cut positions arities replacements append? limit)
-  (let* ((owned (map (lambda (entry)
+  (let* ((prepared (map (lambda (entry)
                        (let* ((position (source-position positions (car entry)))
-                              (rows (source-copy-rows arities position (car entry) (cdr entry))))
+                              (rows (cdr entry)))
+                         ;; Validate the entire batch before duplicates/budget,
+                         ;; but retain no copied row spines on rejected work.
+                         (source-check-rows! arities position (car entry) rows)
                          (cons position (make-source-slot rows (length rows))))) replacements))
          ;; Empty/single replacements cannot duplicate a position. Do not build
          ;; a transaction membership table for the common single-source update.
-         (seen (and (pair? owned) (pair? (cdr owned)) (make-hash-table-eq)))
-         (slots (vector-copy (source-cut-slots cut)))
+         (seen (and (pair? prepared) (pair? (cdr prepared)) (make-hash-table-eq)))
+         (old-slots (source-cut-slots cut))
          (count (source-cut-count cut)))
     (for-each
      (lambda (entry)
        (let* ((position (car entry)) (incoming (cdr entry))
-              (previous (vector-ref slots position)))
+              (previous (vector-ref old-slots position)))
          (when seen
            (when (hash-get seen position)
              (error "duplicate ASCENT actor Session replacement"))
            (hash-put! seen position #t))
-         (vector-set! slots position
-           (if append?
-             (make-source-slot (append (source-slot-rows previous) (source-slot-rows incoming))
-                               (+ (source-slot-count previous) (source-slot-count incoming)))
-             incoming))
          (set! count (+ count (source-slot-count incoming)
-                       (if append? 0 (- (source-slot-count previous))))))) owned)
+                       (if append? 0 (- (source-slot-count previous))))))) prepared)
     (when (> count limit) (error "ASCENT actor Session input fact budget exceeded"))
-    (make-source-cut slots count)))
+    ;; Only admitted work allocates detached row spines and append prefixes.
+    ;; Preparation leaves old slot headers, rows and counts untouched.
+    (let (slots (vector-copy old-slots))
+      (for-each
+       (lambda (entry)
+         (let* ((position (car entry)) (incoming (cdr entry))
+                (previous (vector-ref old-slots position))
+                (rows (map (lambda (row) (map (lambda (value) value) row))
+                           (source-slot-rows incoming))))
+           (vector-set! slots position
+             (if append?
+               (make-source-slot (append (source-slot-rows previous) rows)
+                                 (+ (source-slot-count previous) (source-slot-count incoming)))
+               (make-source-slot rows (source-slot-count incoming)))))) prepared)
+      (make-source-cut slots count))))

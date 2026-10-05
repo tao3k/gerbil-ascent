@@ -629,3 +629,39 @@ owner cancellation checks decrease 51 to 35 for the same 512 rows. CPU/wall
 paired wins are only 32/50 (stream) and 30/50 (recursive coordinator), so these
 noisy measurements do not support a timing speedup claim. The receipt retains
 all final pairs, source/carrier hashes and unchanged resource limits.
+
+* Source budget admission before row ownership transfer
+
+=program/source-cut.ss= now prepares lightweight slot/count metadata before
+allocating detached rows. The whole batch passes source-name and row-shape
+validation first, then duplicate-slot checks and the exact total-input budget.
+Only admitted work copies row spines, append prefixes and dense slot headers.
+Refusal preserves the old rows/counts and publishes no new cut. Input
+multiplicity still counts even if the solver later deduplicates identical rows.
+Untouched slot rows remain shared read-only. No runtime generation bound or
+child timeout changed.
+
+The existing actor Session Suite checks replacement and append refusal with
+10,000 and 20,000 valid input rows against a two-fact limit. Native cumulative
+allocation is 101,984 bytes in all four refused operations, including exception
+formatting: it does not grow with the rejected row batch. This is a resource
+preflight discriminator, not a CPU, live-heap or application speedup claim.
+Malformed rows still reject before duplicate/budget errors, duplicates still
+reject before budgets, exact-limit retry succeeds and the accepted result owns
+its row spines after caller mutation. Existing actor cancellation, source
+updates and publication tests retain their original contract.
+
+The actor and composed Library modules passed 17 Cases with parent status zero;
+the latter rechecks the complete multi-cut lifecycle after this runtime change.
+Concurrent-pool lifecycle timing output does not replace the earlier focused
+cost receipt. The [[file:evidence/scheme-source-preflight-20261005/receipt.json][source-bound preflight receipt]] records the resource
+observations and source/carrier identities.
+
+The existing =NativeSessionPublication.lean= now proves exact replacement count
+balance under valid removal, refusal above the budget, and bounded accepted
+counts. Native correspondence still assumes unique slots and correct cached
+row counts; these are not proofs of native allocation or heap ownership.
+The existing Actor Session TLA model explores 162 distinct states and rejects
+stale-publication and early-close mutations. Rejected preparation is a
+stuttering step on that protocol state; TLC does not model row copying.
+Its finite generation constraint remains exploration-only.

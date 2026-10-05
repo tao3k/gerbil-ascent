@@ -316,3 +316,6 @@ end Ascent.AtomicBinding.Tests
 #print axioms Ascent.TransitiveComponents.insertion_transitive
 #print axioms Ascent.TransitiveComponents.insertion_least
 #print axioms Ascent.TransitiveComponents.quotient_exact
+#print axioms Ascent.NativePublication.source_count_balance
+#print axioms Ascent.NativePublication.refused_source_budget
+#print axioms Ascent.NativePublication.admitted_source_budget

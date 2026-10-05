@@ -19,6 +19,13 @@
         (only-in :gerbil-ascent/candidate/provenance-graph positive-provenance-witness))
 (import (only-in :gerbil-ascent/program/scheme-language
                  relational-program relational-admit relational-solve relational-query-name))
+(import (rename-in (only-in :gerbil-ascent/t/performance/provenance-maintenance/reference
+                           candidate-positive-provenance candidate-open-provenance-maintenance
+                           candidate-provenance-withdraw! provenance-maintenance-rows)
+                   (candidate-positive-provenance prior-graph)
+                   (candidate-open-provenance-maintenance prior-open)
+                   (candidate-provenance-withdraw! prior-withdraw!)
+                   (provenance-maintenance-rows prior-rows)))
 
 (def corpus-edges '((0 1) (0 2) (1 0) (1 2) (2 0) (2 1)))
 (def (edges-for-mask mask)
@@ -70,6 +77,36 @@
 
 (def scheme-provenance-graph-test
   (test-suite "Complete grounded provenance and deletion"
+    (test-case "withdrawal probe budgets and ordered rows match the prior owner"
+      (let* ((snapshot (reasoning-source-snapshot 'budget-parity 1 '((s 1 ((1) (1) (2))))))
+             (spec (recursive-provenance-spec))
+             (rows '((1) (2)))
+             (old-graph (prior-graph snapshot spec 'program 'complete rows 128))
+             (new-graph (candidate-positive-provenance snapshot spec 'program 'complete rows 128)))
+        (def (attempt withdraw state selectors budget)
+          (with-catch (lambda (e) (list 'failed (error-message e)))
+            (lambda () (let-values (((rows work) (withdraw state selectors budget))) (list rows work)))))
+        (for-each
+         (lambda (budget)
+           (let ((old (prior-open snapshot spec 'program 'complete rows old-graph 128))
+                 (new (candidate-open-provenance-maintenance snapshot spec 'program 'complete rows new-graph 128)))
+             (for-each (lambda (selectors)
+                         (check-equal? (attempt candidate-provenance-withdraw! new selectors budget)
+                                       (attempt prior-withdraw! old selectors budget))
+                         (check-equal? (provenance-maintenance-rows new) (prior-rows old)))
+                       '(((s 1)) ((s 2)) ((s 2)) ((s 3)) () ((unknown 1)))))) (iota 64 1))))
+    (test-case "published withdrawals and query rows own their pair spines"
+      (let* ((snapshot (reasoning-source-snapshot 'owned-withdrawal 1 '((s 1 ((1) (1))))))
+             (spec (recursive-provenance-spec))
+             (graph (candidate-positive-provenance snapshot spec 'program 'complete '((1)) 64))
+             (state (candidate-open-provenance-maintenance snapshot spec 'program 'complete '((1)) graph 64))
+             (selectors (list (list 's 1))))
+        (let-values (((rows work) (candidate-provenance-withdraw! state selectors)))
+          (set-car! (car rows) 99))
+        (set-car! (cdr (car selectors)) 2)
+        (check-equal? (provenance-maintenance-rows state) '((1)))
+        (let-values (((rows work) (candidate-provenance-withdraw! state '((s 2)))))
+          (check-equal? rows []))))
     (test-case "indexed enumeration preserves order and exact budget boundaries"
       (let* ((snapshot (reasoning-source-snapshot 'ordered-index 1
                          '((s 1 ((#f) (#f) (#\a) (#\b)))

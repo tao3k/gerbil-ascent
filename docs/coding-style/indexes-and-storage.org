@@ -5,6 +5,23 @@
 Row projection, indexed keys, equivalence classes and lattice binding. Study notes and receipts retain their original revision and scope;
 historical source paths and timings are not current qualification claims.
 
+* Study: retained provenance indexes belong to the verified graph owner
+
+Gerbil =2591dcd= =compiler/optimize-base.ss:24-29= allocates private optimizer
+lookup tables; =runtime/hash.ss:633-635= copies through the table's native
+operation. Provenance enumeration/verification now stays in its graph owner,
+while a separate maintenance module owns copied support edges, row/source
+indexes and tentative deletion memberships. Existing facade exports remain.
+
+Root order and exact edge probe counts are preserved across overdeletion and
+founded rederivation. Failed phases publish nothing. Retained withdrawal labels
+copy caller pairs; result reads return separate row spines. [[file:../../t/performance/provenance-maintenance/README.org][Matched native A/B]]
+freezes the prior graph owner: wide/duplicate withdrawals save about 94%/91%
+CPU but add 27%/69% temporary allocation. Small adds 2 us/6096 bytes; those
+costs remain explicit. Verification/opening and retained-index memory are
+outside these intervals, so no whole-pipeline or allocation-reduction claim
+is made. Budget parity and matrix-closure corpus controls qualify semantics.
+
 * Study: restore order in owned buckets instead of copying input rows
 
 Installed Gerbil =2591dcd=, =std/list/list.ss:363-376=, implements

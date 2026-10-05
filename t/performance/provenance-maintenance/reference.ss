@@ -2,7 +2,7 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(import (only-in :gerbil-ascent/candidate/datum reasoning-bounded-data?)
+(import (only-in :gerbil-ascent/candidate/datum reasoning-bounded-data? candidate-copy-pairs)
         (only-in :gerbil-ascent/candidate/types
                  reasoning-snapshot-relations reasoning-candidate-facts
                  reasoning-candidate-rules)
@@ -15,10 +15,6 @@
                  positive-proof-snapshot-digest positive-proof-candidate-digest positive-proof-query
                  proof-node? proof-node-id proof-node-relation proof-node-row
                  proof-node-kind proof-node-label proof-node-inputs))
-
-(import (only-in "provenance-maintenance.ss"
-                 candidate-make-provenance-maintenance provenance-maintenance?
-                 provenance-maintenance-rows candidate-provenance-withdraw!))
 
 (export candidate-positive-provenance candidate-verify-positive-provenance
         positive-provenance? positive-provenance-status positive-provenance-witness
@@ -210,6 +206,11 @@
                      (equal? edges
                              (positive-provenance-alternatives expected))))))))
 
+;;; Validated, copied grounded support graph for deletion-only maintenance.
+;;; Joins/rule grounding are paid at open time. Subsequent withdrawals use
+;;; only dependency edges, preserving a last-completed result on failure.
+(defstruct provenance-maintenance (nodes roots edges alive removed))
+
 ;; candidate-open-provenance-maintenance
 ;;   : (-> ReasoningSnapshot InspectedCandidate Digest Status Rows PositiveProvenance Nat Nat ProvenanceMaintenance)
 ;;   | doc m%
@@ -223,5 +224,100 @@
            snapshot spec digest native-status native-rows graph max-steps
            edge-limit)
     (error "unverified complete provenance graph"))
-  (candidate-make-provenance-maintenance
-   (positive-provenance-witness graph) (positive-provenance-alternatives graph)))
+  (let* ((proof (positive-provenance-witness graph))
+         (nodes (map (lambda (node)
+                       (list (proof-node-id node)
+                             (candidate-copy-pairs (proof-node-row node))))
+                     (positive-proof-nodes proof))))
+    (make-provenance-maintenance
+     nodes (candidate-copy-pairs (positive-proof-roots proof))
+     (candidate-copy-pairs (positive-provenance-alternatives graph))
+     (map car nodes) [])))
+
+;; provenance-maintenance-rows
+;;   : (-> ProvenanceMaintenance Rows)
+;;   | doc m%
+;;       Copy the last completed query rows
+;;       A failed withdrawal leaves these rows and source-occurrence state unchanged.
+;;     %
+(def (provenance-maintenance-rows state)
+  (unless (provenance-maintenance? state)
+    (error "expected provenance maintenance state"))
+  (map (lambda (id)
+         (candidate-copy-pairs (cadr (assq id (provenance-maintenance-nodes state)))))
+       (filter (lambda (id) (memv id (provenance-maintenance-alive state)))
+               (provenance-maintenance-roots state))))
+
+;;; DRed on the finite grounded hypergraph: overdelete dependents of removed
+;;; source occurrences, then rederive affected facts from remaining founded
+;;; support. A self-cycle cannot seed its own rederivation. Multi-support
+;;; can rederive overdeleted facts. Atomic publication follows both phases.
+;; candidate-provenance-withdraw!
+;;   : (-> ProvenanceMaintenance SourceOccurrences Nat (Values Rows Nat))
+;;   | doc m%
+;;       Overdelete affected support, then rederive from remaining founded alternatives
+;;       Publish only after both bounded phases finish.
+;;
+;;       # Examples
+;;
+;;       ```scheme
+;;       (let (before (provenance-maintenance-rows state))
+;;         (let-values (((after work)
+;;                       (candidate-provenance-withdraw! state [] 100000)))
+;;           (equal? before after)))
+;;       ;; => #t ; no selected source occurrences change the published rows
+;;       ```
+;;     %
+(def (candidate-provenance-withdraw! state selectors (max-steps 100000))
+  (unless (and (provenance-maintenance? state)
+               (exact-integer? max-steps) (> max-steps 0)
+               (reasoning-bounded-data? selectors 131072 128)
+               (list? selectors))
+    (error "invalid provenance withdrawal"))
+  (let* ((edges (provenance-maintenance-edges state))
+         (source-labels (map caddr (filter (lambda (edge)
+                                            (eq? (cadr edge) 'source)) edges)))
+         (removed (append (provenance-maintenance-removed state) selectors))
+         (steps 0) (affected []))
+    (for-each (lambda (selector)
+                (unless (member selector source-labels)
+                  (error "unknown provenance source occurrence" selector))) selectors)
+    (def (probe!)
+      (set! steps (+ steps 1))
+      (when (> steps max-steps) (error "provenance withdrawal budget exceeded")))
+    (def (removed-source? edge)
+      (and (eq? (cadr edge) 'source) (member (caddr edge) removed)))
+    (for-each (lambda (edge)
+                (probe!)
+                (when (and (eq? (cadr edge) 'source)
+                           (member (caddr edge) selectors)
+                           (not (memv (car edge) affected)))
+                  (set! affected (cons (car edge) affected)))) edges)
+    (let overdelete ()
+      (let (changed? #f)
+        (for-each
+         (lambda (edge)
+           (probe!)
+           (when (and (eq? (cadr edge) 'rule)
+                      (not (memv (car edge) affected))
+                      (ormap (lambda (id) (memv id affected)) (cadddr edge)))
+             (set! affected (cons (car edge) affected))
+             (set! changed? #t))) edges)
+        (when changed? (overdelete))))
+    (let ((alive (filter (lambda (id) (not (memv id affected)))
+                         (provenance-maintenance-alive state))))
+      (let rederive ()
+        (let (changed? #f)
+          (for-each
+           (lambda (edge)
+             (probe!)
+             (when (and (memv (car edge) affected)
+                        (not (memv (car edge) alive))
+                        (not (removed-source? edge))
+                        (andmap (lambda (id) (memv id alive)) (cadddr edge)))
+               (set! alive (cons (car edge) alive))
+               (set! changed? #t))) edges)
+          (when changed? (rederive))))
+      (set! (provenance-maintenance-alive state) alive)
+      (set! (provenance-maintenance-removed state) removed)
+      (values (provenance-maintenance-rows state) steps))))

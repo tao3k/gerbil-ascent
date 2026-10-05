@@ -1,0 +1,95 @@
+#+title: Indexed grounded provenance maintenance
+
+* Gerbil source study and production ownership
+
+Gerbil =2591dcd= =compiler/optimize-base.ss:24-29= gives each optimizer-info
+its own identity tables. =runtime/hash.ss:633-635= delegates =hash-copy= to
+the table's native copy operation. The transferable rule is to bind lookup
+indexes to their state owner and copy mutable publication state for a tentative
+transaction. These examples do not implement ASCENT's DRed semantics.
+
+=candidate/provenance-graph.ss= retains finite enumeration, certificate
+verification and the public verified opener. =candidate/provenance-maintenance.ss=
+owns only a copied, already admitted support graph and deletion transactions.
+Existing public exports remain available through provenance-graph. =build.ss=
+adds only the production module declaration. There is no SDK source rebuild,
+new environment control or test dispatch in the production build entry.
+
+The private retained graph indexes node IDs to copied rows and source labels
+to existence. Published alive/removed memberships are tables. Each withdrawal
+copies those memberships, and owns separate selected/affected indexes. Source
+labels use structural equality; IDs use eqv?, matching the former memberships.
+Root order and every copied edge traversal remain unchanged. Hash iteration
+never emits evidence. A failed validation or either bounded phase publishes
+nothing; detached output rows are prepared before atomic state publication.
+
+This removes repeated =assq=/=memv=/=member= searches in row reads, source
+validation, overdeletion and founded rederivation. It preserves the number and
+order of edge probes: no work-list shortcut or budget reduction is claimed.
+Self-cycles cannot seed restoration; another founded alternative can restore an
+overdeleted fact. Removed selectors are copied and deduplicated internally,
+so future withdrawals never borrow caller-owned selector pairs. Query results
+are copied independently of both the retained graph and its certificate.
+
+* Matched native A/B
+
+=just performance-provenance-maintenance= links both owners and all callbacks
+into one static native executable. =reference.ss= is exactly the graph owner
+at =daf78bbd08c2ce24ecd1c2494326b3f216367015=; byte equality is checked.
+Both sides share the same current provenance verification dependencies.
+Source stability during compilation and explicit native module resolution are
+checked. Every pair starts with fresh independently verified maintenance state;
+verification, graph construction and opening are outside the measured interval.
+The withdrawal interval includes selector admission, tentative state, both
+bounded phases, detached row copying and final publication. Read measures only
+detached query-row retrieval from admitted state.
+
+The fixture has one source relation, a copy rule and a recursive self-support
+rule. Wide has 256 distinct values and withdraws 128 source occurrences;
+duplicates has 256 occurrences of one value and withdraws all; read returns
+256 admitted rows; small withdraws its sole source. Independent sorted-row
+truth is checked, while old/new ordered rows and exact returned work counts
+must also agree. Calls run on one VM processor with 50 alternating pairs.
+Forced GC is outside each interval; natural GC remains inside. CPU is process
+user+system time. Allocation observes field 7 and subtracts endpoint field 9
+as Gambit's =time= does; negative deltas reject the run.
+
+Fixed before sampling: large withdrawals require >=30% less CPU and >=35/50
+wins, with temporary allocation <=3x old +16 KiB. Read requires >=50% less CPU,
+>=35/50 wins and <=1 KiB extra allocation. Small bounds CPU overhead by
+5% +30 us and extra temporary allocation by 8 KiB. Gates are not relaxed.
+
+| Scenario | Old CPU us | New CPU us | Old bytes | New bytes | CPU wins | Edge probes |
+|----------+------------+------------+-----------+-----------+----------+-------------|
+| Wide withdrawal | 4491 | 257 | 131840 | 167424 | 50/50 | 3072 |
+| Duplicate sources | 1669 | 143 | 79512 | 134072 | 50/50 | 1032 |
+| Ordered query rows | 565 | 23 | 24944 | 24944 | 50/50 | 0 |
+| Small withdrawal | 3 | 5 | 4032 | 10128 | 2/50 | 12 |
+
+All four gates pass on two launches (400 paired samples). Repeat CPU medians
+are wide 4502 ->258 us, duplicates 1733 ->199 us, read 566 ->23 us and small
+3 ->5 us; allocation and exact work medians match the table on both launches.
+Every large/read pair wins; duplicate CPU savings range 88.5-91.4%, so the
+lower result is retained. The small control remains explicitly slower.
+
+Indexes earn CPU savings at a visible memory cost: wide/duplicate temporary
+allocation increases 27.0%/68.6%; small adds 6096 bytes and 2 us. Retained
+indexes and their opening cost are outside the timing above. This is not an
+allocation reduction, whole reasoning-pipeline gain, multicore claim or RSS
+measurement. Raw pairs and all compile/qualification logs stay under ignored
+=.cache/ascent/provenance-maintenance/=.
+
+* Semantic controls
+
+Native controls compare each budget 1-64 against the exact prior owner across
+successive, repeated, empty and unknown withdrawals. Ordered rows, returned
+work and error messages must match; failed calls preserve published state.
+Ownership controls mutate both returned rows and the caller's selector pairs
+before the next withdrawal. The existing 64 directed-graph corpus checks every
+successive source withdrawal against independent matrix closure and native
+fresh solving, including cyclic and alternate support.
+
+Four native modules pass 28 Cases, with module/harness/final OK and command
+exit 0. Module execution takes 0-6 seconds. Selected production policy reports
+zero findings/errors. These local controls are distinct from full-suite or
+exact-head remote CI results.

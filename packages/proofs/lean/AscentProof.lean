@@ -19,5 +19,6 @@ import SourceCertificates
 import SourceUpdateFrame
 import RuleBodyFrame
 import PositiveSlots
+import PositiveTraversal
 import ProviderFrontier
 import TransitiveComponents

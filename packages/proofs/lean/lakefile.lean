@@ -19,7 +19,7 @@ lean_lib AscentProof where
              `PositiveNonmembership,
              `RecursiveLowering,
              `StratifiedNegation, `SourceCertificates, `SourceUpdateFrame, `RoundAdmission,
-             `RuleGraphClosure, `RuleBodyFrame, `PositiveSlots, `ProviderFrontier, `TransitiveComponents]
+             `RuleGraphClosure, `RuleBodyFrame, `PositiveSlots, `PositiveTraversal, `ProviderFrontier, `TransitiveComponents]
 
 lean_lib AscentProofTests where
-  roots := #[`AscentProofTests, `RuleBodyFrameTests, `PositiveSlotsTests]
+  roots := #[`AscentProofTests, `RuleBodyFrameTests, `PositiveSlotsTests, `PositiveTraversalTests]

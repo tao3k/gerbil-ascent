@@ -343,10 +343,28 @@ stale frame values, and a second traversal of the same dirty frame. Its entire
 ordered emission stream, including repeated and reversed heads, must agree
 with ordinary association-list binding. A fault changing the first new
 variable's =fresh= action to =bound= rejects the valid row after a failed
-partial write; the ordinary binder still emits it. The matcher theorem and
-this native discriminator establish one optimization boundary. Whole slot
-traversal, indexed row selection and semi-naive pivots still need refinement;
-the corpus supplies raw rows with no delta pivot. Native symbol/hash-map
+partial write; the ordinary binder still emits it.
+
+The [[file:../../../packages/proofs/lean/PositiveTraversal.lean][PositiveTraversal refinement]] now lifts the matcher law to an arbitrary
+finite positive body. =scan_refines= threads the dirty frame through failed
+rows and successful suffix returns. =walk_prefix= derives the suffix's parent
+prefix law structurally, rather than assuming the native traversal restores
+slots. =precompiled_walk= identifies position-wise lowering with once-compiled
+actions, and =precompiled_refines= proves equality of the entire ordered output
+list with ordinary binding traversal. =walk_reuse= preserves the input
+environment after the complete traversal. Duplicate emissions are preserved,
+not normalized into a set. The only emission premise is that represented
+environments have the same head observations, supplied by =head_observations=.
+
+Lean qualification covers a three-atom body with rejected partial writes at
+two depths, repeated/reversed heads, literal false, empty/zero-arity bodies,
+and a second traversal of the real returned frame. A continuation fault that
+overwrites a parent slot loses a valid sibling output, demonstrating why the
+prefix law is necessary. The native three-atom corpus adds 81 ordered emissions
+per run, provider visit counts =(1 3 9)=, four stale starts and two traversals
+without clearing. The independent binder never reads compiled actions or slots.
+Indexed row selection and semi-naive pivots still need refinement: these models
+and corpora supply fixed raw rows with no delta pivot. Native symbol/hash-map
 decoding, scalar equality and actual vector ownership remain premises.
 
 The constituent proofs make the contract auditable. The

@@ -76,6 +76,26 @@
        (set! emitted (cons (cons (vector-ref head 0) row) emitted))))
     (reverse emitted)))
 
+;; Arbitrary-depth ordinary binding traversal, independent of compiled slots.
+(def (body-binding-stream atoms heads)
+  (let (emitted [])
+    (def (visit remaining environment)
+      (if (null? remaining)
+        (for-each
+         (lambda (head)
+           (set! emitted
+             (cons (cons (vector-ref head 0)
+                         (gerbil-ascent-head-row (vector-ref head 1) environment))
+                   emitted))) heads)
+        (let (atom (car remaining))
+          (for-each
+           (lambda (row)
+             (let (bound (gerbil-ascent-bind-row (car atom) row environment))
+               (when bound (visit (cdr remaining) bound))))
+           (cdr atom)))))
+    (visit atoms [])
+    (reverse emitted)))
+
 (def ascent-positive-plan-test
   (test-suite "Complete positive rule slot plans"
     (poo-flow-test-case "dirty slot frames preserve ordered bindings across the finite term corpus"
@@ -118,6 +138,46 @@
                    (displayln "SLOT-READ-CHECKED " checked " terms=" patterns)
                    (force-output))) terms)) terms)) terms)
         (check-equal? checked 125)))
+    (poo-flow-test-case "nested branch returns preserve dirty-frame traversal order"
+      (let* ((palette '(#f 0 1))
+             (quadruples
+              (append-map (lambda (x)
+                (append-map (lambda (y)
+                  (append-map (lambda (z)
+                    (map (lambda (w) (list x y z w)) palette)) palette)) palette)) palette))
+             (first '((variable . a)))
+             (middle '((variable . b) (variable . a) (variable . b) (literal . 0)))
+             (last '((variable . c) (variable . b) (variable . c) (variable . a)))
+             (sources (vector (map list palette) quadruples quadruples))
+             (output '((variable . a) (variable . b) (variable . c) (literal . #f)))
+             (heads (list (vector 3 output) (vector 4 (reverse output)) (vector 3 output)))
+             (plan (gerbil-ascent-compile-positive-plan heads
+                     (list (vector 'atom (vector 0 first []))
+                           (vector 'atom (vector 1 middle []))
+                           (vector 'atom (vector 2 last [])))))
+             (expected (body-binding-stream
+                        (list (cons first (vector-ref sources 0))
+                              (cons middle quadruples) (cons last quadruples)) heads)))
+        (check-equal? (length expected) 81)
+        (for-each
+         (lambda (stale)
+           (let (frame (make-vector (vector-ref plan 2) stale))
+             (for-each
+              (lambda (pass)
+                (let ((emitted []) (reads (vector 0 0 0)))
+                  (gerbil-ascent-run-positive-plan!
+                   plan frame -1
+                   (lambda (atom environment delta? slot-terms)
+                     (let (source (vector-ref atom 0))
+                       (vector-set! reads source (+ 1 (vector-ref reads source)))
+                       (vector-ref sources source)))
+                   (lambda (head row)
+                     (set! emitted (cons (cons (vector-ref head 0) row) emitted))))
+                  (check-equal? (reverse emitted) expected)
+                  (check-equal? (vector->list reads) '(1 3 9))
+                  (displayln "SLOT-NESTED-CHECKED stale=" stale " pass=" pass " emitted=" (length emitted))
+                  (force-output))) '(first dirty-repeat))))
+         '(#f 0 1 stale-slot))))
     (poo-flow-test-case "failed partial writes require the next fresh overwrite"
       (let* ((patterns '((variable . b) (variable . a) (variable . b)))
              (heads (list (vector 2 '((variable . a) (variable . b)))))

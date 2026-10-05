@@ -20,8 +20,16 @@ head observations, and even failed candidates preserve the initialized prefix.
 This proves why partial fresh writes need no rollback. Compiled slot IDs fit
 the final dense extent. The native runner's 125-term corpus and a missing-fresh
 fault compare complete ordered emissions with ordinary binding on dirty frames.
-Whole slot traversal, symbol/hash-map decoding, native vector mutation, indexed
-selection and semi-naive pivots remain open implementation correspondences.
+[[file:../packages/proofs/lean/PositiveTraversal.lean][PositiveTraversal]] composes that matcher into the complete raw-row traversal.
+=precompiled_refines= equates precompiled multi-atom plans with ordinary
+binding, preserving the entire ordered emission list. =walk_prefix= proves
+that recursive success returns and failed candidates preserve parent bindings;
+=walk_reuse= admits another traversal of the actual dirty returned frame.
+The native three-atom discriminator checks 81 ordered multihead emissions,
+provider visit counts and repeated dirty-frame runs against an independent
+ordinary binder. These are fixed finite raw-row traversals. Symbol/hash-map
+decoding, native vector mutation, indexed selection and semi-naive pivots
+remain open implementation correspondences.
 
 * Stated claim
 

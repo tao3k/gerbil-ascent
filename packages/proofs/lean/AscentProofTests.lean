@@ -3,6 +3,7 @@
 import AscentProof
 import RuleBodyFrameTests
 import PositiveSlotsTests
+import PositiveTraversalTests
 
 /-! Compile-time qualification for LeanPoo source patches, invalidation,
 certificate reuse and source-count algebra. Temporal publication belongs to TLA+. -/

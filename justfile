@@ -25,7 +25,7 @@ _test-file path:
     #!/usr/bin/env bash
     set -euo pipefail
     test -f "{{ path }}"
-    if [[ "{{ path }}" == t/qualification/ascent-temporal-lens-test.ss ]]; then exec just _test-temporal; fi
+    if [[ "{{ path }}" == t/qualification/ascent-temporal-lens-test.ss && -z "${ASCENT_NATIVE_TEST_REGISTRY:-}" ]]; then exec just _test-temporal; fi
     mkdir -p "{{ justfile_directory() }}/.cache/ascent/tmp"
     output_file="$(mktemp "{{ justfile_directory() }}/.cache/ascent/tmp/case.XXXXXX")"
     trap 'rm -f "$output_file"' EXIT
@@ -41,6 +41,7 @@ _test-file path:
         if [[ -n "${ASCENT_NATIVE_TEST_ENTRY:-}" ]]; then
             test -x "$ASCENT_NATIVE_TEST_ENTRY"
             runner=("$ASCENT_NATIVE_TEST_ENTRY" {{ gerbil_test_runtime_options }})
+            if [[ -n "${ASCENT_NATIVE_TEST_REGISTRY:-}" ]]; then runner+=("{{ path }}"); fi
         fi
     else
         runner=(gerbil {{ gerbil_test_runtime_options }} test)
@@ -96,24 +97,13 @@ check-native-entry:
 test-serial:
     {{ test_runner }} test 1 all
 
-# Independent modules use the standard process pool; native Cases stay serial.
+# Native Scheme actors own admission, output credits, failure and draining.
 _test-suite jobs lane:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    case "{{ lane }}" in all|parallel) ;; *) exit 2 ;; esac
-    jobs="$(gxi {{ gerbil_test_runtime_options }} t/harness/run.ss test-jobs "{{ jobs }}")"
-    directory="$(mktemp -d "{{ justfile_directory() }}/.cache/ascent/native-library/test.XXXXXX")"
-    gxi {{ gerbil_test_runtime_options }} t/harness/run.ss test-modules parallel > "$directory/parallel"
-    gxi {{ gerbil_test_runtime_options }} t/harness/run.ss test-modules exclusive > "$directory/exclusive"
-    printf '[ascent-test] PLAN parallel=%s exclusive=%s jobs=%s logs=%s\n' "$(wc -l < "$directory/parallel")" "$(wc -l < "$directory/exclusive")" "$jobs" "$directory"
-    export ASCENT_TEST_LOG_DIRECTORY="$directory"
-    (while sleep 5; do printf '[ascent-test] RUNNING logs=%s\n' "$directory"; done) &
-    progress_pid=$!
-    trap 'kill "$progress_pid" 2>/dev/null || true; wait "$progress_pid" 2>/dev/null || true' EXIT
-    if [[ -s "$directory/parallel" ]]; then xargs -P "$jobs" -n 1 bash -c 'path="$1"; log="$ASCENT_TEST_LOG_DIRECTORY/$(basename "$path").log"; printf "[ascent-test] RUN %s\n" "$path"; if just _test-file "$path" > "$log" 2>&1; then printf "[ascent-test] PASS %s\n" "$path"; else cat "$log"; exit 1; fi' _ < "$directory/parallel"; fi
-    if [[ "{{ lane }}" == all ]]; then
-        while IFS= read -r path; do just _test-file "$path" 2>&1 | tee "$directory/$(basename "$path").log"; done < "$directory/exclusive"
-    fi
+    {{ test_runner }} test "{{ jobs }}" "{{ lane }}"
+
+# Small native registry and actor lifecycle qualification before the full pool.
+check-actor-pool:
+    {{ test_runner }} test-pool 2 t/harness/native-entry-test.ss t/harness/actor-pool-test.ss
 
 # Paired native finite evidence generation and verification.
 performance-finite-replay:
@@ -316,6 +306,24 @@ check-actor-round-formal: check-nonmembership-formal
       echo "COUNTEREXAMPLE-OK actor-$mutation $expected"
     done
     echo 'ACTOR-ROUND-CHECK-OK'
+
+# Test-pool protocol safety is distinct from solver round safety.
+check-actor-pool-formal:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [[ -n "${TLC_BIN:-}" ]]; then tlc=("$TLC_BIN"); else tlc=(java -XX:+UseParallelGC -cp "${TLC_JAR:-.cache/ascent/tools/tla2tools-v1.7.4.jar}" tlc2.TLC); fi
+    temp=$(mktemp -d)
+    trap 'rm -rf "$temp"' EXIT
+    for capacity in 1 2 3; do
+      sed "s/Capacity = 2/Capacity = $capacity/" packages/proofs/tla/ActorTestPool.cfg > "$temp/$capacity.cfg"
+      "${tlc[@]}" -workers 1 -config "$temp/$capacity.cfg" -metadir "$temp/$capacity" packages/proofs/tla/ActorTestPool.tla
+    done
+    sed 's/EarlyReturn = FALSE/EarlyReturn = TRUE/' packages/proofs/tla/ActorTestPool.cfg > "$temp/early.cfg"
+    code=0
+    "${tlc[@]}" -workers 1 -config "$temp/early.cfg" -metadir "$temp/early" packages/proofs/tla/ActorTestPool.tla > "$temp/early.out" 2>&1 || code=$?
+    [[ "$code" = 12 ]] && grep -q 'Invariant CompleteReturn is violated' "$temp/early.out"
+    echo 'COUNTEREXAMPLE-OK actor-pool-early CompleteReturn'
+    echo 'ACTOR-POOL-CHECK-OK'
 
 # Matched finite-operator research probe; every sample checks independent
 # closure before reporting cost. This is separate from the SS suite.

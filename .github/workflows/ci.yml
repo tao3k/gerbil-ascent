@@ -34,6 +34,8 @@ jobs:
         run: ASP_GERBIL_SCHEME_POLICY=1 gerbil build
       - name: Qualify Scheme rules
         run: just test
+      - name: Qualify native actor pool lifecycle
+        run: just check-actor-pool
       - name: Qualify native single-module entry and failure controls
         run: just check-native-entry
       - name: Build native DSL closure entry
@@ -111,7 +113,7 @@ jobs:
       - name: Check Lean contracts, TLA publication and counterexamples
         env:
           ASCENT_TLC_GENERATION_CUTOFF: '4'
-        run: just check-actor-round-formal
+        run: just check-actor-round-formal && just check-actor-pool-formal
       - name: Qualify Python byte IO and process supervision
         run: python3 -m unittest discover -s python/tests -v
   native-and-oracle:

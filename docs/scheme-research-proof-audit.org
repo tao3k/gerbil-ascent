@@ -78,9 +78,9 @@ separate proof. Abort preservation is encoded as a required action contract;
 model checking does not establish that native exceptions implement it.
 
 Previously GitHub's =formal= job ran Lean only. It now executes the common
-[[file:../packages/proofs/check.sh][proof gate]], including both TLA models and the two intentional faults. TLC is
+[[file:../justfile][Justfile proof gate]], including the TLA models and intentional faults. TLC is
 pinned to the official 1.7.4 jar and verified by SHA256. The gate accepts
-=ASCENT_PROOF_EXPLORATION_DEPTH= independently of protocol semantics; GitHub
+=ASCENT_TLC_GENERATION_CUTOFF= independently of protocol semantics; GitHub
 uses 4, the default exploration configuration uses 2. Counterexample checks
 require both TLC's violation exit code and the expected violated property;
 parse/tool crashes cannot count as successful fault detection.

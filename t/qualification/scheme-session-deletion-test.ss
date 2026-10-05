@@ -455,6 +455,14 @@
             (set-car! provisional-row 9)
             (check-fresh (gerbil-ascent-session-run session)
                          (path-program '((1 2)) '((8))))))))
+    (test-case "source append owns caller row spine"
+      (let* ((session (gerbil-ascent-open-session (path-program '((0 1)))))
+             (added (list 1 2)))
+        (gerbil-ascent-session-run session)
+        (gerbil-ascent-session-append-source! session 'edge added)
+        (set-car! added 9)
+        (check-fresh (gerbil-ascent-session-run session)
+                     (path-program '((0 1) (1 2))))))
     (test-case "a forged descriptor cannot authorize an opaque callback for result reuse"
       (let* ((allow? #t)
              (base (path-program '((0 1))))

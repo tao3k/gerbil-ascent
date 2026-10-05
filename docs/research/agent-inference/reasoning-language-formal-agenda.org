@@ -224,6 +224,7 @@ equivalence. The native correspondence is currently a review obligation:
 | Native entrypoint / path | Abstract action | Unproved condition |
 |--------------------------+-----------------+--------------------|
 | =replace-source!= after completed preflight | =SingleReplace= | Internal batch work is unobservable before the synchronous method returns; committed result and source are restored together |
+| =append-source!= with an owned immutable row | =SingleReplace= at the public cut | Native incremental engine state and its eventual completed solve still require refinement |
 | =replace-sources!= completed | =BatchComplete= | =fresh.run= is complete and its rows equal a fresh solve for the prospective admitted snapshot |
 | =replace-sources!= rejected | =BatchReject= | No accepted source/result pair changes on validation or solve failure |
 | =run!= or completed =run-timeout!= | =RunComplete= | The engine result is complete and matches the pending source snapshot |
@@ -234,18 +235,38 @@ An added =alias= fault changes a committed source cut without changing
 its published result; TLC and Lean both reject it. This is a concrete
 counterexample to extending the proof to arbitrary mutable host values:
 =program/session.ss= previously retained caller-owned row pairs during
-batch replacement. It now copies replacement list/row spines after
-validation; the native regression mutates the caller's row and outer
-list, then performs an unrelated replacement and compares with a fresh
-solve. The checked language admits only exact integers, booleans,
+batch replacement and append. It now copies replacement list/row spines
+after validation and captures each appended row spine before handing it
+to the engine. The native regressions mutate caller-owned rows after
+both operations, then compare completed output with fresh solves. The
+checked language admits only exact integers, booleans,
 symbols and characters as scalar fields, and copies constructed rows.
 Nested host objects remain shared; opaque callbacks/providers require
 an ownership or copying contract before their completed results inherit
 this proof. A passing native regression qualifies this ownership boundary;
 a full native trace refinement is still open.
 
+The proof package now uses LeanPOO directly through Lake. The
+[[file:../../../packages/proofs/lean/SourceCertificates.lean][source-certificate module]] represents each source cut as a typed
+=LeanPoo.Proof.State= and an ordered replacement as =Patch.setMany=.
+A derived-result =Obligation= declares its source dependencies and a
+locality premise. LeanPOO's =reuse= transports a certificate across a
+disjoint batch; =pending= selects affected and new obligations;
+=closePending= requires fresh evidence for those selected. The module
+composes a batch patch with =NativePublication.batchComplete= and proves
+the published result belongs to the new cut while untouched source
+keys retain their values. Concrete qualification cases live in
+[[file:../../../packages/proofs/lean/AscentProofTests.lean][AscentProofTests]]. These statements require an accurate dependency
+list and completed =resultOf=; native source-dependency closure, typed
+row representation and evaluator correspondence remain open. The same
+module makes =StratifiedNegation.IndexExact= a LeanPOO obligation over a
+frozen full relation and its candidate bucket. A current certificate
+discharges =negation_indexed_iff=; changing the source relation selects
+that certificate for revalidation. Native hash-bucket fidelity remains
+an independent premise.
+
 The =TLCGenerationCutoff= constant is a finite *model-checking* search
-parameter, supplied by =ASCENT_TLC_GENERATION_CUTOFF= in =check.sh= (four
+parameter, supplied by =ASCENT_TLC_GENERATION_CUTOFF= in the =Justfile= (four
 generations in CI). Direct =.cfg= invocation samples two generations.
 Neither value limits a native Session, an ASCENT fixed point, or a model's
 reasoning budget. Lean's =publications_consistent= proves the abstract

@@ -5,6 +5,8 @@ set shell := ["bash", "-euo", "pipefail", "-c"]
 
 gerbil_test_runtime_options := "-:max-heap=1G,debug=q"
 test_runner := 'GERBIL_LOADPATH="' + justfile_directory() + '${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" gerbil env gxi -:max-heap=1G,debug=q t/harness/run.ss'
+tlc_release_url := "https://github.com/tlaplus/tlaplus/releases/download/v1.7.4/tla2tools.jar"
+tlc_sha256 := "936a262061c914694dfd669a543be24573c45d5aa0ff20a8b96b23d01e050e88"
 
 default:
     @just --list
@@ -185,12 +187,73 @@ _admission-copy-benchmark:
     grep -x 'OK' "$output_file" >/dev/null
     if grep -E 'ERROR|Heap overflow|Stack overflow' "$output_file" >/dev/null; then exit 1; fi
 
-# Abstract theorem and bounded local receipt-lifecycle safety model.
-# Supply TLC_BIN when tlc is not on PATH; this gate does not build Scheme.
-check-nonmembership-formal:
+# LeanPoo-backed ASCENT proof package. The Lake manifest fixes dependencies.
+check-lean-proofs:
     #!/usr/bin/env bash
     set -euo pipefail
-    bash packages/proofs/check.sh
+    cd packages/proofs/lean
+    lake -v build AscentProof AscentProofTests
+
+# Lean proofs and bounded TLC publication models. Supply TLC_JAR or TLC_BIN.
+check-nonmembership-formal: check-lean-proofs
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [[ -z "${TLC_JAR:-}" && -z "${TLC_BIN:-}" ]]; then
+      TLC_JAR=.cache/ascent/tools/tla2tools-v1.7.4.jar
+      mkdir -p "$(dirname "$TLC_JAR")"
+      if [[ ! -f "$TLC_JAR" ]]; then
+        curl -fLsS "{{ tlc_release_url }}" -o "$TLC_JAR.download"
+        mv "$TLC_JAR.download" "$TLC_JAR"
+      fi
+    fi
+    if [[ -n "${TLC_JAR:-}" ]]; then
+      actual="$(shasum -a 256 "$TLC_JAR" | awk '{print $1}')"
+      [[ "$actual" == "{{ tlc_sha256 }}" ]] || { echo "TLC jar checksum mismatch: $TLC_JAR" >&2; exit 2; }
+      tlc=(java -XX:+UseParallelGC -Xmx1g -cp "$TLC_JAR" tlc2.TLC)
+    else
+      tlc=("${TLC_BIN:-tlc}")
+    fi
+    cutoff="${ASCENT_TLC_GENERATION_CUTOFF:-2}"
+    [[ "$cutoff" =~ ^[0-9]+$ ]] && (( cutoff >= 2 )) || { echo 'TLC generation cutoff must be an integer >= 2' >&2; exit 2; }
+    temp="$(mktemp -d)"
+    trap 'rm -rf "$temp"' EXIT
+    for model in PositiveNonmembershipSession SessionTransaction NativeSessionPublication; do
+      sed "s/TLCGenerationCutoff = [0-9][0-9]*/TLCGenerationCutoff = $cutoff/" "packages/proofs/tla/$model.cfg" > "$temp/$model.cfg"
+      echo "TLA-CHECK $model generation-cutoff=$cutoff (TLC enumeration only)"
+      "${tlc[@]}" -workers 2 -config "$temp/$model.cfg" -metadir "$temp/$model" "packages/proofs/tla/$model.tla"
+    done
+    for mutation in early bounded alias; do
+      sed "s/Mutation = \"none\"/Mutation = \"$mutation\"/" "$temp/NativeSessionPublication.cfg" > "$temp/native-$mutation.cfg"
+      if "${tlc[@]}" -workers 2 -config "$temp/native-$mutation.cfg" -metadir "$temp/native-$mutation" packages/proofs/tla/NativeSessionPublication.tla > "$temp/native-$mutation.log" 2>&1; then
+        cat "$temp/native-$mutation.log"
+        echo "Missing native Session counterexample for $mutation" >&2
+        exit 1
+      else
+        code=$?
+      fi
+      cat "$temp/native-$mutation.log"
+      [[ "$code" = 12 ]] && grep -q 'Invariant CommittedSnapshot is violated' "$temp/native-$mutation.log"
+      echo "COUNTEREXAMPLE-OK native-$mutation"
+    done
+    for mutation in early stale global reuse; do
+      sed "s/Mutation = \"none\"/Mutation = \"$mutation\"/" "$temp/SessionTransaction.cfg" > "$temp/$mutation.cfg"
+      if "${tlc[@]}" -workers 2 -config "$temp/$mutation.cfg" -metadir "$temp/$mutation" packages/proofs/tla/SessionTransaction.tla > "$temp/$mutation.log" 2>&1; then
+        cat "$temp/$mutation.log"
+        echo "Missing counterexample for $mutation" >&2
+        exit 1
+      else
+        code=$?
+      fi
+      cat "$temp/$mutation.log"
+      case "$mutation" in
+        early) [[ "$code" = 12 ]] && grep -q 'Invariant AtomicSnapshot is violated' "$temp/$mutation.log" ;;
+        stale) [[ "$code" = 13 ]] && grep -q 'Action property NoStaleCommit is violated' "$temp/$mutation.log" ;;
+        global) [[ "$code" = 12 ]] && grep -q 'Invariant AtomicSnapshot is violated' "$temp/$mutation.log" ;;
+        reuse) [[ "$code" = 12 ]] && grep -q 'Invariant AtomicSnapshot is violated' "$temp/$mutation.log" ;;
+      esac
+      echo "COUNTEREXAMPLE-OK $mutation"
+    done
+    echo 'FORMAL-CHECK-OK'
 
 # Matched finite-operator research probe; every sample checks independent
 # closure before reporting cost. This is separate from the SS suite.

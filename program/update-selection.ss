@@ -7,7 +7,8 @@
 (import (only-in "source-log.ss" gerbil-ascent-source-log-equal?)
         (only-in "activation.ss" gerbil-ascent-activate-rule)
         (only-in :clan/poo/object .ref)
-        (only-in "scheme-checked.ss" relational-stable-procedure?)
+        (only-in "scheme-checked.ss" relational-stable-procedure?
+                 relational-scalar?)
         (only-in :gerbil-ascent/core/positive-plan gerbil-ascent-positive-plan)
         (only-in :gerbil-ascent/core/dependency-graph gerbil-ascent-graph-close!)
         (only-in :gerbil-ascent/table/provider gerbil-ascent-canonical-hash-index-provider?)
@@ -23,9 +24,10 @@
 ;;     reading rows or computing dependency closure. Rule callbacks and lattice
 ;;     joins must be registered closed procedures; storage and index providers
 ;;     must be the built-ins. This predicate invokes no callback. Relation
-;;     field checks still run during source/result admission and are a separate
-;;     refinement obligation. An opaque lookup may depend on state outside the
-;;     rule-read graph, so its completed rows cannot be retained across a cut.
+;;     Only exact built-in immutable-scalar predicates may validate fields
+;;     during completed-result reuse. Other field callbacks can mutate shared row
+;;     values or source snapshots outside the rule-read graph; they require a
+;;     fresh solve. An opaque lookup has the same graph-external risk.
 ;;
 ;;     # Examples
 ;;
@@ -47,7 +49,13 @@
       ((binding) (relational-stable-procedure? (.ref clause 'compute)))
       (else #f)))
   (and (andmap (lambda (relation)
-                 (and (gerbil-ascent-canonical-hash-index-provider?
+                 (and (let (predicates (.ref relation 'field-predicates))
+                        (or (null? predicates)
+                            (andmap (lambda (predicate)
+                                      (or (eq? predicate relational-scalar?)
+                                          (eq? predicate exact-integer?)))
+                                    predicates)))
+                      (gerbil-ascent-canonical-hash-index-provider?
                        (.ref relation 'index-provider))
                       (if (eq? (.ref relation 'storage-kind) 'lattice)
                         (relational-stable-procedure? (.ref relation 'join))

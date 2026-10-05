@@ -376,7 +376,7 @@
         (check-equal? (.ref updated 'active-rule-count) 0)
         (check-exception (gerbil-ascent-session-replace-sources! session '((input (2 9) (3 10)))) true)
         (check-equal? (eq? updated (gerbil-ascent-session-run session)) #t)))
-    (test-case "field callbacks preserve source membership after checking retained rows"
+    (test-case "field callbacks require fresh evaluation and preserve source membership"
       (let* ((cell (list 7)) (armed? #f) (checks 0)
              (checker (lambda (value)
                         (when armed?
@@ -403,19 +403,48 @@
         (set! armed? #t)
         (let (updated (gerbil-ascent-session-replace-sources! session '((trigger (1)))))
           (check-equal? (.ref updated 'finished) #t)
-          (check-equal? checks 3)
-          (check-equal? (rows updated 'item) '(((10))))
+          (check-equal? (.ref updated 'evaluation-path) 'stratified-semi-naive)
+          (check-equal? checks 2)
+          (check-equal? (rows updated 'item) '(((9))))
           (check-equal? (rows updated 'out) '((1))))
-        ;; Single-source preflight must not read rows or invoke field checks;
-        ;; the actual transaction retains the batch callback sequence.
-        (check-equal? (gerbil-ascent-update-eligible? program) #t)
-        (check-equal? checks 3)
-        (gerbil-ascent-session-replace-source! session 'trigger '((2)))
-        (let (updated (gerbil-ascent-session-run session))
+        ;; Eligibility itself invokes no callback; each fresh replacement
+        ;; checks its admitted source rows independently.
+        (check-equal? (gerbil-ascent-update-eligible? program) #f)
+        (check-equal? checks 2)
+        (let (updated (gerbil-ascent-session-replace-sources! session '((trigger (2)))))
           (check-equal? (.ref updated 'finished) #t)
-          (check-equal? checks 6)
-          (check-equal? (rows updated 'item) '(((13))))
+          (check-equal? (.ref updated 'evaluation-path) 'stratified-semi-naive)
+          (check-equal? checks 4)
+          (check-equal? (rows updated 'item) '(((11))))
           (check-equal? (rows updated 'out) '((1))))))
+    (test-case "field callback cannot silently change an independent source during reuse"
+      (let* ((armed? #f)
+             (base (relational-program
+                    (relation input (value) '((1)))
+                    (relation probe (value) '((0)))
+                    (relation trigger (value) '((0)))
+                    (relation out (value) '())
+                    (rule (out ?v) (input ?v)) (limits 8 16 32)))
+             (declarations (.ref base 'relations))
+             (input-row (car (.ref (car declarations) 'rows)))
+             (probe (cadr declarations))
+             (checker (lambda (_)
+                        (when armed? (set-car! input-row 2))
+                        #t))
+             (checked-probe
+              (gerbil-ascent-relation
+               'probe 1 '((0)) (.ref probe 'index-provider)
+               (.ref probe 'storage-provider) (list checker)))
+             (program (.o (:: @ base)
+                          relations: (cons (car declarations)
+                                           (cons checked-probe (cddr declarations)))))
+             (session (gerbil-ascent-open-session program)))
+        (check-set (rows (gerbil-ascent-session-run session) 'out) '((1)))
+        (set! armed? #t)
+        (let (updated (gerbil-ascent-session-replace-sources! session '((trigger (1)))))
+          (check-set (rows updated 'input) '((2)))
+          (check-set (rows updated 'out) '((2)))
+          (check-equal? (.ref updated 'evaluation-path) 'stratified-semi-naive))))
     (test-case "deletion skips an independent component and restores all rules for later append"
       (let* ((session (gerbil-ascent-open-session (path-program '((0 1) (1 2)))))
              (old (gerbil-ascent-session-run session))

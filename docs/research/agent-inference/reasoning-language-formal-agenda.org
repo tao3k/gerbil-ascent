@@ -333,9 +333,15 @@ state beyond that graph. Reuse admission now accepts only the private
 canonical hash Provider, and a native regression uses a 32-row indexed
 join to show that changing an opaque lookup forces fresh evaluation.
 Opaque rule callbacks and custom storage Providers also use full
-evaluation. Field-checker callbacks remain an explicit native refinement
-obligation: their effects are exercised by qualification but are not
-proved by this pure read-checklist model. No performance claim follows
+evaluation. The same cut now rejects field predicates other than the
+exact built-in =relational-scalar?= and =exact-integer?= checks. A
+native counterexample has a checker mutate an independent source row:
+without the gate, source-log equality selected reuse while a fresh
+solve observed the changed input. Qualification requires fresh evaluation
+and agreement with that input's newly derived output. This closes the
+field-callback effect in reuse admission, while caller mutation of raw
+Core source values and Gerbil-to-Lean evaluator refinement remain open.
+No performance claim follows
 from this proof.
 
 The =TLCGenerationCutoff= constant is a finite *model-checking* search

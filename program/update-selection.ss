@@ -23,11 +23,11 @@
 ;;     Check declaration eligibility without constructing a source snapshot,
 ;;     reading rows or computing dependency closure. Rule callbacks and lattice
 ;;     joins must be registered closed procedures; storage and index providers
-;;     must be the built-ins. This predicate invokes no callback. Relation
-;;     Only exact built-in immutable-scalar predicates may validate fields
-;;     during completed-result reuse. Other field callbacks can mutate shared row
-;;     values or source snapshots outside the rule-read graph; they require a
-;;     fresh solve. An opaque lookup has the same graph-external risk.
+;;     must be the built-ins. This predicate invokes no callback. Only
+;;     immutable scalar source and literal values may enter completed-result
+;;     reuse. Trusted built-in field predicates certify source values at
+;;     admission; otherwise inspect the candidate rows. Other field callbacks
+;;     or an opaque lookup may observe or change state outside the read graph.
 ;;
 ;;     # Examples
 ;;
@@ -38,7 +38,24 @@
 ;;   %
 (def (gerbil-ascent-update-eligible? candidate)
   (def (pure-terms? terms)
-    (andmap (lambda (term) (memq (.ref term 'kind) '(variable wildcard literal))) terms))
+    (andmap (lambda (term)
+              (let (kind (.ref term 'kind))
+                (and (memq kind '(variable wildcard literal))
+                     (or (not (eq? kind 'literal))
+                         (relational-scalar? (.ref term 'value)))))) terms))
+  (def (trusted-field? predicate)
+    (or (eq? predicate relational-scalar?)
+        (eq? predicate exact-integer?)))
+  (def (scalar-source? relation)
+    (let (predicates (.ref relation 'field-predicates))
+      (and (andmap trusted-field? predicates)
+           ;; Core declarations may omit field checks. Their row spines are
+           ;; owned by Session, but nested values remain caller-owned. Scan
+           ;; only this unchecked case; checked scalar declarations already
+           ;; established the invariant during source admission.
+           (or (pair? predicates)
+               (andmap (lambda (row) (andmap relational-scalar? row))
+                       (.ref relation 'rows))))))
   (def (stable-clause? clause)
     (case (.ref clause 'ascent-clause-kind)
       ((atom negation) (pure-terms? (.ref clause 'terms)))
@@ -49,12 +66,7 @@
       ((binding) (relational-stable-procedure? (.ref clause 'compute)))
       (else #f)))
   (and (andmap (lambda (relation)
-                 (and (let (predicates (.ref relation 'field-predicates))
-                        (or (null? predicates)
-                            (andmap (lambda (predicate)
-                                      (or (eq? predicate relational-scalar?)
-                                          (eq? predicate exact-integer?)))
-                                    predicates)))
+                 (and (scalar-source? relation)
                       (gerbil-ascent-canonical-hash-index-provider?
                        (.ref relation 'index-provider))
                       (if (eq? (.ref relation 'storage-kind) 'lattice)

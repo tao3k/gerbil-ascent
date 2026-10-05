@@ -18,7 +18,7 @@
   (check-equal? ((.ref new 'relation-sizes)) ((.ref old 'relation-sizes))))
 (def ascent-result-publication-test
   (test-suite "Persistent result publication"
-    (poo-flow-test-case "unchanged relations share ordered rows while changed history remains intact"
+    (poo-flow-test-case "private ordered rows persist while public reads are owned"
       (let* ((source (map list (iota 64)))
              (p (gerbil-ascent-program
                  (list (gerbil-ascent-relation 'static 1 source)
@@ -34,7 +34,7 @@
              (compare right left)
              (check-equal? (rowsof right 'changing) (rowsof left 'changing))
              (check-equal? (rowsof right 'changing) (map list (iota (+ n 1))))
-             (check-equal? (eq? (rowsof first-new 'static) (rowsof right 'static)) #t)
+             (check-equal? (eq? (rowsof first-new 'static) (rowsof right 'static)) #f)
              (set! history (cons right history))))
          (iota 16))
         (for-each (lambda (result size)
@@ -52,7 +52,7 @@
         (let ((left ((.ref old '.run))) (right ((.ref new '.run))))
           (compare right left)
           (check-equal? (rowsof right 'item) '((1) (1)))
-          (check-equal? (eq? (rowsof first 'item) (rowsof right 'item)) #t))
+          (check-equal? (eq? (rowsof first 'item) (rowsof right 'item)) #f))
         (for-each (lambda (engine) ((.ref engine '.replace-source!) 'item '((2) (3)))) (list old new))
         (let ((left ((.ref old '.run))) (right ((.ref new '.run))))
           (compare right left)

@@ -791,8 +791,15 @@
                  (rule-time-nanoseconds (vector-ref observation 3))
                  (relation-sizes (lambda () (gerbil-ascent-snapshot-sizes names snapshots)))
                  (rows-of (lambda (name)
-                            (gerbil-ascent-snapshot-rows
-                             (vector-ref snapshots (position-of name)))))))))
+                            (let (stored (gerbil-ascent-snapshot-rows
+                                         (vector-ref snapshots (position-of name))))
+                              ;; A Session result is public while its completed
+                              ;; rows may seed a later source replacement. Do
+                              ;; not expose the retained row/list spines to a
+                              ;; caller that can mutate them between solves.
+                              (if session?
+                                (map (lambda (row) (map identity row)) stored)
+                                stored))))))))
          (when (and reuse complete?)
            (set! active-by-stratum #f)
            (set! reuse #f))

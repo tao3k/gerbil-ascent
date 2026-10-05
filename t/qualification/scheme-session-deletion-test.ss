@@ -446,6 +446,61 @@
           (check-set (rows updated 'input) '(((2))))
           (check-set (rows updated 'out) '())
           (check-equal? (.ref updated 'evaluation-path) 'stratified-semi-naive))))
+    (test-case "mutable Core source payload cannot authorize completed reuse"
+      (let* ((cell (list 1))
+             (program
+              (gerbil-ascent-program
+               (list (gerbil-ascent-relation 'input 1 (list (list cell)))
+                     (gerbil-ascent-relation 'trigger 1 '((0)))
+                     (gerbil-ascent-relation 'out 1 []))
+               (list (gerbil-ascent-rule
+                      (list (gerbil-ascent-atom 'out
+                              (list (gerbil-ascent-literal 'hit))))
+                      (list (gerbil-ascent-atom 'input
+                              (list (gerbil-ascent-literal (list 1)))))))
+               8 16 32))
+             (session (gerbil-ascent-open-session program)))
+        (check-set (rows (gerbil-ascent-session-run session) 'out) '((hit)))
+        (set-car! cell 2)
+        (let ((updated (gerbil-ascent-session-replace-sources!
+                        session '((trigger (1)))))
+              (fresh (gerbil-ascent-evaluate-program
+                      (fresh-replacement-program program '((trigger (1)))))))
+          (check-set (rows updated 'out) (rows fresh 'out))
+          (check-equal? (.ref updated 'evaluation-path) 'stratified-semi-naive))))
+    (test-case "mutable Core rule literal cannot authorize completed reuse"
+      (let* ((program
+              (gerbil-ascent-program
+               (list (gerbil-ascent-relation 'input 1 '((1)))
+                     (gerbil-ascent-relation 'out 1 []))
+               (list (gerbil-ascent-rule
+                      (list (gerbil-ascent-atom 'out
+                              (list (gerbil-ascent-literal (list 1)))))
+                      (list (gerbil-ascent-atom 'input
+                              (list (gerbil-ascent-literal 1))))))
+               8 16 32)))
+        (check-equal? (gerbil-ascent-update-eligible? program) #f)))
+    (test-case "published rows cannot mutate retained scalar source"
+      (let* ((x (gerbil-ascent-variable 'x))
+             (program
+              (gerbil-ascent-program
+               (list (gerbil-ascent-relation 'input 1 '((1)))
+                     (gerbil-ascent-relation 'trigger 1 '((0)))
+                     (gerbil-ascent-relation 'out 1 []))
+               (list (gerbil-ascent-rule
+                      (list (gerbil-ascent-atom 'out (list x)))
+                      (list (gerbil-ascent-atom 'input (list x)))))
+               8 16 32))
+             (session (gerbil-ascent-open-session program))
+             (initial (gerbil-ascent-session-run session)))
+        (set-car! (car (rows initial 'input)) 2)
+        (set-car! (car (rows initial 'out)) 3)
+        (let (updated (gerbil-ascent-session-replace-sources!
+                       session '((trigger (1)))))
+          (check-set (rows updated 'input) '((1)))
+          (check-set (rows updated 'out) '((1)))
+          (check-equal? (.ref updated 'evaluation-path)
+                        'stratified-dependency-invalidation))))
     (test-case "initial source snapshot owns caller row spines before first run"
       (let* ((row (list 1)) (x (gerbil-ascent-variable 'x))
              (program

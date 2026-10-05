@@ -339,9 +339,27 @@ native counterexample has a checker mutate a shared nested source value:
 without the gate, source-log equality selected reuse while a fresh
 solve observed the changed input. Qualification requires fresh evaluation
 and agreement with that input's newly derived output. This closes the
-field-callback effect in reuse admission, while caller mutation of raw
-Core nested host values and Gerbil-to-Lean evaluator refinement remain
-open. No performance claim follows from this proof.
+field-callback effect in reuse admission. A separate red/green native
+counterexample closes the same alias path without any field callback: a
+Core source holds a shared nested list; after the first completed solve,
+the caller mutates that list and replaces an independent trigger. Before
+the gate, the retained =out= still contained =hit= while a fresh solve
+produced no =out= row. Reuse eligibility now requires immutable scalar
+source values and rule literals. Exact built-in scalar field checks
+certify source rows during admission; unchecked Core declarations scan
+their prospective source rows. Non-scalar Core inputs take the fresh
+evaluation path. A second native counterexample exposed a publication
+alias even with scalar source rows: changing the row list returned by a
+completed Session result changed the privately retained source and
+could poison the reused result. Session =rows-of= now returns fresh
+outer and row list spines on every public read; the engine's publication
+cache remains private. The qualification mutates both a published source
+row and a published derived row, then requires the next replacement to
+retain the original values. These two boundaries make the compared cut
+stable for the admitted reuse subset. Arbitrary Core host values can
+still be mutable during a fresh evaluation, and Gerbil-to-Lean evaluator
+refinement remains open.
+No performance claim follows from this proof.
 
 The =TLCGenerationCutoff= constant is a finite *model-checking* search
 parameter, supplied by =ASCENT_TLC_GENERATION_CUTOFF= in the =Justfile= (four

@@ -87,6 +87,9 @@
              (a (car (vector-ref (gerbil-ascent-activate-rules analysis) 0)))
              (b (car (vector-ref (gerbil-ascent-activate-rules analysis) 0))))
         (check-equal? (eq? analysis (.ref second '.analysis)) #t)
+        (check-equal? (eq? (vector-ref analysis 6)
+                          (vector-ref (.ref second '.analysis) 6)) #t)
+        (check-equal? (vector-ref analysis 6) '#((1 1) (1)))
         (check-equal? (eq? (vector-ref a 4) (vector-ref b 4)) #t)
         (check-equal? (eq? (vector-ref a 5) (vector-ref b 5)) #t)
         (check-equal? (eq? (vector-ref a 6) (vector-ref b 6)) #f)
@@ -217,10 +220,19 @@
                                         (when (and (vector-ref matrix (+ (* 3 x) k))
                                                    (vector-ref matrix (+ (* 3 k) y)))
                                           (vector-set! matrix (+ (* 3 x) y) #t))) '(0 1 2))) '(0 1 2))) '(0 1 2))
-             (let ((actual (rows (compare (path-program edges) '(edge path)) 'path))
+             ;; Matrix closure is the independent oracle for this exhaustive
+             ;; corpus. Historical evaluator parity remains in focused Cases;
+             ;; replaying it here duplicates admission for all 512 graphs.
+             (let* ((result (gerbil-ascent-evaluate-program (path-program edges)))
+                    (actual (rows result 'path))
                    (expected (filter (lambda (edge) (vector-ref matrix (+ (* 3 (car edge)) (cadr edge)))) pairs)))
+               (check-equal? (.ref result 'finished) #t)
+               (check-equal? (rows result 'edge) edges)
                (check-equal? (length actual) (length expected))
-               (check-equal? (andmap (lambda (edge) (if (member edge actual) #t #f)) expected) #t))))
+               (check-equal? (andmap (lambda (edge) (if (member edge actual) #t #f)) expected) #t))
+             (when (zero? (modulo (+ bits 1) 8))
+               (displayln "POSITIVE-GRAPHS-CHECKED " (+ bits 1) "/512")
+               (force-output))))
          (iota 512))))
     (poo-flow-test-case "failed candidates and repeated variables never expose stale slots"
       (let ((x (v 'x)) (y (v 'y)))

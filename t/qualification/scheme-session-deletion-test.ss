@@ -2,6 +2,8 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 (import (only-in :std/test check-equal? check-exception test-case test-suite)
+        (only-in :gerbil-ascent/core/rule-semantics gerbil-ascent-rule-successors)
+        (only-in :gerbil-ascent/core/dependency-graph gerbil-ascent-graph-close!)
         (only-in :gerbil/runtime/gambit call-with-output-string display-exception)
         (only-in :clan/poo/object .o .ref)
         (only-in :gerbil-ascent/program/scheme-language relational-program)
@@ -200,6 +202,26 @@
 
 (def scheme-session-deletion-test
   (test-suite "Native dependency invalidation and source withdrawal"
+    (test-case "cached adjacency remains read-only across independent closures"
+      (let ((graph '#((0 1 1) (2) (2)))
+            (first (vector #t #f #f))
+            (second (vector #f #f #t)))
+        (gerbil-ascent-graph-close! graph first)
+        (gerbil-ascent-graph-close! graph second)
+        (check-equal? first '#(#t #t #t))
+        (check-equal? second '#(#f #f #t))
+        (check-equal? graph '#((0 1 1) (2) (2))))
+      (gerbil-ascent-graph-close! '#() '#())
+      (let* ((count 4096)
+             (graph (list->vector
+                     (map (lambda (index) (if (= (+ index 1) count) [] [(+ index 1)]))
+                          (iota count))))
+             (selected (make-vector count #f)))
+        (vector-set! selected 0 #t)
+        (gerbil-ascent-graph-close! graph selected)
+        (check-equal? (andmap identity (vector->list selected)) #t)
+        (check-equal? (vector-ref graph 0) '(1))
+        (check-equal? (vector-ref graph (- count 1)) [])))
     (test-case "fresh replacement reads lexical candidate rows without self-field recursion"
       (let* ((base (path-program '((0 1) (1 2))))
              (candidate (fresh-replacement-program
@@ -229,7 +251,7 @@
                 (candidate (gerbil-ascent-program
                             (list (gerbil-ascent-relation 'input (vector-ref fixture 0)
                                                          (vector-ref fixture 3))) [] 64 64 128)))
-           (check-equal? (vector-ref (gerbil-ascent-update-selection before candidate (vector [] [] [])) 0)
+           (check-equal? (vector-ref (gerbil-ascent-update-selection before candidate (vector [] [] [] #f #f #f '#(()))) 0)
                          (vector-ref fixture 4))
            (check-equal? (eq? base (car (vector-ref before 0))) #t)
            (check-equal? (eq? additions (cdr (vector-ref before 0))) #t)))
@@ -271,19 +293,22 @@
                           (vector (list (vector (cadr edge) []) (vector (cadr edge) []))
                                   (list (vector (list-ref '(atom negation aggregate) (modulo index 3))
                                                 (vector (car edge) [])))))
-                        edges (iota (length edges)))))
+                        edges (iota (length edges))))
+                  (successors (gerbil-ascent-rule-successors plans 3))
+                  (graph-before (vector-map (lambda (targets) (map identity targets)) successors)))
              (for-each
               (lambda (root)
                 (let* ((before (list->vector
                                 (map (lambda (index) (cons (if (= index root) [] '((1))) []))
                                      (iota 3))))
                        (actual (gerbil-ascent-update-selection before candidate
-                                                              (vector [] [] plans))))
+                                                              (vector [] [] plans #f #f #f successors))))
                   (check-equal?
                    (vector->list actual)
                    (map (lambda (target)
                           (or (= target root) (and (member (list root target) closure) #t)))
-                        (iota 3)))))
+                        (iota 3)))
+                  (check-equal? successors graph-before)))
               (iota 3))))
          (iota 64))))
     (test-case "unchanged lattice source joins consume no reused derived budget"

@@ -7,6 +7,7 @@
 (import (only-in "objects.ss" gerbil-ascent-clause-plan
                  gerbil-ascent-bound-membership)
         (only-in :gerbil-ascent/core/rule-semantics gerbil-ascent-rule-strata
+                 gerbil-ascent-rule-successors
                  gerbil-ascent-delta-positions)
         (only-in :gerbil-ascent/core/positive-plan gerbil-ascent-prepare-rule-activations)
         (only-in :clan/poo/object .ref))
@@ -62,7 +63,8 @@
              (lambda () (gerbil-ascent-rule-strata plans count kinds)))))
       (let (active (active-rules plans strata))
         (vector relations rules plans strata active
-                (gerbil-ascent-prepare-rule-activations active))))))
+                (gerbil-ascent-prepare-rule-activations active)
+                (gerbil-ascent-rule-successors plans count))))))
 
 ;;; Group each rule's heads once instead of rescanning every rule in every
 ;;; stratum. Reverse both accumulators to retain head and source-rule order.

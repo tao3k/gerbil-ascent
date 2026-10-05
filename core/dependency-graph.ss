@@ -7,7 +7,42 @@
 ;;; Numeric specialization boundary: IDs and discovery indices are bounded
 ;;; by vector-length, including the final count sentinel. Checked fx operations
 ;;; apply only to these dense traversal counters, never to caller edge labels.
-(export gerbil-ascent-graph-components)
+(export gerbil-ascent-graph-components gerbil-ascent-graph-close!)
+
+;; gerbil-ascent-graph-close!
+;;   : (-> (Vector [Nat]) (Vector Boolean) Void)
+;;   : (-> DenseAdjacency (Vector Boolean) Void)
+;;   | doc m%
+;;       Close an invocation-owned selection over read-only dense adjacency.
+;;       Mark before enqueue so cycles and repeated edges visit a vertex once.
+;;       The adjacency and all its lists remain unchanged.
+;;
+;;       # Examples
+;;
+;;       ```scheme
+;;       (let (selected (vector #t #f))
+;;         (gerbil-ascent-graph-close! '#((1) ()) selected)
+;;         selected)
+;;       ;; => #(#t #t)
+;;       ```
+;;     %
+(def (gerbil-ascent-graph-close! successors selected)
+  (let ((count (vector-length selected)) (pending []))
+    (let seed ((index 0))
+      (when (< index count)
+        (when (vector-ref selected index) (set! pending (cons index pending)))
+        (seed (+ index 1))))
+    (let visit ()
+      (unless (null? pending)
+        (let (source (car pending))
+          (set! pending (cdr pending))
+          (for-each
+           (lambda (target)
+             (unless (vector-ref selected target)
+               (vector-set! selected target #t)
+               (set! pending (cons target pending))))
+           (vector-ref successors source)))
+        (visit)))))
 
 ;; gerbil-ascent-graph-components
 ;;   : (-> (Vector [Nat]) [[Nat]])

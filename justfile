@@ -113,6 +113,19 @@ _test-suite jobs lane:
         while IFS= read -r path; do just _test-file "$path" 2>&1 | tee "$directory/$(basename "$path").log"; done < "$directory/exclusive"
     fi
 
+# Paired native source-selection over compiled declaration dependencies.
+performance-update-dependencies:
+    {{ test_runner }} run -- just _performance-update-dependencies
+
+_performance-update-dependencies:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    library="{{ justfile_directory() }}/.cache/ascent/native-library/lib"
+    gxi {{ gerbil_test_runtime_options }} -e '(add-load-path! (path-expand ".cache/ascent/native-library/lib"))' -e '(import :std/make)' -e '(make ["core/dependency-graph" "core/rule-semantics" "program/planning" "program/update-selection" "t/performance/update-dependencies/reference" "t/performance/update-dependencies-benchmark"] srcdir: (current-directory) libdir: (path-expand ".cache/ascent/native-library/lib") build-deps: (path-expand ".cache/ascent/native-library/build-deps"))'
+    for scenario in chain-changed chain-unchanged wide-changed wide-unchanged; do
+        timeout 90s gxi {{ gerbil_test_runtime_options }} -e '(add-load-path! (path-expand ".cache/ascent/native-library/lib"))' :gerbil-ascent/t/performance/update-dependencies-benchmark "$scenario" "$library"
+    done
+
 # Paired native index construction, extension and evaluated-key lookup.
 performance-scalar-index:
     {{ test_runner }} run -- just _performance-scalar-index

@@ -294,3 +294,108 @@ was no matched full-solve gain, so the production and fixture changes
 were reverted. The retained row-key implementation and index plans
 remain as at =74f0046=.
 
+
+* Feature: compile dependency adjacency with immutable rule analysis
+
+Source baseline: =536c87a=. Gerbil v0.19's =std/make.ss:224-246,338-343=
+creates the completion table once for a build invocation and lets its workers
+consult the shared module dependency metadata; worker readiness and channels
+remain separate state. =gerbil/compiler/optimize-base.ss:24-29= similarly
+places optimizer metadata in a named owner rather than reconstructing it at
+every use. The useful principle here is lifetime: compile declaration facts
+at their owner boundary and keep invocation state out of the cached value.
+This is an architectural inference, not a claim of algorithm parity with make.
+
+ASCENT previously rebuilt every source-to-head edge at each source replacement
+in =program/update-selection.ss=. =program/planning.ss= already constructs and
+caches immutable admitted rule plans. It now also compiles adjacency through
+=core/rule-semantics.ss= and retains it at analysis slot 6. All earlier slots
+keep their meaning. Changing rules creates new analysis; source-only updates
+reuse the original declaration analysis and its graph.
+
+| Owner | Responsibility |
+|-------+----------------|
+| =core/rule-semantics.ss= | Compile atom, negation and aggregate reads to all rule heads |
+| =core/dependency-graph.ss= | Read adjacency and close a caller-owned selection bitmap |
+| =program/planning.ss= | Build graph once with admitted immutable plans |
+| =program/update-selection.ss= | Admit reuse, compare source snapshots and allocate each update's bitmap |
+
+The graph is private planning metadata, read-only after construction. It owns
+only dense relation IDs, never source rows, callbacks, mutable engine frames or
+reuse results. Each traversal owns its queue and marks before enqueue, so
+cycles and duplicate edges cannot revisit a vertex. Traversal order is not an
+observable rule execution order: the result is a Boolean relation selection.
+Positive, negative and aggregate dependencies all invalidate every head;
+guards and bindings do not add an edge.
+
+The existing session-deletion Suite checks every three-node graph and root
+against independent matrix reachability, and now reuses the same adjacency
+across roots while checking it is unchanged. Additional tests cover self-loops,
+duplicate edges, independent invocations, zero vertices and a 4096-node chain.
+Existing retained Session cases cover deletion, negation, aggregates, lattice
+replacement, append logs, failed transactions and subsequent append behavior.
+
+=just performance-update-dependencies= freezes the old selection implementation
+from =536c87a=, with only its relative checked-language import normalized. Both
+implementations run as compiled native modules, with path and object checks,
+on the same admitted program and prepared analysis. Declaration construction
+and graph compilation occur before the timer; the measured boundary is repeated
+source-selection, including eligibility, source comparison and closure. It is
+not a full replacement/solve or cold program-construction measurement. A graph
+adds retained metadata and one upfront edge-building pass; that cost is not
+represented as free. Four cases cover chain/wide dependencies, changed/unchanged
+sources. One initial collection precedes warmup; natural GC remains included.
+100 alternating pairs check exact bitmap parity outside each timed batch.
+Wide graphs must reduce allocation by 20%, CPU median by 10%, and win at least
+75 pairs; chains must not increase allocation or regress CPU by more than 5%.
+These limits are fixed before sampling. Logs remain under ignored
+=.cache/ascent/update-dependencies/=.
+
+** Native paired receipt
+
+All four scenarios complete 100 pairs, exact bitmap parity and their original
+CPU/allocation gates, with final OK per scenario and coordinator exit 0.
+Per-call medians (CPU in microseconds):
+
+| Scenario | Bytes old/new | CPU old/new | CPU wins |
+|----------+---------------+-------------+----------|
+| Chain changed | 20420.8 / 13332.8 | 49.6 / 48.5 | 76/100 |
+| Chain unchanged | 17396.8 / 10308.8 | 50.3 / 48.6 | 72/100 |
+| Wide changed | 823892.8 / 11844.8 | 256.6 / 213.5 | 76/100 |
+| Wide unchanged | 822356.8 / 10308.8 | 264.9 / 220.6 | 77/100 |
+
+Wide selection allocation is 98.6-98.7% lower and CPU medians are 16.7-16.8%
+lower. Chains allocate 34.7-40.7% less; CPU medians are 2.2-3.4% lower, within
+the original regression limit. These results do not qualify cold program
+construction, full source replacement, solve time or wall-clock latency.
+The initial benchmark invocation times out waiting for the existing test-lane
+lock; it contains no performance samples. It is retained as a failed attempt,
+and the benchmark is rerun after the semantic invocation releases the lock.
+Neither lock nor test deadlines are extended.
+
+** Exhaustive oracle ownership
+
+The first positive-plan module invocation fails its existing POO Case duration
+budget inside the 512-graph corpus and then its module process deadline. This
+is not accepted as qualification. That corpus already computes independent
+matrix closure, but additionally replayed the unchanged historical evaluator
+for every graph. It now compares the current result directly with the matrix
+oracle, explicitly requiring completion and unchanged ordered source rows,
+exact closure cardinality and every expected edge. The 512 inputs and all
+oracle assertions are retained; other focused Cases still compare old/new
+evaluators. Every eight completed, checked graphs emit a real progress marker.
+No duration or process deadline is increased. The failed invocation remains
+under =.cache/ascent/update-dependencies/ascent-positive-plan.log=.
+
+** Final native semantic receipt
+
+Four module invocations pass 56 distinct Cases: session deletion (13), rule
+programs (14), positive plans (17), and timeout/recovery (12). The final
+positive-plan invocation checks all 512 graphs and passes in 83 seconds under
+the unchanged 60-second Case and 120-second module deadlines. Every final
+module has MODULE-OK, HARNESS-OK, OK and supervising exit 0. The changed
+production owners pass the policy scan with zero findings and zero errors.
+The initial failed positive-plan invocation is not included in this receipt.
+The incoming remote revision =c5df1ac= changes formal proofs and CI configuration,
+with no changes to these Scheme production or qualification sources. Local
+qualification remains distinct from current-head remote CI and static AOT.

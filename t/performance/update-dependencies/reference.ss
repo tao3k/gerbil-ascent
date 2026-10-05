@@ -5,9 +5,8 @@
 ;;; Native dependency invalidation selects components; the evaluator owns
 ;;; reuse capsules, mutable rows, budget accounting and atomic publication.
 (import (only-in :clan/poo/object .ref)
-        (only-in "scheme-checked.ss" relational-stable-procedure?)
+        (only-in :gerbil-ascent/program/scheme-checked relational-stable-procedure?)
         (only-in :gerbil-ascent/core/positive-plan gerbil-ascent-positive-plan)
-        (only-in :gerbil-ascent/core/dependency-graph gerbil-ascent-graph-close!)
         (only-in :gerbil-ascent/table/storage gerbil-ascent-canonical-set-storage-provider?))
 (export gerbil-ascent-update-eligible? gerbil-ascent-update-selection
         gerbil-ascent-update-active-plans)
@@ -69,6 +68,7 @@
 (def (gerbil-ascent-update-selection previous candidate analysis)
   (let* ((relations (.ref candidate 'relations))
          (old-relations (vector->list previous))
+         (plans (vector-ref analysis 2))
          (count (length relations))
          (affected (make-vector count #f)))
     (let (eligible?
@@ -82,8 +82,55 @@
                (unless (equal? (append (car old) (reverse (cdr old))) (.ref new 'rows))
                  (vector-set! affected index #t)))
              old-relations relations (iota count))
-            (gerbil-ascent-graph-close! (vector-ref analysis 6) affected)
+            (propagate-affected! plans affected)
             affected)))))
+
+;; propagate-affected!
+;; : (forall (p) (-> [p] (Vector Boolean) Void))
+;; : (-> RulePlans AffectedRelations Void)
+;; | doc m%
+;;     Build invocation-local dependency edges and visit each affected relation
+;;     once. Positive, negative and aggregate reads invalidate every rule head.
+;;     Marking before enqueue prevents cycles and repeated heads from revisiting.
+;;
+;;     # Examples
+;;
+;;     ```scheme
+;;     (propagate-affected! [] (vector #t #f))
+;;     ;; => no additional affected relations
+;;     ```
+;;   %
+(def (propagate-affected! plans affected)
+  (let* ((count (vector-length affected))
+         (successors (make-vector count []))
+         (pending []))
+    (for-each
+     (lambda (rule)
+       (let (heads (map (lambda (head) (vector-ref head 0)) (vector-ref rule 0)))
+         (for-each
+          (lambda (clause)
+            (when (memq (vector-ref clause 0) '(atom negation aggregate))
+              (let (source (vector-ref (vector-ref clause 1) 0))
+                (vector-set! successors source
+                  (append heads (vector-ref successors source))))))
+          (vector-ref rule 1))))
+     plans)
+    (let seed ((index 0))
+      (when (< index count)
+        (when (vector-ref affected index) (set! pending (cons index pending)))
+        (seed (+ index 1))))
+    (let visit ()
+      (unless (null? pending)
+        (let (source (car pending))
+          (set! pending (cdr pending))
+          (for-each
+           (lambda (target)
+             (unless (vector-ref affected target)
+               (vector-set! affected target #t)
+               (set! pending (cons target pending))))
+           (vector-ref successors source)))
+        (visit)))))
+
 
 ;; gerbil-ascent-update-active-plans
 ;; : (forall (a) (-> (Vector [a]) Vector (Vector [a])))

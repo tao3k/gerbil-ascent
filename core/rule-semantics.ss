@@ -8,6 +8,7 @@
         (only-in "dependency-graph.ss" gerbil-ascent-graph-components))
 
 (export gerbil-ascent-rule-strata
+        gerbil-ascent-rule-successors
         gerbil-ascent-lattice-feeds-relation?
         gerbil-ascent-delta-positions
         gerbil-ascent-lattice-key
@@ -16,6 +17,37 @@
         gerbil-ascent-expression-value
         gerbil-ascent-bind-row
         gerbil-ascent-head-row)
+
+;; gerbil-ascent-rule-successors
+;;   : (-> RulePlans Nat DenseAdjacency)
+;;   | doc m%
+;;       Compile source-to-head invalidation edges from admitted rule plans.
+;;       Positive, negative and aggregate reads affect every head. Non-reading
+;;       clauses add no edge. The fresh graph belongs to immutable analysis;
+;;       source rows and mutable engine state are never retained.
+;;
+;;       # Examples
+;;
+;;       ```scheme
+;;       (gerbil-ascent-rule-successors [] 2) ;; => #(() ())
+;;       ```
+;;     %
+(def (gerbil-ascent-rule-successors plans count)
+  (let (successors (make-vector count []))
+    (for-each
+     (lambda (rule)
+       (for-each
+        (lambda (clause)
+          (when (memq (vector-ref clause 0) '(atom negation aggregate))
+            (let (source (vector-ref (vector-ref clause 1) 0))
+              (for-each
+               (lambda (head)
+                 (vector-set! successors source
+                   (cons (vector-ref head 0) (vector-ref successors source))))
+               (vector-ref rule 0)))))
+        (vector-ref rule 1)))
+     plans)
+    successors))
 
 (def (gerbil-ascent-lattice-key row)
   (unless (pair? row)

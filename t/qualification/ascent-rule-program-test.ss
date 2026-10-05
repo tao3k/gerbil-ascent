@@ -108,6 +108,7 @@
                (gerbil-ascent-program-schema program relations) #f))
              (active (vector-ref analysis 4)))
         (check-equal? (vector-ref analysis 3) '#(0 0 0 1))
+        (check-equal? (vector-ref analysis 6) '#((3 3 2 3) (3) () ()))
         (check-equal?
          (vector-map
           (lambda (rules)

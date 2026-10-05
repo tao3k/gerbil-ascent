@@ -363,7 +363,7 @@ closure, model gain or MRR integration is asserted.
 The [[file:scheme-actor-runtime-design.org][actor runtime design]] now has an implemented source-cut owner and independent
 compute worker. Cancel increments generation, refuses old publication and waits
 for assigned worker/monitor drain; failure restores committed sources. Native
-lifecycle tests and Lean/TLA+ publication/drain laws accompany the code. B22's
+lifecycle tests and TLA+ publication/drain checks accompany the code. B22's
 outer/inner natural time distinction motivates generation versus round; A22's
 ready-SCC dependency scheduling remains a next implementation obligation.
 The actor constructor uses fresh engines, not retained incremental reuse. No
@@ -376,7 +376,7 @@ projection to actual native component workers. Completed predecessors release
 successors without waiting for unrelated active SCCs; each SCC retains local
 round completion, one owner charges global unique-row budgets, and the complete
 cut remains the Session publication unit. Native independent truth/rendezvous
-Cases and Lean/TLA+ prerequisite/drain gates accompany this slice. A22's SCC
+Cases and TLA+ prerequisite/drain gates accompany this slice. A22's SCC
 order/local state is implemented for pure Set cuts; B23 Provider concretization
 remains a separate contract. A matched exploratory native timing probe retains
 serial and SCC 1/2/4 observations without asserting general multicore speedup.
@@ -387,7 +387,7 @@ Immutable analysis identity now keys a weak component-plan cache. SCC admission
 policy is owned by the component module, repairing the prior CI module-size
 failure without changing its threshold. Runtime rows/frames/indexes remain
 solve-private. Native exact-identity and fresh-versus-cached projection controls,
-abstract Lean identity/publication laws, and replayed TLA scheduling safety are
+pure Lean identity/cache-construction equations, and replayed TLA scheduling safety are
 recorded in [[file:evidence/scheme-component-cache-20261005/receipt.json][the qualification receipt]]. Planning-only timing is not an end-to-end
 claim. Remaining gates include persistent worker/index reuse, large SCC
 partitioning, custom Provider concurrency and matched scale/CPU/allocation tests.

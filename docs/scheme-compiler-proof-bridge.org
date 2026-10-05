@@ -584,10 +584,12 @@ these boundaries. The index Suite retains its five independent reference
 Cases. This carrier work closes the qualified single-module execution path;
 the general gxtest/module-pool startup path has its own remaining gate.
 
-The synchronized proof check includes the upstream unbounded native Session
-publication model. Lean's generation argument ranges over natural numbers;
-=TLCGenerationCutoff= configures finite enumeration. This model check and
-native carrier qualification retain their respective abstraction boundaries.
+The recorded synchronized proof check included the former Lean Session
+publication replica. That historical receipt remains bound to its original
+sources; the replica is now removed and its unbounded protocol claims retired.
+Current Session protocol checks belong to TLA+, where =TLCGenerationCutoff=
+configures finite enumeration only. Native carrier qualification does not
+establish an unbounded protocol theorem.
 
 The [[file:evidence/scheme-native-entry-20261005/session-repair.json][Session follow-up receipt]] records a failed exact-head CI at =53df4c1=:
 the newly added replacement-ownership Case lacked two closing parentheses,

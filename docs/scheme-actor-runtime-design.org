@@ -126,20 +126,20 @@ Native implementation gates:
   duplicate, late, canceled, failed-worker and full-mailbox discriminators.
 - Positive SCC worker results equal the independent serial truth after every
   round and at publication, including provider expansion and skewed partitions.
-- Lean refinement links actual coordinator transitions to unbounded safety
-  laws. Existing Session publication proofs do not certify this new scheduler.
+- TLA+ refinement must link actual coordinator transitions to protocol safety.
+  Finite model checking does not establish an unbounded native trace theorem.
 - Matched 1/2/4-worker measurements report queue delay, work, merge time, CPU,
   allocations, throughput and latency, including regressions and backend limits.
 
 This decision adds no native concurrent solver or measured parallel benefit.
 MRR Rust integration retains its later acceptance gate.
 
-=RoundAdmission.lean= supplies the current unbounded work-key laws: a reply
-with any different key/generation leaves the state unchanged; terminal task
-acceptance is idempotent; receive/cancel preserve publication; re-enabling
-acceptance after cancellation still rejects the old generation. The planned
-native coordinator must implement these transitions before inheriting those
-claims. Draining, credits and worker liveness are not proved by that module.
+=ActorRound.tla= owns different-key/generation rejection, duplicate terminal
+replies, cancellation and publication checks over reachable modeled traces.
+The former Lean work-key transition replica has been removed; its unbounded
+claims are retired. Native coordinator correspondence and worker liveness
+remain separate obligations. =RoundAdmission.lean= retains only checkpoint
+arithmetic, immutable cache lookup and bucket extension equations.
 
 * Qualified slice
 
@@ -274,10 +274,9 @@ worker-safe representation. Plain concurrent tuple union does not establish it.
 
 ** Formal/evidence boundary
 
-=RoundAdmission.lean= now distinguishes queued admission from assigned work:
-stop preserves assigned work, assigned membership forbids return, and terminal
-ack removes that task. Naturals remain unbounded. =ActorRoundCredits.tla= checks
-assignment capacity, one outstanding credit per worker and return only after
+=ActorRoundCredits.tla= owns queued/assigned work, stop and terminal
+acknowledgement transitions. It checks assignment capacity, one outstanding
+credit per worker and return only after
 drain at exploration capacities 1/2/3. An injected early return must produce a
 =CompleteReturn= counterexample. These are safety abstractions, without scheduler
 fairness, arbitrary callback termination or a proven Scheme/VM refinement.
@@ -436,9 +435,9 @@ and ready-callback failure drain. Session cancel/close/failure tests continue to
 exercise the actual SCC engine. This is executable causal overlap evidence,
 without an inference of multicore CPU scaling.
 
-=RoundAdmission.lean= proves ready predecessor membership, inert foreign/duplicate
-completion and readiness independence from unrelated active work over unbounded
-natural ids. =ReadyComponents.tla= explores capacities 1/2/3 for prerequisite,
+=ReadyComponents.tla= owns ready predecessor admission, foreign/duplicate
+completion and dispatch alongside unrelated active work. It explores capacities
+1/2/3 for prerequisite,
 partition, capacity and complete-return safety. Premature dispatch and early
 return mutations must fail =Prerequisites= and =CompleteReturn=. These fragments
 do not prove the complete Gerbil/Tarjan/head-projection/VM refinement or liveness.
@@ -515,8 +514,9 @@ unchanged output truth, and equality of fresh/cached projected metadata. A paire
 64-edge fresh-solve probe still checks all output relations for every sample.
 The planning probe cannot establish end-to-end or multicore benefit.
 
-=RoundAdmission.lean= now adds abstract identity hit/miss and completed/failed
-cache publication laws. =ReadyComponents.tla= is replayed unchanged because the
+=RoundAdmission.lean= proves immutable identity hit/miss and the equations
+for completed/failed cache construction. These are pure function laws, not
+publication or synchronization protocols. =ReadyComponents.tla= is replayed unchanged because the
 cache adds no active/done/return transitions. Neither proves the native weak
 hash/mutex implementation. The [[file:evidence/scheme-component-cache-20261005/receipt.json][cache qualification receipt]] records outcomes,
 negative measurements and the preceding CI failure. Model calls remain 0.

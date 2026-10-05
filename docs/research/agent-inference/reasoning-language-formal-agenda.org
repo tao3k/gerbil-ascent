@@ -187,7 +187,9 @@ work and abort over one symbolic direct/via/blocked row. Its =ResultOf=
 is the branch-local formula from the Lean slice; a =global= mutation
 puts exclusion after union and must violate =AtomicSnapshot= when a
 blocked direct witness is published. This compares the same formula
-across the two artifacts but is not a mechanized Lean-to-TLA translation.
+as a semantic oracle for transaction traces. Lean owns the universal
+branch-local equation; TLA+ checks its use during publication and invalidation.
+This is not a mechanized Lean-to-TLA translation or a duplicate algebra proof.
 A =reuse= mutation keeps the old answer when only the blocker bit
 changes; it must also violate =AtomicSnapshot= once a via witness is
 retracted or restored. This directly checks that a lower-stratum
@@ -404,9 +406,10 @@ The =TLCGenerationCutoff= constant is a finite *model-checking* search
 parameter, supplied by =ASCENT_TLC_GENERATION_CUTOFF= in the =Justfile= (four
 generations in CI). Direct =.cfg= invocation samples two generations.
 Neither value limits a native Session, an ASCENT fixed point, or a model's
-reasoning budget. Lean's =publications_consistent= proves the abstract
-publication invariant for a list of any length; that theorem still assumes
-each completed result is qualified and does not establish native refinement.
+reasoning budget. The former Lean =publications_consistent= protocol theorem
+has been removed and its unbounded trace claim retired. Current finite TLC
+checks do not replace that claim. An unbounded temporal result and native
+trace refinement remain TLA+ obligations.
 
 The next cross-owner safety model belongs at the ASCENT-to-MRR
 publication boundary. Model =Propose=, =Solve=, =SourceChange=,

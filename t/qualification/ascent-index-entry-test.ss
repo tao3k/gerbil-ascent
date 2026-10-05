@@ -1,0 +1,109 @@
+;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+(import (only-in :std/test check-equal? test-case test-suite)
+        :gerbil-ascent/t/performance/index-entry/fixture
+        (only-in :gerbil-ascent/program/evaluate gerbil-ascent-evaluate-program)
+        (rename-in (only-in :gerbil-ascent/t/performance/index-entry/reference-evaluate gerbil-ascent-evaluate-program)
+                   (gerbil-ascent-evaluate-program old-evaluate)))
+(export ascent-index-entry-test)
+(def (run-lifecycle old? fail?)
+  (let* ((events []) (reject #f)
+         (provider (index-entry-provider (lambda (event) (set! events (cons event events)))
+                                        (lambda (kind) (eq? kind reject))))
+         (rows (map (lambda (n) (list 0 n)) (iota 32)))
+         (h (index-entry-harness old? rows provider))
+         (lookup (vector-ref h 0)) (advance! (vector-ref h 1))
+         (atom (index-entry-atom '(0) '(0)))
+         (other (index-entry-atom (list 0) '(0)))
+         (answers []))
+    (def (query term delta?) (set! answers (cons (lookup term [] delta? #f) answers)))
+    (def (attempt call)
+      (with-catch (lambda (failure) (error-message failure)) (lambda () (call) 'ok)))
+    ;; Equivalent atom identities share one structural index, independently in
+    ;; all and delta. Lookup arguments are still computed once per invocation.
+    (query atom #f) (query other #f) (query atom #t) (query other #t)
+    (when fail?
+      (set! reject 'extend)
+      (check-equal? (attempt (lambda () (advance! 0 '((0 32))))) "planned extend failure")
+      (set! reject #f)
+      (query other #f))
+    (advance! 0 '((0 32)))
+    (vector-set! (vector-ref h 2) 0 (cons '(0 32) rows))
+    (vector-set! (vector-ref h 4) 0 33)
+    (vector-set! (vector-ref h 6) 0 1)
+    (query atom #f) (query other #f)
+    (vector-set! (vector-ref h 3) 0 '((0 -1)))
+    (vector-set! (vector-ref h 5) 0 1)
+    (vector-set! (vector-ref h 7) 0 1)
+    (query atom #t)
+    (vector-set! (vector-ref h 3) 0 (map (lambda (n) (list 0 (- n))) (iota 32)))
+    (vector-set! (vector-ref h 5) 0 32)
+    (vector-set! (vector-ref h 7) 0 2)
+    (when fail?
+      (set! reject 'build)
+      (check-equal? (attempt (lambda () (query atom #t))) "planned build failure")
+      (set! reject #f))
+    (query other #t) (query atom #t)
+    (check-equal? (length (car answers)) 32)
+    (check-equal? (cadr answers) (car answers))
+    (check-equal? (list-ref answers 2) '((0 -1)))
+    (check-equal? (list-ref answers 3) (cons '(0 32) rows))
+    (list (reverse events) answers)))
+(def ascent-index-entry-test
+  (test-suite "Engine-owned stable physical index entries"
+    (test-case "all delta shared atoms and returned extension values preserve traces"
+      (check-equal? (run-lifecycle #f #f) (run-lifecycle #t #f)))
+    (test-case "failed extension and rebuild preserve retryable versions"
+      (check-equal? (run-lifecycle #f #t) (run-lifecycle #t #t)))
+    (test-case "cold build failure does not publish an index or skip later build"
+      (for-each
+       (lambda (old?)
+         (let* ((events []) (fail? #t)
+                (h (index-entry-harness old? (map list (iota 32))
+                     (index-entry-provider (lambda (e) (set! events (cons e events))) (lambda (_) fail?))))
+                (atom (index-entry-atom '(0) '(7))))
+           (with-catch (lambda (failure) (check-equal? (error-message failure) "planned build failure"))
+                       (lambda () ((vector-ref h 0) atom [] #f #f) (error "expected failure")))
+           ;; A failed placeholder is not an eligible current index to extend.
+           ((vector-ref h 1) 0 '((33)))
+           (set! fail? #f)
+           (check-equal? ((vector-ref h 0) atom [] #f #f) '((7)))
+           (check-equal? (map car (reverse events)) '(build build lookup)))) '(#f #t)))
+    (test-case "expression keys run after build and again at every identity hit"
+      (def (trace old?)
+        (let* ((events [])
+               (h (index-entry-harness old? (map list (iota 32))
+                    (index-entry-provider (lambda (e) (set! events (cons (car e) events))))))
+               (term (cons 'expression (vector '(x) (lambda (n) (set! events (cons (list 'expression n) events)) n))))
+               (atom (vector 0 (list term) '(0) (list term) (list term))))
+          (check-equal? ((vector-ref h 0) atom '((x . 7)) #f #f) '((7)))
+          (check-equal? ((vector-ref h 0) atom '((x . 8)) #f #f) '((8)))
+          (reverse events)))
+      (check-equal? (trace #f) '(build (expression 7) lookup (expression 8) lookup))
+      (check-equal? (trace #t) (trace #f)))
+    (test-case "finite column layouts and row versions agree with direct projection"
+      (for-each
+       (lambda (columns)
+         (let* ((rows (map (lambda (n) (list n (modulo n 2) (modulo n 3) #f)) (iota 40)))
+                (values (map (lambda (c) (list-ref (list 7 1 1 #f) c)) columns))
+                (atom (index-entry-atom columns values))
+                (same (index-entry-atom (map (lambda (c) c) columns) values))
+                (expected (filter (lambda (row) (equal? (map (lambda (c) (list-ref row c)) columns) values)) rows)))
+           (for-each
+            (lambda (old?)
+              (let (h (index-entry-harness old? rows (index-entry-provider (lambda (_) (void)))))
+                (for-each (lambda (term) (check-equal? ((vector-ref h 0) term [] #f #f) expected)) (list atom same atom))))
+            '(#f #t))))
+       '((0) (1) (2) (3) (0 1) (0 2) (0 3) (1 2) (1 3) (2 3)
+         (0 1 2) (0 1 3) (0 2 3) (1 2 3) (0 1 2 3) (3 1) (1 1))))
+    (test-case "full solve parity with duplicated plans and independent engines"
+      (for-each
+       (lambda (width)
+         (let* ((p (index-entry-program 40 width 4))
+                (a (old-evaluate p)) (b (gerbil-ascent-evaluate-program p)))
+           (check-equal? (index-entry-result-rows a) (index-entry-result-rows b))
+           (check-equal? (list-sort (lambda (a b) (< (car a) (car b))) (index-entry-result-rows b)) (map list (iota 40)))
+           (let (workers (map (lambda (_) (spawn (lambda () (index-entry-result-rows (gerbil-ascent-evaluate-program p))))) (iota 4)))
+             (for-each (lambda (worker) (check-equal? (thread-join! worker) (index-entry-result-rows b))) workers))))
+       '(1 8 64)))))

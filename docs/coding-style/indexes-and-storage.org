@@ -5,6 +5,84 @@
 Row projection, indexed keys, equivalence classes and lattice binding. Study notes and receipts retain their original revision and scope;
 historical source paths and timings are not current qualification claims.
 
+* Study: stable engine-owned physical index entries
+
+The installed Gerbil compiler's =optimize-base.ss:24-29= names its private
+optimizer state and owns identity-keyed tables for types, classes, signatures
+and methods. Identity lookup is appropriate after a stable object has been
+resolved; it does not replace semantic equality at the initial resolution.
+
+=program/index.ss= now applies that distinction to admitted immutable atoms.
+Each engine retains separate all/delta structural column tables and lazy
+identity tables. An atom's first indexed lookup resolves a shared column entry;
+subsequent lookups reuse that same entry by atom identity. Different atoms with
+equal columns still share the physical index. No row, expression value or
+lookup result is memoized. Small relations and empty column sets retain their
+existing bypass, so they allocate no identity table.
+
+A private =physical-index-entry= record names its version and physical value.
+Its stable identity survives incremental extension and replacement. The new
+physical value is installed only after build/extend returns successfully;
+=version=#f= means a failed cold build has no ready index and cannot be extended.
+Delta version changes rebuild normally. The column-table traversal updates
+owned fields instead of replacing table values and allocating version pairs.
+Custom providers may return a new index object; every atom sharing the entry
+then observes it. Entries and identity tables never cross engine boundaries.
+
+The exact =a890b9919504f1daadb9990aa501797777a00856= index owner is frozen in
+=t/performance/index-entry/reference.ss=. The complete baseline evaluator
+changes only import routing to that owner. Both graphs share all other current
+runtime modules. Source comparison verifies that boundary; native compilation
+and exact prefix/.o1 checks qualify both sides before timing.
+
+=just performance-index-entry= uses explicit scenario/library/receipt arguments,
+50 alternating pairs in each of seven scenarios (350 total), native CPU
+user+system and allocation counters. Initial GC and four warm-up comparisons
+are outside timing; natural GC is included. Checks preserve ordered rows and
+independent expected projections outside each timed batch. Warm lookup kernels
+batch 512 calls; other kernels and full warm-declaration solves batch ten.
+
+| Scenario | Old CPU us | New CPU us | Old bytes | New bytes | CPU wins |
+|----------+------------+------------+-----------+-----------+----------|
+| 64-column warm all lookup | 1.1602 | 0.8438 | 3072.4 | 3072.4 | 49/50 |
+| 64-column warm delta lookup | 1.2188 | 0.9004 | 3072.4 | 3072.4 | 47/50 |
+| 64-column extension plus lookup | 2.9 | 2.3 | 6500.8 | 6436.8 | 48/50 |
+| Scalar warm control | 0.3008 | 0.2598 | 0.4 | 0.4 | 46/50 |
+| Cold 128-row index control | 164.7 | 171.4 | 421268.8 | 424148.8 | 18/50 |
+| Complete 128-row / 64-column control | 1469.0 | 1223.5 | 2091508.8 | 2094388.8 | 36/50 |
+| Complete 128-row / one-column control | 225.2 | 201.1 | 121396.8 | 124276.8 | 33/50 |
+
+Gates were fixed before sampling: the three wide index kernels require 15%
+median CPU savings, 35/50 wins and at most 256 additional bytes per call.
+Scalar, cold and complete-solve controls allow at most 8 KiB and 5%+20 us
+absolute overhead. Every gate passed. Qualified kernel CPU reductions are
+27.3%, 26.1% and 20.7%; warm allocation is unchanged. Cold/full construction
+adds 2880 bytes when an identity table is needed; cold CPU increased 4.1%.
+The complete solves are nonregression controls, not a qualified universal
+solver improvement. Their lower observed medians are retained without changing
+the gate after seeing measurements.
+
+Native qualification passed six modules / 29 Cases in the existing actor pool
+with =test-pool auto= resolving to 12. Module execution took 0-3 seconds.
+The new Suite covers shared atoms, all/delta isolation, provider replacement
+objects, failed build/extend retries, threshold transitions, repeated/reordered
+columns, key-expression order, full solves and independent concurrent engines.
+Existing lifecycle, index, BYODS, workspace and observability modules passed.
+Production policy reported =findings=0 errors=0=. Logs and raw pair receipts
+remain in ignored =.cache/ascent/index-entry/=.
+
+Prior exact-head CI exposed the cold native zero-budget observation probe:
+=a890b99= returned =unexpected-admission= without a collected heap sample.
+The adopted remote commits =81f3e33= and =df42dc2= use the existing Core
+=collect-before-sample?= option and print actual pre-/post-collection counters.
+Gambit's official =lib/_kernel.scm= (blob =e37bc7508f542793b93dd8572d75dabeb309bf7e=)
+projects statistics slot 15 from =latest_gc_heap_size_= and slot 17 from
+=latest_gc_live_=. A fresh native child must establish that measurement before
+asserting a zero-byte rejection. Neither the budget nor watchdog was relaxed.
+The remote proof/registry changes were preserved; the measured index sources
+remained byte-identical after integration. Native index/observation tests were
+rerun on the integrated tree.
+
 * Feature: prepared general index key terms
 
 =gerbil/compiler/optimize-call.ss:88= checks mutable bindings before substituting

@@ -121,6 +121,20 @@ check-actor-pool:
       echo "NATIVE-REGISTRY-CONTROL-OK $control exit=$code"
     done
 
+# Paired native engine-owned physical index entries and complete indexed solves.
+performance-index-entry:
+    {{ test_runner }} run -- just _performance-index-entry
+
+_performance-index-entry:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    library="{{ justfile_directory() }}/.cache/ascent/native-library/lib"
+    mkdir -p .cache/ascent/index-entry
+    gxi {{ gerbil_test_runtime_options }} -e '(add-load-path! (path-expand ".cache/ascent/native-library/lib"))' -e '(import :std/make)' -e '(make ["program/index" "program/evaluate" "t/performance/index-entry/reference" "t/performance/index-entry/reference-evaluate" "t/performance/index-entry/fixture" "t/performance/index-entry-benchmark"] srcdir: (current-directory) libdir: (path-expand ".cache/ascent/native-library/lib") build-deps: (path-expand ".cache/ascent/native-library/build-deps"))'
+    for scenario in all delta advance scalar cold solve-wide solve-small; do
+        timeout 90s gxi {{ gerbil_test_runtime_options }} -e '(add-load-path! (path-expand ".cache/ascent/native-library/lib"))' :gerbil-ascent/t/performance/index-entry-benchmark "$scenario" "$library" ".cache/ascent/index-entry/$scenario.sexp"
+    done
+
 # Paired native general callbacks, ordered pattern bindings and complete solves.
 performance-rule-bindings:
     {{ test_runner }} run -- just _performance-rule-bindings

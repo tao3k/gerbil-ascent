@@ -33,6 +33,7 @@
     "t/qualification/ascent-finite-evidence-test.ss"
     "t/qualification/ascent-index-lifecycle-test.ss"
     "t/qualification/ascent-index-program-test.ss"
+    "t/qualification/ascent-index-entry-test.ss"
     "t/qualification/ascent-invalid-program-test.ss"
     "t/qualification/ascent-lattice-program-test.ss"
     "t/qualification/ascent-materialization-test.ss"
@@ -134,6 +135,11 @@
                             [])
                           (if (member "t/qualification/scheme-bounded-datum-test.ss" tests)
                             '("t/performance/bounded-datum/reference")
+                            [])
+                          (if (member "t/qualification/ascent-index-entry-test.ss" tests)
+                            '("t/performance/index-entry/reference"
+                              "t/performance/index-entry/reference-evaluate"
+                              "t/performance/index-entry/fixture")
                             [])
                           (if (member "t/qualification/ascent-rule-bindings-test.ss" tests)
                             '("t/performance/rule-bindings/reference"

@@ -14,10 +14,6 @@
 
 (defstruct row-indexes (rows advance!))
 
-;;; Stable entries belong to one engine. Column tables share them across
-;;; equivalent atoms; identity tables only shortcut that structural resolution.
-(defstruct physical-index-entry (version lookup))
-
 ;; gerbil-ascent-make-row-indexes
 ;;   : (-> Rows Rows Sizes Sizes Versions Versions Providers RowIndexes)
 ;;   | doc m%
@@ -33,8 +29,7 @@
 ;;     %
 (def (gerbil-ascent-make-row-indexes all delta all-size delta-size all-version delta-version index-providers)
   (let ((all-indexes (make-vector (vector-length all) #f))
-        (delta-indexes (make-vector (vector-length delta) #f))
-        (all-atoms #f) (delta-atoms #f))
+        (delta-indexes (make-vector (vector-length delta) #f)))
       (def (indexed-rows atom environment use-delta? slot-terms)
         (let* ((index (vector-ref atom 0))
                (columns (vector-ref atom 2))
@@ -44,41 +39,24 @@
                                  index)
                      32))
             rows
-            (let* ((identities
-                    (if use-delta?
-                      (or delta-atoms
-                          (let (fresh (make-hash-table-eq))
-                            (set! delta-atoms fresh) fresh))
-                      (or all-atoms
-                          (let (fresh (make-hash-table-eq))
-                            (set! all-atoms fresh) fresh))))
+            (let* ((caches (if use-delta? delta-indexes all-indexes))
+                   (cache
+                    (or (vector-ref caches index)
+                        (let (fresh (make-hash-table))
+                          (vector-set! caches index fresh)
+                          fresh)))
                    (version (vector-ref
-                             (if use-delta? delta-version all-version) index))
-                   (entry
-                    (or (hash-get identities atom)
-                        (let* ((caches (if use-delta? delta-indexes all-indexes))
-                               (cache
-                                (or (vector-ref caches index)
-                                    (let (fresh (make-hash-table))
-                                      (vector-set! caches index fresh) fresh)))
-                               (shared (hash-get cache columns))
-                               (resolved
-                                (or shared
-                                    (let (fresh (make-physical-index-entry #f #f))
-                                      (hash-put! cache columns fresh) fresh))))
-                          (hash-put! identities atom resolved)
-                          resolved)))
-                   (provider (vector-ref index-providers index))
+                             (if use-delta? delta-version all-version)
+                             index))
+                   (entry (hash-get cache columns))
                    (lookup
-                    (if (and (physical-index-entry-version entry)
-                             (= (physical-index-entry-version entry) version))
-                      (physical-index-entry-lookup entry)
-                      (let (built (gerbil-ascent-physical-index-build provider rows columns))
-                        ;; Failed builds keep the old version and lookup. Publish
-                        ;; both only after the provider has returned successfully.
-                        (physical-index-entry-lookup-set! entry built)
-                        (physical-index-entry-version-set! entry version)
-                        built))))
+                    (if (and entry (= (car entry) version))
+                      (cdr entry)
+                      (let (built (gerbil-ascent-physical-index-build
+                                   (vector-ref index-providers index) rows columns))
+                        (hash-put! cache columns (cons version built))
+                        built)))
+                   (provider (vector-ref index-providers index)))
               ;; Only this trusted representation consumes a scalar. Custom
               ;; receivers retain list keys, callbacks and their lookup order.
               (if (and (gerbil-ascent-canonical-hash-index-provider? provider)
@@ -101,11 +79,10 @@
                   (provider (vector-ref index-providers index)))
               (hash-for-each
                (lambda (columns entry)
-                 (when (and (physical-index-entry-version entry)
-                            (= (physical-index-entry-version entry) version))
-                   (let (extended (gerbil-ascent-physical-index-extend!
-                                   provider (physical-index-entry-lookup entry) rows columns))
-                     (physical-index-entry-lookup-set! entry extended)
-                     (physical-index-entry-version-set! entry (+ version 1)))))
+                 (when (= (car entry) version)
+                   (hash-put! cache columns
+                     (cons (+ version 1)
+                           (gerbil-ascent-physical-index-extend!
+                            provider (cdr entry) rows columns)))))
                cache)))))
     (make-row-indexes indexed-rows advance-all-indexes!)))

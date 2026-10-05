@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 #+TITLE: Scheme actor runtime: ownership, round merge, cancellation and publication
 #+DATE: 2026-10-05
-#+STATUS: native carrier, positive Set round workers and cancelable Session actor implemented; ready-SCC scheduling pending
+#+STATUS: native carrier, cancelable Session actor and ready positive Set SCC scheduling implemented; performance/reuse/provider gates remain
 
 * Architecture decision
 
@@ -385,3 +385,95 @@ only when every required component closes under its current Session generation.
 Qualification must compare each component frontier and the final result against
 independent serial truth, inject stale/duplicate completions and failures, and
 measure skewed tasks with 1/2/4 workers before claiming throughput gains.
+
+* Ready positive Set SCC scheduler implementation (2026-10-05)
+
+=program/positive-components.ss= now derives the complete relation SCC inventory
+from the canonical dependency graph, including pure stratum-zero programs.
+=positive-component= owns named immutable metadata: id, member relations,
+projected rule plans and predecessor component ids. Each multi-head rule is
+projected to each output SCC; its complete ordered body is lowered using the
+existing canonical =gerbil-ascent-compile-positive-plan=. No alternate term
+matching or callback evaluator was introduced.
+
+The fresh pure Set worker path in =program/evaluate.ss= dispatches SCC tasks.
+Existing synchronous default/retained/provider/callback paths keep their prior
+semantics. The admission predicate requires every predecessor SCC terminal and
+merged. The coordinator snapshots immutable frontier roots before dispatch, so
+a worker never copies a vector concurrently being mutated by another owner.
+Source-only components are already closed after native source admission.
+
+An SCC worker owns its variable frames, Set membership tables, total/delta roots,
+size/version vectors and mutable index cache. The first round sees all admitted
+source and completed predecessor facts. Later local rounds use the existing
+semi-naive pivot traversal, and install new delta only after all projected rules
+finish that local round. An independent SCC can continue its own local rounds
+while another closes and releases a successor. There is no shared iteration
+barrier across independent SCCs; component-local round completion is retained.
+
+Candidate batches still use the existing 32-row credit and 64-traversal-step
+checkpoint protocol. The coordinator alone deduplicates and calls the engine's
+existing global budget admission. It extends a tentative frontier for completed
+predecessor reads; completion is accepted only after every batch receives merge
+credit and the worker/monitor joins. The outer engine installs the complete
+pending cut once all required SCCs close. Source-derived rows are not reclassified
+as new source facts in another engine, and no per-component budget reset can
+bypass the global derived/output limits.
+
+The ready callback and terminal-completion callback are coordinator operations.
+A ready callback failure stops admission and drains assigned work. A blocked
+pending dependency inventory with no active task raises a typed dependency
+failure rather than reporting completion. Cancellation and Session generation
+publication reuse the already-qualified lifecycle; this module does not expose
+an incomplete SCC publication as a completed Session result.
+
+** Native and formal gates
+
+The native ready-task rendezvous deliberately keeps independent task C assigned
+until successor B runs after A: a wave barrier would fail this Case. Additional
+Cases check exact SCC/head projection, independent graph truth for chains and a
+cycle at 1/2/4 workers, global unique-row budgets, dependency deadlock rejection
+and ready-callback failure drain. Session cancel/close/failure tests continue to
+exercise the actual SCC engine. This is executable causal overlap evidence,
+without an inference of multicore CPU scaling.
+
+=RoundAdmission.lean= proves ready predecessor membership, inert foreign/duplicate
+completion and readiness independence from unrelated active work over unbounded
+natural ids. =ReadyComponents.tla= explores capacities 1/2/3 for prerequisite,
+partition, capacity and complete-return safety. Premature dispatch and early
+return mutations must fail =Prerequisites= and =CompleteReturn=. These fragments
+do not prove the complete Gerbil/Tarjan/head-projection/VM refinement or liveness.
+
+** Paper obligations and performance boundary
+
+[[https://thomas.gilray.org/pdf/seamless-deductive.pdf][A22]], §4, pp.82–83, identifies SCC dependency order and local total/delta/new
+state. The implementation now maps those premises to component-local native
+state and ready predecessor admission. Its owner-controlled global publication
+condition is retained when topological traversal becomes asynchronous dispatch.
+
+[[https://kmicinski.com/assets/byods.pdf][B23]], §3.3, p.264:9, shows why implied facts must not skip delta into total.
+The SCC subset remains canonical Set/hash storage with no lattice or field
+callbacks. Custom Provider concurrency requires its own concretization and
+mutation contract; Set union alone does not establish that contract.
+
+The native 64-edge probe alternates serial and SCC 1/2/4 capacities in the same
+AOT carrier and validates all four output relations against independent truth
+for each sample. SCC 1 is explicitly forced through the same cancelable SCC
+path, so the effect of SCC planning is distinguishable from worker count.
+Immutable analysis is warmed; each timed sample creates a fresh evaluator,
+including component planning, indexes, private membership and merge. Three
+samples per mode, wall jiffies only, one skewed graph and unmeasured VM processor
+topology make this exploratory evidence, not a stable CPU/allocation/throughput
+or general speedup claim. The receipt retains raw numbers and any negative result.
+
+The observed solve medians were serial 1.773 ms, SCC 1 worker 7.876 ms,
+2 workers 7.966 ms and 4 workers 7.647 ms. This small skewed fixture is a
+negative performance result: component planning, private state and actor merge
+cost more than serial evaluation. Ready dispatch is qualified, but performance
+benefit is not established. Cache/reuse and larger matched workloads remain gates.
+
+The [[file:evidence/scheme-ready-components-20261005/receipt.json][ready-component receipt]] binds source/carrier/proof hashes and verification
+results. Remaining gates include large SCC rule/row partitioning, persistent
+workers/index reuse, immutable component-plan caching, custom Provider workers,
+retained actor engine reuse and matched scale/CPU/allocation/latency measurements.
+Model calls remain 0 and MRR Rust integration remains deferred.

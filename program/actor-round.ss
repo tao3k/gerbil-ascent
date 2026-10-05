@@ -7,7 +7,9 @@
 ;;; one 32-row batch awaiting credit. Only this private coordinator calls merge.
 ;;; Failure/cancellation stops admission, refuses subsequent batches and joins
 ;;; every assigned worker before returning or raising the original exception.
-(def (gerbil-ascent-run-actor-round! key tasks jobs execute merge (canceled? (lambda () #f)))
+(def (gerbil-ascent-run-actor-round! key tasks jobs execute merge (canceled? (lambda () #f))
+                                     (ready? (lambda (_) #t))
+                                     (completed! (lambda (_) (void))))
   (unless (and (exact-integer? jobs) (> jobs 0))
     (error "invalid ASCENT worker capacity" jobs))
   (let (result
@@ -58,12 +60,16 @@
             (with-catch stop!
               (lambda () (when (canceled?) (error "ASCENT actor round canceled")))))
           (unless failure
+            (with-catch stop! (lambda ()
             (let admit ()
               (when (and (pair? pending) (< (length active) jobs))
-                (let (task (car pending)) (set! pending (cdr pending)) (start! task))
-                (admit))))
+                (let (task (find ready? pending))
+                  (when task
+                    (set! pending (filter (lambda (next) (not (eq? task next))) pending))
+                    (start! task) (admit))))))))
           (if (null? active)
-            (if failure (raise failure) (void))
+            (if failure (raise failure)
+              (if (null? pending) (void) (error "ASCENT ready task dependency deadlock")))
             (begin
               (match (thread-receive)
                 ([kind received-key worker task payload]
@@ -81,8 +87,9 @@
                        ((terminal)
                         (thread-join! (cadr assignment))
                         (set! active (filter (lambda (entry) (not (eq? (car entry) worker))) active))
-                        (when (and (pair? payload) (eq? (car payload) 'failed))
-                          (stop! (cdr payload))))))))
+                        (if (and (pair? payload) (eq? (car payload) 'failed))
+                          (stop! (cdr payload))
+                          (unless failure (with-catch stop! (lambda () (completed! task))))))))))
                 (else (void)))
               (loop)))))))))))
     (if (and (pair? result) (eq? (car result) 'failed))

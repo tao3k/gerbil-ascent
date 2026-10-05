@@ -1071,3 +1071,23 @@ check-actor-session-formal:
       echo "COUNTEREXAMPLE-OK actor-session-$mutation $invariant"
     done
     echo 'ACTOR-SESSION-CHECK-OK'
+
+check-ready-components-formal:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [[ -n "${TLC_BIN:-}" ]]; then tlc=("$TLC_BIN"); else tlc=(java -XX:+UseParallelGC -cp "${TLC_JAR:-.cache/ascent/tools/tla2tools-v1.7.4.jar}" tlc2.TLC); fi
+    temp=$(mktemp -d)
+    trap 'rm -rf "$temp"' EXIT
+    for capacity in 1 2 3; do
+      sed "s/Capacity = 2/Capacity = $capacity/" packages/proofs/tla/ReadyComponents.cfg > "$temp/$capacity.cfg"
+      "${tlc[@]}" -workers 1 -config "$temp/$capacity.cfg" -metadir "$temp/$capacity" packages/proofs/tla/ReadyComponents.tla
+    done
+    for mutation in prerequisite early; do
+      sed "s/Mutation = \"none\"/Mutation = \"$mutation\"/" packages/proofs/tla/ReadyComponents.cfg > "$temp/$mutation.cfg"
+      code=0
+      "${tlc[@]}" -workers 1 -config "$temp/$mutation.cfg" -metadir "$temp/$mutation" packages/proofs/tla/ReadyComponents.tla > "$temp/$mutation.out" 2>&1 || code=$?
+      if [[ "$mutation" = prerequisite ]]; then invariant=Prerequisites; else invariant=CompleteReturn; fi
+      [[ "$code" = 12 ]] && grep -q "Invariant $invariant is violated" "$temp/$mutation.out"
+      echo "COUNTEREXAMPLE-OK ready-components-$mutation $invariant"
+    done
+    echo 'READY-COMPONENTS-CHECK-OK'

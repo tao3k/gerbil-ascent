@@ -4,7 +4,8 @@
 
 ;;; Generic stratified semi-naive evaluator. Mutable row buffers belong to one
 ;;; session; public declarations and returned snapshots are POO values.
-(import (only-in "actor-round.ss" gerbil-ascent-run-actor-round!)
+(import (only-in "positive-components.ss" gerbil-ascent-run-positive-components!)
+        (only-in "actor-round.ss" gerbil-ascent-run-actor-round!)
         (only-in "source-log.ss" gerbil-ascent-source-log-rows)
         (only-in :clan/poo/object .o .ref object?)
         (only-in :clan/poo/mop validate)
@@ -399,7 +400,15 @@
          (let ((pending (make-vector count []))
                (pending-seen (make-vector count #f))
                (pending-lattice-keys (make-vector count []))
-               (pending-count 0))
+               (pending-count 0)
+               (component-mode?
+                (and (not session?) (or (> workers 1) canceled?)
+                     (andmap (lambda (rules) (andmap (lambda (rule) (vector-ref rule 5)) rules))
+                             (vector->list (vector-ref analysis 5)))
+                     (andmap gerbil-ascent-canonical-set-storage-provider? (vector->list storage-providers))
+                     (andmap gerbil-ascent-canonical-hash-index-provider? (vector->list index-providers))
+                     (andmap not (vector->list lattice-joins))
+                     (andmap not (vector->list field-checkers)))))
             (def (admit-stored! index pending-table stored)
               (unless (and (list? stored)
                            (= (length stored) (vector-ref arity index)))
@@ -591,6 +600,9 @@
           (set! pending-count 0)
             ;; The admitted pure positive subset has no evaluation callbacks.
             ;; Custom index/storage and lattice semantics remain on the serial path.
+            (if component-mode?
+              (gerbil-ascent-run-positive-components! analysis schema all workers emit-row!
+                                                       (or canceled? (lambda () #f)))
             (if (and (or (> workers 1) canceled?)
                      (andmap (lambda (rule) (vector-ref rule 5)) active-rules)
                      (andmap gerbil-ascent-canonical-set-storage-provider?
@@ -680,6 +692,7 @@
                           (- (current-jiffy) started)))))))
              active-rules)
               ))
+            )
             (set! active? #f)
             (let commit ((index 0))
               (when (< index count)
@@ -751,6 +764,9 @@
                   (vector-set! pending-lattice-keys index [])
                   (hash-clear! (vector-ref pending-seen index)))
                 (commit (+ index 1))))
+            ;; Every required SCC is already closed; this one owner commit
+            ;; installs the complete cut, without another shared solver round.
+            (when component-mode? (set! active? #f))
             (when (and active?
                        (if (vector? deadline) (vector-ref deadline 0) deadline)
                        (>= (current-jiffy)

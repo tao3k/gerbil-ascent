@@ -360,3 +360,15 @@ outer/inner natural time distinction motivates generation versus round; A22's
 ready-SCC dependency scheduling remains a next implementation obligation.
 The actor constructor uses fresh engines, not retained incremental reuse. No
 performance gain or whole-runtime closure is asserted.
+
+* Ready positive Set SCC implementation update (2026-10-05)
+
+The [[file:scheme-actor-runtime-design.org][actor runtime design]] now maps canonical dependency SCCs and multi-head
+projection to actual native component workers. Completed predecessors release
+successors without waiting for unrelated active SCCs; each SCC retains local
+round completion, one owner charges global unique-row budgets, and the complete
+cut remains the Session publication unit. Native independent truth/rendezvous
+Cases and Lean/TLA+ prerequisite/drain gates accompany this slice. A22's SCC
+order/local state is implemented for pure Set cuts; B23 Provider concretization
+remains a separate contract. A matched exploratory native timing probe retains
+serial and SCC 1/2/4 observations without asserting general multicore speedup.

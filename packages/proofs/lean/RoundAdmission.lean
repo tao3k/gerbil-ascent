@@ -121,3 +121,50 @@ theorem acknowledged_absent (state : DrainState) (task : Nat) :
   simp [acknowledge]
 
 end Ascent.RoundAdmission
+
+/-! Ready-component safety is separate from one component's least fixed point.
+These unbounded laws use completed predecessor membership as a premise; they do
+not prove Tarjan, canonical head projection or native mailbox refinement. -/
+namespace Ascent.ReadyComponents
+
+def ready (predecessors : Nat → List Nat) (done : List Nat) (task : Nat) : Bool :=
+  (predecessors task).all (fun parent => done.contains parent)
+
+theorem ready_parent_completed (predecessors : Nat → List Nat) (done : List Nat)
+    (task parent : Nat) (allowed : ready predecessors done task = true)
+    (required : parent ∈ predecessors task) : parent ∈ done := by
+  simp only [ready, List.all_eq_true] at allowed
+  simpa using allowed parent required
+
+structure State where
+  queued : List Nat
+  active : List Nat
+  done : List Nat
+
+def complete (state : State) (task : Nat) : State :=
+  if task ∈ state.active then
+    { state with active := state.active.filter (fun next => next != task),
+                 done := task :: state.done }
+  else state
+
+theorem unassigned_completion (state : State) (task : Nat)
+    (foreign : task ∉ state.active) : complete state task = state := by
+  simp [complete, foreign]
+
+theorem completed_absent (state : State) (task : Nat) :
+    task ∉ (complete state task).active := by
+  by_cases assigned : task ∈ state.active
+  · simp [complete, assigned]
+  · simpa [complete, assigned] using assigned
+
+theorem duplicate_completion (state : State) (task : Nat) :
+    complete (complete state task) task = complete state task := by
+  exact unassigned_completion _ _ (completed_absent state task)
+
+/-- An unrelated still-running component is deliberately not a readiness
+premise. Completed prerequisites suffice regardless of other active work. -/
+theorem independent_active_does_not_block (predecessors : Nat → List Nat)
+    (left right : State) (task : Nat) (sameDone : left.done = right.done) :
+    ready predecessors left.done task = ready predecessors right.done task := by
+  rw [sameDone]
+end Ascent.ReadyComponents

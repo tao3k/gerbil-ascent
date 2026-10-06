@@ -167,6 +167,20 @@ _performance-index-projection:
         timeout 90s .cache/ascent/index-projection/native-entry {{ gerbil_test_runtime_options }} "$scenario" "$library" ".cache/ascent/index-projection/$scenario.sexp"
     done
 
+# Matched complete temporal projection through the public ASP benchmark API.
+performance-temporal-projection:
+    {{ test_runner }} run -- just _performance-temporal-projection
+
+_performance-temporal-projection:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    library="{{ justfile_directory() }}/.cache/ascent/native-library/lib"
+    mkdir -p .cache/ascent/temporal-projection
+    gxi {{ gerbil_test_runtime_options }} t/performance/temporal-projection-build.ss "$library" "{{ justfile_directory() }}/.cache/ascent/temporal-projection/native-entry"
+    for scenario in chain fan complete empty; do
+        timeout 90s .cache/ascent/temporal-projection/native-entry {{ gerbil_test_runtime_options }} "$scenario" "$library" ".cache/ascent/temporal-projection/$scenario.sexp"
+    done
+
 # Matched SCC commit and complete construction control through ASP benchmarks.
 performance-uf-commit:
     {{ test_runner }} run -- just _performance-uf-commit

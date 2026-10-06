@@ -563,3 +563,46 @@ Unrelated components should not inherit cycle-size work. The commit first tests
 whether a surviving root reaches the winner; disconnected roots need no key
 removal. A 64-node SCC with 384 unrelated singleton components qualifies this
 case separately, without changing the original scenario gates.
+
+* Collect temporal facts once and preserve traversal witnesses
+
+Gerbil =compiler/optimize.ss:28-29,164+= scopes mutation/local-type tables to
+one compile invocation and collects facts before applying transformations.
+=optimize-xform.ss:108-113= records binding identity; =optimize-top.ss:17-19=
+queries that table in later passes. Reuse the admitted representation with
+an explicit lifetime.
+
+=temporal/lens.ss= now owns one private node index per detached solve. Records
+hold the first event, cut/window eligibility and traversal state. Sorted lists
+still control validation and diagnostic order. A source-ordered adjacency
+index replaces the repeated all-edge BFS scan. Multi-parent layers select
+minimum original incoming-edge ordinal, then emit reverse ordinal order;
+single-parent layers directly retain reverse first-discovery order. This
+structural admission removes temporary sorting without changing horizon
+witnesses. Records stay private to the call; source coordinates, snapshot
+binding, proof production and replay verification remain unchanged.
+
+=t/performance/temporal-projection/= compares complete native solve calls
+through public ASP benchmarks against byte-identical =068b147= source. Chain,
+fan, complete and empty-window cases use fixed paired CPU/allocation gates.
+Failed depth-scan, adjacency-allocation and rank-sorting experiments remain in
+ignored cache. Independent shortest-distance checks and converging-parent
+frontier tests qualify both ordering and invocation isolation.
+
+Runtime interface internals alone did not establish a performance improvement:
+a one-time =HashTable= cast left native allocation unchanged and failed the
+fan gate. That hypothesis was withdrawn. Checked record access and ordinary
+hash API calls remain. A zero horizon admits a more direct transformation:
+only one root layer can be observed, so one source-ordered pass computes its
+frontier without constructing adjacency. Positive horizons retain the indexed
+traversal and ordered witnesses. Measurements qualify the compiled result.
+
+Fixed private facts benefit from an explicit representation boundary. Generic
+per-edge class descriptors failed allocation qualification and were withdrawn.
+Parent rows retain their existing layout. The private node uses a fixed vector
+with named field macros, so slot positions stay out of consumers. Pure window
+facts are reused only after the whole event-time projection and window have
+been admitted as canonical inert data. Exact point bounds then use direct
+comparisons; supplied callbacks retain their original repeated evaluation.
+Native mutation-order tests qualify that fallback, and source policy has zero
+findings/errors after the field ownership comments are added.

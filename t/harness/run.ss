@@ -66,6 +66,7 @@
     "t/qualification/ascent-syntax-test.ss"
     "t/qualification/ascent-table-expression-test.ss"
     "t/qualification/ascent-temporal-lens-test.ss"
+    "t/qualification/ascent-temporal-projection-test.ss"
     "t/qualification/ascent-timeout-test.ss"
     "t/qualification/ascent-timing-test.ss"
     "t/qualification/ascent-workspace-test.ss"
@@ -125,6 +126,8 @@
                           '("t/performance/native-library" "t/performance/ascent-ss-profile"
                             "t/scenarios/performance/ascent-table-expression/baseline"
                             "t/harness/artifact" "t/harness/prediction" "t/harness/actor-pool")
+                          (if (member "t/qualification/ascent-temporal-projection-test.ss" tests)
+                            '("t/performance/temporal-projection/reference") [])
                           (if (member "t/qualification/ascent-uf-commit-test.ss" tests)
                             '("t/performance/uf-commit/reference") [])
                           (if (member "t/qualification/ascent-trrel-uf-test.ss" tests)

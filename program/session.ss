@@ -215,11 +215,14 @@
             (void))
           (let* ((index (position-of name))
              (source-state (vector-ref pending index))
+             ;; Opaque replacement must own the same source spines as the
+             ;; native batch path before any eager result can retain them.
+             (owned-rows (copy-source-rows rows))
              (outcome
               (attempt
                (lambda ()
-                 ((.ref engine '.replace-source!) name rows)
-                 (vector-set! pending index (cons rows []))))))
+                 ((.ref engine '.replace-source!) name owned-rows)
+                 (vector-set! pending index (cons owned-rows []))))))
         (unless (vector-ref outcome 0)
           (vector-set! pending index source-state)
           (recover! pending (vector-ref outcome 1)))

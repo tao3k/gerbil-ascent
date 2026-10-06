@@ -1860,3 +1860,35 @@ The [[file:research/scheme-dsl/byods-b23.org][B23 follow-up]] distinguishes sour
 facts and transient engine counters. This is a code-supported recovery design
 inference, not an extension of the paper's theorem to arbitrary callback
 exceptions. Full CI remains bound to the subsequent pushed revision.
+
+
+* Eager result and opaque source acceptance ownership (2026-10-07)
+
+At base =0769ae4= a native negation/derived-Provider Case exposed public row
+aliasing after eager append and opaque single replacement. Mutating the read
+row and outer list changed the current result to =((99))=; append also changed
+the previous result, and both paths fed =99= into the next accepted input and
+output. The caller's mutable replacement row is part of the same control.
+The final red command exited 70 on these scalar facts, not on a shape or
+compile error. The earlier immutable quoted-row fixture error is retained
+separately as development history.
+
+Both eager evaluator paths now call a fresh retained engine's =.run=, using
+its existing list/row detachment for public result reads. Checked Session's
+opaque replacement path copies the input list and row spines before engine
+acceptance and pending-source recording. Nested field identity is unchanged;
+ordinary non-retained evaluation is not used as a Session snapshot boundary.
+
+The [[file:evidence/scheme-eager-snapshot-20261007/receipt.json][receipt]] binds identical red/green fixtures to 545 tracked Scheme sources.
+Only evaluator and Session production owners differ between those freezes.
+Green qualification passed 59 native Cases: storage 21, timeout 12 and source
+deletion 26. Each command exited zero with module/harness markers and explicit
+=OK=. The new Case checks repeated reads, the prior result, caller replacement
+mutation and later complete input/output facts. Timeout checks include eager
+replacement and nonpositive updates, resumed rounds and failed resume recovery;
+delete/update checks retain source order, budgets and rollback behavior.
+Policy build exited zero with 17 findings and no errors.
+
+The [[file:research/scheme-dsl/byods-b23.org][B23 ownership follow-up]] is an implementation inference from stable
+concretized facts. It does not prove arbitrary host effects or add a theorem
+or performance qualification. Full CI must be read at the new pushed revision.

@@ -5,7 +5,7 @@
         (only-in :clan/poo/object .ref .o)
         (only-in :gerbil-ascent/program/objects gerbil-ascent-program gerbil-ascent-relation
                  gerbil-ascent-rule gerbil-ascent-atom gerbil-ascent-variable
-                 gerbil-ascent-guard gerbil-ascent-literal)
+                 gerbil-ascent-guard gerbil-ascent-literal gerbil-ascent-negation)
         (only-in :gerbil-ascent/program/evaluate gerbil-ascent-make-engine gerbil-ascent-evaluate-program)
         (only-in :gerbil-ascent/table/storage gerbil-ascent-set-storage-provider
                  gerbil-ascent-eqrel-storage-provider gerbil-ascent-trrel-storage-provider
@@ -16,7 +16,8 @@
         (only-in :gerbil-ascent/t/performance/storage-batch/reference old-prepare-storage-batch)
         :gerbil-ascent/t/performance/storage-batch/fixture
         (only-in :gerbil-ascent/program/session gerbil-ascent-open-session
-                 gerbil-ascent-session-run gerbil-ascent-session-append-source!))
+                 gerbil-ascent-session-run gerbil-ascent-session-append-source!
+                 gerbil-ascent-session-replace-source!))
 (export ascent-storage-batch-test)
 (def (prepare old? rows width present (check #f) (limit 100))
   (let-values (((accepted count) ((if old? old-prepare-storage-batch gerbil-ascent-prepare-storage-batch)
@@ -34,6 +35,45 @@
       (and (= (car a) (car b)) (< (cadr a) (cadr b)))))
 (def ascent-storage-batch-test
   (test-suite "ASCENT complete storage batch admission"
+    (test-case "eager Session snapshots own row spines after append and replacement"
+      (let (observations
+            (map
+             (lambda (mode)
+               (let* ((x (gerbil-ascent-variable 'x))
+                      ;; A derived provider keeps single replacement on the
+                      ;; opaque fresh path; negation makes append recompute.
+                      (provider (.o (:: @ gerbil-ascent-hash-index-provider)))
+                      (program (gerbil-ascent-program
+                                (list (gerbil-ascent-relation 'input 1 '((1)) provider)
+                                      (gerbil-ascent-relation 'blocked 1 [])
+                                      (gerbil-ascent-relation 'out 1 []))
+                                (list (gerbil-ascent-rule
+                                       (list (gerbil-ascent-atom 'out (list x)))
+                                       (list (gerbil-ascent-atom 'input (list x))
+                                             (gerbil-ascent-negation 'blocked (list x)))))
+                                8 16 24))
+                      (session (gerbil-ascent-open-session program))
+                      (old (gerbil-ascent-session-run session)))
+                 (if (eq? mode 'append)
+                   (gerbil-ascent-session-append-source! session 'input '(2))
+                   (let (replacement (map list (iota 2 1)))
+                     (gerbil-ascent-session-replace-source! session 'input replacement)
+                     (set-car! (car replacement) 77)))
+                 (let* ((changed (gerbil-ascent-session-run session))
+                        (borrowed (storage-batch-rows changed)))
+                   (set-car! (car borrowed) 99)
+                   (set-cdr! borrowed [])
+                   (let ((after-mutation (storage-batch-rows changed))
+                         (old-after-mutation (storage-batch-rows old)))
+                     (gerbil-ascent-session-append-source! session 'input '(3))
+                     (let (next (gerbil-ascent-session-run session))
+                       (list after-mutation old-after-mutation
+                             (storage-batch-rows next)
+                             ((.ref next 'rows-of) 'out)))))))
+             '(append replace)))
+        (check-equal? observations
+                      '((((1) (2)) ((1)) ((1) (2) (3)) ((1) (2) (3)))
+                        (((1) (2)) ((1)) ((1) (2) (3)) ((1) (2) (3)))))))
     (test-case "fresh source replacement retires failed storage and admission counters"
       (let* ((graph-outcomes
               (map

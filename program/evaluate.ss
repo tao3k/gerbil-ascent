@@ -762,9 +762,11 @@
                   (let* ((replacement
                           (append (source-rows-at index) (list row)))
                          (candidate (source-program-with index replacement))
-                         (result ((gerbil-ascent-make-engine
-                                   candidate #f analysis schema
-                                   measure-rule-times?))))
+                         ;; Retained publication owns public list/row reads even
+                         ;; when the enclosing engine adopts only this result.
+                         (result ((.ref (gerbil-ascent-make-engine
+                                         candidate #t analysis schema
+                                         measure-rule-times?) '.run))))
                     (set! source-count (+ source-count 1))
                     (vector-set! source-overrides index replacement)
                     (vector-set! source-additions index [])
@@ -857,9 +859,9 @@
                                       (.ref candidate 'relations)))))
                   (when (> next-count input-limit)
                     (error "ASCENT session input fact budget exceeded"))
-                  (let (result ((gerbil-ascent-make-engine
-                                 candidate #f analysis schema
-                                 measure-rule-times?)))
+                  (let (result ((.ref (gerbil-ascent-make-engine
+                                       candidate #t analysis schema
+                                       measure-rule-times?) '.run)))
                     (set! source-count next-count)
                     (vector-set! source-overrides index rows)
                     (vector-set! source-additions index [])

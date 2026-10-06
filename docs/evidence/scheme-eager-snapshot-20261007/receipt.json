@@ -1,0 +1,203 @@
+{
+  "qualifiedBaseHead": "0769ae447a4b650305409605c50d4356272ba214",
+  "scope": "Eager append/replacement results use retained public snapshot ownership; opaque Checked Session replacement owns caller source list and row spines.",
+  "sources": {
+    "program/evaluate.ss": "50a76e2bd3d5f18a8c463526730b4daeed015810ba6bbd85cf4504c00991740e",
+    "program/session.ss": "9ffcffd1d461f42c61f75e87ab3e53821b3741d809649fd6ee789c53e28bead8",
+    "program/result.ss": "176b217b4bdad2f2c2aef6c420e807bc71d4eea925399713a9386960b3cf20c8",
+    "program/initialization.ss": "fdde386cef1f1015cde78e38c31ba4c15ab070f346895dc1a38b261232506956",
+    "program/source-log.ss": "4bdb78699bed3e07a4b5c1e0bf9b4432c64d07c3183495f3fb7d7dc4794c844d",
+    "program/reuse.ss": "1262e74be8805d13f7603f7782b6172080f219e78d4e2b3ab425973656702e0a",
+    "program/index.ss": "b9f75ac90196573d5c29dae6f9ae929673ec692f2b01ba7b17b567ec624d06dc",
+    "program/analysis.ss": "23a8f4634df8bc1999975832fec1a357b1fa5523c8f2fcb68e74ef06c3f9da82",
+    "program/admission.ss": "3dcdbb27a9321f147556f6439171935ee0394380bb26cf6b844488d6a4650b78",
+    "table/storage.ss": "5ebd76d7515fdab7c4f2e2ac82afe45eaf2607eff97c6346719962dc2db8484b",
+    "table/provider.ss": "6727d87e9f705ca24a459b413c5babf37fab1749c24572043f6405dd98f5483e",
+    "build.ss": "bf2f5558c32b7491803552790503e06aea9badbfbc3b52fd60028257da315c85",
+    "t/harness/run.ss": "163ac31524333521c952c8f2ef9929e46e1f90549dad4180d46bc13c4667fff9",
+    "t/qualification/ascent-storage-batch-test.ss": "444dbcb1329695ec4e359e2ae64913c23a6e41e5d77a779b165d0210efef3ef9",
+    "t/qualification/ascent-timeout-test.ss": "8f8f6fa3c9fa70f9d7e452735ed670572f9fa45892bb60ec652dd530ff3ed236",
+    "t/qualification/scheme-session-deletion-test.ss": "3e04cc053cc35c78fcebb4254f39f0b0305b722fa0560f76f571be55250ac5a2"
+  },
+  "trackedSchemeSourceCount": 545,
+  "trackedSchemeSourceDigest": "bf8388bde89c54cf6594d75391b9539b679a516c43d0c59f1f19d8a255df21c0",
+  "trackedSchemeDigestFormat": "Sorted tracked .ss paths; UTF-8 path + NUL + content SHA256 + newline",
+  "red": {
+    "exitCode": 70,
+    "actualAppend": {
+      "current": [
+        [
+          99
+        ]
+      ],
+      "previous": [
+        [
+          99
+        ]
+      ],
+      "nextInput": [
+        [
+          99
+        ],
+        [
+          2
+        ],
+        [
+          3
+        ]
+      ],
+      "nextOutput": [
+        [
+          99
+        ],
+        [
+          2
+        ],
+        [
+          3
+        ]
+      ]
+    },
+    "actualReplacement": {
+      "current": [
+        [
+          99
+        ]
+      ],
+      "previous": [
+        [
+          1
+        ]
+      ],
+      "nextInput": [
+        [
+          99
+        ],
+        [
+          2
+        ],
+        [
+          3
+        ]
+      ],
+      "nextOutput": [
+        [
+          99
+        ],
+        [
+          2
+        ],
+        [
+          3
+        ]
+      ]
+    },
+    "expected": {
+      "current": [
+        [
+          1
+        ],
+        [
+          2
+        ]
+      ],
+      "previous": [
+        [
+          1
+        ]
+      ],
+      "nextInput": [
+        [
+          1
+        ],
+        [
+          2
+        ],
+        [
+          3
+        ]
+      ],
+      "nextOutput": [
+        [
+          1
+        ],
+        [
+          2
+        ],
+        [
+          3
+        ]
+      ]
+    },
+    "logPath": "/private/tmp/ascent-eager-snapshot-final-red.log",
+    "logSha256": "272b4a9e95147c46e63d8310fe2e7e068e1835591c3b21004236d4bf4c715356",
+    "trackedSchemeSourceDigest": "a2216da67d9eeeb943349c92e5216488ebf7f023c0cbf48670fc5e30d365f2a6",
+    "productionSources": {
+      "program/evaluate.ss": "fbe719d3892f6002506e33d4de4c4b491aed6d364803d309842af548ba38d69b",
+      "program/session.ss": "e0d0c2d088bb9599d2dc68ac85f4376b984c6335bb2cb97ebb21c86376e6c20c"
+    },
+    "fixtureSha256": "444dbcb1329695ec4e359e2ae64913c23a6e41e5d77a779b165d0210efef3ef9",
+    "sameFixtureAsGreen": true
+  },
+  "developmentFailure": {
+    "logPath": "/private/tmp/ascent-eager-snapshot-red.log",
+    "logSha256": "153203f7a8da161414d7c04942932a387a8810c599a9cb30dec315100c84b7f0",
+    "exitCode": 70,
+    "cause": "Quoted native replacement row was immutable; final fixture constructs mutable replacement rows before mutation. This development failure is not the semantic counterexample."
+  },
+  "policy": {
+    "exitCode": 0,
+    "findings": 17,
+    "errors": 0,
+    "command": "GERBIL_PATH=\"$PWD/.cache/ascent/sdk\" just check-policy",
+    "logPath": "/private/tmp/ascent-eager-snapshot-policy.log",
+    "logSha256": "401b3cf23324d86b7dd2690d06752c7c70d69ec05c760330fa829e2fa8ae5da3"
+  },
+  "native": [
+    {
+      "module": "t/qualification/ascent-storage-batch-test.ss",
+      "command": "GERBIL_PATH=\"$PWD/.cache/ascent/sdk\" just test-native t/qualification/ascent-storage-batch-test.ss",
+      "exitCode": 0,
+      "cases": 21,
+      "moduleOK": true,
+      "harnessOK": true,
+      "explicitOK": true,
+      "logPath": "/private/tmp/ascent-eager-snapshot-final-green-storage.log",
+      "logSha256": "81512f1f6e6074e567b0b5364ef6fb133c4312e4a043a2b1c37094116dccc97b"
+    },
+    {
+      "module": "t/qualification/ascent-timeout-test.ss",
+      "command": "GERBIL_PATH=\"$PWD/.cache/ascent/sdk\" just test-native t/qualification/ascent-timeout-test.ss",
+      "exitCode": 0,
+      "cases": 12,
+      "moduleOK": true,
+      "harnessOK": true,
+      "explicitOK": true,
+      "logPath": "/private/tmp/ascent-eager-snapshot-green-timeout.log",
+      "logSha256": "72b93bcc636dc198a98110f93fa982e1028938aa81389d8d29ee7a87b7ba735e"
+    },
+    {
+      "module": "t/qualification/scheme-session-deletion-test.ss",
+      "command": "GERBIL_PATH=\"$PWD/.cache/ascent/sdk\" just test-native t/qualification/scheme-session-deletion-test.ss",
+      "exitCode": 0,
+      "cases": 26,
+      "moduleOK": true,
+      "harnessOK": true,
+      "explicitOK": true,
+      "logPath": "/private/tmp/ascent-eager-snapshot-green-deletion.log",
+      "logSha256": "da1a7f8bcbe75202994fb40780d2ea5fed1e2c84d5006307120b2b39bd7654c6"
+    }
+  ],
+  "totalNativeCases": 59,
+  "paper": {
+    "url": "https://kmicinski.com/assets/byods.pdf",
+    "locator": "Section 3 concretization and semi-naive facts",
+    "inference": "Admitted and enumerated facts need stable host ownership; Session read and replacement spines must not permit external mutation of retained logical state."
+  },
+  "limits": [
+    "Focused local native evidence, not full inventory or remote exact-head CI success.",
+    "No new Lean/TLA theorem or performance claim.",
+    "List and row spines are detached; nested field objects retain existing shared identity and stability premises.",
+    "Ordinary non-retained evaluation and raw Provider protocols remain separate APIs."
+  ]
+}

@@ -41,4 +41,33 @@ example : ¬ (iterate rules owner 1 initial 1 = iterate rules owner 1 initial 0)
 #print axioms Ascent.SnapshotClosure.stable_transfers
 #print axioms Ascent.SnapshotClosure.completed_closed
 #print axioms Ascent.SnapshotClosure.unrelated_iteration_agrees
+
+def batches : List (List ComponentClosureTests.Fact) := [[left0, left0], [], [left1, right]]
+def regrouped : List (List ComponentClosureTests.Fact) := [[right, left1, left0]]
+example : publish owner 1 current batches = publish owner 1 current regrouped := by
+  apply publish_ext
+  intro fact
+  simp [batches, regrouped, or_comm, or_left_comm, or_assoc]
+
+theorem delivered : ∀ fact, owner fact = 1 →
+    (iterate rules owner 1 initial 2 fact ↔ initial fact ∨ fact ∈ batches.flatten) := by
+  intro fact owned
+  cases fact <;> simp [owner] at owned <;>
+    simp [iterate, step, Holds, rules, owner, initial, batches]
+example : publish owner 1 current batches = iterate rules owner 1 current 2 :=
+  terminal_publish_exact rules owner 1 initial current 2 batches agreement delivered
+example : ClosedAt rules owner 1 (publish owner 1 current batches) :=
+  terminal_publish_closed rules owner 1 initial current 2 batches agreement delivered snapshotStable
+/-- Losing the final candidate violates the terminal completeness contract. -/
+example : ¬ (∀ fact, owner fact = 1 →
+    (iterate rules owner 1 initial 2 fact ↔ initial fact ∨ fact ∈ ([[left0]] : List (List ComponentClosureTests.Fact)).flatten)) := by
+  intro complete
+  have missing := complete left1 rfl
+  simp [iterate, step, Holds, rules, owner, initial] at missing
+#print axioms Ascent.SnapshotClosure.publish_exact
+#print axioms Ascent.SnapshotClosure.publish_ext
+#print axioms Ascent.SnapshotClosure.publish_sound
+#print axioms Ascent.SnapshotClosure.published_iteration_sound
+#print axioms Ascent.SnapshotClosure.terminal_publish_exact
+#print axioms Ascent.SnapshotClosure.terminal_publish_closed
 end Ascent.SnapshotClosureTests

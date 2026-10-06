@@ -206,6 +206,31 @@ that invalidates old stability. General native trace-to-semantic-step extraction
 intermediate chunk refinement, mutable representation and cancellation remain
 separate obligations. See [[file:evidence/scheme-snapshot-closure-20261006/receipt.json][snapshot closure receipt]].
 
+** Candidate batches and terminal completeness
+
+=SnapshotClosure.publish= folds owned Set admission over any finite list of
+candidate batches. =publish_exact= characterizes its membership as retained
+current facts plus delivered owned candidates. =publish_ext= proves invariance
+under arbitrary regrouping, duplicates and reordering with equal membership.
+=published_iteration_sound= derives soundness of any partial publication from
+local evaluation soundness and inclusion of its candidates in that evaluation.
+It makes no intermediate closure claim.
+
+=terminal_publish_exact= accounts for both retained snapshot facts and delivered
+candidates, and composes the batch fold with completed snapshot rebasing.
+=terminal_publish_closed= therefore gives current component closure after
+complete delivery and actual snapshot stability. No replay of seed rows is
+required. The ordinary 32-row credit size is not a semantic round limit.
+
+Lean tests qualify duplicate and empty chunks, regrouping, foreign candidate
+filtering, current unrelated facts and a missing terminal candidate. Native
+qualification delivers 65 candidates with 17 distinct values through two full
+credit batches and a terminal tail, deduplicates in the owner callback, and
+admits a successor only after all candidates have been seen. The existing
+terminal-tail/stale-snapshot controls remain. TLA+ checks delivery/credit order
+separately. The native worker-to-candidate trace certificate, cancellation,
+and complete mutable representation refinement remain open. See [[file:evidence/scheme-batch-closure-20261006/receipt.json][batch closure receipt]].
+
 * Stated claim
 
 [[file:../packages/proofs/lean/LexicalLowering.lean][LexicalLowering]] supplies a typed expression calculus, lexical environments,

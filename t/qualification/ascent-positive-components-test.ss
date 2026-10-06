@@ -105,6 +105,31 @@
         (check-equal? (if (member '(left 1) published) #t #f) #t)
         (check-equal? (length published) 4)
         (check-equal? (length completed) 2)))
+    (test-case "duplicate chunks and terminal tail preserve complete Set admission"
+      (let ((known (make-hash-table)) (published []) (candidates 0) (completed []) (observed #f))
+        (gerbil-ascent-run-actor-round! (vector 'duplicate-chunks) '(producer successor) 2
+         (lambda (task emit! checkpoint!)
+           (case task
+             ((producer)
+              ;; Two credited 32-row batches plus one terminal candidate.
+              (for-each (lambda (n) (emit! 'producer (list (modulo n 17)))) (iota 65)))
+             ((successor)
+              (check-equal? candidates 65)
+              (check-equal? (length published) 17)
+              (for-each (lambda (n) (check-equal? (if (member (list n) published) #t #f) #t)) (iota 17))
+              (set! observed #t))))
+         (lambda (atom row)
+           (set! candidates (+ candidates 1))
+           (unless (hash-get known row)
+             (hash-put! known row #t)
+             (set! published (cons row published))))
+         (lambda () #f)
+         (lambda (task) (or (eq? task 'producer) (memq 'producer completed)))
+         (lambda (task) (set! completed (cons task completed))))
+        (check-equal? candidates 65)
+        (check-equal? (length published) 17)
+        (check-equal? observed #t)
+        (check-equal? (length completed) 2)))
     (test-case "successor snapshot waits for terminal tail after credited predecessor batch"
       (let ((producer #f) (released? #f) (done []) (merged []) (snapshot #f))
         (gerbil-ascent-run-actor-round! (vector 'terminal-snapshot) '(a b) 2

@@ -648,3 +648,18 @@ right while left retains an older snapshot and verifies both results survive.
 This closes completed-result semantic rebasing under the explicit frame. It
 does not prove every native execution trace, arbitrary intermediate chunks,
 cancellation or mutable row encoding. See [[file:evidence/scheme-snapshot-closure-20261006/receipt.json][source-bound receipt]].
+
+* Batch publication and completed closure
+
+=SnapshotClosure.publish_exact= establishes the Set semantics of incremental
+owned batch admission. Chunk boundaries, duplicate candidates and output order
+are observationally irrelevant to membership (=publish_ext=). Sound partial
+publication follows from local evaluation soundness; it does not imply closure.
+Complete terminal membership, including retained seed facts, connects the batch
+fold to current local evaluation and stable closure through the prior snapshot
+frame theorem. A missing candidate rejects the delivery premise in Lean.
+The native 65-candidate/17-value fixture crosses two credit batches and a
+terminal tail and checks successor admission after complete owner observation.
+Existing TLA+ credit/terminal controls retain temporal ownership. This closes
+batch algebra under candidate origin and complete-delivery premises; native
+trace extraction and cancellation semantics remain outstanding. See [[file:evidence/scheme-batch-closure-20261006/receipt.json][receipt]].

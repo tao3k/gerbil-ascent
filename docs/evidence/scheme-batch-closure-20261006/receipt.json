@@ -1,0 +1,143 @@
+{
+  "qualifiedBaseHead": "00acacc398cf99866a66c2b36537f912bdbb5bde",
+  "scope": "Owned Set batch admission, partial publication soundness and completed delivery transport to stable component closure",
+  "sources": {
+    "packages/proofs/lean/ComponentClosure.lean": "285bb1d19fb5a065cf550549deeb73d399dce8d2d6b51e3b7695a94cad8ca32b",
+    "packages/proofs/lean/Tests/ComponentClosureTests.lean": "bec515bca4b40b96a124861b8383cf9ea98811813d55c1250f26c125646c5d08",
+    "packages/proofs/lean/AscentProof.lean": "453da6dd43f4d7f95feeb4a0d64a749e078e12ddd81794f1e5044f8822cb8068",
+    "packages/proofs/lean/Tests/AscentProofTests.lean": "fcdea81c6f8a0ba735ad2bc5080059124290db684c34e20414714b4fd1d2ee24",
+    "packages/proofs/lean/lakefile.lean": "ee403360ea23d68dbf914a78daf973eb142a83654109edead4c2c12e67657f5c",
+    "packages/proofs/lean/IndexedIteration.lean": "46a0451cc5be2cd28f11f5ce77e37b0a1e21539a3f81fca9f62561de1d8cf211",
+    "packages/proofs/lean/SemiNaive.lean": "c00da4759381f4004996ca299100c08e44fcf455093ddbddaf9d857924e30d51",
+    "program/positive-components.ss": "156a6ef8cb62c92a094638b299ac490738d0ea243a187320d9e460c40434c645",
+    "program/component-worker.ss": "9c4e215910f6c80915a26cb6237b541914ff9036e44ffe9414ec522a29123771",
+    "program/actor-round.ss": "f41bc8c8b6d7b7d9e5228af96ab40ba0dcd3f4325375aae508be6e9d0197465c",
+    "table/funs.ss": "9ecdd332294ce6487998c6e64fc2b88d4396d091c641cf1e61dc0576a5b222c0",
+    "t/qualification/ascent-positive-components-test.ss": "5de680c96af55d159664ab9ebfb35f5f4b636de167d3d5d29dc7378403154e3b",
+    "t/qualification/ascent-positive-plan-test.ss": "578d56134f7e2cf3a3a067f02cd98e1f57cc428527230ef6d63e7e995e62e027",
+    "packages/proofs/tla/ReadyComponents.tla": "f1ba05dd5e99e262de1116c83e725a8f3541d3113e011c46146c470bece8d34e",
+    "packages/proofs/tla/ActorRoundCredits.tla": "3b5de69e5b610222a5628105bc2cba104a8f42e304d7fc069f94307a57c90175",
+    "justfile": "0be71cd42743b8c964e72f72ae9251fecc2a063e3f17c511bf1b0da5c2f535b6",
+    "core/positive-plan.ss": "d51d7676d8ef49097219e812f3596ba589f0f6779e2a09e282222e84afa2f101",
+    "packages/proofs/lean/FiniteHeight.lean": "2769bf31367d45ba9eae23c54c60e4cd8e8c428f00ddf2c4294107d5b4c5396b",
+    "docs/scheme-compiler-proof-bridge.org": "80110e5f7bdff425ab8495239beeda861cfae47057b5bdb05384fe5ee63629be",
+    "docs/scheme-research-proof-audit.org": "217ac6390b8ba48a4f01f9ff1bfa89c4ee7b049b8cc995377bf5bba2e96eb3d4",
+    "packages/proofs/lean/GroundedBinding.lean": "a31874e3b819fc44f4a1f73026d7886041a40e988af89460587254844e512b00",
+    "packages/proofs/lean/Tests/GroundedBindingTests.lean": "3a9f90dfad8be8ade805d9116dee33722e506a21bea473a7b469da12c77afc1c",
+    "packages/proofs/lean/PositiveConsequence.lean": "f19e72ab251f4ef43612dc93ef6c564c3b5dae4416b47dca25f5fadce97a0598",
+    "packages/proofs/lean/AtomicBinding.lean": "5249177555d43df70517c5a04aabe7365500e2b8691dd314e466793af88a6e70",
+    "packages/proofs/lean/ComponentProjection.lean": "87dafa0b7bc30c1bb969c6c18090aea597ae3c341a8796427845b8d7e27af162",
+    "packages/proofs/lean/Tests/ComponentProjectionTests.lean": "12bcaab27afa0e30380f6bd9732b7f1da3184c0bc04a5122c0bd4f0f5b6d2eee",
+    "packages/proofs/lean/RuleGraphClosure.lean": "cbad359a81d876369dd2a599102e6b9058a1e8ddb015f1f78ada5158473fe876",
+    "program/component-plan.ss": "d5d89ae2d1cda032cf4f37eb4bfc2e0355a6b02691197077deca19f00773afe5",
+    "core/dependency-graph.ss": "797d32b47c195d1f26d0ea95d7ed4b5e73f66f4f7c096fa22c066cf35d489ce7",
+    "core/rule-semantics.ss": "5b63ae1d781c59c75c4fa9295fbd8346ae2f6d9297bb40858308474358de2615",
+    "t/harness/run.ss": "4e363af50ae7eed4a0a367a91d8c4d7235f36a2af752584b06d3bb11fbb868a2",
+    "table/trrel-uf.ss": "68bed3e29151bb99f876dda8b4ba8b2bbca6567c7eb04cf219fe62ad7a621f7e",
+    "packages/proofs/lean/SnapshotClosure.lean": "82629611c053f836040bf40348197a6a20a6241cc97eb957792a0a228756d11c",
+    "packages/proofs/lean/Tests/SnapshotClosureTests.lean": "50c33d827faab166087a78a65ee0c5045132604636406c44b469b1f72345a5c3",
+    "temporal/lens.ss": "42b51a5f5e0ca6a49f9e87a5a9e1e7abb3387c612c52c7c12f7e49c11306ca9f"
+  },
+  "lean": {
+    "command": "just check-lean-proofs",
+    "exitCode": 0,
+    "buildJobs": 83,
+    "theorems": [
+      "publish_exact",
+      "publish_ext",
+      "publish_sound",
+      "published_iteration_sound",
+      "terminal_publish_exact",
+      "terminal_publish_closed"
+    ],
+    "axioms": {
+      "publish_exact": [
+        "propext"
+      ],
+      "publish_ext": [
+        "propext",
+        "Quot.sound"
+      ],
+      "publish_sound": [
+        "propext"
+      ],
+      "published_iteration_sound": [
+        "propext"
+      ],
+      "terminal_publish_exact": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "terminal_publish_closed": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    "testsDirectory": "packages/proofs/lean/Tests",
+    "premises": [
+      "Snapshot/current agree on owned facts and owned rule reads",
+      "Partial candidates belong to actual local semantic evaluation for soundness",
+      "Complete owned evaluation membership equals retained snapshot facts or delivered candidates",
+      "Actual snapshot stability for closure"
+    ],
+    "conclusions": [
+      "Batch fold equals retained current facts union owned delivered candidates",
+      "Regrouping, duplicates and reordering preserve Set membership",
+      "Partial publication soundness derives from local iteration soundness",
+      "Complete terminal publication equals current local iteration",
+      "Complete stable publication is component-closed"
+    ],
+    "controls": [
+      "Duplicate and empty batches",
+      "Regrouped membership",
+      "Foreign candidate does not extend component writes",
+      "Unrelated current facts are retained",
+      "Omitted final candidate invalidates terminal completeness"
+    ]
+  },
+  "native": {
+    "command": "t/harness/run.ss test-pool 2 t/qualification/ascent-positive-components-test.ss t/qualification/ascent-positive-plan-test.ss",
+    "exitCode": 0,
+    "pool": 2,
+    "suiteCases": 42,
+    "moduleOK": 2,
+    "explicitOK": 2,
+    "fixture": "Actual actor coordinator delivers 65 candidates as two credited 32-row batches plus one terminal tail. Owner Set callback retains 17 distinct values; successor sees all 65 candidates and all 17 values only after producer completion.",
+    "actualPositiveComponentWorkerTraceClaim": false,
+    "productionRuntimeChangedByThisSlice": false
+  },
+  "tla": {
+    "command": "TLC_JAR=<qualified tool> just check-ready-components-formal check-actor-credit-formal",
+    "exitCode": 0,
+    "normalDistinctStates": [
+      134,
+      857,
+      857,
+      73,
+      121,
+      137
+    ],
+    "expectedNegativeControls": [
+      "ready-components-prerequisite Prerequisites",
+      "ready-components-early CompleteReturn",
+      "ready-components-snapshot DependencySnapshot",
+      "ready-components-tail CompletedDelivery",
+      "ready-components-credit CompletedDelivery",
+      "actor-credit-early CompleteReturn"
+    ],
+    "modelsChanged": false,
+    "role": "Temporal owner credit and complete terminal delivery; no protocol state copied into Lean"
+  },
+  "remaining": [
+    "Native worker-to-candidate semantic trace certificate",
+    "Cancellation and exceptional merge paths",
+    "Mutable binder/row/ownership representation refinement",
+    "Universal native Tarjan refinement",
+    "General non-ground and lattice termination"
+  ],
+  "modelCalls": 0,
+  "rustRuntimeChanges": false,
+  "performanceClaim": null
+}

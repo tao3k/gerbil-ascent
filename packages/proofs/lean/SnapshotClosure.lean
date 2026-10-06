@@ -97,4 +97,106 @@ theorem unrelated_iteration_agrees (rules : List (Rule Fact)) (owner : Fact → 
     · exact different (equal.symm.trans owned)
     · exact independent ⟨rule, member, owned, fact, read, equal⟩
   exact (iterate_frame rules owner other database n fact foreign).symm
+
+/-- Set admission models candidate membership, preserving existing facts and
+filtering by component ownership. Temporal delivery stays outside this model. -/
+def admit (owner : Fact → Component) (component : Component)
+    (database : Database Fact) (batch : List Fact) : Database Fact :=
+  fun fact => database fact ∨ (owner fact = component ∧ fact ∈ batch)
+
+def publish (owner : Fact → Component) (component : Component) :
+    Database Fact → List (List Fact) → Database Fact
+  | database, [] => database
+  | database, batch :: rest => publish owner component (admit owner component database batch) rest
+
+theorem publish_exact (owner : Fact → Component) (component : Component)
+    (database : Database Fact) (batches : List (List Fact)) (fact : Fact) :
+    publish owner component database batches fact ↔
+      database fact ∨ (owner fact = component ∧ fact ∈ batches.flatten) := by
+  induction batches generalizing database with
+  | nil => simp [publish]
+  | cons batch rest ih =>
+      simp only [publish, ih, admit, List.flatten_cons, List.mem_append]
+      constructor
+      · rintro ((old | ⟨owned, head⟩) | ⟨owned, tail⟩)
+        · exact Or.inl old
+        · exact Or.inr ⟨owned, Or.inl head⟩
+        · exact Or.inr ⟨owned, Or.inr tail⟩
+      · rintro (old | ⟨owned, head | tail⟩)
+        · exact Or.inl (Or.inl old)
+        · exact Or.inl (Or.inr ⟨owned, head⟩)
+        · exact Or.inr ⟨owned, tail⟩
+
+/-- Arbitrary chunk boundaries, duplicate candidates and differing list order
+have no effect on admitted Set facts if delivered membership is identical. -/
+theorem publish_ext (owner : Fact → Component) (component : Component)
+    (database : Database Fact) (first second : List (List Fact))
+    (same : ∀ fact, fact ∈ first.flatten ↔ fact ∈ second.flatten) :
+    publish owner component database first = publish owner component database second := by
+  funext fact
+  apply propext
+  rw [publish_exact, publish_exact, same]
+
+theorem publish_sound (rules : List (Rule Fact)) (seed : Database Fact)
+    (owner : Fact → Component) (component : Component) (database : Database Fact)
+    (batches : List (List Fact))
+    (oldSound : ∀ fact, database fact → Derivable rules seed fact)
+    (candidateSound : ∀ fact, owner fact = component → fact ∈ batches.flatten → Derivable rules seed fact)
+    (fact : Fact) (present : publish owner component database batches fact) :
+    Derivable rules seed fact := by
+  rcases (publish_exact owner component database batches fact).mp present with old | ⟨owned, candidate⟩
+  · exact oldSound fact old
+  · exact candidateSound fact owned candidate
+
+/-- Candidate soundness is derived from local evaluation soundness for any
+partial delivered list, rather than asserted as an independent oracle. -/
+theorem published_iteration_sound (rules : List (Rule Fact)) (seed : Database Fact)
+    (owner : Fact → Component) (component : Component)
+    (snapshot current : Database Fact) (n : Nat) (batches : List (List Fact))
+    (snapshotSound : ∀ fact, snapshot fact → Derivable rules seed fact)
+    (currentSound : ∀ fact, current fact → Derivable rules seed fact)
+    (produced : ∀ fact, owner fact = component → fact ∈ batches.flatten →
+      iterate rules owner component snapshot n fact)
+    (fact : Fact) (present : publish owner component current batches fact) :
+    Derivable rules seed fact :=
+  publish_sound rules seed owner component current batches currentSound
+    (fun fact owned member => iterate_sound rules owner component snapshot seed n snapshotSound
+      fact (produced fact owned member)) fact present
+
+/-- The terminal delivery obligation accounts for retained snapshot facts as
+well as new emitted candidates. It does not assume workers replay seed rows. -/
+theorem terminal_publish_exact (rules : List (Rule Fact)) (owner : Fact → Component)
+    (component : Component) (snapshot current : Database Fact) (n : Nat)
+    (batches : List (List Fact))
+    (agree : Agrees rules owner component snapshot current)
+    (delivered : ∀ fact, owner fact = component →
+      (iterate rules owner component snapshot n fact ↔ snapshot fact ∨ fact ∈ batches.flatten)) :
+    publish owner component current batches = iterate rules owner component current n := by
+  rw [← merge_exact rules owner component snapshot current n agree]
+  funext fact
+  apply propext
+  rw [publish_exact]
+  change (current fact ∨ owner fact = component ∧ fact ∈ batches.flatten) ↔
+    current fact ∨ owner fact = component ∧ iterate rules owner component snapshot n fact
+  constructor
+  · rintro (old | ⟨owned, candidate⟩)
+    · exact Or.inl old
+    · exact Or.inr ⟨owned, (delivered fact owned).mpr (Or.inr candidate)⟩
+  · rintro (old | ⟨owned, complete⟩)
+    · exact Or.inl old
+    · rcases (delivered fact owned).mp complete with old | candidate
+      · exact Or.inl ((agree fact (Or.inl owned)).mp old)
+      · exact Or.inr ⟨owned, candidate⟩
+
+theorem terminal_publish_closed (rules : List (Rule Fact)) (owner : Fact → Component)
+    (component : Component) (snapshot current : Database Fact) (n : Nat)
+    (batches : List (List Fact))
+    (agree : Agrees rules owner component snapshot current)
+    (delivered : ∀ fact, owner fact = component →
+      (iterate rules owner component snapshot n fact ↔ snapshot fact ∨ fact ∈ batches.flatten))
+    (stable : iterate rules owner component snapshot (n + 1) = iterate rules owner component snapshot n) :
+    ClosedAt rules owner component (publish owner component current batches) := by
+  rw [terminal_publish_exact rules owner component snapshot current n batches agree delivered]
+  exact stable_closed rules owner component current n
+    (stable_transfers rules owner component snapshot current n agree stable)
 end Ascent.SnapshotClosure

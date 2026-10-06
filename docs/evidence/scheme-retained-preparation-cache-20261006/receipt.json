@@ -1,0 +1,70 @@
+{
+  "qualifiedBaseHead": "841584266410d6ade0df9de4fa58425b2c01c483",
+  "scope": "One-entry preparation cache for a Session-bound fragment batch writer; existing retained operator batch replacement consumes it.",
+  "producerReference": {
+    "repository": "https://github.com/tao3k/lean-poo",
+    "revision": "247d1d6094b6af1bb873f69564b271bc978730ed",
+    "document": "docs/contracts/preparation-cache.org",
+    "role": "Preparation/data lifetime usage reference; no typed registry adapter or native refinement proof"
+  },
+  "sources": {
+    "program/scheme-session.ss": "836131ffe572c21a74d43e813a347512b17a0a0572f58128f2d06be3471b3823",
+    "program/scheme-admission.ss": "599404695b27f72505428d78d7a793af7dfcb9c2527b070b7244e54f3a708fce",
+    "program/scheme-language.ss": "db6c7cf5ce3944e04153b720514a51a0450a537cbdcff490ac1cae4908f5ffaa",
+    "program/operator-session.ss": "04ce0a86aacbdbcf2cad6d3e4ceb5a7f34493573354de1a555009edb13b3da44",
+    "program/scheme-query.ss": "5b8923e947de6e125a3f23c435d38275789d602a17e27d2a338c0b23d49ac7e2",
+    "program/session.ss": "e0d0c2d088bb9599d2dc68ac85f4376b984c6335bb2cb97ebb21c86376e6c20c",
+    "program/evaluate.ss": "6dcdd57cb26df0b91db29a9a43511e12124e12922d5bdbb900bf5a4ec7b13729",
+    "core/positive-plan.ss": "d0f1bbfaa9c3fbd985387b5cebe73e12fcfe5b7a3ede7783c2fb760ef2110d80",
+    "t/qualification/scheme-operator-retained-test.ss": "2c93f2020eea709d717b20fce023e24baff6674dd561209b39f91d3d50629c84",
+    "build.ss": "3435a28db97d4a27b174e0b142b94c9d17196a9e6dad323566db6de2dcad4d3b",
+    "t/harness/run.ss": "d915a4db3ff81c1fca21d7d7a2c6c33ed5a5031a7f6eafadf859cbca1f11edca",
+    "program/index.ss": "7201a25cc42b24629699d0c20551717f360834cac72bc81029dbb8f61558ca95",
+    "program/actor-round.ss": "93a21cf4238c6375357facb80412037dc371b35d6ff9e6997a3deded46ca259e",
+    "program/component-worker.ss": "bd47c1f33b65d11bd57bbbdef7796bd0ab34a4eae1fc44622b164adaafb8e608",
+    "table/provider.ss": "2b5d250f0c3d2ff72dbb438833e2919d3e18029e0991e540a8507c40a14483aa"
+  },
+  "trackedSchemeSourceCount": 534,
+  "trackedSchemeSourceDigest": "a9e3c5adea19f4b2b1a209b69f354f6471b6bfbb83e0668996ea973c69f7eb5b",
+  "trackedSchemeDigestFormat": "Sorted tracked .ss paths; UTF-8 path + NUL + content SHA256 + newline",
+  "native": [
+    {
+      "command": "direnv exec . just test-native t/qualification/scheme-operator-retained-test.ss",
+      "exitCode": 0,
+      "suiteCases": 11,
+      "moduleOK": 1,
+      "harnessOK": 1,
+      "explicitOK": 1,
+      "logSha256": "3c32d918677b4edf76f11446ac8625270292af0df80956e48cd94b25cdf176ac"
+    }
+  ],
+  "mechanism": {
+    "observation": "Native assertions count calls to a derived PO fragment export method",
+    "firstTwoSourcePreparation": 2,
+    "repeatedChecklistAdditionalResolutions": 0,
+    "reorderedChecklistAdditionalResolutions": 2,
+    "returnToOlderChecklistAdditionalResolutions": 2,
+    "retainedEntries": 1
+  },
+  "discriminators": [
+    "Writer creation resolves no source exports and performs no transaction",
+    "Caller replacement-pair mutation cannot change the cached checklist",
+    "Each successful cut matches ordinary transactions and an independent finite closure oracle",
+    "Failed unknown, derived and duplicate selections preserve the previous valid entry",
+    "Cached selection still rejects late malformed rows and native input-budget failure",
+    "Recovery reuses the valid selection and preserves earlier completed snapshots",
+    "Existing exhaustive finite graphs and nested batch replacements traverse the migrated consumer",
+    "Final native run incorporates concurrent positive-plan and provider-progress updates at the qualified base"
+  ],
+  "developmentFailure": {
+    "kind": "New cache test applied a transaction before initial Session completion",
+    "resolution": "Initialize both Session and ordinary control through their public run lifecycle",
+    "qualification": "Only corrected final native run qualifies this revision"
+  },
+  "performanceClaim": false,
+  "remaining": [
+    "No typed LeanPoo registry/cache bridge",
+    "No formal native/LeanPoo equivalence proof"
+  ],
+  "modelCalls": 0
+}

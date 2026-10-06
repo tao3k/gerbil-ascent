@@ -12,6 +12,7 @@
                  relational-op-join relational-op-source
                  relational-op-fragment relational-compose relational-open-session
                  relational-session-run relational-session-replace-sources!
+                 relational-export relational-session-prepare-replacements
                  relational-session-prepare-transaction
                  relational-prepare-query relational-prepare-queries relational-query
                  relational-op-apply
@@ -233,6 +234,77 @@
         (check-equal? (take first 2) '(((0 1)) ((1 2))))
         (check-equal? (same-rows? (caddr first)
                                 (finite-closure '((0 1) (1 2)))) #t)))
+    (test-case "retained batch preparation reuses exactly one successful checklist"
+      (let* ((fragment
+              (relational-op-fragment
+               (reachability
+                (relational-op-union
+                 (relational-op-source 'edge 2 '())
+                 (relational-op-source 'other 2 '()))) 'reach))
+             (resolutions 0)
+             (observed
+              (.o (:: @ fragment)
+                  (exports (lambda (label)
+                             (set! resolutions (+ resolutions 1))
+                             (relational-export fragment label)))))
+             (program (relational-compose (list fragment) 3 64 128))
+             (session (relational-open-session program))
+             (control (relational-open-session program))
+             (initial (relational-session-run session))
+             (control-initial (relational-session-run control))
+             (read-view (relational-prepare-queries fragment '(edge other reach)))
+             (write-batch (relational-session-prepare-replacements session observed))
+             (entries (list (cons 'edge '((0 1))) (cons 'other '((1 2))))))
+        (def (check-update updates expected-resolutions)
+          (let* ((next (write-batch updates))
+                 (ordinary (relational-session-replace-sources!
+                            control fragment updates))
+                 (expected (finite-closure
+                            (append (cdr (assq 'edge updates))
+                                    (cdr (assq 'other updates))))))
+            (check-equal? resolutions expected-resolutions)
+            (check-equal? (read-view next) (read-view ordinary))
+            (check-equal? (same-rows? (caddr (read-view next)) expected) #t)
+            next))
+        (check-equal? (read-view initial) (read-view control-initial))
+        (check-equal? (read-view initial) '(() () ()))
+        (check-equal? resolutions 0)
+        (check-exception (write-batch '()) true)
+        (check-exception (write-batch '(edge)) true)
+        (check-equal? resolutions 0)
+        (let (first (check-update entries 2))
+          (set-car! (car entries) 'unknown)
+          (check-update (list (cons 'edge '((2 0))) (cons 'other '())) 2)
+          (let (before (read-view (relational-session-run session)))
+            (check-exception
+             (write-batch (list (cons 'edge '((0 2)))
+                               (cons 'other '((1 2 3))))) true)
+            (check-equal? resolutions 2)
+            (check-equal? (read-view (relational-session-run session)) before))
+          (check-exception
+           (write-batch (list (cons 'edge '()) (cons 'unknown '()))) true)
+          (check-equal? resolutions 4)
+          (check-exception (write-batch (list (cons 'reach '()))) true)
+          (check-equal? resolutions 5)
+          (check-exception
+           (write-batch (list (cons 'edge '()) (cons 'edge '()))) true)
+          (check-equal? resolutions 7)
+          ;; Failed new selections retain the last checked entry.
+          (check-update (list (cons 'edge '((1 0))) (cons 'other '())) 7)
+          (check-update (list (cons 'other '((0 2))) (cons 'edge '())) 9)
+          (check-update (list (cons 'other '()) (cons 'edge '((2 1)))) 9)
+          ;; Returning to the older order resolves again: no history is retained.
+          (check-update (list (cons 'edge '((0 1))) (cons 'other '((1 2)))) 11)
+          (let (before (read-view (relational-session-run session)))
+            (check-exception
+             (write-batch (list (cons 'edge '((0 1) (1 2)))
+                               (cons 'other '((2 0) (2 1))))) true)
+            (check-equal? resolutions 11)
+            (check-equal? (read-view (relational-session-run session)) before))
+          (check-update (list (cons 'edge '()) (cons 'other '())) 11)
+          (check-equal? (take (read-view first) 2) '(((0 1)) ((1 2))))
+          (check-equal? (same-rows? (caddr (read-view first))
+                                  (finite-closure '((0 1) (1 2)))) #t))))
     (test-case "all finite graphs survive append, duplicate and withdrawal"
       (let* ((possible '((0 1) (0 2) (1 0) (1 2) (2 0) (2 1)))
              (retained

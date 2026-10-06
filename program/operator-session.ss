@@ -13,7 +13,7 @@
                  relational-compose relational-open-session
                  relational-session-append-source!
                  relational-session-prepare-transaction
-                 relational-session-replace-sources!
+                 relational-session-prepare-replacements
                  relational-session-run relational-prepare-query))
 
 (export relational-op-open-retained
@@ -23,7 +23,7 @@
         relational-op-retained-replace-sources!)
 
 (defstruct relational-op-retained
-  (session fragment input-label output-label read-output replace-input latest))
+  (session fragment input-label output-label read-output replace-input replace-sources latest))
 
 (def (row-difference left right)
   (filter (lambda (row) (not (member row right))) left))
@@ -72,9 +72,11 @@
          (replace-input
           (relational-session-prepare-transaction
            session (list (list fragment input-label))))
+         (replace-sources
+          (relational-session-prepare-replacements session fragment))
          (first (relational-session-run session)))
     (make-relational-op-retained
-     session fragment input-label output-label read-output replace-input first)))
+     session fragment input-label output-label read-output replace-input replace-sources first)))
 
 ;;; An append publishes only a completed result. If admission or the run
 ;;; fails, the underlying Session restores its last committed input; the
@@ -102,10 +104,7 @@
     (error "expected a retained relational operator" retained))
   (let (before (relational-op-retained-rows retained))
     (let (next
-          (relational-session-replace-sources!
-           (relational-op-retained-session retained)
-           (relational-op-retained-fragment retained)
-           replacements))
+          ((relational-op-retained-replace-sources retained) replacements))
       (relational-op-retained-publish-replacement! retained before next))))
 
 (def (relational-op-retained-publish-replacement! retained before next)

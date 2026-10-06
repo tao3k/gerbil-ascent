@@ -18,7 +18,8 @@
 (export relational-open-session relational-open-program-session
         relational-session-append-source! relational-session-replace-source!
         relational-session-replace-sources! relational-session-transaction!
-        relational-session-prepare-transaction relational-session-run
+        relational-session-prepare-transaction relational-session-prepare-replacements
+        relational-session-run
         relational-program-append-source! relational-program-replace-source!
         relational-program-transaction! relational-program-session-run)
 
@@ -201,6 +202,51 @@
         (error "prepared transaction requires one row batch per source" batches))
       (relational-session-commit-entries!
        session (map cons names batches)))))
+
+;; relational-session-prepare-replacements
+;;   : (-> RelationalSession Fragment (-> (List (Pair Symbol Rows)) RelationalSolution))
+;;   | doc m%
+;;       Retain one fragment's batch writer in a fixed Session. Repeated
+;;       ordered source checklists reuse their checked transaction selection.
+;;       Only the latest successful selection is retained, never caller rows
+;;       or results. A new checklist is fully resolved before replacing it.
+;;
+;;       # Examples
+;;       ```scheme
+;;       (def replace-sources
+;;         (relational-session-prepare-replacements session fragment))
+;;       (replace-sources (list (cons 'edge '((0 1)))))
+;;       (replace-sources (list (cons 'edge '((1 2)))))
+;;       ```
+;;     %
+(def (relational-session-prepare-replacements session fragment)
+  (unless (relational-session? session)
+    (error "relational transaction requires a session" session))
+  (validate GerbilAscentFragmentContract fragment)
+  (let (last-preparation #f)
+    (lambda (replacements)
+      (unless (and (list? replacements) (pair? replacements))
+        (error "relational transaction requires source updates" replacements))
+      (let* ((labels
+              (map (lambda (replacement)
+                     (unless (and (pair? replacement)
+                                  (symbol? (car replacement)))
+                       (error "invalid relational source replacement" replacement))
+                     (car replacement))
+                   replacements))
+             (previous last-preparation)
+             (transaction
+              (if (and previous (equal? labels (car previous)))
+                (cdr previous)
+                (let (prepared
+                      (relational-session-prepare-transaction
+                       session (map (lambda (label) (list fragment label)) labels)))
+                  ;; Selection failure leaves the previous valid entry intact.
+                  ;; Publish key and factory together as one owned cache entry.
+                  (set! last-preparation (cons labels prepared))
+                  prepared))))
+        ;; A cached selection never skips current row admission or publication.
+        (transaction (map cdr replacements))))))
 
 ;;; Single-fragment batches use the same cross-fragment transaction owner.
 (def (relational-session-replace-sources! session fragment replacements)

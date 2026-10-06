@@ -796,3 +796,55 @@ checks results and earlier snapshots. Both commands exit 0 with explicit final
 OK; no speedup, typed registry bridge or formal cross-language equivalence is
 claimed. Exact source and log identities are in
 [[file:../evidence/scheme-prepared-transaction-20261006/receipt.json][the prepared-transaction receipt]].
+
+* Retain one checked batch preparation per consumer
+
+Repeated retained source batches previously resolved fragment exports and
+rebuilt source selections on every call, even when only their rows changed.
+=relational-session-prepare-replacements= now returns a batch writer bound to
+one Session and fragment. =operator-session.ss= constructs that writer once
+and uses it for its existing exported-source replacement operation.
+
+#+begin_src scheme
+(def write-batch
+  (relational-session-prepare-replacements session fragment))
+(relational-session-run session)
+(write-batch (list (cons 'edge '((0 1))) (cons 'other '((1 2)))))
+(write-batch (list (cons 'edge '((2 0))) (cons 'other '())))
+#+end_src
+
+The writer retains one successful preparation for the exact ordered source
+label list. Equal checklists reuse it with fresh row batches. Changing source
+order requires preparation again, so positional batches cannot bind to the
+wrong handles. A return to an older checklist also prepares again: the writer
+has one entry rather than a growing history. Its owned label list and prepared
+transaction are published together as one immutable pair, read once for each
+application. Caller replacement pairs cannot mutate this identity.
+
+Unknown, derived, foreign or duplicate source selections still pass the full
+source authority checks. A failed new selection leaves the previous valid
+entry in place. Row or native budget failure after successful selection keeps
+that selection available while the ordinary transaction owner preserves the
+last completed source cut. Every application still copies/checks all current
+rows and uses the full native commit boundary. The cache retains preparation,
+not supplied replacement rows or completed answers. Its fixed Session/fragment
+context remains the authority owner; declaration/export changes require a
+new writer. Application requires the ordinary completed clean Session state.
+
+This implements a native consumer use of the preparation/data lifetime
+distinction studied in LeanPoo's preparation-cache contract at
+=247d1d6094b6af1bb873f69564b271bc978730ed=. It does not import a typed registry
+cache or add a formal native/LeanPoo equivalence claim.
+
+The native retained Suite passes 11 Cases. A derived PO fragment counts its
+actual export method applications: a two-source first preparation performs
+two resolutions; repeated equal checklists perform none. Order changes and
+returns to older order each resolve twice. Failed unknown, derived and
+duplicate selections preserve the usable prior entry. Paired ordinary
+transactions and an independent finite-closure model check each successful
+cut; old snapshots and recovery after late bad rows and budget failures remain
+stable. Existing exhaustive finite graph and nested-source batch Cases pass
+through the migrated production consumer. These are mechanism and semantic
+checks, not a CPU, allocation or wall-clock speedup claim. The source/log
+identities are in
+[[file:../evidence/scheme-retained-preparation-cache-20261006/receipt.json][the retained preparation receipt]].

@@ -404,3 +404,50 @@ result and the next append's complete input/output against explicit scalar
 facts. The timeout suite checks that eager validation still hands timed runs
 to fresh committed round boundaries. See
 [[file:../../evidence/scheme-eager-snapshot-20261007/receipt.json][the eager snapshot ownership receipt]].
+
+
+* Source admission recovery follows the complete flush footprint (2026-10-07)
+
+B23 §3.3 decomposes a database into total and delta states for semi-naïve
+iteration; Theorem 3.5 relates the resulting semantics to naïve evaluation.
+Its §5.5 separates logical index requirements from physical representations.
+These logical conditions do not specify recovery from mutable host exceptions.
+For our Scheme Session, an additional implementation obligation follows:
+recover the accepted source cut when any physical owner in an append's flush
+footprint fails. Invalidating the physical cache alone does not restore that
+source cut.
+
+A Set append normally buffers one row. Near the output budget it first flushes
+all staged Set relations, including relations other than the append target.
+The previous Session classification treated canonical Set storage as atomic
+without considering its IndexProvider. A custom index extension could clear
+its table and raise during that flush. The raw engine correctly quarantined
+its failed publication, but the Session append fast path skipped recovery.
+The next run consequently raised the replay error; its run-failure recovery
+used the older committed cut rather than the accepted pre-append pending cut.
+
+Session now computes whether every possible buffered Set owner uses a native
+hash index provider. Set appends use guarded pending-source recovery whenever
+that condition is false, including appends to a native-index relation which
+can flush another relation's custom index. Lattice eager candidate evaluation
+retains its existing atomic classification. Exact native Set/index programs
+retain their direct path. The predicate is conservative about unused custom
+indexes; it makes no performance claim.
+
+The control starts with 32 source rows and one constant derived row, accepts
+two distinct new rows, then triggers a flush at output limit 35.
+A one-shot custom extension mutates and raises. Both append-target variants
+must preserve 34 accepted source rows, both new rows, an empty unrelated
+source, the constant output and the original
+32-row public snapshot. The triggering row is excluded. This validates the
+reconstruction boundary on scalar facts, not rollback of external callback
+effects or a new theorem. See
+[[file:../../evidence/scheme-append-flush-20261007/receipt.json][the append flush recovery receipt]].
+
+
+An earlier development control used a duplicate buffered source. Its pending
+reconstruction hit the existing custom-index duplicate-result check and
+fell back to the committed cut. That outcome is retained in the receipt as a
+reconstruction limitation; the final distinct-row control isolates append
+flush recovery. This change does not qualify duplicate-bearing custom-index
+reconstruction or recovery when fresh replay itself fails.

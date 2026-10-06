@@ -141,6 +141,61 @@
                    (check-equal? (length ((.ref old 'rows-of) 'out)) 32)
                    'ok)))))
         (check-equal? (append graph-outcomes (list counter-outcome)) '(ok ok ok ok))))
+    (test-case "append flush failure preserves accepted sources across relations"
+      (let (observations
+            (map
+             (lambda (target)
+               (let* ((reject? #f)
+                      (provider
+                       (.o (:: @ gerbil-ascent-hash-index-provider)
+                           (.extend-index!
+                            (lambda (index rows columns)
+                              (when reject?
+                                (set! reject? #f)
+                                (hash-clear! index)
+                                (error "buffered Set index failure"))
+                              ((.ref gerbil-ascent-hash-index-provider '.extend-index!)
+                               index rows columns)))))
+                      (x (gerbil-ascent-variable 'x))
+                      (atom (gerbil-ascent-atom 'input (list (gerbil-ascent-literal 0) x)))
+                      (program
+                       (gerbil-ascent-program
+                        (list (gerbil-ascent-relation 'input 2
+                                (map (lambda (n) (list 0 n)) (iota 32)) provider)
+                              (gerbil-ascent-relation 'other 1 [])
+                              (gerbil-ascent-relation 'out 1 []))
+                        (list (gerbil-ascent-rule
+                               (list (gerbil-ascent-atom 'out (list (gerbil-ascent-literal 7))))
+                               (list atom atom)))
+                        40 40 35))
+                      (session (gerbil-ascent-open-session program))
+                      (old (gerbil-ascent-session-run session)))
+                 ;; 33 materialized facts + two accepted buffered sources.
+                 ;; The third append flushes input even when targeting other.
+                 (gerbil-ascent-session-append-source! session 'input '(0 32))
+                 (gerbil-ascent-session-append-source! session 'input '(0 33))
+                 (set! reject? #t)
+                 (let ((rejected (failure
+                                  (lambda ()
+                                    (gerbil-ascent-session-append-source! session target
+                                      (if (eq? target 'input) '(0 34) '(9))))))
+                       (recovered
+                        (with-catch
+                         (lambda (e) (error-message e))
+                         (lambda ()
+                           (let* ((result (gerbil-ascent-session-run session))
+                                  (rows ((.ref result 'rows-of) 'input)))
+                             (list (length rows)
+                                   (and (member '(0 33) rows) #t)
+                                   (and (member '(0 32) rows) #t)
+                                   ((.ref result 'rows-of) 'other)
+                                   ((.ref result 'rows-of) 'out)
+                                   (length ((.ref old 'rows-of) 'input))))))))
+                   (list rejected recovered))))
+             '(input other)))
+        (check-equal? observations
+                      '(("buffered Set index failure" (34 #t #t () ((7)) 32))
+                        ("buffered Set index failure" (34 #t #t () ((7)) 32))))))
     (test-case "interrupted Set source index publication requires engine source replay"
       (for-each
        (lambda (single?)

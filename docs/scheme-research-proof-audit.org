@@ -1892,3 +1892,39 @@ Policy build exited zero with 17 findings and no errors.
 The [[file:research/scheme-dsl/byods-b23.org][B23 ownership follow-up]] is an implementation inference from stable
 concretized facts. It does not prove arbitrary host effects or add a theorem
 or performance qualification. Full CI must be read at the new pushed revision.
+
+
+* Buffered append recovery includes cross-relation index publication (2026-10-07)
+
+At base =85afa3f= the final native control accepted two distinct Set source
+rows, then forced a budget-triggered flush. Its custom index cleared its
+physical table and raised once. Both the custom-index target and a different
+native-index target reported the original append error, then failed the next
+run with =ASCENT engine publication requires source replay=. The red command
+exited 70 on these observations. This demonstrates that append recovery
+classification must include every relation its buffered flush can publish.
+
+Checked Session now treats Set append as atomic only when every possible
+buffered Set owner has a canonical hash IndexProvider. Otherwise its existing
+append recovery restores the pre-append pending source cut. Native Set/index
+programs retain direct append; lattice eager candidates retain their existing
+classification. Raw index publication quarantine and physical cache ownership
+are unchanged.
+
+The [[file:evidence/scheme-append-flush-20261007/receipt.json][receipt]] binds identical final fixtures and 545 tracked Scheme sources;
+only =program/session.ss= differs between red and green. Green passed 60
+native Cases: storage 22, timeout 12 and source deletion 26, each with exit zero,
+module/harness markers and explicit =OK=. The final control checks 34 accepted
+source rows, both new rows, exclusion of the triggering source, constant output
+and stability of the previous 32-row result. Policy passed with 17 findings
+and zero errors. Source freezes before/after qualification are identical.
+
+An earlier duplicate-bearing control exposed a separate replay limitation:
+fresh custom-index lookup rejected duplicate result rows, and pending recovery
+fell back to the committed source cut. Its failing runs and diagnostic are
+retained separately. This slice qualifies distinct-row pending reconstruction;
+it does not qualify a replay that itself fails or external callback rollback.
+The [[file:research/scheme-dsl/byods-b23.org][B23 flush-footprint inference]] connects the implementation boundary to
+§3.3's total/delta decomposition and §5.5's logical/physical index distinction.
+No Lean/TLA theorem or performance claim is added. Full CI remains tied to
+the subsequently pushed revision.

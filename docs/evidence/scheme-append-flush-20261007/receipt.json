@@ -1,0 +1,126 @@
+{
+  "qualifiedBaseHead": "85afa3f7128aef63bfcb10b236cb1b8e82f24448",
+  "scope": "Checked Session Set append recovery includes the index owners of every possible buffered Set flush, preserving accepted pending sources before a failing append.",
+  "sources": {
+    "program/evaluate.ss": "50a76e2bd3d5f18a8c463526730b4daeed015810ba6bbd85cf4504c00991740e",
+    "program/session.ss": "91546d4eb34292efb9f21207b5e08ad122fc47f01dbbb9a0a78fb8103aea1de3",
+    "program/result.ss": "176b217b4bdad2f2c2aef6c420e807bc71d4eea925399713a9386960b3cf20c8",
+    "program/initialization.ss": "fdde386cef1f1015cde78e38c31ba4c15ab070f346895dc1a38b261232506956",
+    "program/source-log.ss": "4bdb78699bed3e07a4b5c1e0bf9b4432c64d07c3183495f3fb7d7dc4794c844d",
+    "program/reuse.ss": "1262e74be8805d13f7603f7782b6172080f219e78d4e2b3ab425973656702e0a",
+    "program/index.ss": "b9f75ac90196573d5c29dae6f9ae929673ec692f2b01ba7b17b567ec624d06dc",
+    "program/analysis.ss": "23a8f4634df8bc1999975832fec1a357b1fa5523c8f2fcb68e74ef06c3f9da82",
+    "program/admission.ss": "3dcdbb27a9321f147556f6439171935ee0394380bb26cf6b844488d6a4650b78",
+    "table/storage.ss": "5ebd76d7515fdab7c4f2e2ac82afe45eaf2607eff97c6346719962dc2db8484b",
+    "table/provider.ss": "6727d87e9f705ca24a459b413c5babf37fab1749c24572043f6405dd98f5483e",
+    "build.ss": "bf2f5558c32b7491803552790503e06aea9badbfbc3b52fd60028257da315c85",
+    "t/harness/run.ss": "163ac31524333521c952c8f2ef9929e46e1f90549dad4180d46bc13c4667fff9",
+    "t/qualification/ascent-storage-batch-test.ss": "daec0441f04f48a56ff4d3dc2de0c411e93de6898123a4793d3ef410d98f0dcf",
+    "t/qualification/ascent-timeout-test.ss": "8f8f6fa3c9fa70f9d7e452735ed670572f9fa45892bb60ec652dd530ff3ed236",
+    "t/qualification/scheme-session-deletion-test.ss": "3e04cc053cc35c78fcebb4254f39f0b0305b722fa0560f76f571be55250ac5a2"
+  },
+  "trackedSchemeSourceCount": 545,
+  "trackedSchemeSourceDigest": "6f928e4219f8d67f59fcc424aa46573c07a445d0d80a8183e87995a361c4cbb7",
+  "trackedSchemeDigestFormat": "Sorted tracked .ss paths; UTF-8 path + NUL + content SHA256 + newline",
+  "red": {
+    "sourcesChangedToGreen": [
+      "program/session.ss"
+    ],
+    "trackedSchemeSourceDigest": "6877e4678e9a6a5c1d30308fdb7abc7bf2218374da24c880ae6ec107a201c451",
+    "productionSessionSha256": "9ffcffd1d461f42c61f75e87ab3e53821b3741d809649fd6ee789c53e28bead8",
+    "log": {
+      "path": "/private/tmp/ascent-append-flush-final-red.log",
+      "sha256": "7deff5758b50fd6b5d77d63e1739af7e85fd7d198ef51db9abcf5191d0e7ec25",
+      "exitCode": 70
+    },
+    "actualBothTargets": [
+      "buffered Set index failure",
+      "ASCENT engine publication requires source replay"
+    ]
+  },
+  "green": {
+    "storage": {
+      "path": "/private/tmp/ascent-append-flush-final-green-storage.log",
+      "sha256": "d77ea533fcc19370b48c1c976e5b5a5155260f8df6c32ac2047376053da12b56",
+      "exitCode": 0,
+      "nativeCases": 22,
+      "moduleOK": true,
+      "harnessOK": true,
+      "explicitOK": true
+    },
+    "timeout": {
+      "path": "/private/tmp/ascent-append-flush-final-green-timeout.log",
+      "sha256": "208e19451cf44c92237e2c060b88cfe1890572b3a7751c3d7bff0ab3d23f9cdf",
+      "exitCode": 0,
+      "nativeCases": 12,
+      "moduleOK": true,
+      "harnessOK": true,
+      "explicitOK": true
+    },
+    "sourceDeletion": {
+      "path": "/private/tmp/ascent-append-flush-final-green-deletion.log",
+      "sha256": "a8f4380877409528daa6b90a7eef1d93163b971aea801d03d03a7f5721854664",
+      "exitCode": 0,
+      "nativeCases": 26,
+      "moduleOK": true,
+      "harnessOK": true,
+      "explicitOK": true
+    },
+    "actualBothTargets": [
+      "buffered Set index failure",
+      [
+        34,
+        true,
+        true,
+        [],
+        [
+          [
+            7
+          ]
+        ],
+        32
+      ]
+    ],
+    "nativeCaseTotal": 60
+  },
+  "policy": {
+    "path": "/private/tmp/ascent-append-flush-final-policy.log",
+    "sha256": "d60c8957ac8cf412fd7a3d23c396c0c7e4dbbe35fb2e0fbfa186beabbf880f96",
+    "exitCode": 0,
+    "findings": 17,
+    "errors": 0
+  },
+  "developmentControl": {
+    "initialRed": {
+      "path": "/private/tmp/ascent-append-flush-red.log",
+      "sha256": "f471aa1df327b136d513ebf655a3968cb86b11e3288c44ebd65f6bf2df59da9f",
+      "exitCode": 70
+    },
+    "initialGreen": {
+      "path": "/private/tmp/ascent-append-flush-green-storage.log",
+      "sha256": "2ada5a6efa28835f46cc27e672c793a970e93795beffc52572d40e0e7b4b4a5f",
+      "exitCode": 70
+    },
+    "diagnostic": {
+      "path": "/private/tmp/ascent-append-flush-diagnostic.log",
+      "sha256": "badcf4f40ddda082ced625b0ea474606b427ebf53e5a0d3dd1b56d6ac11ac8e4",
+      "exitCode": 70
+    },
+    "observation": "Duplicate-bearing pending reconstruction was rejected by the custom-index duplicate-row check and fell back to committed input. Final distinct-row control isolates flush recovery.",
+    "initialRedSourceDigest": "cf6ea843d6a19b74f3eb656c13b42af0e150ae30fc13487dba9830a1bb278a95",
+    "initialGreenSourceDigest": "f9910c4e4089fd3051a4af1b74d83adf08b6adc381dd2ad979d4f793affa3f7d"
+  },
+  "research": {
+    "source": "https://kmicinski.com/assets/byods.pdf",
+    "sections": [
+      "3.3",
+      "Theorem 3.5",
+      "5.5"
+    ],
+    "status": "Host exception recovery is an implementation inference; no theorem or performance claim."
+  },
+  "limits": [
+    "Conservative classification includes unused custom Set indexes.",
+    "Fresh replay must succeed; duplicate-bearing custom-index reconstruction and rollback of external callback effects are not qualified."
+  ]
+}

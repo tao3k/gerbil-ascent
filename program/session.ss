@@ -10,6 +10,8 @@
         (only-in "admission.ss" gerbil-ascent-check-replacement-rows!)
         (only-in "update-selection.ss" gerbil-ascent-update-eligible?)
         (only-in "evaluate.ss" gerbil-ascent-make-engine gerbil-ascent-make-updated-engine)
+        (only-in :gerbil-ascent/table/provider
+                 gerbil-ascent-canonical-hash-index-provider?)
         (only-in :gerbil-ascent/table/storage
                  gerbil-ascent-canonical-set-storage-provider?))
 
@@ -54,12 +56,24 @@
                    (map (lambda (relation)
                           (cons (.ref relation 'rows) []))
                         initial-relations)))
+         ;; A Set append can flush buffered sources in every Set relation.
+         ;; Custom index extension may mutate before raising, even when the
+         ;; triggering append targets a relation with native indexes.
+         (safe-set-flush?
+          (andmap (lambda (relation)
+                    (or (eq? (.ref relation 'storage-kind) 'lattice)
+                        (not (gerbil-ascent-canonical-set-storage-provider?
+                              (.ref relation 'storage-provider)))
+                        (gerbil-ascent-canonical-hash-index-provider?
+                         (.ref relation 'index-provider))))
+                  relations))
          (atomic-appends
           (list->vector
            (map (lambda (relation)
                   (or (eq? (.ref relation 'storage-kind) 'lattice)
-                      (gerbil-ascent-canonical-set-storage-provider?
-                       (.ref relation 'storage-provider))))
+                      (and safe-set-flush?
+                           (gerbil-ascent-canonical-set-storage-provider?
+                            (.ref relation 'storage-provider)))))
                 relations)))
          (direct-appends?
           (andmap (lambda (safe?) safe?)

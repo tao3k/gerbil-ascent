@@ -123,6 +123,20 @@
                   (filter (lambda (name) (string-suffix? "-test.ss" name))
                           (directory-files "t/qualification")))))
 
+;; Each compiler process owns one dependency layer. Expander contexts and
+;; optimization trees must not accumulate across production, references and
+;; all Suites in the coordinator's heap. std/make still owns dependency order,
+;; currentness and parallel work inside each layer; coverage is unchanged.
+;; : (-> ModulePaths LibraryPath Void)
+(def (compile-test-layer! modules library)
+  (unless (null? modules)
+    (let (spec (path-expand "compile-layer.sexp" test-cache))
+      (call-with-output-file [path: spec truncate: #t]
+        (lambda (out) (write modules out) (newline out)))
+      (run-process/batch
+       ["gxi" "-:max-heap=1G,debug=q" "t/harness/run.ss"
+        "compile-test-layer" spec library]))))
+
 (def (prepare-test-library! (tests []))
   (let* ((library (path-expand "lib" test-cache))
          (module-file (path-expand "modules.sexp" test-cache))
@@ -247,10 +261,16 @@
       (set! modules (append modules (filter (lambda (module) (not (member module modules))) support))))
     (call-with-output-file [path: module-file truncate: #t]
       (lambda (out) (write modules out) (newline out)))
-    ;; Compile both sides of the paired performance fixture. Native make also
-    ;; performs the incremental dependency check on every test invocation.
-    (make (append modules (filter (lambda (module) (not (member module modules))) (map path-strip-extension tests))) srcdir: (current-directory) libdir: library
-          build-deps: (path-expand "build-deps" test-cache))
+    ;; The complete paired reference closure is compiled before Suite consumers.
+    ;; Fresh processes release each layer's compiler state under the same heap
+    ;; contract. They share immutable compiled outputs, not expander caches.
+    (compile-test-layer! gerbil-ascent-library-modules library)
+    (compile-test-layer!
+     (filter (lambda (module) (not (member module gerbil-ascent-library-modules))) modules)
+     library)
+    (compile-test-layer!
+     (filter (lambda (module) (not (member module modules))) (map path-strip-extension tests))
+     library)
     (force-output)
     (setenv "ASCENT_TEST_LIBRARY" library)
     (setenv "ASCENT_PERFORMANCE_MODULES" module-file)
@@ -301,6 +321,17 @@
         (error "native pool sources or executable changed during execution")))))
 (def (main . args)
   (match args
+    (["compile-test-layer" spec library]
+     ;; The calling coordinator already owns the package lane. A compiler child
+     ;; must not recursively acquire it or expand the other dependency layers.
+     (let (modules (call-with-input-file spec read))
+       (unless (and (list? modules) (andmap string? modules))
+         (error "invalid native compilation layer" spec))
+       (add-load-path! library)
+       (make modules srcdir: (current-directory) libdir: library
+             build-deps: (path-expand "build-deps" test-cache))
+       (displayln "COMPILE-LAYER-OK modules=" (length modules))
+       (force-output)))
     (["test-jobs" value]
      (let (jobs (if (equal? value "auto")
                  (initialize-native-build-core-capacity!) (string->number value)))

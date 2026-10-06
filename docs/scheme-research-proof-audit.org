@@ -810,3 +810,22 @@ worker purity. Actor Session admission now uses the explicit
 =gerbil-ascent-pure-positive-plan?= predicate, matching component dispatch.
 The existing callback-rejection control detects the old behavior. This check
 preserves the native boundary required by the actor protocol assumptions.
+
+* Compiler dependency-layer implementation (2026-10-06)
+
+The existing Scheme test coordinator now compiles production, reference/support
+and Suite dependency layers in fresh compiler processes. std/make still owns
+ordering, currentness and parallel compilation within each layer. A single
+package lane protects shared outputs; compiler children never reacquire it.
+All 299 selected modules remain covered across layers of 75, 142 and 82.
+The original 1 GiB Scheme heap contract and five-second module progress limits
+remain unchanged.
+
+The [[file:evidence/scheme-compilation-layers-20261006/receipt.json][source-bound receipt]] records 82 native modules, 710 CASE-OK, 82 explicit OK
+and parent exit zero, plus invalid-specification and missing-module refusal
+controls. The first layered run exposed stale three-field activation fixture
+metadata; references now retain the actual compiler purity field without changing
+the comparison algorithms. Its failed result remains recorded. Remote final-head
+CI must separately qualify this implementation. This addresses the concrete
+build blocker and full native gate of milestone 0; remaining milestones and
+model/application benefit claims retain their stated obligations.

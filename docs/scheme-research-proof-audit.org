@@ -1928,3 +1928,17 @@ The [[file:research/scheme-dsl/byods-b23.org][B23 flush-footprint inference]] co
 §3.3's total/delta decomposition and §5.5's logical/physical index distinction.
 No Lean/TLA theorem or performance claim is added. Full CI remains tied to
 the subsequently pushed revision.
+
+* Representation ownership review (2026-10-07)
+
+The [[file:scheme-trrel-uf-design.org::#provider-owned-views][Provider-owned view review]] reads implementation =93e81c1= and reopens B23
+sections 3.3/4/5.1 and S20 sections 6.3/7. Its next architectural unit connects
+compressed storage to actual rule reads, delta, budgets, actor view lifetime and
+result ownership. Current =.extend-rows= and engine buffers retain expanded
+pairs; lazy result reversal does not establish compressed relation storage.
+
+The proposal supplies implementation seams and falsifiable acceptance gates,
+not a completed migration. Lean owns enumeration, filtering and cardinality
+correspondence; TLA owns revision/retirement/publication interleavings. Existing
+finite native checks and exact-head CI retain their original scope. Higher-order
+function-change compilation and MR consumer integration remain separate work.

@@ -451,3 +451,13 @@ fell back to the committed cut. That outcome is retained in the receipt as a
 reconstruction limitation; the final distinct-row control isolates append
 flush recovery. This change does not qualify duplicate-bearing custom-index
 reconstruction or recovery when fresh replay itself fails.
+
+* Representation ownership follow-up (2026-10-07)
+
+The [[file:../../scheme-trrel-uf-design.org::#provider-owned-views][architecture review]] revisits sections 3.3, 4 and 5.1 against =93e81c1=.
+The current engine expands and retains Provider facts despite private SCC
+compression. The proposed next unit is frozen relation views with exact delta,
+keyed enumeration, logical cardinality preflight and owned published snapshots.
+The review separates Lean algebra, TLA reader/publication protocols and native
+cost controls, including full export as a distinct unavoidable enumeration cost.
+This is a design proposal, not a new implementation or performance receipt.

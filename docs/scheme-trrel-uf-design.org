@@ -94,3 +94,113 @@ allocation pair won. Thus structural SCC compression and fixture CPU reduction
 are established, but allocation regresses about 57%/78%; overall Runtime net
 benefit remains unestablished. Allocation/merge temporary reduction is the next
 cost gate, alongside larger application and retained-state memory measurements.
+
+* Provider-owned relation views: architecture review (2026-10-07)
+:PROPERTIES:
+:CUSTOM_ID: provider-owned-views
+:END:
+
+** Finding and source boundary
+
+This review reads implementation =93e81c1c3645197578073fd5481bf7195f16fd0b=.
+It reopens B23 sections 3.3, 4 and 5.1 and S20 sections 6.3 and 7. The
+following design is a proposal; no relation-view implementation, new theorem,
+TLA trace refinement or measured benefit is delivered by this review.
+
+B23 section 4 queries relation representations through logical indexes and
+iterators. Section 3.3 requires total/delta coverage of the joined concrete
+relation and inclusion of every newly implied fact in delta. Section 5.1's
+space argument relies on retaining equivalence classes without retaining every
+pair. These premises explain why a compressed private kernel alone cannot
+supply the paper's whole-engine space result.
+
+The native implementation has four concrete materialization seams:
+
+| Owner | Current action | Consequence for compressed storage |
+|-------+----------------+------------------------------------|
+| [[file:../table/storage.ss][storage dispatch]] | =.extend-rows= returns a proper list; custom output is checked and copied | An implicit frontier is expanded before the evaluator consumes it |
+| [[file:../program/initialization.ss][source initialization]] / [[file:../program/admission.ss][row admission]] | Every admitted expansion enters =all= and =present=; =delta= initially shares =all= | Provider compression does not remove engine row or membership retention |
+| [[file:../program/evaluate.ss][evaluation]] | Derived and appended expansions update row buffers, sizes, membership and index versions | Changing only initialization cannot remove later materialization |
+| [[file:../program/result.ss][result publication]] | Promises capture persistent row roots and defer their reversal; size observation forces those rows | Lazy ordering is not a lazy concretization of Provider state |
+
+For a completed strongly connected active domain of n nodes, the UF view has
+n squared concrete pairs. The engine retains those pairs even when the private
+Provider has one SCC. This is a code-derived representation bound, not a heap
+measurement. Outputting all pairs also takes at least n squared enumeration
+steps; changing internal storage cannot remove that output cost. A sparse query
+and a full result export must therefore be separate measurement conditions.
+
+** Proposed ownership and semantic contract
+
+A relation owner should retain a committed representation and issue immutable
+views for the compiler's actual lookup requirements. Each view binds the
+relation identity, source generation, representation revision and total/delta
+lane. All keyed and full enumerators for that view must denote the same concrete
+relation. Iterator progress belongs to an invocation, never to a shared mutable
+cursor. The existing physical index receiver remains appropriate for explicit
+Set rows; it cannot gain compressed semantics by omitting rows from its supplied
+snapshot. That would violate its current complete-lookup admission contract.
+
+For one completed positive cut, let O be the old concrete relation and N the
+next concrete relation, with O contained in N. Require total union delta to
+represent N, and require delta to include N minus O. Exact delta is the preferred
+built-in contract because current graph kernels already satisfy it. B23 permits
+some overlap; any future overlapping view must preserve authoritative head
+deduplication and must not count overlapping enumeration as distinct facts.
+Initial evaluation still needs full seed visibility, including empty-body
+rules. Returning only injected edges does not satisfy this contract.
+
+A UF frontier may be represented by component-member rectangles rather than a
+list of pairs. A rectangle must retain the member snapshots from its own cut.
+Closing a cursor over mutable parent links or current root membership is unsafe:
+a later merge can change the meaning of an outstanding delta or old result.
+Overlapping rectangles need either a proved disjoint partition or deduplication
+with an explicitly accounted space cost. Compression of delta is therefore a
+separate obligation from compression of total storage.
+
+Keep logical fact limits distinct from physical allocation. A single compressed
+rectangle may imply many facts; its small descriptor cannot bypass the existing
+logical limit. Preflight must compute its exact new cardinality before mutation.
+Source duplicates retain their existing input-count semantics. Derived facts
+retain unique admission semantics. Changing those observable budget rules would
+require a separate contract decision, not an incidental iterator optimization.
+
+** Actors, failure and observation
+
+Use one mutation owner per relation representation initially. Pure consumers
+may receive frozen views through the existing actor scheduling path; each
+consumer gets its own iterator. Readiness and reply credits must bind the view
+revision as well as the existing work identity. Concurrent graph mutation is a
+later capability requiring its own publication protocol and lawful Provider
+implementation; Scheme green threads alone do not make mutable graph state safe.
+
+Cancellation must drain users of a staged view before its backing state can be
+retired. Failure cannot publish some new rows with old membership or sizes.
+Source replay remains the recovery authority for a poisoned owner. Rebuilding
+from a materialized closure would turn derived facts into sources. A published
+result must retain a frozen representation or an owned snapshot independently
+of later merges, replacement and actor cancellation. Full row export remains
+explicitly materializing; keyed observations should not force that export.
+
+S20's function-change translation has a different obligation: changes depend on
+both a discrete base argument and its change. A compressed relation delta is
+not a function derivative. Keep the higher-order descriptor/compiler bridge
+separate while reusing only the established typed algebra where its premises
+are met.
+
+** One implementation sequence and exit gates
+
+| Stage | Concrete deliverable | Required discriminator |
+|-------+----------------------+------------------------|
+| Representation boundary | Private relation-view carrier and explicit Set implementation; compiler metadata chooses keyed/full reads | Same rows, duplicate/order contract, budgets and errors as the current explicit path |
+| Built-in compressed instance | UF frozen total views and exact rectangle delta with separate cardinality | Every insertion prefix against independent reachability; bridge joins, repeated atoms, explicit self inputs and grouped isolation |
+| Evaluator and publication | Initialization, derived admission, append, indexes, result ownership and recovery consume the same view contract | Old result after SCC merge/replacement; exact-budget refusal/retry; interrupted publication; no hidden fallback retaining all UF pairs |
+| Formal correspondence | Lean enumeration/key filtering and rectangle partition/cardinality connect to existing frontier and indexed iteration laws | Native decoding/representation premises remain explicit; tests and axiom reports belong under =Tests/= |
+| Temporal correspondence | TLA view revision, reader retirement, stale reply, cancel/drain and staged publication actions | Mutations for mutable old views, early retirement and partial publication must fail; no semantic generation maximum |
+| Benefit acceptance | Matched current explicit engine versus compressed engine, on identical logical inputs and budgets | Sparse keyed query and full export measured separately; include DAG/cycle, grouped joins, retained updates, peak live memory, allocation and time |
+
+Implement the representation boundary and one UF instance together before
+broadening custom Provider or lattice concurrency. Existing semantic tests stay
+as controls throughout the migration. Acceptance requires both exact observations
+and measured whole-engine cost; neither additional abstract theorems nor private
+component counts alone closes this architecture gate.

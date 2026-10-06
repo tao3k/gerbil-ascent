@@ -3,7 +3,6 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 ;;; Frozen row representations. Consumers own invocation-local traversal;
 ;;; views retain no cursor or mutable storage owner. Nested fields stay stable.
-(import (only-in :std/list/list take))
 (export relation-view? make-relation-view relation-view-count relation-view-units
         relation-view-identity relation-view-generation relation-view-revision relation-view-lane
         gerbil-ascent-view-with-export gerbil-ascent-view-bind gerbil-ascent-view-select gerbil-ascent-view-rows

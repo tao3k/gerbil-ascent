@@ -616,3 +616,26 @@ generated) without a state constraint. The one-reader global-fairness control
 passes 315 states. Eleven seeded faulty variants are caught: the original five
 view safety variants, three reader liveness variants and three shared-reader
 safety variants. No new model API call or performance claim is made.
+
+* Public source-import regression repair (2026-10-07)
+
+Refreshing GitHub exposed a regression in the engine migration at =9fd161f=:
+all oracle shards failed, and Scheme scenario execution failed, with the same
+first root cause: =Unexpected import= at =core/relation-view.ss= line 6. The
+compiled native collection had passed, so it did not qualify this public source
+loading path. The failure was reproduced with a fresh =gxi= module import.
+
+=take= is already supplied by the default Gerbil prelude. The redundant
+=(only-in :std/list/list take)= import expanded to an empty runtime import in
+this source path; Gerbil 0.19's evaluator rejected it. Removing that declaration
+restores the ordinary prelude binding, without adding an adapter, widening a
+limit or changing row semantics. Public import succeeds; the existing UF
+fixture emits the expected six reflexive/transitive pairs for a two-edge chain.
+The existing Rust BYODS shard passes 11 tests with its one pre-existing ignored
+case; package build/policy passes with zero errors and 18 advisory findings.
+
+This regression reinforces the evidence split: Lean verifies the algebra,
+TLA+ checks the protocol, and public source/native entry gates verify that the
+actual library can be loaded and exercised. A compiled-only acceptance cannot
+substitute for public source execution. The shared-reader proof receipt and this
+entry repair receipt retain their separate source identities.

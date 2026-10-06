@@ -125,7 +125,7 @@
            (delta-size (make-vector count 0))
            (index-providers (vector-ref schema 5))
            (indexes (gerbil-ascent-make-row-indexes
-                     all delta all-size delta-size all-version delta-version index-providers))
+                     all delta all-size delta-size all-version delta-version index-providers (pair? rules)))
            (storage-extensions (vector-ref schema 6))
            (storage-states (make-vector count #f))
            (seen (make-vector count #f))

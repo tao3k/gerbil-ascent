@@ -306,4 +306,97 @@ theorem compiled_head [DecidableEq Value] (terms outputs : List (Term Value))
   exact ⟨by simpa [success] using refined.1,
     head_observations outputs _ result _ (refined.2 result success)⟩
 
+/- Finite vectors discharge the infinite-frame representation premise. Bounds
+failure is separate from candidate mismatch; admitted compiled actions never
+take that failure branch. Scalar equality and equal-arity native rows remain
+separate decoding premises. -/
+def VectorRep {n : Nat} (frame : Frame Value) (vector : Vector Value n) : Prop :=
+  ∀ index (inside : index < n), vector[index] = frame index
+
+/-- Extend a finite caller frame without imposing any value on unused cells. -/
+def vectorFrame {n : Nat} (vector : Vector Value n) (outside : Value) : Frame Value :=
+  fun index => if inside : index < n then vector[index] else outside
+
+theorem vector_frame_rep {n : Nat} (vector : Vector Value n) (outside : Value) :
+    VectorRep (vectorFrame vector outside) vector := by
+  intro index inside
+  simp [vectorFrame, inside]
+
+def runVector [DecidableEq Value] {n : Nat} :
+    List (Action Value) → List Value → Vector Value n → Option (Bool × Vector Value n)
+  | [], _, vector => some (true, vector)
+  | _ :: _, [], vector => some (false, vector)
+  | action :: rest, value :: tail, vector =>
+      match action with
+      | .fresh index =>
+          if inside : index < n then runVector rest tail (vector.set index value inside) else none
+      | .bound index =>
+          if inside : index < n then
+            if vector[index] = value then runVector rest tail vector else some (false, vector)
+          else none
+      | .literal expected =>
+          if expected = value then runVector rest tail vector else some (false, vector)
+      | .wildcard => runVector rest tail vector
+
+theorem vector_write_rep {n : Nat} (frame : Frame Value) (vector : Vector Value n)
+    (rep : VectorRep frame vector) (index : Nat) (inside : index < n) (value : Value) :
+    VectorRep (write frame index value) (vector.set index value inside) := by
+  intro key bounded
+  rw [Vector.getElem_set]
+  by_cases same : key = index
+  · subst key; simp [write]
+  · simp [write, same, Ne.symm same, rep key bounded]
+
+/-- Every native vector read/write is in bounds, and all cells (including dirty
+cells left by failed candidates) refine the existing function-frame semantics. -/
+theorem vector_run_refines [DecidableEq Value] {n : Nat}
+    (actions : List (Action Value)) (row : List Value) (frame : Frame Value)
+    (vector : Vector Value n) (rep : VectorRep frame vector)
+    (bounded : ∀ action ∈ actions, action.InRange n) :
+    ∃ result, runVector actions row vector = some result ∧
+      result.1 = (run actions row frame).1 ∧ VectorRep (run actions row frame).2 result.2 := by
+  induction actions generalizing row frame vector with
+  | nil => exact ⟨(true, vector), rfl, rfl, rep⟩
+  | cons action rest ih =>
+      have tailBound : ∀ a ∈ rest, a.InRange n :=
+        fun a member => bounded a (List.mem_cons_of_mem action member)
+      cases row with
+      | nil => exact ⟨(false, vector), rfl, rfl, rep⟩
+      | cons value tail =>
+          cases action with
+          | fresh index =>
+              have inside : index < n := bounded (.fresh index) List.mem_cons_self
+              simpa [runVector, run, Action.InRange, inside] using
+                ih tail (write frame index value) (vector.set index value inside)
+                  (vector_write_rep frame vector rep index inside value) tailBound
+          | bound index =>
+              have inside : index < n := bounded (.bound index) List.mem_cons_self
+              have sameCell := rep index inside
+              by_cases same : frame index = value
+              · simpa [runVector, run, Action.InRange, inside, sameCell, same] using
+                  ih tail frame vector rep tailBound
+              · exact ⟨(false, vector), by simp [runVector, inside, sameCell, same],
+                  by simp [run, same], by simpa [run, same] using rep⟩
+          | literal expected =>
+              by_cases same : expected = value
+              · simpa [runVector, run, same] using ih tail frame vector rep tailBound
+              · exact ⟨(false, vector), by simp [runVector, same],
+                  by simp [run, same], by simpa [run, same] using rep⟩
+          | wildcard => exact ih tail frame vector rep tailBound
+
+theorem compiled_vector_refines [DecidableEq Value] (terms : List (Term Value))
+    {n : Nat} (names : List Nat) (row : List Value) (frame : Frame Value)
+    (vector : Vector Value n) (rep : VectorRep frame vector)
+    (extent : (compile terms names).2.length ≤ n) :
+    ∃ result, runVector (compile terms names).1 row vector = some result ∧
+      result.1 = (run (compile terms names).1 row frame).1 ∧
+      VectorRep (run (compile terms names).1 row frame).2 result.2 :=
+by
+  apply vector_run_refines _ row frame vector rep
+  intro action member
+  have bounded := compile_slots_bounded terms names action member
+  cases action <;> simp only [Action.InRange] at bounded ⊢
+  · exact Nat.lt_of_lt_of_le bounded extent
+  · exact Nat.lt_of_lt_of_le bounded extent
+
 end Ascent.PositiveSlots

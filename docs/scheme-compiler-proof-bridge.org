@@ -20,6 +20,35 @@ head observations, and even failed candidates preserve the initialized prefix.
 This proves why partial fresh writes need no rollback. Compiled slot IDs fit
 the final dense extent. The native runner's 125-term corpus and a missing-fresh
 fault compare complete ordered emissions with ordinary binding on dirty frames.
+
+The finite-vector bridge now constructs =vectorFrame= directly from every
+caller vector. =vector_frame_rep= establishes its correspondence without an
+assumed frame invariant; =vector_write_rep= preserves every in-range cell after
+a write. =vector_run_refines= preserves both acceptance and the entire returned
+finite frame, including partial fresh writes on rejected candidates.
+=compiled_vector_refines= uses compiler-derived slot bounds for any vector whose
+capacity is at least the compiled extent, rather than only an exactly sized
+frame. Bounds failure is represented separately from candidate mismatch.
+The native public plan entry rejects undersized/non-vector frames before any
+provider read, callback or write. Oversized frames remain admitted, and unused
+tail cells retain their caller values. Executable Lean controls stay in
+=Tests/PositiveSlotsTests.lean=; the native discriminator checks early rejection,
+false-valued bindings, reuse and dirty tail preservation. This closes the finite
+slot-container model for the callback-free action grammar. Native compiled
+action decoding and its slot-bound extraction, Scheme scalar/list decoding, host
+expression and callback refinement, full compiler descriptor correspondence,
+and emitted least-model equality remain separate obligations. TLA+ continues
+to own publication and scheduling interleavings, not vector algebra.
+
+The unchanged seven-scenario complete-solve allocation gate exposed a source-only
+regression: constructing a full physical index owner despite an empty rule list.
+=program/index.ss= now returns a private immutable empty owner when the engine
+has no rules; cache advancement is inert, and accidental nonempty requirements
+or lookups fail explicitly. Source admission, versions, storage and budget
+checking retain their existing owners. Ordinary rule programs still receive
+independent mutable index roots. Allocation and time comparisons against the
+frozen association-list evaluator measure the accumulated slot-plan path; they
+do not isolate the new capacity check or establish an application speed gain.
 [[file:../packages/proofs/lean/PositiveTraversal.lean][PositiveTraversal]] composes that matcher into the complete raw-row traversal.
 =precompiled_refines= equates precompiled multi-atom plans with ordinary
 binding, preserving the entire ordered emission list. =walk_prefix= proves

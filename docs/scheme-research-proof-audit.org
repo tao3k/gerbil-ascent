@@ -269,7 +269,14 @@ closure scope; it introduces no new language version, namespace or wrapper frame
 | Separate research / R6 actual model comprehension | Freeze current actual Scheme module/task bytes only after compiler/publication stabilization; native scoring owns truth, Python owns byte transport | No theorem certifies model understanding. Native inert normalization and truth computation remain independent controls | Newly approved exact-source paid batch; no semantic instructions, tutorials, examples, answer-prefill, repairs or truth-guided selection. Compare raw interface acceptance, semantic correctness, reasoning and genuine post-response feedback against history-only control; include every timeout/rejection in denominators |
 
 Milestone 0 is the release gate, not a reason to stop useful design/proof work.
-Milestone 1 is the immediate semantic implementation priority. Provider laws and
+Milestone 1 is the immediate semantic implementation priority. The finite-frame
+sub-obligation is now represented by =PositiveSlots.vector_frame_rep=,
+=vector_run_refines= and =compiled_vector_refines=: compiler-derived bounds cover
+all capacities at least the compiled extent, including dirty cells after failed
+candidates. The native public entry enforces that extent before effects.
+This discharges the slot-container boundary only; concrete scalar/list decoding,
+descriptor lowering and whole-component least-model correspondence still need
+composition, as detailed in [[file:scheme-compiler-proof-bridge.org][the compiler bridge]]. Provider laws and
 shared index design can progress alongside it using an explicit interface, but
 release claims require the integrated path. Milestone 3 must respect milestone
 2's capabilities; adding threads does not make a custom Provider safe.

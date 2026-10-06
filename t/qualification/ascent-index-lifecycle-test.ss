@@ -1,7 +1,7 @@
 ;;; -*- Gerbil -*-
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
-(import (only-in :std/test test-suite check-equal?)
+(import (only-in :std/test test-suite check-equal? check-exception)
         (only-in :core/observability/testing-case poo-flow-test-case)
         (only-in :clan/poo/object .o .ref)
         (only-in :gerbil-ascent/table/funs gerbil-ascent-index-build gerbil-ascent-index-extend!)
@@ -14,6 +14,8 @@
         (only-in :gerbil-ascent/program/interface gerbil-ascent-program gerbil-ascent-relation
                  gerbil-ascent-variable gerbil-ascent-atom gerbil-ascent-rule)
         (only-in :gerbil-ascent/program/evaluate gerbil-ascent-make-engine gerbil-ascent-evaluate-program)
+        (only-in :gerbil-ascent/program/index gerbil-ascent-make-row-indexes
+                 row-indexes-rows row-indexes-advance! row-indexes-plan-atoms!)
         (only-in :gerbil-ascent/table/provider gerbil-ascent-hash-index-provider)
         (only-in :gerbil-ascent/core/rule-semantics gerbil-ascent-bind-row)
         (only-in :gerbil-ascent/t/qualification/ascent-index-reference-evaluate
@@ -64,6 +66,21 @@
 
 (def ascent-index-lifecycle-test
   (test-suite "Complete index lifecycle"
+    (poo-flow-test-case "empty index owner rejects consumers but admits source advancement"
+      (let (owner (gerbil-ascent-make-row-indexes
+                   (vector []) (vector []) (vector 0) (vector 0)
+                   (vector 0) (vector 0) (vector #f) #f))
+        ((row-indexes-plan-atoms! owner) [])
+        ((row-indexes-advance! owner) 0 '((#f) (1)))
+        ((row-indexes-advance! owner) 0 [] #t)
+        (check-exception
+         ((row-indexes-rows owner) #f #f #f #f)
+         (lambda (failure) (equal? (error-message failure)
+                          "ASCENT empty index owner has no lookup consumer")))
+        (check-exception
+         ((row-indexes-plan-atoms! owner) '(unexpected))
+         (lambda (failure) (equal? (error-message failure)
+                          "ASCENT empty index owner has lookup requirements")))))
     (poo-flow-test-case "ordinary atom binding agrees with exhaustive simultaneous assignments"
       (let* ((choices (list (cons 'variable 'x) (cons 'variable 'y)
                             (cons 'literal 0) (cons 'literal #f) (cons 'wildcard #f)))

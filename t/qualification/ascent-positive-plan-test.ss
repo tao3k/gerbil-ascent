@@ -134,6 +134,26 @@
 
 (def ascent-positive-plan-test
   (test-suite "Complete positive rule slot plans"
+    (poo-flow-test-case "finite frame extent rejects before reads and preserves unused dirty slots"
+      (let* ((head (vector 2 '((variable . x) (variable . y))))
+             (atom (vector 0 '((variable . x) (variable . y)) []))
+             (plan (gerbil-ascent-compile-positive-plan (list head) (list (vector 'atom atom))))
+             (short (vector 'old)) (reads 0) (outputs []))
+        (check-equal? (vector-ref plan 2) 2)
+        (check-exception
+         (gerbil-ascent-run-positive-plan! plan short -1
+           (lambda args (set! reads (+ reads 1)) '((#f 1)))
+           (lambda args (error "unexpected output from rejected frame")))
+         (lambda (failure) (equal? (error-message failure)
+                          "ASCENT positive plan frame is smaller than compiled extent")))
+        (check-equal? reads 0)
+        (check-equal? short (vector 'old))
+        (let (frame (vector 'stale 'stale 'untouched))
+          (gerbil-ascent-run-positive-plan! plan frame -1
+            (lambda args '((#f 1) (1 #f)))
+            (lambda (_ row) (set! outputs (cons row outputs))))
+          (check-equal? (reverse outputs) '((#f 1) (1 #f)))
+          (check-equal? frame (vector 1 #f 'untouched)))))
     (poo-flow-test-case "dirty slot frames preserve ordered bindings across the finite term corpus"
       (let* ((palette '(#f 0 1))
              (terms '((variable . a) (variable . b) (literal . #f)

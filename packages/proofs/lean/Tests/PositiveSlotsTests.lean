@@ -70,4 +70,23 @@ example : (compile ([.variable 42, .variable 42, .literal true] : List (Term Boo
 example (action : Action Bool) (member : action ∈ (compile terms names).1) :
     action.InRange 2 := compile_slots_bounded terms names action member
 
+#print axioms Ascent.PositiveSlots.vector_frame_rep
+#print axioms Ascent.PositiveSlots.vector_write_rep
+#print axioms Ascent.PositiveSlots.vector_run_refines
+#print axioms Ascent.PositiveSlots.compiled_vector_refines
+
+/-- Finite frames retain partial writes on rejection and overwrite them on reuse. -/
+example : runVector (compile terms names).1 rejected #v[false, false] =
+    some (false, #v[false, true]) := by decide
+example : runVector (compile terms names).1 accepted #v[false, true] =
+    some (true, #v[false, false]) := by decide
+example : runVector (compile terms names).1 accepted #v[false, true, true] =
+    some (true, #v[false, false, true]) := by decide
+
+/-- Capacity failure is distinct from an ordinary false candidate. -/
+example : runVector [.fresh 2] [true] #v[false, false] = none := by decide
+example : runVector [.bound 0] [true] #v[false] = some (false, #v[false]) := by decide
+example : runVector [.wildcard] [false] (#v[] : Vector Bool 0) =
+    some (true, #v[]) := by decide
+
 end Ascent.PositiveSlotsTests

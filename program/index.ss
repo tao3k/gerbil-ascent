@@ -65,6 +65,16 @@
 
 ;;; Stable entries belong to one engine. Column tables share them across
 ;;; equivalent atoms; identity tables only shortcut that structural resolution.
+(def empty-row-indexes
+  ;; No rule can read this immutable owner; source transactions need no cache
+  ;; advancement. Reject accidental consumers instead of silently scanning.
+  (make-row-indexes
+   (lambda (atom environment use-delta? slot-terms)
+     (error "ASCENT empty index owner has no lookup consumer"))
+   (lambda (index rows (reverse-order? #f)) (void))
+   (lambda (atoms)
+     (unless (null? atoms) (error "ASCENT empty index owner has lookup requirements")))))
+
 (defstruct physical-index-entry (version lookup shared?))
 (defstruct atom-index-view (entry permutation))
 
@@ -81,7 +91,12 @@
 ;;       ;; => engine-local lookup and incremental extension procedures
 ;;       ```
 ;;     %
-(def (gerbil-ascent-make-row-indexes all delta all-size delta-size all-version delta-version index-providers)
+(def (gerbil-ascent-make-row-indexes all delta all-size delta-size all-version delta-version index-providers (required? #t))
+  (if required?
+    (make-required-row-indexes all delta all-size delta-size all-version delta-version index-providers)
+    empty-row-indexes))
+
+(def (make-required-row-indexes all delta all-size delta-size all-version delta-version index-providers)
   ;; Scans and small relations own no physical cache vectors. Allocate each
   ;; lane only when its first indexed lookup crosses the size threshold.
   (let ((all-indexes #f) (delta-indexes #f)

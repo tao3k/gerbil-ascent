@@ -256,6 +256,10 @@
 ;;       ```
 ;;     %
 (def (gerbil-ascent-run-positive-plan! plan frame delta-at rows-access emit-row! (checkpoint! #f))
+  ;; The compiled extent covers every read/write, including failed candidates.
+  ;; Reject an invalid caller frame before lookup, callbacks or partial writes.
+  (unless (and (vector? frame) (>= (vector-length frame) (vector-ref plan 2)))
+    (error "ASCENT positive plan frame is smaller than compiled extent"))
   (visit-positive-atoms! (vector-ref plan 1) (vector-ref plan 0)
                         frame
                         delta-at 0 rows-access emit-row! checkpoint!))

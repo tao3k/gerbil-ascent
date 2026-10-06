@@ -1107,7 +1107,7 @@ _positive-plan-benchmark:
     export ASCENT_POSITIVE_PLAN_LIB="{{ justfile_directory() }}/.gerbil/positive-plan/lib"
     export ASCENT_POSITIVE_PLAN_RECEIPT="${ASCENT_POSITIVE_PLAN_RECEIPT:-{{ justfile_directory() }}/.gerbil/positive-plan/receipt.sexp}"
     mkdir -p .gerbil/positive-plan
-    shasum -a 256 core/positive-plan.ss program/evaluate.ss program/analysis.ss t/qualification/ascent-positive-plan-reference-analysis.ss t/qualification/ascent-positive-plan-reference-evaluate.ss t/performance/positive-plan-benchmark.ss tools/build-positive-plan-benchmark.ss > "$ASCENT_POSITIVE_PLAN_RECEIPT.sources"
+    shasum -a 256 core/positive-plan.ss program/index.ss program/actor-round.ss program/evaluate.ss program/analysis.ss t/qualification/ascent-positive-plan-reference-analysis.ss t/qualification/ascent-positive-plan-reference-evaluate.ss t/performance/positive-plan-benchmark.ss tools/build-positive-plan-benchmark.ss > "$ASCENT_POSITIVE_PLAN_RECEIPT.sources"
     timeout 150s gxi {{ gerbil_test_runtime_options }} tools/build-positive-plan-benchmark.ss
     mkdir -p "{{ justfile_directory() }}/.cache/ascent/tmp"
     log="$(mktemp "{{ justfile_directory() }}/.cache/ascent/tmp/run.XXXXXX")"

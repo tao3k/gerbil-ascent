@@ -26,3 +26,5 @@ import ProviderFrontier
 import SemiNaive
 import TransitiveComponents
 import PositiveConsequence
+
+import ComponentClosure

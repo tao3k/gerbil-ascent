@@ -583,3 +583,18 @@ worker/monitor joins occur at whole-pool exit, not at each SCC completion. This
 corrects source and design descriptions without changing scheduling behavior.
 See [[file:evidence/scheme-dependency-snapshot-20261006/receipt.json][qualification receipt]]. General DAG-to-relational-closure and complete native
 representation/trace refinement remain open; finite TLC is protocol evidence.
+
+* Positive SCC semantic closure
+
+[[file:../packages/proofs/lean/ComponentClosure.lean][ComponentClosure]] closes the semantic component-decomposition obligation for
+ground positive Set rules: local stability implies closure, owned writes preserve
+unrelated facts, no backward reads preserve earlier closures, and complete
+stable topological plans compute the least model. Independent component orders
+agree. Unlike the TLA+ task inventory, this proof contains no mailbox, credit,
+worker or publication state. No generation or iteration upper bound is imposed.
+
+The [[file:evidence/scheme-component-closure-20261006/receipt.json][receipt]] distinguishes this universal ground-rule theorem from the native
+recursive-diamond qualifier and the existing finite ready/credit protocol.
+Stable local iteration, complete head coverage and sound dependency ownership
+are explicit premises. A faithful binder-to-ground-rule bridge, native SCC/head
+projection and termination remain required for whole-engine closure.

@@ -7,6 +7,7 @@ import Tests.PositiveTraversalTests
 import Tests.PositiveConsequenceTests
 import Tests.IndexedPositiveTraversalTests
 import Tests.IndexedIterationTests
+import Tests.ComponentClosureTests
 
 /-! Compile-time qualification for LeanPoo source patches, invalidation,
 certificate reuse and source-count algebra. Temporal publication belongs to TLA+. -/

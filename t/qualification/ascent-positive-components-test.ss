@@ -106,6 +106,32 @@
         (check-equal? (length merged) 34)
         (check-equal? (length snapshot) 33)
         (check-equal? (length done) 2)))
+    (test-case "ground recursive diamond matches least closure under independent component orders"
+      (def (atom relation numbers)
+        (gerbil-ascent-atom relation (map gerbil-ascent-literal numbers)))
+      (let* ((seed (gerbil-ascent-relation 'seed 1 '((0))))
+             (left (gerbil-ascent-relation 'left 1 []))
+             (right (gerbil-ascent-relation 'right 1 []))
+             (out (gerbil-ascent-relation 'out 1 []))
+             (rules
+              (list
+               (gerbil-ascent-rule (list (atom 'left '(0))) (list (atom 'seed '(0))))
+               (gerbil-ascent-rule (list (atom 'left '(1))) (list (atom 'left '(0))))
+               (gerbil-ascent-rule (list (atom 'left '(0))) (list (atom 'left '(1))))
+               (gerbil-ascent-rule (list (atom 'right '(0))) (list (atom 'seed '(0))))
+               (gerbil-ascent-rule (list (atom 'out '(0)))
+                                   (list (atom 'left '(1)) (atom 'right '(0)))))))
+        (for-each
+         (lambda (relations)
+           (let (p (gerbil-ascent-program relations rules 64 64 64))
+             (for-each
+              (lambda (jobs)
+                (let (result (gerbil-ascent-evaluate-program p workers: jobs))
+                  (check-equal? (canonical result 'seed) '((0)))
+                  (check-equal? (canonical result 'left) '((0) (1)))
+                  (check-equal? (canonical result 'right) '((0)))
+                  (check-equal? (canonical result 'out) '((0))))) '(1 2 4))))
+         (list (list seed left right out) (list seed right left out)))))
     (test-case "multi-head plans project into their exact relation SCC"
       (let* ((engine (gerbil-ascent-make-engine (program '((0 1))) #t))
              (components (gerbil-ascent-positive-components (.ref engine '.analysis))))

@@ -97,8 +97,31 @@ private root/size vectors only after predecessor task completion, which follows
 owner merge credit and terminal-tail merging in =actor-round.ss=. Whole-pool
 worker/monitor joins happen at run exit; they do not gate each successor.
 The [[file:evidence/scheme-dependency-snapshot-20261006/receipt.json][receipt]] records a native 32+1-row rendezvous and discriminating protocol
-faults. This supplies a checked scheduling premise, not a proof of arbitrary
-DAG closure or a complete native Lean extraction/refinement.
+faults. This supplies a checked scheduling premise; native grounding, SCC projection
+and trace extraction still require refinement.
+
+* Positive component least closure
+
+[[file:../packages/proofs/lean/ComponentClosure.lean][ComponentClosure]] now proves the pure semantic decomposition behind SCC
+execution. Ground positive rules define =Derivable= independently of a runner.
+A component-local full step adds only heads it owns; =iterate_frame= proves
+other components unchanged. =stable_closed= derives local closure from an
+observed stable iteration. =preserve_closed= uses the absence of backward read
+edges to retain earlier closures. =least_closure= then covers arbitrary finite
+component plans and natural iteration counts, assuming each selected local
+iteration is stable and every rule head is covered. =least_model= places the
+result inside every closed model covering the seed. =orders_equal= proves equal
+results for alternative admitted component orders.
+
+This is a ground positive Set semantics theorem. Ground-rule completeness,
+native Tarjan/head projection, representation and termination are not inferred.
+=IndexedIteration= remains the compiled binder/history theorem; composing its
+operator with this ground presentation still needs a faithful grounding
+certificate. TLA+ owns the unchanged ready/credit protocol. Lean tests live in
+=Tests/ComponentClosureTests.lean=, including a recursive diamond, independent
+component swap, premature successor and insufficient local rounds. The native
+same-case qualifier checks exact seed/left/right/output rows under both relation
+orders and 1/2/4 workers. See [[file:evidence/scheme-component-closure-20261006/receipt.json][source-bound receipt]].
 
 * Stated claim
 

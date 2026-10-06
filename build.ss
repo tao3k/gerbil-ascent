@@ -50,6 +50,7 @@
     "program/analysis"
     "program/summary"
     "program/admission"
+    "program/initialization"
     "program/result"
     "program/source-log"
     "program/activation"

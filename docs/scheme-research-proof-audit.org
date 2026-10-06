@@ -1780,3 +1780,15 @@ The [[file:research/scheme-dsl/byods-b23.org][B23 follow-up]] distinguishes conc
 Provider reconstruction. Custom and graph storage do not qualify for completed
 closure reuse. No theorem owner, public Provider protocol or performance
 qualification changed in this slice.
+* Initial source admission owner and build gate (2026-10-07)
+
+The =9eda9fc= Scheme CI job rejected =program/evaluate.ss= through
+=GERBIL-SCHEME-MOD-R002= before native tests: storage publication guards
+increased its effective size to 1,006 lines. The complete initial admission
+loop now belongs to =program/initialization.ss=, using one private buffer record
+and two returned count values. Its normalized algorithm text is unchanged.
+The declared native module inventory is 77, and =just check-policy= passes with
+zero errors. Ten affected native modules pass 106 Cases with all native and
+explicit completion markers and no watchdog failure. The [[file:evidence/scheme-source-initialization-20261007/receipt.json][source-bound receipt]]
+retains the CI failure and controls. Full CI on the corrected revision remains
+required; previous successful formal/oracle results are not relabeled.

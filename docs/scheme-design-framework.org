@@ -466,3 +466,25 @@ scalar/name decoding, Provider snapshot/frontier instances, then constructed
 least-model output and completed publication. It separates pure logical plans,
 sequential host effects and closure storage semantics. This extends the current
 library architecture; MR/MRR remains future consumer research.
+
+* Initial source admission ownership (2026-10-07)
+
+=program/initialization.ss= owns the complete initial source admission loop.
+=program/evaluate.ss= supplies one fresh engine's buffers and receives the
+input/materialized counts through Scheme multiple values before retained
+component seeding and rule execution. A private =initial-source-state= record
+names the row, frontier, size, storage, membership and lattice buffers. It
+introduces no public compatibility protocol or shared mutable declaration.
+
+The original loop is retained verbatim except indentation. It preserves field
+callback order, duplicate input accounting, output limits, storage admission
+and last-source-update lattice materialization. =build.ss= declares the native
+module before evaluator consumers; package build and ASP policy admit all 77
+modules without errors. This repairs the 1,006-effective-line evaluator owner
+rejection without changing the policy threshold or deleting documentation.
+
+The [[file:evidence/scheme-source-initialization-20261007/receipt.json][source initialization receipt]] records the failed GitHub revision, exact
+algorithm relocation, source hashes, policy result and ten affected native
+modules. This source ownership change adds neither a Lean theorem nor a TLA+
+protocol transition. The existing algebra/lifecycle responsibility split is
+retained, and the final GitHub revision must pass its full inventory gates.

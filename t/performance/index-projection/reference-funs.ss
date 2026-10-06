@@ -48,46 +48,23 @@
         (and (> (car remaining) prior)
              (loop (cdr remaining) (car remaining))))))
 
-;;; Distances belong to this batch, never a cache of caller-owned columns.
-;;; The next cursor starts immediately after the preceding selected value.
-;; : (-> Columns (List Nat))
-(def (column-steps columns)
-  (let loop ((remaining columns) (position 0))
-    (if (null? remaining)
-      []
-      (cons (inexact->exact (- (car remaining) position))
-            (loop (cdr remaining) (+ (car remaining) 1))))))
-
-;; : (-> Row (List Nat) Key)
-(def (stepped-key row steps)
-  (if (null? steps)
+;; : (-> Row Columns Nat Key)
+(def (ordered-key row columns position)
+  (if (null? columns)
     []
-    (let (selected (list-tail row (car steps)))
-      (cons (car selected) (stepped-key (cdr selected) (cdr steps))))))
+    (if (= position (car columns))
+      (cons (car row) (ordered-key (cdr row) (cdr columns) (+ position 1)))
+      (ordered-key (cdr row) columns (+ position 1)))))
 
 ;; : (-> Index (List Row) (List ColumnIndex) Index)
 (def (gerbil-ascent-index-extend! index new-rows columns)
   ;; New batches are in insertion order; prepend keeps relation bucket order.
-  ;; Select the complete loop once. Ordered rows need no column comparison,
-  ;; position counter or shape branch while traversing their key values.
-  ;; Native hash-update! invokes its callback synchronously and does not retain
-  ;; it. One private slot supplies the row to a single batch callback, keeping
-  ;; lexical bindings stable and avoiding one captured closure per input row.
-  ;; Prepending creates a fresh spine; no previously returned bucket is edited.
-  (let* ((row-slot (vector #f))
-         (prepend-row (lambda (bucket) (cons (vector-ref row-slot 0) (or bucket [])))))
-    (if (increasing-columns? columns)
-      (let (steps (column-steps columns))
-        (for-each
-         (lambda (row)
-           (let (key (stepped-key row steps))
-             (vector-set! row-slot 0 row)
-             (hash-update! index key prepend-row #f)))
-         new-rows))
-      (for-each
-       (lambda (row)
-         (let (key (gerbil-ascent-index-key row columns))
-           (vector-set! row-slot 0 row)
-           (hash-update! index key prepend-row #f)))
-       new-rows)))
+  ;; Select the projection once per batch, without per-row update closures.
+  (let (ordered? (increasing-columns? columns))
+    (for-each
+     (lambda (row)
+       (let (key (if ordered? (ordered-key row columns 0)
+                     (gerbil-ascent-index-key row columns)))
+         (hash-put! index key (cons row (or (hash-get index key) [])))))
+     new-rows))
   index)

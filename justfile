@@ -153,6 +153,20 @@ _performance-actor-admission baseline lane:
         timeout 90s .cache/ascent/actor-admission/native-entry {{ gerbil_test_runtime_options }} "$scenario" "$library" "$receipt_dir/$scenario.sexp" "{{ baseline }}"
     done
 
+# Matched physical index build, extension and lookup with projection controls.
+performance-index-projection:
+    {{ test_runner }} run -- just _performance-index-projection
+
+_performance-index-projection:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    library="{{ justfile_directory() }}/.cache/ascent/native-library/lib"
+    mkdir -p .cache/ascent/index-projection
+    gxi {{ gerbil_test_runtime_options }} t/performance/index-projection-build.ss "$library" "{{ justfile_directory() }}/.cache/ascent/index-projection/native-entry"
+    for scenario in wide compact fallback small; do
+        timeout 90s .cache/ascent/index-projection/native-entry {{ gerbil_test_runtime_options }} "$scenario" "$library" ".cache/ascent/index-projection/$scenario.sexp"
+    done
+
 # Matched complete operator compilation with shared lexical dependencies.
 performance-operator-scope:
     {{ test_runner }} run -- just _performance-operator-scope

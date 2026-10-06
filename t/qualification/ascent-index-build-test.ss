@@ -38,6 +38,25 @@
            (check-equal? (length bucket) 2)
            (set-car! bucket '(changed))
            (check-equal? source (list row row)))) '((0) (0 1))))
+    (test-case "wide batch projections retain boundaries order and fresh column selection"
+      (let* ((rows (map (lambda (n) (map (lambda (column) (list n column)) (iota 64))) (iota 4)))
+             (batch (list (car rows) (cadr rows))))
+        (for-each
+         (lambda (columns)
+           (let* ((index (gerbil-ascent-index-build rows columns))
+                  (key-of (lambda (row) (index-build-key row columns))))
+             (gerbil-ascent-index-extend! index batch columns)
+             (for-each
+              (lambda (row)
+                (let (key (key-of row))
+                  (check-equal? (hash-ref index key)
+                    (filter (lambda (candidate) (equal? key (key-of candidate)))
+                            (append (reverse batch) rows))))) rows)))
+         '(() (0) (63) (0 8 56 63) (0 1 2 3) (63 0 63) (2 2)))
+        (let* ((columns (list 0 8)) (index (gerbil-ascent-index-build rows columns)))
+          (set-car! (cdr columns) 56)
+          (gerbil-ascent-index-extend! index batch columns)
+          (check-equal? (hash-ref index (index-build-key (car rows) columns)) (list (car rows))))))
     (test-case "custom provider retains exact source batch columns and lookup keys"
       (let* ((events []) (source '((1) (2))) (batch '((3))) (columns '(0)) (key '(1))
              (provider (.o (:: @ gerbil-ascent-hash-index-provider)

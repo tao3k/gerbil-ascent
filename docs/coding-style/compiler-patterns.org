@@ -7,14 +7,9 @@ historical source paths and timings are not current qualification claims.
 
 * Study: expression optimization conditions and compiler output
 
-[[https://docs.racket-lang.org/guide/performance.html][Racket's performance guide]] explains how immutable module bindings,
-known callees and small function bodies enable propagation and inlining.
-[[https://docs.racket-lang.org/reference/performance-hint.html][Its inline hints]] remain subject to compiler heuristics; forced expansion
-can interfere with them. This is a comparison of optimization conditions,
-not evidence that the two implementations share every optimization or
-evaluation rule. Racket's documented
-[[https://docs.racket-lang.org/guide/application.html][left-to-right application order]] must not be assumed for a different
-language solely because its surface syntax looks similar.
+Study the installed Gerbil compiler directly, including the conditions that
+admit a rewrite and the bindings retained in its output. Surface similarity
+to another Scheme dialect is insufficient evidence for an optimization.
 
 At Gerbil revision =2591dcd=, =compiler/optimize.ss:163-179= collects
 mutators before generating specializers and lifting dispatch lambdas, then
@@ -38,10 +33,31 @@ or a speedup. Probe sources and generated artifacts stay in ignored
 For our code, =core/rule-bindings.ss= already has direct calls for admitted
 small arities; =program/operator.ss= uses fixed local helper signatures.
 These require inspection of emitted code before further manual inlining.
-=table/funs.ss= selects the ordered projection condition once per batch,
-but retains a per-row branch; whether moving that branch saves complete
-solve work remains an unmeasured candidate. Preserve arbitrary/repeated
-column semantics and caller callback effects in any such experiment.
+=table/funs.ss= now selects its complete ordered/arbitrary loop once per
+batch. Ordered column positions become immutable forward distances before
+row traversal; =list-tail= advances each cursor. One synchronous
+=hash-update!= operation replaces the separate lookup and set. Its callback
+is shared within one batch and reads a private row slot; stable lexical
+bindings coexist with explicitly owned mutable state. No callback is
+allocated per row, and each insertion creates a fresh bucket spine.
+The native =runtime/table.ss:440-464= expansion hashes and probes the key
+once and calls the updater directly in its hit/insert branches.
+Arbitrary and repeated columns retain their
+original projection. No caller column list is changed or cached across
+batches. This applies the compiler's fixed-shape specialization approach at
+a production boundary where shape metadata is already available; it does
+not assume that the compiler will hoist an arbitrary captured branch.
+Qualification measures the complete physical build/extend/lookup lifecycle;
+it does not establish an end-to-end solve speedup.
+
+Projection-only hoisting improved this lifecycle's CPU by approximately 2%
+and failed the preset 20% gate. Combining it with one native hash update passed
+50 checked wide pairs: median CPU =2335.25 -> 1403.50= microseconds, with 928
+extra allocated bytes per lifecycle. Compact, arbitrary/repeated-column and
+small controls also passed their unchanged regression gates. The bounded
+batch state increases allocation; this is a CPU result. The public ASP fixture,
+frozen current-commit access layer, negative result and full measurement scope
+are documented in [[file:../../t/performance/index-projection/README.org][index projection qualification]].
 
 * Study: descriptor ownership and shared lexical analysis
 

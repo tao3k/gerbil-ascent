@@ -5,8 +5,8 @@
 ;;; Finite operator lowering into rules, with the stable public facade.
 ;;; Descriptor construction, graph admission and set interpretation have
 ;;; separate owners; only this invocation emits private relation handles.
-(import "operator-descriptor.ss" "operator-analysis.ss" "operator-measurement.ss" "operator-reference.ss"
-        (only-in "objects.ss" gerbil-ascent-relation gerbil-ascent-program gerbil-ascent-rule
+(import :gerbil-ascent/program/operator-descriptor :gerbil-ascent/program/operator-analysis :gerbil-ascent/program/operator-measurement :gerbil-ascent/program/operator-reference
+        (only-in :gerbil-ascent/program/objects gerbil-ascent-relation gerbil-ascent-program gerbil-ascent-rule
                  gerbil-ascent-atom gerbil-ascent-variable gerbil-ascent-fragment))
 
 (export relational-op-source relational-op-union relational-op-join
@@ -56,7 +56,7 @@
 ;;; Compilation is finite and instance-local. A placeholder may be read
 ;;; only inside its own fix body; distinct source nodes cannot silently
 ;;; alias the same public name, even when their rows happen to match.
-(def (lower-operator-graph root fresh-sources? (make-relation gerbil-ascent-relation))
+(def (lower-operator-graph root fresh-sources?)
   (let* ((analysis (analyze-operator-graph root))
          (checked-rows (operator-analysis-checked-rows analysis))
         (relations []) (rules []) (sources [])
@@ -67,7 +67,7 @@
     (def (add-derived arity)
       (let (name (gensym 'operator))
         (set! relations
-          (cons (make-relation name arity []) relations))
+          (cons (gerbil-ascent-relation name arity []) relations))
         name))
     (def (add-rule rule)
       (set! rules (cons rule rules)))
@@ -110,7 +110,7 @@
                   (value (vector-ref (relational-op-data node) 1))
                   (constant-name (gensym 'selection)))
              (set! relations
-               (cons (make-relation
+               (cons (gerbil-ascent-relation
                       constant-name 1 (list (list value)))
                      relations))
              (set! sources (cons constant-name sources))
@@ -143,7 +143,7 @@
                   (out (fresh-variables
                         (relational-op-arity node))))
              (set! relations
-               (cons (make-relation
+               (cons (gerbil-ascent-relation
                       mapping-name
                       (+ input-arity (relational-op-arity node))
                       (hash-ref checked-rows node))
@@ -188,7 +188,7 @@
                 (cons (cons label name) source-labels))
               (set! sources (cons name sources))
               (set! relations
-                (cons (make-relation
+                (cons (gerbil-ascent-relation
                        name (relational-op-arity node)
                        (hash-ref checked-rows node))
                       relations))
@@ -258,12 +258,10 @@
        output (reverse source-labels)))))
 
 ;; relational-op-compile
-;;   : (-> RelationalOp Nat Nat Nat [RelationConstructor] (Values Program Symbol))
+;;   : (-> RelationalOp Nat Nat Nat (Values Program Symbol))
 ;;   | doc m%
 ;;       Lower a descriptor graph to the same admitted positive-rule
 ;;       program consumed by the Scheme relational lifecycle.
-;;       An optional compiler-owned constructor emits the final relation
-;;       representation directly; it is used only during compilation.
 ;;
 ;;       # Examples
 ;;
@@ -275,18 +273,13 @@
 ;;     %
 ;;; The standalone compiler keeps explicit source names for named queries.
 ;;; Its budget belongs to the resulting program, not to graph construction.
-(def (relational-op-compile root input-limit derived-limit output-limit
-                           (make-relation gerbil-ascent-relation))
+(def (relational-op-compile root input-limit derived-limit output-limit)
   (unless (and (exact-integer? input-limit) (> input-limit 0)
                (exact-integer? derived-limit) (> derived-limit 0)
                (exact-integer? output-limit) (> output-limit 0))
     (error "operator program budgets must be positive exact integers"))
-  ;; A compiler owner may supply its final relation representation. Emission
-  ;; still follows complete graph admission and keeps names, rules and order.
-  ;; The default constructor retains ordinary standalone/fragment semantics.
-  (unless (procedure? make-relation) (error "operator relation constructor must be a procedure"))
   (let-values (((relations rules sources output _labels)
-                (lower-operator-graph root #f make-relation)))
+                (lower-operator-graph root #f)))
     (values
      (gerbil-ascent-program relations rules
                             input-limit derived-limit output-limit

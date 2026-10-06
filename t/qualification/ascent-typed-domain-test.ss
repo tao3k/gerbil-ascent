@@ -1,0 +1,85 @@
+;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+(import (only-in :gerbil-ascent/program/operator relational-op-source relational-op-project relational-op-compile)
+        (only-in :gerbil-ascent/program/objects gerbil-ascent-relation)
+        (only-in :std/test check-equal? test-case test-suite)
+        (only-in :clan/poo/object .ref)
+        (only-in :gerbil-ascent/program/scheme-language relational-admit relational-solve relational-query-name)
+        (only-in :gerbil-ascent/program/higher-order relational-relation-type relational-arrow-type relational-type=? relational-type-right relational-typed-source relational-typed-flatmap relational-typed-compile)
+        (rename-in (only-in :gerbil-ascent/t/performance/typed-domain/reference relational-relation-type relational-arrow-type relational-type=? relational-type-right relational-typed-source relational-typed-flatmap relational-typed-compile)
+          (relational-relation-type old-type) (relational-arrow-type old-arrow) (relational-type=? old-equal?)
+          (relational-type-right old-domain) (relational-typed-source old-source)
+          (relational-typed-flatmap old-flatmap) (relational-typed-compile old-compile)))
+(export ascent-typed-domain-test)
+(def (permutations atoms)
+  (if (null? atoms) [[]]
+    (apply append (map (lambda (atom)
+      (map (lambda (tail) (cons atom tail))
+           (permutations (filter (lambda (other) (not (equal? atom other))) atoms)))) atoms))))
+(def ascent-typed-domain-test
+  (test-suite "typed expression domain analysis preserves admission"
+    (test-case "operator lowering constructs each final relation exactly once"
+      (let* ((op (relational-op-project (relational-op-source 'source 1 '((#f) (1))) '(0)))
+             (calls []))
+        (let-values (((program output)
+          (relational-op-compile op 32 256 512
+            (lambda (name arity rows)
+              (set! calls (cons (list name arity rows) calls))
+              (gerbil-ascent-relation name arity rows)))))
+          (check-equal? (reverse calls)
+            (map (lambda (relation) (list (.ref relation 'name) (.ref relation 'arity) (.ref relation 'rows)))
+                 (.ref program 'relations)))
+          (check-equal? (.ref program 'source-handles) '(source))
+          (let (rows (relational-query-name (relational-solve (relational-admit program)) output))
+            (check-equal? (length rows) 2)
+            (check-equal? (and (member '(1) rows) (member '(#f) rows) #t) #t)))))
+    (test-case "permuted scalar and nested arrow equality retains support semantics"
+      (for-each (lambda (left)
+        (for-each (lambda (right)
+          (let ((a (old-type 1 left)) (b (old-type 1 right))
+                (x (relational-relation-type 1 left)) (y (relational-relation-type 1 right)))
+            (check-equal? (relational-type=? x y) #t)
+            (check-equal? (relational-type=? x y) (old-equal? a b))
+            (check-equal? (relational-type=? (relational-arrow-type x y) (relational-arrow-type y x))
+                          (old-equal? (old-arrow a b) (old-arrow b a))))) (permutations '(#f #t #\a 3))))
+        (permutations '(#f #t #\a 3))))
+    (test-case "mutable duplicate domains keep the original directional equality"
+      (for-each (lambda (left right)
+        (let ((a (old-type 1 '(a b))) (b (old-type 1 '(a b)))
+              (x (relational-relation-type 1 '(a b))) (y (relational-relation-type 1 '(a b))))
+          (set-car! (old-domain a) (car left)) (set-car! (cdr (old-domain a)) (cadr left))
+          (set-car! (old-domain b) (car right)) (set-car! (cdr (old-domain b)) (cadr right))
+          (set-car! (relational-type-right x) (car left)) (set-car! (cdr (relational-type-right x)) (cadr left))
+          (set-car! (relational-type-right y) (car right)) (set-car! (cdr (relational-type-right y)) (cadr right))
+          (check-equal? (relational-type=? x y) (old-equal? a b))
+          (check-equal? (relational-type=? y x) (old-equal? b a))))
+        '((a a) (a b) (b b)) '((a b) (a a) (a a))))
+    (test-case "mapping range validation preserves input-before-output rejection"
+      (for-each (lambda (entries)
+        (let ((a (old-source 'source (old-type 1 '(0)) '((0))))
+              (b (relational-typed-source 'source (relational-relation-type 1 '(0)) '((0)))))
+          (check-equal?
+           (with-catch error-message (lambda () (relational-typed-flatmap b (relational-relation-type 1 '(1)) entries)))
+           (with-catch error-message (lambda () (old-flatmap a (old-type 1 '(1)) entries))))))
+        '((((2) (3))) (((0) (3)) ((2) (1))) (((0) (3))))))
+    (test-case "latest occurrence domain order budgets and native rows remain exact"
+      (for-each (lambda (make-type source flatmap compile)
+        (let* ((term (flatmap (flatmap (source 'source (make-type 1 '(a b)) '((a)))
+                          (make-type 1 '(b c)) '(((a) (c))))
+                          (make-type 1 '(c a)) '(((c) (a)))))
+               (verdicts []))
+          (for-each (lambda (budget)
+            (set! verdicts (cons
+              (with-catch error-message
+                (lambda ()
+                  (let-values (((program output) (compile term 32 256 512 budget)))
+                    (let (relation (find (lambda (relation) (eq? (.ref relation 'name) output)) (.ref program 'relations)))
+                      (check-equal? (vector-ref (.ref relation 'checked-domain) 1) '((c a b))))
+                    (check-equal? (relational-query-name (relational-solve (relational-admit program)) output) '((a)))
+                    'accepted))) verdicts))) (iota 12 1))
+          ;; Three scoped terms, three type visits and three lower visits.
+          (check-equal? (reverse verdicts)
+            (append (make-list 8 "typed normalization budget exceeded") (make-list 4 'accepted)))))
+        (list old-type relational-relation-type) (list old-source relational-typed-source)
+        (list old-flatmap relational-typed-flatmap) (list old-compile relational-typed-compile)))))

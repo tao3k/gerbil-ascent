@@ -76,6 +76,7 @@
     "t/qualification/scheme-finite-replay-test.ss"
     "t/qualification/scheme-provenance-graph-test.ss"
     "t/qualification/scheme-higher-order-test.ss"
+    "t/qualification/ascent-typed-domain-test.ss"
     "t/qualification/scheme-session-deletion-test.ss"
     "t/qualification/scheme-stratified-provenance-test.ss"
     "t/qualification/scheme-model-closure-test.ss"
@@ -127,6 +128,8 @@
                           '("t/performance/native-library" "t/performance/ascent-ss-profile"
                             "t/scenarios/performance/ascent-table-expression/baseline"
                             "t/harness/artifact" "t/harness/prediction" "t/harness/actor-pool")
+                          (if (member "t/qualification/ascent-typed-domain-test.ss" tests)
+                            '("t/performance/typed-domain/operator-reference" "t/performance/typed-domain/reference") [])
                           (if (member "t/qualification/ascent-nonmembership-index-test.ss" tests)
                             '("t/performance/nonmembership-index/reference" "t/performance/nonmembership-index/input") [])
                           (if (member "t/qualification/ascent-temporal-projection-test.ss" tests)

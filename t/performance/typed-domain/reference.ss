@@ -6,12 +6,14 @@
 ;;; Builders run once during construction; admitted solves hold no callbacks.
 (import (only-in :gerbil-ascent/program/finite-arithmetic
                  relational-capped-product relational-capped-power)
-        (only-in :gerbil-ascent/program/operator
+        (only-in :gerbil-ascent/t/performance/typed-domain/operator-reference
                  relational-op-source relational-op-union relational-op-join
                  relational-op-project relational-op-select-eq relational-op-flatmap
                  relational-op-fix relational-op-compile relational-op-kind)
         (only-in :gerbil-ascent/program/scheme-checked
                  relational-scalar? relational-copy-rows relational-finite-rows relational-finite-source)
+        (only-in :gerbil-ascent/program/objects gerbil-ascent-program)
+        (only-in :clan/poo/object .ref)
         (only-in :std/list/list delete-duplicates/hash take))
 
 (export relational-relation-type relational-arrow-type relational-type?
@@ -54,17 +56,6 @@
 
 ;; Relation equality compares domain membership, independent of atom order.
 ;; Type candidates are untrusted inputs; non-descriptors compare false.
-;;; The public descriptor exposes mutable domain spines. Build comparison
-;;; indexes for this call only; equal ordered domains need no table at all.
-;;; Keep the original length-and-support behavior even for mutated duplicates.
-;; : (-> ScalarDomain ScalarDomain Boolean)
-(def (same-domain-atoms? left right)
-  (and (= (length left) (length right))
-       (or (equal? left right)
-           (let (members (make-hash-table))
-             (for-each (lambda (atom) (hash-put! members atom #t)) right)
-             (andmap (lambda (atom) (and (hash-get members atom) #t)) left)))))
-
 ;; : (forall (a b) (-> a b Boolean))
 ;; : (-> TypeCandidate TypeCandidate Boolean)
 (def (relational-type=? left right)
@@ -74,8 +65,9 @@
        (case (relational-type-kind left)
          ((relation)
           (and (= (relational-type-left left) (relational-type-left right))
-               (same-domain-atoms? (relational-type-right left)
-                                   (relational-type-right right))))
+               (= (length (relational-type-right left)) (length (relational-type-right right)))
+               (andmap (lambda (atom) (and (member atom (relational-type-right right)) #t))
+                       (relational-type-right left))))
          ((arrow)
           (and (relational-type=? (relational-type-left left) (relational-type-left right))
                (relational-type=? (relational-type-right left) (relational-type-right right))))
@@ -151,33 +143,16 @@
 ;; : (forall (a b) (-> (Type [a]) (Type [b]) Boolean))
 ;; : (-> FiniteRelationType FiniteRelationType Boolean)
 (def (same-domain? left right)
-  (let ((a (relational-type-right left)) (b (relational-type-right right)))
-    ;; This check formerly constructed two throwaway nullary type objects.
-    ;; Retain left-to-right scalar/size admission, then compare canonical
-    ;; supports directly. Domain duplicates are allowed at this boundary.
-    (for-each (lambda (atoms)
-                (unless (and (list? atoms) (<= (length atoms) 4096)
-                             (andmap relational-scalar? atoms))
-                  (error "invalid finite relation type"))) (list a b))
-    (or (equal? a b)
-        (let ((seen-left (make-hash-table)) (seen-right (make-hash-table)))
-          (for-each (lambda (atom) (hash-put! seen-left atom #t)) a)
-          (for-each (lambda (atom) (hash-put! seen-right atom #t)) b)
-          (and (= (hash-length seen-left) (hash-length seen-right))
-               (andmap (lambda (atom) (and (hash-get seen-right atom) #t)) a))))))
+  (relational-type=? (relational-relation-type 0 (relational-type-right left))
+                     (relational-relation-type 0 (relational-type-right right))))
 
 ;; : (forall (a) (-> (Type [a]) [[a]] Void))
 ;; : (-> FiniteRelationType Rows Void)
-(def (check-domain! type rows (start 0) (width (relational-type-left type)))
+(def (check-domain! type rows)
   (for-each (lambda (row)
-              ;; Owned rows already have admitted arities. Inspect a bounded
-              ;; segment directly rather than allocating prefix/suffix lists.
-              (let (segment (list-tail row start))
-                (let walk ((rest segment) (remaining width))
-                  (unless (zero? remaining)
-                    (unless (member (car rest) (relational-type-right type))
-                      (error "typed relation value outside declared domain" (car rest)))
-                    (walk (cdr rest) (- remaining 1)))))) rows))
+              (for-each (lambda (atom)
+                          (unless (member atom (relational-type-right type))
+                            (error "typed relation value outside declared domain" atom))) row)) rows))
 
 ;; Freeze caller-owned row spines and check every atom against the domain.
 ;; : (forall (a) (-> Symbol (Type [a]) [[a]] (Term [a])))
@@ -263,9 +238,8 @@
       (error "typed finite mapping output must be a relation"))
     (let* ((width (relational-type-left it))
            (table (relational-finite-rows width (relational-type-left output-type) entries)))
-      ;; All input-domain failures still precede every output-domain failure.
-      (check-domain! it table 0 width)
-      (check-domain! output-type table width)
+      (check-domain! it (map (lambda (row) (take row width)) table))
+      (check-domain! output-type (map (lambda (row) (list-tail row width)) table))
       (make-relational-typed-term output-type 'flatmap (list input) (vector width table)))))
 
 ;; : (forall (a) (-> (Term (-> a a)) (Term a)))
@@ -296,8 +270,7 @@
   (relation-term-type term)
   (unless (and (exact-integer? expansion-limit) (> expansion-limit 0))
     (error "typed expansion limit must be positive"))
-  (let ((steps 0) (sources (make-hash-table-eq)) (source-domains (make-hash-table-eq))
-        (atoms []) (domain-chunks []))
+  (let ((steps 0) (sources (make-hash-table-eq)) (source-domains (make-hash-table-eq)) (atoms []))
     (def term-copies (make-hash-table-eq))
     (def snapshot-type (finite-type-snapshotter
                         (lambda ()
@@ -308,7 +281,7 @@
       (unless (hash-get collected-types type)
         (hash-put! collected-types type #t)
         (case (relational-type-kind type)
-          ((relation) (set! domain-chunks (cons (relational-type-right type) domain-chunks)))
+          ((relation) (set! atoms (delete-duplicates/hash (append atoms (relational-type-right type)))))
           ((arrow) (collect-type-atoms! (relational-type-left type))
                    (collect-type-atoms! (relational-type-right type))))))
     (def (check-type! type)
@@ -422,12 +395,10 @@
         (case (relational-typed-term-kind node)
           ((source)
            (or (hash-get sources node)
-               ;; check-term! already froze and domain-checked these rows.
-               ;; The positive operator constructor performs its ownership
-               ;; copy; lowering need not rebuild a second typed descriptor.
-               (let (op (relational-op-source (vector-ref data 0) (relational-type-left type)
-                                              (vector-ref data 1)))
-                 (hash-put! sources node op) op)))
+               (let (checked (relational-typed-source (vector-ref data 0) type (vector-ref data 1)))
+                 (let (op (relational-op-source (vector-ref data 0) (relational-type-left type)
+                                                (vector-ref (relational-typed-term-data checked) 1)))
+                   (hash-put! sources node op) op))))
           ((parameter) (let (binding (assq node environment))
                          (unless binding (error "typed parameter missing from frozen environment")) (cdr binding)))
           ((function) (make-typed-closure data (car inputs) environment))
@@ -458,12 +429,6 @@
                                               (list-tail row (vector-ref data 0)))) (vector-ref data 1))))
           (else (error "unsupported typed term kind")))))
     (set! term (check-term! term [] []))
-    ;; Domains are inert and every collection visit has already been charged.
-    ;; Flatten once in original visitation order. Gerbil's default duplicate
-    ;; removal keeps the last occurrence, which is observable in published
-    ;; domains; a first-occurrence set accumulator would change that order.
-    (for-each (lambda (domain) (set! atoms (append domain atoms))) domain-chunks)
-    (set! atoms (delete-duplicates/hash atoms))
     ;; Native source observations retain occurrence multiplicity and budgets.
     ;; A typed relation denotes a set even when lowering returns a bare source
     ;; (including a parameter or function bottom). Materialize its identity
@@ -473,10 +438,16 @@
             (if (eq? (relational-op-kind root) 'source)
               (relational-op-project root (iota (relational-type-left (relational-typed-term-type term))))
               root)))
-    ;; Emit the final finite-domain representation directly. Constructing an
-    ;; ordinary program and rebuilding all relations repeated contract checks
-    ;; and ownership copies without changing the lowered rules or handles.
-    (relational-op-compile result-root input-limit derived-limit output-limit
-      (lambda (name arity rows)
-        (let (domain (or (hash-get source-domains name) atoms))
-          (relational-finite-source name arity rows (make-list arity domain))))))))
+    (let-values (((program output)
+                  (relational-op-compile result-root input-limit derived-limit output-limit)))
+      (values
+       (gerbil-ascent-program
+        (map (lambda (relation)
+               (let* ((name (.ref relation 'name)) (arity (.ref relation 'arity))
+                      (domain (or (hash-get source-domains name) atoms)))
+                 (relational-finite-source name arity (.ref relation 'rows)
+                                           (make-list arity domain))))
+             (.ref program 'relations))
+        (.ref program 'rules) input-limit derived-limit output-limit
+        (.ref program 'source-handles))
+       output)))))

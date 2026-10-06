@@ -626,3 +626,26 @@ The relation index alone and subsequent static term lowering failed the fixed
 native performance gates; the retained experiments and complete qualification
 scope are in =t/performance/nonmembership-index/README.org=. Do not infer
 whole-solver or producer performance from a verifier benchmark.
+
+* Separate typed-domain analysis from expression lowering
+
+Gerbil =optimize-source= collects static facts before transformation, and its
+known-call optimizer uses arity, type and lexical scope as admission guards.
+In =program/higher-order.ss=, type-domain comparison now first checks ordered
+equality, then uses an invocation-owned membership table only for permuted
+domains. Mapping validation consumes owned row segments without creating
+intermediate projections. The compiler collects frozen domain chunks and
+normalizes the aggregate once after graph admission and budget charging.
+
+Gerbil =std/list/list.ss:24-30= keeps last duplicate occurrences by default.
+The aggregate's published domain order therefore requires original visitation
+order plus the existing final normalization; a first-occurrence set is not an
+equivalent replacement. Mutable public types also prohibit persistent indexes.
+Native compiler measurements and semantic controls are documented separately
+in =t/performance/typed-domain/README.org=.
+
+Typed lowering also supplies its final finite-domain relation constructor
+to operator emission after graph admission. This avoids constructing a
+temporary ordinary Program and rebuilding every relation a second time.
+The ordinary four-argument compiler and fragment calls keep their default
+representation; the constructor callback is never retained in the runtime IR.

@@ -167,6 +167,20 @@ _performance-index-projection:
         timeout 90s .cache/ascent/index-projection/native-entry {{ gerbil_test_runtime_options }} "$scenario" "$library" ".cache/ascent/index-projection/$scenario.sexp"
     done
 
+# Cold typed-expression compilation with matched native semantic checks.
+performance-typed-domain:
+    {{ test_runner }} run -- just _performance-typed-domain
+
+_performance-typed-domain:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    library="{{ justfile_directory() }}/.cache/ascent/native-library/lib"
+    mkdir -p .cache/ascent/typed-domain
+    gxi {{ gerbil_test_runtime_options }} t/performance/typed-domain-build.ss "$library" "{{ justfile_directory() }}/.cache/ascent/typed-domain/native-entry"
+    for scenario in ordered permuted small; do
+        timeout 90s .cache/ascent/typed-domain/native-entry {{ gerbil_test_runtime_options }} "$scenario" "$library" ".cache/ascent/typed-domain/$scenario.sexp"
+    done
+
 # Matched complete independent absence verification using the public ASP API.
 performance-nonmembership-index:
     {{ test_runner }} run -- just _performance-nonmembership-index

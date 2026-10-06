@@ -16,7 +16,7 @@
         (only-in :gerbil-ascent/core/positive-plan gerbil-ascent-compile-positive-plan
                  gerbil-ascent-run-positive-plan!)
         (only-in :gerbil-ascent/table/funs gerbil-ascent-index-build gerbil-ascent-index-extend!)
-        (only-in :gerbil-ascent/program/index gerbil-ascent-make-row-indexes row-indexes-rows)
+        (only-in :gerbil-ascent/program/index gerbil-ascent-make-row-indexes row-indexes-rows row-indexes-advance!)
         (only-in :gerbil-ascent/core/rule-bindings gerbil-ascent-bind-row
                  gerbil-ascent-head-row)
         (only-in :gerbil-ascent/program/reuse gerbil-ascent-activate-rules)
@@ -117,6 +117,20 @@
      (lambda (head row) (set! emitted (cons (cons (vector-ref head 0) row) emitted))))
     (for-each (lambda (read) (check-equal? (cadr read) (= (car read) pivot))) reads)
     (reverse emitted)))
+
+;; A full synchronous scan oracle; it does not read slots, pivots or indexes.
+(def (scan-path-step edges current)
+  (let (next current)
+    (def (admit row) (unless (member row next) (set! next (cons row next))))
+    (for-each admit edges)
+    (for-each
+     (lambda (path)
+       (for-each (lambda (edge)
+                   (when (= (cadr path) (car edge)) (admit (list (car path) (cadr edge))))) edges)) current)
+    next))
+(def (check-path-set actual expected)
+  (check-equal? (length actual) (length expected))
+  (for-each (lambda (row) (check-equal? (and (member row expected) #t) #t)) actual))
 
 (def ascent-positive-plan-test
   (test-suite "Complete positive rule slot plans"
@@ -282,6 +296,85 @@
                   (check-equal? (equal? (indexed-slot-stream plan (make-vector (vector-ref plan 2) 'stale)
                                         1 all dropped gerbil-ascent-hash-index-provider positions) expected) #f))))
             '(#f #t))) '(() (1) (1 3) (3 1) (1 1)))))
+    (poo-flow-test-case "persistent indexed delta rounds agree with full scans and stable reachability"
+      (let* ((vertices (append (iota 12) (map (lambda (n) (+ n 20)) (iota 6))))
+             (edges (append (map (lambda (n) (list n (+ n 1))) (iota 11))
+                            (append-map (lambda (x) (map (lambda (y) (list x y)) (map (lambda (n) (+ n 20)) (iota 6))))
+                                        (map (lambda (n) (+ n 20)) (iota 6)))))
+             (nodes (map list vertices))
+             (copy (gerbil-ascent-compile-positive-plan
+                    (list (vector 1 '((variable . x) (variable . y)))
+                          (vector 1 '((variable . x) (variable . y))))
+                    (list (vector 'atom (vector 0 '((variable . x) (variable . y)) [] [] [])))))
+             (recursive (gerbil-ascent-compile-positive-plan
+                         (list (vector 1 '((variable . x) (variable . z))))
+                         (list (vector 'atom (vector 2 '((variable . x)) [] [] []))
+                               (vector 'atom (vector 1 '((variable . x) (variable . y)) '(0) [] '((variable . x))))
+                               (vector 'atom (vector 0 '((variable . y) (variable . z)) '(0) [] '((variable . y)))))))
+             (all (vector edges [] nodes)) (delta (vector [] [] []))
+             (all-size (vector (length edges) 0 (length nodes))) (delta-size (vector 0 0 0))
+             (all-version (vector 0 0 0)) (delta-version (vector 0 0 0))
+             (indexes (gerbil-ascent-make-row-indexes all delta all-size delta-size all-version delta-version
+                        (make-vector 3 gerbil-ascent-hash-index-provider)))
+             (access (row-indexes-rows indexes)) (advance! (row-indexes-advance! indexes))
+             (copy-frame (make-vector (vector-ref copy 2) 'stale))
+             (recursive-frame (make-vector (vector-ref recursive 2) 'stale))
+             (seen (make-hash-table)) (pending []) (rounds 0) (stable #f))
+        (def (admit head row)
+          (check-equal? (vector-ref head 0) 1)
+          (unless (hash-get seen row) (hash-put! seen row #t) (set! pending (cons row pending))))
+        ;; Missing full initialization is a real fault: static source deltas
+        ;; are empty, so delta-only execution falsely reports empty completion.
+        (for-each (lambda (pivot) (gerbil-ascent-run-positive-plan! copy copy-frame pivot access admit)) '(0))
+        (for-each (lambda (pivot) (gerbil-ascent-run-positive-plan! recursive recursive-frame pivot access admit)) '(0 1 2))
+        (check-equal? pending [])
+        (check-equal? (null? (scan-path-step edges [])) #f)
+        (let loop ()
+          (let* ((before (vector-ref all 1)) (expected (scan-path-step edges before)))
+            (set! pending [])
+            (if (= rounds 0)
+              (begin (gerbil-ascent-run-positive-plan! copy copy-frame -1 access admit)
+                     (gerbil-ascent-run-positive-plan! recursive recursive-frame -1 access admit))
+              (begin
+                (gerbil-ascent-run-positive-plan! copy copy-frame 0 access admit)
+                (for-each (lambda (pivot)
+                            (gerbil-ascent-run-positive-plan! recursive recursive-frame pivot access admit)) '(0 1 2))))
+            ;; Publication waits for all rule traversals. Frames and physical
+            ;; caches persist across rounds; only admitted new rows advance.
+            (advance! 1 pending #t)
+            (vector-set! all 1 (append pending before))
+            (vector-set! all-size 1 (+ (vector-ref all-size 1) (length pending)))
+            (unless (null? pending) (vector-set! all-version 1 (+ (vector-ref all-version 1) 1)))
+            (vector-set! delta 1 pending)
+            (vector-set! delta-size 1 (length pending))
+            (vector-set! delta-version 1 (+ (vector-ref delta-version 1) 1))
+            (check-path-set (vector-ref all 1) expected)
+            (set! rounds (+ rounds 1))
+            (displayln "SLOT-HISTORY-ROUND " rounds " admitted=" (length pending) " known=" (vector-ref all-size 1))
+            (force-output)
+            (if (null? pending) (set! stable #t) (loop))))
+        (check-equal? stable #t)
+        (check-equal? rounds 12)
+        (check-equal? (vector-ref all-size 1) 102)
+        ;; Independent Boolean Floyd closure includes the disconnected clique;
+        ;; it does not reuse the synchronous scan oracle or engine traversals.
+        (let ((matrix (make-vector (* 18 18) #f)) (expected []))
+          (def (position n) (if (< n 12) n (+ 12 (- n 20))))
+          (for-each (lambda (edge) (vector-set! matrix (+ (* 18 (position (car edge))) (position (cadr edge))) #t)) edges)
+          (for-each (lambda (k)
+            (for-each (lambda (x)
+              (for-each (lambda (y)
+                (when (and (vector-ref matrix (+ (* 18 x) k)) (vector-ref matrix (+ (* 18 k) y)))
+                  (vector-set! matrix (+ (* 18 x) y) #t))) (iota 18))) (iota 18))) (iota 18))
+          (for-each (lambda (x)
+            (for-each (lambda (y)
+              (when (vector-ref matrix (+ (* 18 (position x)) (position y)))
+                (set! expected (cons (list x y) expected)))) vertices)) vertices)
+          (check-path-set (vector-ref all 1) expected))
+        ;; Execute a further round on the actual stable frame/cache state.
+        (set! pending [])
+        (for-each (lambda (pivot) (gerbil-ascent-run-positive-plan! recursive recursive-frame pivot access admit)) '(0 1 2))
+        (check-equal? pending [])))
     (poo-flow-test-case "failed partial writes require the next fresh overwrite"
       (let* ((patterns '((variable . b) (variable . a) (variable . b)))
              (heads (list (vector 2 '((variable . a) (variable . b)))))

@@ -51,6 +51,23 @@ Symbol/hash-map decoding, native vector ownership and mutable cache publication
 remain representation obligations; custom provider membership alone does not
 promise canonical emission order.
 
+[[file:../packages/proofs/lean/IndexedIteration.lean][IndexedIteration]] carries those concrete indexed traversals into synchronous
+multi-rule Set history. =Schema= checks row arity against a declared domain and
+known columns at each lowering position; faithful finite enumeration supplies
+row admission and monotonicity. =batch_refines= preserves the entire ordered
+pivot stream while threading actual dirty returns. =returned_frame_valid= and
+=pivot_frame_independent= justify using those returns in later rounds.
+=full_step_exact= derives complete initialization; =pivot_after_full= derives
+all-old head coverage from history. =indexed_iterations_equal= equates every
+natural-number round with full ordinary-binding iteration, including multiple
+and duplicate heads. =stable_indexed= transports stability to all later rounds
+without asserting a termination cutoff. Native qualification retains one set
+of slot frames, all/delta versions and physical indexes for twelve rounds,
+compares each round to an independent full scan, and checks the final 102 paths
+against independent Floyd closure. Delta-only initialization is a required
+counterexample, and an extra stable round must admit nothing. Mutable native
+representation and actor publication remain outside this semantic history.
+
 * Physical cache failure recovery
 
 The indexed traversal theorem assumes candidates from the current committed
@@ -69,6 +86,7 @@ corrected engine's rows, alias lookup, delta isolation and successful retry.
 See [[file:evidence/scheme-index-recovery-20261006/receipt.json][qualification receipt]]. Lean retains the frozen-row algebra; this lifecycle
 belongs to TLA+ and native runtime checks. Neither finite TLC nor the source
 inspection constitutes a whole-engine extraction proof.
+
 
 * Stated claim
 

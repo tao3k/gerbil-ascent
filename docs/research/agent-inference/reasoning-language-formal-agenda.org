@@ -397,6 +397,42 @@ new-head witness. Native decoding, scalar equality, vector ownership and cache
 publication remain representation obligations; the canonical filter model does
 not assert ordering for an arbitrary custom Provider.
 
+The [[file:../../../packages/proofs/lean/IndexedIteration.lean][compiled indexed history]] now composes the entire chain across rounds.
+Each rule carries source atoms, planned columns, a seed environment, its slot
+representation and ordered head emissions. =Schema= discharges per-round arity
+and known-column admission from the declared input domain. Faithful finite
+row enumeration supplies both admitted rows and monotone snapshots. No step
+refinement, complete initialization or completed-solve equality is assumed.
+
+=batch_refines= threads actual dirty frame returns through every position in
+the pivot batch and preserves ordered duplicate heads. =returned_frame_valid=
+proves that the next round may reuse the returned frame; =pivot_frame_independent=
+shows that this reuse has the same ordered output as any frame representing
+the seed prefix. The Set-history recurrence uses such a representative frame,
+while native qualification retains the actual frames throughout execution.
+=full_step_exact= proves full compiled initialization. =pivot_after_full=
+derives all-old coverage from the preceding full consequence step, then uses
+indexed pivot soundness and completeness. =indexed_iterations_equal= proves
+that every natural-number compiled-indexed round agrees with the synchronous
+full ordinary-binding round across all rules and declared heads. =stable_indexed=
+transports an observed stable full step to every subsequent indexed round;
+it supplies no universal native iteration bound or termination claim.
+
+The [[file:../../../packages/proofs/lean/Tests/IndexedIterationTests.lean][Lean history qualifiers]] include an empty-body seed, duplicate heads and a
+second rule that can consume the seed only in the next frozen-snapshot round.
+The [[file:../../../t/qualification/ascent-positive-plan-test.ss][native history qualifier]] runs an 11-edge chain beside a disconnected
+six-vertex clique. It retains the same frames and index owner for all rounds,
+extends admitted all-index rows, and advances all/delta sizes and versions.
+Each of twelve rounds agrees with an independent full-scan consequence oracle:
+47, 57, 66, 74, 81, 87, 92, 96, 99, 101, 102, 102 known paths. Independent Boolean
+Floyd closure verifies all 102 final paths, and an additional stable pivot batch
+admits no rows. Skipping the full initial run leaves empty static-source deltas
+and incorrectly completes with no paths; the discriminator retains this fault.
+This binds initialization, indexed selection, concrete delta, dirty reuse,
+round history and stability to one chain. Native encoding, mutable cache
+publication and actor scheduling still require their own representation and
+protocol evidence.
+
 The constituent proofs make the contract auditable. The
 [[file:../../../packages/proofs/lean/RuleGraphClosure.lean][rule compiler]] proves exact source-to-head membership, including repeated
 heads and all three read kinds. The

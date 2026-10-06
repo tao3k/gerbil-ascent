@@ -205,6 +205,68 @@
             (lambda (_ row) (set! outputs (cons row outputs))))
           (check-equal? (reverse outputs) '((#f 1) (1 #f)))
           (check-equal? frame (vector 1 #f 'untouched)))))
+    (poo-flow-test-case "delta ordinals reject before callbacks and preserve full ordered emissions"
+      (let* ((terms '((variable . x)))
+             (heads (list (vector 2 terms) (vector 3 terms) (vector 2 terms)))
+             (callbacks 0) (reads []) (emissions []) (checkpoints 0)
+             (plan
+              (gerbil-ascent-compile-positive-plan
+               heads (list (vector 'guard [] (lambda () (set! callbacks (+ callbacks 1)) #t))
+                           (vector 'atom (vector 0 terms []))
+                           (vector 'guard '(x) (lambda (_x) #t))
+                           (vector 'atom (vector 1 terms [])))))
+             (frame (make-vector (vector-ref plan 2) 'old))
+             (all '#(((0) (1)) ((1) (0))))
+             (delta '#(((1)) ((0)))))
+        (check-equal? (vector-ref plan 4) 2)
+        (for-each
+         (lambda (pivot)
+           (check-exception
+            (gerbil-ascent-run-positive-plan! plan frame pivot
+             (lambda args (set! reads (cons 'unexpected reads)) '((0)))
+             (lambda args (set! emissions (cons 'unexpected emissions)))
+             (lambda () (set! checkpoints (+ checkpoints 1))))
+            (lambda (failure)
+              (equal? (error-message failure)
+                      "ASCENT positive plan delta selector outside compiled atom extent"))))
+         '(-2 2 3 1/2 0.0 #f))
+        (check-equal? callbacks 0)
+        (check-equal? reads [])
+        (check-equal? emissions [])
+        (check-equal? checkpoints 0)
+        (check-equal? (vector->list frame) '(old))
+        (for-each
+         (lambda (pivot)
+           (set! reads []) (set! emissions [])
+           (gerbil-ascent-run-positive-plan! plan frame pivot
+            (lambda (atom _frame delta? _keys)
+              (let (position (vector-ref atom 0))
+                (set! reads (cons (cons position delta?) reads))
+                (vector-ref (if delta? delta all) position)))
+            (lambda (head row)
+              (set! emissions (cons (cons (vector-ref head 0) row) emissions))))
+           (let (expected
+                 (body-binding-stream
+                  (list (cons terms (vector-ref (if (= pivot 0) delta all) 0))
+                        (cons terms (vector-ref (if (= pivot 1) delta all) 1))) heads))
+             (check-equal? (reverse emissions) expected))
+           (for-each
+            (lambda (read)
+              (check-equal? (cdr read) (= (car read) pivot))) reads))
+         '(-1 0 1))
+        (check-equal? callbacks 3)
+        ;; Empty-body facts have only the total traversal; no delta pivot.
+        (let* ((fact (gerbil-ascent-compile-positive-plan
+                      (list (vector 0 [])) []))
+               (fact-frame (make-vector 0)))
+          (check-equal? (vector-ref fact 4) 0)
+          (check-exception (gerbil-ascent-run-positive-plan! fact fact-frame 0
+                             (lambda args []) (lambda args (error "unexpected fact"))) true)
+          (let (facts [])
+            (gerbil-ascent-run-positive-plan! fact fact-frame -1
+              (lambda args (error "unexpected lookup"))
+              (lambda (_ row) (set! facts (cons row facts))))
+            (check-equal? facts '(()))))))
     (poo-flow-test-case "dirty slot frames preserve ordered bindings across the finite term corpus"
       (let* ((palette '(#f 0 1))
              (terms '((variable . a) (variable . b) (literal . #f)
@@ -545,6 +607,7 @@
         (check-equal? (length (vector-ref partial 0)) 3)
         (check-equal? (eq? (vector-ref plan 1) (vector-ref partial 1)) #t)
         (check-equal? (vector-ref plan 2) (vector-ref partial 2))
+        (check-equal? (vector-ref plan 4) (vector-ref partial 4))
         (check-equal? (eq? (vector-ref full 6) (vector-ref selected 6)) #f)
         (check-equal? (length (vector-ref plan 0)) 4)
         (gerbil-ascent-run-positive-plan!

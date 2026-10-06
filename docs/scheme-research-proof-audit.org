@@ -1161,3 +1161,48 @@ least-model correspondence. Native finite probes qualify representation
 examples; they are not the universal extraction theorem. Callback/host closure
 refinement, typed change algebra and measured application benefit remain
 distinct obligations. MR is a future consumer of the accepted library.
+* A22 native correspondence: checked delta ordinals and one projection owner
+
+This Scheme implementation slice starts from PR #1 revision
+=0c042d4a014fd7251dae95eb63b736d8f6c298d1=. It follows the admitted compiler
+correspondence obligation above. Theorem construction remains a separate owner;
+this slice changes no Lean or TLA+ source.
+
+The compiled positive runner previously accepted any delta selector. A selector
+outside the relation-atom ordinals matched no lookup and silently performed a
+total traversal. That could hide a scheduler/lowering mismatch while producing
+plausible rows. =core/positive-plan.ss= now records the relation atom extent
+when lowering actions. Callback segments do not consume relation ordinals.
+Execution admits only the total selector =-1= or an exact integer in
+=[0, atom-extent)=, before callbacks, row lookup, checkpoint or frame mutation.
+Empty-body facts have no delta ordinal and retain their total traversal.
+The metadata count is computed once during compilation; execution checks it
+without rescanning actions.
+
+Native execution exposed another representation gap: SCC head projection in
+=program/component-plan.ss= reconstructed an independent four-field vector,
+while source-update projection in =program/update-selection.ss= had its own
+copy. The first SCC native attempt consequently rejected the missing extent.
+Both now call =gerbil-ascent-positive-plan-with-outputs=, owned by the compiler.
+Projection replaces only ordered emissions and shares action identity, frame
+extent, purity and atom extent. Engine/worker frames remain privately allocated.
+This centralizes the compiled representation boundary across ordinary execution,
+SCC ownership and partial-head source updates.
+
+The native positive-plan Suite passes 26 Cases after rebasing the parallel
+stored-actions theorem revision =cdf5dd8=. The added discriminator checks
+invalid selectors before side effects, total/first/second atom selection across
+callback segments, exact ordered duplicate/multiple-head emissions against an
+independent binding interpreter, and nullary empty-body facts. Existing corpus
+checks exercise repeated variables, dirty frames, indexed lookups, callbacks,
+source updates, partial heads and concurrent engines. The SCC Suite passes 21
+Cases, including actual workers, recursive diamonds, projected heads, complete
+terminal dependency snapshots, global budgets and failure drain. Commands exit
+0 with MODULE-OK, HARNESS-OK and explicit final OK using the repository's
+isolated Gerbil SDK; the default host prefix initially lacked building-api.
+
+[[file:evidence/scheme-delta-selector-20261006/receipt.json][The source-bound receipt]] qualifies this native contract and its consumers.
+It does not prove universal native compiler refinement, whole-framework paper
+replication or a performance improvement. Those audit gaps remain as stated;
+this supplies the executable selector/projection invariant for the separate
+semantic correspondence work.

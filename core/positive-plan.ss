@@ -8,7 +8,7 @@
                  gerbil-ascent-compile-input-guard)
         (only-in "rule-bindings.ss" gerbil-ascent-expression-value gerbil-ascent-head-row gerbil-ascent-call-with-bindings))
 (export gerbil-ascent-prepare-rule-activations gerbil-ascent-positive-plan gerbil-ascent-compile-positive-plan gerbil-ascent-run-positive-plan!
-        gerbil-ascent-pure-positive-plan?
+        gerbil-ascent-positive-plan-with-outputs gerbil-ascent-pure-positive-plan?
         gerbil-ascent-index-key gerbil-ascent-index-key/terms
         gerbil-ascent-index-value gerbil-ascent-emit-heads!)
 
@@ -74,7 +74,7 @@
         (let (positions (list->vector terms))
           (map (lambda (column) (vector-ref positions column)) columns)))))))
 
-;;; Plans retain ordered outputs, actions, slot count and a separate purity flag.
+;;; Plans retain ordered outputs, actions, slot count, purity and atom extent.
 ;;; Unsupported terms or clauses keep the complete rule on the general path.
 ;;; Slot assignment follows admitted body order. A fresh slot is always written
 ;;; before a bound read, so backtracking never needs to copy or clear the frame.
@@ -188,7 +188,8 @@
                (map (lambda (head)
                       (vector head (map (lambda (term) (lower term #t))
                                         (vector-ref head 1)))) heads)))
-        (vector outputs (compile-action-segments actions) count pure?)))))
+        (vector outputs (compile-action-segments actions) count pure?
+                (length (filter (lambda (action) (vector? (vector-ref action 0))) actions)))))))
 
 ;;; Return the ordered callback prefix and its atom suffix as separate values.
 ;;; Structural recursion constructs only the detached prefix, without mutation.
@@ -214,6 +215,13 @@
                     (callback-prefix actions)))
         (cons (vector 'callbacks (gerbil-ascent-compile-frame-sequence segment))
               (compile-action-segments remaining))))))
+
+;;; Project only head emissions; preserve every compiled body invariant.
+;;; Both SCC ownership and source-update selection share this representation owner.
+;; : (-> PositivePlan OrderedOutputs PositivePlan)
+(def (gerbil-ascent-positive-plan-with-outputs plan outputs)
+  (vector outputs (vector-ref plan 1) (vector-ref plan 2)
+          (vector-ref plan 3) (vector-ref plan 4)))
 
 ;;; Execution representation and permission to reorder are separate facts.
 ;;; Callback plans execute serially even when their slot reads are compiled.
@@ -260,6 +268,12 @@
   ;; Reject an invalid caller frame before lookup, callbacks or partial writes.
   (unless (and (vector? frame) (>= (vector-length frame) (vector-ref plan 2)))
     (error "ASCENT positive plan frame is smaller than compiled extent"))
+  ;; Delta ordinals count relation atoms, not callback segments. An invalid
+  ;; selector must not silently become a total traversal or invoke host code.
+  (unless (and (exact-integer? delta-at)
+               (or (= delta-at -1)
+                   (and (<= 0 delta-at) (< delta-at (vector-ref plan 4)))))
+    (error "ASCENT positive plan delta selector outside compiled atom extent"))
   (visit-positive-atoms! (vector-ref plan 1) (vector-ref plan 0)
                         frame
                         delta-at 0 rows-access emit-row! checkpoint!))

@@ -9,7 +9,7 @@
         (only-in :clan/poo/object .ref)
         (only-in "scheme-checked.ss" relational-stable-procedure?
                  relational-scalar?)
-        (only-in :gerbil-ascent/core/positive-plan gerbil-ascent-positive-plan)
+        (only-in :gerbil-ascent/core/positive-plan gerbil-ascent-positive-plan gerbil-ascent-positive-plan-with-outputs)
         (only-in :gerbil-ascent/core/dependency-graph gerbil-ascent-graph-close!)
         (only-in :gerbil-ascent/table/provider gerbil-ascent-canonical-hash-index-provider?)
         (only-in :gerbil-ascent/table/storage gerbil-ascent-canonical-set-storage-provider?))
@@ -146,12 +146,12 @@
                         ;; full plans retain normal lowering of the selected heads.
                         (plan
                          (if full-plan
-                           (vector
+                           (gerbil-ascent-positive-plan-with-outputs
+                            full-plan
                             (filter (lambda (output)
                                       (vector-ref affected
                                        (vector-ref (vector-ref output 0) 0)))
-                                    (vector-ref full-plan 0))
-                            (vector-ref full-plan 1) (vector-ref full-plan 2) (vector-ref full-plan 3))
+                                    (vector-ref full-plan 0)))
                            (gerbil-ascent-positive-plan
                             (vector heads (vector-ref rule 1)
                                     (vector-ref rule 2) (vector-ref rule 3))))))

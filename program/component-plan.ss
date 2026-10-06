@@ -4,7 +4,8 @@
 
 ;;; Immutable SCC execution metadata. Construction owns temporary grouping
 ;;; tables; returned components share admitted slot actions, never worker state.
-(import (only-in :gerbil-ascent/core/positive-plan gerbil-ascent-pure-positive-plan?)
+(import (only-in :gerbil-ascent/core/positive-plan gerbil-ascent-pure-positive-plan?
+                 gerbil-ascent-positive-plan-with-outputs)
         (only-in :gerbil-ascent/core/dependency-graph gerbil-ascent-graph-components)
         (only-in :gerbil-ascent/table/provider gerbil-ascent-canonical-hash-index-provider?)
         (only-in :gerbil-ascent/table/storage gerbil-ascent-canonical-set-storage-provider?))
@@ -78,7 +79,7 @@
               (hash-for-each
                (lambda (component outputs)
                  (let (plan (if single? full
-                              (vector (reverse! outputs) (vector-ref full 1) (vector-ref full 2) #t)))
+                              (gerbil-ascent-positive-plan-with-outputs full (reverse! outputs))))
                    (positive-component-rules-set! component
                      (cons (vector plan (vector-ref rule 2)) (positive-component-rules component)))))
                outputs-by-component)))) rules))

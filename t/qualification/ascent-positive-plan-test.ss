@@ -505,9 +505,10 @@
                  (andmap (lambda (action column)
                            (eq? action (list-ref (vector-ref compiled 1) column)))
                          (vector-ref compiled 2) columns) #t)))
-            (list [] (list (- width 1)) (iota width)
+            (list [] (list (- width 1)) (list 0 (- width 1))
+                  (filter even? (iota width)) (iota width)
                   (reverse (iota width)) (append (iota width) (iota width))))))
-       '(7 8 9 32 127 128 129 512)))
+       '(7 8 9 32 127 128 129 512 1024)))
     (poo-flow-test-case "wide slot keys preserve literals repeats wildcards and unsupported callbacks"
       (let* ((terms (map (lambda (n)
                           (case (modulo n 3)

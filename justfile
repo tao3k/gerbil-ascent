@@ -167,6 +167,20 @@ _performance-index-projection:
         timeout 90s .cache/ascent/index-projection/native-entry {{ gerbil_test_runtime_options }} "$scenario" "$library" ".cache/ascent/index-projection/$scenario.sexp"
     done
 
+# Matched cold slot compilation and native traversal with shape controls.
+performance-slot-projection:
+    {{ test_runner }} run -- just _performance-slot-projection
+
+_performance-slot-projection:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    library="{{ justfile_directory() }}/.cache/ascent/native-library/lib"
+    mkdir -p .cache/ascent/slot-projection
+    gxi {{ gerbil_test_runtime_options }} t/performance/slot-projection-build.ss "$library" "{{ justfile_directory() }}/.cache/ascent/slot-projection/native-entry"
+    for scenario in sparse reverse repeat full below-boundary boundary small empty single; do
+        timeout 90s .cache/ascent/slot-projection/native-entry {{ gerbil_test_runtime_options }} "$scenario" "$library" ".cache/ascent/slot-projection/$scenario.sexp"
+    done
+
 # Matched full proof production, replay and checker with source controls.
 performance-stratified-model:
     {{ test_runner }} run -- just _performance-stratified-model

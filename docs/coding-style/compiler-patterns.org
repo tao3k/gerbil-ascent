@@ -61,6 +61,21 @@ are documented in [[file:../../t/performance/index-projection/README.org][index 
 
 * Study: descriptor ownership and shared lexical analysis
 
+Structural admission also improves slot-action selection in
+=core/positive-plan.ss=. Its new private projector selects an ordered forward
+cursor, full reverse copy or arbitrary positional vector from column shape,
+removing the 128-column cutoff. Lowering order, action identity and detached
+selected-list spines remain unchanged; engine frames are not retained there.
+The forward cursor's successive =list-tail= intervals are disjoint, so a
+random-access lint advisory does not describe this traversal.
+
+The public ASP benchmark includes cold compilation, fresh frame allocation
+and native four-row indexed traversal. Sparse/reverse/repeated cases improve
+CPU by approximately 65%/78%/79%, while full-forward is 2% slower. A vector-only
+reverse version failed its allocation cap; exact reverse admission removed
+the extra scratch storage without relaxing the gate. Nine shapes pass.
+See [[file:../../t/performance/slot-projection/README.org][slot projection qualification]] for frozen source, controls and scope.
+
 The same invocation-owned pattern applies to stratified proofs.
 =candidate/closure-index.ss= now gives one verified model relation a named
 record containing ordered rows, structural membership and optional source

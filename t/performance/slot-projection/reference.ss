@@ -4,7 +4,7 @@
 
 ;;; Private positive-rule execution plans. Plans are immutable and shared;
 ;;; each engine owns its variable frames, including nested/concurrent solves.
-(import (only-in "rule-bindings.ss" gerbil-ascent-expression-value gerbil-ascent-head-row))
+(import (only-in :gerbil-ascent/core/rule-bindings gerbil-ascent-expression-value gerbil-ascent-head-row))
 (export gerbil-ascent-prepare-rule-activations gerbil-ascent-positive-plan gerbil-ascent-compile-positive-plan gerbil-ascent-run-positive-plan!
         gerbil-ascent-index-key gerbil-ascent-index-key/terms
         gerbil-ascent-index-value gerbil-ascent-emit-heads!)
@@ -36,40 +36,6 @@
                   (vector-ref rule 0) (vector-ref rule 1)))
         (hash-put! +positive-plans+ rule (cons #t plan))
         plan))))
-
-;;; Shape belongs to immutable admitted metadata. Ordered columns advance one
-;;; cursor; full reverse columns copy in reverse order; other arbitrary or
-;;; repeated columns use a temporary positional view. All paths
-;;; retain action identity and create a detached selected-list spine.
-;; : (-> SlotTerms Columns SlotTerms)
-(def (project-slot-terms terms columns)
-  (match columns
-    ([] [])
-    ([column] (list (list-ref terms column)))
-    (else
-     (def (increasing? remaining prior)
-       (or (null? remaining)
-           (and (> (car remaining) prior)
-                (increasing? (cdr remaining) (car remaining)))))
-     (def (reverse-columns? remaining position)
-       (if (null? remaining)
-         (= position -1)
-         (and (= (car remaining) position)
-              (reverse-columns? (cdr remaining) (- position 1)))))
-     (cond
-       ((increasing? columns -1)
-        (let select ((remaining terms) (selected columns) (position 0))
-          (if (null? selected)
-            []
-            (let (cursor (list-tail remaining (- (car selected) position)))
-              (cons (car cursor)
-                    (select (cdr cursor) (cdr selected) (+ (car selected) 1)))))))
-       ((and (reverse-columns? columns (car columns))
-             (= (+ (car columns) 1) (length terms)))
-        (reverse terms))
-       (else
-        (let (positions (list->vector terms))
-          (map (lambda (column) (vector-ref positions column)) columns)))))))
 
 ;;; Unsupported terms or clauses keep the complete rule on the general path.
 ;;; Slot assignment follows admitted body order. A fresh slot is always written
@@ -111,7 +77,22 @@
                         (let* ((atom (vector-ref clause 1))
                                (terms (map lower (vector-ref atom 1)))
                                (columns (vector-ref atom 2)))
-                          (vector atom terms (project-slot-terms terms columns)))) body))
+                          (vector atom terms
+                                  ;; Full ordered wide keys need no positional
+                                  ;; reads. Copy the spine, retaining action
+                                  ;; identity without aliasing the term list.
+                                  (match columns
+                                    ([] [])
+                                    ([column] (list (list-ref terms column)))
+                                    (else
+                                     (if (and (>= (length columns) 128)
+                                              (let loop ((xs terms) (ks columns) (n 0))
+                                                (if (null? xs)
+                                                  (null? ks)
+                                                  (and (pair? ks) (= (car ks) n)
+                                                       (loop (cdr xs) (cdr ks) (+ n 1))))))
+                                       (map (lambda (term) term) terms)
+                                       (map (lambda (column) (list-ref terms column)) columns))))))) body))
                 (outputs
                  (map (lambda (head)
                         (vector head

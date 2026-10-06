@@ -1,0 +1,107 @@
+#+title: Shape-directed slot projection in positive rule compilation
+
+* Gerbil source study and production change
+
+Gerbil =2591dcd= recognizes admitted expression structure before rewriting it.
+=compiler/optimize-call.ss:89-131= checks arity and immutable bindings before
+substitution, retaining temporaries for other operands. The dispatch recognizer
+in =compiler/optimize-top.ss:872+= checks exact argument correspondence and
+callee identity. Surface similarity or a large expression size is insufficient.
+The applicable lesson is explicit structural admission and stable binding
+identity, not forcing every helper to inline.
+
+=core/positive-plan.ss= now separates slot lowering from key projection.
+=project-slot-terms= selects already lowered actions by immutable admitted
+column shape. Empty/single keys retain their direct paths. Strictly increasing
+columns advance one forward cursor, full reverse columns use =reverse=, and
+other arbitrary/repeated columns use one temporary vector. The former
+128-column/full-forward special case is removed. Every path preserves the
+selected action identities and creates a separate list spine.
+
+Lowering still follows original body/term order. Mutable variable frames remain
+engine-owned; selected metadata contains no frame or evaluated expression.
+Unsupported callbacks keep the entire rule on the general interpreter. No
+provider or expression callback moves across index construction. For admitted
+columns, projection selection is linear in input width plus selected columns,
+rather than repeating prefix traversals for each positional read.
+
+Emitted native Scheme confirms the three branches and fixed local helper
+arguments. The ordered cursor recurs on =cdr cursor= with the next absolute
+position. Its =list-tail= distances cover disjoint forward intervals; it never
+restarts from the original term list. The source policy audit flags that call
+as possible random list access (advisory 041), but this cursor invariant makes
+that advisory inapplicable. The audit has one advisory and zero errors.
+
+* Frozen comparator and public ASP entry
+
+=reference.ss= freezes =5ea7fa82f33e5559dae43fe375a60795965d0832='s complete
+positive-plan module. Only its relative rule-bindings import becomes the
+unchanged production library import. Restoring that spelling reproduces the
+original file byte for byte. Its compiler, runner and key builder all supply
+the baseline leg; no global positive-plan cache substitutes a warm lookup.
+
+Run =just performance-slot-projection=. The native builder compiles project
+modules against the installed SDK without rebuilding Gerbil. Scenarios,
+library and receipt paths are explicit arguments. All generated artifacts,
+logs and raw receipts remain in ignored =.cache/ascent/slot-projection/=.
+
+The public =make-benchmark-fixture= API creates =benchmark.ss=;
+=benchmark-run/result= owns 50 alternating checked pairs and the standard
+wall/heap receipt. Additional CPU and cumulative allocated byte counters
+measure each inner leg. Fixtures and lookup buckets are prepared before timing.
+Every repetition cold-compiles both atoms and the head, allocates a fresh frame,
+traverses a four-row native indexed self join and emits four heads. The full
+compiled plan, selected action identity and direct expected rows are compared
+outside timing. This measures compile-plus-traversal, not a complete solver
+lifecycle or a speedup of an already cached warm plan.
+
+* Admission and retained failed experiment
+
+Sparse/reverse/repeated keys require at least 20% CPU improvement and 35/50
+paired CPU wins. Controls allow 5% plus 20 microseconds CPU overhead. Allocation
+must stay within 16 KiB of baseline above width 128, or 1 KiB otherwise. All
+gates were fixed before sampling; standard pair wall p95 is diagnostic.
+
+The initial arbitrary-key vector path reduced reverse CPU from 1705 to 383.5
+microseconds, but added 16,432 bytes and failed the 16 KiB allocation cap. Its
+receipt and log remain locally as =reverse-vector-only.sexp= and
+=vector-only.log=. Recognizing full reverse shape uses its necessary output
+spine as the projection, eliminating that scratch vector. The cap was not
+relaxed. General repeated/arbitrary keys still pay for their temporary vector.
+
+* Local native measurements
+
+The public entry passes all nine scenarios with 50 pairs each:
+
+| Scenario       | Width | Baseline CPU us | Current CPU us | Baseline bytes | Current bytes | CPU wins |
+|----------------+-------+-----------------+----------------+----------------+---------------+----------|
+| sparse         |  2048 |         1050.00 |         366.50 |         821724 |        821724 |    50/50 |
+| reverse        |  2048 |         1687.50 |         373.00 |        1067484 |       1067484 |    50/50 |
+| repeat         |  1024 |          854.00 |         181.50 |         780396 |        788636 |    50/50 |
+| full           |  2048 |          400.00 |         408.00 |        1067484 |       1067484 |     7/50 |
+| below-boundary |   127 |           24.25 |          18.25 |          74960 |         74960 |    50/50 |
+| boundary       |   128 |           18.50 |          18.75 |          75408 |         75408 |    23/50 |
+| small          |     4 |         1.578125|        1.562500|           6272 |          6272 |    37/50 |
+| empty          |    32 |        3.531250 |       3.562500 |          14528 |         14528 |    22/50 |
+| single         |   128 |          13.00 |         13.125 |          44928 |         44928 |    14/50 |
+
+Sparse/reverse/repeated lifecycle CPU improves by approximately 65%/78%/79%.
+Already optimized full-forward keys are 2% slower in this run; small control
+differences do not establish a performance gain. Ordered/reverse allocations
+are unchanged. Repeated-key selection adds 8240 bytes per lifecycle.
+
+After final source formatting and native Suite qualification, the public entry
+passes all nine gates again: sparse =1116 -> 379.5= microseconds, reverse
+=1819 -> 404.5=, repeated =876 -> 184=, with 50/50 wins each. Full-forward
+=311 -> 320= (approximately 3% slower). Allocation deltas are identical to
+the first run. Separate absolute timings vary; both runs support the relative
+cold compile-plus-traversal improvement and its full-forward cost.
+
+Three native Suites (positive plan, complete index lifecycle and rule bindings)
+pass 35 Cases with native/module/harness/final =OK= markers and exit 0.
+Selection goldens cover sparse endpoints and alternating columns, widths
+7/8/9/32/127/128/129/512/1024, full reverse and repeated positions, literal
+false values and wildcards. Integration covers wide composite joins, exact
+provider and callback order, malformed lookup rows, nested/concurrent engines,
+retained updates and existing budget/timeout rejection. No original deadlines,
+frame ownership or fallback callback behavior changed.

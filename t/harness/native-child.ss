@@ -58,4 +58,6 @@
       (emit (string-append "[ascent-test] PASS " path)) 0)
      ((zero? status)
       (emit (string-append "[ascent-test] FAIL incomplete native receipt " path)) 70)
-     (else status))))
+     (else
+      (emit (string-append "[ascent-test] FAIL " path " exit=" (number->string status)))
+      status))))

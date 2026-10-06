@@ -1731,3 +1731,20 @@ recipe/shell/filter chain while retaining every verdict and resource gate.
 The [[file:scheme-actor-runtime-design.org][actor runtime design]] describes the ownership boundary and diagnostic limits.
 This correction does not strengthen the algebraic proof coverage or claim
 that all ASCENT/BYODS research obligations have been discharged.
+
+The subsequent integrated full run retained a mistaken row-identity assertion
+in the custom build/extend fixture. =gerbil-ascent-index-row-snapshot= copies
+both the outer and each row list spine; only field objects are borrowed. The
+fixture now uses a shared mutable vector field and requires distinct outer/row
+identities, equal contents and the original field identity. Both failed full
+runs are retained in the native child admission receipt rather than removed
+from the acceptance history.
+
+The completed native inventory at integrated base =7b8b830= passed 83 modules
+and 764 Cases, with 83 native readiness markers, 83 explicit =OK= markers and
+zero output watchdog failures. All 27 three-body producer partitions completed.
+The updated direct-child controls also passed ten Cases and the three registry
+argument rejection controls. The [[file:evidence/scheme-native-child-admission-20261006/receipt.json][native child admission receipt]] retains source,
+carrier, registry and transcript digests, plus the earlier failures. This
+inventory result is bound to that source base and must not be relabeled as a
+subsequent revision's CI result.

@@ -58,15 +58,17 @@
           (gerbil-ascent-index-extend! index batch columns)
           (check-equal? (hash-ref index (index-build-key (car rows) columns)) (list (car rows))))))
     (test-case "custom provider receives isolated row column and key spines while borrowing row values"
-      (let* ((events []) (source '((1) (2))) (batch '((3))) (columns (list 0)) (key (list 1))
+      (let* ((events []) (field (vector 'borrowed))
+             (source (list (list 1 field) (list 2 field)))
+             (batch (list (list 3 field))) (columns (list 0)) (key (list 1))
              (provider (.o (:: @ gerbil-ascent-hash-index-provider)
-                         (.build-index (lambda (rows cols) (set! events (cons (list 'build (eq? rows source) (equal? rows source) (eq? (car rows) (car source)) (eq? cols columns) (equal? cols columns)) events)) 'opaque))
-                         (.extend-index! (lambda (index rows cols) (set! events (cons (list 'extend index (eq? rows batch) (equal? rows batch) (eq? (car rows) (car batch)) (eq? cols columns) (equal? cols columns)) events)) index))
+                         (.build-index (lambda (rows cols) (set! events (cons (list 'build (eq? rows source) (equal? rows source) (eq? (car rows) (car source)) (eq? (cadar rows) field) (eq? cols columns) (equal? cols columns)) events)) 'opaque))
+                         (.extend-index! (lambda (index rows cols) (set! events (cons (list 'extend index (eq? rows batch) (equal? rows batch) (eq? (car rows) (car batch)) (eq? (cadar rows) field) (eq? cols columns) (equal? cols columns)) events)) index))
                          (.lookup-index (lambda (index selected) (set! events (cons (list 'lookup index (eq? selected key) (equal? selected key)) events)) source)))))
         (let (index (gerbil-ascent-physical-index-build provider source columns))
           (gerbil-ascent-physical-index-extend! provider index batch columns)
           (check-equal? (gerbil-ascent-physical-index-rows provider index key) source)
-          (check-equal? (reverse events) '((build #f #t #t #f #t) (extend opaque #f #t #t #f #t) (lookup opaque #f #t))))))
+          (check-equal? (reverse events) '((build #f #t #f #t #f #t) (extend opaque #f #t #f #t #f #t) (lookup opaque #f #t))))))
     (test-case "dense unique empty and small native lifecycles match frozen baseline"
       (for-each
        (lambda (size)

@@ -60,6 +60,21 @@
     "rootCause": "Selected activation fixture used four plan fields; current projection requires compiled atom extent at field four. Corrected fixture qualified separately. Full CI must run again on the correction.",
     "url": "https://github.com/tao3k/gerbil-ascent/actions/runs/37472308312"
   },
+  "integratedFullInventory": {
+    "carrierSha256": "b4d3d98d7f0316ade7a7c9488260017caf082a2409f61cd861cbb9e338cb7999",
+    "cases": 764,
+    "command": "just test",
+    "completedThreeBodyPartitions": 27,
+    "exitStatus": 0,
+    "explicitOKMarkers": 83,
+    "logSha256": "33248c057aa2f9039f3afd669f4dc917765804795949a92ad7fca7ab96f2f342",
+    "modules": 83,
+    "nativeReadyMarkers": 83,
+    "qualifiedBase": "7b8b830ffa876ea9c92c9e9ccaf776b1a899f8ea",
+    "registrySha256": "fd2be49ed2e9ebaa8dc5643e919113797bc5d78c9f79d26032692d38ef0c0095",
+    "sourceInventorySha256": "9b47f6d1355822b88fdd6ebc1d5d8269d1fafaf287edc3f6255cd56cc9b9ac34",
+    "watchdogFailures": 0
+  },
   "integration": "Rebased upstream custom lookup completeness and unique enumeration admission. Both appended B23 research and audit sections retained. Complete Lean and native BYODS suite rerun on combined source; prior output hashes retained. Subsequent Provider key/column argument isolation is retained; complete Lean and focused BYODS qualification rerun on that combined source.",
   "modelCalls": 0,
   "mr": "Deferred future library consumer.",

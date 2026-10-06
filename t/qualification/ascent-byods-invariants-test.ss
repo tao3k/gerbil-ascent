@@ -203,7 +203,8 @@
 (def ascent-byods-invariants-test
   (test-suite "ASCENT BYODS exhaustive three-node invariants"
     (poo-flow-test-case "three repeated Provider atoms consume delayed frontiers exactly"
-      (for-each
+      (let (checked 0)
+       (for-each
        (lambda (edges)
          (for-each
           (lambda (first)
@@ -222,9 +223,15 @@
                '(eqrel trrel trrel-uf)
                (list gerbil-ascent-eqrel-storage-provider
                      gerbil-ascent-trrel-storage-provider
-                     gerbil-ascent-trrel-uf-storage-provider))))
+                     gerbil-ascent-trrel-uf-storage-provider))
+              ;; Emit only after all three independently checked provider
+              ;; results complete for this actual producer partition.
+              (set! checked (+ checked 1))
+              (displayln "BYODS-THREE-BODY-CHECKED partition=" checked
+                         " edges=" edges " first=" first)
+              (force-output)))
           (subsets edges)))
-       (subsets '((0 1) (1 2) (2 0)))))
+       (subsets '((0 1) (1 2) (2 0))))))
     (poo-flow-test-case "union-find false nodes and false groups have distinct identities"
       (let ((state (gerbil-ascent-storage-make-state gerbil-ascent-trrel-uf-storage-provider)))
         (def (extend edge budget)

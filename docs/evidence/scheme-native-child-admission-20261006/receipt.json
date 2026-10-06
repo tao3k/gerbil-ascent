@@ -10,7 +10,11 @@
     "caseOK": 10,
     "command": "just check-actor-pool",
     "exitStatus": 0,
-    "logSha256": "534bbe0787023c316ebe8cd11bf98dcfec9951d1063ed117d78ed46388401c19",
+    "logSha256": "adc6a038ad760bf55861e8fb857e69b77e606a1bb93d47d2dc9d38f12454cd01",
+    "owners": {
+      "t/harness/actor-pool-test.ss": "a19dde4bf2f295f93fb731c372a0ed9ebead9bfbb64a0f345feeae577cf085f8",
+      "t/harness/native-child.ss": "2abe4cc3e429fe3e45d7c491dde943db3d5868fafe6d50962e71f2d7f3f52809"
+    },
     "realChildControls": {
       "case": 42,
       "cleanup": 42,
@@ -78,21 +82,59 @@
     "rootCause": "Index-build fixture still expected shared custom row list spines after a1b69b9 introduced isolation; upstream b351520 already corrects this expectation. Rebase and full inventory qualification required.",
     "watchdogFailures": 0
   },
+  "fullInventory": {
+    "carrierSha256": "b4d3d98d7f0316ade7a7c9488260017caf082a2409f61cd861cbb9e338cb7999",
+    "cases": 764,
+    "command": "just test",
+    "completedThreeBodyPartitions": 27,
+    "exitStatus": 0,
+    "explicitOKMarkers": 83,
+    "logSha256": "33248c057aa2f9039f3afd669f4dc917765804795949a92ad7fca7ab96f2f342",
+    "modules": 83,
+    "nativeReadyMarkers": 83,
+    "qualifiedBase": "7b8b830ffa876ea9c92c9e9ccaf776b1a899f8ea",
+    "registrySha256": "fd2be49ed2e9ebaa8dc5643e919113797bc5d78c9f79d26032692d38ef0c0095",
+    "sourceInventorySha256": "9b47f6d1355822b88fdd6ebc1d5d8269d1fafaf287edc3f6255cd56cc9b9ac34",
+    "watchdogFailures": 0
+  },
   "initialFullRun": {
     "exitStatus": 70,
     "logSha256": "8e8c4800deca8d2e6bfa57b00318d445844812656a846f3ada52e0b2c415a345",
     "scope": "Twelve-worker recipe launch; assigned workers drained; complete inventory not admitted.",
     "watchdogFailures": 4
   },
+  "integratedFailedRun": {
+    "base": "7b8b830ffa876ea9c92c9e9ccaf776b1a899f8ea",
+    "exitStatus": 70,
+    "logSha256": "08bb1bc27c89a2a1a567dbffcf505243766683e6d12b876acbcdc9cbec757a2e",
+    "rootCause": "Integrated index-build fixture still expected borrowed row object identity. Native snapshot copies outer and row list spines and borrows field values. Fixture now checks isolated row identities plus a shared mutable field identity.",
+    "watchdogFailures": 0
+  },
   "modelCalls": 0,
   "owners": {
+    "program/analysis.ss": "a79f269116336f8c0719b31d4b88e77f8cac50fa6a3e12ff9fa3d971b75e2e80",
+    "program/index.ss": "b9f75ac90196573d5c29dae6f9ae929673ec692f2b01ba7b17b567ec624d06dc",
     "t/harness/actor-pool-test.ss": "a19dde4bf2f295f93fb731c372a0ed9ebead9bfbb64a0f345feeae577cf085f8",
-    "t/harness/native-child.ss": "e957e7f24b60417c6fc51c5f0eadbb0065b06848c47c55664eeb729589401f5a",
+    "t/harness/native-child.ss": "2abe4cc3e429fe3e45d7c491dde943db3d5868fafe6d50962e71f2d7f3f52809",
     "t/harness/run.ss": "163ac31524333521c952c8f2ef9929e46e1f90549dad4180d46bc13c4667fff9",
-    "t/qualification/scheme-session-deletion-test.ss": "3e04cc053cc35c78fcebb4254f39f0b0305b722fa0560f76f571be55250ac5a2"
+    "t/qualification/ascent-byods-invariants-test.ss": "6b949efe6d71e5e67ac9f7d3699c7175a63729f231c72d81dddc0714fa621eb1",
+    "t/qualification/ascent-index-build-test.ss": "1dc996b6b838a0e577e490facbac78bde495a5eb4dcffa80f708201b66637234",
+    "t/qualification/scheme-session-deletion-test.ss": "3e04cc053cc35c78fcebb4254f39f0b0305b722fa0560f76f571be55250ac5a2",
+    "table/access.ss": "04b0916e264e63f6dafeb6452ad5aa50962797a0942f98056d8a0e5bd1ab7823",
+    "table/funs.ss": "82602b2f5afd364c693b5e83394fb55ab87b02b64427271ca9f11f9a9e0eb76c",
+    "table/storage.ss": "c8b77d4d30bd907c457b99192ee3414ddfbd085c8c38402e39ecb079f7f57b59"
   },
   "qualifiedBaseHead": "70557a17c3d6fc53998b83a7252256ac1cb29288",
   "schema": "ascent.native-child-admission-qualification",
   "scope": "Scheme directly launches and admits frozen AOT children. Existing Python process supervision remains transport only. ActorTestPool lifecycle protocol is unchanged; no new formal theorem or end-to-end model gain is claimed.",
+  "threeBodyIdleFailure": {
+    "correction": "Report each completed producer partition only after all three independent provider checks; preserve all inputs and watchdog limits.",
+    "exitStatus": 70,
+    "failedModule": "t/qualification/ascent-byods-invariants-test.ss",
+    "logSha256": "bf48d7aa3a2faf07dbe10523dd0f2f15770a1c3436aeeb2ce87837cdcf157e3c",
+    "passedModules": 46,
+    "rootCause": "First Case completes 27 producer partitions across three providers without a progress boundary. Idle failure preceded frontier Case; that later Case already reported completed graphs.",
+    "startedModules": 47
+  },
   "version": 1
 }

@@ -695,3 +695,12 @@ This isolates the extra launch chain as an avoidable qualification cost; it is
 not an application throughput claim or an identification of one specific OS
 subprocess as the cause. Negative controls exercise setup, Case, cleanup, empty
 Suite and incomplete receipt rejection on the direct path.
+
+A later integrated inventory run rejected the BYODS three-body Case at the
+unchanged idle gate: 46 other admitted modules passed. Its first Case checked
+27 two-producer partitions for three providers before its next Case boundary.
+It now reports a partition only after every provider's result passes the
+independent closure/witness checks. The 5,120-history frontier Case already
+reported completed graph batches and was not reached by this failed child.
+This is evidence of completed computation, not timer-driven activity. Failure
+lines now include the registry key and decoded exit status.

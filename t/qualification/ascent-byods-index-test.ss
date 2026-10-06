@@ -57,7 +57,7 @@
 
 (def (check-provider-row-boundary pattern?)
   (let* ((calls 0) (override #f)
-         (source (map (lambda (n) (list (modulo n 2) n)) (iota 32)))
+         (source (map (lambda (n) (list (modulo n 2) (if (= n 0) #f n))) (iota 32)))
          (provider
           (.o (:: @ gerbil-ascent-hash-index-provider)
               (.build-index (lambda (rows _columns) rows))
@@ -83,7 +83,7 @@
      (lambda (bad)
        ;; A valid candidate precedes the malformed one: no term callback may
        ;; run until the complete returned batch has passed the boundary.
-       (set! override (list '(0 99) bad))
+       (set! override (list '(0 #f) bad))
        (set! calls 0)
        (check-equal?
         (with-catch (lambda (failure) (error-message failure))
@@ -91,6 +91,13 @@
         "ASCENT index provider returned wrong row arity")
        (check-equal? calls 0))
      (list '(0 1 2) '(0) '(0 . 1) cycle))
+    (set! override '((0 #f) (0 99)))
+    (set! calls 0)
+    (check-equal?
+     (with-catch (lambda (failure) (error-message failure))
+       (lambda () (gerbil-ascent-session-run session) 'accepted))
+     "ASCENT index provider returned foreign row")
+    (check-equal? calls 0)
     ;; Empty answers remain valid. A later run on the same failed session can
     ;; recover; shape-correct overselection retains ordinary term filtering.
     (set! override [])
@@ -98,7 +105,7 @@
     (set! override #f)
     (let (result (rows (gerbil-ascent-session-run session)))
       (check-equal? (length result) 16)
-      (for-each (lambda (n) (check-equal? (not (not (member (list (* n 2)) result))) #t))
+      (for-each (lambda (n) (check-equal? (not (not (member (list (if (= n 0) #f (* n 2))) result))) #t))
                 (iota 16)))
     (set! override '((0 #f)))
     (check-equal? (rows (gerbil-ascent-evaluate-program program)) '((#f)))))

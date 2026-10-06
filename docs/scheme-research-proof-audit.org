@@ -1343,3 +1343,42 @@ This closes tuple shape only. Candidate membership in the represented relation,
 key completeness, callback mutation of returned rows and universal Provider
 concretization remain separate obligations. No relation-membership scan,
 performance result or general Provider semantic refinement is claimed here.
+
+* B23 native correspondence: custom index candidates belong to their lane
+
+[[https://kmicinski.com/assets/byods.pdf][B23 Section 4, PDF page 11]] requires all logical indexes of a relation to
+agree on concretization. Its total/delta interface additionally distinguishes
+which represented facts each lane may enumerate. In this implementation the
+storage Provider owns represented facts; the IndexProvider receives the
+already-enumerated row snapshot and may only choose candidates from it. This
+split does not grant an index authority to synthesize additional facts.
+
+After the tuple-shape repair, a well-shaped foreign row could still pass term
+matching and reach a rule head. =program/index.ss= now retains a membership
+witness beside each custom physical index's lookup and version. The witness
+is built from that entry's actual all or delta snapshot, published only after
+successful build, and extended only after successful incremental extension.
+Lookup first admits the complete batch shape, then checks every candidate's
+equality membership before invoking any rule-term callback. Empty candidates,
+ordered overselection and equal copied tuples remain admissible. A candidate
+outside the selected lane or no longer in the current source version is rejected.
+
+A fresh version rebuilds lookup and witness together. Existing revoke-before-
+extend behavior still forces reconstruction after a mutating Provider raises.
+All and delta retain separate entries; atom aliases resolve the same physical
+entry. Canonical hash and engine-owned curried indexes retain their trusted
+representations and do not build these extra witnesses. Custom witnesses use
+one additional equality table per physical index. This is an explicit cost of
+the custom boundary, with no speedup claim.
+
+Native controls exercise shape-correct forged consequences in both compiled
+and pattern execution, rejection before callbacks, recovery, equal copied
+rows, disjoint all/delta candidates, append admission, stale rows after source
+replacement, aliases and existing extension-failure revocation. The
+[[file:evidence/scheme-provider-members-20261006/receipt.json][source-bound receipt]] distinguishes local execution from remote CI.
+
+This establishes a checked subset-of-snapshot condition under the existing
+stable-value premise. It does not prove lookup completeness, uniqueness,
+Provider callback purity, mutable nested-value stability or general storage
+concretization. B23's semi-naive equivalence theorem still needs its other
+premises; this check alone does not establish that theorem for native Scheme.

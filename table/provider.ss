@@ -49,6 +49,9 @@
 ;;; candidate can contribute to a rule head.
 ;;; Candidates must be proper tuples of the relation's admitted arity. The
 ;;; engine validates the complete custom lookup batch before matching terms.
+;;; Every candidate must also belong to the snapshot supplied to this index;
+;;; a delta index cannot return an old total-only fact. Keys may overselect
+;;; existing candidates, but indexes cannot introduce new relation facts.
 (.defgeneric (gerbil-ascent-index-provider-lookup provider index key)
   slot: .lookup-index)
 

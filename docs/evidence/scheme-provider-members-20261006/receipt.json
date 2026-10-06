@@ -1,0 +1,69 @@
+{
+  "qualifiedBaseHead": "6f358993cf9088aff8531c92095fe5ce209c07e2",
+  "scope": "Custom physical index candidate membership is bound to its actual all/delta row snapshot and index version.",
+  "sources": {
+    "program/index.ss": "f081d97d9e34b78bb5e603ce45224ff9178378893b0ed0a7a3c3c573b429a0d1",
+    "table/provider.ss": "9725cd9b7268ef5a9778d50e4453e976c7722ca6761cfccb76138150153cbefa",
+    "table/access.ss": "b90a362ddc0ef0b0b6eb8c77043148829857274d5fb271b242454a0cfa44562b",
+    "core/positive-plan.ss": "5328d128933a8ed1270d5228bdd8f12b134f81bd71a0b4b126ceb443155cb441",
+    "core/rule-bindings.ss": "308d44ab08fb53eacd4702064277ce9661f3c37df3cd5a17b0debfc7c3652206",
+    "program/objects.ss": "f0b2da5fd325d2a9a947b691f475593194e2b03a17da1ffd39a3d076e1356dc4",
+    "program/session.ss": "e0d0c2d088bb9599d2dc68ac85f4376b984c6335bb2cb97ebb21c86376e6c20c",
+    "program/evaluate.ss": "5ed19f6af62e7eb8ffe92bc221054fb9227e379c79b17245530585f56ce446b8",
+    "t/qualification/ascent-byods-index-test.ss": "9bce0e6b028014ed2a60cbc5c2b76e8e49cd1abf610d789d441a5ada17c01572",
+    "t/qualification/ascent-index-entry-test.ss": "3915cfe9445f6e277c52b510632cfa310fd25e6cdb6c79e2277c3b5ae310bf01",
+    "t/performance/index-entry/fixture.ss": "6ff260ac814b6db65fb5300154451b8e6e80e930ed5698e4fd10b7a8bb60fb6a",
+    "build.ss": "3435a28db97d4a27b174e0b142b94c9d17196a9e6dad323566db6de2dcad4d3b",
+    "t/harness/run.ss": "3ac76467003f8aee89419eb6063e0f7cc7470557af6df138b81433a25e88d294"
+  },
+  "trackedSchemeSourceCount": 543,
+  "trackedSchemeSourceDigest": "04c1f3d20e878c89a2a8e13867775a0a630dfd44f78eccb5e192317b2ce481c2",
+  "trackedSchemeDigestFormat": "Sorted tracked .ss paths; UTF-8 path + NUL + content SHA256 + newline",
+  "native": [
+    {
+      "command": "GERBIL_PATH=\"$PWD/.cache/ascent/sdk\" just test-native t/qualification/ascent-byods-index-test.ss",
+      "exitCode": 0,
+      "suiteCases": 4,
+      "moduleOK": 1,
+      "harnessOK": 1,
+      "explicitOK": 1,
+      "logSha256": "2a307125829c7a6cf1f65c916f3a15b4c0d9270942fa2e98f8627150bfe9ac2f"
+    },
+    {
+      "command": "GERBIL_PATH=\"$PWD/.cache/ascent/sdk\" just test-native t/qualification/ascent-index-entry-test.ss",
+      "exitCode": 0,
+      "suiteCases": 20,
+      "moduleOK": 1,
+      "harnessOK": 1,
+      "explicitOK": 1,
+      "logSha256": "266b23461a6e85574acec42726c03bb0a0b64b5941226ce30daf13588aae233a"
+    }
+  ],
+  "discriminators": [
+    "Shape-correct foreign consequences reject in compiled and general pattern execution before callbacks",
+    "Equal copied rows and false-valued members remain admissible",
+    "Whole batch shape and membership precede term matching",
+    "All-only facts cannot enter delta lookup and delta-only fixture facts cannot enter all lookup",
+    "Append admits newly represented rows without admitting them to unchanged delta",
+    "Source replacement rejects stale members and aliases share versioned witnesses",
+    "Cold-build and mutating-extension failures remain retryable",
+    "Built-in curried sharing, actor Sessions and independent solve parity retain existing controls"
+  ],
+  "proofFilesChanged": false,
+  "performanceClaim": false,
+  "paper": {
+    "source": "https://kmicinski.com/assets/byods.pdf",
+    "locator": "Section 4, PDF page 11; Section 3.3 total/delta premises",
+    "transfer": "Index reads must enumerate the same represented tuples; physical indexes do not create storage facts.",
+    "boundary": "Native membership check supplies one subset premise, not general Provider or semi-naive equivalence proof."
+  },
+  "cost": "An additional equality table per custom physical index; trusted canonical and engine-owned shared paths do not allocate witnesses.",
+  "remaining": [
+    "Lookup completeness and duplicate enumeration",
+    "Stable nested values and callback purity",
+    "General storage Provider concretization and native proof extraction"
+  ],
+  "developmentFailures": [],
+  "modelCalls": 0,
+  "remoteBaseAtClosure": "6f358993cf9088aff8531c92095fe5ce209c07e2"
+}

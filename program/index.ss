@@ -21,7 +21,7 @@
 ;;; Custom indexes may overselect candidates, but each must still represent
 ;;; a complete relation tuple. Check the whole batch before term callbacks.
 ;;; Traversal is bounded by admitted arity, including improper/cyclic rows.
-(def (checked-provider-rows rows terms)
+(def (checked-provider-rows rows terms members)
   (for-each
    (lambda (row)
      (let loop ((remaining row) (columns terms))
@@ -32,7 +32,19 @@
            (loop (cdr remaining) (cdr columns))
            (error "ASCENT index provider returned wrong row arity" (length terms))))))
    rows)
+  ;; Membership follows complete shape admission, before any term matching.
+  ;; The witness belongs to this physical entry's all/delta version.
+  (for-each
+   (lambda (row)
+     (unless (hash-get members row)
+       (error "ASCENT index provider returned foreign row")))
+   rows)
   rows)
+
+(def (provider-row-members rows)
+  (let (members (make-hash-table))
+    (for-each (lambda (row) (hash-put! members row #t)) rows)
+    members))
 
 ;;; Index ownership includes discovery of the logical lookup requirements.
 ;;; The three execution owners supply admitted metadata, never row snapshots
@@ -91,7 +103,7 @@
    (lambda (atoms)
      (unless (null? atoms) (error "ASCENT empty index owner has lookup requirements")))))
 
-(defstruct physical-index-entry (version lookup shared?))
+(defstruct physical-index-entry (version lookup shared? members))
 (defstruct atom-index-view (entry permutation))
 
 ;; gerbil-ascent-make-row-indexes
@@ -182,7 +194,7 @@
                                (shared (hash-get cache physical-columns))
                                (resolved
                                 (or shared
-                                    (let (fresh (make-physical-index-entry #f #f (and permutation #t)))
+                                    (let (fresh (make-physical-index-entry #f #f (and permutation #t) #f))
                                       (hash-put! cache physical-columns fresh) fresh))))
                           (let (view (make-atom-index-view resolved permutation))
                             (hash-put! identities atom view)
@@ -194,12 +206,16 @@
                     (if (and (physical-index-entry-version entry)
                              (= (physical-index-entry-version entry) version))
                       (physical-index-entry-lookup entry)
-                      (let (built (if permutation
+                      (let* ((members (and (not permutation)
+                                          (not (gerbil-ascent-canonical-hash-index-provider? provider))
+                                          (provider-row-members rows)))
+                             (built (if permutation
                                    (gerbil-ascent-shared-index-build rows permutation)
-                                   (gerbil-ascent-physical-index-build provider rows columns)))
+                                   (gerbil-ascent-physical-index-build provider rows columns))))
                         ;; Failed builds keep the old version and lookup. Publish
                         ;; both only after the provider has returned successfully.
                         (physical-index-entry-lookup-set! entry built)
+                        (physical-index-entry-members-set! entry members)
                         (physical-index-entry-version-set! entry version)
                         built))))
               ;; Only this trusted representation consumes a scalar. Custom
@@ -220,7 +236,8 @@
                     (let (matched (gerbil-ascent-physical-index-rows provider lookup key))
                       (if (gerbil-ascent-canonical-hash-index-provider? provider)
                         matched
-                        (checked-provider-rows matched (vector-ref atom 1))))))))))))
+                        (checked-provider-rows matched (vector-ref atom 1)
+                                               (physical-index-entry-members entry))))))))))))
       (def (advance-all-indexes! index new-rows (reverse-order? #f))
         (let (cache (and all-indexes (vector-ref all-indexes index)))
           (when (and cache (pair? new-rows))
@@ -240,6 +257,10 @@
                                    (gerbil-ascent-physical-index-extend!
                                     provider (physical-index-entry-lookup entry) rows columns)))
                      (physical-index-entry-lookup-set! entry extended)
+                     (when (physical-index-entry-members entry)
+                       (for-each
+                        (lambda (row) (hash-put! (physical-index-entry-members entry) row #t))
+                        rows))
                      (physical-index-entry-version-set! entry (+ version 1)))))
                cache)))))
     (make-row-indexes indexed-rows advance-all-indexes! plan-atoms!)))

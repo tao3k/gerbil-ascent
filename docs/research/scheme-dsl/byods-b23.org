@@ -92,3 +92,21 @@ Lean edge/quotient laws and finite TLA remapping/refusal controls. The earlier
 frontier receipt remains a historical snapshot. Full native refinement and
 whole-engine/application cost evidence remain open; representation counts are
 not allocator or end-to-end memory measurements.
+
+* Native index snapshot membership (2026-10-06)
+
+Section 4 (PDF p. 11) requires logical indexes to agree on represented tuples.
+The Scheme implementation separates storage concretization from physical
+lookup: a custom index reads a supplied snapshot and cannot add relation facts.
+=program/index.ss= now couples each custom lookup with a versioned membership
+witness for its actual all/delta snapshot. Shape-correct foreign candidates
+reject before rule-term callbacks, including total-only rows returned by a
+delta index and rows left over after source replacement. Append extends the
+witness only after a successful Provider extension; failed mutations revoke
+the index version and require rebuilding. See the
+[[file:../../scheme-research-proof-audit.org][research audit]] and
+[[file:../../evidence/scheme-provider-members-20261006/receipt.json][native receipt]].
+
+This closes candidate membership for stable values, not lookup completeness
+or arbitrary Provider refinement. The custom boundary uses an additional
+equality table per physical index; runtime benefit has not been measured.

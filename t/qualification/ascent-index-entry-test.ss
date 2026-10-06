@@ -83,6 +83,48 @@
 
 (def ascent-index-entry-test
   (test-suite "Engine-owned stable physical index entries"
+    (test-case "custom candidate membership follows all delta append and replacement versions"
+      (let* ((override #f)
+             (all (map (lambda (n) (list 0 n)) (iota 32)))
+             (delta (map (lambda (n) (list 0 (+ 100 n))) (iota 32)))
+             (provider (.o (:: @ gerbil-ascent-hash-index-provider)
+                           (.build-index (lambda (rows _columns) rows))
+                           (.extend-index! (lambda (index rows _columns) (append rows index)))
+                           (.lookup-index (lambda (index _key) (or override index)))))
+             (h (index-entry-harness #f all provider))
+             (query (vector-ref h 0)) (advance! (vector-ref h 1))
+             (atom (index-entry-atom '(0) '(0) 2))
+             (alias (index-entry-atom (list 0) '(0) 2)))
+        (def (reject delta?)
+          (check-equal? (with-catch (lambda (e) (error-message e))
+                          (lambda () (query alias [] delta? #f) 'accepted))
+                        "ASCENT index provider returned foreign row"))
+        (vector-set! (vector-ref h 3) 0 delta)
+        (check-equal? (query atom [] #f #f) all)
+        (check-equal? (query atom [] #t #f) delta)
+        ;; Equal copied tuples are members; row object identity is not required.
+        (set! override '((0 0)))
+        (check-equal? (query alias [] #f #f) override)
+        (reject #t)
+        (set! override '((0 100)))
+        (check-equal? (query alias [] #t #f) override)
+        (reject #f)
+        (set! override '((0 32)))
+        (reject #f)
+        (advance! 0 override)
+        (vector-set! (vector-ref h 2) 0 (append override all))
+        (vector-set! (vector-ref h 4) 0 33)
+        (vector-set! (vector-ref h 6) 0 1)
+        (check-equal? (query atom [] #f #f) override)
+        (reject #t)
+        ;; A new all version revokes the old membership witness as well as lookup.
+        (vector-set! (vector-ref h 2) 0 delta)
+        (vector-set! (vector-ref h 4) 0 32)
+        (vector-set! (vector-ref h 6) 0 2)
+        (reject #f)
+        (set! override #f)
+        (check-equal? (query alias [] #f #f) delta)
+        (check-equal? (query alias [] #t #f) delta)))
     (test-case "matching certificates reject inconsistent and nonmaximum search output"
       (let (sets (vector '(0) '(0 1) '(0 1 2)))
         (check-equal? (gerbil-ascent-index-sharing-certificate? sets

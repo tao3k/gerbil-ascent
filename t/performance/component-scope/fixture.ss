@@ -35,7 +35,14 @@
   (map (lambda (component)
          (list ((if old? old-id positive-component-id) component)
                ((if old? old-members positive-component-members) component)
-               ((if old? old-rules positive-component-rules) component)
+               ;; Compare the original execution metadata explicitly. Current
+               ;; plans additionally carry an independently tested purity flag.
+               (map (lambda (rule)
+                      (let (plan (vector-ref rule 0))
+                        (vector (vector (vector-ref plan 0) (vector-ref plan 1)
+                                        (vector-ref plan 2))
+                                (vector-ref rule 1))))
+                    ((if old? old-rules positive-component-rules) component))
                ((if old? old-predecessors positive-component-predecessors) component))) components))
 (def (component-scope-run old? request jobs)
   (let* ((initial (vector-ref request 2))

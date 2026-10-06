@@ -1,0 +1,120 @@
+;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+(import (only-in :std/test test-suite test-case check-equal?)
+  (only-in :clan/poo/object .ref)
+  (only-in :gerbil-ascent/program/objects
+    gerbil-ascent-program gerbil-ascent-relation gerbil-ascent-rule
+    gerbil-ascent-atom gerbil-ascent-variable gerbil-ascent-expression
+    gerbil-ascent-binding gerbil-ascent-guard)
+  (only-in :gerbil-ascent/program/evaluate gerbil-ascent-make-engine gerbil-ascent-evaluate-program)
+  (only-in :gerbil-ascent/core/positive-plan gerbil-ascent-compile-positive-plan
+    gerbil-ascent-pure-positive-plan?)
+  (only-in :gerbil-ascent/t/performance/expression-plan/input expression-program)
+  (rename-in (only-in :gerbil-ascent/t/performance/expression-plan/evaluate-reference
+    gerbil-ascent-make-engine gerbil-ascent-evaluate-program)
+    (gerbil-ascent-make-engine old-engine) (gerbil-ascent-evaluate-program old-evaluate)))
+(export ascent-expression-plan-test)
+(def (rows result)
+  (map (lambda (name) (cons name ((.ref result 'rows-of) name)))
+       (.ref result 'relation-names)))
+(def (atom name . terms) (gerbil-ascent-atom name terms))
+(def (variable name) (gerbil-ascent-variable name))
+(def (program body head (limit 128))
+  (gerbil-ascent-program
+    (list (gerbil-ascent-relation 'input 2 '((1 #f) (2 3) (4 5)))
+          (gerbil-ascent-relation 'other 1 '((1) (2) (4)))
+          (gerbil-ascent-relation 'out 1 []))
+    (list (gerbil-ascent-rule (list (atom 'out head)) body)) 128 limit 256))
+(def (integer-power base count)
+  (let loop ((left count) (value 1))
+    (if (zero? left) value (loop (- left 1) (* value base)))))
+(def (outcome call)
+  (with-catch (lambda (failure) (error-message failure)) (lambda () (rows (call)))))
+(def ascent-expression-plan-test
+  (test-suite "compiled expression reads preserve ordered execution"
+    (test-case "complete expression chains match frozen evaluator and arithmetic truth"
+      (for-each (lambda (width)
+        (for-each (lambda (stages)
+          (let* ((p (expression-program width stages #t))
+                 (a (old-evaluate p)) (b (gerbil-ascent-evaluate-program p))
+                 (name (string->symbol (string-append "v" (number->string stages))))
+                 (expected (map (lambda (x) (list (+ (* x (integer-power 3 stages)) (/ (* 3 (- (integer-power 3 stages) 1)) 2)))) (iota width))))
+            (check-equal? (rows b) (rows a))
+            (check-equal? (list-sort (lambda (x y) (< (car x) (car y))) (cdr (assq name (rows b)))) expected)))
+          '(1 2 4))) '(0 1 2 8 32)))
+    (test-case "side effects remain serial with workers requested and retain exact traces"
+      (let* ((calls [])
+             (record (lambda (tag value) (set! calls (cons (list tag value (current-thread)) calls)) value))
+             (p (program
+                  (list (atom 'input (variable 'x) (variable 'y))
+                    (gerbil-ascent-binding 'z '(x y) (lambda (x y) (record 'binding (if y (+ x y) x))))
+                    (gerbil-ascent-guard '(z) (lambda (z) (record 'guard z) #t)))
+                  (gerbil-ascent-expression '(z) (lambda (z) (record 'head z)))))
+             (a (old-evaluate p)) (trace calls))
+        (for-each (lambda (jobs)
+          (set! calls [])
+          (let (b (gerbil-ascent-evaluate-program p workers: jobs))
+            (check-equal? calls trace) (check-equal? (rows b) (rows a)))) '(1 2 4))))
+    (test-case "same-atom reads and indexed expression callbacks retain call multiplicity"
+      (let* ((calls []) (f (lambda (x) (set! calls (cons x calls)) x))
+             (p (program
+                  (list (atom 'input (variable 'x) (variable 'y))
+                        (atom 'other (gerbil-ascent-expression '(x) f)))
+                  (gerbil-ascent-expression '(x) f)))
+             (a (old-evaluate p)) (trace calls))
+        (set! calls [])
+        (check-equal? (rows (gerbil-ascent-evaluate-program p)) (rows a))
+        (check-equal? calls trace)))
+    (test-case "callback type errors and output admission limits agree"
+      (for-each (lambda (p)
+        (check-equal? (outcome (lambda () (gerbil-ascent-evaluate-program p)))
+                      (outcome (lambda () (old-evaluate p)))))
+        (list (program (list (atom 'input (variable 'x) (variable 'y))
+                             (gerbil-ascent-guard '(x) (lambda (_) 17))) (variable 'x))
+              (program (list (atom 'input (variable 'x) (variable 'y))
+                             (gerbil-ascent-binding 'z '(x) values)) (variable 'z) 1))))
+    (test-case "private plans distinguish pure execution from compiled callbacks"
+      (let* ((pure (expression-program 2 1 #f)) (effect (expression-program 2 1 #t))
+             (pure-analysis (.ref (gerbil-ascent-make-engine pure #t) '.analysis))
+             (effect-analysis (.ref (gerbil-ascent-make-engine effect #t) '.analysis))
+             (plan (lambda (analysis) (vector-ref (car (vector-ref (vector-ref analysis 5) 0)) 5))))
+        (check-equal? (gerbil-ascent-pure-positive-plan? (plan pure-analysis)) #t)
+        (check-equal? (not (not (plan effect-analysis))) #t)
+        (check-equal? (gerbil-ascent-pure-positive-plan? (plan effect-analysis)) #f)
+        (check-equal? (gerbil-ascent-compile-positive-plan [] (list (vector 'generator #f))) #f)))
+    (test-case "zero and repeated variadic inputs preserve false values and nested frames"
+      (let* ((calls []) (inner (expression-program 2 2 #t))
+             (p (program
+                  (list (gerbil-ascent-binding 'k []
+                          (lambda () (set! calls (cons 'zero calls)) #f))
+                        (gerbil-ascent-guard '(k k k)
+                          (lambda (a b c)
+                            (set! calls (cons (list a b c) calls))
+                            (and (eq? a #f) (eq? b #f) (eq? c #f)))))
+                  (gerbil-ascent-expression '(k)
+                    (lambda (k)
+                      (check-equal? (rows (gerbil-ascent-evaluate-program inner))
+                                    (rows (old-evaluate inner)))
+                      k))))
+             (a (old-evaluate p)) (trace calls))
+        (set! calls [])
+        (check-equal? (rows (gerbil-ascent-evaluate-program p)) (rows a))
+        (check-equal? calls trace)))
+    (test-case "long scopes retain complete independent arithmetic results"
+      (for-each (lambda (scope)
+        (let* ((p (expression-program 4 2 #t scope))
+               (a (old-evaluate p)) (b (gerbil-ascent-evaluate-program p))
+               (c (+ scope 1))
+               (expected (map (lambda (x) (list (+ (* c c x) (* c (+ c 1))))) (iota 4))))
+          (check-equal? (rows a) (rows b))
+          (check-equal? (list-sort (lambda (x y) (< (car x) (car y))) (cdr (assq 'v2 (rows b)))) expected)))
+        '(1 2 3 24 48)))
+    (test-case "retained updates and nested engines own their frames"
+      (let* ((p (expression-program 4 2 #t)) (a (old-engine p #t))
+             (b (gerbil-ascent-make-engine p #t)))
+        (check-equal? (rows ((.ref b '.run))) (rows ((.ref a '.run))))
+        (for-each (lambda (engine) ((.ref engine '.replace-source!) 'v0 '((7) (9)))) (list a b))
+        (check-equal? (rows ((.ref b '.run))) (rows ((.ref a '.run))))
+        (let ((first (gerbil-ascent-make-engine p #t)) (second (gerbil-ascent-make-engine p #t)))
+          (check-equal? (rows ((.ref first '.run))) (rows ((.ref second '.run)))))))))

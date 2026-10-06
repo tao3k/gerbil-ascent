@@ -24,6 +24,7 @@
     "program/aggregators"
     "program/syntax"
     "program/planning"
+    "core/expression-plan"
     "core/positive-plan"
     "program/index"
     "program/scheme-checked"

@@ -668,3 +668,24 @@ and singleton lookups stay direct and pending tables are lazy. Complete native
 producer-plus-verifier comparisons and boundary qualification are documented in
 =t/performance/proof-replay/README.org=; these results do not establish solver
 or actor throughput gains.
+
+* Treat expression representation and effects as separate analyses
+
+Gerbil =optimize-call.ss= admits known calls separately from
+=expression-no-side-effects?=, which requires explicit effect information.
+Its lambda substitution also checks mutable bindings and preserves ordered
+operand evaluation. These are separate obligations for our expression plans.
+
+Admitted callback input names now become lexical frame reads, and contiguous
+guard/binding clauses become one ordered continuation segment. Structural recursion with =values=
+separates those segments at atom boundaries; frame state remains engine-owned.
+Index and head expressions still execute at every original call point. The
+plan carries an independent purity flag, which survives head projection and
+controls both actor and SCC admission. Callback results are never memoized.
+
+The complete implementation crosses Core lowering, serial execution, update
+selection and worker admission. Native qualification is documented in
+=t/performance/expression-plan/README.org=. Short scopes failed the original
+20% CPU improvement gate despite allocation reductions; long-scope measurements
+must be reported with that boundary. Prepared tuple matchers/builders were
+withdrawn after failing to establish the intended CPU gain.

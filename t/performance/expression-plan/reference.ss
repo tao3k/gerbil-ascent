@@ -4,10 +4,8 @@
 
 ;;; Private positive-rule execution plans. Plans are immutable and shared;
 ;;; each engine owns its variable frames, including nested/concurrent solves.
-(import (only-in "expression-plan.ss" gerbil-ascent-compile-frame-call gerbil-ascent-compile-frame-sequence)
-        (only-in "rule-bindings.ss" gerbil-ascent-expression-value gerbil-ascent-head-row))
+(import (only-in :gerbil-ascent/core/rule-bindings gerbil-ascent-expression-value gerbil-ascent-head-row))
 (export gerbil-ascent-prepare-rule-activations gerbil-ascent-positive-plan gerbil-ascent-compile-positive-plan gerbil-ascent-run-positive-plan!
-        gerbil-ascent-pure-positive-plan?
         gerbil-ascent-index-key gerbil-ascent-index-key/terms
         gerbil-ascent-index-value gerbil-ascent-emit-heads!)
 
@@ -73,15 +71,13 @@
         (let (positions (list->vector terms))
           (map (lambda (column) (vector-ref positions column)) columns)))))))
 
-;;; Plans retain ordered outputs, actions, slot count and a separate purity flag.
 ;;; Unsupported terms or clauses keep the complete rule on the general path.
 ;;; Slot assignment follows admitted body order. A fresh slot is always written
 ;;; before a bound read, so backtracking never needs to copy or clear the frame.
 ;; gerbil-ascent-compile-positive-plan
 ;;   : (-> Heads Body (Maybe PositivePlan))
 ;;   | doc m%
-;;       Lower admitted atoms, expressions, guards and bindings into ordered
-;;       slot actions. Other clause kinds retain the general interpreter.
+;;       Lower ordered variable, literal and wildcard atoms into numeric slot actions. Clauses with callbacks retain the general interpreter.
 ;;
 ;;       # Examples
 ;;
@@ -91,92 +87,40 @@
 ;;       ```
 ;;     %
 (def (gerbil-ascent-compile-positive-plan heads body)
-  (let/cc unsupported
-    (let ((slots (make-hash-table-eq)) (count 0) (pure? #t))
-      (def (read-slot name)
-        (or (hash-get slots name) (unsupported #f)))
-      (def (fresh-slot! name)
-        (let (slot count)
-          (set! count (+ count 1))
-          (hash-put! slots name slot)
-          slot))
-      (def (lower-call names procedure)
-        (unless (and (list? names) (procedure? procedure)) (unsupported #f))
-        (set! pure? #f)
-        (gerbil-ascent-compile-frame-call procedure (map read-slot names)))
-      (def (lower term head?)
-        (case (car term)
-          ((literal wildcard) term)
-          ((expression)
-           (let (payload (cdr term))
-             (unless (and (vector? payload) (= (vector-length payload) 2))
-               (unsupported #f))
-             (cons 'expression (lower-call (vector-ref payload 0)
-                                          (vector-ref payload 1)))))
-          ((variable)
-           (let (slot (hash-get slots (cdr term)))
-             (cond
-               (slot (cons 'bound slot))
-               (head? (unsupported #f))
-               (else (cons 'fresh (fresh-slot! (cdr term)))))))
-          (else (unsupported #f))))
-      (let* ((actions
-               (map
-                 (lambda (clause)
-                   (case (vector-ref clause 0)
-                     ((atom)
-                      (let* ((atom (vector-ref clause 1))
-                             (terms (map (lambda (term) (lower term #f))
-                                         (vector-ref atom 1))))
-                        (vector atom terms
-                                (project-slot-terms terms (vector-ref atom 2)))))
-                     ((guard)
-                      (vector 'guard (lower-call (vector-ref clause 1)
-                                                (vector-ref clause 2))))
-                     ((binding)
-                      ;; Resolve inputs before shadowing the output name. A
-                      ;; separate slot preserves enclosing backtracking values.
-                      (let* ((call (lower-call (vector-ref clause 2)
-                                               (vector-ref clause 3)))
-                             (slot (fresh-slot! (vector-ref clause 1))))
-                        (vector 'binding slot call)))
-                     (else (unsupported #f)))) body))
-             (outputs
-               (map (lambda (head)
-                      (vector head (map (lambda (term) (lower term #t))
-                                        (vector-ref head 1)))) heads)))
-        (vector outputs (compile-action-segments actions) count pure?)))))
-
-;;; Return the ordered callback prefix and its atom suffix as separate values.
-;;; Structural recursion constructs only the detached prefix, without mutation.
-;; : (-> OrderedActions (Values OrderedActions OrderedActions))
-(def (callback-prefix actions)
-  (match actions
-    ([] (values [] []))
-    ([action . remaining]
-     (if (vector? (vector-ref action 0))
-       (values [] actions)
-       (let-values (((prefix suffix) (callback-prefix remaining)))
-         (values (cons action prefix) suffix))))))
-
-;;; Atom boundaries retain relation lookup and delta depth. Contiguous guards
-;;; and bindings share one prepared continuation, preserving their exact order.
-;; : (-> OrderedActions OrderedActions)
-(def (compile-action-segments actions)
-  (if (null? actions)
-    []
-    (if (vector? (vector-ref (car actions) 0))
-      (cons (car actions) (compile-action-segments (cdr actions)))
-      (let-values (((segment remaining)
-                    (callback-prefix actions)))
-        (cons (vector 'callbacks (gerbil-ascent-compile-frame-sequence segment))
-              (compile-action-segments remaining))))))
-
-;;; Execution representation and permission to reorder are separate facts.
-;;; Callback plans execute serially even when their slot reads are compiled.
-;; : (-> (Maybe PositivePlan) Boolean)
-(def (gerbil-ascent-pure-positive-plan? plan)
-  (and plan (vector-ref plan 3)))
+  (def (simple? atom)
+    (andmap (lambda (term) (memq (car term) '(variable literal wildcard)))
+            (vector-ref atom 1)))
+  (and (andmap simple? heads)
+       (andmap (lambda (clause)
+                 (and (eq? (vector-ref clause 0) 'atom)
+                      (simple? (vector-ref clause 1)))) body)
+       (let ((slots (make-hash-table-eq)) (count 0))
+         (def (lower term)
+           (case (car term)
+             ((literal wildcard) term)
+             (else
+              (let (slot (hash-get slots (cdr term)))
+                (if slot
+                  (cons 'bound slot)
+                  (let (fresh count)
+                    (set! count (+ count 1))
+                    (hash-put! slots (cdr term) fresh)
+                    (cons 'fresh fresh)))))))
+         (let* ((atoms
+                 (map (lambda (clause)
+                        (let* ((atom (vector-ref clause 1))
+                               (terms (map lower (vector-ref atom 1)))
+                               (columns (vector-ref atom 2)))
+                          (vector atom terms (project-slot-terms terms columns)))) body))
+                (outputs
+                 (map (lambda (head)
+                        (vector head
+                                (map (lambda (term)
+                                       (if (eq? (car term) 'literal)
+                                         term
+                                         (cons 'bound (hash-get slots (cdr term)))))
+                                     (vector-ref head 1)))) heads)))
+           (vector outputs atoms count)))))
 
 ;; : (-> Terms Row Frame Boolean)
 (def (match-row! terms row frame)
@@ -187,16 +131,12 @@
              ((fresh) (vector-set! frame (cdr term) value) #t)
              ((bound) (equal? (vector-ref frame (cdr term)) value))
              ((literal) (equal? (cdr term) value))
-             ((expression) (equal? ((cdr term) frame) value))
              ((wildcard) #t))
            (match-row! (cdr terms) (cdr row) frame)))))
 
 ;; : (-> SlotTerm Frame Value)
 (def (term-value term frame)
-  (case (car term)
-    ((literal) (cdr term))
-    ((expression) ((cdr term) frame))
-    (else (vector-ref frame (cdr term)))))
+  (if (eq? (car term) 'literal) (cdr term) (vector-ref frame (cdr term))))
 
 ;;; The engine supplies row/index access and the authoritative output admission
 ;;; function. This runner changes binding representation, not fact admission.
@@ -228,22 +168,16 @@
                      (map (lambda (term) (term-value term frame))
                           (vector-ref output 1))))
         (outputs (cdr remaining))))
-    (let (action (car atoms))
-      (case (vector-ref action 0)
-        ((callbacks)
-         (when ((vector-ref action 1) frame)
-           (visit-positive-atoms! (cdr atoms) heads frame delta-at depth
-                                  rows-access emit-row! checkpoint!)))
-        (else
-         (let (rows (rows-access (vector-ref action 0) frame
-                                 (= depth delta-at) (vector-ref action 2)))
-           (let candidates ((remaining rows))
-             (unless (null? remaining)
-               (when checkpoint! (checkpoint!))
-               (when (match-row! (vector-ref action 1) (car remaining) frame)
-                 (visit-positive-atoms! (cdr atoms) heads frame delta-at (+ depth 1)
-                                        rows-access emit-row! checkpoint!))
-               (candidates (cdr remaining))))))))))
+    (let* ((atom (car atoms))
+           (rows (rows-access (vector-ref atom 0) frame
+                              (= depth delta-at) (vector-ref atom 2))))
+      (let candidates ((remaining rows))
+        (unless (null? remaining)
+          (when checkpoint! (checkpoint!))
+          (when (match-row! (vector-ref atom 1) (car remaining) frame)
+            (visit-positive-atoms! (cdr atoms) heads frame delta-at (+ depth 1)
+                                   rows-access emit-row! checkpoint!))
+          (candidates (cdr remaining)))))))
 
 ;;; Build the provider's ordered key after index construction. Compiled terms
 ;;; read proved frame slots; the general path preserves expression callbacks.

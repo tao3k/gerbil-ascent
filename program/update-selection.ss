@@ -151,7 +151,7 @@
                                       (vector-ref affected
                                        (vector-ref (vector-ref output 0) 0)))
                                     (vector-ref full-plan 0))
-                            (vector-ref full-plan 1) (vector-ref full-plan 2))
+                            (vector-ref full-plan 1) (vector-ref full-plan 2) (vector-ref full-plan 3))
                            (gerbil-ascent-positive-plan
                             (vector heads (vector-ref rule 1)
                                     (vector-ref rule 2) (vector-ref rule 3))))))

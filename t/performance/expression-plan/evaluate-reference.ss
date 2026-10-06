@@ -4,27 +4,27 @@
 
 ;;; Generic stratified semi-naive evaluator. Mutable row buffers belong to one
 ;;; session; public declarations and returned snapshots are POO values.
-(import (only-in "positive-components.ss" gerbil-ascent-run-positive-components! gerbil-ascent-component-mode?)
-        (only-in "actor-round.ss" gerbil-ascent-run-actor-round!)
-        (only-in "source-log.ss" gerbil-ascent-source-log-rows)
+(import (only-in :gerbil-ascent/program/positive-components gerbil-ascent-run-positive-components! gerbil-ascent-component-mode?)
+        (only-in :gerbil-ascent/program/actor-round gerbil-ascent-run-actor-round!)
+        (only-in :gerbil-ascent/program/source-log gerbil-ascent-source-log-rows)
         (only-in :clan/poo/object .o .ref object?)
         (only-in :clan/poo/mop validate)
         (only-in :std/iter for iter Iterator &Iterator-next!)
-        (only-in "admission.ss" gerbil-ascent-initialize-source-row!
+        (only-in :gerbil-ascent/program/admission gerbil-ascent-initialize-source-row!
                  gerbil-ascent-admit-source-row!
                  gerbil-ascent-check-replacement-rows! gerbil-ascent-prepare-storage-batch)
-        (only-in "result.ss" gerbil-ascent-publication-cache
+        (only-in :gerbil-ascent/program/result gerbil-ascent-publication-cache
                  gerbil-ascent-publish-rows gerbil-ascent-snapshot-rows gerbil-ascent-snapshot-sizes
                  gerbil-ascent-result-observation gerbil-ascent-public-snapshot-rows)
-        (only-in "planning.ss" gerbil-ascent-prepare-program)
-        (only-in :gerbil-ascent/core/positive-plan gerbil-ascent-run-positive-plan!
-                 gerbil-ascent-emit-heads! gerbil-ascent-pure-positive-plan?)
-        (only-in "index.ss" gerbil-ascent-make-row-indexes row-indexes-rows row-indexes-advance!)
-        (only-in "types.ss" GerbilAscentSessionContract)
-        (only-in "reuse.ss" gerbil-ascent-prepare-native-reuse
+        (only-in :gerbil-ascent/t/performance/expression-plan/planning-reference gerbil-ascent-prepare-program)
+        (only-in :gerbil-ascent/t/performance/expression-plan/reference gerbil-ascent-run-positive-plan!
+                 gerbil-ascent-emit-heads!)
+        (only-in :gerbil-ascent/program/index gerbil-ascent-make-row-indexes row-indexes-rows row-indexes-advance!)
+        (only-in :gerbil-ascent/program/types GerbilAscentSessionContract)
+        (only-in :gerbil-ascent/program/reuse gerbil-ascent-prepare-native-reuse
                  gerbil-ascent-activate-rules gerbil-ascent-activate-selected-rules native-reuse?
                  native-reuse-result native-reuse-affected)
-        (only-in "analysis.ss" gerbil-ascent-program-analysis
+        (only-in :gerbil-ascent/t/performance/expression-plan/analysis-reference gerbil-ascent-program-analysis
                  gerbil-ascent-program-schema)
         (only-in :gerbil-ascent/core/rule-semantics gerbil-ascent-lattice-feeds-relation?
                  gerbil-ascent-lattice-key
@@ -597,7 +597,7 @@
               (gerbil-ascent-run-positive-components! analysis schema all workers emit-row!
                                                        (or canceled? (lambda () #f)))
             (if (and (or (> workers 1) canceled?)
-                     (andmap (lambda (rule) (gerbil-ascent-pure-positive-plan? (vector-ref rule 5))) active-rules)
+                     (andmap (lambda (rule) (vector-ref rule 5)) active-rules)
                      (andmap gerbil-ascent-canonical-set-storage-provider?
                              (vector->list storage-providers))
                      (andmap gerbil-ascent-canonical-hash-index-provider?

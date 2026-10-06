@@ -1,0 +1,44 @@
+;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+;;; Private admitted callback inputs lower once to frame reads. Calls remain
+;;; at their original execution points; neither results nor frames are cached.
+(export gerbil-ascent-compile-frame-call gerbil-ascent-compile-frame-sequence)
+
+;; : (-> Procedure Slots (-> Frame Value))
+(def (gerbil-ascent-compile-frame-call procedure slots)
+  (match slots
+    ([] (lambda (_) (procedure)))
+    ([one] (lambda (frame) (procedure (vector-ref frame one))))
+    ([one two]
+     (lambda (frame)
+       (let* ((left (vector-ref frame one))
+              (right (vector-ref frame two)))
+         (procedure left right))))
+    (else
+     (lambda (frame)
+       (apply procedure (map (lambda (slot) (vector-ref frame slot)) slots))))))
+
+;;; Compile an ordered callback segment backwards, without executing callbacks.
+;;; Each continuation reads only its own frame. A failed guard skips its suffix;
+;;; an exception is raised before any later binding or guard can execute.
+;; : (-> FrameActions (-> Frame Boolean))
+(def (gerbil-ascent-compile-frame-sequence actions)
+  (if (null? actions)
+    (lambda (_) #t)
+    (let* ((action (car actions))
+           (next (gerbil-ascent-compile-frame-sequence (cdr actions))))
+      (case (vector-ref action 0)
+        ((guard)
+         (let (call (vector-ref action 1))
+           (lambda (frame)
+             (let (pass? (call frame))
+               (unless (boolean? pass?)
+                 (error "ASCENT guard must return a boolean" pass?))
+               (and pass? (next frame))))))
+        ((binding)
+         (let ((slot (vector-ref action 1)) (call (vector-ref action 2)))
+           (lambda (frame)
+             (vector-set! frame slot (call frame))
+             (next frame))))))))

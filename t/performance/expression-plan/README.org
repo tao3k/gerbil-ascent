@@ -1,0 +1,112 @@
+#+TITLE: Lexical expression plans across admission, execution and scheduling
+
+* Gerbil source study and production boundary
+
+Studied Gerbil =0.19.2591dcd.patchf5cedd8168cb= directly:
+- =compiler/optimize-call.ss:89-131= checks arity and mutable bindings before
+  lambda substitution, retaining bindings for ordered operand evaluation.
+- =compiler/optimize-call.ss:189-204= separately admits known-call optimization.
+- =compiler/optimize-call.ss:283-296= requires explicit effect information to
+  classify a call as free of side effects. Optimized call representation alone
+  does not establish purity.
+- =compiler/optimize-spec.ss:406-435= collects receiver method/slot references
+  before substitution. Identity and lexical context guard the analysis.
+
+The production change covers the entire expression plan lifecycle:
+1. =core/positive-plan.ss= assigns lexical slots in admitted body order, lowers
+   callback input names once and retains ordered head/index expression calls.
+2. =core/expression-plan.ss= prepares zero/one/two-input direct calls and the
+   existing variadic apply convention. Consecutive guard/binding actions become
+   one ordered continuation segment, split at atom boundaries with ordered structural recursion and values.
+3. =program/evaluate.ss= executes those plans with engine-owned frames. Calls
+   occur at the same lookup/match/guard/binding/head points, without result reuse.
+4. =program/component-plan.ss= and the actor round gate inspect a separate pure
+   flag. Compiled callbacks stay serial even when workers are requested.
+5. =program/update-selection.ss= preserves that flag while projecting heads.
+   Cached analyses own immutable actions; activations own mutable frames.
+
+Patterns, generators, aggregates and negation retain their general interpreter.
+An unsupported clause keeps the whole rule on that interpreter. Invalid input
+names are not silently assigned fresh slots. Guard Boolean checks, exceptions,
+field/storage admission, budgets and original delta depth remain authoritative.
+
+* Comparator and public benchmark
+
+Baseline =5e2305b1f8310b38561c40829382ec8c8d337fc2= supplies the complete
+=core/positive-plan.ss= and =program/{analysis,planning,evaluate}.ss= sources.
+The four frozen modules change import references only, selecting the baseline
+planner/executor and independent analysis caches; engine logic is unchanged.
+Both legs share unchanged source/storage/index/binding contracts.
+
+=benchmark.ss= is generated through public ASP =make-benchmark-fixture= with
+sampleCount explicitly set to 50 (the API default is 20). The native executable
+uses =benchmark-run/result= with 50 alternating paired samples. GC precedes each
+leg. Both analysis caches are warmed separately; every timed sample then creates
+a fresh engine, admits source rows and computes the complete fixed point.
+This qualifies warm-analysis full solving, not cold expression compilation.
+
+Outside timing, every relation's ordered rows and completion status agree, and
+an independent closed arithmetic formula checks the final relation. A binding
+scope of n computes the stage recurrence =(n+1)*x+n+1=. Index module resolution
+and benchmark imports are qualified against the native library before sampling.
+CPU and allocated bytes are native process-counter deltas. Outer ASP wall/heap
+observations are diagnostic, not an application latency claim.
+
+All expression scenarios retain a fixed <=80% baseline CPU gate, <=baseline+8192
+allocation gate and >=35 CPU wins. Pure/small controls permit <=105% CPU+20 us
+and <=baseline+4096 bytes. Long-scope scenarios were added after the short-scope
+CPU gate failed, to check the identified scope-size cost; the original gates
+were retained, and the overall recipe remains unsuccessful if any gate fails.
+=just performance-expression-plan= runs all six scenarios and propagates failure.
+
+* Experiments and boundaries
+
+The first short-scope attempt reduced allocation 45% but did not improve CPU.
+It used the factory default 20 samples, despite a progress label of /50; that
+receipt is retained as a negative experiment and is not a 50-pair qualification.
+An explicit 50-sample rerun of callback segments also failed the original 20%
+CPU gate. Prepared tuple matchers/builders did not establish that improvement
+and were withdrawn, retaining the simpler existing tuple traversal.
+
+Final native medians (50 alternating pairs in every row):
+
+| Scenario | Rows | Stages | Scope | CPU us old/new | Bytes old/new | Wins | Fixed gate |
+|----------+------+--------+-------+----------------+---------------+------+------------|
+| deep | 512 | 4 | 24 | 3492 / 1158 | 5620080 / 774352 | 50 | pass |
+| scope | 1024 | 1 | 48 | 3991 / 850 | 5264352 / 510016 | 50 | pass |
+| chain | 512 | 8 | 2 | 1695 / 1496 | 2632464 / 1452368 | 46 | fail CPU |
+| wide | 2048 | 2 | 2 | 1928 / 1682 | 2842224 / 1662512 | 48 | fail CPU |
+| pure | 512 | 8 | no callbacks | 1339 / 1340 | 1452112 / 1452112 | 21 | pass |
+| small | 2 | 1 | 2 | 7 / 7 | 13440 / 12864 | 27 | pass |
+
+Long scopes reduced median CPU 67%/79% and allocation 86%/90%. Short scopes
+reduced CPU 12%/13% and allocation 45%/42%, but failed their unchanged 20% CPU
+gates. The overall command returned nonzero (recipe exit 1, enclosing Gerbil
+process exit 70); it is not an overall performance gate pass. Pure and small
+controls passed; neither establishes a speed improvement. Raw logs, rejected experiments,
+receipts, generated native objects and executables remain only under ignored
+=.cache/ascent/expression-plan/=. No performance gate is reported as passing
+merely because allocation improves or correctness tests pass.
+
+* Semantic qualification
+
+The native expression suite compares complete solves against the frozen engine
+and independently checks arithmetic over empty, singleton and larger sources,
+multiple stages and binding scopes up to 48. It covers false values, repeated
+and zero/variadic callback inputs, nested solves, retained source replacement,
+exact callback traces and thread identity with workers 1/2/4, type errors and
+fact-budget errors. It checks that compiled effectful plans are not pure plans.
+
+Existing positive plan, SCC, runtime bindings, mixed binding program and table
+expression suites cover slot freshness/backtracking, ordered physical keys,
+custom provider effects, update head selection, concurrent frame ownership and
+finite graph execution. SCC comparator normalization compares its original
+three execution fields explicitly; the added purity field has separate checks.
+
+The final six native modules passed all 66 Cases, each with explicit
+=MODULE-OK=, =HARNESS-OK=, final =OK= and process exit 0. Comparator sources were
+checked against their baseline: imports are the only differences. Selected
+production source policy completed with zero errors and one existing warning:
+=GERBIL-SCHEME-AGENT-POLICY-041= flags the unchanged forward =list-tail= cursor
+in =project-slot-terms=. That loop advances its cursor and does not restart at
+the list root; this patch did not alter it or suppress the policy finding.

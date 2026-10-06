@@ -457,3 +457,12 @@ one engine or worker. =actor-round.ss= owns the pure/canonical Provider capabili
 predicate; the evaluator owns options, frozen source cuts and final publication.
 This extraction preserves callback eligibility, ordering and source ownership,
 and passes the actual ASP package policy without changing its threshold.
+
+* Next native compiler correspondence
+
+The [[file:scheme-research-proof-audit.org::#native-compiler-correspondence][connected native compiler obligation]] now fixes the next implementation
+order: complete finite-vector traversal, actual Scheme action/key/head and
+scalar/name decoding, Provider snapshot/frontier instances, then constructed
+least-model output and completed publication. It separates pure logical plans,
+sequential host effects and closure storage semantics. This extends the current
+library architecture; MR/MRR remains future consumer research.

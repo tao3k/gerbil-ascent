@@ -292,6 +292,102 @@ different algorithms: snapshot equality alone cannot qualify either name.
 Complete application outputs and measured cost remain milestone 6; no MR
 adapter or model score can discharge these library obligations.
 
+** Native compiler correspondence: next connected design obligation
+:PROPERTIES:
+:CUSTOM_ID: native-compiler-correspondence
+:END:
+
+The 2026-10-06 rereading of A22 section 4, B23 section 3.3 and section
+5.5, and S20 sections 4.2-4.3 selects the admitted callback-free compiler
+path as the next connected obligation. This is a library obligation. MR/MRR
+bindings and model comprehension cannot establish it.
+
+A22 generates nested rule loops and an SCC evaluation path. Its clause-order
+restriction is a binding prerequisite, not a proof that arbitrary Scheme
+callbacks commute. B23 equations (1)-(2) require total/delta concretizations
+to cover represented facts and include all newly implied facts in delta;
+raw inserted rows are insufficient for closure Providers. S20 defines an
+arrow change using both the old argument and its change; existing rule pivots
+are not a derivative of a higher-order closure. These premises constrain
+separate native owners, even when all three eventually produce relation rows.
+
+*** One semantic path, three implementation correspondences
+
+1. Relate the actual admitted descriptors and compiler metadata to the existing
+   semantic terms/rules. Variable symbols need an injective identity map into
+   Lean names, separate from symbol-valued scalar encoding. Fresh allocation
+   order, repeated occurrences and lexical capture must commute with lowering.
+2. Lift the finite-vector matcher to the complete candidate scan and recursive
+   multi-atom traversal, including ordered emissions and the returned dirty
+   vector. Relate the actual stored actions, selected keys and head readers to
+   that traversal. A matcher theorem alone does not cover a continuation's
+   reads, head slots, or recursion through the same mutable vector.
+3. Connect full/pivot traversals to actual Provider enumeration and the existing
+   constructed ground-rule model. Then discharge finite domain/rank and
+   completed execution premises to obtain the least model. Semantic stability,
+   budget refusal, pending execution and committed publication remain distinct.
+
+Reuse =PositiveSlots=, =PositiveTraversal=, =IndexedPositiveTraversal=,
+=IndexedIteration= and =GroundedBinding=; do not introduce another runtime,
+serialized proof format or parallel semantic interpreter. Native Scheme owns
+admission and execution. Inspection for independent qualification belongs to
+existing native Suites; it must not become a per-row production revalidator.
+
+*** Concrete contract and falsifier map
+
+| Boundary / native owner | Required correspondence | Existing formal owner to extend | Independent falsifier |
+|-------------------------+-------------------------+---------------------------------+-----------------------|
+| Owned admitted graph: higher-order.ss / operator-descriptor.ss | Decode owned types, captures and descriptor identity into the scoped IR; each lowering step preserves its denotation | DescriptorScope, LexicalLowering, RecursiveLowering | Shared captures, same printed name with distinct binding identity, escaped dependency, nested fixed points; caller mutations cannot alter an admitted snapshot |
+| Scalars and rows: scheme-checked.ss | Exactly integers, Booleans, symbols and characters; proper owned row spines of declared arity; equality and hash lookup respect the same encoding | RowRepresentation and AtomicBinding | false versus zero, symbol-valued literals versus variable identities, large exact integers, character distinctions, duplicate occurrences, improper/cyclic rows |
+| Compiled plan: core/positive-plan.ss | Decode actual output/action vectors and slot extent; first writes precede bound reads, keys use only the earlier prefix, heads use defined slots | PositiveSlots and IndexedPositiveTraversal | Fresh/bound interchange, missing overwrite, out-of-range head/key slot, row-local key reads, repeated/reversed selected columns; short frame rejected before effects |
+| Complete finite traversal: core/positive-plan.ss | Every recursive return threads the actual vector; acceptance, ordered duplicate emissions and all in-range returned cells agree | PositiveTraversal using the finite-vector matcher | A rejected candidate writes before failure; later candidate overwrites it; nested success leaves deeper slots dirty; zero-atom/zero-arity and multihead output |
+| Physical lookup: program/index.ss / table/provider.ss | Complete matching candidates, lawful selected-key encoding, unchanged relation meaning; frozen snapshot/version agrees with roots | IndexedPositiveTraversal, SharedIndex | Missing bucket, stale extension, key permutation, accidental shared mutable roots, failed extension; an over-return is filtered by the binder |
+| Storage and frontier: table/storage.ss / closure Providers | Concrete represented rows equal the stated closure; emitted delta covers every newly represented row, including implications across producers | ProviderFrontier and SemiNaive algebra; TLA+ visibility/install protocol | Two producers merge components and a newly implied pair feeds another join; raw-only frontier, foreign fact, omitted batch, budget refusal before mutation |
+| Completed component: component-worker.ss / actor-round.ss | Constructed rules and finite stable result agree; credits and dependency cuts authorize only complete publication | GroundedBinding / ComponentClosure for algebra; existing TLA+ scheduling and publication | Early completion, stale/duplicate reply, failed worker, pending successor, unrooted support cycle and exhausted budget; no partial result admitted as a least model |
+
+=PositiveSlots.compiled_vector_refines= proves bounds for the Lean compiler's
+callback-free grammar and all sufficiently large vectors. It does not itself
+prove that the native Scheme plan decoder produces those actions or that every
+native head/key access is covered. Each row of this map must discharge a
+premise consumed by the next row; extra abstract lemmas without that connection
+are not closure evidence.
+
+*** Effects, finite height and optimization permission
+
+Plan existence is an execution representation decision. Purity is a separate
+permission: the compiler sets =pure?= false for host calls, and actor admission
+also checks storage/index capabilities. =relational-stable= records a caller
+contract; it is not a theorem of callback monotonicity, totality, termination or
+commutation. Keep sequential callback observations and mutable-payload fallback
+controls in their existing owner. Extending the pure proof to callbacks requires
+an explicit mathematical function interpretation and an independently stated
+effect contract; the pure least-model theorem must not quantify over arbitrary
+host procedures.
+
+Finite signature admission derives a bound from the actual declared domain and
+type. A resource budget can interrupt a computation; it cannot prove semantic
+termination. TLC exploration cutoffs bound checker work, not native generation
+semantics. No fixed generation constant is introduced by this correspondence.
+
+B23's minimum physical-index count permits several layouts with different
+lookup costs. Representation minimality, allocation reduction and whole solve
+CPU/peak-memory benefit therefore remain separate gates. S20 optimization
+must wait for an actual typed compiler transformation preserving changed
+captures and fixed-point meaning; insertion validity algebra alone is not
+that transformation. Deletion/support maintenance continues under its own
+H18/B22 contracts rather than being renamed an arrow delta.
+
+*** Immediate implementation order
+
+First compose finite vector scan/recursive traversal with the existing dirty
+frame laws, then establish native action/key/head decoding and scalar/name
+correspondence on the same admitted pure plan. Next instantiate Provider
+snapshot/frontier contracts and connect constructed component output to the
+least-model result. Retain the existing full native registry, original ASCENT
+oracle shards and exact-head CI as release gates. Do not gate this work on MR
+or paid model calls. Lean tests and axiom reports remain under =Tests/=; TLA+
+models stay responsible for temporal execution and publication only.
+
 ** Paper coverage and proof ownership
 
 The [[file:research/scheme-dsl/index.org][source ledger]] now lists twelve sources. This audit reopened A22, B23,

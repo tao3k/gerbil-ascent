@@ -1403,7 +1403,7 @@ check-provider-views-formal:
     done
     cp packages/proofs/tla/ReaderLifetime.cfg "$temp/live.cfg"
     "${tlc[@]}" -workers 1 -config "$temp/live.cfg" -metadir "$temp/live" packages/proofs/tla/ReaderLifetime.tla
-    for mutation in stuck unfair; do
+    for mutation in stuck unfair global; do
       sed "s/Mutation = \"none\"/Mutation = \"$mutation\"/" "$temp/live.cfg" > "$temp/$mutation.cfg"
       code=0
       "${tlc[@]}" -workers 1 -config "$temp/$mutation.cfg" -metadir "$temp/$mutation" packages/proofs/tla/ReaderLifetime.tla > "$temp/$mutation.out" 2>&1 || code=$?
@@ -1413,4 +1413,20 @@ check-provider-views-formal:
       fi
       echo "COUNTEREXAMPLE-OK provider-views-$mutation ReaderCompletion exit=$code"
     done
+    for mutation in retire credit aba; do
+      case "$mutation" in
+        retire) invariant=ReaderAlive ;;
+        credit) invariant=CreditBalance ;;
+        aba) invariant=AcceptedCurrent ;;
+      esac
+      sed -e "s/Mutation = \"none\"/Mutation = \"$mutation\"/" -e '/PROPERTY ReaderCompletion/d' -e "s/INVARIANTS .*/INVARIANTS $invariant/" "$temp/live.cfg" > "$temp/shared-$mutation.cfg"
+      code=0
+      "${tlc[@]}" -workers 1 -config "$temp/shared-$mutation.cfg" -metadir "$temp/shared-$mutation" packages/proofs/tla/ReaderLifetime.tla > "$temp/shared-$mutation.out" 2>&1 || code=$?
+      [[ "$code" = 12 ]] && grep -q "Invariant $invariant is violated" "$temp/shared-$mutation.out"
+      echo "COUNTEREXAMPLE-OK shared-reader-$mutation $invariant"
+    done
+    # The same global fairness assumption suffices for one reader but not two.
+    sed -e 's/Readers = {r1, r2}/Readers = {r1}/' -e 's/Mutation = "none"/Mutation = "global"/' "$temp/live.cfg" > "$temp/single.cfg"
+    "${tlc[@]}" -workers 1 -config "$temp/single.cfg" -metadir "$temp/single" packages/proofs/tla/ReaderLifetime.tla
+    echo 'SINGLE-READER-GLOBAL-FAIRNESS-OK'
     echo 'PROVIDER-VIEWS-CHECK-OK'

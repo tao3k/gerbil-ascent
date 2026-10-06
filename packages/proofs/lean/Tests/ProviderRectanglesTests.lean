@@ -60,4 +60,19 @@ example : (0, 3) ∈ expand bridge ∧
 #print axioms selected_member
 #print axioms uf_selected_exact
 #print axioms component_uniform
+-- Disjoint members are insufficient when a root pair is repeated.
+example : count [⟨[0], [1]⟩, ⟨[0], [1]⟩] = 2 ∧
+    ¬ (expand ([⟨[0], [1]⟩, ⟨[0], [1]⟩] : List (Rectangle Nat))).Nodup := by decide
+-- Duplicated members violate unique logical cardinality even for one pair.
+example : count [⟨[0, 0], [1]⟩] = 2 ∧
+    ¬ (expand ([⟨[0, 0], [1]⟩] : List (Rectangle Nat))).Nodup := by decide
+
+#print axioms component_pair_owned
+#print axioms component_plan_separate
+#print axioms component_plan_nodup
+#print axioms component_plan_uniform
+#print axioms component_plan_reach_uniform
+#print axioms successive_frontiers_disjoint
+#print axioms successive_union_exact
+#print axioms successive_union_nodup
 end Ascent.ProviderRectanglesTests

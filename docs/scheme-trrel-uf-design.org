@@ -528,3 +528,91 @@ regresses both CPU and allocation; cycle export still increases allocation.
 The grouped join remains slightly above the explicit path after eliminating
 candidate tuple construction. No universal speedup, asymptotic DAG compression
 or paper-application replication is accepted from these measurements.
+
+* Component ownership, frontier union and shared readers (2026-10-07)
+
+This follow-up is based on =9fd161f=, which carries frozen UF views through the
+engine. Earlier migration proposals describe their stated revisions; the current
+engine already admits canonical frozen UF execution. This unit strengthens its
+mathematical and concurrency obligations, without changing Scheme execution.
+
+** Component plan refinement
+
+=ProviderRectangles.Components= represents captured member lists, their owner
+mapping, ownership consistency and member uniqueness. =component_pair_owned=
+recovers the ordered root pair of every emitted tuple. Distinct root pairs
+therefore imply =component_plan_separate=; together with unique members they
+imply =component_plan_nodup=. =component_plan_uniform= derives the old-membership
+uniformity needed for whole-rectangle selection. =component_plan_reach_uniform=
+connects that condition to =TransitiveComponents.quotient_exact= under the SCC
+root-equivalence and transitivity premises.
+
+Component membership and distinct root pairs are separate checks. The new Lean
+negative examples show repeated root-pair descriptors and repeated members
+both inflate cardinality despite preserving membership. Native roots/member
+extraction and completeness of the candidate root-pair list remain source
+refinement obligations; this record does not make the mutable Scheme parent
+map a Lean value or prove its extraction automatically.
+
+** Additive frontier union
+
+=core/relation-view.ss= states that =gerbil-ascent-view-union= requires disjoint
+facts; it is not a deduplicating Set union. Per-insertion uniqueness alone does
+not justify this across an accumulated delta. =successive_frontiers_disjoint=
+derives disjointness from consecutive exact frontiers through the intermediate
+relation. =successive_union_exact= proves that concatenation is the exact
+old-to-final frontier under both monotone steps; =successive_union_nodup=
+preserves unique enumeration. Existing =count_exact= then makes additive counts
+sound for these frontiers. Source occurrence counting remains a separate rule.
+
+** Shared-reader defect discovery
+
+=ReaderLifetime= now supports a parameterized finite =Readers= set. Each reader
+has its own captured rows, current-compatibility bit, semantic validity bit and
+cancellation status. =credits= counts active reader ownership, not batch/row
+backpressure acknowledgements. Every release removes exactly one owner; backing
+retirement is allowed only after the last owner releases. Every publication
+invalidates active reads regardless of whether row content is equal.
+
+The accepted two-reader model uses per-reader weak fairness of =Finish(r)=.
+There is no numeric generation variable, generation maximum, state/action
+constraint or timer. The same global completion fairness passes the one-reader
+control but fails the two-reader control: one reader can remain canceled forever
+while the other repeatedly borrows and completes. This is a design counterexample
+to inferring individual progress from aggregate progress, not evidence that the
+current Scheme actor pool has this defect.
+
+Additional faulty variants are checked independently: =retire= makes backing
+inaccessible when the first of two readers exits; =credit= releases a reader
+without decrementing ownership; =aba= treats matching row contents as revision
+compatibility and accepts an invalid reply. Safety controls require exit 12 and
+the expected invariant; liveness controls require exit 13 and a temporal
+violation. Concrete TLC state traces are recorded as structured JSON witnesses.
+
+** Current implementation correspondence and limits
+
+The native round owns a fresh cut identity, tracks active worker/task assignments,
+refuses stale reply identities, and drains/join workers before owner publication.
+Those mechanisms are the correspondence points for =valid=, ownership and last
+release. Captured view spines are separate from mutable UF nodes, with nested
+fields retaining the stable-value premise. =alive= abstracts accessibility of all
+captured backing, not byte accounting or a native explicit reference-count API.
+The model allows more publish/read interleavings than the current drain-before-
+commit coordinator; injected failures are prospective protocol discriminators.
+
+The abstraction does not prove Gambit scheduling fairness, termination of host
+callbacks, multi-key actor source extraction or journal replay ordering. Lean
+owns component/fact algebra; TLA+ owns reader lifecycle and publication. Existing
+native controls and cost receipts remain separate evidence, including negative
+full-export and grouped-join measurements.
+
+** Acceptance
+
+The complete Lean collection passes 90 jobs. The rectangle module has 24 laws
+and its Tests module has 14 examples with only standard Lean axioms. The original
+view safety model passes 55,197 distinct states at enumeration bound 4. Shared
+reader safety and per-reader completion pass 14,175 distinct states (132,616
+generated) without a state constraint. The one-reader global-fairness control
+passes 315 states. Eleven seeded faulty variants are caught: the original five
+view safety variants, three reader liveness variants and three shared-reader
+safety variants. No new model API call or performance claim is made.

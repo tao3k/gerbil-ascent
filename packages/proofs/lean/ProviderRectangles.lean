@@ -167,4 +167,107 @@ theorem component_uniform (root : α → C) (visible : C → C → Prop)
       ← targets r member p.2 pp.2 q.2 qq.2]
   exact old
 
+/-- A finite captured component family. Ownership excludes overlapping member
+lists; root-pair uniqueness must still be checked independently. -/
+structure Components (α C : Type) where
+  members : C → List α
+  owner : α → C
+  owns : ∀ c x, x ∈ members c → owner x = c
+  unique : ∀ c, (members c).Nodup
+
+def componentPlan (family : Components α C) (pairs : List (C × C)) : List (Rectangle α) :=
+  pairs.map fun pair => ⟨family.members pair.1, family.members pair.2⟩
+
+theorem component_pair_owned (family : Components α C) (pair : C × C)
+    (p : α × α) (present : p ∈ rows ⟨family.members pair.1, family.members pair.2⟩) :
+    (family.owner p.1, family.owner p.2) = pair := by
+  have member := (rectangle_member _ p.1 p.2).mp present
+  exact Prod.ext (family.owns _ _ member.1) (family.owns _ _ member.2)
+
+theorem component_plan_separate (family : Components α C) (pairs : List (C × C))
+    (unique : pairs.Nodup) : Separate (componentPlan family pairs) := by
+  apply List.pairwise_map.mpr
+  apply unique.imp
+  intro a b different p ha hb
+  exact different ((component_pair_owned family a p ha).symm.trans
+    (component_pair_owned family b p hb))
+
+theorem component_plan_nodup (family : Components α C) (pairs : List (C × C))
+    (unique : pairs.Nodup) : (expand (componentPlan family pairs)).Nodup := by
+  apply expansion_nodup _ _ (component_plan_separate family pairs unique)
+  intro r present
+  obtain ⟨pair, _, same⟩ := List.mem_map.mp present
+  subst r
+  exact ⟨family.unique _, family.unique _⟩
+
+theorem component_plan_uniform (family : Components α C) (pairs : List (C × C))
+    (visible : C → C → Prop) :
+    Uniform (fun p => visible (family.owner p.1) (family.owner p.2))
+      (componentPlan family pairs) := by
+  apply component_uniform
+  · intro r present x hx y hy
+    obtain ⟨pair, _, same⟩ := List.mem_map.mp present
+    subst r
+    exact (family.owns _ _ hx).trans (family.owns _ _ hy).symm
+  · intro r present x hx y hy
+    obtain ⟨pair, _, same⟩ := List.mem_map.mp present
+    subst r
+    exact (family.owns _ _ hx).trans (family.owns _ _ hy).symm
+
+/-- SCC quotient exactness supplies the root interpretation required above. -/
+theorem component_plan_reach_uniform (family : Components α C) (pairs : List (C × C))
+    (reach : α → α → Prop)
+    (trans : ∀ x y z, reach x y → reach y z → reach x z)
+    (same : ∀ x y, family.owner x = family.owner y ↔ reach x y ∧ reach y x) :
+    Uniform (fun p => reach p.1 p.2) (componentPlan family pairs) := by
+  have uniform := component_plan_uniform family pairs
+    (TransitiveComponents.compressed family.owner reach)
+  intro r member p hp q hq old
+  have compressed := (TransitiveComponents.quotient_exact family.owner reach trans same p.1 p.2).mpr old
+  exact (TransitiveComponents.quotient_exact family.owner reach trans same q.1 q.2).mp
+    (uniform r member p hp q hq compressed)
+
+/-- Disjointness across consecutive injection frontiers follows from their
+history, not from component ownership alone. This justifies additive union. -/
+theorem successive_frontiers_disjoint (old middle next : α × α → Prop)
+    (left right : List (Rectangle α)) (first : Exact old middle left)
+    (second : Exact middle next right) (p : α × α)
+    (hl : p ∈ expand left) (hr : p ∈ expand right) : False := by
+  have known := (frontier_exact old middle left first p).mp hl
+  have fresh := (frontier_exact middle next right second p).mp hr
+  exact fresh.2 known.1
+
+theorem successive_union_exact (old middle next : α × α → Prop)
+    (left right : List (Rectangle α))
+    (growsFirst : ∀ p, old p → middle p)
+    (growsSecond : ∀ p, middle p → next p)
+    (first : Exact old middle left) (second : Exact middle next right) :
+    Exact old next (left ++ right) := by
+  classical
+  intro p
+  rw [← expansion_member]
+  simp only [expand, List.flatMap_append, List.mem_append]
+  change (p ∈ expand left ∨ p ∈ expand right) ↔ next p ∧ ¬ old p
+  rw [frontier_exact old middle left first, frontier_exact middle next right second]
+  unfold ProviderFrontier.delta
+  constructor
+  · rintro (⟨present, fresh⟩ | ⟨present, fresh⟩)
+    · exact ⟨growsSecond p present, fresh⟩
+    · exact ⟨present, fun old => fresh (growsFirst p old)⟩
+  · rintro ⟨present, fresh⟩
+    by_cases prior : middle p
+    · exact Or.inl ⟨prior, fresh⟩
+    · exact Or.inr ⟨present, prior⟩
+
+theorem successive_union_nodup (old middle next : α × α → Prop)
+    (left right : List (Rectangle α)) (first : Exact old middle left)
+    (second : Exact middle next right) (uniqueLeft : (expand left).Nodup)
+    (uniqueRight : (expand right).Nodup) : (expand (left ++ right)).Nodup := by
+  rw [expand, List.flatMap_append]
+  apply List.nodup_append.mpr
+  refine ⟨uniqueLeft, uniqueRight, ?_⟩
+  intro p hp q hq same
+  subst q
+  exact successive_frontiers_disjoint old middle next left right first second p hp hq
+
 end Ascent.ProviderRectangles

@@ -2064,3 +2064,23 @@ journal are included in engine measurements. These changes close the concrete
 explicit-row retention seam for the admitted UF/hash path, while general custom
 Provider/lattice concurrency, universal callback traces, continuous heap peak and
 paper application replication retain their stated gates.
+
+* Component ownership and shared-reader refinement (2026-10-07)
+
+The [[file:scheme-trrel-uf-design.org][UF design]] now connects captured member ownership and unique
+root pairs to disjoint rectangle enumeration, and derives disjoint additive
+union for consecutive exact frontiers. Repeated members and root pairs remain
+checked Lean counterexamples. SCC equivalence, candidate completeness and native
+extraction are explicit remaining premises rather than assumed whole-frontier
+correctness. The complete Lean build passes 90 jobs, with 24 rectangle laws and
+14 examples.
+
+The shared-reader TLA model checks last-owner retirement, ownership conservation,
+revision compatibility and per-reader completion. Aggregate fairness passes a
+single-reader control but permits starvation with two readers. Premature
+retirement, leaked ownership and equal-content revision reuse fail their named
+invariants. The accepted shared model covers 14,175 states, has no generation
+ceiling or state constraint, and retains a 315-state one-reader control. Eleven
+seeded defects are caught across the view and reader models. This formal unit
+uses the engine migration at =9fd161f=; it adds no new Scheme behavior or cost
+claim and does not replace the migration's native/cost evidence.

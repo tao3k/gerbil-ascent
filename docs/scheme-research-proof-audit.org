@@ -1298,3 +1298,48 @@ retains its native prior-prefix key admission checks and their separate
 receipt. The complete Lean collection and native SCC suite are requalified
 on the combined source. Both parallel audit additions are preserved; the
 indexed-least receipt keeps pre-rebase and combined native evidence distinct.
+
+* A22 native correspondence: complete custom index candidate tuples
+
+[[https://thomas.gilray.org/pdf/seamless-deductive.pdf][A22 Section 4, index selection and code generation]] derives lookup layouts from
+join columns and iterates the returned tuples in generated rule loops. In the
+Rust embedding the relation tuple type carries its width. For this Scheme
+implementation's extensible IndexProvider receiver, the corresponding premise
+needs an executable boundary. This is an implementation inference from the
+paper, not a theorem stated there. Selected key columns restrict candidates;
+they do not turn a candidate into a partial row.
+
+The custom lookup boundary previously admitted any proper outer list. The
+compiled matcher accepted a row with extra cells once its terms were exhausted;
+the general matcher likewise ignored the trailing cells. Missing or improper
+cells instead failed during matching, potentially after a preceding candidate
+had executed a callback. Thus a shape-invalid answer could either contribute
+a consequence or expose effects before a failure.
+
+=program/index.ss= now checks every custom candidate against the admitted
+atom's complete term list before handing the batch to any matching owner.
+The traversal is bounded by that arity, so cyclic and improper rows reject
+without traversing arbitrary provider data indefinitely or printing it in the
+exception. The check returns the original rows and preserves order and cell
+identity. Canonical hash and engine-owned shared indexes keep their trusted
+lookup paths. The receiver contract documents this tuple premise.
+
+The native BYODS suite exercises both a compiled positive rule and an ordinary
+pattern rule against a 32-row indexed relation. A valid candidate precedes
+each malformed candidate to discriminate complete-batch checking from a
+per-row late guard. Controls cover overlong, short, dotted and cyclic rows,
+zero term callbacks on rejection, empty answers, false-valued cells,
+shape-correct overselection with ordinary term filtering, and recovery of the
+same failed Session. Existing custom composite eqrel append/replacement cases
+remain in that suite. The stable index-entry suite additionally checks all/delta
+lanes, alias sharing, version revocation, ordered keys and independent solve
+results. Its first run exposed a synthetic fixture that described only key
+terms as the complete atom. The fixture now keeps the full declared row width
+and its selected key projection separate; existing cache assertions are retained.
+Qualification and source identity are recorded in
+[[file:evidence/scheme-provider-rows-20261006/receipt.json][the native receipt]].
+
+This closes tuple shape only. Candidate membership in the represented relation,
+key completeness, callback mutation of returned rows and universal Provider
+concretization remain separate obligations. No relation-membership scan,
+performance result or general Provider semantic refinement is claimed here.

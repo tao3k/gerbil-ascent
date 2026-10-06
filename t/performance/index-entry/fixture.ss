@@ -19,9 +19,15 @@
          (indexes ((if old? old-make gerbil-ascent-make-row-indexes) all delta as ds av dv (vector provider))))
     (vector ((if old? old-rows row-indexes-rows) indexes)
             ((if old? old-advance! row-indexes-advance!) indexes) all delta as ds av dv)))
-(def (index-entry-atom columns values)
-  (let (terms (map (lambda (n) (cons 'literal n)) values))
-    (vector 0 terms columns terms terms)))
+(def (index-entry-atom columns values (width (+ 1 (apply max columns))))
+  (let* ((keys (map (lambda (n) (cons 'literal n)) values))
+         (selected (map cons columns keys))
+         (terms (map (lambda (column)
+                       (let (entry (assoc column selected))
+                         (if entry (cdr entry) (cons 'wildcard #f))))
+                     (iota width))))
+    ;; Lookup keys are a projection; admitted atom terms describe the whole row.
+    (vector 0 terms columns terms keys)))
 (def (index-entry-provider emit (reject (lambda (_) #f)))
   (.o (:: @ gerbil-ascent-hash-index-provider)
       (.build-index

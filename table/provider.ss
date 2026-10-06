@@ -47,6 +47,8 @@
 ;;; Lookup is allowed to return a superset of matching rows because an index
 ;;; covers only selected columns. The evaluator checks every term before a
 ;;; candidate can contribute to a rule head.
+;;; Candidates must be proper tuples of the relation's admitted arity. The
+;;; engine validates the complete custom lookup batch before matching terms.
 (.defgeneric (gerbil-ascent-index-provider-lookup provider index key)
   slot: .lookup-index)
 

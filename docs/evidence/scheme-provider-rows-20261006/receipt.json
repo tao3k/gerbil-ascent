@@ -1,0 +1,79 @@
+{
+  "qualifiedBaseHead": "e01949a1370b614b8143ccb1f4a903135b9b073a",
+  "scope": "Validate complete custom index candidate batch against admitted atom arity before matching in compiled and general execution.",
+  "sources": {
+    "program/index.ss": "df12a1ec45ec255a01e39ae21de1caeba0333a16a598c3ee7a383e433f1b9e65",
+    "table/provider.ss": "fc0bb78ecbe70e6390472548755d150b04bdf4eea4fa812990f1911be25dda8c",
+    "t/performance/index-entry/fixture.ss": "6ff260ac814b6db65fb5300154451b8e6e80e930ed5698e4fd10b7a8bb60fb6a",
+    "t/qualification/ascent-byods-index-test.ss": "68e2090335028d8bd6ef0e21999be307fa59f6ae3a9107177f4f65ab2e649e44",
+    "t/qualification/ascent-index-entry-test.ss": "e2c52c99a4a2b89f0a5d0cf12fccd140b3bc3168d9deb371a9320e99262f8628",
+    "table/access.ss": "b90a362ddc0ef0b0b6eb8c77043148829857274d5fb271b242454a0cfa44562b",
+    "core/positive-plan.ss": "5328d128933a8ed1270d5228bdd8f12b134f81bd71a0b4b126ceb443155cb441",
+    "core/rule-bindings.ss": "308d44ab08fb53eacd4702064277ce9661f3c37df3cd5a17b0debfc7c3652206",
+    "program/objects.ss": "f0b2da5fd325d2a9a947b691f475593194e2b03a17da1ffd39a3d076e1356dc4",
+    "program/session.ss": "e0d0c2d088bb9599d2dc68ac85f4376b984c6335bb2cb97ebb21c86376e6c20c",
+    "build.ss": "3435a28db97d4a27b174e0b142b94c9d17196a9e6dad323566db6de2dcad4d3b",
+    "t/harness/run.ss": "3ac76467003f8aee89419eb6063e0f7cc7470557af6df138b81433a25e88d294"
+  },
+  "trackedSchemeSourceCount": 543,
+  "trackedSchemeSourceDigest": "ca91c086f092e5d3561aef3d98888691349320b16b72854cd7e4dd22e276bc7a",
+  "trackedSchemeDigestFormat": "Sorted tracked .ss paths; UTF-8 path + NUL + content SHA256 + newline",
+  "native": [
+    {
+      "command": "GERBIL_PATH=\"$PWD/.cache/ascent/sdk\" just test-native t/qualification/ascent-byods-index-test.ss",
+      "exitCode": 0,
+      "suiteCases": 4,
+      "moduleOK": 1,
+      "harnessOK": 1,
+      "explicitOK": 1,
+      "logSha256": "c74e80b28649253123c82c070ee889f86514902f1b1bc63e1f98476429b4796e"
+    },
+    {
+      "command": "GERBIL_PATH=\"$PWD/.cache/ascent/sdk\" just test-native t/qualification/ascent-index-entry-test.ss",
+      "exitCode": 0,
+      "suiteCases": 19,
+      "moduleOK": 1,
+      "harnessOK": 1,
+      "explicitOK": 1,
+      "logSha256": "e8d97764e1c2aec84266e9ec63751fe84c13ad1673fb7bffa24ac41cb4e07f51"
+    }
+  ],
+  "discriminators": [
+    "Long, short, dotted and cyclic rows reject before any candidate term callback",
+    "Valid candidate preceding malformed row cannot expose callbacks",
+    "False cells and empty answers remain valid",
+    "Shape-correct overselection retains term filtering and failed Session recovers",
+    "Custom all/delta aliases, mutation failure revocation, ordered expression keys and independent solve parity"
+  ],
+  "developmentFailures": [
+    {
+      "kind": "Missing closing parenthesis during initial edit",
+      "logSha256": "f6bc1f4b85b17380179f0cc4a74c1efcd3e79220aac282545a1225ab1eaa76bd",
+      "resolution": "Corrected before native qualification"
+    },
+    {
+      "kind": "Old synthetic index atom carried key width rather than relation width",
+      "logSha256": "f548e922997c62949a859c1890f228980aec89882691a8743ec7f20192be5cc3",
+      "resolution": "Full row terms and selected key projection now distinct; original cache assertions retained"
+    }
+  ],
+  "proofFilesChanged": false,
+  "performanceClaim": false,
+  "remaining": [
+    "Provider candidate relation membership and lookup completeness",
+    "Callback mutation and general Provider concretization"
+  ],
+  "rebaseIntegration": {
+    "baseHead": "c3c62589b2274d7ef1086ddae477c4e1a5242e5d",
+    "changedPaths": [
+      "docs/evidence/scheme-indexed-least-20261006/receipt.json",
+      "docs/evidence/scheme-indexed-least-20261006/receipt.json.license",
+      "docs/scheme-compiler-proof-bridge.org",
+      "docs/scheme-research-proof-audit.org",
+      "packages/proofs/lean/GroundedBinding.lean",
+      "packages/proofs/lean/Tests/GroundedBindingTests.lean",
+      "t/qualification/ascent-positive-components-test.ss"
+    ],
+    "scope": "Parallel proof, documentation and unrelated component test only. Qualified runtime, BYODS, index-entry and harness source hashes must remain unchanged after rebase. Aggregate digest describes the native qualification base."
+  }
+}

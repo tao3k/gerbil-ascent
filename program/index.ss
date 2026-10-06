@@ -18,6 +18,22 @@
 
 (defstruct row-indexes (rows advance! plan-atoms!))
 
+;;; Custom indexes may overselect candidates, but each must still represent
+;;; a complete relation tuple. Check the whole batch before term callbacks.
+;;; Traversal is bounded by admitted arity, including improper/cyclic rows.
+(def (checked-provider-rows rows terms)
+  (for-each
+   (lambda (row)
+     (let loop ((remaining row) (columns terms))
+       (if (null? columns)
+         (unless (null? remaining)
+           (error "ASCENT index provider returned wrong row arity" (length terms)))
+         (if (pair? remaining)
+           (loop (cdr remaining) (cdr columns))
+           (error "ASCENT index provider returned wrong row arity" (length terms))))))
+   rows)
+  rows)
+
 ;;; Index ownership includes discovery of the logical lookup requirements.
 ;;; The three execution owners supply admitted metadata, never row snapshots
 ;;; or evaluated key expressions, and retain their own independent roots.
@@ -201,7 +217,10 @@
                              (vector-ref atom 4) environment)))
                   (if permutation
                     (gerbil-ascent-shared-index-rows lookup columns key)
-                    (gerbil-ascent-physical-index-rows provider lookup key)))))))))
+                    (let (matched (gerbil-ascent-physical-index-rows provider lookup key))
+                      (if (gerbil-ascent-canonical-hash-index-provider? provider)
+                        matched
+                        (checked-provider-rows matched (vector-ref atom 1))))))))))))
       (def (advance-all-indexes! index new-rows (reverse-order? #f))
         (let (cache (and all-indexes (vector-ref all-indexes index)))
           (when (and cache (pair? new-rows))

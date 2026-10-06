@@ -7,6 +7,7 @@ import Tests.PositiveTraversalTests
 import Tests.PositiveConsequenceTests
 import Tests.IndexedPositiveTraversalTests
 import Tests.IndexedIterationTests
+import Tests.LeanPooAlignmentTests
 import Tests.ComponentClosureTests
 import Tests.GroundedBindingTests
 import Tests.ComponentProjectionTests

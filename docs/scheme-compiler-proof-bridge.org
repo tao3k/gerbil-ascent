@@ -925,3 +925,44 @@ and 83 Lake jobs. =stagedReuse= reports only =propext= and =Quot.sound=;
 the restoration control compiles as a kernel-checked pending-membership proof.
 This gate qualifies the updated Lean consumer; it supplies no new native
 performance or publication receipt.
+
+** Code alignment: indexed witness to source result
+
+[[file:../packages/proofs/lean/LeanPooAlignment.lean][LeanPooAlignment]] now consumes
+=LeanPoo.Functional.SolverTransport= directly. This is a concrete alignment
+of the existing ASCENT indexed iteration theorem with the producer's public
+input-indexed solver workflow:
+
+| Producer contract | ASCENT implementation |
+|-------------------+-----------------------|
+| =Problem.Input= | =Request= binds the exact initial database and round |
+| =Problem.Valid= | Compiled rule schema/frame/head validity, row admission and row monotonicity |
+| Target =Problem.Result/Correct= | Pair equals the actual =IndexedIteration.indexed= result |
+| Source =Problem.Result/Correct= | Database equals =IndexedIteration.naive= at round + 1 |
+| =CertifiedTransformation.forward/preserves= | Preserve the exact request and its admitted schema |
+| =extract/sound= | Select the newer snapshot; =indexed_iterations_equal= proves its source correctness |
+| =Solver= | =indexedSolver= returns the actual mathematical compiled result and exact-result proof |
+| =pullSolver= | =sourceSolver= transports that witness and certificate through the producer API |
+
+=supplied_solver_correct= covers any target solver certifying the same exact
+indexed result. It does not accept arbitrary equal-looking source IDs or
+unproved output. =sourceSolver_value= shows the transported data is exactly
+the target's newer snapshot, avoiding a separate reference evaluation in the
+extraction path. The correctness proposition compares it to the reference.
+
+[[file:../packages/proofs/lean/Tests/LeanPooAlignmentTests.lean][LeanPooAlignmentTests]] routes the existing empty-body seed/dependent-rule
+fixture through this API for every round. =routed_seed= proves the transported
+initial full round contains its seed; =wrong_snapshot_rejected= proves that
+extracting the older snapshot violates the source contract. This catches the
+round-offset distinction in the actual ASCENT result representation.
+
+The route reuses our semantic refinement and the producer's transport code.
+Its evaluator still uses mathematical databases, so it does not certify Scheme
+encoding, native index fidelity, actor publication or runtime speed. The C4
+provider-registry mapping discussed above remains a separate unimplemented
+capability; indexed witness transport is now implemented and qualified.
+
+Qualification: =direnv exec . just check-lean-proofs= completes with exit 0
+and 88 Lake jobs. The route, data equality, generic transport, routed fixture
+and wrong-snapshot rejection report only standard Lean axioms, without
+=sorryAx= or custom axioms.

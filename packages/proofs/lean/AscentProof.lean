@@ -31,3 +31,5 @@ import ComponentClosure
 import GroundedBinding
 import ComponentProjection
 import SnapshotClosure
+
+import LeanPooAlignment

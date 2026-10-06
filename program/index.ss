@@ -261,11 +261,20 @@
                              (vector-ref atom 4) environment)))
                   (if permutation
                     (gerbil-ascent-shared-index-rows lookup columns key)
-                    (let (matched (gerbil-ascent-physical-index-rows provider lookup key))
-                      (if (gerbil-ascent-canonical-hash-index-provider? provider)
-                        matched
-                        (checked-provider-rows matched (vector-ref atom 1)
-                                               (physical-index-entry-witness entry) key)))))))))))
+                    (if (gerbil-ascent-canonical-hash-index-provider? provider)
+                      (gerbil-ascent-physical-index-rows provider lookup key)
+                      ;; Open reads may mutate private state before raising or
+                      ;; returning a rejected packet. Revoke the shared entry
+                      ;; so every alias rebuilds from committed rows on retry.
+                      (with-catch
+                       (lambda (failure)
+                         (physical-index-entry-version-set! entry #f)
+                         (raise failure))
+                       (lambda ()
+                         (checked-provider-rows
+                          (gerbil-ascent-physical-index-rows provider lookup key)
+                          (vector-ref atom 1)
+                          (physical-index-entry-witness entry) key))))))))))))
       (def (advance-all-indexes! index new-rows (reverse-order? #f))
         (let (cache (and all-indexes (vector-ref all-indexes index)))
           (when (and cache (pair? new-rows))

@@ -55,6 +55,8 @@
 ;;; Every candidate must also belong to the snapshot supplied to this index;
 ;;; a delta index cannot return an old total-only fact. Keys may overselect
 ;;; existing candidates, but indexes cannot introduce new relation facts.
+;;; Failed dispatch or candidate admission revokes the engine cache version;
+;;; the next read rebuilds from committed rows and propagates the original error.
 ;;; Lookup must include every snapshot row with the requested key, once per
 ;;; candidate. The engine checks key coverage and duplicate enumeration.
 (.defgeneric (gerbil-ascent-index-provider-lookup provider index key)

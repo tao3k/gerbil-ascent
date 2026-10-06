@@ -83,6 +83,69 @@
 
 (def ascent-index-entry-test
   (test-suite "Engine-owned stable physical index entries"
+    (test-case "failed custom lookups revoke aliases without poisoning the other lane"
+      (for-each
+       (lambda (mode)
+         (let* ((corrupt? #f) (builds 0) (extensions 0)
+                (expected (map (lambda (n) (list 0 n)) (iota 32)))
+                (provider
+                 (.o (:: @ gerbil-ascent-hash-index-provider)
+                     (.build-index
+                      (lambda (rows columns)
+                        (set! builds (+ builds 1))
+                        ((.ref gerbil-ascent-hash-index-provider '.build-index) rows columns)))
+                     (.extend-index!
+                      (lambda (index rows columns)
+                        (set! extensions (+ extensions 1))
+                        ((.ref gerbil-ascent-hash-index-provider '.extend-index!) index rows columns)))
+                     (.lookup-index
+                      (lambda (index key)
+                        (when corrupt?
+                          (hash-put! index key
+                            (case mode
+                              ((non-list) 7) ((arity) '((0)))
+                              ((foreign) '((0 999)))
+                              ((duplicate) (list (car expected) (car expected)))
+                              (else [])))
+                          (when (eq? mode 'raise) (error "mutated lookup failure")))
+                        ((.ref gerbil-ascent-hash-index-provider '.lookup-index) index key)))))
+                (h (index-entry-harness #f expected provider))
+                (query (vector-ref h 0)) (advance! (vector-ref h 1))
+                (atom (index-entry-atom '(0) '(0) 2))
+                (alias (index-entry-atom (list 0) '(0) 2)))
+           (def (reject delta?)
+             (set! corrupt? #t)
+             (check-equal?
+              (with-catch (lambda (e) (error-message e))
+                (lambda () (query atom [] delta? #f) 'accepted))
+              (case mode
+                ((raise) "mutated lookup failure")
+                ((non-list) "ASCENT index provider returned non-list rows")
+                ((arity) "ASCENT index provider returned wrong row arity")
+                ((foreign) "ASCENT index provider returned foreign row")
+                ((duplicate) "ASCENT index provider returned duplicate row")
+                (else "ASCENT index provider omitted matching rows")))
+             (set! corrupt? #f))
+           (check-equal? (query atom [] #f #f) expected)
+           (check-equal? (query atom [] #t #f) expected)
+           (check-equal? builds 2)
+           (reject #f)
+           (check-equal? (query alias [] #t #f) expected)
+           (check-equal? builds 2)
+           ;; A revoked entry cannot be extended as if its cache were valid.
+           (advance! 0 '((0 32)))
+           (check-equal? extensions 0)
+           ;; No source version bump or manual repair is needed for recovery.
+           (check-equal? (query alias [] #f #f) expected)
+           (check-equal? builds 3)
+           (check-equal? (query atom [] #f #f) expected)
+           (check-equal? builds 3)
+           (reject #t)
+           (check-equal? (query alias [] #f #f) expected)
+           (check-equal? builds 3)
+           (check-equal? (query alias [] #t #f) expected)
+           (check-equal? builds 4)))
+       '(raise non-list arity foreign duplicate omitted)))
     (test-case "retained custom row spines cannot mutate roots batches or admitted packets"
       (let* ((retained #f) (extended-rows #f)
              (provider (.o (:: @ gerbil-ascent-hash-index-provider)

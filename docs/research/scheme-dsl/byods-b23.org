@@ -183,3 +183,23 @@ a concrete preservation condition for the Section 3/4 transfer, not general
 Provider refinement. Field values remain shared: nested-value stability and
 callback purity remain separate. Custom snapshot cost is explicit and no
 paper performance result is attributed to this change.
+
+* Failed read recovery at the Scheme boundary (2026-10-06)
+
+Section 4's =RelIndexRead= supplies the concretization used by rule consumers;
+logical index aliases must continue to represent the same facts. The paper
+does not specify recovery from effectful Scheme callbacks. Our implementation
+therefore needs a separate cache validity rule: a failed custom read cannot
+certify that its physical state still represents the committed source version.
+
+Lookup dispatch and complete candidate admission now form one failure boundary.
+A raised callback or rejected answer revokes only the selected physical entry's
+version and rethrows the original failure. Aliases rebuild that entry on their
+next read, while another all/delta lane keeps its own valid entry. Successful
+reads keep ordinary reuse; no automatic retry or callback correction is added.
+See the [[file:../../scheme-research-proof-audit.org][research audit]] and
+[[file:../../evidence/scheme-provider-lookup-recovery-20261006/receipt.json][native receipt]] for failure controls and source identity.
+
+Rebuilding requires a Provider that can build a valid index again. Shared
+nested field stability, external effects and general storage rollback remain
+separate premises; this is not a new DLDS theorem or a performance claim.

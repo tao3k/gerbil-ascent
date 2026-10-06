@@ -1557,3 +1557,38 @@ remain separate obligations. Trusted canonical and engine-owned shared paths
 retain their existing representations. Custom copying costs scale with batch
 size times row width; no speed or allocation improvement is claimed here.
 No Lean/TLA source is changed by this Scheme implementation.
+
+* B23 native correspondence: revoke failed custom reads (2026-10-06)
+
+[[https://kmicinski.com/assets/byods.pdf][B23 Section 4, PDF page 11]] connects index reads with concretization and
+requires logical indices of one relation to agree. Its formal interface does
+not define exception recovery for effectful Scheme receiver callbacks. This
+implementation gap is ours: build and extend already handle failed mutable
+physical state, but lookup previously left the entry marked as current.
+
+A custom receiver can overwrite a bucket before raising, or return that
+corrupted bucket for boundary rejection. Source rows and their version remain
+unchanged. Retaining the physical entry then authorizes reuse or incremental
+extension of a cache that no longer represents those rows.
+
+The custom lookup branch now catches failures from both receiver dispatch and
+whole-batch admission. It clears the selected entry's version and rethrows the
+same exception. A later read through an equivalent atom rebuilds from the
+committed snapshot; the separate all/delta entry is unaffected. Successful
+custom reads retain cache reuse and callback order. Key expressions are still
+evaluated outside this boundary, after build and once per lookup: an expression
+failure has not dispatched the mutable Provider and does not revoke its entry.
+Canonical and shared engine-owned paths retain their existing dispatch.
+
+Native controls independently inject a raised error, non-list packet, wrong
+arity, foreign row, duplicate enumeration and omitted key group. They check
+original diagnostics, alias recovery without changing source versions,
+revoked-entry extension refusal, successful-hit reuse and reciprocal all/delta
+isolation. Session controls compare recovered materialization with all 32
+independently enumerated source facts. The
+[[file:evidence/scheme-provider-lookup-recovery-20261006/receipt.json][receipt]] retains the unrepaired discriminator and qualified source hashes.
+
+No automatic retry occurs inside a failing read. Rebuild can still fail if the
+Provider remains invalid. Nested field stability, host side effects and general
+storage refinement remain open. No Lean/TLA source or performance claim is
+changed by this Scheme repair.

@@ -942,3 +942,21 @@ zero under the unchanged progress contract. Existing exact-budget parity,
 failed publication, complete-alternative tampering and last cyclic support
 controls remain included. The complete Lean collection passes 84 build jobs.
 See the [[file:evidence/scheme-founded-recovery-20261006/receipt.json][source-bound recovery receipt]].
+
+** Native owner boundaries and package policy acceptance
+
+GitHub Scheme job =112186600199= at =80f1af4= failed before runtime tests:
+ASP rejected =program/evaluate.ss= at 1010 effective lines. An intermediate
+index extraction still had 1000 lines and was rejected. Neither outcome is a
+native Runtime stall or an accepted test run.
+
+Logical requirement discovery now belongs to =program/index.ss=. Engine rules
+and compiled SCC/actor actions use its registration functions in original order;
+no key expression is evaluated during registration. Actor capability admission
+belongs to =program/actor-round.ss= and retains exactly the prior purity,
+canonical Set/index, lattice and field-callback restrictions. Each executor
+still owns separate all/delta physical roots. The source policy threshold is
+unchanged; the actual complete package build passes with 13 advisory findings
+and zero hard errors. The concurrent =735f610= prepared atomic transaction
+update is integrated. Complete native/formal and exact-head GitHub acceptance
+must separately qualify this combined source.

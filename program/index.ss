@@ -14,9 +14,54 @@
                  gerbil-ascent-physical-index-single-rows)
         (only-in :gerbil-ascent/table/provider gerbil-ascent-canonical-hash-index-provider?
                  gerbil-ascent-curried-index-provider?))
-(export gerbil-ascent-make-row-indexes row-indexes-rows row-indexes-advance! row-indexes-plan-atoms!)
+(export gerbil-ascent-make-row-indexes row-indexes-rows row-indexes-advance! row-indexes-plan-atoms! row-indexes-plan-rules! row-indexes-plan-actions!)
 
 (defstruct row-indexes (rows advance! plan-atoms!))
+
+;;; Index ownership includes discovery of the logical lookup requirements.
+;;; The three execution owners supply admitted metadata, never row snapshots
+;;; or evaluated key expressions, and retain their own independent roots.
+;; row-indexes-plan-rules!
+;; : (forall (i r) (-> (RowIndexes i) [(RulePlan r)] Void))
+;; : (-> RowIndexes AdmittedRulePlans Void)
+;; | doc m%
+;;     Register logical atoms in original rule and clause order. Negative and
+;;     aggregate lookup requirements retain their admitted atom metadata.
+;;
+;;     # Examples
+;;
+;;     ```scheme
+;;     (row-indexes-plan-rules! indexes rule-plans)
+;;     ;; => registers engine-owned logical lookup requirements
+;;     ```
+;;   %
+(def (row-indexes-plan-rules! indexes rules)
+  ((row-indexes-plan-atoms! indexes)
+   (foldr append []
+    (map (lambda (rule)
+           (filter-map (lambda (clause)
+                         (and (memq (vector-ref clause 0) '(atom negation aggregate))
+                              (vector-ref clause 1)))
+                       (vector-ref rule 1))) rules))))
+
+;; row-indexes-plan-actions!
+;; : (forall (i a) (-> (RowIndexes i) [(CompiledAction a)] Void))
+;; : (-> RowIndexes AdmittedPositiveActions Void)
+;; | doc m%
+;;     Register immutable compiled lookup atoms for a private worker. Do not
+;;     evaluate callbacks, reorder actions or share the worker's physical roots.
+;;
+;;     # Examples
+;;
+;;     ```scheme
+;;     (row-indexes-plan-actions! indexes actions)
+;;     ;; => registers worker-owned compiled lookup requirements
+;;     ```
+;;   %
+(def (row-indexes-plan-actions! indexes actions)
+  ((row-indexes-plan-atoms! indexes)
+   (filter-map (lambda (action)
+                 (and (vector? (vector-ref action 0)) (vector-ref action 0))) actions)))
 
 ;;; Stable entries belong to one engine. Column tables share them across
 ;;; equivalent atoms; identity tables only shortcut that structural resolution.

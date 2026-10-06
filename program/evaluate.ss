@@ -5,7 +5,7 @@
 ;;; Generic stratified semi-naive evaluator. Mutable row buffers belong to one
 ;;; session; public declarations and returned snapshots are POO values.
 (import (only-in "positive-components.ss" gerbil-ascent-run-positive-components! gerbil-ascent-component-mode?)
-        (only-in "actor-round.ss" gerbil-ascent-run-actor-round!)
+        (only-in "actor-round.ss" gerbil-ascent-run-actor-round! gerbil-ascent-actor-round-eligible?)
         (only-in "source-log.ss" gerbil-ascent-source-log-rows)
         (only-in :clan/poo/object .o .ref object?)
         (only-in :clan/poo/mop validate)
@@ -18,8 +18,8 @@
                  gerbil-ascent-result-observation gerbil-ascent-public-snapshot-rows)
         (only-in "planning.ss" gerbil-ascent-prepare-program)
         (only-in :gerbil-ascent/core/positive-plan gerbil-ascent-run-positive-plan!
-                 gerbil-ascent-emit-heads! gerbil-ascent-pure-positive-plan?)
-        (only-in "index.ss" gerbil-ascent-make-row-indexes row-indexes-rows row-indexes-advance! row-indexes-plan-atoms!)
+                 gerbil-ascent-emit-heads!)
+        (only-in "index.ss" gerbil-ascent-make-row-indexes row-indexes-rows row-indexes-advance! row-indexes-plan-rules! row-indexes-plan-actions!)
         (only-in "types.ss" GerbilAscentSessionContract)
         (only-in "reuse.ss" gerbil-ascent-prepare-native-reuse
                  gerbil-ascent-activate-rules gerbil-ascent-activate-selected-rules native-reuse?
@@ -296,14 +296,7 @@
                      (gerbil-ascent-prepare-program
                       relations rules schema plan-error)))))
              (rule-plans (vector-ref analysis 2))
-             (_index-layout
-              ((row-indexes-plan-atoms! indexes)
-               (foldr append []
-                (map (lambda (rule)
-                       (filter-map (lambda (clause)
-                                     (and (memq (vector-ref clause 0) '(atom negation aggregate))
-                                          (vector-ref clause 1)))
-                                   (vector-ref rule 1))) rule-plans))))
+             (_index-layout (row-indexes-plan-rules! indexes rule-plans))
              (rule-ticks (and measure-rule-times?
                               (make-vector (length rules) 0)))
              (strata (vector-ref analysis 3))
@@ -605,13 +598,8 @@
               (gerbil-ascent-run-positive-components! analysis schema all workers emit-row!
                                                        (or canceled? (lambda () #f)))
             (if (and (or (> workers 1) canceled?)
-                     (andmap (lambda (rule) (gerbil-ascent-pure-positive-plan? (vector-ref rule 5))) active-rules)
-                     (andmap gerbil-ascent-canonical-set-storage-provider?
-                             (vector->list storage-providers))
-                     (andmap gerbil-ascent-canonical-hash-index-provider?
-                             (vector->list index-providers))
-                     (andmap not (vector->list lattice-joins))
-                     (andmap not (vector->list field-checkers)))
+                     (gerbil-ascent-actor-round-eligible? active-rules storage-providers
+                                                        index-providers lattice-joins field-checkers))
               (let ((frozen-all (vector-copy all)) (frozen-delta (vector-copy delta))
                     (frozen-all-size (vector-copy all-size)) (frozen-delta-size (vector-copy delta-size))
                     (frozen-all-version (vector-copy all-version)) (frozen-delta-version (vector-copy delta-version)))
@@ -628,10 +616,7 @@
                             frozen-all frozen-delta frozen-all-size frozen-delta-size
                             frozen-all-version frozen-delta-version index-providers))
                           (_private-layout
-                           ((row-indexes-plan-atoms! private-indexes)
-                            (filter-map (lambda (action)
-                              (and (vector? (vector-ref action 0)) (vector-ref action 0)))
-                              (vector-ref plan 1))))
+                           (row-indexes-plan-actions! private-indexes (vector-ref plan 1)))
                           (rows (row-indexes-rows private-indexes))
                           (pivots (vector-ref rule 2))
                           (prunable (vector-ref rule 4)))

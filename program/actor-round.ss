@@ -1,7 +1,32 @@
 ;;; -*- Gerbil -*-
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
-(export gerbil-ascent-run-actor-round!)
+(import (only-in :gerbil-ascent/core/positive-plan gerbil-ascent-pure-positive-plan?)
+        (only-in :gerbil-ascent/table/storage gerbil-ascent-canonical-set-storage-provider?)
+        (only-in :gerbil-ascent/table/provider gerbil-ascent-canonical-hash-index-provider?))
+(export gerbil-ascent-run-actor-round! gerbil-ascent-actor-round-eligible?)
+
+;; gerbil-ascent-actor-round-eligible?
+;; : (forall (r s i l f) (-> [r] (Vector s) (Vector i) (Vector l) (Vector f) Boolean))
+;; : (-> AdmittedRulePlans StorageProviders IndexProviders LatticeJoins FieldCheckers Boolean)
+;; | doc m%
+;;     Admit parallel computation only for pure plans and private canonical Set
+;;     storage/index receivers, without lattice or user field callbacks. The
+;;     evaluator still owns worker options and the private source/frontier cut.
+;;
+;;     # Examples
+;;
+;;     ```scheme
+;;     (gerbil-ascent-actor-round-eligible? rules storages indexes joins fields)
+;;     ;; => #t only when each computation/Provider permits actor execution
+;;     ```
+;;   %
+(def (gerbil-ascent-actor-round-eligible? rules storages indexes joins fields)
+  (and (andmap (lambda (rule) (gerbil-ascent-pure-positive-plan? (vector-ref rule 5))) rules)
+       (andmap gerbil-ascent-canonical-set-storage-provider? (vector->list storages))
+       (andmap gerbil-ascent-canonical-hash-index-provider? (vector->list indexes))
+       (andmap not (vector->list joins))
+       (andmap not (vector->list fields))))
 
 ;;; A worker owns one task and at most one 32-row batch awaiting owner credit.
 ;;; Workers and their joining monitors live for one round and are reused only

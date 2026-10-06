@@ -1,0 +1,119 @@
+#+title: Invocation-owned absence checking plans
+
+* Gerbil source lesson
+
+In Gerbil 2591dcd, =compiler/optimize.ss:27-29= owns symbol-keyed
+mutator and local-type tables for one optimization invocation.
+=compiler/optimize-xform.ss:108-113= records binding identity once;
+=compiler/optimize-top.ss:17-19= queries that analysis instead of rescanning
+syntax. =compiler/optimize-call.ss:89-131= admits lambda substitution only
+after checking arity and immutability, retaining other operands in ordered
+bindings. The useful pattern is to separate static analysis from repeated
+execution and admit elimination using a specific invariant.
+
+* Production change
+
+=candidate/nonmembership.ss= groups admitted proof rows by relation once
+rather than filtering all proof nodes separately for every declaration.
+Schema order and node order remain authoritative; every emitted row is copied.
+The producer retains the same finite saturation and certificate size checks.
+
+The independent verifier builds its own symbol index only after certificate
+size, snapshot/program/query binding, schema, uniqueness and scalar checks.
+Empty, singleton and pair schemas use direct relation lookup, avoiding
+a symbol table for those bounded shapes. General schemas use an invocation-owned
+symbol index. Each relation entry owns the membership table and references the supplied
+ordered row list. Neither producer indexes nor proof results are trusted by
+the verifier. First-declaration behavior and missing-name behavior are kept.
+
+For each reached rule, the verifier lowers term kinds and resolves body row
+sequences once. It reuses =core/rule-bindings.ss='s pure row binder; variable
+patterns remain ordinary variables, with no fresh-variable assumption.
+Repeated variables, false values, constants and wildcards therefore retain
+matching behavior. Fixed clauses retain their original scalar evaluator.
+
+If the rule head is exactly a positive body atom and has no wildcard, a
+successful instance already witnesses the head in the supplied closure.
+Only the terminal head-row allocation and membership lookup are omitted.
+Every rule instance is still traversed in the same order and charged the
+same work. This preserves exact bounded/invalid priority. Other heads use
+ordinary independent membership checks. No index or prepared descriptor
+escapes one verification invocation or changes the external certificate.
+
+* Qualification
+
+=just performance-nonmembership-index= uses the installed SDK and public
+ASP =benchmark-run/result= for 50 alternating matched pairs per scenario.
+=benchmark.ss= was created by public =make-benchmark-fixture=.
+=reference.ss= is the byte-identical complete production module at
+=25e41c07d92e4f7b599a80884dc53b188fce33e9=; dependencies are shared unchanged.
+All generated files, binaries, logs and receipts live in ignored
+=.cache/ascent/nonmembership-index/=. Test/build integration stays in =t/=
+and =justfile=; =build.ss= has no changes.
+
+The timed operation is the entire public independent verifier, including
+snapshot structure and digest validation, certificate binding and row
+admission, construction of private indexes, rule preparation and all finite
+rule instances. Input construction and producer calls are outside timing.
+Both producers must emit the independently expected input closure and a
+complete certificate before sampling. Inner CPU/cumulative allocated bytes
+are distinct from ASP wall/heap occupancy diagnostics. No producer or
+whole-solver speedup is claimed.
+
+=wide= has 64 unary relations, 16 rows per relation and 64 rules, each with
+two body atoms and an identical head/body atom. The absent query is -1;
+identity rules cannot expand the independently known input closure.
+It requires CPU <= 80% of baseline, >=35/50 CPU wins and at most 8 KiB extra
+allocation. These gates were set before the first measurements.
+=uncovered= keeps the same relation and rule counts but uses a different
+first-body relation, so its head is not covered by any body atom. Its control
+requires CPU <= 105% plus 20 us and at most 64 KiB extra allocation, accounting
+for prepared rules while retaining all terminal checks. This control was
+added before sampling the covered-head implementation.
+=small= has two relations, two rows and one rule, with CPU <=105% plus 20 us
+and at most 2 KiB extra allocation. Main and small gates were never relaxed.
+
+=ascent-nonmembership-index-test.ss= checks all budgets 1..60 against both
+implementations and an independently counted 49-step identity-rule boundary.
+It covers late relation lookup, ordered detached closure, source isolation,
+false literals, repeated variables, wildcards, filters/computations, extra
+rows, duplicates, omitted input and a forged present target. The existing
+nonmembership suite covers real missing derived tuples, incomplete/nonpositive
+programs, mutable snapshots, omitted rule conclusions and external size caps.
+
+* Retained negative measurements
+
+The relation index alone yielded 8945 -> 8166 us (41/50 wins), with allocation
+3436768 -> 3441872 bytes. It failed the original 20% CPU gate.
+Receipts: =wide-relation-only.sexp= and =relation-only.log=.
+
+Static term lowering and pre-resolved rows yielded 6865 -> 5824 us
+(46/50 wins), allocation 3436768 -> 3474640 bytes. It failed both CPU and
+allocation gates. Receipts: =wide-lowered-terms.sexp= and =lowered-terms.log=.
+These partial experiments are not promoted as completed improvements.
+
+The initial covered-head plan passed wide/uncovered CPU gates but the small
+control allocated 45248 -> 48192 bytes, exceeding the unchanged 2 KiB cap.
+Receipts: =small-eager-index.sexp= and =eager-index.log=. The final version
+uses direct lookup for empty/singleton/pair schemas and does not lower or
+resolve an already covered head.
+
+* Final local native measurements
+
+All three fixed scenario gates pass 50 native pairs:
+
+| Scenario  | Old CPU us | New CPU us | Old bytes | New bytes | CPU wins |
+|-----------+------------+------------+-----------+-----------+----------|
+| wide      | 6096       | 3799       | 3436768   | 2685168   | 48/50    |
+| uncovered | 5579       | 4728       | 3436064   | 3477040   | 48/50    |
+| small     | 27         | 27         | 45248     | 45648     | 26/50    |
+
+Wide CPU improves about 38% and cumulative allocation about 22%.
+The uncovered-head control improves CPU about 15% with 40 KiB extra
+allocation; small is approximately flat with 400 bytes extra allocation.
+Results apply to these explicit verifier shapes,
+not actor scheduling, producer saturation or end-to-end reasoning throughput.
+
+The two native suites pass all 12 Cases with process exit zero, explicit
+=MODULE-OK=, =HARNESS-OK= and =OK=. The selected production source policy
+reports zero findings and zero errors.

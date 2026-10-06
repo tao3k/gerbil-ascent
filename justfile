@@ -167,6 +167,20 @@ _performance-index-projection:
         timeout 90s .cache/ascent/index-projection/native-entry {{ gerbil_test_runtime_options }} "$scenario" "$library" ".cache/ascent/index-projection/$scenario.sexp"
     done
 
+# Matched complete independent absence verification using the public ASP API.
+performance-nonmembership-index:
+    {{ test_runner }} run -- just _performance-nonmembership-index
+
+_performance-nonmembership-index:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    library="{{ justfile_directory() }}/.cache/ascent/native-library/lib"
+    mkdir -p .cache/ascent/nonmembership-index
+    gxi {{ gerbil_test_runtime_options }} t/performance/nonmembership-index-build.ss "$library" "{{ justfile_directory() }}/.cache/ascent/nonmembership-index/native-entry"
+    for scenario in wide uncovered small; do
+        timeout 90s .cache/ascent/nonmembership-index/native-entry {{ gerbil_test_runtime_options }} "$scenario" "$library" ".cache/ascent/nonmembership-index/$scenario.sexp"
+    done
+
 # Matched complete temporal projection through the public ASP benchmark API.
 performance-temporal-projection:
     {{ test_runner }} run -- just _performance-temporal-projection

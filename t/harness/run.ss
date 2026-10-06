@@ -47,6 +47,7 @@
     "t/qualification/ascent-multi-frontier-test.ss"
     "t/qualification/ascent-poo-primitives-test.ss"
     "t/qualification/ascent-positive-nonmembership-test.ss"
+    "t/qualification/ascent-nonmembership-index-test.ss"
     "t/qualification/ascent-positive-plan-test.ss"
     "t/qualification/ascent-positive-components-test.ss"
     "t/qualification/ascent-positive-provenance-test.ss"
@@ -126,6 +127,8 @@
                           '("t/performance/native-library" "t/performance/ascent-ss-profile"
                             "t/scenarios/performance/ascent-table-expression/baseline"
                             "t/harness/artifact" "t/harness/prediction" "t/harness/actor-pool")
+                          (if (member "t/qualification/ascent-nonmembership-index-test.ss" tests)
+                            '("t/performance/nonmembership-index/reference" "t/performance/nonmembership-index/input") [])
                           (if (member "t/qualification/ascent-temporal-projection-test.ss" tests)
                             '("t/performance/temporal-projection/reference") [])
                           (if (member "t/qualification/ascent-uf-commit-test.ss" tests)

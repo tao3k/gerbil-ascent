@@ -606,3 +606,23 @@ been admitted as canonical inert data. Exact point bounds then use direct
 comparisons; supplied callbacks retain their original repeated evaluation.
 Native mutation-order tests qualify that fallback, and source policy has zero
 findings/errors after the field ownership comments are added.
+
+* Prepare absence verification per invocation
+
+Gerbil's mutator analysis owns symbol identity lookup in =optimize!= and
+separates collection from repeated transformation. Lambda substitution in
+=optimize-call.ss= is admitted by arity/immutability checks before eliminating
+work. Apply these principles to finite absence verification:
+
+- Group admitted proof rows once while retaining ordered external declarations.
+- Build an independent verifier index after certificate admission; preserve
+  ordered row enumeration for exact budget accounting.
+- Classify inspected static terms once per reached rule and reuse the pure
+  core row binder, without inventing a fresh-variable assumption.
+- Eliminate a terminal membership check only when an exactly identical positive
+  body atom witnesses the head. Continue traversing and charging every instance.
+
+The relation index alone and subsequent static term lowering failed the fixed
+native performance gates; the retained experiments and complete qualification
+scope are in =t/performance/nonmembership-index/README.org=. Do not infer
+whole-solver or producer performance from a verifier benchmark.

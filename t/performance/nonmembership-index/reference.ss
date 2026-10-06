@@ -7,7 +7,6 @@
 ;;; program and one copied input snapshot. This says nothing about whether
 ;;; the caller supplied every real-world source fact.
 (import (only-in :gerbil-ascent/candidate/datum candidate-copy-pairs)
-        (only-in :gerbil-ascent/core/rule-bindings gerbil-ascent-bind-row)
         (only-in :gerbil-ascent/candidate/certificate-limits
                  +max-certificate-relations+ +max-certificate-rows+
                  +max-certificate-cells+ +max-certificate-row-arity+
@@ -24,7 +23,7 @@
                  candidate-variable? scalar?)
         (only-in :gerbil-ascent/candidate/funs
                  candidate-schema-of
-                 candidate-fixed-clause)
+                 candidate-bind-atom candidate-fixed-clause)
         (only-in :gerbil-ascent/candidate/provenance
                  candidate-positive-closed-absence positive-proof-status
                  positive-proof-nodes proof-node-relation proof-node-row
@@ -135,48 +134,37 @@
         (case status
           ((bounded) (result 'bounded []))
           ((closed-absent)
-           ;; Group the admitted proof once. The ordered schema still owns
-           ;; declaration order; reversing each bucket restores node order.
-           (let (grouped (make-hash-table-eq))
-             (for-each
-              (lambda (node)
-                (let (name (proof-node-relation node))
-                  (hash-put! grouped name
-                    (cons (proof-node-row node)
-                          (or (hash-get grouped name) [])))))
-              (positive-proof-nodes witness))
+           (let (nodes (positive-proof-nodes witness))
              (let (closure
                    (map
                     (lambda (declaration)
                       (list
                        (car declaration) (cadr declaration)
-                       (map candidate-copy-pairs
-                            (reverse (or (hash-get grouped (car declaration)) [])))))
+                       (map (lambda (node)
+                              (candidate-copy-pairs (proof-node-row node)))
+                            (filter
+                             (lambda (node)
+                               (eq? (proof-node-relation node)
+                                    (car declaration)))
+                             nodes))))
                     (certificate-schema-of snapshot spec)))
                (if (certificate-size-valid? closure)
                  (result 'complete closure)
                  (result 'bounded [])))))
           (else (result 'unsupported [])))))))
 
-;;; Lower only static term kinds, after certificate admission. Variable names
-;;; remain candidate symbols; this plan makes no fresh-binding assumption.
-;; : (-> Terms BindingPatterns)
-(def (binding-patterns terms (wildcards? #t))
-  (map (lambda (term)
-         (cons (cond ((and wildcards? (eq? term '?_)) 'wildcard)
-                     ((candidate-variable? term) 'variable)
-                     (else 'literal))
-               term))
-       terms))
+;; : (forall (v) (-> (Atom v) (Row v) (Bindings v) (Maybe (Bindings v))))
+;; : (-> Atom Row Bindings (Maybe Bindings))
 
-;; : (forall (v) (-> (Patterns v) (Bindings v) (Row v)))
-;; : (-> BindingPatterns Bindings Row)
+
+;; : (forall (v) (-> (Atom v) (Bindings v) (Row v)))
+;; : (-> Atom Bindings Row)
 (def (head-row head bindings)
   (map (lambda (term)
-         (if (eq? (car term) 'variable)
-           (cdr (assq (cdr term) bindings))
-           (cdr term)))
-       head))
+         (if (candidate-variable? term)
+           (cdr (assq term bindings))
+           term))
+       (cdr head)))
 
 ;;; The checker treats the supplied closure as an inductive invariant:
 ;;; every input tuple belongs to it, and every rule instance over it has
@@ -263,34 +251,21 @@
         closure))
      'invalid)
      (else
-      ;; Empty, singleton and pair schemas have bounded direct lookup; a
-      ;; symbol table pays for itself only for the general schema shape.
-      (let* ((steps preflight) (bounded? #f) (invalid? #f)
-             (direct? (match closure ([] #t) ([_] #t) ([_ _] #t) (else #f)))
-             (index (if direct? [] (make-hash-table-eq size: (length closure)))))
-        (def (relation-entry name)
-          (if direct?
-            (let (entry (assq name index)) (and entry (cdr entry)))
-            (hash-get index name)))
-        ;; This checker owns its index after size, binding and row admission.
-        ;; Keep the supplied row sequence for enumeration and budget charging;
-        ;; the membership table never supplies an iteration order.
-        (for-each
-         (lambda (entry)
-           (let (present (make-hash-table))
-             (for-each (lambda (row) (hash-put! present row #t)) (caddr entry))
-             ;; Retain assq's first-declaration behavior for supplied schemas.
-             (unless (relation-entry (car entry))
-               (let (value (cons (caddr entry) present))
-                 (if direct?
-                   (set! index (cons (cons (car entry) value) index))
-                   (hash-put! index (car entry) value))))))
-         closure)
+      (let ((steps preflight) (bounded? #f) (invalid? #f)
+            (index
+             (map
+              (lambda (entry)
+                (let (present (make-hash-table))
+                  (for-each
+                   (lambda (row) (hash-put! present row #t))
+                   (caddr entry))
+                  (cons (car entry) present)))
+              closure)))
         (def (rows name)
-          (let (entry (relation-entry name))
-            (if entry (car entry) [])))
+          (let (entry (assq name closure))
+            (if entry (caddr entry) [])))
         (def (contains? name row)
-          (let (entry (relation-entry name))
+          (let (entry (assq name index))
             (and entry (hash-get (cdr entry) row))))
         (unless bounded?
           (for-each
@@ -314,45 +289,23 @@
         (unless (or bounded? invalid?)
           (for-each
            (lambda (rule)
-             ;; Prepare this rule once, keeping body order and row ownership.
-             ;; A descriptor is (fixed? payload rows); fixed clauses retain
-             ;; their checked scalar evaluator and their original work charge.
-             (let* ((head (vector-ref rule 0))
-                    ;; An identical positive body atom witnesses head
-                    ;; membership for every successful instance. Keep walking
-                    ;; and charging all instances; only the terminal lookup is
-                    ;; redundant. Wildcard heads receive no such admission.
-                    (covered-head?
-                     (and (not (memq '?_ (cdr head)))
-                          (ormap (lambda (clause)
-                                   (and (not (positive-fixed-clause? clause))
-                                        (equal? head clause)))
-                                 (vector-ref rule 1))))
-                    (head-patterns (if covered-head? [] (binding-patterns (cdr head) #f)))
-                    (head-entry (and (not covered-head?) (relation-entry (car head))))
-                    (body (map (lambda (clause)
-                                 (if (positive-fixed-clause? clause)
-                                   (vector #t clause [])
-                                   (vector #f (binding-patterns (cdr clause))
-                                           (rows (car clause)))))
-                               (vector-ref rule 1))))
+             (let ((head (vector-ref rule 0))
+                   (body (vector-ref rule 1)))
                (def (walk remaining bindings)
                  (unless (or bounded? invalid?)
                    (if (null? remaining)
-                     (unless (or covered-head?
-                                 (and head-entry
-                                      (hash-get (cdr head-entry)
-                                                (head-row head-patterns bindings))))
+                     (unless (contains? (car head)
+                                        (head-row head bindings))
                        (set! invalid? #t))
                      (let (clause (car remaining))
-                       (if (vector-ref clause 0)
+                       (if (positive-fixed-clause? clause)
                          (begin
                            (set! steps (+ steps 1))
                            (if (> steps max-checks)
                              (set! bounded? #t)
                              (let (next
                                    (candidate-fixed-clause
-                                    (vector-ref clause 1) bindings))
+                                    clause bindings))
                                (when next
                                  (walk (cdr remaining) next)))))
                          (for-each
@@ -362,11 +315,10 @@
                               (if (> steps max-checks)
                                 (set! bounded? #t)
                                 (let (next
-                                      (gerbil-ascent-bind-row
-                                       (vector-ref clause 1) row bindings))
+                                      (candidate-bind-atom clause row bindings))
                                   (when next
                                     (walk (cdr remaining) next))))))
-                          (vector-ref clause 2)))))))
+                          (rows (car clause))))))))
                (walk body [])))
            (reasoning-candidate-rules spec)))
         (cond

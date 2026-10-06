@@ -307,3 +307,29 @@ unit cannot discharge it for general winner-row lattices. The new test makes
 this false premise explicit. This is a proof-scope discriminator, not evidence
 that every native lattice program fails. General lattice transfer needs its own
 concretization and consumer contracts before the actor eligibility is broadened.
+
+One candidate for preserving ordered full export is a persistent injection
+journal with source/append events and derived-round boundaries. A frozen result
+could replay only the deterministic native UF kernel when full ordered rows are
+requested, while ordinary keyed reads use its compressed snapshot. The journal
+must retain derived injections separately from source recovery logs; they must
+never be replayed as authoritative sources during Session reconstruction. It
+must also encode each round's historical emission orientation. Acceptance needs
+exact legacy order, bounded full-export cost and measured retained journal size.
+This candidate is not implemented here and does not promise linear storage for
+arbitrary dense injections or DAG component reachability.
+
+** Qualified source and remaining release gate
+
+Implementation =20401286a7e477c9b1dd756978a8e0019d2a3003= includes the concurrent
+index-occurrence repair. Its full native inventory passes 84 modules and 781
+Cases, with 84 native-ready markers, 84 explicit =OK= markers, exit zero and no
+watchdog failure. Lean passes all 90 jobs; ProviderViews explores 44,172 distinct
+states at TLC bound 4 and detects all five intended faults. Final package policy
+exits zero with zero errors and 18 advisory findings. The receipt binds 546
+Scheme sources, relevant owner hashes and retained transcript hashes.
+
+The earlier full build changed its frozen Justfile during compilation and was
+rejected before tests. It is retained as failed preparation, not combined with
+the successful inventory. GitHub acceptance of the published commit remains a
+separate release gate. No new model call or whole-engine benefit is claimed.

@@ -2,6 +2,7 @@
 -- SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 import FiniteHeight
 import ProviderFrontier
+import DirectedFrontier
 
 /-! Compressed positive relation frontiers. These laws concern frozen member
 lists, not mutable Scheme parent pointers, protocol steps or arbitrary lattices. -/
@@ -106,4 +107,64 @@ Set membership. Disjointness is essential to unique-fact budget semantics. -/
 theorem duplicate_rectangle (r : Rectangle α) :
     count [r, r] = 2 * (rows r).length := by
   simp [count, rectangle_length, Nat.two_mul]
+/-- Whole-component rejection is sound only when old membership is uniform
+inside every rectangle. Arbitrary rectangles do not satisfy this premise. -/
+def Uniform (old : α × α → Prop) (rs : List (Rectangle α)) : Prop :=
+  ∀ r ∈ rs, ∀ p ∈ rows r, ∀ q ∈ rows r, old p → old q
+
+noncomputable def freshRectangles (old : α × α → Prop) (rs : List (Rectangle α)) := by
+  classical
+  exact rs.filter fun r => decide (∀ p ∈ rows r, ¬ old p)
+
+theorem selected_member (old : α × α → Prop) (rs : List (Rectangle α))
+    (uniform : Uniform old rs) (p : α × α) :
+    p ∈ expand (freshRectangles old rs) ↔ p ∈ expand rs ∧ ¬ old p := by
+  classical
+  simp only [expand, List.mem_flatMap, freshRectangles, List.mem_filter,
+    decide_eq_true_eq]
+  constructor
+  · rintro ⟨r, ⟨member, fresh⟩, present⟩
+    exact ⟨⟨r, member, present⟩, fresh p present⟩
+  · rintro ⟨⟨r, member, present⟩, absent⟩
+    refine ⟨r, ⟨member, ?_⟩, present⟩
+    intro q known prior
+    exact absent (uniform r member q known p present prior)
+
+theorem selected_nodup (old : α × α → Prop) (rs : List (Rectangle α))
+    (members : ∀ r ∈ rs, r.left.Nodup ∧ r.right.Nodup)
+    (separate : Separate rs) : (expand (freshRectangles old rs)).Nodup := by
+  classical
+  apply expansion_nodup
+  · intro r present
+    exact members r (List.mem_filter.mp present).1
+  · exact List.Pairwise.filter _ separate
+
+/-- Derive exact UF delta from the insertion law and a candidate encoding;
+no Exact-frontier premise is assumed. Native decoding and SCC partition
+homogeneity remain implementation obligations. -/
+theorem uf_selected_exact (state : DirectedFrontier.State α) (a b : α)
+    (rs : List (Rectangle α))
+    (encoding : ∀ p, p ∈ expand rs ↔ DirectedFrontier.ufCandidate state a b p.1 p.2)
+    (uniform : Uniform (fun p => DirectedFrontier.ufVisible state p.1 p.2) rs) :
+    Exact (fun p => DirectedFrontier.ufVisible state p.1 p.2)
+      (fun p => DirectedFrontier.ufVisible (DirectedFrontier.extendState state a b) p.1 p.2)
+      (freshRectangles (fun p => DirectedFrontier.ufVisible state p.1 p.2) rs) := by
+  intro p
+  rw [← expansion_member, selected_member _ rs uniform p, encoding p]
+  exact DirectedFrontier.uf_emitted_exact state a b p.1 p.2
+
+/-- Component rectangles are homogeneous whenever each side has one root
+and visible reachability is determined by the ordered root pair. -/
+theorem component_uniform (root : α → C) (visible : C → C → Prop)
+    (rs : List (Rectangle α))
+    (components : ∀ r ∈ rs, ∀ x ∈ r.left, ∀ y ∈ r.left, root x = root y)
+    (targets : ∀ r ∈ rs, ∀ x ∈ r.right, ∀ y ∈ r.right, root x = root y) :
+    Uniform (fun p => visible (root p.1) (root p.2)) rs := by
+  intro r member p hp q hq old
+  have pp := (rectangle_member r p.1 p.2).mp hp
+  have qq := (rectangle_member r q.1 q.2).mp hq
+  rw [← components r member p.1 pp.1 q.1 qq.1,
+      ← targets r member p.2 pp.2 q.2 qq.2]
+  exact old
+
 end Ascent.ProviderRectangles

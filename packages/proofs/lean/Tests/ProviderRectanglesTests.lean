@@ -40,4 +40,24 @@ example : ¬ (∀ before after : Nat, after ≤ before →
 #print axioms lookup_exact
 #print axioms budget_exact
 #print axioms duplicate_rectangle
+-- A mixed rectangle is a genuine counterexample to whole-rectangle rejection:
+-- (0,3) is fresh, but retaining only entirely fresh rectangles loses it.
+example : (0, 3) ∈ expand bridge ∧
+    (0, 3) ∉ expand (freshRectangles (fun p => p = (0, 2)) bridge) := by
+  classical
+  constructor
+  · decide
+  · intro member
+    obtain ⟨r, hr, _⟩ := List.mem_flatMap.mp member
+    have filtered := List.mem_filter.mp hr
+    have same : r = ⟨[0, 1], [2, 3]⟩ := by simpa [bridge] using filtered.1
+    subst r
+    have fresh : ∀ p ∈ rows (⟨[0, 1], [2, 3]⟩ : Rectangle Nat), p ≠ (0, 2) :=
+      by simpa only [decide_eq_true_eq] using filtered.2
+    exact fresh (0, 2) (by decide) rfl
+
+#print axioms selected_nodup
+#print axioms selected_member
+#print axioms uf_selected_exact
+#print axioms component_uniform
 end Ascent.ProviderRectanglesTests

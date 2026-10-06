@@ -57,7 +57,15 @@ Reply == /\ reading /\ ~canceled
          /\ reading' = FALSE /\ alive' = FALSE
          /\ UNCHANGED <<generation, committed, published, candidate, phase,
                          canceled, captured, observed>>
-Next == Stage \/ Publish \/ Reject \/ Borrow \/ Cancel \/ Drain \/ Reply
+\* A stale consumer must release its credit without publishing its old rows.
+Discard == /\ reading /\ ~canceled /\ captured[1] # generation
+           /\ Mutation # "stuck"
+           /\ reading' = FALSE /\ alive' = FALSE
+           /\ UNCHANGED <<generation, committed, published, candidate, phase,
+                           canceled, captured, observed,
+                           replyAccepted, replyRevision, replyRows>>
+Finish == Drain \/ Reply \/ Discard
+Next == Stage \/ Publish \/ Reject \/ Borrow \/ Cancel \/ Finish
 Spec == Init /\ [][Next]_vars
 \* No generation maximum in Init/Next/Spec. TLC's finite constraint is separate.
 Explore == generation <= ExplorationBound

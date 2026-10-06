@@ -1401,4 +1401,16 @@ check-provider-views-formal:
       [[ "$code" = 12 ]] && grep -q "Invariant $invariant is violated" "$temp/$mutation.out"
       echo "COUNTEREXAMPLE-OK provider-views-$mutation $invariant"
     done
+    cp packages/proofs/tla/ReaderLifetime.cfg "$temp/live.cfg"
+    "${tlc[@]}" -workers 1 -config "$temp/live.cfg" -metadir "$temp/live" packages/proofs/tla/ReaderLifetime.tla
+    for mutation in stuck unfair; do
+      sed "s/Mutation = \"none\"/Mutation = \"$mutation\"/" "$temp/live.cfg" > "$temp/$mutation.cfg"
+      code=0
+      "${tlc[@]}" -workers 1 -config "$temp/$mutation.cfg" -metadir "$temp/$mutation" packages/proofs/tla/ReaderLifetime.tla > "$temp/$mutation.out" 2>&1 || code=$?
+      if [[ "$code" != 13 ]] || ! grep -q 'Temporal properties were violated' "$temp/$mutation.out"; then
+        cat "$temp/$mutation.out"
+        exit 1
+      fi
+      echo "COUNTEREXAMPLE-OK provider-views-$mutation ReaderCompletion exit=$code"
+    done
     echo 'PROVIDER-VIEWS-CHECK-OK'

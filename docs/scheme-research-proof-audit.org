@@ -2018,3 +2018,26 @@ required before claiming B23's compressed-storage application result.
 The matrix records both verified laws and missing premises. It is the acceptance
 map for continued BYODS work; a passing formal job cannot be substituted for the
 native correspondence and cost columns.
+
+* BYODS selection and completion audit (2026-10-07)
+
+The follow-up connects rectangle selection to the existing directed insertion
+law instead of requiring a pre-established =Exact= frontier. Its remaining
+premises are candidate encoding, homogeneous root rectangles, unique members
+and disjoint descriptors. A mixed-old rectangle is a checked counterexample to
+omitting homogeneity. These are distinct from native hash/SCC extraction.
+
+The prior view model checked safety but could leave a stale reader awaiting
+external cancellation. =ProviderViews.Discard= repairs the proposed protocol.
+=ReaderLifetime= checks eventual release under explicit completion fairness,
+without any generation cutoff or state constraint. A missing stale-discard
+transition and an unfair worker are separately detected temporal counterexamples.
+This requirement precedes compressed-view actor integration; it does not assert
+that the current engine has implemented that integration.
+
+Lean: 90 jobs, 16 rectangle laws, 12 examples, standard axioms only.
+TLA+: 55,197 safety states at enumeration bound 4; 315 states in the independent
+reader-lifetime abstraction; five safety and two temporal seeded faults caught.
+The [[file:scheme-trrel-uf-design.org][UF design]] documents the abstraction mapping,
+remaining premises and engine integration gates. No new Scheme runtime behavior,
+model API experiment or whole-engine performance benefit is claimed here.

@@ -110,3 +110,35 @@ production source policy completed with zero errors and one existing warning:
 =GERBIL-SCHEME-AGENT-POLICY-041= flags the unchanged forward =list-tail= cursor
 in =project-slot-terms=. That loop advances its cursor and does not restart at
 the list root; this patch did not alter it or suppress the policy finding.
+
+* Complete qualification follow-up
+
+Full-pool qualification found two remaining integration boundaries. Actor
+Session creation also used plan existence as its pure-rule admission check;
+it now uses the same independent purity predicate as SCC and actor rounds.
+The selected-activation synthetic metadata fixture now constructs the four-field
+private plan and compares original execution fields explicitly with its frozen
+three-field projector. The real actor callback-rejection Case passes.
+
+The preceding GitHub run =37420839719= failed with heap overflow while compiling
+the generated combined entry, before Case execution. Native entry compilation
+now runs in =t/harness/native-compile.ss= in a fresh Scheme process with the same
+=-:max-heap=1G,debug=q= bound. Library-make expander/optimizer contexts remain in
+the parent. Child output is forwarded, compiler errors propagate, and both child
+and parent check the generated source digest. The old executable is removed
+before compilation and the pending compiler/link jobs are drained before use.
+
+The complete =t/harness/run.ss test 2 all= command passed all 82 modules and 708
+Cases with process exit 0 and explicit =MODULE-OK=, =HARNESS-OK= and final =OK=
+for every module. This used two parallel module processes and the existing
+exclusive lane. It confirms the complete generated entry can compile and run
+under the retained heap bound. This is local evidence; GitHub must independently
+qualify the exact pushed revision.
+
+The local =test auto all= run admitted 12 processes and hit the unchanged 5s
+progress watchdog during simultaneous initialization of the combined entry.
+That negative result remains in ignored cache; the default automatic capacity,
+startup/idle deadlines and native Case ordering were not changed. The two-process
+full pass does not establish that automatic 12-process startup is qualified.
+Actor Session source policy has no errors and retains its existing repeated
+match-branch warning (policy 014); the source was not rewritten to suppress it.

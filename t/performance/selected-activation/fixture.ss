@@ -18,7 +18,7 @@
          (rules (map (lambda (index)
                        (let* ((heads (if partial? (list (vector index []) (vector (+ count index) []) (vector index []))
                                        (list (vector index []))))
-                              (plan (and positive? (vector (map (lambda (head) (vector head [])) heads) [] slots))))
+                              (plan (and positive? (vector (map (lambda (head) (vector head [])) heads) [] slots #t))))
                          (vector heads [] [] index '#() plan))) (iota count))))
     (vector-set! analysis 5 (vector rules)) analysis))
 (def (activation-selected old? analysis affected)
@@ -27,7 +27,13 @@
 (def (activation-summary active)
   (vector-map (lambda (rules) (map (lambda (rule)
                                   (list (vector-ref rule 0) (vector-ref rule 3)
-                                        (vector-ref rule 5)
+                                        ;; Baseline projections have three fields;
+                                        ;; compare ordered execution data, while the
+                                        ;; current effect flag is qualified separately.
+                                        (let (plan (vector-ref rule 5))
+                                          (and plan (vector (vector-ref plan 0)
+                                                            (vector-ref plan 1)
+                                                            (vector-ref plan 2))))
                                         (and (vector-ref rule 6) (vector-length (vector-ref rule 6))))) rules)) active))
 (def (activation-request count width)
   (let* ((variables (map (lambda (n) (gerbil-ascent-variable (string->symbol (string-append "x" (number->string n))))) (iota width)))

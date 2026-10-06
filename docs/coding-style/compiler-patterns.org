@@ -689,3 +689,12 @@ selection and worker admission. Native qualification is documented in
 20% CPU improvement gate despite allocation reductions; long-scope measurements
 must be reported with that boundary. Prepared tuple matchers/builders were
 withdrawn after failing to establish the intended CPU gain.
+
+Full qualification also covers Actor Session creation, whose admission predicate
+must inspect purity independently of plan availability. It found a separate
+compiler-lifetime boundary: generating the combined test entry after library
+make can retain both phases' contexts. A fresh Scheme compiler process now owns
+entry lowering/linking under the same heap cap, with source-digest admission and
+streamed compiler output. Complete local qualification passed 82 modules/708
+Cases at two-process concurrency. Automatic 12-process combined-entry startup
+still failed the retained progress watchdog; that boundary is recorded separately.

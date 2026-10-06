@@ -1,7 +1,7 @@
 ;;; -*- Gerbil -*-
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
-(import (only-in :gerbil/compiler compile-module compile-exe execute-pending-compile-jobs!)
+(import (only-in :std/misc/process run-process)
         :gerbil/expander
         (only-in "artifact.ss" artifact-digest))
 (export prepare-native-tests!)
@@ -69,11 +69,17 @@
                    (begin (displayln "OK") (force-output) (exit 0))
                    (exit 42)))))))))
     (when (file-exists? binary) (delete-file binary))
-    (let ((generated (artifact-digest source))
-          (options [output-dir: library output-file: binary parallel: #t verbose: #t invoke-gsc: #t static: #t]))
-      (compile-module source [invoke-gsc: #f options ...])
-      (compile-exe source options)
-      (execute-pending-compile-jobs!)
+    ;; Preserve the existing runtime heap bound. Library compilation and entry
+    ;; compilation must not retain one another's expander/optimizer contexts.
+    (let (generated (artifact-digest source))
+      (run-process ["gxi" "-:max-heap=1G,debug=q" "t/harness/native-compile.ss"
+                    source library binary]
+        stderr-redirection: #t
+        coprocess: (lambda (process)
+                     (let loop ()
+                       (let (line (read-line process))
+                         (unless (eof-object? line)
+                           (displayln line) (force-output) (loop))))))
       (unless (equal? generated (artifact-digest source))
         (error "generated native test entry changed during compilation")))
     (setenv "ASCENT_NATIVE_TEST_ENTRY" binary)

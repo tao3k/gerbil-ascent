@@ -594,6 +594,22 @@
                (displayln "POSITIVE-GRAPHS-CHECKED " (+ bits 1) "/512")
                (force-output))))
          (iota 512))))
+    (poo-flow-test-case "ground binder witnesses preserve shared reads and duplicate multiple heads"
+      (let* ((x (v 'x)) (y (v 'y))
+             (result
+              (compare
+               (gerbil-ascent-program
+                (list (gerbil-ascent-relation 'input 3 '((0 0 0) (1 1 1) (1 2 1)))
+                      (gerbil-ascent-relation 'join 2 '((1 7) (2 8)))
+                      (gerbil-ascent-relation 'out 2 [])
+                      (gerbil-ascent-relation 'flag 0 []))
+                (list (gerbil-ascent-rule
+                       (list (a 'out x y) (a 'out x y) (a 'flag))
+                       (list (a 'input x x (gerbil-ascent-literal 1)) (a 'join x y))))
+                32 32 64)
+               '(out flag))))
+        (check-equal? (rows result 'out) '((1 7)))
+        (check-equal? (rows result 'flag) '(()))))
     (poo-flow-test-case "failed candidates and repeated variables never expose stale slots"
       (let ((x (v 'x)) (y (v 'y)))
         (let (result (compare

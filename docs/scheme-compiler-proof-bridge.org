@@ -117,8 +117,8 @@ This is a ground positive Set semantics theorem. Ground-rule completeness,
 native Tarjan/head projection and representation are not inferred. General
 non-ground and lattice termination are not inferred.
 =IndexedIteration= remains the compiled binder/history theorem; composing its
-operator with this ground presentation still needs a faithful grounding
-certificate. TLA+ owns the unchanged ready/credit protocol. Lean tests live in
+operator with this ground presentation is now constructed in =GroundedBinding=
+for frozen finite admitted rows; native encoding still needs refinement. TLA+ owns the unchanged ready/credit protocol. Lean tests live in
 =Tests/ComponentClosureTests.lean=, including a recursive diamond, independent
 component swap, premature successor and insufficient local rounds. The native
 same-case qualifier checks exact seed/left/right/output rows under both relation
@@ -141,6 +141,26 @@ noncomputable semantic witness, not an extracted native scheduler. Tests under
 =Tests/= qualify both recursive-diamond orders without a supplied =StablePlan=,
 duplicate heads and empty rules. The existing premature-successor and short
 iteration controls remain. See [[file:evidence/scheme-component-termination-20261006/receipt.json][termination qualification receipt]].
+
+** Constructed binder grounding
+
+[[file:../packages/proofs/lean/GroundedBinding.lean][GroundedBinding]] constructs a finite clause list by traversing actual ordinary
+=AtomicBinding.bind= successes over frozen admitted row lists. Each clause body
+retains all read tuples; failed matches disappear. Repeated heads and multiple
+heads remain in the list. =ground_exact= proves equivalence with the ordered
+binder body for every database; faithful enumeration admits precisely those
+domain rows present in that database. This does not supply the desired answer.
+
+=compiled_ground_exact= composes that construction with =IndexedIteration.full_run_exact=,
+using the existing schema, frame and emitter validity obligations. =program_exact=
+and =closed_exact= lift it to programs and closed models. =binder_least_model=
+transports the finite ground component result into every closed binder model
+covering the seed, using proved termination instead of a supplied stable plan.
+This is pure semantic construction, not Gerbil code extraction. Native scalar
+encoding, mutable row enumeration, SCC ownership and asynchronous refinement
+remain open. Lean tests live in =Tests/GroundedBindingTests.lean=; the matching
+native fixture combines repeated variables, a constant, a shared-key join,
+duplicate heads and a zero-arity head. See [[file:evidence/scheme-binder-grounding-20261006/receipt.json][source-bound receipt]].
 
 * Stated claim
 

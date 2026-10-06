@@ -28,3 +28,4 @@ import TransitiveComponents
 import PositiveConsequence
 
 import ComponentClosure
+import GroundedBinding

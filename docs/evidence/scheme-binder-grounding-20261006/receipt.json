@@ -1,0 +1,97 @@
+{
+  "qualifiedBaseHead": "1202f17f7fb0b0fd8de064320ca7b60cd3b10758",
+  "scope": "Constructed finite grounding of ordinary positive binder paths and transport of component least-model semantics",
+  "sources": {
+    "packages/proofs/lean/ComponentClosure.lean": "285bb1d19fb5a065cf550549deeb73d399dce8d2d6b51e3b7695a94cad8ca32b",
+    "packages/proofs/lean/Tests/ComponentClosureTests.lean": "bec515bca4b40b96a124861b8383cf9ea98811813d55c1250f26c125646c5d08",
+    "packages/proofs/lean/AscentProof.lean": "2cf8dfa1c003c381926ff45531510ef643f902d35b932bf2b033f16d53688aeb",
+    "packages/proofs/lean/Tests/AscentProofTests.lean": "ae54b86adf1a2f66213f4162467d46106003fcc6161889f61ae2ffd28eb24826",
+    "packages/proofs/lean/lakefile.lean": "ae49e30d158ee13520133ed52c0f69f4d1475b123cdeb4261ca0449c513640b4",
+    "packages/proofs/lean/IndexedIteration.lean": "46a0451cc5be2cd28f11f5ce77e37b0a1e21539a3f81fca9f62561de1d8cf211",
+    "packages/proofs/lean/SemiNaive.lean": "c00da4759381f4004996ca299100c08e44fcf455093ddbddaf9d857924e30d51",
+    "program/positive-components.ss": "156a6ef8cb62c92a094638b299ac490738d0ea243a187320d9e460c40434c645",
+    "program/component-worker.ss": "9c4e215910f6c80915a26cb6237b541914ff9036e44ffe9414ec522a29123771",
+    "program/actor-round.ss": "f41bc8c8b6d7b7d9e5228af96ab40ba0dcd3f4325375aae508be6e9d0197465c",
+    "table/funs.ss": "9ecdd332294ce6487998c6e64fc2b88d4396d091c641cf1e61dc0576a5b222c0",
+    "t/qualification/ascent-positive-components-test.ss": "c751ea81bfa7676cbfb71d74a8f35d32d265215365fafe32666db7efa51aaac2",
+    "t/qualification/ascent-positive-plan-test.ss": "578d56134f7e2cf3a3a067f02cd98e1f57cc428527230ef6d63e7e995e62e027",
+    "packages/proofs/tla/ReadyComponents.tla": "f1ba05dd5e99e262de1116c83e725a8f3541d3113e011c46146c470bece8d34e",
+    "packages/proofs/tla/ActorRoundCredits.tla": "3b5de69e5b610222a5628105bc2cba104a8f42e304d7fc069f94307a57c90175",
+    "justfile": "4f47241a44a880be471880d7d8b43e912ad260dcc64ea3e236919602461a2e78",
+    "core/positive-plan.ss": "d51d7676d8ef49097219e812f3596ba589f0f6779e2a09e282222e84afa2f101",
+    "packages/proofs/lean/FiniteHeight.lean": "2769bf31367d45ba9eae23c54c60e4cd8e8c428f00ddf2c4294107d5b4c5396b",
+    "docs/scheme-compiler-proof-bridge.org": "3ca442b1ea342d10b0be20621652a065d60d51d4b2504523b0d1443fd1f8f433",
+    "docs/scheme-research-proof-audit.org": "13ec326d6e741aac7d46459e71b4b0e1de7dda65c4094171bfb95cec17b6f4ae",
+    "packages/proofs/lean/GroundedBinding.lean": "a31874e3b819fc44f4a1f73026d7886041a40e988af89460587254844e512b00",
+    "packages/proofs/lean/Tests/GroundedBindingTests.lean": "3a9f90dfad8be8ade805d9116dee33722e506a21bea473a7b469da12c77afc1c",
+    "packages/proofs/lean/PositiveConsequence.lean": "f19e72ab251f4ef43612dc93ef6c564c3b5dae4416b47dca25f5fadce97a0598",
+    "packages/proofs/lean/AtomicBinding.lean": "5249177555d43df70517c5a04aabe7365500e2b8691dd314e466793af88a6e70"
+  },
+  "lean": {
+    "exitCode": 0,
+    "command": "just check-lean-proofs",
+    "buildJobs": 79,
+    "axioms": {
+      "ground_exact": [
+        "propext",
+        "Quot.sound"
+      ],
+      "compiled_ground_exact": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "program_exact": [
+        "propext",
+        "Quot.sound"
+      ],
+      "closed_exact": [
+        "propext",
+        "Quot.sound"
+      ],
+      "binder_least_model": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    "testsDirectory": "packages/proofs/lean/Tests",
+    "premises": [
+      "Frozen finite admitted row lists with faithful database enumeration",
+      "Compiled schema/frame/emitter validity for compiled execution",
+      "Complete head ownership and sound topological dependency order for component leastness"
+    ],
+    "construction": "Enumerate actual successful AtomicBinding.bind paths; retain all body facts and each emitted head, including duplicates. No assumed grounding certificate or selected expected answer.",
+    "controls": [
+      "Repeated variable mismatch",
+      "Literal mismatch",
+      "Shared key mismatch",
+      "Duplicate and multiple emitted heads",
+      "Empty body and missing source domain"
+    ]
+  },
+  "native": {
+    "exitCode": 0,
+    "pool": 2,
+    "suiteCases": 39,
+    "moduleOK": 2,
+    "explicitOK": 2,
+    "command": "t/harness/run.ss test-pool 2 t/qualification/ascent-positive-components-test.ss t/qualification/ascent-positive-plan-test.ss",
+    "matchingFixture": "input [1,1,1] joins [1,7]; repeated out [1,7] admits one Set row and zero-arity flag. Both compiled and ordinary binder executions match independent expected rows."
+  },
+  "tla": {
+    "modelsChanged": false,
+    "rerunThisRound": false,
+    "retainedEvidence": "../scheme-component-termination-20261006/receipt.json",
+    "role": "Ready/credit temporal protocol remains separate from pure grounding algebra"
+  },
+  "remaining": [
+    "Native binder/scalar/row encoding refinement",
+    "Native Tarjan SCC and projected dependency correspondence",
+    "Asynchronous linearization and mutable publication refinement",
+    "General non-ground and lattice termination"
+  ],
+  "modelCalls": 0,
+  "rustRuntimeChanges": false,
+  "performanceClaim": null
+}

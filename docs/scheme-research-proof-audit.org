@@ -601,6 +601,21 @@ heads and arbitrary seeds. =planned_stable= supplies every component witness;
 =topological_least= consequently needs only complete head coverage and sound
 topological dependency ownership. Its =n <= rules.length= is a derived theorem,
 not a native round limit; the witness plan is noncomputable semantic evidence.
-See [[file:evidence/scheme-component-termination-20261006/receipt.json][follow-up receipt]]. A faithful binder-to-ground-rule bridge, native SCC/head
+See [[file:evidence/scheme-component-termination-20261006/receipt.json][follow-up receipt]]. Native binder/row encoding, SCC/head
 projection, asynchronous refinement and general non-ground/lattice termination
 remain required for whole-engine closure.
+
+* Constructed positive binder grounding
+
+=GroundedBinding= now constructs finite ground clauses from successful ordinary
+binder paths, rather than assuming a consequence certificate. Universal
+=ground_exact=, =compiled_ground_exact=, =program_exact= and =closed_exact=
+connect binding, compiled full execution and ground closed models.
+=binder_least_model= composes with finite component termination and leastness.
+Frozen finite row enumeration must be faithful for every database; compiled
+schema/frame/emitter validity and sound complete topological ownership remain
+explicit premises. This narrows the open bridge to native representation and
+SCC correspondence. It does not close arbitrary generated domains, lattices,
+mutable index publication or asynchronous execution refinement. TLA+ retains
+protocol ownership and no new overlapping temporal model is introduced.
+See [[file:evidence/scheme-binder-grounding-20261006/receipt.json][qualification receipt]].

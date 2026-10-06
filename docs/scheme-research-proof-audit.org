@@ -1748,3 +1748,11 @@ argument rejection controls. The [[file:evidence/scheme-native-child-admission-2
 carrier, registry and transcript digests, plus the earlier failures. This
 inventory result is bound to that source base and must not be relabeled as a
 subsequent revision's CI result.
+
+After integrating =4bcdb4c= (source replay and native graph state protection
+through complete round publication), six affected modules passed 78 Cases:
+storage batches, BYODS invariants, Session deletion, selected activation,
+index construction and Session actors. All six native/explicit completion
+markers were present and no watchdog failed. This focused integration result
+is recorded separately from the earlier full inventory; the latest GitHub
+revision still requires its full CI gates.

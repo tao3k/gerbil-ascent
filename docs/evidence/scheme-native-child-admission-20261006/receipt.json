@@ -110,6 +110,30 @@
     "rootCause": "Integrated index-build fixture still expected borrowed row object identity. Native snapshot copies outer and row list spines and borrows field values. Fixture now checks isolated row identities plus a shared mutable field identity.",
     "watchdogFailures": 0
   },
+  "latestStorageIntegration": {
+    "carrierSha256": "93ee1e4f4f7a5fdd5c49aee6328f07243b6eb423a74a1ef859c48ca1ed952c98",
+    "cases": 78,
+    "command": "t/harness/run.ss test-pool auto (six affected modules)",
+    "exitStatus": 0,
+    "explicitOKMarkers": 6,
+    "integratedBase": "4bcdb4c",
+    "limit": "Affected native integration controls; earlier 83-module inventory belongs to 7b8b830. Exact-head full CI remains required.",
+    "logSha256": "2ef789a6f96614144899a5b3759c194afec447344476d7975a8e9b4243ed6911",
+    "modules": 6,
+    "nativeReadyMarkers": 6,
+    "owners": {
+      "program/analysis.ss": "23a8f4634df8bc1999975832fec1a357b1fa5523c8f2fcb68e74ef06c3f9da82",
+      "program/evaluate.ss": "81df482fbcfbd8ed139f22db94123237839c89dd55e53e3d5e02ceb8f8e115ee",
+      "t/qualification/ascent-actor-session-test.ss": "98db65d5d1eb5a89b4dc2f0376ed3167d506d04507b80abbb10bb6cfd6855585",
+      "t/qualification/ascent-byods-invariants-test.ss": "6b949efe6d71e5e67ac9f7d3699c7175a63729f231c72d81dddc0714fa621eb1",
+      "t/qualification/ascent-index-build-test.ss": "1dc996b6b838a0e577e490facbac78bde495a5eb4dcffa80f708201b66637234",
+      "t/qualification/ascent-selected-activation-test.ss": "04c6dbd6ebca325c662daf4d1e57c28b12cd4248f64ad2ba69bb63d320dc63d0",
+      "t/qualification/ascent-storage-batch-test.ss": "0e03e956234d75583e1f4b10b5f9971f077e4d15e642a0993ab72d6a30f79cfb",
+      "t/qualification/scheme-session-deletion-test.ss": "3e04cc053cc35c78fcebb4254f39f0b0305b722fa0560f76f571be55250ac5a2",
+      "table/storage.ss": "5ebd76d7515fdab7c4f2e2ac82afe45eaf2607eff97c6346719962dc2db8484b"
+    },
+    "watchdogFailures": 0
+  },
   "modelCalls": 0,
   "owners": {
     "program/analysis.ss": "a79f269116336f8c0719b31d4b88e77f8cac50fa6a3e12ff9fa3d971b75e2e80",

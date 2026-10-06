@@ -1237,3 +1237,37 @@ projection implementation above. Both appended audit sections are retained.
 The complete Lean collection and native Set-batch suite are qualified again
 on the combined source; the receipt keeps the earlier native source boundary
 separate. The selector/SCC receipt continues to own its own native results.
+* Native key lowering checks the prior binding prefix (2026-10-06)
+
+B23 lookup keys are evaluated before the current atom's candidate matching.
+The stored-action correspondence above keeps KnownColumns explicit; a cell
+existing in a frame does not mean its logical variable was bound in the prior
+prefix. =core/positive-plan.ss= now enforces that distinction during lowering.
+It records the slot extent before each atom, checks selected columns are proper
+lists of exact in-range positions, and admits keys only for literals, previously
+bound slots or expressions whose dependencies all lie in that earlier extent.
+
+A repeated variable in one atom illustrates the gap: its second occurrence is
+lowered as bound for matching, but both occurrences belong to a newly assigned
+row slot. Neither may be an index key before matching that row. Wildcards and
+fresh slots are likewise not keys. Malformed key metadata returns unsupported
+instead of producing a compiled action that can observe stale frame cells.
+This is the compiler's optimized-plan boundary, not a replacement for whole
+program admission or a new general-interpreter guarantee for forged metadata.
+
+Legal prefix variables, literal false values, repeated selected columns and
+prefix-dependent expression keys preserve their existing ordered evaluation.
+Compilation executes no key expression. The native positive-plan Suite passes
+27 Cases; the new discriminator checks the same-atom repeated-variable hole,
+row-local expression dependencies, wildcard keys, negative/out-of-range/nonexact
+columns and improper lists. It also checks a valid expression key against a
+dirty frame without modifying the unrelated cell. An old wide projection test
+was corrected: selecting fresh and wildcard columns is shape-correct selection
+but invalid pre-match lookup metadata. Its wide literal-key and actual wide
+composite-join controls remain. The first failed test is retained in the receipt.
+
+The actual SCC native Suite passes 21 Cases. Both final commands exit 0 with
+MODULE-OK, HARNESS-OK and explicit final OK under the isolated SDK. The
+[[file:evidence/scheme-key-prefix-20261006/receipt.json][source-bound receipt]] records this Scheme slice. No Lean/TLA source is changed;
+universal descriptor extraction and Provider correspondence remain their
+separate obligations. No CPU, allocation or whole-framework speedup is claimed.

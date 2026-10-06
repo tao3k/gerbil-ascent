@@ -153,13 +153,34 @@
                      ((atom)
                       (let* ((atom (vector-ref clause 1))
                              (original (vector-ref atom 1))
+                             (columns (vector-ref atom 2))
+                             (prior-count count)
+                             (_checked-columns
+                              (unless (and (list? columns)
+                                           (andmap (lambda (column)
+                                                     (and (exact-integer? column)
+                                                          (<= 0 column)
+                                                          (< column (length original)))) columns))
+                                (unsupported #f)))
                              (prior-scope
                                (and (ormap (lambda (term) (eq? (car term) 'expression)) original)
                                     (ensure-scope!)))
                              (terms (map (lambda (term) (lower term #f)) original))
-                             (columns (vector-ref atom 2))
                              (keys (map
                                      (lambda (source action)
+                                       ;; Index access precedes this atom's row
+                                       ;; matching. Only the prior bound prefix
+                                       ;; may supply a key, even for a repeated
+                                       ;; variable already tagged bound locally.
+                                       (unless (or (eq? (car action) 'literal)
+                                                   (and (eq? (car action) 'bound)
+                                                        (< (cdr action) prior-count))
+                                                   (and (eq? (car source) 'expression)
+                                                        (andmap (lambda (name)
+                                                                  (let (slot (hash-get slots name))
+                                                                    (and slot (< slot prior-count))))
+                                                                (vector-ref (cdr source) 0))))
+                                         (unsupported #f))
                                        (if (eq? (car source) 'expression)
                                          (let (payload (cdr source))
                                            (cons 'expression

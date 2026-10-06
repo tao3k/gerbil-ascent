@@ -267,6 +267,40 @@
               (lambda args (error "unexpected lookup"))
               (lambda (_ row) (set! facts (cons row facts))))
             (check-equal? facts '(()))))))
+    (poo-flow-test-case "compiled keys require the prior bound prefix before current row matching"
+      (let* ((x '(variable . x)) (y '(variable . y))
+             (head (vector 1 (list x))) (calls 0)
+             (expression (cons 'expression
+                           (vector '(x) (lambda (_x) (set! calls (+ calls 1)) 0)))))
+        (for-each
+         (lambda (atom)
+           (check-equal? (gerbil-ascent-compile-positive-plan
+                          (list head) (list (vector 'atom atom))) #f))
+         (list (vector 0 (list x) '(0))
+               ;; The second occurrence is locally bound, but not prior-bound.
+               (vector 0 (list x x) '(1))
+               (vector 0 (list x '(wildcard . #f)) '(1))
+               (vector 0 (list x expression) '(1))
+               (vector 0 (list x) '(-1))
+               (vector 0 (list x) '(1))
+               (vector 0 (list x) '(0.0))
+               (vector 0 (list x) '(0 . 1))))
+        (check-equal? calls 0)
+        ;; Prior-prefix reads, literal keys and repeated selected columns stay
+        ;; supported. Compilation never evaluates the key expression itself.
+        (let* ((plan (gerbil-ascent-compile-positive-plan
+                      (list (vector 2 (list x y)))
+                      (list (vector 'atom (vector 0 (list x) []))
+                            (vector 'atom
+                             (vector 1 (list x expression y '(literal . #f)) '(0 1 3 0))))))
+               (second (cadr (vector-ref plan 1)))
+               (keys (vector-ref second 2))
+               (frame (vector #f 'dirty)))
+          (check-equal? (gerbil-ascent-pure-positive-plan? plan) #f)
+          (check-equal? calls 0)
+          (check-equal? (gerbil-ascent-index-key [] [] frame keys) '(#f 0 #f #f))
+          (check-equal? calls 1)
+          (check-equal? frame (vector #f 'dirty)))))
     (poo-flow-test-case "dirty slot frames preserve ordered bindings across the finite term corpus"
       (let* ((palette '(#f 0 1))
              (terms '((variable . a) (variable . b) (literal . #f)
@@ -663,11 +697,11 @@
                    (else '(wildcard . #f)))) (iota 384)))
         (check-equal? (vector-ref compiled 2)
                       (map (lambda (_) '(literal . #f)) columns))
-        (let* ((full (gerbil-ascent-compile-positive-plan heads
-                       (list (vector 'atom (vector 0 terms (iota 384))))))
-               (full-atom (car (vector-ref full 1))))
-          (check-equal? (vector-ref full-atom 2) (vector-ref compiled 1))
-          (check-equal? (eq? (vector-ref full-atom 1) (vector-ref full-atom 2)) #f))
+        ;; A shape-correct projection is not a valid pre-match key: this
+        ;; all-column selection contains fresh slots and wildcard actions.
+        (check-equal?
+         (gerbil-ascent-compile-positive-plan heads
+           (list (vector 'atom (vector 0 terms (iota 384))))) #f)
         (check-equal?
          (gerbil-ascent-compile-positive-plan heads
            (list (vector 'atom (vector 0 '((expression . #f)) '(0))))) #f)))

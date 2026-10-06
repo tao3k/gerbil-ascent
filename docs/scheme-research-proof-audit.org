@@ -1632,3 +1632,46 @@ prove semantic completeness of a custom extension or roll back its private
 state. Nested field stability and arbitrary closure effects remain premises.
 Copying costs scale with supplied all/pending snapshots and the emitted batch.
 No new Lean/TLA source, provider speedup or general refinement is claimed.
+
+* B23 native correspondence: custom state readiness through publication (2026-10-06)
+
+[[https://kmicinski.com/assets/byods.pdf][B23 Sections 3.1 and 3.3]] describe injection and represented total/delta
+facts. Scheme callbacks introduce another obligation: an exception must not
+leave a reusable private state that remembers a fact the evaluator never
+published. No rollback operation exists in the arbitrary StorageProvider API.
+
+A native counterexample mutates a private vector before raising. The raw
+retained engine then accepts another run, despite that state being capable of
+suppressing the same fact on retry. Source rows and public publication remain
+unchanged, so copying their spines alone cannot close this failure boundary.
+
+Custom engine states now have a private =storage-state-owner= containing the
+Provider's original value and a readiness phase. Provider code still receives
+that original value. The immutable schema shares no readiness owner between
+engines. Dispatch enters =pending=; receiver or shape failure becomes =failed=.
+Typed-field and budget refusal leave the owner pending. A later public run or
+append requires every custom owner to be ready and otherwise requests source
+replay. The original failure is propagated at its first occurrence.
+
+Readiness is restored after a complete initial extension batch or retained
+source append, and after the whole rule-round commit has published rows,
+membership, versions and physical indexes. It is deliberately not restored
+per successful emission: a later guard can raise after an earlier injection
+mutated private state, discarding the round workspace. Pending owners may
+accept additional injections inside that same round. Deadline partial results
+use the existing completed round boundary. Native Provider state representation
+and preflight remain unchanged; custom readiness adds owner checks, with no
+performance improvement claim.
+
+Native controls cover raised, shape, field and budget failures; unsafe raw
+engine reuse refuses until a fresh source solve. Session recovery uses its
+existing fresh-engine reconstruction and preserves prior results. A two-row
+rule emits once before a later guard failure and proves that this entire round
+still requires replay; a fresh engine recovers both independent consequences.
+The [[file:evidence/scheme-storage-state-20261006/receipt.json][receipt]] retains exact source and rejected/accepted native run boundaries.
+
+This closes reuse of interrupted custom engine state under independent fresh
+construction and stable fields. It does not prove arbitrary concretization
+completeness, rollback private state, or reverse external closure side effects.
+Native extraction and those remaining Provider laws still require separate
+work. No Lean/TLA source is changed by this implementation.

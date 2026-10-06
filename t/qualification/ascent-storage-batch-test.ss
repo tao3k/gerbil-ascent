@@ -4,7 +4,8 @@
 (import (only-in :std/test check-equal? test-case test-suite)
         (only-in :clan/poo/object .ref .o)
         (only-in :gerbil-ascent/program/objects gerbil-ascent-program gerbil-ascent-relation
-                 gerbil-ascent-rule gerbil-ascent-atom gerbil-ascent-variable)
+                 gerbil-ascent-rule gerbil-ascent-atom gerbil-ascent-variable
+                 gerbil-ascent-guard)
         (only-in :gerbil-ascent/program/evaluate gerbil-ascent-make-engine gerbil-ascent-evaluate-program)
         (only-in :gerbil-ascent/table/storage gerbil-ascent-set-storage-provider
                  gerbil-ascent-eqrel-storage-provider gerbil-ascent-trrel-storage-provider
@@ -29,6 +30,114 @@
       (cons (car rows) (first-rows (cdr rows) (cons (car rows) seen))))))
 (def ascent-storage-batch-test
   (test-suite "ASCENT complete storage batch admission"
+    (test-case "failed mutable storage states require source replay before engine reuse"
+      (for-each
+       (lambda (mode)
+         (let* ((reject? #t) (retained #f)
+                (provider
+                 (.o (:: @ gerbil-ascent-set-storage-provider)
+                     (.make-state (lambda () (let (state (vector 0)) (set! retained state) state)))
+                     (.extend-rows
+                      (lambda (state _all _pending row _budget)
+                        (let (already? (> (vector-ref state 0) 0))
+                          (vector-set! state 0 1)
+                          (if reject?
+                            (case mode
+                              ((raise) (error "mutated storage failure"))
+                              ((shape) '((1 2))) ((field) '((bad)))
+                              (else '((1) (2))))
+                            (if already? [] (list row))))))))
+                (program (gerbil-ascent-program
+                          (list (gerbil-ascent-relation 'input 1 []
+                                  gerbil-ascent-hash-index-provider provider (list integer?)))
+                          [] 16 16 (if (eq? mode 'budget) 1 64)))
+                (engine (gerbil-ascent-make-engine program #t)))
+           (check-equal? (storage-batch-rows ((.ref engine '.run))) [])
+           (check-equal? (failure (lambda () ((.ref engine '.append-source!) 'input '(1))))
+                         (case mode
+                           ((raise) "mutated storage failure")
+                           ((shape) "invalid ASCENT storage provider row")
+                           ((field) "ASCENT relation field type mismatch")
+                           (else "ASCENT session output fact budget exceeded")))
+           (check-equal? (vector-ref retained 0) 1)
+           (set! reject? #f)
+           ;; A successful-looking retry would omit the fact because private
+           ;; state already records it. A fresh owner can admit the same row.
+           (check-equal? (failure (lambda () ((.ref engine '.run))))
+                         "ASCENT storage state requires source replay")
+           (check-equal? (failure (lambda () ((.ref engine '.append-source!) 'input '(1))))
+                         "ASCENT storage state requires source replay")
+           (let (fresh (gerbil-ascent-make-engine program #t))
+             ((.ref fresh '.run))
+             ((.ref fresh '.append-source!) 'input '(1))
+             (check-equal? (storage-batch-rows ((.ref fresh '.run))) '((1))))))
+       '(raise shape field budget)))
+    (test-case "Session source replay recovers mutable dispatch and admission failures"
+      (for-each
+       (lambda (mode)
+         (let* ((reject? #t)
+                (provider
+                 (.o (:: @ gerbil-ascent-set-storage-provider)
+                     (.make-state (lambda () (vector #f)))
+                     (.extend-rows
+                      (lambda (state _all _pending row _budget)
+                        (let (prior (vector-ref state 0))
+                          (vector-set! state 0 #t)
+                          (if reject?
+                            (case mode
+                              ((raise) (error "mutated storage failure"))
+                              ((shape) '((1 2))) ((field) '((bad)))
+                              (else '((1) (2))))
+                            (if prior [] (list row))))))))
+                (program (gerbil-ascent-program
+                          (list (gerbil-ascent-relation 'input 1 []
+                                  gerbil-ascent-hash-index-provider provider (list integer?)))
+                          [] 16 16 (if (eq? mode 'budget) 1 64)))
+                (session (gerbil-ascent-open-session program))
+                (first (gerbil-ascent-session-run session)))
+           (check-equal? (failure (lambda () (gerbil-ascent-session-append-source! session 'input '(1))))
+                         (case mode
+                           ((raise) "mutated storage failure")
+                           ((shape) "invalid ASCENT storage provider row")
+                           ((field) "ASCENT relation field type mismatch")
+                           (else "ASCENT session output fact budget exceeded")))
+           (check-equal? (storage-batch-rows (gerbil-ascent-session-run session)) [])
+           (set! reject? #f)
+           (gerbil-ascent-session-append-source! session 'input '(1))
+           (check-equal? (storage-batch-rows (gerbil-ascent-session-run session)) '((1)))
+           (check-equal? (storage-batch-rows first) [])))
+       '(raise shape field budget)))
+    (test-case "a later guard failure keeps the entire custom storage round tentative"
+      (let* ((calls 0) (reject? #t) (private #f)
+             (provider
+              (.o (:: @ gerbil-ascent-set-storage-provider)
+                  (.make-state (lambda () (let (state (make-hash-table)) (set! private state) state)))
+                  (.extend-rows
+                   (lambda (state _all _pending row _budget)
+                     (if (hash-get state row) []
+                       (begin (hash-put! state row #t) (list row)))))))
+             (x (gerbil-ascent-variable 'x))
+             (program (gerbil-ascent-program
+                       (list (gerbil-ascent-relation 'source 1 '((1) (2)))
+                             (gerbil-ascent-relation 'input 1 []
+                               gerbil-ascent-hash-index-provider provider))
+                       (list (gerbil-ascent-rule
+                              (list (gerbil-ascent-atom 'input (list x)))
+                              (list (gerbil-ascent-atom 'source (list x))
+                                    (gerbil-ascent-guard '(x)
+                                      (lambda (_x)
+                                        (set! calls (+ calls 1))
+                                        (when (and reject? (= calls 2)) (error "later guard failure"))
+                                        #t))))) 16 16 64))
+             (engine (gerbil-ascent-make-engine program #t)))
+        (check-equal? (failure (lambda () ((.ref engine '.run)))) "later guard failure")
+        (check-equal? (hash-length private) 1)
+        (set! reject? #f)
+        (check-equal? (failure (lambda () ((.ref engine '.run))))
+                      "ASCENT storage state requires source replay")
+        (let (fresh (gerbil-ascent-make-engine program #t))
+          (check-equal? (list-sort (lambda (a b) (< (car a) (car b)))
+                                    (storage-batch-rows ((.ref fresh '.run)))) '((1) (2))))))
     (test-case "retained custom storage output rows cannot rewrite a published result"
       (let* ((emitted (list (list 1) (list 2)))
              (program (storage-batch-program 1 (lambda (_) emitted)))
@@ -104,7 +213,8 @@
                              "ASCENT storage provider returned non-list rows"))
              ;; The input row is checked once; no returned row reaches a checker.
              (check-equal? calls 1)
-             (check-equal? (storage-batch-rows ((.ref engine '.run))) [])))
+             (check-equal? (failure (lambda () ((.ref engine '.run))))
+                           "ASCENT storage state requires source replay")))
          (list 7 outer (list '(2) '(3 4)) (list '(2) '(3 . 4)) (list '(2) cycle)))))
     (test-case "native storage dispatch stays direct and derived receivers own spines"
       (for-each

@@ -35,7 +35,8 @@
                  gerbil-ascent-call-with-bindings gerbil-ascent-extend-pattern)
         (only-in :gerbil-ascent/table/provider gerbil-ascent-canonical-hash-index-provider?)
         (only-in :gerbil-ascent/table/storage
-                 gerbil-ascent-storage-make-state
+                 gerbil-ascent-storage-engine-state gerbil-ascent-storage-owned-states
+                 gerbil-ascent-storage-check-state! gerbil-ascent-storage-admit-state!
                  gerbil-ascent-set-batch-admit!
                  gerbil-ascent-canonical-set-storage-provider?)
         (only-in :clan/poo/support/base until))
@@ -163,7 +164,7 @@
               (vector-set! lattice-rows index (make-hash-table)))
             (when (eq? kind 'relation)
               (vector-set! storage-states index
-                (gerbil-ascent-storage-make-state
+                (gerbil-ascent-storage-engine-state
                  (vector-ref storage-providers index))))
             (for-each
              (lambda (row)
@@ -219,7 +220,9 @@
                           (gerbil-ascent-initialize-source-row! stored width
                             (vector-ref field-checkers index) present all index
                             source-materialized-count output-limit)))
-                      materialized)))))
+                      materialized)
+                     (gerbil-ascent-storage-admit-state!
+                      (vector-ref storage-states index))))))
              rows)
             (when (eq? kind 'lattice)
               (let ((keyed (vector-ref lattice-rows index))
@@ -285,7 +288,8 @@
                 (vector-set! all-size index (length rows))
                 (vector-set! delta-size index (length rows))))
             (seed (+ index 1)))))
-      (let* ((analysis
+      (let* ((storage-owners (gerbil-ascent-storage-owned-states storage-states))
+             (analysis
               ;; Source-only replacement preserves declarations and rules.
               ;; Its session reuses this immutable rule plan while the fresh
               ;; engine still owns new rows, indexes, storage and budgets.
@@ -388,6 +392,7 @@
                         (not accepted-any?))
                (set! dirty? #f)))))
         (def (run-retained! (deadline #f))
+         (for-each gerbil-ascent-storage-check-state! storage-owners)
          (when dirty? (flush-staged-set-rows!))
          ;; One invocation owns the complete round workspace. Clearing slots
          ;; after commit releases pending state while delta keeps its row spine.
@@ -755,6 +760,9 @@
                   (vector-set! pending-lattice-keys index [])
                   (hash-clear! (vector-ref pending-seen index)))
                 (commit (+ index 1))))
+            ;; Private storage state becomes reusable only after the entire
+            ;; round has published rows, membership, versions and indexes.
+            (for-each gerbil-ascent-storage-admit-state! storage-owners)
             ;; Every required SCC is already closed; this one owner commit
             ;; installs the complete cut, without another shared solver round.
             (when component-mode? (set! active? #f))
@@ -834,6 +842,7 @@
               (set! staged-total (+ staged-total 1))
               (set! dirty? #t))
             (def (append-source! name row)
+              (for-each gerbil-ascent-storage-check-state! storage-owners)
               (when first-run?
                 (error "ASCENT session must run before source updates"))
               (let* ((index (position-of name))
@@ -915,7 +924,9 @@
                 (unless (or (vector-ref source-overrides index)
                             built-in-set?)
                   (vector-set! source-additions index
-                    (cons row (vector-ref source-additions index))))))
+                    (cons row (vector-ref source-additions index))))
+                (gerbil-ascent-storage-admit-state!
+                 (vector-ref storage-states index))))
             (def (append-single-set-source! name row)
               (if recompute-from-source?
                 (append-source! name row)

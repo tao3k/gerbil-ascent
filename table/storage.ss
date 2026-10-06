@@ -27,6 +27,8 @@
         gerbil-ascent-trrel-uf-storage-provider
         gerbil-ascent-storage-make-state
         gerbil-ascent-storage-extension
+        gerbil-ascent-storage-engine-state gerbil-ascent-storage-owned-states
+        gerbil-ascent-storage-check-state! gerbil-ascent-storage-admit-state!
         gerbil-ascent-set-batch-admit!
         gerbil-ascent-storage-extend)
 
@@ -161,6 +163,28 @@
   (list +canonical-set-storage-provider+ gerbil-ascent-eqrel-storage-provider
         gerbil-ascent-trrel-storage-provider gerbil-ascent-trrel-uf-storage-provider))
 
+;;; Custom state remains tentative until the evaluator commits the complete
+;;; source batch or rule round. Private mutations cannot be rolled back in
+;;; general; an interrupted owner requires source replay into a fresh engine.
+(defstruct storage-state-owner (value phase))
+
+(def (gerbil-ascent-storage-engine-state provider)
+  (let (state (gerbil-ascent-storage-make-state provider))
+    (if (memq provider +native-storage-providers+) state
+      (make-storage-state-owner state 'ready))))
+
+(def (gerbil-ascent-storage-owned-states states)
+  (filter storage-state-owner? (vector->list states)))
+
+(def (gerbil-ascent-storage-check-state! state)
+  (when (and (storage-state-owner? state)
+             (not (eq? (storage-state-owner-phase state) 'ready)))
+    (error "ASCENT storage state requires source replay")))
+
+(def (gerbil-ascent-storage-admit-state! state)
+  (when (storage-state-owner? state)
+    (storage-state-owner-phase-set! state 'ready)))
+
 (def (owned-storage-rows rows)
   (map (lambda (row) (map values row)) rows))
 
@@ -173,10 +197,24 @@
     (if (memq provider +native-storage-providers+)
       extend
       (lambda (state all pending row budget)
+        ;; Pending states may accept more rows inside the same rule round.
+        ;; Public engine entry checks require ready states instead.
+        (when (storage-state-owner? state)
+          (when (eq? (storage-state-owner-phase state) 'failed)
+            (error "ASCENT storage state requires source replay"))
+          (storage-state-owner-phase-set! state 'pending))
+        (with-catch
+         (lambda (failure)
+           (when (storage-state-owner? state)
+             (storage-state-owner-phase-set! state 'failed))
+           (raise failure))
+         (lambda ()
         (let* ((owned-all (owned-storage-rows all))
                (owned-pending (if (eq? all pending) owned-all
                                 (owned-storage-rows pending)))
-               (expanded (extend state owned-all owned-pending
+               (expanded (extend (if (storage-state-owner? state)
+                                     (storage-state-owner-value state) state)
+                                 owned-all owned-pending
                                  (map values row) budget)))
           (unless (list? expanded)
             (error "ASCENT storage provider returned non-list rows"))
@@ -192,4 +230,4 @@
                    (loop (cdr remaining) (- left 1))
                    (error "invalid ASCENT storage provider row")))))
            expanded)
-          (owned-storage-rows expanded))))))
+          (owned-storage-rows expanded))))))))

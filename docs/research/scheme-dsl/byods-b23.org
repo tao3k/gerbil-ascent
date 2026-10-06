@@ -227,3 +227,26 @@ The [[file:../../scheme-research-proof-audit.org][audit]] and
 prove arbitrary concretization completeness or roll back private Provider
 state after a failed extension. Custom copies add work proportional to the
 supplied snapshots and returned batch; no speedup is claimed.
+
+* Custom state readiness and source replay (2026-10-06)
+
+The injection/concretization transfer also needs a state publication boundary.
+An extension can mutate private state and then fail, or pass its own shape
+check before a later field, budget or rule callback rejects the evaluation.
+A physical state that already remembers an unpublished fact can suppress it
+on retry. The paper's Section 3 operators do not specify recovery from these
+Scheme exceptions.
+
+Custom engine states now have a private readiness owner. Dispatch marks them
+pending; callback/shape failure marks them failed. Only complete source batch
+or rule-round publication restores readiness. Pending states accept further
+injections within the same round, but a later public engine run/append requires
+all owners ready. Session recovery reconstructs fresh states from its retained
+source snapshot. The shared schema caches dispatch only, never these owners.
+
+The [[file:../../evidence/scheme-storage-state-20261006/receipt.json][native receipt]] covers mutable callback failures, shape/field/budget
+rejection, a later guard failure after a successful emission, source replay,
+and prior-result preservation. Native providers keep their raw state and
+existing preflight laws. This prevents silent reuse of uncertain custom state;
+it does not clone or roll back arbitrary private representation or undo host
+side effects. Fresh independent state construction remains a Provider premise.

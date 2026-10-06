@@ -5,6 +5,13 @@
         (only-in :gerbil-ascent/program/session gerbil-ascent-session-run
                  gerbil-ascent-session-append-source! gerbil-ascent-session-replace-source!)
         :gerbil-ascent/table/index-sharing
+        (only-in :std/list/list delete-duplicates/hash)
+        (rename-in (only-in :gerbil-ascent/t/performance/index-sharing/reference
+                           gerbil-ascent-shared-index-build gerbil-ascent-shared-index-extend!
+                           gerbil-ascent-shared-index-rows)
+                   (gerbil-ascent-shared-index-build old-shared-build)
+                   (gerbil-ascent-shared-index-extend! old-shared-extend!)
+                   (gerbil-ascent-shared-index-rows old-shared-rows))
         (only-in :gerbil-ascent/program/index gerbil-ascent-make-row-indexes
                  row-indexes-rows row-indexes-advance! row-indexes-plan-atoms!)
         (only-in :clan/poo/object .o .ref)
@@ -90,6 +97,69 @@
                        (vector 1 #f #f) (vector #f 2 #f)) #f)
         (check-equal? (gerbil-ascent-index-sharing-certificate? sets
                        (vector 3 #f #f) (vector #f #f #f)) #f)))
+    (test-case "batch column writes preserve row identity across permutations and wide sparse keys"
+      (for-each
+       (lambda (config)
+         (let* ((width (car config)) (columns (cdr config))
+                (original-columns (map values columns))
+                (source (lambda (offset count)
+                          (map (lambda (n)
+                                 (map (lambda (c) (if (= (modulo c 7) 0) #f (+ c (modulo n 8))))
+                                      (iota width))) (iota count offset))))
+                (rows (source 0 20)) (batch (source 20 9))
+                (old (old-shared-build rows columns))
+                (new (gerbil-ascent-shared-index-build rows columns)))
+           (check-equal? columns original-columns)
+           (for-each
+            (lambda (size)
+              (let* ((logical (reverse (take columns size)))
+                     (key-of (lambda (row) (map (lambda (c) (list-ref row c)) logical)))
+                     (key (key-of (car rows)))
+                     (expected (lambda (all) (filter (lambda (row) (equal? key (key-of row))) all))))
+                (check-equal? (old-shared-rows old logical key) (expected rows))
+                (check-equal? (andmap eq? (gerbil-ascent-shared-index-rows new logical key)
+                                         (expected rows)) #t)))
+            (delete-duplicates/hash (list 1 (max 1 (quotient (length columns) 2)) (length columns))))
+           (old-shared-extend! old batch)
+           (gerbil-ascent-shared-index-extend! new batch)
+           (check-equal? columns original-columns)
+           (for-each
+            (lambda (logical)
+              (let* ((key-of (lambda (row) (map (lambda (c) (list-ref row c)) logical)))
+                     (key (key-of (car rows)))
+                     (expected (filter (lambda (row) (equal? key (key-of row)))
+                                       (append (reverse batch) rows)))
+                     (actual (gerbil-ascent-shared-index-rows new logical key)))
+                (check-equal? actual expected)
+                (check-equal? actual (old-shared-rows old logical key))
+                (check-equal? (andmap eq? actual expected) #t)))
+            (list columns (reverse columns)))))
+       (list '(1 0) '(3 1 0 2) (cons 32 '(31 0 17 4))
+             (cons 512 (reverse (iota 64 448)))
+             (cons 1024 (map (lambda (n) (+ 3 (* n 16))) (iota 64))))))
+    (test-case "empty batch keeps cached publications and later gathers never alias earlier rows"
+      (let* ((rows '((#f a 1) (#f a 1) (9 b 2)))
+             (index (gerbil-ascent-shared-index-build rows '(1 0 2)))
+             (published (gerbil-ascent-shared-index-rows index '(1) '(a))))
+        (gerbil-ascent-shared-index-extend! index [])
+        (check-equal? (eq? published (gerbil-ascent-shared-index-rows index '(1) '(a))) #t)
+        (gerbil-ascent-shared-index-extend! index '((#f a 3) (8 b 4)))
+        (check-equal? published '((#f a 1) (#f a 1)))
+        (check-equal? (gerbil-ascent-shared-index-rows index '(1) '(a))
+                      '((#f a 3) (#f a 1) (#f a 1)))
+        (check-equal? (andmap eq? published (take rows 2)) #t)))
+    (test-case "borrowed column changes retain baseline extension semantics"
+      (let* ((columns (list 0)) (rows '((1 a) (2 b)))
+             (old (old-shared-build rows columns))
+             (new (gerbil-ascent-shared-index-build rows columns))
+             (published (gerbil-ascent-shared-index-rows new '(0) '(1))))
+        (set-car! columns 1)
+        (old-shared-extend! old '((3 c)))
+        (gerbil-ascent-shared-index-extend! new '((3 c)))
+        (check-equal? (gerbil-ascent-shared-index-rows new '(1) '(c)) '((3 c)))
+        (check-equal? (gerbil-ascent-shared-index-rows new '(1) '(c))
+                      (old-shared-rows old '(1) '(c)))
+        (check-equal? published '((1 a)))))
     (test-case "all 128 requirement families match independent minimum chain partitions"
       (let (universe '((0) (1) (2) (0 1) (0 2) (1 2) (0 1 2)))
         (for-each

@@ -819,3 +819,26 @@ against independent arithmetic outside timing. They establish compilation CPU
 and allocation gains, not cold engine or solve speed. Long scopes, small calls
 and a 256-column pure rule have separate fixed gates. Evidence and retained
 negative results are in =t/performance/expression-plan/README.org=.
+
+* Prepare guarded column projections before trie insertion
+
+Gerbil =compiler/optimize.ss:163-185= collects mutation and type facts before
+transforming applications. =optimize-call.ss:283-295= separately admits effect
+information: its side-effect predicate accepts only proved pure/allocation
+calls whose operands also qualify. Representation specialization therefore
+needs both stable facts and an explicit effect boundary.
+
+The shared physical index applies this pattern to admitted row fields. Column
+metadata is prepared once into forward cursor steps and physical destination
+slots. A detached vector guards the complete borrowed column sequence before
+each nonempty extension. The index owns its reusable scratch frame; each row
+is gathered afresh and inserted in the original trie permutation. Query keys,
+expression callbacks, insertion ordinals and published result spines keep their
+existing owners and order. Compiled metadata is reusable; row values are not.
+
+Private column ordering uses standard =list-sort!= on newly allocated pairs.
+Tail builders avoid additional construction continuations. Empty batches do
+not allocate a projection. Native build/extend/lookup comparisons against the
+complete frozen source retain negative experiments and small controls in
+=t/performance/index-sharing/README.org=. The measured CPU improvement applies
+to that physical lifecycle, with a bounded metadata allocation increase.

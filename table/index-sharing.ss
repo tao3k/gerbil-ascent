@@ -131,13 +131,16 @@
       (error "index sharing chains omit a requirement"))
     layout))
 
-(defstruct shared-index (columns root ordinal views))
+(defstruct shared-index (columns root ordinal views projection))
+;;; Immutable column facts and one mutable scratch frame belong to one index.
+;;; Neither metadata nor frame is a result row or a published bucket spine.
+(defstruct column-projection (columns writes frame))
 ;;; Trie nodes retain either child maps or occurrence lists at full depth.
 ;;; Each occurrence has one increasing ordinal, so prefix traversal can restore
 ;;; exact relation order independently of hash traversal order and duplicates.
 ;; : (-> AdmittedRows NonemptyDistinctColumns SharedIndex)
 (def (gerbil-ascent-shared-index-build rows columns)
-  (let (index (make-shared-index columns (make-hash-table) 0 (make-hash-table)))
+  (let (index (make-shared-index columns (make-hash-table) 0 (make-hash-table) #f))
     (gerbil-ascent-shared-index-extend! index (reverse rows))
     index))
 
@@ -145,19 +148,76 @@
 (def (gerbil-ascent-shared-index-extend! index rows)
   ;; Old result spines remain immutable. One successful batch invalidates all
   ;; aliases together; there is no shared mutable bucket between engine owners.
-  (when (pair? rows) (shared-index-views-set! index (make-hash-table)))
-  (for-each
-   (lambda (row)
-     (let (ordinal (+ (shared-index-ordinal index) 1))
-       (let insert ((node (shared-index-root index)) (columns (shared-index-columns index)))
-         (let ((key (list-ref row (car columns))))
-           (if (null? (cdr columns))
-             (hash-put! node key (cons (cons ordinal row) (or (hash-get node key) [])))
-             (let (child (or (hash-get node key)
-                            (let (fresh (make-hash-table)) (hash-put! node key fresh) fresh)))
-               (insert child (cdr columns))))))
-       (shared-index-ordinal-set! index ordinal))) rows)
+  (when (pair? rows)
+    (shared-index-views-set! index (make-hash-table))
+    (let* ((columns (shared-index-columns index))
+           (width (length columns))
+           ;; Sort reads, not trie levels. Each instruction carries the forward
+           ;; cursor distance and the original physical destination slot.
+           (projection (column-projection-for! index columns width))
+           (writes (column-projection-writes projection))
+           (frame (column-projection-frame projection)))
+      (def (insert! node depth row ordinal)
+        (let (key (vector-ref frame depth))
+          (if (= (+ depth 1) width)
+            (hash-put! node key (cons (cons ordinal row) (or (hash-get node key) [])))
+            (let (child (or (hash-get node key)
+                           (let (fresh (make-hash-table)) (hash-put! node key fresh) fresh)))
+              (insert! child (+ depth 1) row ordinal)))))
+      (for-each
+       (lambda (row)
+         (let (ordinal (+ (shared-index-ordinal index) 1))
+           (fill-column-frame! row writes frame)
+           (insert! (shared-index-root index) 0 row ordinal)
+           (shared-index-ordinal-set! index ordinal))) rows)))
   index)
+
+;;; Specialization depends on column identity, not row values. Empty batches
+;;; never construct a projection. Borrowed columns can change: a detached
+;;; snapshot guards reuse before gathering any row in the next nonempty batch.
+;; : (-> SharedIndex NonemptyDistinctColumns Nat ColumnProjection)
+(def (column-projection-for! index columns width)
+  (let (prior (shared-index-projection index))
+    (if (and prior (same-columns? columns (column-projection-columns prior))) prior
+      (let (fresh (make-column-projection (list->vector columns)
+                                         (column-writes columns) (make-vector width #f)))
+        (shared-index-projection-set! index fresh)
+        fresh))))
+
+;;; Compare borrowed list metadata with a detached vector without allocating
+;;; another column spine at each extension. Both length and order guard reuse.
+;; : (-> NonemptyDistinctColumns (Vector Column) Boolean)
+(def (same-columns? columns snapshot)
+  (let compare ((remaining columns) (slot 0))
+    (if (null? remaining) (= slot (vector-length snapshot))
+      (and (< slot (vector-length snapshot))
+           (equal? (car remaining) (vector-ref snapshot slot))
+           (compare (cdr remaining) (+ slot 1))))))
+
+;;; No user callback runs between gather and insert. Sort private metadata,
+;;; never source columns or rows; row values are read afresh for every insert.
+;; : (-> NonemptyDistinctColumns ColumnWrites)
+(def (column-writes columns)
+  ;; Every sorted pair and spine is private. Tail builders keep the column
+  ;; projection from retaining additional construction continuations.
+  (let gather ((remaining columns) (slot 0) (entries []))
+    (if (null? remaining)
+      (let (ordered (list-sort! (lambda (a b) (< (car a) (car b))) entries))
+        (let steps ((remaining ordered) (position 0) (writes []))
+          (if (null? remaining) (reverse! writes)
+            (let (entry (car remaining))
+              (steps (cdr remaining) (+ (car entry) 1)
+                     (cons (cons (- (car entry) position) (cdr entry)) writes))))))
+      (gather (cdr remaining) (+ slot 1)
+              (cons (cons (car remaining) slot) entries)))))
+
+;; : (-> AdmittedRow ColumnWrites PrivateFrame Void)
+(def (fill-column-frame! row writes frame)
+  (unless (null? writes)
+    (let* ((instruction (car writes))
+           (selected (list-tail row (car instruction))))
+      (vector-set! frame (cdr instruction) (car selected))
+      (fill-column-frame! (cdr selected) (cdr writes) frame))))
 
 ;;; Logical key order may differ from the physical prefix permutation. Resolve
 ;;; that adapter without changing caller columns, keys, rows or published lists.

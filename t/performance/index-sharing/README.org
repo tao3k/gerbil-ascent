@@ -1,0 +1,108 @@
+#+TITLE: Shared index column projection qualification
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+* Production change
+
+The shared physical index keeps its original trie permutation, occurrence
+ordinals, result ordering, alias invalidation and source row objects. Its
+insertion path previously ran =list-ref= from the row root for every column.
+It now gathers admitted row values with one forward cursor into an index-owned
+scratch frame, then inserts those values in the original physical order.
+
+One private projection retains a detached vector of columns, ordered cursor
+steps and the scratch frame. Each nonempty extension compares the complete
+current column sequence with that snapshot before reusing the projection.
+Changed borrowed columns prepare a fresh projection; empty batches prepare
+nothing and keep published bucket spines. Row values are never memoized. Each
+engine or worker owns its index and frame; neither is transferred in results.
+
+The projection is prepared once per index shape, with O(k log k) column ordering
+and O(k) retained metadata for k columns. Insertion gathers in O(max-column + k)
+per row instead of O(sum-of-column-positions). All reordered reads are plain
+admitted row fields. Public expression and Provider callback order stays with
+the existing evaluator and index adapter.
+
+* Matched native evidence
+
+=reference.ss= is byte-identical to the complete =table/index-sharing.ss= at
+=4fe11743929170e177ab8e7b6388e00d21595e72=. There are no import substitutions
+or reduced reference algorithms. Both implementations are compiled and linked
+into the same native executable. The runner verifies matching native library
+paths and =.o1= files before sampling.
+
+The fixture was generated through public ASP =make-benchmark-fixture=. Each
+scenario performs 50 alternating old/new pairs with GC before each leg and
+native process CPU/allocation counters. Fresh build, append and prefix/full
+lookups are all inside timing. Rows, keys and independent direct-projection
+truth are prepared outside timing. Both results must equal ordered source truth,
+including duplicate rows and =#f= keys, after every sample. ASP admission and the
+actual sample count are checked in addition to relative gates.
+
+The gates were fixed before sampling. Large scenarios require <=80% baseline
+CPU, at least 35 CPU wins and <=32 KiB additional allocation per lifecycle.
+Controls require <=105% CPU plus 20 us and <=4 KiB additional allocation.
+
+| Scenario | Rows / batch | Row width / key width | CPU us old / new | Bytes old / new | Wins | Gate |
+|----------+--------------+-----------------------+------------------+-----------------+------+------|
+| wide | 128 / 32 | 512 / 128 | 10580 / 2299 | 5277456 / 5306256 | 50 | pass |
+| sparse | 128 / 32 | 1024 / 64 | 5772 / 1144 | 2008672 / 2023136 | 50 | pass |
+| small | 64 / 16 | 3 / 3 | 36.125 / 34.875 | 81168 / 81968 | 47 | pass |
+| scalar | 64 / 16 | 1 / 1 | 12.750 / 12.375 | 18608 / 18960 | 47 | pass |
+| empty | 0 / 0 | 512 / 128 | 0.328 / 0.328 | 1984 / 2000 | 21 | pass |
+
+This establishes approximately 78% / 80% CPU reduction for the shared physical
+index lifecycle. Allocation increases by 28,800 / 14,464 bytes, within the fixed
+budget; this is not an allocation reduction or a complete evaluator speed claim.
+Chain-cover planning, DSL compilation and result admission are outside this
+benchmark and remain covered by consumer tests.
+
+Earlier experiments remain under ignored =.cache/ascent/index-sharing/=:
+=pilot-*= used the ASP default 20 samples and are not 50-pair qualification;
+=sorted-*=, =tail-*=, =hash-*=, =bounded-*= and =cached-*= retain negative
+allocation results. Eager per-batch ordering and hash position tables exceeded
+budgets; shape heuristics were withdrawn. The final implementation uses one
+standard private ordering strategy and a guarded index-owned projection.
+No gate or timeout was widened to admit those negative results.
+
+* Reproduction
+
+The project SDK must already be installed; these commands do not build Gerbil.
+Run from the repository root with the same project Gerbil environment used for
+native tests:
+
+#+begin_src sh
+GERBIL_PATH="$PWD/.cache/ascent/sdk" GERBIL_LOADPATH="$PWD" \
+  gerbil env gxi -:max-heap=1G,debug=q t/performance/index-sharing-build.ss \
+  "$PWD/.cache/ascent/native-library/lib" "$PWD/.cache/ascent/index-sharing/benchmark"
+
+for scenario in wide sparse small scalar empty; do
+  .cache/ascent/index-sharing/benchmark -:max-heap=1G,debug=q "$scenario" \
+    "$PWD/.cache/ascent/native-library/lib" ".cache/ascent/index-sharing/$scenario.sexp"
+done
+#+end_src
+
+The benchmark builder and regression cases live under =t/=. Raw receipts,
+compiler output and executables stay in ignored =.cache/=; =build.ss= has no new
+test or benchmark responsibilities.
+
+* Consumer qualification
+
+The final native two-lane pool passes seven modules and 79 Cases: expression
+plans, index entries, component indexes, positive SCCs, actor Sessions, retained
+operators and native integration. Explicit =MODULE-OK=, =HARNESS-OK= and final
+=OK= occur for every module, with process exit zero. New Cases check original
+row identities across dense/sparse permutations, untouched caller columns,
+empty-batch publication identity and a changed borrowed column tuple against
+the frozen baseline. A malformed initial test form was corrected; its failed
+compilation log is retained rather than counted as a test pass.
+
+The complete native build-selection ASP policy passes with zero errors and
+thirteen existing warnings. Qualification logs and raw receipts are in ignored
+=.cache/ascent/index-sharing/=; no execution log is part of the change.
+
+After preserving the concurrent native matching-certificate change, the
+integrated index-entry module passes all 19 Cases with process exit zero. The
+production source from =defstruct shared-index= through the complete projection
+and query implementations is byte-identical to the measured version. The
+certificate affects chain-cover planning, outside the timed lifecycle.

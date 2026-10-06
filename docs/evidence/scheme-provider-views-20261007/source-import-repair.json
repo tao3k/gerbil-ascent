@@ -15,7 +15,7 @@
       "passed": 11,
       "ignored": 1,
       "filteredOut": 63,
-      "ignoredScope": "pre-existing pinned upstream discrepancy"
+      "ignoredScope": "pre-existing pinned Ascent trrel-uf 10,000-edge slow full-scale gate, executed separately by the CI byods-scale shard"
     },
     "policy": {
       "exitCode": 0,

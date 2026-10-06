@@ -74,6 +74,52 @@
                              (gerbil-ascent-guard '(x) (lambda (_) 17))) (variable 'x))
               (program (list (atom 'input (variable 'x) (variable 'y))
                              (gerbil-ascent-binding 'z '(x) values)) (variable 'z) 1))))
+    (test-case "public expression procedure and input mutations remain observable"
+      (def (run evaluate)
+        (let* ((calls []) (expression #f)
+               (replacement (lambda (y) (set! calls (cons (list 'replacement y) calls)) y))
+               (initial (lambda (x)
+                          (set! calls (cons (list 'initial x) calls))
+                          (vector-set! (.ref expression 'value) 0 '(y))
+                          (vector-set! (.ref expression 'value) 1 replacement)
+                          x)))
+          (set! expression (gerbil-ascent-expression '(x) initial))
+          (let (result (evaluate (program (list (atom 'input (variable 'x) (variable 'y))) expression)))
+            (list (rows result) calls))))
+      (let ((expected (run old-evaluate)) (actual (run gerbil-ascent-evaluate-program)))
+        (check-equal? actual expected)
+        (check-equal? (and (member '(replacement #f) (cadr actual)) #t) #t)))
+    (test-case "borrowed binding and guard input lists retain mutation semantics"
+      (def (run evaluate)
+        (let* ((names (list 'x 'y)) (calls [])
+               (p (program
+                    (list (atom 'input (variable 'x) (variable 'y))
+                      (gerbil-ascent-binding 'z names
+                        (lambda (a b)
+                          (set! calls (cons (list 'binding a b) calls))
+                          (set-car! names 'y) a))
+                      (gerbil-ascent-guard names
+                        (lambda (a b) (set! calls (cons (list 'guard a b) calls)) #t)))
+                    (variable 'z))))
+          (let (result (evaluate p)) (list (rows result) calls))))
+      (check-equal? (run gerbil-ascent-evaluate-program) (run old-evaluate)))
+    (test-case "changed indexed inputs cannot read stale row-local slots"
+      (def (run evaluate)
+        (let* ((expression (gerbil-ascent-expression '(x) values))
+               (p (gerbil-ascent-program
+                    (list (gerbil-ascent-relation 'source 1 '((1)))
+                          (gerbil-ascent-relation 'lookup 2
+                            (map (lambda (x) (list x x)) (iota 64)))
+                          (gerbil-ascent-relation 'out 1 []))
+                    (list (gerbil-ascent-rule (list (atom 'out (variable 'x)))
+                      (list (atom 'source (variable 'x))
+                        (gerbil-ascent-guard '(x)
+                          (lambda (_)
+                            (vector-set! (.ref expression 'value) 0 '(z)) #t))
+                        (atom 'lookup (variable 'z) expression)))) 128 128 256)))
+          (outcome (lambda () (evaluate p)))))
+      (check-equal? (run gerbil-ascent-evaluate-program) (run old-evaluate))
+      (check-equal? (run gerbil-ascent-evaluate-program) "unbound ASCENT expression variable"))
     (test-case "private plans distinguish pure execution from compiled callbacks"
       (let* ((pure (expression-program 2 1 #f)) (effect (expression-program 2 1 #t))
              (pure-analysis (.ref (gerbil-ascent-make-engine pure #t) '.analysis))

@@ -4,7 +4,8 @@
 
 ;;; Private admitted callback inputs lower once to frame reads. Calls remain
 ;;; at their original execution points; neither results nor frames are cached.
-(export gerbil-ascent-compile-frame-call gerbil-ascent-compile-frame-sequence)
+(export gerbil-ascent-compile-frame-call gerbil-ascent-compile-frame-sequence
+        gerbil-ascent-compile-input-guard)
 
 ;; : (-> Procedure Slots (-> Frame Value))
 (def (gerbil-ascent-compile-frame-call procedure slots)
@@ -42,3 +43,21 @@
            (lambda (frame)
              (vector-set! frame slot (call frame))
              (next frame))))))))
+
+;;; Observe the current input tuple without retaining a borrowed mutable spine.
+;;; Common arities use identity checks; larger shapes compare a detached copy.
+;; : (-> Names (-> Any Boolean))
+(def (gerbil-ascent-compile-input-guard names)
+  (match names
+    ([] null?)
+    ([one]
+     (lambda (current)
+       (and (pair? current) (eq? (car current) one) (null? (cdr current)))))
+    ([one two]
+     (lambda (current)
+       (and (pair? current) (eq? (car current) one)
+            (pair? (cdr current)) (eq? (cadr current) two)
+            (null? (cddr current)))))
+    (else
+     (let (expected (map values names))
+       (lambda (current) (equal? current expected))))))

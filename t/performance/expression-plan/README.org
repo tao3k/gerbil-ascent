@@ -72,15 +72,15 @@ Final native medians (50 alternating pairs in every row):
 
 | Scenario | Rows | Stages | Scope | CPU us old/new | Bytes old/new | Wins | Fixed gate |
 |----------+------+--------+-------+----------------+---------------+------+------------|
-| deep | 512 | 4 | 24 | 3492 / 1158 | 5620080 / 774352 | 50 | pass |
-| scope | 1024 | 1 | 48 | 3991 / 850 | 5264352 / 510016 | 50 | pass |
-| chain | 512 | 8 | 2 | 1695 / 1496 | 2632464 / 1452368 | 46 | fail CPU |
-| wide | 2048 | 2 | 2 | 1928 / 1682 | 2842224 / 1662512 | 48 | fail CPU |
-| pure | 512 | 8 | no callbacks | 1339 / 1340 | 1452112 / 1452112 | 21 | pass |
-| small | 2 | 1 | 2 | 7 / 7 | 13440 / 12864 | 27 | pass |
+| deep | 512 | 4 | 24 | 2881 / 1627 | 5601456 / 774352 | 50 | pass |
+| scope | 1024 | 1 | 48 | 3822 / 1311 | 5264352 / 510016 | 50 | pass |
+| chain | 512 | 8 | 2 | 1675 / 1629 | 2632464 / 1452368 | 48 | fail CPU |
+| wide | 2048 | 2 | 2 | 1852 / 1794 | 2842224 / 1662512 | 43 | fail CPU |
+| pure | 512 | 8 | no callbacks | 1315 / 1316 | 1452112 / 1452112 | 28 | pass |
+| small | 2 | 1 | 2 | 7 / 7 | 13440 / 12864 | 20 | pass |
 
-Long scopes reduced median CPU 67%/79% and allocation 86%/90%. Short scopes
-reduced CPU 12%/13% and allocation 45%/42%, but failed their unchanged 20% CPU
+Long scopes reduced median CPU 44%/66% and allocation 86%/90%. Short scopes
+reduced CPU 3%/3% and allocation 45%/42%, but failed their unchanged 20% CPU
 gates. The overall command returned nonzero (recipe exit 1, enclosing Gerbil
 process exit 70); it is not an overall performance gate pass. Pure and small
 controls passed; neither establishes a speed improvement. Raw logs, rejected experiments,
@@ -142,3 +142,53 @@ startup/idle deadlines and native Case ordering were not changed. The two-proces
 full pass does not establish that automatic 12-process startup is qualified.
 Actor Session source policy has no errors and retains its existing repeated
 match-branch warning (policy 014); the source was not rewritten to suppress it.
+
+* Guard public callback mutation
+
+Gerbil's lambda substitution checks mutable bindings before replacing reads.
+Our public expression payload vectors and clause input lists are borrowed and
+mutable, so compiling their initial values unconditionally is not equivalent
+to interpretation. Each compiled call now checks the current procedure and
+input tuple against its prepared values. Mutation uses the original runtime
+binding protocol with a snapshot of the lexical names visible at that point.
+Index-key evaluation snapshots the scope before row matching; row expressions
+can see earlier terms in that row. Frames and callback results remain private
+and uncached. The medians above include these guards (=guarded-benchmark.log=),
+including the failed short-scope gates; guard cost is not excluded from timing.
+
+The mutation suite passed 11 native Cases, including procedure/input replacement,
+borrowed clause-list mutation and a 64-row indexed lookup whose changed inputs
+must not observe row-local slots. Each is checked against the complete frozen
+interpreter, with explicit unbound-variable and false-value controls. Selected
+Core policy has zero errors; it also reports policy 013 on the new input guard's
+compact signature comment, alongside the existing cursor warning 041.
+
+GitHub run 37427304589 for c3bc505 still failed before Cases: its library-make
+worker overflowed the unchanged 1 GiB heap. The fresh entry compiler addresses
+entry phase ownership only; it does not qualify cold full library compilation
+on GitHub. Local module passes must not be reported as remote acceptance.
+
+After adding mutation guards and integrating the concurrent remote changes, the
+complete native =test 2 all= rerun passed 82 modules and 713 Cases. It returned
+exit 0 with 82 =MODULE-OK=, 82 =HARNESS-OK= and 82 final =OK= markers. The receipt
+is =.cache/ascent/expression-plan/guarded-full-native-tests.log=. This supersedes
+the earlier local 708-Case count for the final guarded production sources.
+
+Concurrent commit 67da108 separates production, reference/fixture and Suite
+library compilation into fresh processes under the same heap limit. Its GitHub
+run 37429219617 completed the first two layers but still overflowed in the
+Suite layer before Cases. This integration narrows the remaining cold-build
+resource boundary; it does not establish remote qualification. The final local
+integration rerun is retained in =rebased-guarded-full-native-tests.log=.
+The rebased local integration rerun also returned exit 0 with all 82 modules and
+713 Cases, plus 82 of each required module/harness/final success marker. The
+production expression sources and frozen expression comparator were unchanged
+by integration; the remote-only changes preserve compiler phase ownership and
+purity metadata in earlier update benchmark adapters.
+
+Concurrent follow-up 5a75020 releases Suite compiler state per consumer instead
+of retaining all Suite contexts. Integration leaves the guarded Core sources
+byte-identical. The final expression Suite passed all 11 Cases through this
+boundary with exit 0 and all required success markers; its receipt is
+=final-consumer-native-tests.log=. The two full 713-Case passes precede this
+consumer-boundary follow-up. Its complete Linux CI qualification remains open.

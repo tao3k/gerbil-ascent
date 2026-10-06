@@ -4,8 +4,9 @@
 
 ;;; Private positive-rule execution plans. Plans are immutable and shared;
 ;;; each engine owns its variable frames, including nested/concurrent solves.
-(import (only-in "expression-plan.ss" gerbil-ascent-compile-frame-call gerbil-ascent-compile-frame-sequence)
-        (only-in "rule-bindings.ss" gerbil-ascent-expression-value gerbil-ascent-head-row))
+(import (only-in "expression-plan.ss" gerbil-ascent-compile-frame-call gerbil-ascent-compile-frame-sequence
+                 gerbil-ascent-compile-input-guard)
+        (only-in "rule-bindings.ss" gerbil-ascent-expression-value gerbil-ascent-head-row gerbil-ascent-call-with-bindings))
 (export gerbil-ascent-prepare-rule-activations gerbil-ascent-positive-plan gerbil-ascent-compile-positive-plan gerbil-ascent-run-positive-plan!
         gerbil-ascent-pure-positive-plan?
         gerbil-ascent-index-key gerbil-ascent-index-key/terms
@@ -100,10 +101,28 @@
           (set! count (+ count 1))
           (hash-put! slots name slot)
           slot))
-      (def (lower-call names procedure)
+      (def (lower-call names procedure diagnostic (payload #f) (scope (hash->list slots)))
         (unless (and (list? names) (procedure? procedure)) (unsupported #f))
         (set! pure? #f)
-        (gerbil-ascent-compile-frame-call procedure (map read-slot names)))
+        (let ((fast (gerbil-ascent-compile-frame-call procedure (map read-slot names)))
+              (stable-inputs? (gerbil-ascent-compile-input-guard names)))
+          (def (fallback current-procedure current-names frame)
+            (gerbil-ascent-call-with-bindings current-procedure current-names
+              (map (lambda (entry)
+                     (cons (car entry) (vector-ref frame (cdr entry)))) scope)
+              diagnostic))
+          (if payload
+            (lambda (frame)
+              ;; The old expression protocol reads procedure before input names.
+              (let* ((current-procedure (vector-ref payload 1))
+                     (current-names (vector-ref payload 0)))
+                (if (and (eq? current-procedure procedure)
+                         (stable-inputs? current-names))
+                  (fast frame)
+                  (fallback current-procedure current-names frame))))
+            (lambda (frame)
+              (if (stable-inputs? names) (fast frame)
+                  (fallback procedure names frame))))))
       (def (lower term head?)
         (case (car term)
           ((literal wildcard) term)
@@ -112,7 +131,7 @@
              (unless (and (vector? payload) (= (vector-length payload) 2))
                (unsupported #f))
              (cons 'expression (lower-call (vector-ref payload 0)
-                                          (vector-ref payload 1)))))
+                                          (vector-ref payload 1) "unbound ASCENT expression variable" payload))))
           ((variable)
            (let (slot (hash-get slots (cdr term)))
              (cond
@@ -126,18 +145,33 @@
                    (case (vector-ref clause 0)
                      ((atom)
                       (let* ((atom (vector-ref clause 1))
-                             (terms (map (lambda (term) (lower term #f))
-                                         (vector-ref atom 1))))
-                        (vector atom terms
-                                (project-slot-terms terms (vector-ref atom 2)))))
+                             (prior-scope (hash->list slots))
+                             (original (vector-ref atom 1))
+                             (terms (map (lambda (term) (lower term #f)) original))
+                             (columns (vector-ref atom 2))
+                             (keys (map
+                                     (lambda (source action)
+                                       (if (eq? (car source) 'expression)
+                                         (let (payload (cdr source))
+                                           (cons 'expression
+                                             (lower-call (vector-ref payload 0)
+                                               (vector-ref payload 1)
+                                               "unbound ASCENT expression variable"
+                                               payload prior-scope)))
+                                         action))
+                                     (project-slot-terms original columns)
+                                     (project-slot-terms terms columns))))
+                        ;; Key evaluation precedes row matching. Changed inputs
+                        ;; must not read row-local slots left by prior candidates.
+                        (vector atom terms keys)))
                      ((guard)
                       (vector 'guard (lower-call (vector-ref clause 1)
-                                                (vector-ref clause 2))))
+                                                (vector-ref clause 2) "unbound ASCENT clause variable")))
                      ((binding)
                       ;; Resolve inputs before shadowing the output name. A
                       ;; separate slot preserves enclosing backtracking values.
                       (let* ((call (lower-call (vector-ref clause 2)
-                                               (vector-ref clause 3)))
+                                               (vector-ref clause 3) "unbound ASCENT clause variable"))
                              (slot (fresh-slot! (vector-ref clause 1))))
                         (vector 'binding slot call)))
                      (else (unsupported #f)))) body))

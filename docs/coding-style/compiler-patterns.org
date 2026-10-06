@@ -698,3 +698,17 @@ entry lowering/linking under the same heap cap, with source-digest admission and
 streamed compiler output. Complete local qualification passed 82 modules/708
 Cases at two-process concurrency. Automatic 12-process combined-entry startup
 still failed the retained progress watchdog; that boundary is recorded separately.
+
+Public callback data adds a second admission boundary: expression payloads and
+borrowed input-name lists can change during execution. A prepared call checks
+its current procedure and tuple before using lexical slots. Changed metadata
+uses the original binding protocol, with the scope visible at that call point.
+Index lookup precedes row matching and therefore needs its own prior-atom scope.
+This applies Gerbil's mutable-binding check to our runtime representation;
+compilation never turns mutable callback metadata into a frozen constant.
+
+The final guarded expression path passed the complete local native pool:
+82 modules and 713 Cases, with explicit success markers and exit 0. Its long
+binding scopes improve CPU and allocation; short scopes still fail the original
+20% CPU gate. GitHub c3bc505 failed during cold library-make under its retained
+heap cap, before Cases, so remote qualification remains independent and open.

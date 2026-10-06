@@ -1,0 +1,81 @@
+{
+  "qualifiedBaseHead": "0aae58cd770590c0b22b0b6fa29103f97bf9bf9d",
+  "sources": {
+    "packages/proofs/lean/IndexedPositiveTraversal.lean": "eb8c319a5acf5c74dc5f3973690d69d8dbe3fb03863508598657272c7b3ad6a0",
+    "packages/proofs/lean/Tests/IndexedPositiveTraversalTests.lean": "5fa49a5779324b04f58e7af97a63288e07782f0248f331e91157561f1e066ed1",
+    "packages/proofs/tla/ProviderFrontier.tla": "179d258c61e2dc1c123fd91b1693168e022733f8fe8117db75dae69b5163e3d7",
+    "packages/proofs/tla/ProviderFrontier.cfg": "b103e84ee43a3db559dd62c96a4f995bf53fc8a295590a33e7550cd4ab0f5fbc",
+    "justfile": "f2f8916b0aac6083694a476db592bca1670288951edd805e881b6fd3c5a0f09a",
+    "t/qualification/ascent-positive-plan-test.ss": "1a9a108f64eb9ac89b8b069876948a6cd7655be39124929490bfe09dcc7bb7e3",
+    "t/qualification/ascent-byods-invariants-test.ss": "ac2b17a1ecdea6456c5dcd11c1f046f05c7979af2dc601bc8b09213b344e7538",
+    "program/evaluate.ss": "938f5ec1c9ed6f240fb0a9f32ea742486b80d3dd47ee524d9323822dde723e79"
+  },
+  "papers": [
+    {
+      "url": "https://kmicinski.com/assets/byods.pdf",
+      "section": "3.2 properties (1)-(2), pp. 8-9",
+      "reopened": "2026-10-06",
+      "mapping": "Concrete frozen-row specialization: old subset current, current minus old subset delta, delta subset current; old/delta overlap permitted. Not general abstract gamma or injection refinement."
+    }
+  ],
+  "lean": {
+    "command": "just check-lean-proofs",
+    "exitCode": 0,
+    "buildJobs": 73,
+    "contract": "DeltaCovers",
+    "generalizedTheorems": [
+      "frontier_to_rows",
+      "row_partition",
+      "new_output_indexed_pivot",
+      "indexed_pivot_output_sound"
+    ],
+    "compatibility": "exact_covers admits DeltaExact, without axioms",
+    "testsDirectory": "packages/proofs/lean/Tests",
+    "controls": [
+      "legal overlap is not DeltaExact",
+      "fresh-row omission violates DeltaCovers",
+      "foreign-row inclusion violates DeltaCovers"
+    ],
+    "scope": "Arbitrary finite positive bodies, frozen snapshots, admitted columns/arity and represented frames; compiled indexed pivot emissions are complete for new heads and sound for current heads."
+  },
+  "tla": {
+    "command": "TLC_JAR=<qualified tool> just check-provider-frontier-formal check-component-index-formal",
+    "toolSha256": "936a262061c914694dfd669a543be24573c45d5aa0ff20a8b96b23d01e050e88",
+    "exitCode": 0,
+    "providerNormalDistinctStates": {
+      "exact": 1376,
+      "seeded": 670,
+      "overlap": 1376
+    },
+    "componentIndexNormalDistinctStates": 9,
+    "expectedNegativeControls": [
+      "provider-frontier-raw FrontierComplete",
+      "provider-frontier-foreign FrontierComplete",
+      "provider-frontier-omit DeliveredExact",
+      "provider-frontier-early ConsumerSnapshot",
+      "provider-frontier-old ConsumerSnapshot",
+      "provider-frontier-initial ConsumerSnapshot",
+      "component-index-order Consistent",
+      "component-index-early Consistent"
+    ],
+    "scope": "Finite injection/publication/consume and physical-index installation protocol; no unbounded or native extraction claim."
+  },
+  "native": {
+    "command": "t/harness/run.ss test-pool 2 t/qualification/ascent-positive-plan-test.ss t/qualification/ascent-byods-invariants-test.ss",
+    "exitCode": 0,
+    "pool": 2,
+    "suiteCases": 33,
+    "moduleOK": 2,
+    "explicitOK": 2,
+    "runtimeChanged": false,
+    "scope": "Existing native Scheme indexed/pivot and BYODS qualification, including upstream indexed traversal discriminators."
+  },
+  "remaining": [
+    "Native encoding/equality/vector ownership refinement",
+    "Mutable cache and async trace refinement",
+    "General abstract gamma/injection and termination contracts"
+  ],
+  "modelCalls": 0,
+  "rustRuntimeChanges": false,
+  "performanceClaim": null
+}

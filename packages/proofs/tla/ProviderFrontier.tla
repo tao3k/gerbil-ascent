@@ -33,6 +33,9 @@ Inject(edge) == /\ phase = "idle" /\ edge \notin inputs
                 /\ inputs' = inputs \cup {edge}
                 /\ pending' = Concrete(inputs')
                 /\ delta' = IF Mutation = "raw" THEN {edge} \ total
+                             ELSE IF Mutation = "foreign" THEN
+                               (pending' \ total) \cup ((Nodes \X Nodes) \ pending')
+                             ELSE IF Mutation = "overlap" THEN pending'
                              ELSE pending' \ total
                 /\ phase' = "pending"
                 /\ answers' = IF Mutation = "early" THEN BodyOf(pending') ELSE answers
@@ -46,7 +49,10 @@ Consume == /\ phase = "pending"
 Next == (\E edge \in Nodes \X Nodes : Inject(edge)) \/ Consume
 Spec == Init /\ [][Next]_vars
 FrontierComplete == phase = "pending" =>
-                      pending = total \cup delta /\ delta = pending \ total
+                      pending = total \cup delta /\ delta \subseteq pending
+\* Exact difference is a stronger implementation choice, not BYODS admission.
+ExactFrontier == (phase = "pending" /\ Mutation = "none") =>
+                   delta = pending \ total
 DeliveredExact == phase = "idle" => delivered = total /\ total = Concrete(inputs)
 \* The visible consumer stays on the committed total until Consume. Even
 \* pending phases cannot expose answers derived from a private new frontier.

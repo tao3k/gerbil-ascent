@@ -304,6 +304,21 @@ def DeltaExact (body : List (Atom Value)) : Prop :=
   ∀ atom ∈ body, (∀ row ∈ atom.oldRows, row ∈ atom.allRows) ∧
     (∀ row, row ∈ atom.deltaRows ↔ row ∈ atom.allRows ∧ row ∉ atom.oldRows)
 
+/-- BYODS coverage permits overlap with old rows. No new concrete row may
+skip delta, and delta may not contain rows outside the current snapshot. -/
+def DeltaCovers (body : List (Atom Value)) : Prop :=
+  ∀ atom ∈ body, (∀ row ∈ atom.oldRows, row ∈ atom.allRows) ∧
+    (∀ row, row ∈ atom.allRows → row ∉ atom.oldRows → row ∈ atom.deltaRows) ∧
+    (∀ row ∈ atom.deltaRows, row ∈ atom.allRows)
+
+omit [DecidableEq Value] in
+theorem exact_covers (body : List (Atom Value)) (exactDelta : DeltaExact body) :
+    DeltaCovers body := by
+  intro atom member
+  have exactAtom := exactDelta atom member
+  exact ⟨exactAtom.1, fun row current absent => (exactAtom.2 row).mpr ⟨current, absent⟩,
+    fun row fresh => ((exactAtom.2 row).mp fresh).1⟩
+
 def rowPivots : List (Atom Value) → Env Value → Env Value → Prop
   | [], _, _ => False
   | atom :: rest, input, output =>
@@ -315,15 +330,15 @@ def rowPivots : List (Atom Value) → Env Value → Env Value → Prop
 rows may collapse to one environment (e.g. wildcards), so the converse is not
 assumed: row pivots can legitimately rederive old heads. -/
 theorem changed_to_delta (atom : Atom Value) (input output : Env Value)
-    (exactDelta : ∀ row, row ∈ atom.deltaRows ↔ row ∈ atom.allRows ∧ row ∉ atom.oldRows)
+    (covered : ∀ row, row ∈ atom.allRows → row ∉ atom.oldRows → row ∈ atom.deltaRows)
     (changed : ProviderFrontier.changed (transition Atom.oldRows atom)
       (transition Atom.allRows atom) input output) :
     transition Atom.deltaRows atom input output := by
   obtain ⟨⟨row, member, bound⟩, absent⟩ := changed
-  exact ⟨row, (exactDelta row).mpr ⟨member, fun old => absent ⟨row, old, bound⟩⟩, bound⟩
+  exact ⟨row, covered row member (fun old => absent ⟨row, old, bound⟩), bound⟩
 
 theorem frontier_to_rows (body : List (Atom Value)) (input output : Env Value)
-    (exactDelta : DeltaExact body)
+    (covered : DeltaCovers body)
     (fresh : ProviderFrontier.pivots (transition Atom.oldRows) (transition Atom.allRows) body input output) :
     rowPivots body input output := by
   induction body generalizing input with
@@ -332,10 +347,10 @@ theorem frontier_to_rows (body : List (Atom Value)) (input output : Env Value)
       rcases fresh with first | later
       · obtain ⟨middle, changed, tail⟩ := first
         exact Or.inl ⟨middle, changed_to_delta atom input middle
-          (exactDelta atom List.mem_cons_self).2 changed, tail⟩
+          (covered atom List.mem_cons_self).2.1 changed, tail⟩
       · obtain ⟨middle, all, tail⟩ := later
         exact Or.inr ⟨middle, all, ih middle
-          (fun next member => exactDelta next (List.mem_cons_of_mem atom member)) tail⟩
+          (fun next member => covered next (List.mem_cons_of_mem atom member)) tail⟩
 
 def rawTransition (atom : PositiveTraversal.Atom Value) (input output : Env Value) : Prop :=
   ∃ row ∈ atom.rows, AtomicBinding.bind atom.terms row input = some output
@@ -412,36 +427,36 @@ theorem reference_membership (body : List (PositiveTraversal.Atom Value))
         exact ⟨row, member, by simpa [bound] using (ih middle).mpr ⟨output, tail, head⟩⟩
 
 /-- Finite row-level version of the frontier partition. The growth premise
-is scoped to this body's atoms, and delta is the exact row difference. -/
+is scoped to this body's atoms; delta covers every new row and may overlap old rows. -/
 theorem row_partition (body : List (Atom Value)) (input output : Env Value)
-    (exactDelta : DeltaExact body) :
+    (covered : DeltaCovers body) :
     ProviderFrontier.body (transition Atom.allRows) body input output ↔
       ProviderFrontier.body (transition Atom.oldRows) body input output ∨ rowPivots body input output := by
   classical
   induction body generalizing input with
   | nil => simp [ProviderFrontier.body, rowPivots]
   | cons atom rest ih =>
-      have tailExact : DeltaExact rest :=
-        fun next member => exactDelta next (List.mem_cons_of_mem atom member)
-      have atomExact := exactDelta atom List.mem_cons_self
+      have tailCoverage : DeltaCovers rest :=
+        fun next member => covered next (List.mem_cons_of_mem atom member)
+      have atomCoverage := covered atom List.mem_cons_self
       have grow : ∀ seed result, transition Atom.oldRows atom seed result → transition Atom.allRows atom seed result := by
         rintro seed result ⟨row, member, bound⟩
-        exact ⟨row, atomExact.1 row member, bound⟩
+        exact ⟨row, atomCoverage.1 row member, bound⟩
       have deltaGrow : ∀ seed result, transition Atom.deltaRows atom seed result → transition Atom.allRows atom seed result := by
         rintro seed result ⟨row, member, bound⟩
-        exact ⟨row, ((atomExact.2 row).mp member).1, bound⟩
+        exact ⟨row, atomCoverage.2.2 row member, bound⟩
       constructor
       · rintro ⟨middle, first, tail⟩
         by_cases prior : transition Atom.oldRows atom input middle
-        · rcases (ih middle tailExact).mp tail with oldTail | freshTail
+        · rcases (ih middle tailCoverage).mp tail with oldTail | freshTail
           · exact Or.inl ⟨middle, prior, oldTail⟩
           · exact Or.inr (Or.inr ⟨middle, first, freshTail⟩)
-        · exact Or.inr (Or.inl ⟨middle, changed_to_delta atom input middle atomExact.2 ⟨first, prior⟩, tail⟩)
+        · exact Or.inr (Or.inl ⟨middle, changed_to_delta atom input middle atomCoverage.2.1 ⟨first, prior⟩, tail⟩)
       · intro covered
         rcases covered with ⟨middle, first, tail⟩ | ⟨middle, first, tail⟩ | ⟨middle, first, tail⟩
-        · exact ⟨middle, grow _ _ first, (ih middle tailExact).mpr (Or.inl tail)⟩
+        · exact ⟨middle, grow _ _ first, (ih middle tailCoverage).mpr (Or.inl tail)⟩
         · exact ⟨middle, deltaGrow _ _ first, tail⟩
-        · exact ⟨middle, first, (ih middle tailExact).mpr (Or.inr tail)⟩
+        · exact ⟨middle, first, (ih middle tailCoverage).mpr (Or.inr tail)⟩
 
 /-- Any consequence absent from the old snapshot is emitted by at least one
 indexed delta pivot. Projection collisions and overlapping pivot emissions
@@ -449,7 +464,7 @@ are admitted; authoritative output admission must deduplicate them. -/
 theorem new_output_indexed_pivot (body : List (Atom Value))
     (slotEmit : List Nat → Frame Value → List Output) (envEmit : Env Value → List Output)
     (emits : ∀ names env frame, Represents names env frame → slotEmit names frame = envEmit env)
-    (exactDelta : DeltaExact body) (names : List Nat) (input : Env Value) (frame : Frame Value)
+    (covered : DeltaCovers body) (names : List Nat) (input : Env Value) (frame : Frame Value)
     (rep : Represents names input frame)
     (admitted : ∀ pivot, Admitted body (some pivot) 0 names) (item : Output)
     (current : ∃ output, ProviderFrontier.body (transition Atom.allRows) body input output ∧ item ∈ envEmit output)
@@ -457,7 +472,7 @@ theorem new_output_indexed_pivot (body : List (Atom Value))
     ∃ pivot, pivot < body.length ∧ item ∈
       (runBody (compileBody body names).1 (some pivot) 0 (compileBody body names).2 slotEmit frame).1 := by
   obtain ⟨output, derived, emitted⟩ := current
-  have partition := (row_partition body input output exactDelta).mp derived
+  have partition := (row_partition body input output covered).mp derived
   rcases partition with old | fresh
   · exact False.elim (absent ⟨output, old, emitted⟩)
   · obtain ⟨pivot, _, upper, traversed⟩ := (row_pivots_iff body 0 input output).mp fresh
@@ -470,7 +485,7 @@ Together with new_output_indexed_pivot this closes the consequence boundary. -/
 theorem indexed_pivot_output_sound (body : List (Atom Value)) (pivot : Nat)
     (slotEmit : List Nat → Frame Value → List Output) (envEmit : Env Value → List Output)
     (emits : ∀ names env frame, Represents names env frame → slotEmit names frame = envEmit env)
-    (exactDelta : DeltaExact body) (names : List Nat) (input : Env Value) (frame : Frame Value)
+    (covered : DeltaCovers body) (names : List Nat) (input : Env Value) (frame : Frame Value)
     (rep : Represents names input frame) (admitted : Admitted body (some pivot) 0 names)
     (inside : pivot < body.length) (item : Output)
     (emitted : item ∈ (runBody (compileBody body names).1 (some pivot) 0
@@ -480,6 +495,6 @@ theorem indexed_pivot_output_sound (body : List (Atom Value)) (pivot : Nat)
   obtain ⟨output, traversed, head⟩ := (reference_membership _ envEmit input item).mp emitted
   have fresh := (row_pivots_iff body 0 input output).mpr
     ⟨pivot, Nat.zero_le _, by simpa using inside, traversed⟩
-  exact ⟨output, (row_partition body input output exactDelta).mpr (Or.inr fresh), head⟩
+  exact ⟨output, (row_partition body input output covered).mpr (Or.inr fresh), head⟩
 
 end Ascent.IndexedPositiveTraversal

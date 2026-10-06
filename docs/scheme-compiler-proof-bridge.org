@@ -35,8 +35,13 @@ selected columns read the actual compiled bound/literal actions; fresh local
 slots cannot supply admitted keys. =precompiled_indexed_pivot_refines= proves
 whole ordered-output equality after the native 32-row threshold chooses a scan
 or canonical ordered bucket, with delta at exactly one body occurrence.
-=row_partition= and =row_pivots_iff= connect the exact row difference to the
-frontier law. =new_output_indexed_pivot= covers every new head through a compiled
+=row_partition= and =row_pivots_iff= connect concrete row coverage to the
+frontier law. =DeltaCovers= allows old/delta overlap while requiring every new
+row in delta and excluding rows outside the current snapshot. =exact_covers=
+admits exact row differences as a stronger implementation choice. This is the
+concrete frozen-row specialization of BYODS section 3.2 properties (1)-(2),
+not a proof of arbitrary abstract lattices or concretization operators.
+=new_output_indexed_pivot= covers every new head through a compiled
 indexed pivot; =indexed_pivot_output_sound= excludes heads outside the full next
 snapshot. Projection collisions may rederive old heads and overlapping pivots
 require authoritative deduplication. Native qualification covers 30 layout /

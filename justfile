@@ -1218,7 +1218,9 @@ check-provider-frontier-formal:
     "${tlc[@]}" -workers 1 -config packages/proofs/tla/ProviderFrontier.cfg -metadir "$temp/good" packages/proofs/tla/ProviderFrontier.tla
     sed 's/InitialInputs = {}/InitialInputs <- SeededInputs/' packages/proofs/tla/ProviderFrontier.cfg > "$temp/seeded.cfg"
     "${tlc[@]}" -workers 1 -config "$temp/seeded.cfg" -metadir "$temp/seeded" packages/proofs/tla/ProviderFrontier.tla
-    for mutation in raw omit early old initial; do
+    sed 's/Mutation = "none"/Mutation = "overlap"/' packages/proofs/tla/ProviderFrontier.cfg > "$temp/overlap.cfg"
+    "${tlc[@]}" -workers 1 -config "$temp/overlap.cfg" -metadir "$temp/overlap" packages/proofs/tla/ProviderFrontier.tla
+    for mutation in raw foreign omit early old initial; do
       sed "s/Mutation = \"none\"/Mutation = \"$mutation\"/" packages/proofs/tla/ProviderFrontier.cfg > "$temp/$mutation.cfg"
       if [[ "$mutation" == initial ]]; then
         sed 's/InitialInputs = {}/InitialInputs <- SeededInputs/' "$temp/$mutation.cfg" > "$temp/initial-seeded.cfg"

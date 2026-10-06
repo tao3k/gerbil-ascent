@@ -94,7 +94,7 @@ example (item : List (Option Bool))
     (absent : ¬ ∃ output, ProviderFrontier.body (transition Atom.oldRows) body input output ∧ item ∈ envEmit output) :
     ∃ pivot, pivot < body.length ∧ item ∈
       (runBody (compileBody body names).1 (some pivot) 0 (compileBody body names).2 slotEmit dirty).1 :=
-  new_output_indexed_pivot body slotEmit envEmit emits exactDelta names input dirty rep
+  new_output_indexed_pivot body slotEmit envEmit emits (exact_covers body exactDelta) names input dirty rep
     (fun pivot => admitted (some pivot)) item current absent
 def newHead : List (Option Bool) := [some false, some true, some true, some false]
 theorem newCurrent : ∃ output,
@@ -112,7 +112,22 @@ theorem newAbsent : ¬ ∃ output,
 
 example : ∃ pivot, pivot < body.length ∧ newHead ∈
     (runBody (compileBody body names).1 (some pivot) 0 (compileBody body names).2 slotEmit dirty).1 :=
-  new_output_indexed_pivot body slotEmit envEmit emits exactDelta names input dirty rep
+  new_output_indexed_pivot body slotEmit envEmit emits (exact_covers body exactDelta) names input dirty rep
     (fun pivot => admitted (some pivot)) newHead newCurrent newAbsent
 
+/-- An overlap frontier is legal but is not the exact row difference. -/
+def overlap : Atom Bool := ⟨[.wildcard], [], [[false], [true]], [[false], [true]], [[false]]⟩
+example : DeltaCovers [overlap] := by
+  simp [DeltaCovers, overlap]
+example : ¬ DeltaExact [overlap] := by
+  simp [DeltaExact, overlap]
+example : transition Atom.deltaRows overlap [] [] := by
+  exact ⟨[false], by simp [overlap], rfl⟩
+/-- Missing a fresh row and adding a foreign row violate distinct obligations. -/
+def missing : Atom Bool := {overlap with deltaRows := [[false]]}
+def foreign : Atom Bool := {overlap with allRows := [[false]]}
+example : ¬ DeltaCovers [missing] := by simp [DeltaCovers, missing, overlap]
+example : ¬ DeltaCovers [foreign] := by simp [DeltaCovers, foreign, overlap]
+
+#print axioms Ascent.IndexedPositiveTraversal.exact_covers
 end Ascent.IndexedPositiveTraversalTests

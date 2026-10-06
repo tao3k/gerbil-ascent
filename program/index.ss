@@ -13,7 +13,9 @@
                  gerbil-ascent-physical-index-extend! gerbil-ascent-physical-index-rows
                  gerbil-ascent-physical-index-single-rows)
         (only-in :gerbil-ascent/table/provider gerbil-ascent-canonical-hash-index-provider?
-                 gerbil-ascent-curried-index-provider?))
+                 gerbil-ascent-curried-index-provider?)
+        (rename-in (only-in :gerbil-ascent/table/funs gerbil-ascent-index-key)
+                   (gerbil-ascent-index-key row-key)))
 (export gerbil-ascent-make-row-indexes row-indexes-rows row-indexes-advance! row-indexes-plan-atoms! row-indexes-plan-rules! row-indexes-plan-actions!)
 
 (defstruct row-indexes (rows advance! plan-atoms!))
@@ -21,7 +23,9 @@
 ;;; Custom indexes may overselect candidates, but each must still represent
 ;;; a complete relation tuple. Check the whole batch before term callbacks.
 ;;; Traversal is bounded by admitted arity, including improper/cyclic rows.
-(def (checked-provider-rows rows terms members)
+(defstruct provider-row-witness (keys counts))
+
+(def (checked-provider-rows rows terms witness key)
   (for-each
    (lambda (row)
      (let loop ((remaining row) (columns terms))
@@ -34,17 +38,37 @@
    rows)
   ;; Membership follows complete shape admission, before any term matching.
   ;; The witness belongs to this physical entry's all/delta version.
-  (for-each
-   (lambda (row)
-     (unless (hash-get members row)
-       (error "ASCENT index provider returned foreign row")))
-   rows)
+  (let ((seen (make-hash-table)) (matched 0))
+    (for-each
+     (lambda (row)
+       (let (represented-key (hash-get (provider-row-witness-keys witness) row))
+         (unless represented-key
+           (error "ASCENT index provider returned foreign row"))
+         (when (hash-get seen row)
+           (error "ASCENT index provider returned duplicate row"))
+         (hash-put! seen row #t)
+         (when (equal? represented-key key) (set! matched (+ matched 1)))))
+     rows)
+    ;; Unique represented candidates cover this key iff their count equals
+    ;; the snapshot's unique key count. No second key-expression evaluation.
+    (unless (= matched (or (hash-get (provider-row-witness-counts witness) key) 0))
+      (error "ASCENT index provider omitted matching rows")))
   rows)
 
-(def (provider-row-members rows)
-  (let (members (make-hash-table))
-    (for-each (lambda (row) (hash-put! members row #t)) rows)
-    members))
+(def (extend-provider-row-witness! witness rows columns)
+  (let ((keys (provider-row-witness-keys witness))
+        (counts (provider-row-witness-counts witness)))
+    (for-each
+     (lambda (row)
+       (unless (hash-get keys row)
+         (let (key (row-key row columns))
+           (hash-put! keys row key)
+           (hash-put! counts key (+ 1 (or (hash-get counts key) 0)))))) rows))
+  witness)
+
+(def (build-provider-row-witness rows columns)
+  (extend-provider-row-witness!
+   (make-provider-row-witness (make-hash-table) (make-hash-table)) rows columns))
 
 ;;; Index ownership includes discovery of the logical lookup requirements.
 ;;; The three execution owners supply admitted metadata, never row snapshots
@@ -103,7 +127,7 @@
    (lambda (atoms)
      (unless (null? atoms) (error "ASCENT empty index owner has lookup requirements")))))
 
-(defstruct physical-index-entry (version lookup shared? members))
+(defstruct physical-index-entry (version lookup shared? witness))
 (defstruct atom-index-view (entry permutation))
 
 ;; gerbil-ascent-make-row-indexes
@@ -208,14 +232,14 @@
                       (physical-index-entry-lookup entry)
                       (let* ((members (and (not permutation)
                                           (not (gerbil-ascent-canonical-hash-index-provider? provider))
-                                          (provider-row-members rows)))
+                                          (build-provider-row-witness rows columns)))
                              (built (if permutation
                                    (gerbil-ascent-shared-index-build rows permutation)
                                    (gerbil-ascent-physical-index-build provider rows columns))))
                         ;; Failed builds keep the old version and lookup. Publish
                         ;; both only after the provider has returned successfully.
                         (physical-index-entry-lookup-set! entry built)
-                        (physical-index-entry-members-set! entry members)
+                        (physical-index-entry-witness-set! entry members)
                         (physical-index-entry-version-set! entry version)
                         built))))
               ;; Only this trusted representation consumes a scalar. Custom
@@ -237,7 +261,7 @@
                       (if (gerbil-ascent-canonical-hash-index-provider? provider)
                         matched
                         (checked-provider-rows matched (vector-ref atom 1)
-                                               (physical-index-entry-members entry))))))))))))
+                                               (physical-index-entry-witness entry) key)))))))))))
       (def (advance-all-indexes! index new-rows (reverse-order? #f))
         (let (cache (and all-indexes (vector-ref all-indexes index)))
           (when (and cache (pair? new-rows))
@@ -257,10 +281,9 @@
                                    (gerbil-ascent-physical-index-extend!
                                     provider (physical-index-entry-lookup entry) rows columns)))
                      (physical-index-entry-lookup-set! entry extended)
-                     (when (physical-index-entry-members entry)
-                       (for-each
-                        (lambda (row) (hash-put! (physical-index-entry-members entry) row #t))
-                        rows))
+                     (when (physical-index-entry-witness entry)
+                       (extend-provider-row-witness!
+                        (physical-index-entry-witness entry) rows columns))
                      (physical-index-entry-version-set! entry (+ version 1)))))
                cache)))))
     (make-row-indexes indexed-rows advance-all-indexes! plan-atoms!)))

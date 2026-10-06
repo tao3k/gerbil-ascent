@@ -120,3 +120,22 @@ budget rejection/retry and non-singleton merges. This closes this algebraic
 instance; it does not close arbitrary Provider contracts or universal hash /
 component representation extraction. Section 5.1's asymptotic and measured
 benefits are retained as paper results, not attributed to this Scheme change.
+
+
+* Native key coverage and aggregate enumeration (2026-10-06)
+
+Section 4's key lookup must enumerate all corresponding tuples. The native
+custom-index boundary now couples row membership with projected keys and
+unique per-key counts. Each answer must be unique and contain every matching
+snapshot member. Unique overselection is still legal and preserves order;
+different-key rows cannot disguise a dropped matching row. Checks precede
+rule-term callbacks and aggregate invocation, and reuse the evaluated key
+without calling host expressions again. Native controls include an aggregate
+whose 16-row key group would otherwise be undercounted or inflated by duplicate
+candidates. The [[file:../../scheme-research-proof-audit.org][audit]] and
+[[file:../../evidence/scheme-provider-coverage-20261006/receipt.json][receipt]] retain source identity and remaining semantic premises.
+
+This is a concrete finite coverage check under stable-value and admitted-key
+premises. It does not establish arbitrary callback purity, general storage
+refinement or the full semi-naive equivalence theorem. Per-key counts add
+verification cost; the paper's performance results are not transferred.

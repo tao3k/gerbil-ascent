@@ -103,10 +103,10 @@
         (check-equal? (query atom [] #f #f) all)
         (check-equal? (query atom [] #t #f) delta)
         ;; Equal copied tuples are members; row object identity is not required.
-        (set! override '((0 0)))
+        (set! override (map (lambda (row) (map values row)) all))
         (check-equal? (query alias [] #f #f) override)
         (reject #t)
-        (set! override '((0 100)))
+        (set! override (map (lambda (row) (map values row)) delta))
         (check-equal? (query alias [] #t #f) override)
         (reject #f)
         (set! override '((0 32)))
@@ -115,6 +115,7 @@
         (vector-set! (vector-ref h 2) 0 (append override all))
         (vector-set! (vector-ref h 4) 0 33)
         (vector-set! (vector-ref h 6) 0 1)
+        (set! override (append override all))
         (check-equal? (query atom [] #f #f) override)
         (reject #t)
         ;; A new all version revokes the old membership witness as well as lookup.
@@ -124,7 +125,12 @@
         (reject #f)
         (set! override #f)
         (check-equal? (query alias [] #f #f) delta)
-        (check-equal? (query alias [] #t #f) delta)))
+        (check-equal? (query alias [] #t #f) delta)
+        (set! override [])
+        (check-equal? (query (index-entry-atom '(0) '(1) 2) [] #f #f) [])
+        (check-equal? (with-catch (lambda (e) (error-message e))
+                        (lambda () (query atom [] #f #f) 'accepted))
+                      "ASCENT index provider omitted matching rows")))
     (test-case "matching certificates reject inconsistent and nonmaximum search output"
       (let (sets (vector '(0) '(0 1) '(0 1 2)))
         (check-equal? (gerbil-ascent-index-sharing-certificate? sets

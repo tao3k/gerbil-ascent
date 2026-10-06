@@ -1,0 +1,91 @@
+{
+  "qualifiedBaseHead": "3f82d3a343c769b88e2af27d8e6f3ce2e3b7d701",
+  "scope": "Custom lookup complete key coverage and unique enumeration, checked before rule-term callbacks or aggregate invocation.",
+  "sources": {
+    "program/index.ss": "d2b800005fda618b75319756730d0ef367e7b40cc562aa657f4251bbe9f428cd",
+    "table/provider.ss": "6d2e7560947a02c2f20bf67e251a9a69eeb917babdd188969c949ceea6cd7d53",
+    "table/access.ss": "b90a362ddc0ef0b0b6eb8c77043148829857274d5fb271b242454a0cfa44562b",
+    "table/funs.ss": "9ecdd332294ce6487998c6e64fc2b88d4396d091c641cf1e61dc0576a5b222c0",
+    "core/positive-plan.ss": "5328d128933a8ed1270d5228bdd8f12b134f81bd71a0b4b126ceb443155cb441",
+    "core/rule-bindings.ss": "308d44ab08fb53eacd4702064277ce9661f3c37df3cd5a17b0debfc7c3652206",
+    "program/objects.ss": "f0b2da5fd325d2a9a947b691f475593194e2b03a17da1ffd39a3d076e1356dc4",
+    "program/session.ss": "e0d0c2d088bb9599d2dc68ac85f4376b984c6335bb2cb97ebb21c86376e6c20c",
+    "program/evaluate.ss": "5ed19f6af62e7eb8ffe92bc221054fb9227e379c79b17245530585f56ce446b8",
+    "t/qualification/ascent-byods-index-test.ss": "47bf7f8cc76eac991613a38e4273dc1313f93215e791e07ea46d04dd944aca05",
+    "t/qualification/ascent-index-entry-test.ss": "37f385c6dd394f44c9aa5151e82d6524252492bf0090842e28b7ea94d436ceb1",
+    "t/performance/index-entry/fixture.ss": "6ff260ac814b6db65fb5300154451b8e6e80e930ed5698e4fd10b7a8bb60fb6a",
+    "build.ss": "3435a28db97d4a27b174e0b142b94c9d17196a9e6dad323566db6de2dcad4d3b",
+    "t/harness/run.ss": "3ac76467003f8aee89419eb6063e0f7cc7470557af6df138b81433a25e88d294"
+  },
+  "trackedSchemeSourceCount": 543,
+  "trackedSchemeSourceDigest": "88e7e5e2d40ebc32ea33606c45559e63c51564775623b644f741c99864c2fa56",
+  "trackedSchemeDigestFormat": "Sorted tracked .ss paths; UTF-8 path + NUL + content SHA256 + newline",
+  "native": [
+    {
+      "command": "GERBIL_PATH=\"$PWD/.cache/ascent/sdk\" just test-native t/qualification/ascent-byods-index-test.ss",
+      "exitCode": 0,
+      "suiteCases": 5,
+      "moduleOK": 1,
+      "harnessOK": 1,
+      "explicitOK": 1,
+      "logSha256": "a121cdb7bf249f3ad03724f02d9580f776b938028eeffd85a62ffb3913f4ea95"
+    },
+    {
+      "command": "GERBIL_PATH=\"$PWD/.cache/ascent/sdk\" just test-native t/qualification/ascent-index-entry-test.ss",
+      "exitCode": 0,
+      "suiteCases": 20,
+      "moduleOK": 1,
+      "harnessOK": 1,
+      "explicitOK": 1,
+      "logSha256": "266b23461a6e85574acec42726c03bb0a0b64b5941226ce30daf13588aae233a"
+    }
+  ],
+  "discriminators": [
+    "Empty and partial answers for a represented key reject in compiled and pattern execution before callbacks",
+    "Different-key represented rows cannot compensate for a missing matching row",
+    "Duplicate candidates reject without silently inflating aggregate count",
+    "Independent aggregate count of a 16-row key group remains exact",
+    "Complete equal copied answers preserve order, false values and failed Session recovery",
+    "Empty no-match answer is valid",
+    "All/delta versions, append, replacement, aliases and mutating extension recovery retain coverage",
+    "Reordered/repeated key columns and once-per-lookup expression traces retain their prior semantics"
+  ],
+  "proofFilesChanged": false,
+  "performanceClaim": false,
+  "paper": {
+    "source": "https://kmicinski.com/assets/byods.pdf",
+    "locator": "Section 4, PDF page 11; RelIndexRead key lookup",
+    "transfer": "Key lookup enumerates all represented corresponding tuples. Finite unique subset plus equal key count establishes concrete coverage.",
+    "boundary": "Argument assumes stable values and admitted key projection; no general native-to-Lean refinement or callback purity proof."
+  },
+  "cost": "One row-to-key map and one per-key count map per custom physical index, plus a temporary returned candidate set per lookup. No second full row-bucket index.",
+  "remaining": [
+    "Stable nested values, field equality laws and callback purity",
+    "General storage Provider concretization and native proof extraction"
+  ],
+  "developmentFailures": [
+    {
+      "kind": "Extra closing parenthesis in initial edit",
+      "logSha256": "cc7c469950a4d84f1ae639e5ba2aae5497ab0b986ed55d012593289d38eeaf3f",
+      "resolution": "Corrected before both final native qualifications"
+    }
+  ],
+  "modelCalls": 0,
+  "rebaseIntegration": {
+    "baseHead": "1ead2244a64e7f344bb4e17fb16d1b5d57fb57c8",
+    "changedPaths": [
+      "docs/evidence/scheme-eqrel-frontier-20261006/receipt.json",
+      "docs/evidence/scheme-eqrel-frontier-20261006/receipt.json.license",
+      "docs/research/scheme-dsl/byods-b23.org",
+      "docs/scheme-compiler-proof-bridge.org",
+      "docs/scheme-paper-closure.org",
+      "docs/scheme-research-proof-audit.org",
+      "packages/proofs/lean/AscentProof.lean",
+      "packages/proofs/lean/EquivalenceComponents.lean",
+      "packages/proofs/lean/Tests/EquivalenceComponentsTests.lean",
+      "packages/proofs/lean/lakefile.lean",
+      "t/qualification/ascent-eqrel-program-test.ss"
+    ],
+    "scope": "Parallel eqrel proofs, documentation and unrelated eqrel native test only. Every recorded qualified runtime/test/harness hash must remain unchanged after rebase. Aggregate Scheme digest describes the native qualification base."
+  }
+}

@@ -19,7 +19,8 @@
                  gerbil-ascent-open-session
                  gerbil-ascent-session-append-source!
                  gerbil-ascent-session-replace-source!
-                 gerbil-ascent-session-run)
+                 gerbil-ascent-session-run
+                 gerbil-ascent-aggregate gerbil-ascent-count)
         (only-in :gerbil-ascent/program/syntax ascent))
 
 (export ascent-byods-index-test)
@@ -98,20 +99,60 @@
        (lambda () (gerbil-ascent-session-run session) 'accepted))
      "ASCENT index provider returned foreign row")
     (check-equal? calls 0)
-    ;; Empty answers remain valid. A later run on the same failed session can
-    ;; recover; shape-correct overselection retains ordinary term filtering.
-    (set! override [])
-    (check-equal? (rows (gerbil-ascent-evaluate-program program)) [])
-    (set! override #f)
+    (for-each
+     (lambda (candidate)
+       (set! override candidate)
+       (set! calls 0)
+       (check-equal?
+        (with-catch (lambda (failure) (error-message failure))
+          (lambda () (gerbil-ascent-session-run session) 'accepted))
+        "ASCENT index provider omitted matching rows")
+       (check-equal? calls 0))
+     (list [] '((0 #f)) (cdr source)))
+    (set! override (cons (car source) source))
+    (set! calls 0)
+    (check-equal?
+     (with-catch (lambda (failure) (error-message failure))
+       (lambda () (gerbil-ascent-session-run session) 'accepted))
+     "ASCENT index provider returned duplicate row")
+    (check-equal? calls 0)
+    ;; A later run on the same failed session can recover; complete
+    ;; overselection and copied rows retain term filtering and false values.
+    (set! override (map (lambda (row) (map values row)) source))
     (let (result (rows (gerbil-ascent-session-run session)))
       (check-equal? (length result) 16)
       (for-each (lambda (n) (check-equal? (not (not (member (list (if (= n 0) #f (* n 2))) result))) #t))
-                (iota 16)))
-    (set! override '((0 #f)))
-    (check-equal? (rows (gerbil-ascent-evaluate-program program)) '((#f)))))
+                (iota 16)))))
 
 (def ascent-byods-index-test
   (test-suite "ASCENT BYODS storage and custom index composition"
+    (poo-flow-test-case "aggregate cannot consume duplicated or incomplete custom candidates"
+      (let* ((override #f)
+             (source (map (lambda (n) (list (modulo n 2) n)) (iota 32)))
+             (provider (.o (:: @ gerbil-ascent-hash-index-provider)
+                           (.build-index (lambda (rows _columns) rows))
+                           (.lookup-index (lambda (index _key) (or override index)))))
+             (program
+              (gerbil-ascent-program
+               (list (gerbil-ascent-relation 'input 2 source provider)
+                     (gerbil-ascent-relation 'matched 1 []))
+               (list (gerbil-ascent-rule
+                      (list (gerbil-ascent-atom 'matched (list (gerbil-ascent-variable 'n))))
+                      (list (gerbil-ascent-aggregate
+                             'n 'input
+                             (list (gerbil-ascent-literal 0) (gerbil-ascent-variable 'y))
+                             [] gerbil-ascent-count)))) 32 64 64)))
+        (check-equal? (rows (gerbil-ascent-evaluate-program program)) '((16)))
+        (set! override (cdr source))
+        (check-equal?
+         (with-catch (lambda (e) (error-message e))
+           (lambda () (gerbil-ascent-evaluate-program program) 'accepted))
+         "ASCENT index provider omitted matching rows")
+        (set! override (cons (car source) source))
+        (check-equal?
+         (with-catch (lambda (e) (error-message e))
+           (lambda () (gerbil-ascent-evaluate-program program) 'accepted))
+         "ASCENT index provider returned duplicate row")))
     (poo-flow-test-case "compiled lookup rejects malformed tuples before callbacks"
       (check-provider-row-boundary #f))
     (poo-flow-test-case "general pattern lookup rejects malformed tuples before callbacks"

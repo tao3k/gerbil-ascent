@@ -76,6 +76,20 @@
 
 (def ascent-index-entry-test
   (test-suite "Engine-owned stable physical index entries"
+    (test-case "matching certificates reject inconsistent and nonmaximum search output"
+      (let (sets (vector '(0) '(0 1) '(0 1 2)))
+        (check-equal? (gerbil-ascent-index-sharing-certificate? sets
+                       (vector 1 2 #f) (vector #f 0 1)) #t)
+        (check-equal? (gerbil-ascent-index-sharing-certificate? sets
+                       (vector #f #f #f) (vector #f #f #f)) #f)
+        (check-equal? (gerbil-ascent-index-sharing-certificate? sets
+                       (vector 1 #f #f) (vector #f 0 #f)) #f)
+        (check-equal? (gerbil-ascent-index-sharing-certificate? sets
+                       (vector 1 1 #f) (vector #f 0 #f)) #f)
+        (check-equal? (gerbil-ascent-index-sharing-certificate? sets
+                       (vector 1 #f #f) (vector #f 2 #f)) #f)
+        (check-equal? (gerbil-ascent-index-sharing-certificate? sets
+                       (vector 3 #f #f) (vector #f #f #f)) #f)))
     (test-case "all 128 requirement families match independent minimum chain partitions"
       (let (universe '((0) (1) (2) (0 1) (0 2) (1 2) (0 1 2)))
         (for-each

@@ -150,4 +150,16 @@ example : (∀ column, column ∈ ([0, 1] : List Nat) ↔ column ∈ ([1, 0, 2] 
 example : SharedIndex.extendPermutation [1] [0, 1] = [1, 0] := by decide
 example : SharedIndex.extendPermutation [1, 0] [0, 1, 2] = [1, 0, 2] := by decide
 
+#print axioms SharedIndex.MatchingCertificate.matching_bound
+#print axioms SharedIndex.MatchingCertificate.maximum
+#print axioms SharedIndex.MatchingCertificate.minimum_chains
+#print axioms SharedIndex.MatchingCertificate.partition_balance
+#print axioms SharedIndex.MatchingCertificate.partition_matching
+#print axioms SharedIndex.MatchingCertificate.minimum_partition
+example : SharedIndex.MatchingCertificate.partitionEdges [[0, 1, 2], [3]] =
+    [(0, 1), (1, 2)] := by decide
+example : SharedIndex.MatchingCertificate.Matching
+    (SharedIndex.MatchingCertificate.partitionEdges [[0, 1, 2], [3]]) := by
+  apply SharedIndex.MatchingCertificate.partition_matching
+  decide
 end Ascent.IndexedPositiveTraversalTests

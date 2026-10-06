@@ -153,8 +153,14 @@ requirements share engine/worker-owned physical chains; lazy ordered views
 preserve occurrence order, expression evaluation order and old publications.
 The admitted rule/compiler metadata supplies the requirements, including actual
 SCC and actor Session execution. Default hash and custom Provider representations
-remain available. Matching optimality, native trie refinement and full paper
-application costs retain their separate acceptance obligations.
+remain available. Every selected matching is independently checked against a
+constructed tight endpoint cover before any layout is returned. The checker
+also rejects inconsistent endpoints and incomplete or repeated chain coverage.
+Lean proves the cover bounds every competing matching and constructs adjacency
+edges from arbitrary nonempty, distinct-node chain partitions, deriving both
+matching validity and the edge/chain balance. This establishes the mathematical
+minimum-chain criterion; extraction of native column graphs and trie execution
+into those premises and full paper application costs retain separate obligations.
 
 The 82-module, 717-Case native qualification and separate Lean/TLA collection
 establish this implementation boundary. Existing default-path performance gates

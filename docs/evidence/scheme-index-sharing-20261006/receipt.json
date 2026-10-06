@@ -1362,5 +1362,42 @@
     "tools/build-workspace-benchmark.ss": "d9ceffd5a7c71c3c3750f37a8a49172852677ed06b30c2f25041732700f3fa02",
     "tools/model-source-closure.ss": "26e63ae42ab7e986170dd695fcf38cec31d21e43825429bc0accf59d90df1c6f"
   },
-  "sourceParentHead": "5a75020fb2eada61cd9ec9e1a94f8139c79429af"
+  "sourceParentHead": "5a75020fb2eada61cd9ec9e1a94f8139c79429af",
+  "minimumChainCertificate": {
+    "sourceParentHead": "841584266410d6ade0df9de4fa58425b2c01c483",
+    "sourceHashes": {
+      "table/index-sharing.ss": "2fec3b87f5dd83e9afb1d288234f7f887b16ff5d288806fd1feb40ca2e91ad62",
+      "t/qualification/ascent-index-entry-test.ss": "10932ba18fc782d744570355ea17bb401f172e823c166c1a87dab2d69563211b",
+      "packages/proofs/lean/IndexedPositiveTraversal.lean": "75656e831f9360027fed0acf7ff8a2be11a7498a360f26f16d369a533041747c",
+      "packages/proofs/lean/Tests/IndexedPositiveTraversalTests.lean": "8dedc759000cd7286e32bc52e55aab01e489df7d574b3f3681a03c7cb9dfe7ba"
+    },
+    "nativeFocused": {
+      "exitCode": 0,
+      "explicitFinalOK": true,
+      "invalidMatchingControls": 6,
+      "independentRequirementFamilies": 128,
+      "scope": "actual index entries, engine/SCC/actor ownership, failure recovery and ordered rows"
+    },
+    "lean": {
+      "exitCode": 0,
+      "jobs": 84,
+      "theorems": [
+        "matching_bound",
+        "maximum",
+        "partition_balance",
+        "partition_matching",
+        "minimum_partition"
+      ],
+      "customAxioms": 0,
+      "sorry": 0
+    },
+    "package": {
+      "exitCode": 0,
+      "advisories": 13,
+      "hardErrors": 0
+    },
+    "fullNative": "Interrupted before completion to integrate new upstream 4fe1174; not accepted as a pass",
+    "scope": "Every returned layout is checked against reciprocal matching, strict subset edges, an explicitly verified tight cover and complete unique chain traversal. Lean constructs arbitrary competing partition adjacency and counts. Native graph/trie extraction and complete application benefit remain separate obligations.",
+    "paidCalls": 0
+  }
 }

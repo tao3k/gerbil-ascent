@@ -4,9 +4,74 @@
 
 ;;; Finite logical column requirements share curried physical chains. Planning
 ;;; owns no rows. Each engine/worker builds and extends its own physical roots.
-(export gerbil-ascent-index-sharing-layout
+(export gerbil-ascent-index-sharing-layout gerbil-ascent-index-sharing-certificate?
         gerbil-ascent-shared-index-build gerbil-ascent-shared-index-extend!
         gerbil-ascent-shared-index-rows)
+
+;; gerbil-ascent-index-sharing-certificate?
+;; : (forall (c) (-> (Vector [c]) (Vector (Maybe Nat)) (Vector (Maybe Nat)) Boolean))
+;; : (-> AdmittedColumnSets MatchingLeft MatchingRight Boolean)
+;; | doc m%
+;;     Independently check matching validity and a tight endpoint cover before
+;;     publishing a layout. Alternating reachability constructs the cover; all
+;;     graph edges and its cardinality are then checked explicitly. The checker
+;;     neither mutates the search's tables nor owns runtime rows.
+;;
+;;     # Examples
+;;
+;;     ```scheme
+;;     (gerbil-ascent-index-sharing-certificate? (vector '(0) '(0 1))
+;;                                              (vector 1 #f) (vector #f 0))
+;;     ;; => #t, a maximum matching and tight endpoint cover
+;;     ```
+;;   %
+(def (gerbil-ascent-index-sharing-certificate? sets left right)
+  (let/cc reject
+    (unless (and (vector? sets) (vector? left) (vector? right)
+                 (= (vector-length sets) (vector-length left) (vector-length right)))
+      (reject #f))
+    (let* ((count (vector-length sets)) (ids (iota count))
+           (seen-left (make-vector count #f)) (seen-right (make-vector count #f))
+           (pending []) (matched 0) (cover-count 0))
+      (def (below? i j)
+        (let ((a (vector-ref sets i)) (b (vector-ref sets j)))
+          (and (< (length a) (length b)) (andmap (cut member <> b) a))))
+      (def (index? x) (or (eq? x #f) (and (exact-integer? x) (<= 0 x) (< x count))))
+      (unless (and (andmap index? (vector->list left)) (andmap index? (vector->list right)))
+        (reject #f))
+      (for-each
+       (lambda (i)
+         (let ((j (vector-ref left i)) (owner (vector-ref right i)))
+           (when j
+             (unless (and (eqv? (vector-ref right j) i) (below? i j)) (reject #f))
+             (set! matched (+ matched 1)))
+           (when owner (unless (eqv? (vector-ref left owner) i) (reject #f)))
+           (unless j
+             (vector-set! seen-left i #t) (set! pending (cons i pending))))) ids)
+      (let traverse ()
+        (when (pair? pending)
+          (let (i (car pending))
+            (set! pending (cdr pending))
+            (for-each
+             (lambda (j)
+               (when (and (below? i j) (not (vector-ref seen-right j)))
+                 (vector-set! seen-right j #t)
+                 (let (owner (vector-ref right j))
+                   ;; An unmatched reachable right endpoint is an augmenting
+                   ;; path and cannot certify maximum cardinality.
+                   (unless owner (reject #f))
+                   (unless (vector-ref seen-left owner)
+                     (vector-set! seen-left owner #t)
+                     (set! pending (cons owner pending)))))) ids))
+          (traverse)))
+      (for-each
+       (lambda (i)
+         (unless (vector-ref seen-left i) (set! cover-count (+ cover-count 1)))
+         (when (vector-ref seen-right i) (set! cover-count (+ cover-count 1)))
+         (for-each (lambda (j)
+                     (when (and (below? i j) (vector-ref seen-left i)
+                                (not (vector-ref seen-right j))) (reject #f))) ids)) ids)
+      (= matched cover-count))))
 
 ;;; Maximum bipartite matching on strict subset edges yields a chain cover.
 ;;; Only chains with multiple logical requirements change physical storage;
@@ -43,10 +108,15 @@
                      (search (+ j 1)))))
                (search (+ j 1))))))
     (for-each (lambda (i) (augment! i (make-vector count #f))) (iota count))
+    (unless (gerbil-ascent-index-sharing-certificate? sets left right)
+      (error "invalid index sharing maximum matching certificate"))
+    (def visited (make-vector count #f))
     (for-each
      (lambda (i)
        (unless (vector-ref right i)
          (let chain ((j i) (members []) (permutation []))
+           (when (vector-ref visited j) (error "index sharing chain repeats a requirement"))
+           (vector-set! visited j #t)
            (let* ((columns (vector-ref sets j))
                   (next (vector-ref left j))
                   (extended (append permutation
@@ -57,6 +127,8 @@
                (when (pair? (cdr covered))
                  (for-each (lambda (c) (hash-put! layout c extended)) covered)))))))
      (iota count))
+    (unless (andmap values (vector->list visited))
+      (error "index sharing chains omit a requirement"))
     layout))
 
 (defstruct shared-index (columns root ordinal views))

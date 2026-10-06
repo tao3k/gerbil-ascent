@@ -960,3 +960,25 @@ unchanged; the actual complete package build passes with 13 advisory findings
 and zero hard errors. The concurrent =735f610= prepared atomic transaction
 update is integrated. Complete native/formal and exact-head GitHub acceptance
 must separately qualify this combined source.
+
+* Certified minimum physical chains (2026-10-06)
+
+The B23 index-sharing planner now checks its search result independently before
+returning any layout. It verifies reciprocal matching endpoints, actual strict
+subset edges, alternating reachability, coverage of every edge, and equality of
+cover and matching cardinalities. Chain traversal separately rejects duplicate
+or omitted logical requirements. These checks own no rows and do not evaluate
+lookup expressions. Each engine and actor worker retains its existing private
+physical roots and publication boundaries.
+
+=SharedIndex.MatchingCertificate.minimum_partition= proves that a tight endpoint
+cover bounds every legal competing chain partition. Adjacency edges, endpoint
+uniqueness and the edge/chain balance are constructed from the partition rather
+than supplied as independent matching/count assumptions. This is an unbounded
+finite mathematical result; the native-to-Lean graph representation bridge and
+trie refinement remain distinct obligations. Existing TLA publication/ownership
+checks are retained without duplicating the matching algebra. Native invalid
+matching controls and independent exhaustive partition comparisons qualify the
+implementation separately. The [[file:evidence/scheme-index-sharing-20261006/receipt.json][receipt]] retains source identity, verification
+results and the negative complete-solve cost result. No model or Rust result is
+implied by minimum physical root count.

@@ -605,6 +605,136 @@ theorem chain_prefix_preserved (logical prior next : List Nat) (depth : Nat)
   rw [extension_prefix prior next depth inside]
   exact prefix_lookup logical prior depth coverage rows wanted
 
+/- A dual endpoint cover certifies maximum matching independently of the
+search algorithm. Left and right occurrences are separate vertex namespaces. -/
+namespace MatchingCertificate
+abbrev Edge := Nat × Nat
+
+def Matching (edges : List Edge) : Prop :=
+  edges.Pairwise (fun first second => first.1 ≠ second.1 ∧ first.2 ≠ second.2)
+
+def Covers (graph : List Edge) (left right : List Nat) : Prop :=
+  ∀ edge ∈ graph, edge.1 ∈ left ∨ edge.2 ∈ right
+
+def assigned (left : List Nat) (edge : Edge) : Sum Nat Nat :=
+  if edge.1 ∈ left then .inl edge.1 else .inr edge.2
+
+theorem matching_bound (graph edges : List Edge) (left right : List Nat)
+    (valid : Matching edges) (present : edges ⊆ graph) (cover : Covers graph left right) :
+    edges.length ≤ left.length + right.length := by
+  have unique : (edges.map (assigned left)).Nodup := by
+    apply List.Pairwise.map (assigned left) _ valid
+    intro first second distinct
+    by_cases firstLeft : first.1 ∈ left <;> by_cases secondLeft : second.1 ∈ left
+    · simpa [assigned, firstLeft, secondLeft] using distinct.1
+    · simp [assigned, firstLeft, secondLeft]
+    · simp [assigned, firstLeft, secondLeft]
+    · simpa [assigned, firstLeft, secondLeft] using distinct.2
+  have subset : edges.map (assigned left) ⊆ left.map Sum.inl ++ right.map Sum.inr := by
+    intro vertex member
+    obtain ⟨edge, known, same⟩ := List.mem_map.mp member
+    subst vertex
+    have covered := cover edge (present known)
+    by_cases selected : edge.1 ∈ left
+    · simp [assigned, selected]
+    · have rightSelected : edge.2 ∈ right := covered.resolve_left selected
+      simp [assigned, selected, rightSelected]
+  simpa using unique.length_le_of_subset subset
+
+/-- The verified cover equality supplies maximality for every competing
+matching, rather than testing optimality on a bounded requirement corpus. -/
+theorem maximum (graph chosen other : List Edge) (left right : List Nat)
+    (otherValid : Matching other) (otherPresent : other ⊆ graph)
+    (cover : Covers graph left right) (tight : left.length + right.length = chosen.length) :
+    other.length ≤ chosen.length := by
+  rw [← tight]
+  exact matching_bound graph other left right otherValid otherPresent cover
+
+/-- A chain partition has one fewer edge than vertices per nonempty chain.
+For partitions with the same requirement count, maximum matching minimizes
+physical chain count. Native prefix coverage is a separate obligation. -/
+theorem minimum_chains (graph chosen other : List Edge) (left right : List Nat)
+    (otherValid : Matching other) (otherPresent : other ⊆ graph)
+    (cover : Covers graph left right) (tight : left.length + right.length = chosen.length)
+    (requirements chosenChains otherChains : Nat)
+    (chosenBalance : chosen.length + chosenChains = requirements)
+    (otherBalance : other.length + otherChains = requirements) :
+    chosenChains ≤ otherChains := by
+  have bound := maximum graph chosen other left right otherValid otherPresent cover tight
+  omega
+def chainEdges (chain : List Nat) : List Edge := chain.zip chain.tail
+
+def partitionEdges (chains : List (List Nat)) : List Edge := chains.flatMap chainEdges
+
+theorem chain_balance (chain : List Nat) (nonempty : chain ≠ []) :
+    (chainEdges chain).length + 1 = chain.length := by
+  cases chain with
+  | nil => contradiction
+  | cons head tail => simp [chainEdges, List.length_zip]
+
+theorem partition_balance (chains : List (List Nat))
+    (nonempty : ∀ chain ∈ chains, chain ≠ []) :
+    (partitionEdges chains).length + chains.length = chains.flatten.length := by
+  induction chains with
+  | nil => simp [partitionEdges]
+  | cons chain rest ih =>
+      have first := chain_balance chain (nonempty chain List.mem_cons_self)
+      have remaining := ih (fun c h => nonempty c (List.mem_cons_of_mem chain h))
+      simp only [partitionEdges, List.flatMap_cons, List.length_append,
+        List.length_cons, List.flatten_cons] at *
+      omega
+
+theorem chain_endpoints (chain : List Nat) :
+    List.Sublist ((chainEdges chain).map Prod.fst) chain ∧
+    List.Sublist ((chainEdges chain).map Prod.snd) chain := by
+  induction chain with
+  | nil => simp [chainEdges]
+  | cons head tail ih =>
+      cases tail with
+      | nil => simp [chainEdges]
+      | cons next rest =>
+          constructor
+          · exact ih.1.cons_cons head
+          · change List.Sublist ((List.zip (head :: next :: rest) (next :: rest)).map Prod.snd) (head :: next :: rest)
+            rw [List.map_snd_zip (by simp)]
+            exact (List.Sublist.refl _).cons head
+
+theorem partition_endpoints (chains : List (List Nat)) :
+    List.Sublist ((partitionEdges chains).map Prod.fst) chains.flatten ∧
+    List.Sublist ((partitionEdges chains).map Prod.snd) chains.flatten := by
+  induction chains with
+  | nil => simp [partitionEdges]
+  | cons chain rest ih =>
+      simp only [partitionEdges, List.flatMap_cons, List.map_append, List.flatten_cons]
+      exact ⟨(chain_endpoints chain).1.append ih.1, (chain_endpoints chain).2.append ih.2⟩
+
+theorem partition_matching (chains : List (List Nat)) (unique : chains.flatten.Nodup) :
+    Matching (partitionEdges chains) := by
+  have endpoints := partition_endpoints chains
+  have left := endpoints.1.nodup unique
+  have right := endpoints.2.nodup unique
+  have leftPairs := List.pairwise_map.mp left
+  have rightPairs := List.pairwise_map.mp right
+  exact leftPairs.imp₂ (fun _ _ a b => ⟨a, b⟩) rightPairs
+
+/-- Every legal competing partition supplies its matching and balance by
+construction. No assumed edge count or competing matching is needed. -/
+theorem minimum_partition (graph : List Edge) (chosen other : List (List Nat))
+    (left right : List Nat)
+    (chosenNonempty : ∀ chain ∈ chosen, chain ≠ [])
+    (otherNonempty : ∀ chain ∈ other, chain ≠ [])
+    (otherUnique : other.flatten.Nodup)
+    (sameCount : chosen.flatten.length = other.flatten.length)
+    (otherPresent : partitionEdges other ⊆ graph)
+    (cover : Covers graph left right)
+    (tight : left.length + right.length = (partitionEdges chosen).length) :
+    chosen.length ≤ other.length := by
+  apply minimum_chains graph (partitionEdges chosen) (partitionEdges other) left right
+    (partition_matching other otherUnique) otherPresent cover tight chosen.flatten.length
+  · exact partition_balance chosen chosenNonempty
+  · rw [sameCount]; exact partition_balance other otherNonempty
+end MatchingCertificate
+
 end SharedIndex
 
 end Ascent.IndexedPositiveTraversal

@@ -78,3 +78,11 @@ metadata after caller column mutation, retained bucket snapshots, exact custom
 provider arguments, compiled self joins and recursive actor truth. The source
 policy audit exits 0 with no errors and one advisory for the distance-building
 named-let: its prior-column state is required to produce successive distances.
+
+After integrating the concurrent provider-recovery change, native lifecycle
+and entry qualification exits 0. Inspection of individual Case markers caught
+the newly added mutate-then-raise Case nested inside its predecessor: creating
+that Case during execution did not run its assertions. Correcting the two
+registration parentheses makes it an independent Case. The entry Suite then
+executes all eight Cases, including the explicit mutate-then-raise =CASE-OK=,
+and exits 0. This registration repair does not change the measured algorithm.

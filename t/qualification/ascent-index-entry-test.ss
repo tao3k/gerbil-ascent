@@ -78,7 +78,7 @@
         (check-equal? (filter (lambda (e) (not (eq? (car e) 'build))) (car current))
                       (filter (lambda (e) (not (eq? (car e) 'build))) (car prior)))
         (check-equal? (length (filter (lambda (e) (eq? (car e) 'build)) (car current)))
-                      (+ 1 (length (filter (lambda (e) (eq? (car e) 'build)) (car prior))))))
+                      (+ 1 (length (filter (lambda (e) (eq? (car e) 'build)) (car prior)))))))
     (test-case "mutate-then-raise revokes shared total cache and leaves delta isolated"
       (def (trial old?)
         (let* ((fail? #t) (rows (map (lambda (n) (list 0 n)) (iota 32)))
@@ -114,7 +114,7 @@
         (check-equal? (cadr current) (cons '(0 32) (caddr current)))
         ;; The frozen previous implementation exposes the poisoned cache.
         (check-equal? (car prior) (cons '(0 999) (caddr prior)))
-        (check-equal? (equal? (car prior) (car current)) #f))))
+        (check-equal? (equal? (car prior) (car current)) #f)))
     (test-case "cold build failure does not publish an index or skip later build"
       (for-each
        (lambda (old?)

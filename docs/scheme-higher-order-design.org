@@ -148,3 +148,29 @@ parent finalization still share the original 180-second acceptance bound.
 The first final-source attempts are recorded as excluded deadline failures;
 a cached build satisfying that bound is delivery evidence, not a controlled
 measurement of compiler speedup or application benefit.
+
+* Typed change boundary and exact frontier extraction
+
+The [[https://www.rntz.net/files/seminaive-datafun.pdf][S20 paper]], sections 4.2--4.3 and figure 10, gives a function change
+both its base input and that input's change. Its base input is discrete;
+monotonicity in the input change does not imply monotonicity in the base.
+The existing native arrow descriptors admit the positive monotone grammar.
+A new derivative compiler must specify this variance boundary, lexical capture
+translation and changed higher-order inputs before selecting an optimization.
+
+=LexicalLowering.exact_frontier_not_positive_arrow= proves a concrete boundary:
+no closed positive Nat-relation arrow represents exact insertion difference for
+all bases even with the fixed insertion ={0}=. The empty base emits 0, whereas
+base ={0}= emits nothing, contradicting monotonicity. This does not rule out
+positive derivatives: valid insertion changes may overlap the old value.
+Exact frontier extraction stays outside the positive arrow grammar unless an
+explicit discrete/base contract is added. An imperative difference operation
+in =operator-change.ss= is not a typed higher-order compiler transformation.
+
+The next preserving transformation must distinguish value/update meaning from
+exact frontier accounting, carry both base and input change through application,
+and preserve fresh lexical identities. Relation-valued fixed points and the
+existing function-valued fixed-point extension require their own statements;
+the S20 recursion rule and discreteness cannot be transferred by name. Native
+complete recomputation is the reference, not evidence of an implemented
+higher-order derivative. Examples and axiom reports remain under =Tests=.

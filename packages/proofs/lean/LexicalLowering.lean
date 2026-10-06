@@ -269,6 +269,23 @@ theorem closed_function_monotone
     ∀ row, denote expression PUnit.unit left row → denote expression PUnit.unit right row :=
   denotation_monotone expression PUnit.unit PUnit.unit trivial left right included
 
+/- Exact frontier extraction depends contravariantly on the base. This
+separates the external set-difference boundary from a positive typed arrow;
+S20 valid insertion changes may overlap the base and are not exact frontiers. -/
+def exactInsertedFrontier (before added : row → Prop) : row → Prop :=
+  fun value => added value ∧ ¬before value
+
+theorem exact_frontier_not_positive_arrow
+    (expression : Expression [] (.arrow (.relation Nat) (.relation Nat))) :
+    ¬(∀ base row, denote expression PUnit.unit base row ↔
+      exactInsertedFrontier base (fun n => n = 0) row) := by
+  intro represents
+  have empty : denote expression PUnit.unit (fun _ => False) 0 :=
+    (represents _ 0).mpr ⟨rfl, id⟩
+  have grown := closed_function_monotone expression (fun _ => False)
+    (fun n => n = 0) (fun _ impossible => False.elim impossible) 0 empty
+  exact ((represents _ 0).mp grown).2 rfl
+
 /- Concrete finite tuple layout for join concatenation and projection. Scalar
    encoding into Fin atoms, descriptor validation and native list construction
    remain implementation obligations; these laws quantify over every tuple. -/

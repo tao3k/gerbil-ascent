@@ -427,3 +427,5 @@ example (old next : Bool → Bool → Bool → Prop) (seed output : Bool) :
 #print axioms Ascent.SourceUpdateFrame.source_count_balance
 #print axioms Ascent.SourceUpdateFrame.refused_source_budget
 #print axioms Ascent.SourceUpdateFrame.admitted_source_budget
+
+#print axioms Ascent.Lowering.exact_frontier_not_positive_arrow

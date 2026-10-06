@@ -28,6 +28,7 @@
     "t/qualification/ascent-rule-bindings-test.ss"
     "t/qualification/ascent-byods-index-test.ss"
     "t/qualification/ascent-byods-invariants-test.ss"
+    "t/qualification/ascent-provider-views-test.ss"
     "t/qualification/ascent-candidate-description-test.ss"
     "t/qualification/ascent-closure-candidates-test.ss"
     "t/qualification/ascent-contract-union-test.ss"

@@ -1374,3 +1374,31 @@ check-transitive-components-formal:
       echo "COUNTEREXAMPLE-OK transitive-components-$mutation $invariant"
     done
     echo 'TRANSITIVE-COMPONENTS-CHECK-OK'
+
+# Frozen BYODS relation views: lifetime, publication and logical budgets.
+check-provider-views-formal:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [[ -n "${TLC_BIN:-}" ]]; then tlc=("$TLC_BIN"); else tlc=(java -XX:+UseParallelGC -Xmx1g -cp "${TLC_JAR:-.cache/ascent/tools/tla2tools-v1.7.4.jar}" tlc2.TLC); fi
+    temp=$(mktemp -d)
+    trap 'rm -rf "$temp"' EXIT
+    cutoff="${ASCENT_TLC_GENERATION_CUTOFF:-3}"
+    [[ "$cutoff" =~ ^[0-9]+$ ]] || { echo 'Invalid TLC exploration bound' >&2; exit 2; }
+    sed "s/ExplorationBound = [0-9][0-9]*/ExplorationBound = $cutoff/" packages/proofs/tla/ProviderViews.cfg > "$temp/base.cfg"
+    echo "TLA-CHECK ProviderViews exploration-bound=$cutoff (TLC enumeration only)"
+    "${tlc[@]}" -workers 1 -config "$temp/base.cfg" -metadir "$temp/good" packages/proofs/tla/ProviderViews.tla
+    for mutation in alias retire early stale budget; do
+      case "$mutation" in
+        alias) invariant=FrozenRead ;;
+        retire) invariant=ReaderAlive ;;
+        early) invariant=AtomicPublication ;;
+        stale) invariant=CurrentReply ;;
+        budget) invariant=LogicalBudget ;;
+      esac
+      sed -e "s/Mutation = \"none\"/Mutation = \"$mutation\"/" -e "s/INVARIANTS .*/INVARIANTS $invariant/" "$temp/base.cfg" > "$temp/$mutation.cfg"
+      code=0
+      "${tlc[@]}" -workers 1 -config "$temp/$mutation.cfg" -metadir "$temp/$mutation" packages/proofs/tla/ProviderViews.tla > "$temp/$mutation.out" 2>&1 || code=$?
+      [[ "$code" = 12 ]] && grep -q "Invariant $invariant is violated" "$temp/$mutation.out"
+      echo "COUNTEREXAMPLE-OK provider-views-$mutation $invariant"
+    done
+    echo 'PROVIDER-VIEWS-CHECK-OK'

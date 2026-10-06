@@ -204,3 +204,106 @@ broadening custom Provider or lattice concurrency. Existing semantic tests stay
 as controls throughout the migration. Acceptance requires both exact observations
 and measured whole-engine cost; neither additional abstract theorems nor private
 component counts alone closes this architecture gate.
+
+* Frozen rectangle validation and design counterexamples (2026-10-07)
+
+The first implementation unit now supplies native UF frontier and total views.
+The private =uf-view= carrier retains immutable member-list roots in rectangles,
+with an exact count computed before graph mutation. It retains no mutable node,
+parent pointer, shared cursor or concrete tuple cache. Merge replaces member
+roots; a held view keeps its old lists. Each enumeration creates fresh row
+spines. Field objects remain borrowed, so this is a structural freeze, not a
+promise that arbitrary mutable host values are immutable.
+
+The existing =.extend-rows= implementation delegates to that same frontier plan
+and materializes its list at the current engine boundary. Source initialization,
+engine membership/index buffers and result publication still use explicit rows.
+This unit therefore closes the frozen UF representation contract below; it does
+not complete the whole-engine relation-view migration described above.
+
+** Lean algebra and implementation premises
+
+[[file:../packages/proofs/lean/ProviderRectangles.lean][ProviderRectangles]] proves twelve laws for actual finite member-list Cartesian
+enumeration: rectangle membership/length, union membership/length, member and
+rectangle-family uniqueness, exact frontier transport, total/frontier coverage,
+first-column lookup, budget equivalence and duplicate-descriptor overcounting.
+The cardinality formula is the sum of products of the member-list lengths.
+Unique-fact counting additionally needs unique members and pairwise disjoint
+rectangles. A correct Set observation alone cannot establish that condition.
+
+The exact-frontier transport theorem assumes each rectangle family denotes
+=N minus O=. It does not prove this premise from native SCC hashing. Native
+construction freezes new singleton diagonals and every missing ordered
+component rectangle before merging; independent graph checks below test this
+correspondence. The snapshot freezes every reachable ordered root pair exactly
+once. Group isolation is a native check; the Lean rectangle model is binary.
+Native =equal?=, arbitrary field objects, allocation failures, compiler decoding
+and UF state extraction retain their separate representation obligations.
+
+Tests, defect examples and all twelve axiom reports are in
+[[file:../packages/proofs/lean/Tests/ProviderRectanglesTests.lean][Tests/ProviderRectanglesTests]]. They include a bridge with four implied facts
+but one descriptor, repeated rectangles with the same membership but twice the
+count, a raw-edge delta missing an implied pair, empty rectangles and diagonals.
+No custom axiom, =sorry= or =native_decide= is introduced.
+
+** TLA protocol and fault discrimination
+
+[[file:../packages/proofs/tla/ProviderViews.tla][ProviderViews]] models one outstanding reader, staged source cuts, atomic
+publication, cancel/drain, view retirement, reply revision and logical budgets.
+Cuts can repeat (including ABA). Generation ranges over natural numbers;
+=Explore= constrains TLC enumeration only and is absent from =Spec=.
+Rows are symbolic observations. The model does not recompute graph closure,
+prove enumeration/cardinality algebra, or extract Gerbil mailbox actions.
+
+| Deliberate design fault | Required violated invariant | Design correction |
+|-------------------------+-----------------------------+-------------------|
+| Read current mutable roots from a previously issued view | FrozenRead | Capture member roots at the original cut |
+| Free backing storage when cancel is requested | ReaderAlive | Retire after the outstanding reader drains |
+| Publish a candidate while it is still staged | AtomicPublication | One complete source/revision/result publication |
+| Accept a reply from an earlier revision | CurrentReply | Admit the revision together with the reply |
+| Accept a large implied relation by counting its small descriptor | LogicalBudget | Preflight logical fact cardinality |
+
+These are seeded fault variants, not reports that the current actor engine
+contains all five bugs. A successful fault gate requires TLC exit 12 and the
+named invariant violation; parse failures and crashes are rejected. The native
+view implementation addresses the mutable-root design fault structurally.
+Reader retirement and reply admission remain temporal requirements for the
+future engine integration, not implemented actor capabilities in this patch.
+
+** Independent native correspondence and acceptance
+
+[[file:../t/qualification/ascent-provider-views-test.ss][The native suite]] checks all 512 three-node graph subsets in forward and
+reverse insertion order: 1,024 histories and 4,608 insertion prefixes. A separate
+Boolean adjacency/Floyd implementation supplies total and exact-difference
+truth. Each prefix checks count, frontier uniqueness/completeness, keyed reads,
+held old total views, refusal at one below the required budget, exact retry and
+zero-budget duplicate insertion. Additional controls retain a frontier through
+later SCC merges, mutate an exported row spine, isolate false-valued group keys,
+check reordered keyed columns and preserve the original list adapter's order.
+The 64-node cycle has 4,096 logical rows and supports a 64-row keyed observation;
+these structural counts do not establish allocator or whole-engine gains.
+
+The new native module and both proof artifacts are registered in the existing
+acceptance paths and GitHub formal job. The dated
+[[file:evidence/scheme-provider-views-20261007/receipt.json][receipt]] records successful exits, source hashes and rejected preparation
+attempts. Completing the remaining engine migration requires the existing
+initialization/admission, evaluator, index and publication owners to consume
+these views consistently, followed by the temporal and cost gates above.
+
+One migration constraint remains visible in this unit: total-view enumeration
+follows component traversal, while the current published engine result follows
+fact arrival order. The list adapter preserves existing frontier arrival order;
+the total snapshot promises complete unique membership, not that historical
+order. The engine migration must resolve the public ordering contract explicitly.
+Keeping a history of rectangle events may itself retain significant storage;
+its cost must be measured rather than hidden behind a lazy result interface.
+
+A further Lean counterexample blocks an invalid generalization to arbitrary
+lattices. For a =min= key/value lattice, replacing winner 5 with winner 2 is
+ascending in the abstract lattice order, but the exact tuple =(key,5)= disappears.
+Thus a lawful join does not imply monotone Set concretization. Existing
+=SemiNaive.iterations_equal= requires its =ViewMonotone= premise; the UF rectangle
+unit cannot discharge it for general winner-row lattices. The new test makes
+this false premise explicit. This is a proof-scope discriminator, not evidence
+that every native lattice program fails. General lattice transfer needs its own
+concretization and consumer contracts before the actor eligibility is broadened.

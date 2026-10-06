@@ -519,3 +519,13 @@ first boundary's duplicate discriminator. A compressed relation view still
 needs its own concretization, exact delta and logical cardinality; a custom
 IndexProvider cannot obtain compressed semantics by omitting supplied rows.
 The present repair does not implement or qualify that representation migration.
+* Frozen-view implementation and formal discriminators (2026-10-07)
+
+The [[file:../../scheme-trrel-uf-design.org][UF design follow-up]] now freezes native component-member rectangles before
+SCC merge and supplies total/frontier count, enumeration and keyed reads.
+The existing list boundary uses that same plan. =ProviderRectangles= proves
+binary rectangle laws under explicit disjointness and frontier premises;
+=ProviderViews= explores ownership/publication and detects five seeded faults.
+Independent Floyd checks connect native views to concrete graph observations.
+This validates the next representation unit without claiming the evaluator has
+stopped retaining all pairs or that B23's application speedups are reproduced.

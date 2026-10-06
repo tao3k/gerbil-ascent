@@ -4,9 +4,75 @@
 ;;; Private union-find SCCs and reachability between component roots.
 ;;; Concrete frontier rows are returned, never retained in this provider.
 (export gerbil-ascent-trrel-uf-state gerbil-ascent-trrel-uf-extension
-        gerbil-ascent-trrel-uf-observation)
+        gerbil-ascent-trrel-uf-frontier-extension gerbil-ascent-trrel-uf-snapshot
+        gerbil-ascent-trrel-uf-view-count gerbil-ascent-trrel-uf-view-for-each
+        gerbil-ascent-trrel-uf-view-lookup gerbil-ascent-trrel-uf-observation)
 (defstruct uf-node (parent members size reach))
 (defstruct uf-group (nodes roots))
+;;; Private frozen descriptors contain member list roots, never mutable nodes.
+;;; Merge replaces member roots without mutating their list spines. Field values
+;;; retain the existing borrowed identity contract; this is not a deep freeze.
+(defstruct uf-rectangle (prefix from to))
+(defstruct uf-view (rectangles count))
+
+;; : (-> UfView Natural)
+(def (gerbil-ascent-trrel-uf-view-count view) (uf-view-count view))
+
+;; : (-> UfView (-> Row Any) Void)
+(def (gerbil-ascent-trrel-uf-view-for-each view consume)
+  (for-each
+   (lambda (rectangle)
+     (for-each (lambda (from)
+       (for-each (lambda (to)
+         (consume (append (uf-rectangle-prefix rectangle) (list from to))))
+         (uf-rectangle-to rectangle)))
+       (uf-rectangle-from rectangle)))
+   (uf-view-rectangles view)))
+
+;;; Key filtering precedes Cartesian enumeration. Each invocation owns its
+;;; returned row spines; no cursor or materialized tuple cache lives in the view.
+;; : (-> UfView (List Natural) Row Rows)
+(def (gerbil-ascent-trrel-uf-view-lookup view columns key)
+  (unless (and (list? columns) (list? key) (= (length columns) (length key))
+               (andmap (lambda (column) (and (exact-integer? column) (>= column 0))) columns))
+    (error "invalid ASCENT UF view key"))
+  (let (found [])
+    (for-each
+     (lambda (rectangle)
+       (let* ((prefix (uf-rectangle-prefix rectangle)) (offset (length prefix)))
+         (unless (andmap (lambda (column) (< column (+ offset 2))) columns)
+           (error "invalid ASCENT UF view column"))
+         (def (matches? column value)
+           (let loop ((remaining columns) (values key))
+             (or (null? remaining)
+                 (and (or (not (= (car remaining) column)) (equal? (car values) value))
+                      (loop (cdr remaining) (cdr values))))))
+         (when (or (= offset 0) (matches? 0 (car prefix)))
+           (for-each (lambda (from)
+             (when (matches? offset from)
+               (for-each (lambda (to)
+                 (when (matches? (+ offset 1) to)
+                   (set! found (cons (append prefix (list from to)) found))))
+                 (uf-rectangle-to rectangle))))
+             (uf-rectangle-from rectangle)))))
+     (uf-view-rectangles view))
+    (reverse found)))
+
+;;; A total snapshot enumerates each reachable ordered component rectangle once.
+;; : (-> UfState UfView)
+(def (gerbil-ascent-trrel-uf-snapshot groups)
+  (let ((rectangles []) (count 0))
+    (hash-for-each (lambda (key group)
+      (let (prefix (if (= (car key) 3) (list (cadr key)) []))
+        (for-each (lambda (from)
+          (for-each (lambda (to)
+            (when (reachable? from to)
+              (set! rectangles (cons (make-uf-rectangle prefix
+                                      (uf-node-members from) (uf-node-members to)) rectangles))
+              (set! count (+ count (* (uf-node-size from) (uf-node-size to))))))
+            (uf-group-roots group)))
+          (uf-group-roots group)))) groups)
+    (make-uf-view (reverse rectangles) count)))
 (def (gerbil-ascent-trrel-uf-state) (make-hash-table))
 ;; Preflight reads parent links without compression, preserving rejected state.
 (def (root node)
@@ -48,7 +114,7 @@
             (when (or (not (eq? target winner)) (eq? n winner))
               (hash-remove! (uf-node-reach n) target))) cycle)))) roots)))
 
-(def (gerbil-ascent-trrel-uf-extension groups _all _pending row budget)
+(def (gerbil-ascent-trrel-uf-frontier-extension groups row budget)
   (let* ((width (length row))
          (_ (unless (memq width '(2 3))
               (error "ASCENT trrel requires two or three columns" row)))
@@ -70,7 +136,7 @@
          ;; Succ(b) membership is already represented by b's reach table.
          (cycle (and (not (eq? a b)) (reachable? b a)
                      (filter (lambda (p) (reachable? b p)) preds)))
-         (changes []) (needed (length new)) (added []))
+         (changes []) (needed (length new)))
     ;; Count each missing component rectangle before rows or graph mutation.
     (for-each (lambda (p)
       (for-each (lambda (s)
@@ -78,13 +144,14 @@
           (set! needed (+ needed (* (uf-node-size p) (uf-node-size s))))
           (set! changes (cons (cons p s) changes)))) succs)) preds)
     (when (> needed budget) (error "ASCENT trrel output fact budget exceeded"))
-    (def (emit! from to)
-      (set! added (cons (if (= width 3) (list (car row) from to) (list from to)) added)))
-    (for-each (lambda (n) (let (v (car (uf-node-members n))) (emit! v v))) new)
-    (for-each (lambda (change)
-      (for-each (lambda (from)
-        (for-each (lambda (to) (emit! from to)) (uf-node-members (cdr change))))
-        (uf-node-members (car change)))) changes)
+    (let* ((prefix (if (= width 3) (list (car row)) []))
+           (rectangles
+            (append (map (lambda (n) (make-uf-rectangle prefix
+                                      (uf-node-members n) (uf-node-members n))) new)
+                    (map (lambda (change) (make-uf-rectangle prefix
+                                           (uf-node-members (car change))
+                                           (uf-node-members (cdr change)))) changes)))
+           (frontier (make-uf-view rectangles needed)))
     ;; No callback occurs between preflight and commit. Budget rejection has
     ;; not installed new nodes, rewritten parents or altered adjacency.
     (unless (null? new)
@@ -93,14 +160,24 @@
       (unless right-node (hash-put! nodes right b))
       (set! (uf-group-roots group) roots))
     ;; If every root collapses, all changed arcs would immediately disappear.
-    ;; Concrete rectangles were emitted above; no external reach key survives.
+    ;; Concrete member rectangles were frozen above; no external reach key survives.
     (unless (and cycle (= (length cycle) (length roots)))
       (for-each (lambda (change) (hash-put! (uf-node-reach (car change)) (cdr change) #t)) changes))
     ;; A new a->b edge makes precisely Pred(a) intersect Succ(b) cyclic.
     ;; Merge toward the largest component, bounding union parent depth.
     (when cycle
       (merge-cycle! group roots cycle))
-    (reverse added)))
+    frontier)))
+
+;;; The existing list-based engine consumes the same compressed frontier plan.
+;;; This adapter preserves its concrete row order; engine view migration is separate.
+;; : (-> UfState Rows Rows Row Natural Rows)
+(def (gerbil-ascent-trrel-uf-extension groups _all _pending row budget)
+  (let ((frontier (gerbil-ascent-trrel-uf-frontier-extension groups row budget))
+        (rows []))
+    (gerbil-ascent-trrel-uf-view-for-each frontier
+      (lambda (row) (set! rows (cons row rows))))
+    (reverse rows)))
 ;; Physical structure counts, not whole-engine memory or allocator receipts.
 (def (gerbil-ascent-trrel-uf-observation groups)
   (let ((nodes 0) (components 0) (arcs 0))

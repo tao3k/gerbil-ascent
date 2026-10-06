@@ -1986,3 +1986,35 @@ finite natural-number occurrence annotation described in GKT07 §2–3. This
 closes the preceding qualified hash-receiver replay limitation while retaining
 field stability and successful fresh replay premises. It does not implement
 recursive bag Datalog, arbitrary callback rollback or new performance claims.
+* BYODS frozen-view validation unit (2026-10-07)
+
+[[file:scheme-trrel-uf-design.org][The UF design follow-up]] couples twelve Lean rectangle enumeration/cardinality
+laws, a TLA view-lifetime/publication model with five discriminating fault
+variants, and independently checked native frozen total/frontier views.
+Lean's exact-frontier transport retains its concretization premise; the native
+Floyd oracle checks that premise on 4,608 insertion prefixes. TLA checks
+protocol observations and avoids duplicating the relation algebra. Its seeded
+counterexamples establish design discriminators, not five production incidents.
+
+The existing UF list entrypoint consumes the same compressed frontier plan.
+The evaluator still materializes that frontier at its current row boundary.
+Thus this acceptance unit validates the representation/lifetime design; the
+whole-engine representation migration and measured benefit remain separately
+required before claiming B23's compressed-storage application result.
+
+** BYODS validation coverage after the frozen-view unit
+
+| Design obligation | Lean owner / premise | TLA owner / premise | Native discriminator / remaining gap |
+|-------------------+----------------------+---------------------+--------------------------------------|
+| Concretization of declared built-ins | EquivalenceComponents and DirectedFrontier: active-domain closure and exact frontier | TransitiveComponents: finite merge/remap/refusal actions | Independent per-insertion graph truth; general Scheme hash/root extraction remains open |
+| Every implied fact reaches a delta consumer | ProviderFrontier and SemiNaive: body decomposition and positive Set iteration under monotone views | ProviderFrontier: injection/consumption and initial-cut publication | Repeated atoms and split producers; arbitrary lattice gamma contracts remain open |
+| Keyed reads agree with the relation | IndexedPositiveTraversal / IndexedIteration: faithful bucket and admitted-column premises; ProviderRectangles: first-column rectangle filtering | ComponentIndex: root/version installation and aliases | Native keyed UF rectangle reads plus current explicit indexes; compressed engine dispatch remains open |
+| Unique logical fact budgets | ProviderRectangles: enumeration count plus unique members/disjoint rectangles | ProviderViews: a staged candidate exceeding the logical budget cannot publish | Exact-budget refusal/retry, duplicate zero delta; descriptor count cannot replace fact count |
+| Old observations survive later mutation | Immutable member-list representation is a Lean premise, not a temporal proof | ProviderViews: frozen reads, cancel/drain and backing lifetime | Held native total/frontier through SCC merge and exported-row mutation; borrowed field values are not deeply frozen |
+| No stale source/result publication | No Lean replica of the transaction machine | NativeSessionPublication / SessionTransaction / ProviderViews: cut/revision and atomic publication | Existing Session recovery controls; compressed-view integration still needs native trace mapping |
+| General lattice transfer | Lawful joins alone do not establish ViewMonotone; the new min-winner counterexample rejects this inference | No duplicate lattice fixed-point calculus | Trusted callback semantics remain outside this UF contract; do not widen actor eligibility without new contracts |
+| Whole-engine cost benefit | No timing theorem follows from semantic equivalence | No throughput theorem follows from finite safety exploration | Current engine retains pairs; sparse query/full export and retained-history costs still require matched measurement |
+
+The matrix records both verified laws and missing premises. It is the acceptance
+map for continued BYODS work; a passing formal job cannot be substituted for the
+native correspondence and cost columns.

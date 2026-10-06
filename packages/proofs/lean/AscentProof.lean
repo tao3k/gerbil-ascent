@@ -21,4 +21,5 @@ import RuleBodyFrame
 import PositiveSlots
 import PositiveTraversal
 import ProviderFrontier
+import SemiNaive
 import TransitiveComponents

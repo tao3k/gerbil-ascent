@@ -312,6 +312,22 @@ end Ascent.AtomicBinding.Tests
 #print axioms Ascent.ProviderFrontier.projected_partition
 #print axioms Ascent.ProviderFrontier.projected_frontier
 #print axioms Ascent.ProviderFrontier.new_consequence_pivot
+#print axioms Ascent.SemiNaive.consequences_partition
+#print axioms Ascent.SemiNaive.pivot_after_full
+#print axioms Ascent.SemiNaive.iterations_equal
+
+/-- Empty-body facts require the initial full execution; a pivot-only first
+round cannot derive them, even though the concrete view is monotone. -/
+def factRule : Ascent.SemiNaive.Rule Bool Bool Bool := ⟨[], false, fun _ => true⟩
+
+example : Ascent.SemiNaive.fullStep [factRule]
+    (fun _ _ _ _ => False) (fun _ => False) true := by
+  exact Or.inr ⟨factRule, List.mem_cons_self, false, rfl, rfl⟩
+
+example : ¬ Ascent.SemiNaive.pivotStep [factRule]
+    (fun _ _ _ _ => False) (fun _ => False) (fun _ => False) true := by
+  simp [Ascent.SemiNaive.pivotStep, Ascent.SemiNaive.freshConsequences,
+    factRule, Ascent.ProviderFrontier.output, Ascent.ProviderFrontier.pivots]
 
 /-- Repeated keys and multiple fresh occurrences yield a pivot derivation. -/
 example : Ascent.ProviderFrontier.pivots

@@ -3,7 +3,7 @@
 \* SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 \* Finite eqrel injection/frontier/consumer exploration, not native refinement.
 EXTENDS Naturals, FiniteSets
-CONSTANTS Nodes, Mutation
+CONSTANTS Nodes, InitialInputs, Mutation
 VARIABLES inputs, total, delta, pending, delivered, answers, phase
 vars == <<inputs, total, delta, pending, delivered, answers, phase>>
 \* A three-occurrence downstream body; snapshot ownership is the temporal
@@ -22,8 +22,13 @@ Close(edges) == LET next == edges \cup
 Concrete(edges) == LET members == {n \in Nodes : \E p \in edges : n = p[1] \/ n = p[2]}
                   IN Close(edges \cup {<<p[2], p[1]>> : p \in edges}
                            \cup {<<n, n>> : n \in members})
-Init == /\ inputs = {} /\ total = {} /\ delta = {}
-        /\ pending = {} /\ delivered = {} /\ answers = {} /\ phase = "idle"
+\* The first committed snapshot needs a full consumer evaluation. An initial
+\* pivot-only consumer silently loses seeded all-old consequences.
+SeededInputs == {<<CHOOSE n \in Nodes : TRUE, CHOOSE n \in Nodes : TRUE>>}
+Init == /\ inputs = InitialInputs /\ total = Concrete(InitialInputs) /\ delta = {}
+        /\ pending = total /\ delivered = total
+        /\ answers = IF Mutation = "initial" THEN {} ELSE BodyOf(total)
+        /\ phase = "idle"
 Inject(edge) == /\ phase = "idle" /\ edge \notin inputs
                 /\ inputs' = inputs \cup {edge}
                 /\ pending' = Concrete(inputs')

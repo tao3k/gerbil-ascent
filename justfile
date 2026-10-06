@@ -1202,13 +1202,19 @@ check-provider-frontier-formal:
     temp=$(mktemp -d)
     trap 'rm -rf "$temp"' EXIT
     "${tlc[@]}" -workers 1 -config packages/proofs/tla/ProviderFrontier.cfg -metadir "$temp/good" packages/proofs/tla/ProviderFrontier.tla
-    for mutation in raw omit early old; do
+    sed 's/InitialInputs = {}/InitialInputs <- SeededInputs/' packages/proofs/tla/ProviderFrontier.cfg > "$temp/seeded.cfg"
+    "${tlc[@]}" -workers 1 -config "$temp/seeded.cfg" -metadir "$temp/seeded" packages/proofs/tla/ProviderFrontier.tla
+    for mutation in raw omit early old initial; do
       sed "s/Mutation = \"none\"/Mutation = \"$mutation\"/" packages/proofs/tla/ProviderFrontier.cfg > "$temp/$mutation.cfg"
+      if [[ "$mutation" == initial ]]; then
+        sed 's/InitialInputs = {}/InitialInputs <- SeededInputs/' "$temp/$mutation.cfg" > "$temp/initial-seeded.cfg"
+        mv "$temp/initial-seeded.cfg" "$temp/$mutation.cfg"
+      fi
       code=0
       "${tlc[@]}" -workers 1 -config "$temp/$mutation.cfg" -metadir "$temp/$mutation" packages/proofs/tla/ProviderFrontier.tla > "$temp/$mutation.out" 2>&1 || code=$?
       invariant=FrontierComplete
       if [[ "$mutation" == omit ]]; then invariant=DeliveredExact; fi
-      if [[ "$mutation" == early || "$mutation" == old ]]; then invariant=ConsumerSnapshot; fi
+      if [[ "$mutation" == early || "$mutation" == old || "$mutation" == initial ]]; then invariant=ConsumerSnapshot; fi
       [[ "$code" = 12 ]] && grep -q "Invariant $invariant is violated" "$temp/$mutation.out"
       echo "COUNTEREXAMPLE-OK provider-frontier-$mutation $invariant"
     done

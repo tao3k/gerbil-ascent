@@ -503,8 +503,19 @@ The [[file:scheme-paper-closure.org][paper closure matrix]] and [[file:evidence/
 ProviderFrontier beyond its earlier binary join. Lean proves arbitrary finite
 positive-body decomposition, projection and output subtraction. Omitting
 all-old derivations explicitly requires prior heads to be covered by the known
-database; the iteration-history proof remains open. TLA+ owns the staged
+database; at that receipt snapshot the iteration-history proof remained open. TLA+ owns the staged
 frontier/consumer publication sequence, with early-publication and old-snapshot
 fault controls. Native Scheme checks delayed producers and repeated Provider
 atoms against independent complete output sets. These are complementary claims,
 not duplicate protocol proofs or whole-engine refinement.
+
+* Concrete Set iteration history qualification
+
+[[file:../packages/proofs/lean/SemiNaive.lean][SemiNaive]] now derives all-old head coverage from the previous consequence
+step and proves naive/pivot equality for every natural-number round of a finite
+positive rule set over a monotone concrete Set view. Initialization executes
+the full body, including empty-body facts. No completed-solve premise or finite
+iteration cutoff is used. The [[file:evidence/scheme-seminaive-history-20261006/receipt.json][qualification receipt]] separates this universal
+algebra result from finite TLA initial/consume publication checks and native
+Provider regressions. General abstract gamma/join/injection contracts,
+descriptor finite-height termination and native combined refinement remain open.

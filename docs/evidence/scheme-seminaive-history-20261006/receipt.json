@@ -86,5 +86,31 @@
   ],
   "modelCalls": 0,
   "performanceClaim": null,
-  "rustRuntimeChanges": false
+  "rustRuntimeChanges": false,
+  "postRebaseQualification": {
+    "qualifiedSourceHead": "08879fb92313e10977ae9c7e8316a3e1ef18943d",
+    "rebasedOver": "19db531",
+    "lean": {
+      "exitCode": 0,
+      "buildJobs": 69
+    },
+    "native": {
+      "exitCode": 0,
+      "suiteCases": 12,
+      "regressionPrograms": 81
+    },
+    "sources": {
+      "packages/proofs/lean/SemiNaive.lean": "c00da4759381f4004996ca299100c08e44fcf455093ddbddaf9d857924e30d51",
+      "packages/proofs/lean/AscentProof.lean": "d24a1447c67be818c91d96386b4a01f806500c5323e8acd7ec36f5fd2a72f9a2",
+      "packages/proofs/lean/AscentProofTests.lean": "7517918a9c54d109715842f82f3363fa18885c86cb1a8e22d1156128fcb6bd14",
+      "packages/proofs/lean/lakefile.lean": "e2cb8702ac9c0bb90d898bf69c645b39c8c24ef37a32f1a3d64471d3f8009b7e",
+      "packages/proofs/tla/ProviderFrontier.tla": "f35ca9033bec6ab1ba8ff4d2b054f24b478df9af7bea9e7476c8493a2cff4e05",
+      "packages/proofs/tla/ProviderFrontier.cfg": "ef00c31e8e9e27e59ec1d87787921e5c8ffca3027ac136387094b1cd77a3f20b",
+      "justfile": "25e4d0f943c190ebb4bf73ccdde1eda95ec0c7971efd68fe771a9acd9c0a3f8c",
+      "t/harness/run.ss": "98a4edb1285b414d32ce0dbfa8becc95aae572450e7abe54acf13f8df92fd2c1",
+      "t/qualification/ascent-byods-invariants-test.ss": "ac2b17a1ecdea6456c5dcd11c1f046f05c7979af2dc601bc8b09213b344e7538"
+    },
+    "tlaSourcesAndGateUnchangedFromSuccessfulFiveControlRun": true,
+    "conflictResolution": "Retained PositiveTraversal and SemiNaive library roots and upstream test roots"
+  }
 }

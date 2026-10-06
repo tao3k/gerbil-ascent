@@ -2,11 +2,16 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(import (only-in :std/test check-equal? check-exception test-suite test-case)
+(import (only-in :clan/poo/object .o)
+        (only-in :gerbil-ascent/program/scheme-query make-relational-solution)
+        (only-in :std/test check-equal? check-exception test-suite test-case)
         (only-in :gerbil-ascent/program/interface
                  relational-op-function relational-op-fix
                  relational-op-union relational-op-project
                  relational-op-join relational-op-source
+                 relational-op-fragment relational-compose relational-open-session
+                 relational-session-run relational-session-replace-sources!
+                 relational-prepare-query relational-prepare-queries relational-query
                  relational-op-apply
                  relational-op-select-eq relational-op-flatmap
                  relational-op-open-retained relational-op-retained-rows
@@ -91,6 +96,65 @@
 
 (def scheme-operator-retained-test
   (test-suite "retained first-class relational operators"
+    (test-case "prepared views follow completed transactions and own duplicate rows"
+      (let* ((edge (relational-op-source 'edge 2 '((0 1) (1 2))))
+             (fragment (relational-op-fragment (reachability edge) 'reach))
+             (labels (list 'reach 'edge 'reach))
+             (view (relational-prepare-queries fragment labels))
+             (read-edge (relational-prepare-query fragment 'edge))
+             (session (relational-open-session
+                        (relational-compose (list fragment) 32 128 256)))
+             (first (relational-session-run session))
+             (before (view first)))
+        (check-equal? (same-rows? (car before) (finite-closure '((0 1) (1 2)))) #t)
+        (check-equal? (cadr before) (read-edge first))
+        (check-equal? (car before) (caddr before))
+        (set-car! labels 'unknown)
+        (set-car! (car (car before)) 99)
+        (check-equal? (same-rows? (caddr before) (finite-closure '((0 1) (1 2)))) #t)
+        (check-equal? (same-rows? (car (view first)) (finite-closure '((0 1) (1 2)))) #t)
+        (let* ((next (relational-session-replace-sources!
+                      session fragment (list (cons 'edge '((2 0))))))
+               (after (view next)))
+          (check-equal? (same-rows? (car after) (finite-closure '((2 0)))) #t)
+          (check-equal? (cadr after) '((2 0)))
+          (check-equal? (read-edge first) '((0 1) (1 2)))
+          (check-exception
+           (relational-session-replace-sources!
+            session fragment (list (cons 'edge '((0 2))) (cons 'unknown '()))) true)
+          (check-equal? (view (relational-session-run session)) after)
+          (check-equal? (read-edge first) (relational-query first fragment 'edge)))
+        (check-exception (relational-prepare-queries fragment '(edge unknown)) true)
+        (let* ((other (relational-op-fragment
+                       (relational-op-source 'edge 2 '((2 1))) 'reach))
+               (other-solution
+                (relational-session-run
+                 (relational-open-session
+                  (relational-compose (list other) 32 128 256)))))
+          ;; Identical public labels do not substitute a different fragment's handle.
+          (check-exception (read-edge other-solution) true))))
+    (test-case "query preparation is lazy and completion precedes observation"
+      (let* ((fragment (relational-op-fragment
+                        (relational-op-source 'edge 1 '((1))) 'out))
+             (view (relational-prepare-queries fragment '(out out)))
+             (empty-view (relational-prepare-queries fragment '()))
+             (calls 0)
+             (partial (make-relational-solution
+                       (.o (finished #f)
+                           (rows-of (lambda (_name) (set! calls (+ calls 1)) '((7))))))))
+        (check-equal? calls 0)
+        (check-exception (view partial) true)
+        (check-exception (empty-view partial) true)
+        (check-equal? calls 0)
+        (check-exception (view #f) true)
+        (let* ((complete (make-relational-solution
+                         (.o (finished #t)
+                             (rows-of (lambda (_name)
+                                        (set! calls (+ calls 1)) '((7))))))))
+          (check-equal? (empty-view complete) '())
+          (check-equal? calls 0)
+          (check-equal? (view complete) '(((7)) ((7))))
+          (check-equal? calls 2))))
     (test-case "all finite graphs survive append, duplicate and withdrawal"
       (let* ((possible '((0 1) (0 2) (1 0) (1 2) (2 0) (2 1)))
              (retained

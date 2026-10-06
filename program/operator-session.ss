@@ -13,7 +13,7 @@
                  relational-compose relational-open-session
                  relational-session-append-source!
                  relational-session-replace-sources!
-                 relational-session-run relational-query))
+                 relational-session-run relational-prepare-query))
 
 (export relational-op-open-retained
         relational-op-retained? relational-op-retained-rows
@@ -22,7 +22,7 @@
         relational-op-retained-replace-sources!)
 
 (defstruct relational-op-retained
-  (session fragment input-label output-label latest))
+  (session fragment input-label output-label read-output latest))
 
 (def (row-difference left right)
   (filter (lambda (row) (not (member row right))) left))
@@ -30,11 +30,9 @@
 (def (relational-op-retained-rows retained)
   (unless (relational-op-retained? retained)
     (error "expected a retained relational operator" retained))
-  ;; relational-query returns copied row spines from a completed solution.
-  (relational-query
-   (relational-op-retained-latest retained)
-   (relational-op-retained-fragment retained)
-   (relational-op-retained-output-label retained)))
+  ;; The prepared reader returns copied row spines from this completed solution.
+  ((relational-op-retained-read-output retained)
+   (relational-op-retained-latest retained)))
 
 ;; relational-op-open-retained
 ;;   : (-> RelationalTransform Rows Nat Nat Nat RelationalOpRetained)
@@ -68,10 +66,11 @@
          (program
           (relational-compose (list fragment)
                               input-limit derived-limit output-limit))
+         (read-output (relational-prepare-query fragment output-label))
          (session (relational-open-session program))
          (first (relational-session-run session)))
     (make-relational-op-retained
-     session fragment input-label output-label first)))
+     session fragment input-label output-label read-output first)))
 
 ;;; An append publishes only a completed result. If admission or the run
 ;;; fails, the underlying Session restores its last committed input; the
@@ -87,9 +86,7 @@
             (relational-session-run
              (relational-op-retained-session retained)))
            (after
-            (relational-query
-             next (relational-op-retained-fragment retained)
-             (relational-op-retained-output-label retained))))
+            ((relational-op-retained-read-output retained) next)))
       (set! (relational-op-retained-latest retained) next)
       (values before after (row-difference after before)))))
 
@@ -106,9 +103,7 @@
            (relational-op-retained-fragment retained)
            replacements))
       (let (after
-            (relational-query
-             next (relational-op-retained-fragment retained)
-             (relational-op-retained-output-label retained)))
+            ((relational-op-retained-read-output retained) next))
         (set! (relational-op-retained-latest retained) next)
         (values before after
                 (row-difference after before)

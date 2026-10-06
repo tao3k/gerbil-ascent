@@ -13,7 +13,8 @@
         relational-admission-report-diagnostic
         relational-diagnostic? relational-diagnostic-code
         relational-diagnostic-path relational-diagnostic-detail
-        relational-solve relational-query relational-query-name
+        relational-solve relational-prepare-query relational-prepare-queries
+        relational-query relational-query-name
         relational-open-session relational-session-append-source!
         relational-session-replace-source!
         relational-session-replace-sources!

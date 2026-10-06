@@ -689,3 +689,58 @@ jobs=12, module execution 0-3 seconds, explicit final OK and command exit 0.
 The independent test-process pool capacity is separate from VM processors in
 one Session process. Concurrent remote =0e2540c= changes proofs, BYODS tests,
 CI and documentation; it changes none of these production/test dependencies.
+
+* Prepared queries: retain export selection and apply the current solution
+
+LeanPoo =247d1d6094b6af1bb873f69564b271bc978730ed= separates selecting
+factories from applying them to a context. Its preparation-cache,
+context-cache, borrowed-view and observed-view examples make the lifetime
+of preparation distinct from the lifetime of observed data. The native
+consumer now implements that distinction directly in =scheme-query.ss=.
+
+=relational-prepare-query= resolves one fragment export once and returns a
+read function. =relational-prepare-queries= resolves an ordered checklist,
+including repeated labels, into a read function. Preparation does not read
+rows or construct an engine. Each application validates the supplied solution
+and its completion before observing rows, then selects that result's reader.
+An empty checklist still requires completion and observes no relations.
+
+#+begin_src scheme
+(def read-view (relational-prepare-queries fragment '(reach edge reach)))
+(def first (relational-session-run session))
+(def first-view (read-view first))
+(def next
+  (relational-session-replace-sources! session fragment
+    '((edge (0 1) (1 2)))))
+(def next-view (read-view next))
+;; Applying read-view to first still observes the earlier completed snapshot.
+#+end_src
+
+The declaration/export selection is fixed at preparation. Changing the
+caller's checklist afterwards cannot change it. Reprepare when declarations
+or export mappings change; data transactions on the same admitted program
+reuse it. Handles remain scoped to the declaring fragment, so another
+independently constructed fragment with identical public labels cannot
+supply these relations merely by sharing their spelling.
+
+Public views copy list and row spines. Repeated labels produce independent
+copies, and mutating an answer cannot change another answer or a later read.
+This is the existing public row ownership boundary; it is not recursive
+cloning of arbitrary cell values. Prepared readers grant no source mutation
+authority and retain no earlier solution.
+
+=operator-session.ss= is the production consumer: opening a retained operator
+prepares its output reader once; rows, successful append and successful batch
+replacement apply it to the exact completed solution being published. The
+existing Session admission, rollback and full transaction publication remain
+the owners of updates. A failed batch does not replace the committed result.
+
+=program/result.ss= already owns a private publication cache of ordered row
+promises keyed by unchanged persistent row roots. Prepared queries use those
+existing snapshots through =rows-of=; no second built-data cache is added.
+This native API does not implement LeanPoo's typed registry or ContextSlot
+identity checks, and no cross-language refinement or runtime speedup is
+claimed. The retained and publication native Suites pass 8 and 5 Cases,
+respectively, with command exit 0 and explicit final OK. Source and log
+identities are recorded in
+[[file:../evidence/scheme-prepared-query-20261006/receipt.json][the prepared-query receipt]].

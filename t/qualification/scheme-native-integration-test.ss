@@ -9,7 +9,7 @@
                  relational-lattice-fragment relational-compose
                  relational-export relational-open-session
                  relational-session-run relational-session-replace-source!
-                 relational-session-transaction!
+                 relational-session-prepare-transaction relational-session-transaction!
                  relational-query
                  relational-op-source relational-op-union
                  relational-op-join relational-op-project
@@ -239,15 +239,17 @@
                    (new-roots '((1) (2) (4)))
                    (new-mapping '(((2) (5)) ((4) (9))))
                    (new-seeds '((4 15)))
+                   (replace-all
+                    (relational-session-prepare-transaction
+                     session (list (list edges 'raw-edge)
+                                   (list blocked 'blocked)
+                                   (list roots 'root)
+                                   (list view 'weight)
+                                   (list best 'best))))
                    (fourth
-                    (relational-session-transaction!
-                     session
-                     (list
-                      (list edges 'raw-edge new-edges)
-                      (list blocked 'blocked new-blocked)
-                      (list roots 'root new-roots)
-                      (list view 'weight '((2 5) (4 9)))
-                      (list best 'best new-seeds)))))
+                    (replace-all
+                     (list new-edges new-blocked new-roots
+                           '((2 5) (4 9)) new-seeds))))
               (check-result-against-model
                fourth counts best new-edges new-blocked new-roots
                new-mapping new-seeds)
@@ -280,4 +282,15 @@
                  new-mapping new-seeds)
                 (check-equal?
                  (same-rows? (relational-query fourth best 'best)
-                             '((1 9) (2 9) (4 15))) #t)))))))))
+                             '((1 9) (2 9) (4 15))) #t)
+                ;; Prepared source scope spans fragments and reuses the current
+                ;; full transaction owner after an intervening dynamic update.
+                (let (sixth (replace-all
+                             (list new-edges new-blocked new-roots
+                                   '((2 5) (4 9)) new-seeds)))
+                  (check-result-against-model
+                   sixth counts best new-edges new-blocked new-roots
+                   new-mapping new-seeds)
+                  (check-result-against-model
+                   fifth counts best '() new-blocked new-roots
+                   new-mapping new-seeds))))))))))

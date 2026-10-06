@@ -744,3 +744,55 @@ claimed. The retained and publication native Suites pass 8 and 5 Cases,
 respectively, with command exit 0 and explicit final OK. Source and log
 identities are recorded in
 [[file:../evidence/scheme-prepared-query-20261006/receipt.json][the prepared-query receipt]].
+
+* Prepared source transactions: bind authority to one retained Session
+
+The read preparation above retains exported relation selection while applying
+a supplied completed solution. Repeated writes have a different context:
+the receiving Session owns source admission and publication. LeanPoo's
+preparation-cache contract distinguishes a consumer view from publication of
+the whole updated registry. That ownership distinction guides this native
+change; its data updates are not LeanPoo registry edits.
+
+=relational-session-prepare-transaction= accepts a Session and an ordered,
+nonempty list of =(fragment label)= selections. Preparation resolves each
+export, checks source authority in that exact Session and rejects repeated
+source handles. It reads no proposed rows, runs no engine and publishes no
+state. It retains private handles rather than the caller's mutable checklist.
+Unlike repeated read requests, repeated write targets are errors.
+
+#+begin_src scheme
+(def replace-pair
+  (relational-session-prepare-transaction session
+    (list (list edges 'raw-edge) (list blocked 'blocked))))
+(def next (replace-pair (list '((1 2) (2 4)) '((1 2)))))
+;; A later call replaces the then-current cut of this same Session.
+(def later (replace-pair (list '((2 4)) '())))
+#+end_src
+
+Application requires exactly one row batch per selected source, in checklist
+order. All batches pass the existing arity, scalar and owned-row admission
+before reaching the native atomic transaction. There is no partial prefix
+commit. Malformed rows and budget failures preserve the last completed state;
+the prepared capability remains usable after recovery. It cannot be retargeted
+to a different Session, expanded by changing the original selection list, or
+used to mutate an exported derived query. Declaration changes require a new
+Session and new preparation; ordinary data transactions reuse it.
+
+=scheme-session.ss= owns source selection and one shared checked commit entry
+for dynamic and prepared transactions. =operator-session.ss= prepares its
+single input replacement at construction, applies fresh rows on each replace,
+and publishes the next output through the same result/delta helper as dynamic
+source batches. Captured exported sources remain available only through the
+explicit batch API. Appends retain their existing admission path.
+
+The native retained Suite passes 10 Cases, including every finite input graph,
+ordered selection, separate Sessions over the same declaration, mutable caller
+checklists and rows, late bad batches and post-failure reuse. The combined
+language Suite passes its integration Case through a five-fragment prepared
+transaction spanning finite views, negation, reduction and lattice sources,
+then reuses it after an intervening dynamic transaction. The independent model
+checks results and earlier snapshots. Both commands exit 0 with explicit final
+OK; no speedup, typed registry bridge or formal cross-language equivalence is
+claimed. Exact source and log identities are in
+[[file:../evidence/scheme-prepared-transaction-20261006/receipt.json][the prepared-transaction receipt]].

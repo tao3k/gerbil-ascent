@@ -3,8 +3,8 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 ;;; A first-class relation transformer admitted once into the retained
-;;; native Session. The input is the only source this facade may change;
-;;; other sources captured by the transformer remain fixed here.
+;;; native Session. Single-input operations use a prepared source capability;
+;;; explicit batch operations may also replace exported captured sources.
 (import (only-in "operator.ss"
                  relational-op-source relational-op-apply
                  relational-op-fragment relational-transform?
@@ -12,6 +12,7 @@
         (only-in "scheme-admission.ss"
                  relational-compose relational-open-session
                  relational-session-append-source!
+                 relational-session-prepare-transaction
                  relational-session-replace-sources!
                  relational-session-run relational-prepare-query))
 
@@ -22,7 +23,7 @@
         relational-op-retained-replace-sources!)
 
 (defstruct relational-op-retained
-  (session fragment input-label output-label read-output latest))
+  (session fragment input-label output-label read-output replace-input latest))
 
 (def (row-difference left right)
   (filter (lambda (row) (not (member row right))) left))
@@ -68,9 +69,12 @@
                               input-limit derived-limit output-limit))
          (read-output (relational-prepare-query fragment output-label))
          (session (relational-open-session program))
+         (replace-input
+          (relational-session-prepare-transaction
+           session (list (list fragment input-label))))
          (first (relational-session-run session)))
     (make-relational-op-retained
-     session fragment input-label output-label read-output first)))
+     session fragment input-label output-label read-output replace-input first)))
 
 ;;; An append publishes only a completed result. If admission or the run
 ;;; fails, the underlying Session restores its last committed input; the
@@ -102,16 +106,18 @@
            (relational-op-retained-session retained)
            (relational-op-retained-fragment retained)
            replacements))
-      (let (after
-            ((relational-op-retained-read-output retained) next))
-        (set! (relational-op-retained-latest retained) next)
-        (values before after
-                (row-difference after before)
-                (row-difference before after))))))
+      (relational-op-retained-publish-replacement! retained before next))))
+
+(def (relational-op-retained-publish-replacement! retained before next)
+  (let (after ((relational-op-retained-read-output retained) next))
+    (set! (relational-op-retained-latest retained) next)
+    (values before after
+            (row-difference after before)
+            (row-difference before after))))
 
 ;;; The single-input replacement is the one-source form of the same
 ;;; transaction, including withdrawal and failure recovery.
 (def (relational-op-retained-replace! retained rows)
-  (relational-op-retained-replace-sources!
-   retained
-   (list (cons (relational-op-retained-input-label retained) rows))))
+  (let* ((before (relational-op-retained-rows retained))
+         (next ((relational-op-retained-replace-input retained) (list rows))))
+    (relational-op-retained-publish-replacement! retained before next)))

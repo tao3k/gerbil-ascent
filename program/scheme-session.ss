@@ -17,7 +17,8 @@
         (only-in :std/list/list find))
 (export relational-open-session relational-open-program-session
         relational-session-append-source! relational-session-replace-source!
-        relational-session-replace-sources! relational-session-transaction! relational-session-run
+        relational-session-replace-sources! relational-session-transaction!
+        relational-session-prepare-transaction relational-session-run
         relational-program-append-source! relational-program-replace-source!
         relational-program-transaction! relational-program-session-run)
 
@@ -121,8 +122,15 @@
            (cons name rows))))
      entries)))
 
-;;; Updates are (fragment label rows) triples. Each handle must be an
-;;; exported source in this composed session. The returned solution is
+;;; Resolve exported source authority before reading any proposed rows.
+(def (relational-session-source-name session fragment label)
+  (let (name (relational-export fragment label))
+    (unless (and (memq name (.ref fragment 'source-handles))
+                 (assq name (relational-session-source-arities session)))
+      (error "relational export is not a source in this session" label))
+    name))
+
+;;; Updates are (fragment label rows) triples. The returned solution is
 ;;; complete, or the previous completed snapshot remains current.
 (def (relational-session-transaction! session updates)
   (unless (relational-session? session)
@@ -135,19 +143,64 @@
            (unless (and (list? update) (= (length update) 3)
                         (symbol? (cadr update)))
              (error "invalid relational transaction update" update))
-           (let* ((fragment (car update))
-                  (label (cadr update)))
-             (let (name (relational-export fragment label))
-               (unless (memq name (.ref fragment 'source-handles))
-                 (error "relational export is not a source in this session"
-                        label))
-               (cons name (caddr update)))))
+           (cons (relational-session-source-name
+                  session (car update) (cadr update))
+                 (caddr update)))
          updates))
-    (make-relational-solution
-     (gerbil-ascent-session-replace-sources!
-      (relational-session-engine session)
-      (relational-checked-replacements
-       (relational-session-source-arities session) entries)))))
+    (relational-session-commit-entries! session entries)))
+
+;;; Both dynamic and prepared transactions use the same complete admission
+;;; and native commit boundary. Selection never authorizes unchecked rows.
+(def (relational-session-commit-entries! session entries)
+  (make-relational-solution
+   (gerbil-ascent-session-replace-sources!
+    (relational-session-engine session)
+    (relational-checked-replacements
+     (relational-session-source-arities session) entries))))
+
+;; relational-session-prepare-transaction
+;;   : (-> RelationalSession (List (List Fragment Symbol))
+;;          (-> (List Rows) RelationalSolution))
+;;   | doc m%
+;;       Fix an ordered nonempty source checklist for one retained Session.
+;;       Preparation resolves authority without changing rows or running the
+;;       engine. The returned function accepts one row batch per source and
+;;       commits all updates through the ordinary checked transaction owner.
+;;       Duplicate sources are errors, including aliases across fragments.
+;;
+;;       # Examples
+;;       ```scheme
+;;       (def replace-input
+;;         (relational-session-prepare-transaction session
+;;           (list (list fragment 'edge))))
+;;       (replace-input (list '((0 1) (1 2))))
+;;       ```
+;;     %
+(def (relational-session-prepare-transaction session sources)
+  (unless (relational-session? session)
+    (error "relational transaction requires a session" session))
+  (unless (and (list? sources) (pair? sources))
+    (error "prepared transaction requires source selections" sources))
+  (let* ((seen (make-hash-table-eq))
+         (names
+          (map
+           (lambda (source)
+             (unless (and (list? source) (= (length source) 2)
+                          (symbol? (cadr source)))
+               (error "invalid prepared transaction source" source))
+             (let (name (relational-session-source-name
+                         session (car source) (cadr source)))
+               (when (hash-get seen name)
+                 (error "duplicate relational transaction source" name))
+               (hash-put! seen name #t)
+               name))
+           sources))
+         (count (length names)))
+    (lambda (batches)
+      (unless (and (list? batches) (= (length batches) count))
+        (error "prepared transaction requires one row batch per source" batches))
+      (relational-session-commit-entries!
+       session (map cons names batches)))))
 
 ;;; Single-fragment batches use the same cross-fragment transaction owner.
 (def (relational-session-replace-sources! session fragment replacements)

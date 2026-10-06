@@ -4,6 +4,7 @@
 
 (import (only-in :clan/poo/object .o)
         (only-in :gerbil-ascent/program/scheme-query make-relational-solution)
+        (only-in :std/list/list take)
         (only-in :std/test check-equal? check-exception test-suite test-case)
         (only-in :gerbil-ascent/program/interface
                  relational-op-function relational-op-fix
@@ -11,6 +12,7 @@
                  relational-op-join relational-op-source
                  relational-op-fragment relational-compose relational-open-session
                  relational-session-run relational-session-replace-sources!
+                 relational-session-prepare-transaction
                  relational-prepare-query relational-prepare-queries relational-query
                  relational-op-apply
                  relational-op-select-eq relational-op-flatmap
@@ -155,6 +157,82 @@
           (check-equal? calls 0)
           (check-equal? (view complete) '(((7)) ((7))))
           (check-equal? calls 2))))
+    (test-case "prepared transactions retain ordered sources and the exact Session"
+      (let* ((fragment
+              (relational-op-fragment
+               (reachability
+                (relational-op-union
+                 (relational-op-source 'edge 2 '((0 1)))
+                 (relational-op-source 'other 2 '((1 2))))) 'reach))
+             (program (relational-compose (list fragment) 8 64 128))
+             (session (relational-open-session program))
+             (independent (relational-open-session program))
+             (read-view (relational-prepare-queries fragment '(edge other reach)))
+             (first (relational-session-run session))
+             (untouched (relational-session-run independent))
+             (sources (list (list fragment 'other) (list fragment 'edge)))
+             (replace-both (relational-session-prepare-transaction session sources))
+             (rows (list (list 2 0))))
+        ;; The checklist is retained without mutating or running the Session.
+        (check-equal? (read-view (relational-session-run session)) (read-view first))
+        (set-car! (car sources) #f)
+        (set-car! (cadr sources) #f)
+        (set-cdr! sources '())
+        (let (next (replace-both (list rows '((0 2)))))
+          (check-equal? (take (read-view next) 2) '(((0 2)) ((2 0))))
+          (check-equal? (same-rows? (caddr (read-view next))
+                                  (finite-closure '((2 0) (0 2)))) #t)
+          (set-car! (car rows) 99)
+          (check-equal? (take (read-view next) 2) '(((0 2)) ((2 0))))
+          (check-equal? (read-view first) (read-view untouched))
+          (check-equal? (read-view (relational-session-run independent))
+                        (read-view untouched)))
+        ;; Reusing the capability replaces the current source cut, not first.
+        (let (next (replace-both (list '() '((1 0)))))
+          (check-equal? (read-view next) '(((1 0)) () ((1 0)))))))
+    (test-case "prepared transaction checks all batches before atomic publication"
+      (let* ((fragment
+              (relational-op-fragment
+               (reachability
+                (relational-op-union
+                 (relational-op-source 'edge 2 '((0 1)))
+                 (relational-op-source 'other 2 '((1 2))))) 'reach))
+             (session (relational-open-session
+                       (relational-compose (list fragment) 3 64 128)))
+             (read-view (relational-prepare-queries fragment '(edge other reach)))
+             (first (read-view (relational-session-run session)))
+             (replace-both
+              (relational-session-prepare-transaction
+               session (list (list fragment 'edge) (list fragment 'other)))))
+        (check-exception (relational-session-prepare-transaction #f
+                           (list (list fragment 'edge))) true)
+        (check-exception (relational-session-prepare-transaction session '()) true)
+        (check-exception (relational-session-prepare-transaction session
+                           (list (list fragment 'edge 'extra))) true)
+        (check-exception (relational-session-prepare-transaction session
+                           (list (list fragment 'edge) (list fragment 'unknown))) true)
+        (check-exception (relational-session-prepare-transaction session
+                           (list (list fragment 'reach))) true)
+        (check-exception (relational-session-prepare-transaction session
+                           (list (list fragment 'edge) (list fragment 'edge))) true)
+        (let (foreign (relational-op-fragment
+                       (relational-op-source 'edge 2 '()) 'reach))
+          (check-exception (relational-session-prepare-transaction session
+                             (list (list foreign 'edge))) true))
+        (check-exception (replace-both #f) true)
+        (check-exception (replace-both '()) true)
+        (check-exception (replace-both (list '())) true)
+        (check-exception (replace-both (list '() '() '())) true)
+        (check-exception (replace-both (list '((2 0)) '((0 1 2)))) true)
+        (check-equal? (read-view (relational-session-run session)) first)
+        ;; A well-shaped over-budget batch reaches the native rollback owner.
+        (check-exception (replace-both
+                           (list '((0 1) (1 2)) '((2 0) (2 1)))) true)
+        (check-equal? (read-view (relational-session-run session)) first)
+        (check-equal? (read-view (replace-both (list '() '()))) '(() () ()))
+        (check-equal? (take first 2) '(((0 1)) ((1 2))))
+        (check-equal? (same-rows? (caddr first)
+                                (finite-closure '((0 1) (1 2)))) #t)))
     (test-case "all finite graphs survive append, duplicate and withdrawal"
       (let* ((possible '((0 1) (0 2) (1 0) (1 2) (2 0) (2 1)))
              (retained

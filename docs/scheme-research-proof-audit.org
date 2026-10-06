@@ -124,19 +124,26 @@ uses 4, the default exploration configuration uses 2. Counterexample checks
 require both TLC's violation exit code and the expected violated property;
 parse/tool crashes cannot count as successful fault detection.
 
-* Runtime 主线整体验收修正
+* Integrated Runtime mainline acceptance correction
 
-本轮发现并修复真实 owner 的中间批次与旧 =Agrees= 前提不相容的问题。
-=SnapshotClosure.ExternalAgrees= 保持外部读，已发布自身事实可包含于最终
-局部闭包；=credited_terminal_closed= 处理信用批次前缀与终端尾批。
-=GroundedBinding.credited_compiled_closed= 将有效编译 binder、实际构造的
-有限 ground clauses 和完成发布连接成同一个输出闭包结论。相关 Tests
-显式证明旧前提失败而新终端定理可用，不能继续套用旧的过强前提。
+This round identified and corrected the incompatibility between actual owner
+intermediate publications and the previous =Agrees= premise.
+=SnapshotClosure.ExternalAgrees= preserves external reads while published owned
+facts may be contained in the completed local closure.
+=credited_terminal_closed= handles the credited prefix and terminal tail.
+=GroundedBinding.credited_compiled_closed= connects valid compiled binders,
+actually constructed finite ground clauses and complete publication into one
+output closure statement. =completed_compiled_least= connects sound publication,
+seed coverage and compiled closure to whole-result least-model equality.
+Tests explicitly show that the old premise fails and the new terminal theorem
+applies to credited publication.
 
-全量 native、完整 formal target 集合和 pinned oracle 属于此次统一验收，
-实际 SCC worker 逐条 emission 的 512 图对照与取消/merge 失败回收是新增
-实现对应证据。[[file:scheme-paper-closure.org][全局收口矩阵]] 保留全部论文功能和应用门槛；不以
-“某个编译器测试通过”替代完整复刻。见 [[file:evidence/scheme-integrated-closure-20261006/receipt.json][统一源码回执]]。
+All native modules, all formal targets and the pinned oracle jointly qualify
+this round. The actual SCC worker's emission checks over all 512 three-node
+graphs, plus cancellation and merge-failure drain controls, supply new executable
+implementation correspondence evidence. The [[file:scheme-paper-closure.org][global closure matrix]] retains all
+paper functionality and application gates. Passing selected compiler tests does
+not establish full replication. See the [[file:evidence/scheme-integrated-closure-20261006/receipt.json][integrated source receipt]].
 
 * Ordered implementation plan and exit conditions
 
@@ -677,3 +684,12 @@ terminal tail and checks successor admission after complete owner observation.
 Existing TLA+ credit/terminal controls retain temporal ownership. This closes
 batch algebra under candidate origin and complete-delivery premises; native
 trace extraction and cancellation semantics remain outstanding. See [[file:evidence/scheme-batch-closure-20261006/receipt.json][receipt]].
+
+** Actor Session admission after expression-plan compilation
+
+The 2026-10-06 rebase exposed an admission regression: a compiled positive plan
+may now contain callbacks. Plan existence therefore no longer establishes
+worker purity. Actor Session admission now uses the explicit
+=gerbil-ascent-pure-positive-plan?= predicate, matching component dispatch.
+The existing callback-rejection control detects the old behavior. This check
+preserves the native boundary required by the actor protocol assumptions.

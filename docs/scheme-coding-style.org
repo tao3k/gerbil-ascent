@@ -8,6 +8,12 @@ to ASCENT. Each topic records concrete source references, implemented changes,
 semantic gates and rejected candidates. This index is the entry point; new
 studies belong in the corresponding topic file.
 
+* Documentation language
+
+All repository documentation must be English only. This includes design and
+research notes, RFCs, proof explanations, acceptance reports, evidence prose,
+and README files. New sections and revisions follow the same requirement.
+
 * Topics
 
 | Topic | Contents |

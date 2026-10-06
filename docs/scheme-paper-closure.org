@@ -1,129 +1,155 @@
 # SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-#+TITLE: ASCENT / BYODS 收口矩阵与证明缺口
+#+TITLE: ASCENT / BYODS Closure Matrix and Proof Gaps
 #+DATE: 2026-10-05
 #+STATUS: audited; full replication remains open
 
-* 收口结论与判据
+* Closure conclusions and criteria
 
-先交付可用的原生推理生命周期，再围绕同一场景验证架构收益和模型理解。
-本表继续保留完整复刻的全部义务；有限场景通过不能替代论文整体收口。
+Deliver a usable native reasoning lifecycle, then assess architectural benefits
+and model comprehension on the same scenarios. This matrix retains every
+obligation for full replication; passing finite scenarios does not establish
+complete coverage of a paper.
 
-目标保持完整的 ASCENT 行为与 BYODS 设计覆盖。当前不能宣布整体完成。
-已通过的原生用例、有限 Rust 差分、抽象 Lean 定理、有限 TLC 状态探索，
-分别回答不同问题。用例数量或某个 CI 绿灯不能替代缺失的论文功能与证明。
-本表将原矩阵、最近 actor 实现和证明目录对齐；既有收口范围保持明确，
-未实现或未证明的项目不能从表中删除后再宣布“完整复刻”。
+The objective remains complete ASCENT behavior and BYODS design coverage.
+Overall completion has not yet been established. Native cases, finite Rust
+comparisons, abstract Lean theorems and finite TLC exploration answer distinct
+questions. Case counts or passing CI cannot replace missing functionality or
+proofs. This matrix aligns the original scope, recent actor implementation and
+proof catalog. Unimplemented or unproved items remain visible.
 
-每项只有在以下证据均匹配时才能收口：
-1. 论文定位、接受的 Scheme 行为和实现 owner 明确。
-2. 独立真值、Rust 差分或明确记录的上游差异覆盖该项及其交互。
-3. Lean/TLA+ 证明命题与实际实现之间有明确对应；尚需假设不能当作结论。
-4. 正负对照、失败/超时行为和资源约束均有当前源码绑定的执行结果。
-5. 该项声称的性能收益有同输入、同语义、交替顺序的测量；负结果保留。
-6. 最终 GitHub 提交的 CI 和消费者 pin 验证通过。
+An item closes only when all of the following evidence agrees:
+1. Identify its paper location, admitted Scheme behavior and implementation owner.
+2. Cover the item and its interactions with independent truth, Rust comparison
+   or explicitly recorded upstream differences.
+3. Connect Lean/TLA+ statements to the actual implementation and distinguish
+   premises from conclusions.
+4. Bind positive and negative controls, failure/timeout behavior and resource
+   constraints to execution results for the current source.
+5. Support claimed performance benefits with identical inputs and semantics,
+   alternating measurement order, and retained negative results.
+6. Verify CI and consumer pins against the final GitHub commit.
 
-论文来源：[[https://thomas.gilray.org/pdf/seamless-deductive.pdf][A22]]、[[https://kmicinski.com/assets/byods.pdf][B23]]。
-2026-10-05 重新读取。A22 的并行化在原文是未来工作；当前 actor 设计
-是后续工程义务。B23 的自定义数据结构接口与论文应用实验需要分别验收。
-原论文性能数字不构成 Scheme 性能证据。
+Sources: [[https://thomas.gilray.org/pdf/seamless-deductive.pdf][A22]] and [[https://kmicinski.com/assets/byods.pdf][B23]], reread on 2026-10-05.
+A22 presents parallelization as future work; the current actor architecture adds
+engineering obligations. B23's custom data structure interface and application
+experiments require separate acceptance. Published performance numbers do not
+constitute Scheme performance evidence.
 
-* 当前 Runtime 主线的统一验收
+* Integrated acceptance of the current Runtime mainline
 
-2026-10-06 的审计发现此前 =SnapshotClosure.Agrees= 要求当前自身事实仍与
-旧快照相同；真实 owner 已接收 credit 批次，所以不能直接将该前提移到
-完成时的 live frontier。现以外部 read frame 和已发布自身事实包含于完成
-闭包替代，=credited_terminal_closed= 接通 credit 前缀与终端尾批。
-=GroundedBinding.credited_compiled_closed= 将 row/binder/index 的既有有效性、
-构造 grounding、快照帧和实际终端完整性交到同一个 compiled-rule closure
-结论。中间批次可靠性与完成闭包分别验证，不能把前者晋升为后者。
-=GroundedBinding.completed_compiled_least= 将种子覆盖、可靠发布和所有
-编译规则闭合连接到整个结果恰好等于最小模型。
+The 2026-10-06 audit found that =SnapshotClosure.Agrees= required current owned
+facts to equal the earlier snapshot. The actual owner has already received
+credited batches, so this premise cannot apply directly to the live frontier at
+completion. The revised proof uses an external read frame and containment of
+published owned facts in the completed closure. =credited_terminal_closed=
+connects the credited prefix to the terminal tail.
+=GroundedBinding.credited_compiled_closed= combines row/binder/index validity,
+constructed grounding, snapshot framing and actual terminal completeness into
+one compiled-rule closure conclusion. Intermediate publication soundness and
+completed closure have separate obligations.
+=GroundedBinding.completed_compiled_least= combines seed coverage, sound
+publication and closure under every compiled rule to establish that the whole
+result equals the least model.
 
-本轮必须一起验收以下主线，不再以两个选定模块作为整体结果：
+The following gates jointly qualify the mainline:
 
-| 验收环节 | 实现与证明连接 | 判定方式 |
-|----------+----------------+----------|
-| 实际 worker 迭代与发出候选 | component-worker / IndexedIteration / GroundedBinding | 全部 512 个三节点图，独立 Floyd 真值逐条核验 emission；私有完成根与 owner 根均必须精确相等 |
-| 分批发布与终端完成 | actor-round / SnapshotClosure / ReadyComponents / ActorRoundCredits | credit 前缀可改变自身事实；tail 完整后形成闭包；旧快照相等条件的失败对照必须保留 |
-| 取消与 merge 异常 | actor owner drain / ActorRound / ActorSession | worker finally 已执行，失败不调用 completed；全量 Session 原子发布测试同时验收 |
-| 已接受 Library 行为 | 当前所有 native modules | 并发 lane 与隔离 lane 全量执行；逐模块真实 Cases、显式 OK 与父进程退出均核对 |
-| Rust 比较与形式门槛 | pinned oracle / 全部 Lean roots 与 TLC targets | 当前源执行，不借用早先提交的绿色结果；负对照保留 |
+| Acceptance stage | Implementation and proof connection | Decision criterion |
+|------------------+-------------------------------------+--------------------|
+| Actual worker iteration and candidate emission | component-worker / IndexedIteration / GroundedBinding | All 512 three-node graphs; independently computed Floyd truth checks every emission; completed private and owner roots must both match exactly |
+| Batch publication and terminal completion | actor-round / SnapshotClosure / ReadyComponents / ActorRoundCredits | Credited prefixes may change owned facts; a complete tail establishes closure; retain the negative control for the old snapshot equality premise |
+| Cancellation and merge exceptions | actor owner drain / ActorRound / ActorSession | Worker finally executes; failure never invokes completed; qualify the full Session atomic publication suite together |
+| Admitted Library behavior | All current native modules | Execute all concurrent and exclusive lanes; check real Cases, explicit OK and parent exit for every module |
+| Rust comparison and formal gates | Pinned oracle / all Lean roots and TLC targets | Execute current source; retain negative controls and distinguish earlier commit results |
 
-回执：[[file:evidence/scheme-integrated-closure-20261006/receipt.json][统一验收证据]]。它不会把有限 graph corpus 解释为整个 Gerbil VM 的
-通用证明，也不会把尚无实现的论文项目改名为已完成。论文全部复刻仍须
-保留本文件其余功能、应用、规模与收益门槛。一般整数递归或无界 lattice
-不可能一概证明收敛；有限域/高度证书与显式预算失败必须分别验收，绝不
-将截断结果发布成 complete。
+The [[file:evidence/scheme-integrated-closure-20261006/receipt.json][integrated acceptance receipt]] records these gates. A finite graph corpus does
+not establish a general proof of the Gerbil VM. Full paper replication still
+requires the functionality, applications, scale and benefit gates below.
+Unrestricted integer recursion or an unbounded lattice need not converge.
+Finite domain/height certificates and explicit budget failures require separate
+acceptance; truncated results must never be published as complete.
 
-* ASCENT 行为覆盖
+* ASCENT behavior coverage
 
-下表“已有验证”引用现有 [[file:rust-parity.org][Rust 0.8.0 差分矩阵]] 和代码，
-本轮执行结果由统一回执绑定：74 项常规对照、1 项 Release 全规模对照
-和 ASP Rust 门槛均通过；对照中明确判定的上游差异继续保留。
-全规模 Debug 参考的 180 秒未完成结果保留，Release 相同输入/真值
-在 34.5 秒完成；GitHub CI 单独执行此全规模门槛。证明目录链接说明
-各命题及其前提，实际 native 对应由回执中的独立运行验收。
+Existing qualification references the [[file:rust-parity.org][Rust 0.8.0 comparison matrix]] and source.
+The integrated receipt binds the pre-rebase comparison results: 74 regular
+comparisons, one Release full-scale comparison and the ASP Rust gate passed.
+The rebased snapshot requires its own exact-head GitHub CI. Explicitly
+classified upstream differences remain recorded. The full-scale Debug control
+did not complete within 180 seconds; Release completed the same inputs and
+truth checks in 34.5 seconds. GitHub CI has a separate full-scale gate. Proof
+links specify statements and premises; independent native runs qualify their
+implementation correspondence.
 
-| 功能 | 实现 / 已有验证 | Lean / TLA+ 对应 | 尚未闭合的验收义务 |
-|------+-----------------+------------------+----------------------|
-| 声明、任意 arity、类型、无效程序 | program/types、schema；arity_repetition、compile-fail 差分 | DescriptorScope / AtomicBinding 的抽象语法与匹配 | 所有接受的 native 声明对应、剩余 attribute/API/诊断类别；Scheme host predicate 不等同 Rust 静态类型 |
-| 绑定、重复变量、join、wildcard、多头 | core/rule-bindings、rule-semantics；clause_composition、composed_corpus | AtomicBinding / LexicalLowering 的局部 sound/complete | native 标量相等、向量编码、任意已接受 body 组合与规则执行 correspondence |
-| guard、let、for、disjunction、嵌入宏 | program/syntax、core clauses；原生及 Rust fixture | 有界已接受语法的 lowering 命题 | host callback 和 iterator 行为不是形式证明前提自动成立；其错误/不终止必须保持 typed 状态 |
-| SCC、semi-naive、strata、最小不动点 | planning、component-plan/worker、evaluate；递归/组合差分 | RuleGraphClosure、RecursiveLowering、FiniteHeight | 编译 adjacency、实际 delta 选择、执行步骤与 consequence operator 的完整 refinement；一般 host 程序终止不可默认 |
-| negation 与 aggregate | program/strata、aggregation；有限交互语料 | StratifiedNegation、PositiveNonmembership | 实际分层读图、aggregate 行编码与 completed-stratum 对应 |
-| lattice 与下游普通关系 | table/storage、evaluate；min/union/product/LCM 有限语料 | 抽象有限高度及单调性命题 | 任意用户 join 法则、部分序/domain/native 值对应；lattice 不可套用普通 Set 的 delta 命题 |
-| indexes / physical plan | table/provider、program/index；hash/alist/composite 与 scale 差分 | AtomicBinding indexed_atom_iff；ComponentIndex 顺序扩张 | 原生 bucket/key 编码 refinement、用户 lookup 完整性、更多 scale/成本结果 |
-| timeout、resume、重复 run、source replacement | Session、source log、reuse；保留状态及删除语料 | SourceUpdateFrame 的依赖帧/计数代数；SessionTransaction / NativeSessionPublication TLA 时序 | completed 求解仍是证明前提；native 状态与模型的 trace refinement、external Provider rollback 范围 |
-| module / fragment / macro embedding | Gerbil syntax 与 include fixture | DescriptorScope / lowering 局部对应 | 更广宏捕获与诊断、剩余 Rust attribute 的 Scheme API 对应 |
-| actor 并发扩展 | 纯正 canonical Set SCC 支持 ready/credit/drain；原矩阵“仍串行”已过期 | TLA: ActorRound / ReadyComponents / ActorRoundCredits / ActorSession；Lean: checkpoint/index 代数 | custom Provider 与 lattice 并发、单大 SCC 分区、真实多核收益、native mailbox/mutex refinement |
+| Feature | Implementation / existing qualification | Lean / TLA+ correspondence | Remaining acceptance obligations |
+|---------+------------------------------------------+----------------------------+----------------------------------|
+| Declarations, arbitrary arity, types, invalid programs | program/types, schema; arity_repetition and compile-fail comparisons | DescriptorScope / AtomicBinding abstract syntax and matching | All admitted native declarations; remaining attributes, APIs and diagnostic classes; Scheme host predicates differ from Rust static types |
+| Binding, repeated variables, joins, wildcards, multiple heads | core/rule-bindings, rule-semantics; clause_composition, composed_corpus | AtomicBinding / LexicalLowering local soundness and completeness | Native scalar equality, vector encoding, arbitrary admitted body composition and rule execution correspondence |
+| Guards, let, for, disjunction, embedded macros | program/syntax, core clauses; native and Rust fixtures | Lowering statements for bounded admitted syntax | Host callbacks and iterators must satisfy their stated premises; errors and nontermination retain typed status |
+| SCC, semi-naive evaluation, strata, least fixed point | planning, component-plan/worker, evaluate; recursive and composition comparisons | RuleGraphClosure, RecursiveLowering, FiniteHeight | Full refinement of compiled adjacency, actual delta selection and execution steps to the consequence operator; general host termination cannot be assumed |
+| Negation and aggregation | program/strata, aggregation; finite interaction corpus | StratifiedNegation, PositiveNonmembership | Actual stratified read graph, aggregate row encoding and completed-stratum correspondence |
+| Lattices and downstream ordinary relations | table/storage, evaluate; finite min/union/product/LCM corpus | Abstract finite-height and monotonicity statements | User join laws and correspondence of partial orders, domains and native values; ordinary Set delta theorems do not cover arbitrary lattices |
+| Indexes / physical plans | table/provider, program/index; hash/alist/composite and scale comparisons | AtomicBinding indexed_atom_iff; ComponentIndex sequential extension | Native bucket/key encoding refinement, user lookup completeness, further scale and cost evidence |
+| Timeout, resume, repeated run, source replacement | Session, source log, reuse; retained state and deletion corpus | SourceUpdateFrame dependency-frame/counting algebra; SessionTransaction / NativeSessionPublication temporal protocols | Completed solving remains a proof premise; native trace refinement and external Provider rollback scope |
+| Module / fragment / macro embedding | Gerbil syntax and include fixtures | DescriptorScope / local lowering correspondence | Broader macro capture and diagnostics; Scheme APIs corresponding to remaining Rust attributes |
+| Actor concurrency extension | Pure positive canonical Set SCCs support ready/credit/drain; the original serial-only description is obsolete | TLA: ActorRound / ReadyComponents / ActorRoundCredits / ActorSession; Lean: checkpoint/index algebra | Custom Provider and lattice concurrency, partitioning one large SCC, actual multicore benefits, native mailbox/mutex refinement |
 
-* BYODS 设计覆盖
+* BYODS design coverage
 
-B23 §3 的 concretization 与 total/delta 条件、§4 接口以及 §5 的数据结构
-和应用，必须各自有验收项。不能用三类内置 closure Provider 代替整篇覆盖。
+B23 section 3 concretization and total/delta conditions, section 4 interfaces,
+and section 5 data structures and applications each require acceptance.
+Three built-in closure Providers alone do not cover the entire paper.
 
-| 验收项 | 已有实现 / 证据 | 本轮形式与原生补强 | 剩余缺口 |
-|--------+------------------+----------------------+------------|
-| 自定义 index / storage 接口 | POO Provider、hash/alist、Set/eqrel/trrel/trrel_uf | frontier 接口义务明确列出 | 任意 caller Provider 的 monotone concretization、lookup 完整性及 emitted frontier 无法由接口声明证明 |
-| 内置 eqrel/trrel/trrel_uf 的 concrete rows | 三/四/八节点、两 producer 分区、分组隔离与 scale 语料 | 每次插入后的独立 concrete difference，512 图 × 3 Provider × 正反两个顺序 | 更大分组 arity、一般图上的 native 算法 refinement、规模/内存与复杂度收益 |
-| trrel_uf 的存储算法 | 新 table/trrel-uf.ss 独立状态：weighted union 父链接、SCC members/size、组件 reach；预算预检后再合并与重映射 | 原生逐步 frontier、64 节点压缩、预算拒绝/重试；TransitiveComponents Lean/TLA 与三个 mutation | 算法实现缺口已修复；native hash/parent/row refinement、复杂度与 whole-engine 内存收益仍待完整验收，见 trrel_uf 设计和 receipt |
-| delta 可见性 | 独立闭包及 split-producer discriminator；Rust eqrel 缺漏差异保留 | ProviderFrontier Lean：任意有限正向 body 与 head projection 的 pivot/frontier 分解；SemiNaive Lean：具体正向 Set 每轮 naive/pivot 等价；TLA 注入/消费/初始发布与五个负对照 | B23 Theorem 3.5 的一般抽象 lattice/gamma/injection 契约及 native binder/pivot refinement；具体单调 Set view 的全迭代历史已证明，不代表任意 Provider 契约成立 |
-| 重复输入、budget、失败原子性、保留更新 | 原生 preflight/retry、byods_session 与 timeout 差分 | 每步 frontier 同时检查无重复与不遗漏 | Provider external state 与 timeout/换源/分层交互的完整模型/refinement |
-| index sharing (ind_share) | 当前 solve-private index cache/增量扩张 | 无论文 index-sharing 算法验收 | 尚无 B23 对应索引共享设计、共享布局/选择算法和端到端应用证据；不能把普通缓存称作完成 |
-| 用户定义格与并发 Provider | serial lattice 有有限差分；actor 只接受限定纯 Set 路径 | 不将 Set frontier 定理扩展为 lattice theorem | 一般格/递归聚合契约、并发访问/迭代/合并协议与 race/失败/refinement |
-| 论文应用与收益 | 当前有 closure 与选定 Rust 包示例 | 保留现有负性能结果 | Steensgaard、Polonius、PageRank、LLVM/index-sharing 对应完整程序与可复现数据、成本/内存测量尚未验收；当前不能宣称论文实验全部复现 |
+| Acceptance item | Existing implementation / evidence | Formal and native strengthening | Remaining gaps |
+|-----------------+------------------------------------+---------------------------------+----------------|
+| Custom index / storage interfaces | POO Provider, hash/alist, Set/eqrel/trrel/trrel_uf | Explicit frontier interface obligations | Interface declarations cannot prove arbitrary caller Providers' monotone concretization, lookup completeness or emitted frontier completeness |
+| Built-in eqrel/trrel/trrel_uf concrete rows | Three/four/eight-node graphs, two-producer partitions, group isolation and scale corpus | Independent concrete difference after each insertion; 512 graphs x 3 Providers x forward/reverse order | Larger group arities, native algorithm refinement for general graphs, scale/memory and complexity benefits |
+| trrel_uf storage algorithm | Independent table/trrel-uf.ss state: weighted union parent links, SCC members/size and component reach; budget preflight precedes merge/remapping | Native stepwise frontier, 64-node compression, budget rejection/retry; TransitiveComponents Lean/TLA and three mutations | Storage implementation gap closed; native hash/parent/row refinement, complexity and whole-engine memory benefits still require full acceptance; see trrel_uf design and receipt |
+| Delta visibility | Independent closure and split-producer discriminator; retained Rust eqrel omission difference | ProviderFrontier Lean: pivot/frontier decomposition for arbitrary finite positive bodies and head projections; SemiNaive Lean: per-round naive/pivot equivalence for concrete positive Sets; TLA injection/consumption/initial publication and five negative controls | B23 Theorem 3.5 general abstract lattice/gamma/injection contracts and native binder/pivot refinement; proved concrete monotone Set iteration history does not establish arbitrary Provider contracts |
+| Duplicate input, budgets, failure atomicity, retained updates | Native preflight/retry, byods_session and timeout comparisons | Every step checks frontier uniqueness and completeness | Complete models/refinement of external Provider state interacting with timeout, source replacement and strata |
+| Index sharing (ind_share) | Current solve-private index cache and incremental extension | No acceptance of the paper's index-sharing algorithm | B23 sharing design, shared layout/selection algorithm and end-to-end application evidence remain missing; ordinary caching does not discharge these obligations |
+| User-defined lattices and concurrent Providers | Finite serial lattice comparisons; actor eligibility restricted to pure Set paths | Set frontier theorems retain their stated scope | General lattice/recursive aggregate contracts; concurrent access, iteration and merge protocols; race/failure/refinement |
+| Paper applications and benefits | Closure examples and selected Rust package examples | Retained negative performance results | Complete Steensgaard, Polonius, PageRank and LLVM/index-sharing programs, reproducible datasets and cost/memory measurements await acceptance; full experimental replication has not been established |
 
-* 其他论文与证明链
+* Other papers and the proof chain
 
-[[file:scheme-research-proof-audit.org][研究/证明总审计]] 是 F16/S20 单调类型及有限高度、H13 binding、
-F20/L25 embedding、H18 deletion、B22 change maintenance 和 provenance 的
-对应表；它列出的 native refinement、任意语法/host value、一般维护算法
-及语义收益缺口继续有效。新增 ProviderFrontier 不能替代这些命题。
-目前 proofs 下的模型均为命名契约或有限状态探索，不是整个 native Scheme
-代码自动生成/验证的程序证明。所有 Nat generation 保持无界；有限 TLC
-节点集合只是探索 fixture。没有增加 Prompt、repair、模型调用或 Rust runtime 接入。
+The [[file:scheme-research-proof-audit.org][research/proof audit]] maps F16/S20 monotone types and finite height, H13
+binding, F20/L25 embedding, H18 deletion, B22 change maintenance and provenance.
+Its native refinement, arbitrary syntax/host value, general maintenance and
+semantic benefit gaps remain applicable. ProviderFrontier does not discharge
+those separate statements. Existing proof models express named contracts or
+finite exploration; they do not automatically verify the entire native Scheme
+implementation. Nat generations remain unbounded; finite TLC node sets are
+exploration fixtures. This round adds no prompts, repair, paid model calls or
+Rust runtime integration.
 
-* 落地顺序与终验门槛
+* Implementation order and final acceptance gates
 
-1. 先闭合 admitted DSL → native row/binder/index/rule-step → consequence operator
-   的 refinement，连接现有局部命题；输入能力/退出状态和 semantic budgets 同步。
-2. 连接内置 Provider gamma、逐步 emitted frontier 与任意 body/迭代，完成
-   semi-naive/naive 等价链；格与普通关系分别定义语义。
-3. 在已实现 trrel_uf SCC/union-find 表示上补完整 native refinement/规模收益，并实现验证 index-sharing 及用户 Provider 并发协议，保留 owner、
-   取消和发布隔离；不能以限制测试规模替代这些实现。
-4. 补齐论文应用程序、组合交互、数据集与性能/内存对照，记录上游差异。
-5. 在全部收口项有当前源码、native/Rust/Lean/TLA+、负对照及收益证据后，
-   完成最终 head 和 consumer pin CI，才宣布 ASCENT/BYODS 整体收口。
+1. Connect admitted DSL, native row/binder/index/rule steps and the consequence
+   operator through refinement, composing the existing local statements.
+   Align input capabilities, exit status and semantic budgets.
+2. Connect built-in Provider gamma, stepwise emitted frontiers and arbitrary
+   bodies/iterations to complete the semi-naive/naive equivalence chain.
+   Define lattice and ordinary relation semantics separately.
+3. Complete native refinement and scale benefits for the implemented trrel_uf
+   SCC/union-find representation. Implement and verify index sharing and user
+   Provider concurrency protocols, preserving ownership, cancellation and
+   publication isolation. Restricted test scale cannot replace implementation.
+4. Complete paper applications, interaction cases, datasets and performance/
+   memory comparisons, retaining upstream differences.
+5. Once every closure item has current source, native/Rust/Lean/TLA+ evidence,
+   negative controls and benefit evidence, verify final-head and consumer-pin CI
+   before declaring complete ASCENT/BYODS closure.
 
-本轮新增 frontier 检查在初次五模块验证中通过 50 Cases；同步最新
-source-cut、默认 actor 容量和 completed-reuse 并发提交后，六模块通过
-76 Cases。Lean 完整 roots 完成 63 jobs；TLC 正例生成 3,169 状态、
-1,376 distinct 状态，并正确检出两个 mutation。
+The 2026-10-05 frontier round initially passed 50 Cases in five modules. After
+integrating concurrent source-cut, default actor capacity and completed-reuse
+changes, six modules passed 76 Cases. All Lean roots completed 63 jobs. Positive
+TLC exploration generated 3,169 states, 1,376 distinct states, and correctly
+detected two mutations.
 
-本轮精确结果见 [[file:evidence/scheme-provider-frontier-20261005/receipt.json][Provider frontier receipt]]。
-此前 75-module/638-Case 全量结果仅属于其原提交，不移作本轮完整验收。
+See the [[file:evidence/scheme-provider-frontier-20261005/receipt.json][Provider frontier receipt]] for those historical results. The earlier
+75-module/638-Case full run belongs to its original commit.
 
 * Native SCC union-find implementation follow-up (2026-10-05)
 
@@ -138,70 +164,86 @@ DAG and cycle controls. This closes the missing storage implementation slice;
 allocation, full native refinement, index sharing and paper application gates
 remain open. The earlier full run with a parent heap failure is not admitted.
 
-* Positive body / frontier 联合推进（2026-10-05）
+* Positive body / frontier joint progress (2026-10-05)
 
-重新读取 B23 §3.2，尤其 Lemma 3.2–3.4 / Theorem 3.5（pp.8–9）。
-论文把单步分解、旧事实已经被推导的历史条件、抽象数据结构的 gamma
-契约和迭代等价分开。当前实现也必须保留这四个环节。
+B23 section 3.2, especially Lemmas 3.2-3.4 and Theorem 3.5 (pages 8-9), was
+reread. The paper separates single-step decomposition, historical coverage of
+old facts, abstract data structure gamma contracts and iteration equivalence.
+The implementation must retain all four obligations.
 
-本轮 [[file:evidence/scheme-body-frontier-20261005/receipt.json][联合验收回执]] 对应三个职责：
+The [[file:evidence/scheme-body-frontier-20261005/receipt.json][joint acceptance receipt]] records the following distinct responsibilities:
 
-- Lean =ProviderFrontier.body_partition= 对任意长度的有限正向 body 证明
-  full = old ∪ single-delta pivots；环境传递允许共享变量和重复 relation key。
-  =projected_partition= / =projected_frontier= 证明任意纯 head projection
-  下的结果和精确输出 delta。Pivots 可以重叠；新 witness 不等于新 head。
-- =new_consequence_pivot= 明确要求 all-old heads 已包含在 known database，
-  才能省略 all-old body。这是待由迭代历史建立的前提，不能用 Provider
-  frontier 完整性替代。空 body 保留 seed；初始全量执行仍不可省略。
-- TLA+ =ProviderFrontier= 检查 private pending frontier 到 committed total
-  的消费顺序及三 atom 下游 publication。=ConsumerSnapshot= 在 pending
-  和 idle 都成立；提前发布和消费旧 total 的 mutation 必须失败。
-- Scheme 原生 Suite 为 eqrel / trrel / trrel-uf 枚举 27 种三边输入与
-  producer 分区，共 81 个完整程序；relay 延迟第二 producer，三次读取
-  同一个 closure relation 并共享变量。结果与独立图闭包、三边 witness
-  枚举比对，不以另一个相同 evaluator 作为真值。
+- Lean =ProviderFrontier.body_partition= proves full = old union single-delta
+  pivots for finite positive bodies of arbitrary length. Environment passing
+  permits shared variables and repeated relation keys.
+  =projected_partition= / =projected_frontier= establish projected results and
+  exact output delta for arbitrary pure head projection. Pivots may overlap;
+  a new witness need not produce a new head.
+- =new_consequence_pivot= requires every all-old head to belong to the known
+  database before omitting the all-old body. Establishing this premise requires
+  iteration history; Provider frontier completeness alone does not establish it.
+  Empty bodies preserve seeds; initial full execution remains necessary.
+- TLA+ =ProviderFrontier= checks consumption from private pending frontier to
+  committed total and downstream publication through three atoms.
+  =ConsumerSnapshot= holds in both pending and idle states. Premature publication
+  and consumption of stale total are rejected by mutation controls.
+- The native Scheme suite enumerates 27 three-edge input/producer partitions
+  for each of eqrel, trrel and trrel-uf, yielding 81 complete programs. A relay
+  delays the second producer; three reads of the same closure relation share
+  variables. Independent graph closure and three-edge witness enumeration
+  supply truth independently of the evaluator under test.
 
-这是正向 concrete body 的单步语义链；尚未证明一般 lattice、negation、
-aggregate 或任意 host callback 的 delta 分解，也没有 native extraction。
+This establishes a single-step semantic chain for positive concrete bodies.
+General lattices, negation, aggregation and arbitrary host callback delta
+decomposition remain unproved; no native extraction is claimed.
 
-** 后续设计缺口与证明职责
+** Subsequent design gaps and proof responsibilities
 
-| 论文 / 设计环节 | Lean 下一命题 | TLA+ 下一义务 | 原生对应门槛 |
-|-----------------+---------------+---------------+--------------|
-| A22 §4 / B23 §3.2 | 从 binder/index 行为到环境 transition；从旧 head 已覆盖的迭代不变量到 naive/semi-naive 全迭代等价 | frontiers 在 dispatch/consume 期间保持所属 cut；失败不得安装半轮结果 | 编译 pivot 位置、source/delta 选择、索引 lookup 完整性与 row equality 对应 |
-| F16 / S20 | 有限 descriptor domain 与 rank 连接；typed function change translation 独立于 relation delta | bounded/provisional 结果不冒充 completed；取消排空与结果发布 | arbitrary host closure 仍需 totality/monotonicity 约束，不能靠事实预算假定终止 |
-| H18 / B22 | founded rederivation、source dependency frame 和撤回后正确性；当前并非 DRedc 或 signed-weight DBSP | 多次 update、失败、resume 的 source/result 原子性与 ABA 隔离 | 多支持、无根循环、lower-stratum 变化与 external Provider rollback |
-| H13 / F20 / L25 | hygiene、generativity、fragment composition / lexical lowering 的 native 对应 | 只验证跨 owner/cut 生命周期，不重复 lexical 语义 | 宏展开和 native descriptor 到已证明 IR 的 correspondence |
+| Paper / design stage | Next Lean statement | Next TLA+ obligation | Native correspondence gate |
+|----------------------+---------------------+----------------------+----------------------------|
+| A22 section 4 / B23 section 3.2 | Binder/index behavior to environment transitions; historical all-old head coverage to full naive/semi-naive iteration equivalence | Frontiers retain their cut during dispatch/consumption; failure never installs partial round results | Compiled pivot positions, source/delta selection, index lookup completeness and row equality |
+| F16 / S20 | Finite descriptor domains to rank; typed function change translation separate from relation delta | Bounded/provisional results retain status; cancellation drain and result publication | Arbitrary host closures still need totality/monotonicity constraints; fact budgets do not imply termination |
+| H18 / B22 | Founded rederivation, source dependency frames and correctness after retraction; current algorithms are neither DRedc nor signed-weight DBSP | Source/result atomicity and ABA isolation across repeated updates, failure and resume | Multiple supports, unfounded cycles, lower-stratum changes and external Provider rollback |
+| H13 / F20 / L25 | Native correspondence for hygiene, generativity, fragment composition / lexical lowering | Cross-owner/cut lifecycle only; lexical semantics belongs to Lean | Macro expansion and native descriptors to the proved IR |
 
-有限 TLC 安全检查不提供无界 temporal theorem；无界协议证明及 Scheme
-trace refinement 属于 TLA+ 后续工作。Lean 的普遍代数命题不能替代它们。
-本轮没有新增模型调用、Prompt、Rust Runtime 接入或性能收益声明。
+Finite TLC safety exploration does not establish unbounded temporal theorems.
+Unbounded protocol proofs and Scheme trace refinement remain TLA+ work. General
+Lean algebra does not replace those obligations. This historical round added
+no model calls, prompts, Rust runtime integration or performance benefit claims.
 
-* Concrete positive Set iteration history（2026-10-06）
+* Concrete positive Set iteration history (2026-10-06)
 
-[[file:../packages/proofs/lean/SemiNaive.lean][SemiNaive]] 将上一轮的规则体分解提升到有限规则集合的完整同步迭代：
+[[file:../packages/proofs/lean/SemiNaive.lean][SemiNaive]] extends rule-body decomposition to complete synchronous iteration
+for a finite rule set:
 
-1. =consequences_partition= 证明所有规则输出的 full/old/pivot 分解。
-2. =pivot_after_full= 从上一轮 fullStep 的定义推导 all-old heads 已被纳入，
-   不再要求 caller 给出 covered 前提，也不要求求解已 completed。
-3. =iterations_equal= 对所有 Nat 轮次证明 semiNaive 连续两个 snapshot
-   与 naive 的对应轮次相等。初始轮必须 fullStep；空 body 事实不会被遗漏。
+1. =consequences_partition= proves full/old/pivot decomposition of all rule outputs.
+2. =pivot_after_full= derives all-old head coverage from the preceding fullStep
+   definition, without caller-provided coverage or completed-solving premises.
+3. =iterations_equal= proves corresponding naive and semiNaive snapshots equal
+   for every Nat round. The initial round uses fullStep; empty-body facts remain
+   included.
 
-精确范围：数据库是具体 Set，规则有限，body 是有限正向环境 transition，
-head projection 纯且固定，view 在 Set inclusion 下单调；delta 是相邻
-concrete view 的精确差。重复 key / 共享变量沿用 ProviderFrontier 的语义。
-规则集合允许为空，规则 body 允许为空，轮次无上限。
+Exact scope: concrete Set databases, finitely many rules, finite positive
+body environment transitions, pure fixed head projections, and views monotone
+under Set inclusion. Delta is the exact difference between adjacent concrete
+views. Repeated keys and shared variables retain ProviderFrontier semantics.
+The rule set and rule bodies may be empty; round numbers have no upper bound.
 
-它没有假定原生结果成功，也没有添加终止假设。全轮次一致不能单独推出
-有限轮次收敛；终止仍需 FiniteHeight 的有限高度/进展及 descriptor 对应。
-B23 一般抽象 lattice 的 join、gamma/injection 和 gamma-total/delta 契约
-仍需独立连接；本轮定理没有把任意 caller Provider 视为满足这些契约。
+The theorem assumes neither successful native results nor termination.
+Equality at every round alone does not imply finite convergence. Termination
+still requires FiniteHeight's finite-height/progress premises and descriptor
+correspondence. B23's general abstract lattice join, gamma/injection and
+gamma-total/delta contracts need separate connections; arbitrary caller
+Providers are not assumed to satisfy them.
 
-TLA+ 保留协议职责：ProviderFrontier 同时检查空初始 cut 和有种子初始 cut，
-并拒绝仅运行 pivot 而漏掉初始完整 consumer 发布的 mutation。该有限安全
-检查不是 Lean 全迭代代数的替代，也不是无界 temporal theorem。
+TLA+ retains protocol responsibilities. ProviderFrontier checks both empty and
+seeded initial cuts and rejects the mutation that only runs pivots while
+omitting initial full consumer publication. This finite safety check establishes
+neither Lean's iteration algebra nor unbounded temporal theorems.
 
-[[file:evidence/scheme-seminaive-history-20261006/receipt.json][本轮回执]] 绑定最新 rebase 后源码及实际检查结果。上一节与旧回执记录的
-“迭代历史待证明”对应 2026-10-05 源码；本节更新具体 Set 子集的当前结论。
-后续主线仍为 native slot/binder/index/pivot 的组合 correspondence、
-一般 Provider gamma 契约与无界 TLA/native trace refinement。
+The [[file:evidence/scheme-seminaive-history-20261006/receipt.json][iteration receipt]] binds rebased source and actual checks. Earlier sections
+and receipts describing unproved iteration history refer to the 2026-10-05
+source. This section updates the conclusion for concrete Sets. Remaining
+mainline obligations include composed native slot/binder/index/pivot
+correspondence, general Provider gamma contracts and unbounded TLA/native trace
+refinement.

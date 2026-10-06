@@ -632,3 +632,19 @@ IDs and preserved projected head count. This closes the semantic projection
 contract and strengthens bounded native correspondence evidence. It is not a
 universal native Tarjan proof, nor a temporal scheduler proof. TLA+ models stay
 unchanged and retain ready/credit protocol ownership. See [[file:evidence/scheme-component-projection-20261006/receipt.json][source-bound receipt]].
+
+* Completed snapshot rebasing
+
+=SnapshotClosure= proves the pure frame/merge obligation for completed worker
+results. Relevance is derived from owned rule bodies and ownership, not an
+opaque callback premise. Local iteration respects this frame; merging owned
+completed facts into the current database equals current local evaluation,
+and snapshot stability yields current closure. Writes by another component
+with no read edge derive the frame via =iterate_frame=. Changed predecessor
+reads are a negative control, even if the old empty snapshot was stable.
+Lean contains no temporal protocol replica. Existing TLA+ ready/credit models
+check terminal delivery and admission; the native concurrent fixture completes
+right while left retains an older snapshot and verifies both results survive.
+This closes completed-result semantic rebasing under the explicit frame. It
+does not prove every native execution trace, arbitrary intermediate chunks,
+cancellation or mutable row encoding. See [[file:evidence/scheme-snapshot-closure-20261006/receipt.json][source-bound receipt]].

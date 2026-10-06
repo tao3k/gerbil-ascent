@@ -74,6 +74,37 @@
          (lambda (task) (set! done (cons task done))))
         (check-equal? (length done) 3)
         (check-equal? merged '((a 1) (b 2)))))
+    (test-case "completed snapshot merge preserves concurrently completed unrelated writes"
+      (let ((worker #f) (captured #f) (published '((seed 0))) (completed []) (lock (make-mutex)))
+        (gerbil-ascent-run-actor-round! (vector 'snapshot-frame) '(left right) 2
+         (lambda (task emit! checkpoint!)
+           (case task
+             ((left)
+              (mutex-lock! lock)
+              (set! worker (current-thread))
+              (let (ready? (memq 'right completed))
+                (mutex-unlock! lock)
+                (unless ready?
+                  (unless (eq? (thread-receive 1 'timeout) 'published)
+                    (error "unrelated completion failed to overlap frozen snapshot"))))
+              (check-equal? captured '((seed 0)))
+              (emit! 'left '(0)) (emit! 'left '(1)))
+             ((right) (emit! 'right '(0)))))
+         (lambda (atom row) (set! published (cons (cons atom row) published)))
+         (lambda () #f)
+         (lambda (task)
+           (when (eq? task 'left) (set! captured (map values published))) #t)
+         (lambda (task)
+           (mutex-lock! lock)
+           (set! completed (cons task completed))
+           (let (target (and (eq? task 'right) worker))
+             (mutex-unlock! lock)
+             (when target (thread-send target 'published)))))
+        (check-equal? (if (member '(right 0) published) #t #f) #t)
+        (check-equal? (if (member '(left 0) published) #t #f) #t)
+        (check-equal? (if (member '(left 1) published) #t #f) #t)
+        (check-equal? (length published) 4)
+        (check-equal? (length completed) 2)))
     (test-case "successor snapshot waits for terminal tail after credited predecessor batch"
       (let ((producer #f) (released? #f) (done []) (merged []) (snapshot #f))
         (gerbil-ascent-run-actor-round! (vector 'terminal-snapshot) '(a b) 2

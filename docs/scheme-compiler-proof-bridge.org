@@ -183,6 +183,29 @@ required dependency and reject reversed order. Tests remain under =Tests/=.
 See [[file:evidence/scheme-component-projection-20261006/receipt.json][projection receipt]]. Arbitrary-size native graph extraction, relation encoding
 and asynchronous execution refinement remain open.
 
+** Completed snapshot merge algebra
+
+[[file:../packages/proofs/lean/SnapshotClosure.lean][SnapshotClosure]] supplies the pure semantic frame required when a worker
+finishes on an older snapshot. =Relevant= includes the component's own facts
+and every fact read by its owned rules. =iterate_agrees= proves local iterations
+agree whenever those facts agree. =merge_exact= admits only completed owned
+facts into the current database and equals local evaluation on that current
+database. =stable_transfers= and =completed_closed= transport actual stability
+and closure through this merge. =unrelated_iteration_agrees= derives the frame
+from owned writes by a different component with no read edge into this one.
+This removes an externally assumed read-equality condition for that concrete
+unrelated-write case; changed predecessors still invalidate the frame.
+
+The proof is database algebra, with no mailbox, credit, scheduler or publication
+state. TLA+ retains readiness and complete terminal delivery. The native actor
+fixture freezes the left snapshot, allows right to complete and publish first,
+then admits both left rows and checks all writes survive. Existing 32+1 terminal
+tail and successor-overlap controls are retained. Tests under =Tests/= qualify
+stable recursive left merge, retained right facts and a changed predecessor
+that invalidates old stability. General native trace-to-semantic-step extraction,
+intermediate chunk refinement, mutable representation and cancellation remain
+separate obligations. See [[file:evidence/scheme-snapshot-closure-20261006/receipt.json][snapshot closure receipt]].
+
 * Stated claim
 
 [[file:../packages/proofs/lean/LexicalLowering.lean][LexicalLowering]] supplies a typed expression calculus, lexical environments,

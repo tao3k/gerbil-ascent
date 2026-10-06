@@ -10,6 +10,7 @@ import Tests.IndexedIterationTests
 import Tests.ComponentClosureTests
 import Tests.GroundedBindingTests
 import Tests.ComponentProjectionTests
+import Tests.SnapshotClosureTests
 
 /-! Compile-time qualification for LeanPoo source patches, invalidation,
 certificate reuse and source-count algebra. Temporal publication belongs to TLA+. -/

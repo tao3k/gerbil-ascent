@@ -792,3 +792,30 @@ budget preflight on a retained method. The complete existing suites qualify
 ordinary graph closure and typed finite-domain behavior through these paths.
 Original harness heap/progress/deadline controls remain in force. These are
 focused local native checks; submitted-head CI is a separate gate.
+
+* Share lexical scope metadata at its consumers
+
+Gerbil =compiler/optimize-call.ss:105-129= prepends lexical substitutions and
+ordered bindings instead of materializing a complete environment per operand.
+Its dispatch specialization at =633-648= also requires the dispatch identity to
+remain in the local scope. =optimize-spec.ss:406-435= collects object references
+only after checking the receiver's lexical identity. These patterns preserve
+identity and execution order before specializing representation.
+
+Our positive-rule compiler previously copied its entire slot map for each
+callback and atom-key scope. A long binding chain therefore built quadratically
+many metadata pairs even though adjacent scopes differ by one binding. Scope
+metadata now materializes once at the first callback consumer. Subsequent
+bindings prepend private pairs and retain immutable tails. Old callbacks keep
+their old scope; a shadowing binding acquires a new slot; index-key expressions
+capture the scope before row terms bind. Pure rules never materialize a scope.
+The slot hash still serves compile-time reads; the persistent chain serves
+runtime fallback after public callback metadata changes. Neither representation
+is a substitute for the existing effect and input-mutation guards.
+
+Native public ASP comparisons against the complete positive-plan source at
+=91d42d4= measure fresh whole-rule lowering, then execute both returned plans
+against independent arithmetic outside timing. They establish compilation CPU
+and allocation gains, not cold engine or solve speed. Long scopes, small calls
+and a 256-column pure rule have separate fixed gates. Evidence and retained
+negative results are in =t/performance/expression-plan/README.org=.

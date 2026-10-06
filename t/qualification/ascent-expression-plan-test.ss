@@ -120,6 +120,41 @@
           (outcome (lambda () (evaluate p)))))
       (check-equal? (run gerbil-ascent-evaluate-program) (run old-evaluate))
       (check-equal? (run gerbil-ascent-evaluate-program) "unbound ASCENT expression variable"))
+    (test-case "shared lexical tails retain prior and extended callback scopes"
+      (def (run evaluate)
+        (let* ((calls []) (names (list 'x))
+               (head (gerbil-ascent-expression '(x) values))
+               (p (program
+                    (list (atom 'input (variable 'x) (variable 'y))
+                      (gerbil-ascent-binding 'z names
+                        (lambda (x)
+                          (set! calls (cons (list 'outer x) calls))
+                          (set-car! names 'y)
+                          (if x (+ x 10) 10)))
+                      (gerbil-ascent-binding 'w '(z)
+                        (lambda (x) (set! calls (cons (list 'inner x) calls)) (+ x 100)))
+                      (gerbil-ascent-guard '(w)
+                        (lambda (_)
+                          (vector-set! (.ref head 'value) 0 '(y w))
+                          (vector-set! (.ref head 'value) 1
+                            (lambda (y x) (list y x))) #t))) head)))
+          (let (result (evaluate p)) (list (rows result) calls))))
+      (check-equal? (run gerbil-ascent-evaluate-program) (run old-evaluate)))
+    (test-case "a retained prior scope rejects a later binding even after a row wrote its slot"
+      (def (run evaluate)
+        (let* ((names (list 'x)) (calls [])
+               (p (program
+                    (list (atom 'input (variable 'x) (variable 'y))
+                      (gerbil-ascent-binding 'z names
+                        (lambda (x)
+                          (set! calls (cons x calls))
+                          (set-car! names 'z) (+ x 1))))
+                    (variable 'z))))
+          (let (result (outcome (lambda () (evaluate p)))) (list result calls))))
+      (let ((actual (run gerbil-ascent-evaluate-program)) (expected (run old-evaluate)))
+        (check-equal? actual expected)
+        (check-equal? (car actual) "unbound ASCENT clause variable")
+        (check-equal? (length (cadr actual)) 1)))
     (test-case "private plans distinguish pure execution from compiled callbacks"
       (let* ((pure (expression-program 2 1 #f)) (effect (expression-program 2 1 #t))
              (pure-analysis (.ref (gerbil-ascent-make-engine pure #t) '.analysis))

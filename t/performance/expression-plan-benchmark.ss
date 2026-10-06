@@ -6,8 +6,16 @@
     benchmark-fixture-ref benchmark-fixture-contract-pass? benchmark-run/result)
   (only-in :gerbil/expander core-resolve-library-module-path)
   (only-in :clan/poo/object .ref)
+  (only-in :gerbil-ascent/program/objects gerbil-ascent-program gerbil-ascent-relation
+    gerbil-ascent-rule gerbil-ascent-atom gerbil-ascent-variable)
   (only-in :gerbil-ascent/t/performance/expression-plan/input expression-program)
   (only-in :gerbil-ascent/program/evaluate gerbil-ascent-evaluate-program)
+  (only-in :gerbil-ascent/program/evaluate gerbil-ascent-make-engine)
+  (only-in :gerbil-ascent/core/positive-plan
+    gerbil-ascent-compile-positive-plan gerbil-ascent-run-positive-plan!)
+  (rename-in (only-in :gerbil-ascent/t/performance/expression-plan/scope-reference
+    gerbil-ascent-compile-positive-plan)
+    (gerbil-ascent-compile-positive-plan old-compile))
   (rename-in (only-in :gerbil-ascent/t/performance/expression-plan/evaluate-reference
     gerbil-ascent-evaluate-program) (gerbil-ascent-evaluate-program old-evaluate)))
 (export main)
@@ -52,10 +60,37 @@
     (unless (>= bytes 0) (error "invalid cumulative allocation counter"))
     (values result bytes cpu)))
 
+;; Admission is outside timing; each measured leg lowers the complete rule.
+;; Execute both returned plans outside timing against independent arithmetic.
+(def (pure-wide-program width arity)
+  (let ((terms (map (lambda (i) (gerbil-ascent-variable
+                  (string->symbol (string-append "x" (number->string i))))) (iota arity)))
+        (rows (map (lambda (x) (map (lambda (i) (+ x i)) (iota arity))) (iota width))))
+    (gerbil-ascent-program
+      (list (gerbil-ascent-relation 'v0 arity rows) (gerbil-ascent-relation 'v1 arity []))
+      (list (gerbil-ascent-rule (list (gerbil-ascent-atom 'v1 terms))
+                              (list (gerbil-ascent-atom 'v0 terms)))) 65536 65536 65536)))
+
+(def (check-lowered a b inputs expected)
+  (def (execute plan)
+    (let (rows [])
+      (gerbil-ascent-run-positive-plan! plan (make-vector (vector-ref plan 2) #f) -1
+        (lambda (_atom _frame _delta _keys) inputs)
+        (lambda (_head row) (set! rows (cons row rows))))
+      (reverse rows)))
+  (let ((ar (execute a)) (br (execute b)))
+    (unless (and (equal? ar expected) (equal? br expected)
+                 (= (vector-ref a 2) (vector-ref b 2))
+                 (eq? (vector-ref a 3) (vector-ref b 3)))
+      (error "lowered lexical scope differs from arithmetic truth"))))
+
 (def (main scenario library receipt-path)
   (add-load-path! library)
   (def contract
-    (call-with-input-file "t/performance/expression-plan/benchmark.ss" read))
+    (call-with-input-file
+      (if (string-prefix? "lower-" scenario)
+        "t/performance/expression-plan/scope-benchmark.ss"
+        "t/performance/expression-plan/benchmark.ss") read))
   (unless (benchmark-fixture-contract-pass? contract)
     (error "invalid expression plan fixture"))
   (def entry
@@ -70,19 +105,39 @@
             (string->symbol (string-append ":gerbil-ascent/" name)))
           (path-expand (string-append "gerbil-ascent/" name ".ssi") library))
         (error "expression plan module mismatch" name)))
-    '("program/evaluate" "core/positive-plan" "t/performance/expression-plan/evaluate-reference" "t/performance/expression-plan/reference"))
+    '("program/evaluate" "core/positive-plan" "t/performance/expression-plan/evaluate-reference" "t/performance/expression-plan/reference"
+      "t/performance/expression-plan/scope-reference"))
   (let* ((config (cdr entry))
          (get (lambda (key) (benchmark-fixture-ref config key)))
          (ab []) (bb []) (ac []) (bc []) (wins 0) (count 0))
     (let* ((width (get 'width)) (stages (get 'stages))
            (expressions? (get 'expressions)) (scope (get 'scope))
-           (program (expression-program width stages expressions? scope)))
+           (lowering? (let (phase (assq 'phase config))
+                        (and phase (eq? (cdr phase) 'lower))))
+           (arity (let (entry (assq 'arity config)) (if entry (cdr entry) 1)))
+           (program (if (> arity 1) (pure-wide-program width arity)
+                        (expression-program width stages expressions? scope)))
+           (inputs (and lowering? (.ref (car (.ref program 'relations)) 'rows)))
+           (expected (and lowering?
+                       (if expressions?
+                         (map (lambda (x) (list (+ (* (+ scope 1) x) (+ scope 1)))) (iota width))
+                         inputs)))
+           (rule (and lowering?
+                   (car (vector-ref (vector-ref
+                     (.ref (gerbil-ascent-make-engine program #t) '.analysis) 4) 0)))))
       ;; Warm each independent analysis cache. Every timed sample still builds
       ;; a fresh engine, admits source rows and runs the whole fixed point.
-      (check-result (old-evaluate program) (gerbil-ascent-evaluate-program program)
-                    width stages expressions? scope)
-      (def (old-call) (old-evaluate program))
-      (def (new-call) (gerbil-ascent-evaluate-program program))
+      (unless lowering?
+        (check-result (old-evaluate program) (gerbil-ascent-evaluate-program program)
+                      width stages expressions? scope))
+      (def (old-call)
+        (if lowering?
+          (old-compile (vector-ref rule 0) (vector-ref rule 1))
+          (old-evaluate program)))
+      (def (new-call)
+        (if lowering?
+          (gerbil-ascent-compile-positive-plan (vector-ref rule 0) (vector-ref rule 1))
+          (gerbil-ascent-evaluate-program program)))
       (def (sample)
         (let-values (((a x u b y v)
                       (if (even? count)
@@ -92,7 +147,8 @@
                         (let-values (((b y v) (measure new-call))
                                      ((a x u) (measure old-call)))
                           (values a x u b y v)))))
-          (check-result a b width stages expressions? scope)
+          (if lowering? (check-lowered a b inputs expected)
+              (check-result a b width stages expressions? scope))
           (set! ab (cons x ab))
           (set! bb (cons y bb))
           (set! ac (cons u ac))

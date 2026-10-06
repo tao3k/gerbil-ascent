@@ -4,9 +4,9 @@
 
 ;;; Private positive-rule execution plans. Plans are immutable and shared;
 ;;; each engine owns its variable frames, including nested/concurrent solves.
-(import (only-in "expression-plan.ss" gerbil-ascent-compile-frame-call gerbil-ascent-compile-frame-sequence
+(import (only-in :gerbil-ascent/core/expression-plan gerbil-ascent-compile-frame-call gerbil-ascent-compile-frame-sequence
                  gerbil-ascent-compile-input-guard)
-        (only-in "rule-bindings.ss" gerbil-ascent-expression-value gerbil-ascent-head-row gerbil-ascent-call-with-bindings))
+        (only-in :gerbil-ascent/core/rule-bindings gerbil-ascent-expression-value gerbil-ascent-head-row gerbil-ascent-call-with-bindings))
 (export gerbil-ascent-prepare-rule-activations gerbil-ascent-positive-plan gerbil-ascent-compile-positive-plan gerbil-ascent-run-positive-plan!
         gerbil-ascent-pure-positive-plan?
         gerbil-ascent-index-key gerbil-ascent-index-key/terms
@@ -93,22 +93,15 @@
 ;;     %
 (def (gerbil-ascent-compile-positive-plan heads body)
   (let/cc unsupported
-    (let ((slots (make-hash-table-eq)) (scope #f) (count 0) (pure? #t))
-      (def (ensure-scope!)
-        ;; Materialize at the first consumer, once per plan. Pure rules keep
-        ;; only their slot map; callbacks share subsequent immutable tails.
-        (or scope (begin (set! scope (hash->list slots)) scope)))
+    (let ((slots (make-hash-table-eq)) (count 0) (pure? #t))
       (def (read-slot name)
         (or (hash-get slots name) (unsupported #f)))
       (def (fresh-slot! name)
         (let (slot count)
           (set! count (+ count 1))
           (hash-put! slots name slot)
-          ;; Private immutable tails preserve the scope at each call point.
-          ;; Shadowing prepends a new identity; prior callbacks retain theirs.
-          (when scope (set! scope (cons (cons name slot) scope)))
           slot))
-      (def (lower-call names procedure diagnostic (payload #f) (visible (ensure-scope!)))
+      (def (lower-call names procedure diagnostic (payload #f) (scope (hash->list slots)))
         (unless (and (list? names) (procedure? procedure)) (unsupported #f))
         (set! pure? #f)
         (let ((fast (gerbil-ascent-compile-frame-call procedure (map read-slot names)))
@@ -116,7 +109,7 @@
           (def (fallback current-procedure current-names frame)
             (gerbil-ascent-call-with-bindings current-procedure current-names
               (map (lambda (entry)
-                     (cons (car entry) (vector-ref frame (cdr entry)))) visible)
+                     (cons (car entry) (vector-ref frame (cdr entry)))) scope)
               diagnostic))
           (if payload
             (lambda (frame)
@@ -152,10 +145,8 @@
                    (case (vector-ref clause 0)
                      ((atom)
                       (let* ((atom (vector-ref clause 1))
+                             (prior-scope (hash->list slots))
                              (original (vector-ref atom 1))
-                             (prior-scope
-                               (and (ormap (lambda (term) (eq? (car term) 'expression)) original)
-                                    (ensure-scope!)))
                              (terms (map (lambda (term) (lower term #f)) original))
                              (columns (vector-ref atom 2))
                              (keys (map

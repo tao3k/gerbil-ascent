@@ -192,3 +192,84 @@ byte-identical. The final expression Suite passed all 11 Cases through this
 boundary with exit 0 and all required success markers; its receipt is
 =final-consumer-native-tests.log=. The two full 713-Case passes precede this
 consumer-boundary follow-up. Its complete Linux CI qualification remains open.
+
+* Shared lexical scope lowering
+
+The next complete compiler change uses private persistent lexical scope tails.
+The first actual callback consumer materializes the slot map once. Later
+bindings prepend pairs; captured scopes retain their old tails and shadowed
+slot identity. A row expression and an index-key expression retain their own
+original visibility boundaries. Pure rules do not materialize fallback scopes.
+
+=scope-reference.ss= is the complete positive-plan source at
+=91d42d459f9fe6ac2e6bf9b64b1d64a2a938bba3=, with only its two relative imports
+qualified. The expression and binding dependencies are unchanged. Native checks
+reverse those rewrites and require byte equality with Git. The public ASP
+=make-benchmark-fixture= generates =scope-benchmark.ss=; =benchmark-run/result=
+owns 50 alternating pairs. Admitted rule preparation is outside timing. Each
+leg compiles the entire rule afresh; outside timing both plans execute on
+independent source tuples and must agree with arithmetic truth, slot counts
+and effect flags. This measures whole-rule lowering only, not full analysis,
+engine admission, cold solve or warm solve.
+
+Long-scope gates were fixed before sampling: CPU <=80% baseline, allocation
+<=baseline and >=35/50 CPU wins. Small and pure controls retain <=105% CPU plus
+20 us and <=4 KiB allocation overhead. No gate was widened after measurement.
+
+Final lazy-scope native medians (50 pairs per row):
+
+| Scenario | Shape | CPU us old/new | Bytes old/new | Wins | Gate |
+|----------+-------+----------------+---------------+------+------|
+| lower-deep | 128 bindings | 87 / 18 | 930224 / 114896 | 50 | pass |
+| lower-scope | 256 bindings | 283 / 29 | 3419224 / 215928 | 50 | pass |
+| lower-small | 2 bindings | 3 / 2 | 7424 / 6560 | 20 | pass |
+| lower-pure | unary pure rule | 1 / 1 | 3872 / 3824 | 22 | pass |
+| lower-pure-wide | 256-column pure rule | 18 / 20 | 71192 / 71144 | 9 | pass |
+
+Long scopes reduce lowering CPU about 79%/90% and allocation about 88%/94%.
+The pure-wide control establishes its bounded overhead gate, not a speed gain.
+An initial eager scope experiment passed the long-scope gates but allocated
+48 extra bytes for the unary pure control. It was replaced by consumer-driven
+materialization; both logs remain in ignored cache. The intermediate full pool
+was stopped before completion to apply that correction and is not a pass.
+
+The unchanged warm-solve comparisons against 5e2305b still pass long-scope,
+pure and small controls; short chain/wide CPU gates still fail. The combined
+=just performance-expression-plan= command therefore still returns nonzero.
+The five lowering gates above passing does not turn it into an overall pass.
+Raw final data is =.cache/ascent/expression-plan/lazy-shared-scope-benchmark.log=.
+
+The final expression Suite passed 13 native Cases, with exit 0 and explicit
+module/harness/final success markers. New controls cover legal scope extension,
+borrowed input-name changes, changed head inputs and false values. A prior
+binding callback changed to read its own later output must raise the same
+unbound-clause-variable error after one successful row; a stale frame slot must
+not make that name visible. This distinguishes a retained lexical tail from a
+mutable reference to the compiler's latest scope.
+
+An earlier new Case attempted to shadow an already-bound variable through the
+standard binding constructor. Admission correctly rejects that shape before
+Core lowering; the failed full pool is retained and is not an acceptance pass.
+The corrected controls use the supported public API and compare complete solves
+with the frozen general interpreter. The focused receipt is
+=.cache/ascent/expression-plan/shared-scope-boundary-tests.log=.
+Source policy has zero errors and retains the existing cursor warning 041.
+
+Final complete native =test 2 all= qualification passed 82 modules and 715
+Cases, with exit 0, 82 =MODULE-OK=, 82 =HARNESS-OK= and 82 final =OK= markers.
+The receipt is =.cache/ascent/expression-plan/final-shared-scope-full-native-tests.log=.
+This includes the corrected 13-Case expression Suite and actor, SCC, update,
+proof and typed-expression integration. It uses explicit local concurrency 2;
+it does not establish automatic 12-process startup or exact-head GitHub CI.
+
+After integrating concurrent commit 59c1710 (native PO operator compiler
+composition), seven affected native modules passed 118 Cases with exit 0 and
+seven of each required module/harness/final success marker. This covers the
+expression Suite, typed-domain, higher-order, operator, retained operator,
+native reduction and model closure. Core lowering and both benchmark contracts,
+comparators and runner were byte-identical to the full 715-Case pass. The
+integration receipt is =integrated-scope-operator-native-tests.log=.
+
+GitHub run 37431877416 for the preceding baseline 91d42d4 completed successfully
+in all Scheme, formal and oracle jobs. That closes its earlier remote compiler
+qualification boundary; it does not qualify this new scope-lowering revision.

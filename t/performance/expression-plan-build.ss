@@ -7,7 +7,7 @@
 (def (main library binary)
   (let (sources (artifact-sources))
     (add-load-path! library)
-    (make ["core/expression-plan" "core/positive-plan" "program/component-plan" "program/evaluate" "t/performance/expression-plan/reference" "t/performance/expression-plan/analysis-reference" "t/performance/expression-plan/planning-reference" "t/performance/expression-plan/evaluate-reference" "t/performance/expression-plan/input" "t/performance/expression-plan-benchmark"]
+    (make ["core/expression-plan" "core/positive-plan" "program/component-plan" "program/evaluate" "t/performance/expression-plan/scope-reference" "t/performance/expression-plan/reference" "t/performance/expression-plan/analysis-reference" "t/performance/expression-plan/planning-reference" "t/performance/expression-plan/evaluate-reference" "t/performance/expression-plan/input" "t/performance/expression-plan-benchmark"]
           srcdir: (current-directory) libdir: library build-deps: (path-expand ".cache/ascent/native-library/build-deps"))
     (let ((source "t/performance/expression-plan-benchmark.ss")
           (options [output-dir: library output-file: binary parallel: #t verbose: #t invoke-gsc: #t static: #t]))

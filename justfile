@@ -178,7 +178,7 @@ _performance-expression-plan:
     mkdir -p .cache/ascent/expression-plan
     gxi {{ gerbil_test_runtime_options }} t/performance/expression-plan-build.ss "$library" "{{ justfile_directory() }}/.cache/ascent/expression-plan/native-entry"
     status=0
-    for scenario in deep scope chain wide pure small; do
+    for scenario in lower-deep lower-scope lower-small lower-pure lower-pure-wide deep scope chain wide pure small; do
         timeout 90s .cache/ascent/expression-plan/native-entry {{ gerbil_test_runtime_options }} "$scenario" "$library" ".cache/ascent/expression-plan/$scenario.sexp" || status=1
     done
     exit "$status"

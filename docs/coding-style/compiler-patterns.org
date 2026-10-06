@@ -842,3 +842,21 @@ not allocate a projection. Native build/extend/lookup comparisons against the
 complete frozen source retain negative experiments and small controls in
 =t/performance/index-sharing/README.org=. The measured CPU improvement applies
 to that physical lifecycle, with a bounded metadata allocation increase.
+
+* Specialize invocation after stable call admission
+
+Gerbil =compiler/optimize-call.ss:85-129= checks argument shape and mutable
+bindings before inline rewriting. Its =!lambda= method at =632-650= validates
+arity and the local dispatch identity before introducing a direct call.
+Our positive-plan compiler similarly guards current callback identity and
+borrowed input metadata before using a prepared frame call. The shared factory
+now extends explicit ordered reads to three/four arguments; higher arities
+retain general =apply=. Metadata above two inputs uses a detached vector and
+an elementwise shape check. Neither path caches callback results or shares a
+mutable argument buffer across reentrant calls.
+
+Matched native stable-call measurements and controls are documented in
+=t/performance/callback-plan/README.org=. An attempted tail-builder rewrite
+increased long-plan compilation CPU and allocation and was withdrawn. The
+lesson is to expose proven call facts while measuring the complete chosen
+boundary; a tail-shaped expression alone is not a performance improvement.

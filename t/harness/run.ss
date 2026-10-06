@@ -144,6 +144,8 @@
                           '("t/performance/native-library" "t/performance/ascent-ss-profile"
                             "t/scenarios/performance/ascent-table-expression/baseline"
                             "t/harness/artifact" "t/harness/prediction" "t/harness/actor-pool")
+                          (if (member "t/qualification/ascent-callback-plan-test.ss" tests)
+                            '("t/performance/callback-plan/expression-reference") [])
                           (if (member "t/qualification/ascent-expression-plan-test.ss" tests)
                             '("t/performance/expression-plan/reference"
                               "t/performance/expression-plan/analysis-reference"

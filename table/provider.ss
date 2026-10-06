@@ -14,6 +14,8 @@
 
 (export GerbilAscentIndexProviderContract
         gerbil-ascent-hash-index-provider
+        gerbil-ascent-curried-index-provider
+        gerbil-ascent-curried-index-provider?
         gerbil-ascent-canonical-hash-index-provider?
         gerbil-ascent-index-provider-build
         gerbil-ascent-index-provider-extend!
@@ -60,12 +62,40 @@
 
 (def gerbil-ascent-hash-index-provider +canonical-hash-index-provider+)
 
+;;; Curried sharing is an explicit receiver choice. The ordinary receiver
+;;; keeps its measured representation; an engine using this receiver derives
+;;; compatible logical requirements and owns its curried roots and adapters.
+(def +curried-index-provider+
+  (validate GerbilAscentIndexProviderContract
+            (.o (:: @ IndexProvider.)
+                (.build-index gerbil-ascent-index-build)
+                (.extend-index! gerbil-ascent-index-extend!)
+                (.lookup-index
+                 (lambda (index key) (or (hash-get index key) []))))))
+(def gerbil-ascent-curried-index-provider +curried-index-provider+)
+
+;; gerbil-ascent-curried-index-provider?
+;; : (-> IndexProviderCandidate Boolean)
+;; | doc m%
+;;     Admit only the privately retained curried receiver. Inherited receivers
+;;     remain custom Providers; mutable physical roots belong to each engine.
+;;
+;;     # Examples
+;;
+;;     ```scheme
+;;     (gerbil-ascent-curried-index-provider? gerbil-ascent-curried-index-provider)
+;;     ;; => #t
+;;     ```
+;;   %
+(def (gerbil-ascent-curried-index-provider? value)
+  (eq? value +curried-index-provider+))
+
 ;;; The exported default can be rebound. Native representation admission uses
 ;;; the private, module-initialized receiver, never a caller's new default.
 ;; gerbil-ascent-canonical-hash-index-provider?
 ;;   : (-> IndexProviderCandidate Boolean)
 ;;   | doc m%
-;;       Recognize the privately retained receiver validated at module load.
+;;       Recognize the privately retained hash receivers validated at module load.
 ;;       Rebinding the exported default does not grant native representation.
 ;;
 ;;       # Examples
@@ -76,4 +106,5 @@
 ;;       ```
 ;;     %
 (def (gerbil-ascent-canonical-hash-index-provider? value)
-  (eq? value +canonical-hash-index-provider+))
+  (or (eq? value +canonical-hash-index-provider+)
+      (eq? value +curried-index-provider+)))

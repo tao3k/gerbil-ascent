@@ -829,3 +829,73 @@ the comparison algorithms. Its failed result remains recorded. Remote final-head
 CI must separately qualify this implementation. This addresses the concrete
 build blocker and full native gate of milestone 0; remaining milestones and
 model/application benefit claims retain their stated obligations.
+
+* Curried physical index implementation (2026-10-06)
+
+The admitted rule analysis now supplies logical column requirements to each
+engine. Pure component and actor workers derive requirements from their actual
+compiled actions and build independent mutable roots. The explicit =gerbil-ascent-curried-index-provider= receiver
+uses maximum bipartite matching over strict subset requirements to form chains;
+each chain's permutation covers every assigned logical requirement as a prefix.
+The default hash receiver, singleton requirements and arbitrary custom
+Providers retain their existing representations. Requirements are planned only
+when an explicit curried receiver first needs an actual physical lookup. This implements the layout-sharing mechanism discussed in
+[[https://kmicinski.com/assets/byods.pdf][B23 section 5.5]], rather than renaming the former cache.
+
+A physical trie stores each input occurrence at one full-depth leaf. Ordinals
+restore exact relation order when selecting a shorter prefix; ordered view
+spines are cached lazily and invalidated together on extension. Existing
+returned spines remain immutable. Multiple logical aliases extend one physical
+entry once. All/delta and different engine/worker roots remain separate.
+No general memory or application speed improvement follows from the reduced
+physical root count: ordinals, trie nodes and cached view spines have costs.
+The paired complete-solve fixture is observational and retains negative results;
+it is not the paper's Polonius, LLVM or whole-application replication.
+
+Native acceptance compares all 128 requirement families over three columns
+with an independent chain-partition enumeration and checks actual compiled
+serial/component actor solves against independent truth. Shared prefixes cover
+false values, repeated row occurrences, reordered keys, immutable old views,
+alias extension and owner/delta isolation. Lean proves universal prefix-coverage
+lookup equality, ordered batch decomposition and exact membership; minimum
+matching optimality and native trie ordinal collection are not inferred from
+those theorems. TLA+ extends the existing root-publication model with alias and
+foreign-owner mutations; it does not repeat those algebraic statements.
+
+The Linux CI run at =67da108a97de39722087b6bcabe8398d8b4163ba= passed
+production and support compilation, then exhausted the 1 GiB heap in the
+combined Suite expansion process. That rejected result is retained. Suite
+compilation now releases expander/compiler state per Suite consumer, preserving
+the full module registry and the same heap/progress contracts. Runtime workers
+still use the configured parallel module pool and actor execution paths.
+
+** Cost admission and retained negative outcomes
+
+The initial three-view fixture produced no CPU wins in 50 paired solves and
+allocated 6,971,728 bytes per solve (median), compared with 380,768 for the
+historical ordinary-index reference. Resolving layout identity once per atom,
+removing per-query adaptation hash tables and retaining immutable ordered views
+reduced the revised median to 663,744 bytes; CPU still had no wins (744 versus
+635 microseconds). These measured revisions were rejected as a default-path
+performance improvement. The curried receiver is therefore an explicit
+physical representation choice; no reduced root count is promoted to an
+application benefit. These comparisons use the existing historical complete
+solve reference and do not isolate every earlier engine change.
+
+The first complete native run with the prototype passed 50 modules and 432
+Cases, then the stratified proof checker triggered the unchanged five-second
+idle guard. Its isolated rerun passed in three seconds. The tiny founded-proof
+case now reports only completed direct and generated witness checks as actual
+progress; no heartbeat or timeout increase was introduced. A new complete
+native run must qualify the final receiver/adapter implementation.
+
+** Final source-bound qualification
+
+The [[file:evidence/scheme-index-sharing-20261006/receipt.json][curried receiver receipt]] records the final frozen implementation: 82 native
+modules, 717 CASE-OK, 82 explicit OK, parent exit zero, four concurrent module
+workers, unchanged 1 GiB compiler heap and five-second startup/idle limits.
+The complete formal collection has 84 Lean build jobs, 19 normal TLC
+explorations and 33 required counterexamples. All seven existing default-path
+cost gates passed; the explicit shared fixture remains observational and its
+negative outcome is retained. The compiler-only parent =5a75020= passed every
+GitHub CI job. The final receiver commit must independently pass exact-head CI.

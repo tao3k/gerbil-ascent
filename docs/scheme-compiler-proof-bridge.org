@@ -994,3 +994,24 @@ and 84 Lake jobs. The preparation correspondence and evaluator equivalence
 report only =propext=; the existing completed-frame theorem retains its
 standard-only axiom report. The earlier solver-route files and imports have
 been removed because they did not migrate the existing consumer.
+
+* Curried logical views and physical root ownership
+
+=IndexedPositiveTraversal.SharedIndex= proves that logical columns with exactly
+one physical-prefix coverage set select the same ordered row occurrences. The
+proof preserves repeated rows and reordered logical keys. =extend_lookup=
+decomposes reversed insertion-batch publication without deduplication;
+=lookup_membership= characterizes every selected occurrence. Tests and axiom
+prints remain in =Tests/IndexedPositiveTraversalTests.lean=.
+
+The actual engine obtains coverage plans from admitted rule atoms; private SCC
+and actor workers obtain them from their compiled actions. Every root belongs
+to one engine/worker and one all/delta lane. Logical aliases extend one root
+once, and a failed partial extension revokes that root's readable version until
+rebuilding from committed rows. Native exhaustive small matching, direct row
+projection, expression-order and actor Session controls exercise these paths.
+=ComponentIndex.tla= owns publication, failed-version recovery, alias-double
+extension and foreign-owner interference; it does not repeat lookup algebra.
+The [[file:evidence/scheme-index-sharing-20261006/receipt.json][receipt]] binds both collections to source and retains rejected cost outcomes.
+These results do not imply a universal native matching/trie extraction theorem
+or complete Polonius/LLVM application benefit.

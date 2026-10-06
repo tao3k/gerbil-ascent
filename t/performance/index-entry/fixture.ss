@@ -4,14 +4,14 @@
 (import (only-in :clan/poo/object .o .ref)
         :gerbil-ascent/program/index
         :gerbil-ascent/program/objects
-        (only-in :gerbil-ascent/table/provider gerbil-ascent-hash-index-provider)
+        (only-in :gerbil-ascent/table/provider gerbil-ascent-hash-index-provider gerbil-ascent-curried-index-provider)
         (rename-in (only-in :gerbil-ascent/table/funs gerbil-ascent-index-build)
                    (gerbil-ascent-index-build build-index))
         (rename-in :gerbil-ascent/t/performance/index-entry/reference
                    (gerbil-ascent-make-row-indexes old-make)
                    (row-indexes-rows old-rows) (row-indexes-advance! old-advance!)))
 (export index-entry-harness index-entry-atom index-entry-program index-entry-result-rows
-        index-entry-provider)
+        index-entry-provider index-sharing-program)
 (def (index-entry-harness old? rows provider)
   (let* ((all (vector rows)) (delta (vector rows))
          (as (vector (length rows))) (ds (vector (length rows)))
@@ -54,3 +54,18 @@
                    (gerbil-ascent-atom 'input variables)))) (iota rules))
      4096 4096 8192)))
 (def (index-entry-result-rows result) ((.ref result 'rows-of) 'out))
+
+;;; Three compatible logical requirements {1}, {0,1}, {0,1,2} select one
+;;; physical [1,0,2] chain through the ordinary admitted rule compiler.
+(def (index-sharing-program size)
+  (let ((a (gerbil-ascent-literal 'a)) (f (gerbil-ascent-literal #f))
+        (z (gerbil-ascent-variable 'z)))
+    (gerbil-ascent-program
+     (list (gerbil-ascent-relation 'input 3 (map (lambda (n) (list #f 'a n)) (iota size)) gerbil-ascent-curried-index-provider)
+           (gerbil-ascent-relation 'out 1 []))
+     (list (gerbil-ascent-rule
+            (list (gerbil-ascent-atom 'out (list z)))
+            (list (gerbil-ascent-atom 'input (list (gerbil-ascent-wildcard) a z))
+                  (gerbil-ascent-atom 'input (list f a (gerbil-ascent-wildcard)))
+                  (gerbil-ascent-atom 'input (list f a z)))))
+     4096 4096 8192)))

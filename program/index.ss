@@ -4,19 +4,24 @@
 
 ;;; One engine's physical indexes over live all/delta vectors. Metadata plans
 ;;; stay immutable; source admission and row/version publication stay in evaluate.
-(import (only-in :gerbil-ascent/core/positive-plan gerbil-ascent-index-key
+(import (only-in :gerbil-ascent/table/index-sharing gerbil-ascent-index-sharing-layout
+                 gerbil-ascent-shared-index-build gerbil-ascent-shared-index-extend!
+                 gerbil-ascent-shared-index-rows)
+        (only-in :gerbil-ascent/core/positive-plan gerbil-ascent-index-key
                  gerbil-ascent-index-key/terms gerbil-ascent-index-value)
         (only-in :gerbil-ascent/table/access gerbil-ascent-physical-index-build
                  gerbil-ascent-physical-index-extend! gerbil-ascent-physical-index-rows
                  gerbil-ascent-physical-index-single-rows)
-        (only-in :gerbil-ascent/table/provider gerbil-ascent-canonical-hash-index-provider?))
-(export gerbil-ascent-make-row-indexes row-indexes-rows row-indexes-advance!)
+        (only-in :gerbil-ascent/table/provider gerbil-ascent-canonical-hash-index-provider?
+                 gerbil-ascent-curried-index-provider?))
+(export gerbil-ascent-make-row-indexes row-indexes-rows row-indexes-advance! row-indexes-plan-atoms!)
 
-(defstruct row-indexes (rows advance!))
+(defstruct row-indexes (rows advance! plan-atoms!))
 
 ;;; Stable entries belong to one engine. Column tables share them across
 ;;; equivalent atoms; identity tables only shortcut that structural resolution.
-(defstruct physical-index-entry (version lookup))
+(defstruct physical-index-entry (version lookup shared?))
+(defstruct atom-index-view (entry permutation))
 
 ;; gerbil-ascent-make-row-indexes
 ;;   : (-> Rows Rows Sizes Sizes Versions Versions Providers RowIndexes)
@@ -35,7 +40,31 @@
   ;; Scans and small relations own no physical cache vectors. Allocate each
   ;; lane only when its first indexed lookup crosses the size threshold.
   (let ((all-indexes #f) (delta-indexes #f)
-        (all-atoms #f) (delta-atoms #f))
+        (all-atoms #f) (delta-atoms #f)
+        (layouts (make-vector (vector-length all) #f)) (planned-atoms #f))
+      (def (plan-atoms! atoms)
+        (when (or all-indexes delta-indexes) (error "cannot replan a live physical index"))
+        ;; Small snapshots need no physical plan. An explicit curried receiver
+        ;; triggers planning only when an actual lookup first needs an index.
+        (set! planned-atoms
+          (and (ormap gerbil-ascent-curried-index-provider? (vector->list index-providers)) atoms)))
+      (def (ensure-layouts!)
+        (when planned-atoms
+          (let ((requirements (make-vector (vector-length all) []))
+                (fresh (make-vector (vector-length all) #f)))
+            (for-each
+             (lambda (atom)
+               (let ((i (vector-ref atom 0)) (columns (vector-ref atom 2)))
+                 (when (and (gerbil-ascent-curried-index-provider? (vector-ref index-providers i))
+                            (= (length columns) (hash-length (let (seen (make-hash-table-eq))
+                              (for-each (lambda (c) (hash-put! seen c #t)) columns) seen))))
+                   (vector-set! requirements i (cons columns (vector-ref requirements i)))))) planned-atoms)
+            (for-each (lambda (i)
+                        (let (layout (gerbil-ascent-index-sharing-layout (vector-ref requirements i)))
+                          (vector-set! fresh i (and (> (hash-length layout) 0) layout))))
+                      (iota (vector-length all)))
+            ;; Metadata publication follows successful complete planning.
+            (set! layouts fresh) (set! planned-atoms #f))))
       (def (indexed-rows atom environment use-delta? slot-terms)
         (let* ((index (vector-ref atom 0))
                (columns (vector-ref atom 2))
@@ -45,6 +74,8 @@
                                  index)
                      32))
             rows
+            (begin
+              (ensure-layouts!)
             (let* ((identities
                     (if use-delta?
                       (or delta-atoms
@@ -55,9 +86,12 @@
                             (set! all-atoms fresh) fresh))))
                    (version (vector-ref
                              (if use-delta? delta-version all-version) index))
-                   (entry
+                   (view
                     (or (hash-get identities atom)
-                        (let* ((caches
+                        (let* ((layout (vector-ref layouts index))
+                               (permutation (and layout (hash-get layout (list-sort < columns))))
+                               (physical-columns (or permutation columns))
+                               (caches
                                 (if use-delta?
                                   (or delta-indexes
                                       (let (fresh (make-vector (vector-length delta) #f))
@@ -69,19 +103,24 @@
                                 (or (vector-ref caches index)
                                     (let (fresh (make-hash-table))
                                       (vector-set! caches index fresh) fresh)))
-                               (shared (hash-get cache columns))
+                               (shared (hash-get cache physical-columns))
                                (resolved
                                 (or shared
-                                    (let (fresh (make-physical-index-entry #f #f))
-                                      (hash-put! cache columns fresh) fresh))))
-                          (hash-put! identities atom resolved)
-                          resolved)))
+                                    (let (fresh (make-physical-index-entry #f #f (and permutation #t)))
+                                      (hash-put! cache physical-columns fresh) fresh))))
+                          (let (view (make-atom-index-view resolved permutation))
+                            (hash-put! identities atom view)
+                            view))))
+                   (entry (atom-index-view-entry view))
+                   (permutation (atom-index-view-permutation view))
                    (provider (vector-ref index-providers index))
                    (lookup
                     (if (and (physical-index-entry-version entry)
                              (= (physical-index-entry-version entry) version))
                       (physical-index-entry-lookup entry)
-                      (let (built (gerbil-ascent-physical-index-build provider rows columns))
+                      (let (built (if permutation
+                                   (gerbil-ascent-shared-index-build rows permutation)
+                                   (gerbil-ascent-physical-index-build provider rows columns)))
                         ;; Failed builds keep the old version and lookup. Publish
                         ;; both only after the provider has returned successfully.
                         (physical-index-entry-lookup-set! entry built)
@@ -89,7 +128,7 @@
                         built))))
               ;; Only this trusted representation consumes a scalar. Custom
               ;; receivers retain list keys, callbacks and their lookup order.
-              (if (and (gerbil-ascent-canonical-hash-index-provider? provider)
+              (if (and (not permutation) (gerbil-ascent-canonical-hash-index-provider? provider)
                        (null? (cdr columns)))
                 (gerbil-ascent-physical-index-single-rows
                  lookup (gerbil-ascent-index-value
@@ -100,7 +139,9 @@
                              (vector-ref atom 1) columns environment slot-terms)
                             (gerbil-ascent-index-key/terms
                              (vector-ref atom 4) environment)))
-                  (gerbil-ascent-physical-index-rows provider lookup key)))))))
+                  (if permutation
+                    (gerbil-ascent-shared-index-rows lookup columns key)
+                    (gerbil-ascent-physical-index-rows provider lookup key)))))))))
       (def (advance-all-indexes! index new-rows (reverse-order? #f))
         (let (cache (and all-indexes (vector-ref all-indexes index)))
           (when (and cache (pair? new-rows))
@@ -115,9 +156,11 @@
                    ;; the old version before dispatch so failure forces rebuild
                    ;; from still-committed rows on the next read.
                    (physical-index-entry-version-set! entry #f)
-                   (let (extended (gerbil-ascent-physical-index-extend!
-                                   provider (physical-index-entry-lookup entry) rows columns))
+                   (let (extended (if (physical-index-entry-shared? entry)
+                                   (gerbil-ascent-shared-index-extend! (physical-index-entry-lookup entry) rows)
+                                   (gerbil-ascent-physical-index-extend!
+                                    provider (physical-index-entry-lookup entry) rows columns)))
                      (physical-index-entry-lookup-set! entry extended)
                      (physical-index-entry-version-set! entry (+ version 1)))))
                cache)))))
-    (make-row-indexes indexed-rows advance-all-indexes!)))
+    (make-row-indexes indexed-rows advance-all-indexes! plan-atoms!)))

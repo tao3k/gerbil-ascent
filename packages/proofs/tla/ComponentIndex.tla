@@ -1,7 +1,7 @@
 ---- MODULE ComponentIndex ----
 \* SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 \* SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
-\* Finite private single-bucket extension/install exploration, not native hashes.
+\* Finite private shared-root extension/install exploration, not native hashes.
 EXTENDS Integers, Sequences
 CONSTANTS Owners, Mutation
 VARIABLES rows, cache, version, cacheVersion, stage, published
@@ -13,7 +13,11 @@ Init == /\ rows = [o \in Owners |-> <<0, 1>>]
         /\ version = [o \in Owners |-> 0] /\ cacheVersion = version
         /\ stage = [o \in Owners |-> 0]
 Extend(o) == /\ stage[o] = 0
-             /\ cache' = [cache EXCEPT ![o] = (IF Mutation = "order" THEN Reverse(Batch) ELSE Batch) \o @]
+             /\ cache' = IF Mutation = "foreign" THEN
+                   [p \in Owners |-> (IF p = o THEN cache[p] ELSE Batch \o cache[p])]
+                 ELSE [cache EXCEPT ![o] =
+                   (IF Mutation = "order" THEN Reverse(Batch)
+                    ELSE IF Mutation = "alias" THEN Batch \o Batch ELSE Batch) \o @]
              /\ cacheVersion' = [cacheVersion EXCEPT ![o] = version[o] + 1]
              /\ stage' = [stage EXCEPT ![o] = 1]
              /\ UNCHANGED <<rows, version, published>>
@@ -23,6 +27,8 @@ Install(o) == /\ (stage[o] = 1 \/ (stage[o] = 0 /\ Mutation = "early"))
               /\ published' = [published EXCEPT ![o] = rows'[o]]
               /\ stage' = [stage EXCEPT ![o] = 2]
               /\ UNCHANGED <<cache, cacheVersion>>
+\* Logical aliases resolve to one root; extending once per alias is rejected.
+\* Foreign-owner extension is rejected before that owner installs any rows.
 \* Failed provider mutation is unreadable until rebuilding from committed rows.
 FailExtend(o) == /\ stage[o] = 0
                  /\ cache' = [cache EXCEPT ![o] = <<3>> \o @]

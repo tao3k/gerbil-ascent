@@ -264,12 +264,14 @@
         (check-equal? rows '((1 1)))
         (check-equal? (verify source spec digest status rows finite proof)
                       'valid)
+        (displayln "STRATIFIED-PROOF-CHECKED direct-witness") (force-output)
         (let-values (((produced-status produced)
                       (candidate-produce-stratified-proof
                        source spec digest status rows finite 5000 5000)))
           (check-equal? produced-status 'complete)
           (check-equal? (verify source spec digest status rows finite produced)
-                        'valid))
+                        'valid)
+          (displayln "STRATIFIED-PROOF-CHECKED produced-witness") (force-output))
         (let-values (((produced-status produced)
                       (candidate-produce-stratified-proof
                        source spec digest status rows finite 5000 1)))

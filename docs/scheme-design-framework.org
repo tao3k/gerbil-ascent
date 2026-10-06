@@ -143,6 +143,22 @@ the same checked program and evidence path cross nine source cuts, with all
 eight native relation sets checked independently. This finite workflow result
 does not close general benefit or the actor/Provider performance obligations.
 
+* Explicit curried physical representation
+
+The [[file:scheme-research-proof-audit.org][current research audit]] and [[file:evidence/scheme-index-sharing-20261006/receipt.json][source-bound receipt]] qualify an explicit
+=gerbil-ascent-curried-index-provider= choice. Compatible logical column
+requirements share engine/worker-owned physical chains; lazy ordered views
+preserve occurrence order, expression evaluation order and old publications.
+The admitted rule/compiler metadata supplies the requirements, including actual
+SCC and actor Session execution. Default hash and custom Provider representations
+remain available. Matching optimality, native trie refinement and full paper
+application costs retain their separate acceptance obligations.
+
+The 82-module, 717-Case native qualification and separate Lean/TLA collection
+establish this implementation boundary. Existing default-path performance gates
+passed; the shared complete-solve fixture did not establish a CPU/allocation
+benefit. Reduced physical root count is not a speed or peak-memory claim.
+
 * Model interface policy
 
 Why might an invocation contain text? Actual source, the user's task and a

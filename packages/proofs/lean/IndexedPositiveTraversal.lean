@@ -497,4 +497,56 @@ theorem indexed_pivot_output_sound (body : List (Atom Value)) (pivot : Nat)
     ⟨pivot, Nat.zero_le _, by simpa using inside, traversed⟩
   exact ⟨output, (row_partition body input output covered).mpr (Or.inr fresh), head⟩
 
+/-! Shared curried index views select the same ordered occurrences when a
+logical column set covers exactly one physical prefix. Native matching/planning
+and trie ordinal collection are separate executable obligations. -/
+namespace SharedIndex
+variable {V : Type} [DecidableEq V]
+
+def Matches (columns : List Nat) (row : List V) (wanted : Nat → Option V) : Prop :=
+  ∀ column ∈ columns, row[column]? = wanted column
+
+instance (columns : List Nat) (row : List V) (wanted : Nat → Option V) :
+    Decidable (Matches columns row wanted) := by
+  unfold Matches
+  infer_instance
+
+def lookup (columns : List Nat) (rows : List (List V)) (wanted : Nat → Option V) :
+    List (List V) := rows.filter fun row => decide (Matches columns row wanted)
+
+theorem matches_coverage (logical physical : List Nat)
+    (coverage : ∀ column, column ∈ logical ↔ column ∈ physical)
+    (row : List V) (wanted : Nat → Option V) :
+    Matches logical row wanted ↔ Matches physical row wanted := by
+  constructor
+  · intro selected column member
+    exact selected column ((coverage column).mpr member)
+  · intro selected column member
+    exact selected column ((coverage column).mp member)
+
+/-- Equality of ordered filters preserves multiplicity, including duplicate
+rows, and does not depend on the order of logical key columns. -/
+theorem prefix_lookup (logical permutation : List Nat) (depth : Nat)
+    (coverage : ∀ column, column ∈ logical ↔ column ∈ permutation.take depth)
+    (rows : List (List V)) (wanted : Nat → Option V) :
+    lookup logical rows wanted = lookup (permutation.take depth) rows wanted := by
+  unfold lookup
+  congr 1
+  funext row
+  simp only [matches_coverage logical _ coverage row wanted]
+
+/-- Incremental native admission prepends the reversed insertion batch. The
+same logical view distributes over the two ordered spines without deduplication. -/
+theorem extend_lookup (columns : List Nat) (old batch : List (List V))
+    (wanted : Nat → Option V) :
+    lookup columns (batch.reverse ++ old) wanted =
+      lookup columns batch.reverse wanted ++ lookup columns old wanted := by
+  simp [lookup, List.filter_append]
+
+theorem lookup_membership (columns : List Nat) (rows : List (List V))
+    (wanted : Nat → Option V) (row : List V) :
+    row ∈ lookup columns rows wanted ↔ row ∈ rows ∧ Matches columns row wanted := by
+  simp [lookup]
+end SharedIndex
+
 end Ascent.IndexedPositiveTraversal

@@ -1318,7 +1318,7 @@ check-component-index-formal:
     temp=$(mktemp -d)
     trap 'rm -rf "$temp"' EXIT
     "${tlc[@]}" -workers 1 -config packages/proofs/tla/ComponentIndex.cfg -metadir "$temp/correct" packages/proofs/tla/ComponentIndex.tla
-    for mutation in order early failed; do
+    for mutation in order early failed alias foreign; do
       sed "s/Mutation = \"none\"/Mutation = \"$mutation\"/" packages/proofs/tla/ComponentIndex.cfg > "$temp/$mutation.cfg"
       code=0
       "${tlc[@]}" -workers 1 -config "$temp/$mutation.cfg" -metadir "$temp/$mutation" packages/proofs/tla/ComponentIndex.tla > "$temp/$mutation.out" 2>&1 || code=$?

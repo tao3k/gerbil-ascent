@@ -15,6 +15,7 @@
     "table/eqrel"
     "table/trrel"
     "table/trrel-uf"
+    "table/index-sharing"
     "table/provider"
     "table/access"
     "table/storage"

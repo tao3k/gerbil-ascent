@@ -1,8 +1,14 @@
 ;;; -*- Gerbil -*-
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
-(import (only-in :clan/poo/object .o .ref)
-        (only-in :gerbil-ascent/table/provider gerbil-ascent-hash-index-provider)
+(import (only-in :gerbil-ascent/program/actor-session gerbil-ascent-open-actor-session gerbil-ascent-session-close!)
+        (only-in :gerbil-ascent/program/session gerbil-ascent-session-run
+                 gerbil-ascent-session-append-source! gerbil-ascent-session-replace-source!)
+        :gerbil-ascent/table/index-sharing
+        (only-in :gerbil-ascent/program/index gerbil-ascent-make-row-indexes
+                 row-indexes-rows row-indexes-advance! row-indexes-plan-atoms!)
+        (only-in :clan/poo/object .o .ref)
+        (only-in :gerbil-ascent/table/provider gerbil-ascent-hash-index-provider gerbil-ascent-curried-index-provider)
         (only-in :std/test check-equal? test-case test-suite)
         :gerbil-ascent/t/performance/index-entry/fixture
         (only-in :gerbil-ascent/program/evaluate gerbil-ascent-evaluate-program)
@@ -52,8 +58,132 @@
     (check-equal? (list-ref answers 2) '((0 -1)))
     (check-equal? (list-ref answers 3) (cons '(0 32) rows))
     (list (reverse events) answers)))
+;;; Independent partition enumeration, rather than matching, checks optimality.
+(def (minimum-chain-count requirements)
+  (def (comparable? a b)
+    (or (andmap (cut member <> b) a) (andmap (cut member <> a) b)))
+  (def (partition remaining chains)
+    (if (null? remaining) (length chains)
+      (let ((head (car remaining)) (tail (cdr remaining)))
+        (let try ((before []) (after chains)
+                  (best (partition tail (cons (list head) chains))))
+          (if (null? after) best
+            (try (cons (car after) before) (cdr after)
+              (if (andmap (cut comparable? head <>) (car after))
+                (min best (partition tail (append (reverse before)
+                            (cons (cons head (car after)) (cdr after))))) best)))))))
+  (partition requirements []))
+
 (def ascent-index-entry-test
   (test-suite "Engine-owned stable physical index entries"
+    (test-case "all 128 requirement families match independent minimum chain partitions"
+      (let (universe '((0) (1) (2) (0 1) (0 2) (1 2) (0 1 2)))
+        (for-each
+         (lambda (mask)
+           (let* ((requirements (filter-map (lambda (i)
+                                  (and (not (= 0 (bitwise-and mask (arithmetic-shift 1 i)))) (list-ref universe i))) (iota 7)))
+                  (layout (gerbil-ascent-index-sharing-layout requirements))
+                  (physical (make-hash-table)))
+             (for-each (lambda (columns)
+                         (let (permutation (or (hash-get layout columns) columns))
+                           (hash-put! physical permutation #t)
+                           (check-equal? (list-sort < (take permutation (length columns))) columns))) requirements)
+             (check-equal? (hash-length physical) (minimum-chain-count requirements))))
+         (iota 128))))
+    (test-case "curried prefixes preserve reordered keys false values duplicates and incremental order"
+      (let* ((columns '(1 0 2))
+             (rows (append '((#f a 1) (#f b 0) (#f a 1))
+                           (map (lambda (n) (list n (if (even? n) 'a 'b) n)) (iota 40))))
+             (batch '((#f a 2) (#f a 1) (9 a 9)))
+             (index (gerbil-ascent-shared-index-build rows columns)))
+        (for-each
+         (lambda (logical)
+           (for-each
+            (lambda (row)
+              (let* ((key (map (lambda (c) (list-ref row c)) logical))
+                     (matches (lambda (source) (filter (lambda (r)
+                                  (equal? key (map (lambda (c) (list-ref r c)) logical))) source))))
+                (check-equal? (gerbil-ascent-shared-index-rows index logical key) (matches rows)))) rows))
+         '((1) (0 1) (1 0) (0 1 2) (2 1 0)))
+        (let (old (gerbil-ascent-shared-index-rows index '(1) '(a)))
+          (gerbil-ascent-shared-index-extend! index batch)
+          (check-equal? old (filter (lambda (r) (eq? (cadr r) 'a)) rows))
+          (check-equal? (gerbil-ascent-shared-index-rows index '(1) '(a))
+                        (filter (lambda (r) (eq? (cadr r) 'a)) (append (reverse batch) rows))))))
+    (test-case "one engine chain extends once across logical aliases and all delta lanes remain separate"
+      (let* ((rows (map (lambda (n) (list #f 'a n)) (iota 40)))
+             (all (vector rows)) (delta (vector rows))
+             (sizes (vector 40)) (delta-sizes (vector 40))
+             (versions (vector 0)) (delta-versions (vector 0))
+             (engine (gerbil-ascent-make-row-indexes all delta sizes delta-sizes versions delta-versions
+                        (vector gerbil-ascent-curried-index-provider)))
+             (other (gerbil-ascent-make-row-indexes (vector rows) (vector rows) (vector 40) (vector 40)
+                        (vector 0) (vector 0) (vector gerbil-ascent-curried-index-provider)))
+             (atoms (list (index-entry-atom '(1) '(a)) (index-entry-atom '(0 1) '(#f a))
+                          (index-entry-atom '(1 0 2) '(a #f 0)))))
+        ((row-indexes-plan-atoms! engine) atoms)
+        ((row-indexes-plan-atoms! other) atoms)
+        (for-each (lambda (atom)
+                    (for-each (lambda (delta?) ((row-indexes-rows engine) atom [] delta? #f)) '(#f #t))) atoms)
+        (let (old ((row-indexes-rows engine) (car atoms) [] #f #f))
+          ((row-indexes-advance! engine) 0 '((#f a 40)))
+          (vector-set! all 0 (cons '(#f a 40) rows))
+          (vector-set! sizes 0 41) (vector-set! versions 0 1)
+          (for-each (lambda (atom)
+                      (check-equal? ((row-indexes-rows engine) atom [] #f #f)
+                                    (cons '(#f a 40) rows))
+                      (check-equal? ((row-indexes-rows engine) atom [] #t #f) rows)
+                      (check-equal? ((row-indexes-rows other) atom [] #f #f) rows)) (take atoms 2))
+          (check-equal? old rows))))
+    (test-case "curried failure revokes every alias until rebuilding the committed root"
+      (let* ((rows (map (lambda (n) (list #f 'a n)) (iota 40)))
+             (engine (gerbil-ascent-make-row-indexes (vector rows) (vector rows) (vector 40) (vector 40)
+                        (vector 0) (vector 0) (vector gerbil-ascent-curried-index-provider)))
+             (atoms (list (index-entry-atom '(1) '(a)) (index-entry-atom '(0 1) '(#f a)))))
+        ((row-indexes-plan-atoms! engine) atoms)
+        (let (old ((row-indexes-rows engine) (car atoms) [] #f #f))
+          (check-equal? (with-catch (lambda (_) 'rejected)
+                          (lambda () ((row-indexes-advance! engine) 0 '((#f a 40) ())) 'accepted)) 'rejected)
+          (for-each (lambda (atom)
+                      (check-equal? ((row-indexes-rows engine) atom [] #f #f) rows)
+                      (check-equal? ((row-indexes-rows engine) atom [] #t #f) rows)) atoms)
+          (check-equal? old rows))))
+    (test-case "curried adapters preserve original expression order on every warm lookup"
+      (let* ((events []) (rows (map (lambda (n) (list #f 'a n)) (iota 40)))
+             (first (cons 'expression (vector [] (lambda () (set! events (cons 'first events)) #f))))
+             (second (cons 'expression (vector [] (lambda () (set! events (cons 'second events)) 'a))))
+             (terms (list first second (cons 'wildcard #f)))
+             (atom (vector 0 terms '(0 1) (list first second) (list first second)))
+             (short (index-entry-atom '(1) '(a)))
+             (engine (gerbil-ascent-make-row-indexes (vector rows) (vector rows) (vector 40) (vector 40)
+                        (vector 0) (vector 0) (vector gerbil-ascent-curried-index-provider))))
+        ((row-indexes-plan-atoms! engine) (list atom short))
+        (for-each (lambda (_) (check-equal? ((row-indexes-rows engine) atom [] #f #f) rows)) (iota 3))
+        (check-equal? (reverse events) '(first second first second first second))))
+    (test-case "actor Session curried views preserve old publication across append and replacement"
+      (for-each
+       (lambda (workers)
+         (let (session (gerbil-ascent-open-actor-session (index-sharing-program 40) workers: workers))
+           (try
+            (let (first (gerbil-ascent-session-run session))
+              (gerbil-ascent-session-append-source! session 'input '(#f a 40))
+              (check-equal? (list-sort (lambda (a b) (< (car a) (car b)))
+                                      (index-entry-result-rows (gerbil-ascent-session-run session))) (map list (iota 41)))
+              (gerbil-ascent-session-replace-source! session 'input (map (lambda (n) (list #f 'a n)) (iota 32)))
+              (check-equal? (list-sort (lambda (a b) (< (car a) (car b)))
+                                      (index-entry-result-rows (gerbil-ascent-session-run session))) (map list (iota 32)))
+              (check-equal? (list-sort (lambda (a b) (< (car a) (car b)))
+                                      (index-entry-result-rows first)) (map list (iota 40))))
+            (finally (gerbil-ascent-session-close! session))))) '(1 4)))
+    (test-case "admitted three-view program agrees with independent truth in serial and component actor execution"
+      (let* ((program (index-sharing-program 40)) (expected (map list (iota 40))))
+        (for-each
+         (lambda (workers)
+           (let (result (gerbil-ascent-evaluate-program program workers: workers))
+             (check-equal? (list-sort (lambda (a b) (< (car a) (car b)))
+                                      (index-entry-result-rows result)) expected))) '(1 4))
+        (check-equal? (list-sort (lambda (a b) (< (car a) (car b)))
+                                 (index-entry-result-rows (old-evaluate program))) expected)))
     (test-case "first index after unindexed updates observes the published version"
       (let* ((events []) (rows (map list (iota 31)))
              (h (index-entry-harness #f rows

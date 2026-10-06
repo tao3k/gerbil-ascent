@@ -130,4 +130,16 @@ example : ¬ DeltaCovers [missing] := by simp [DeltaCovers, missing, overlap]
 example : ¬ DeltaCovers [foreign] := by simp [DeltaCovers, foreign, overlap]
 
 #print axioms Ascent.IndexedPositiveTraversal.exact_covers
+#print axioms Ascent.IndexedPositiveTraversal.SharedIndex.prefix_lookup
+#print axioms Ascent.IndexedPositiveTraversal.SharedIndex.extend_lookup
+#print axioms Ascent.IndexedPositiveTraversal.SharedIndex.lookup_membership
+
+example : SharedIndex.lookup [1, 0] [[false, true], [false, true], [true, true]]
+    (fun column => if column = 0 then some false else some true) =
+    [[false, true], [false, true]] := by decide
+example : SharedIndex.lookup [1] ([[false, true], [true, false]].reverse ++ [[true, true]])
+    (fun _ => some true) = [[false, true], [true, true]] := by decide
+example : (∀ column, column ∈ ([0, 1] : List Nat) ↔ column ∈ ([1, 0, 2] : List Nat).take 2) := by
+  intro column; simp; grind
+
 end Ascent.IndexedPositiveTraversalTests

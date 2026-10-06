@@ -337,3 +337,37 @@ Arbitrary callback effects and mutable nested fields remain outside this
 recovery guarantee. The native Case checks ordinary and single-relation Set
 entrypoints, Session restoration and old snapshot stability. See
 [[file:../../evidence/scheme-engine-publication-20261007/receipt.json][the focused publication receipt]].
+
+
+* Source reconstruction retires incremental state (2026-10-07)
+
+B23 §3, PDF pp. 5–9, distinguishes injected source facts from a Provider's
+concretized relation. Recovery has a corresponding Scheme ownership rule:
+the new candidate is built from retained source logs, not from the interrupted
+materialized relation or its counters. This rule is an implementation inference;
+the paper does not prove the host's exception or Session publication protocol.
+
+Two executable counterexamples extend the publication audit. First, a graph
+injection mutates private state before a stored field rejects it. Raw source
+replacement then completes in a fresh engine, but a later append still checks
+the retired graph owner and is rejected. This occurs for =eqrel=, =trrel= and
+=trrel_uf=. Second, a custom-storage append admits rows and increments the
+source count before a physical index extension throws; its source log is not
+yet updated. The old replacement preflight combines that tentative count with
+the log length and rejects a legal 33-row replacement as though it had 34 rows.
+
+=replace-source!= now constructs the complete prospective source cut first
+and counts its rows, preserving duplicates as input facts. It publishes this
+count and the fresh result only after successful evaluation. With
+=recompute-from-source?= established by replacement, subsequent appends build
+another fresh candidate and no longer inspect retired incremental owners.
+Their old states are not marked ready or reused. Before successful replacement,
+run and append remain subject to the storage and index publication guards.
+
+The native Case checks all three graph providers against fresh evaluation,
+then checks the 33-row input limit after an interrupted indexed admission,
+a later replacement/append and stability of the original 32-row result.
+The existing Session deletion matrix covers replacement budgets, retained
+append logs, independent reuse, mutable callbacks and withdrawal. See
+[[file:../../evidence/scheme-source-reconstruction-20261007/receipt.json][the source reconstruction receipt]]. This closes recovery handoff and budget
+ownership; it makes no theorem, rollback or speedup claim.

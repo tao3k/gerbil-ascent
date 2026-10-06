@@ -29,8 +29,78 @@
     (if (member (car rows) seen)
       (first-rows (cdr rows) seen)
       (cons (car rows) (first-rows (cdr rows) (cons (car rows) seen))))))
+(def (equal-row-order? a b)
+  (or (< (car a) (car b))
+      (and (= (car a) (car b)) (< (cadr a) (cadr b)))))
 (def ascent-storage-batch-test
   (test-suite "ASCENT complete storage batch admission"
+    (test-case "fresh source replacement retires failed storage and admission counters"
+      (let* ((graph-outcomes
+              (map
+               (lambda (provider)
+                 (with-catch
+                  (lambda (e) (error-message e))
+                  (lambda ()
+                    (let* ((reject? #t) (calls 0)
+                           (predicate (lambda (_value)
+                                        (set! calls (+ calls 1))
+                                        (not (and reject? (> calls 2)))))
+                           (relation (gerbil-ascent-relation 'input 2 []
+                                       gerbil-ascent-hash-index-provider provider
+                                       (list predicate predicate)))
+                           (program (gerbil-ascent-program (list relation) [] 16 16 64))
+                           (engine (gerbil-ascent-make-engine program #t)))
+                      ((.ref engine '.run))
+                      (check-equal? (failure (lambda () ((.ref engine '.append-source!) 'input '(1 2))))
+                                    "ASCENT relation field type mismatch")
+                      (set! reject? #f)
+                      ((.ref engine '.replace-source!) 'input '((1 2)))
+                      ((.ref engine '.append-source!) 'input '(2 3))
+                      (let* ((updated ((.ref engine '.run)))
+                             (fresh (gerbil-ascent-evaluate-program
+                                     (.o (:: @ program)
+                                         (relations (list (.o (:: @ relation) rows: '((1 2) (2 3)))))))))
+                        (check-equal? (list-sort equal-row-order? (storage-batch-rows updated))
+                                      (list-sort equal-row-order? (storage-batch-rows fresh))))
+                      'ok))))
+               (list gerbil-ascent-eqrel-storage-provider gerbil-ascent-trrel-storage-provider
+                     gerbil-ascent-trrel-uf-storage-provider)))
+             (counter-outcome
+              (with-catch
+               (lambda (e) (error-message e))
+               (lambda ()
+                 (let* ((reject? #f)
+                        (provider (.o (:: @ gerbil-ascent-hash-index-provider)
+                                      (.extend-index!
+                                       (lambda (index rows columns)
+                                         (when reject? (error "replacement index failure"))
+                                         ((.ref gerbil-ascent-hash-index-provider '.extend-index!) index rows columns)))))
+                        (storage (.o (:: @ gerbil-ascent-set-storage-provider)
+                                     (.extend-rows (lambda (_state _all _pending row _budget) (list row)))))
+                        (source (map (lambda (n) (list 0 n)) (iota 32)))
+                        (x (gerbil-ascent-variable 'x))
+                        (atom (gerbil-ascent-atom 'input (list (gerbil-ascent-literal 0) x)))
+                        (program (gerbil-ascent-program
+                                  (list (gerbil-ascent-relation 'input 2 source provider storage)
+                                        (gerbil-ascent-relation 'out 1 []))
+                                  (list (gerbil-ascent-rule (list (gerbil-ascent-atom 'out (list x)))
+                                          (list atom atom))) 33 64 128))
+                        (engine (gerbil-ascent-make-engine program #t))
+                        (old ((.ref engine '.run))))
+                   (set! reject? #t)
+                   (check-equal? (failure (lambda () ((.ref engine '.append-source!) 'input '(0 32))))
+                                 "replacement index failure")
+                   (set! reject? #f)
+                   ;; Failed admission counted a row before recording its source.
+                   ;; The legal 33-row replacement must not be counted as 34.
+                   ((.ref engine '.replace-source!) 'input (append source '((0 32))))
+                   (check-equal? (length ((.ref ((.ref engine '.run)) 'rows-of) 'out)) 33)
+                   ((.ref engine '.replace-source!) 'input source)
+                   ((.ref engine '.append-source!) 'input '(0 32))
+                   (check-equal? (length ((.ref ((.ref engine '.run)) 'rows-of) 'out)) 33)
+                   (check-equal? (length ((.ref old 'rows-of) 'out)) 32)
+                   'ok)))))
+        (check-equal? (append graph-outcomes (list counter-outcome)) '(ok ok ok ok))))
     (test-case "interrupted Set source index publication requires engine source replay"
       (for-each
        (lambda (single?)

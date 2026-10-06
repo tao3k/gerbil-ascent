@@ -1,0 +1,92 @@
+{
+  "qualifiedBaseHead": "fbe42d64409d8172e88b945c06582a7b7851e49f",
+  "scope": "Successful fresh source replacement retires incremental storage readiness; replacement input budgets derive from the complete candidate source cut rather than tentative admission counters.",
+  "sources": {
+    "program/evaluate.ss": "fbe719d3892f6002506e33d4de4c4b491aed6d364803d309842af548ba38d69b",
+    "program/initialization.ss": "fdde386cef1f1015cde78e38c31ba4c15ab070f346895dc1a38b261232506956",
+    "program/source-log.ss": "4bdb78699bed3e07a4b5c1e0bf9b4432c64d07c3183495f3fb7d7dc4794c844d",
+    "program/reuse.ss": "1262e74be8805d13f7603f7782b6172080f219e78d4e2b3ab425973656702e0a",
+    "program/session.ss": "e0d0c2d088bb9599d2dc68ac85f4376b984c6335bb2cb97ebb21c86376e6c20c",
+    "program/index.ss": "b9f75ac90196573d5c29dae6f9ae929673ec692f2b01ba7b17b567ec624d06dc",
+    "program/result.ss": "176b217b4bdad2f2c2aef6c420e807bc71d4eea925399713a9386960b3cf20c8",
+    "program/analysis.ss": "23a8f4634df8bc1999975832fec1a357b1fa5523c8f2fcb68e74ef06c3f9da82",
+    "program/admission.ss": "3dcdbb27a9321f147556f6439171935ee0394380bb26cf6b844488d6a4650b78",
+    "table/storage.ss": "5ebd76d7515fdab7c4f2e2ac82afe45eaf2607eff97c6346719962dc2db8484b",
+    "table/eqrel.ss": "76b715695420e68dd4205467069b2f88976c11d34158f9439bbebc4368795b5b",
+    "table/trrel.ss": "b9994d27e806baf47b399447ded7881ae3439a53899a3bd00d0116ba1ef4b50e",
+    "table/trrel-uf.ss": "68bed3e29151bb99f876dda8b4ba8b2bbca6567c7eb04cf219fe62ad7a621f7e",
+    "build.ss": "bf2f5558c32b7491803552790503e06aea9badbfbc3b52fd60028257da315c85",
+    "t/harness/run.ss": "163ac31524333521c952c8f2ef9929e46e1f90549dad4180d46bc13c4667fff9",
+    "t/qualification/ascent-storage-batch-test.ss": "e8b327a378ed9d255ff7dcec123e8e54c394c53f534121d2a3e45886178e482d",
+    "t/qualification/scheme-session-deletion-test.ss": "3e04cc053cc35c78fcebb4254f39f0b0305b722fa0560f76f571be55250ac5a2"
+  },
+  "trackedSchemeSourceCount": 545,
+  "trackedSchemeSourceDigest": "98a1a03d8a73f7a7717db21d0db4aac226057df0a11ce693aa5ef7b80f3a428b",
+  "trackedSchemeDigestFormat": "Sorted tracked .ss paths; UTF-8 path + NUL + content SHA256 + newline",
+  "red": {
+    "exitCode": 70,
+    "actual": [
+      "ASCENT storage state requires source replay",
+      "ASCENT storage state requires source replay",
+      "ASCENT storage state requires source replay",
+      "ASCENT session input fact budget exceeded"
+    ],
+    "expected": [
+      "ok",
+      "ok",
+      "ok",
+      "ok"
+    ],
+    "logPath": "/private/tmp/ascent-source-reconstruction-red.log",
+    "logSha256": "e11748822fd39f5b4a9589832b6ffb1fb767be7c39ea0ebf7d95a11dce16731a",
+    "trackedSchemeSourceDigest": "4e5cb9b62933915e3cef6fecb3c4c92d616d8198c6c68704ca7f725f764b41c2",
+    "changedProductionSource": "program/evaluate.ss",
+    "productionSha256": "586a901fc31a53365b5612cea12d5276390c5bd579bc8c3dd22c9936c2d21c38",
+    "fixtureSha256": "e8b327a378ed9d255ff7dcec123e8e54c394c53f534121d2a3e45886178e482d",
+    "sameFixtureAsGreen": true
+  },
+  "policy": {
+    "command": "GERBIL_PATH=\"$PWD/.cache/ascent/sdk\" just check-policy",
+    "exitCode": 0,
+    "findings": 17,
+    "errors": 0,
+    "logPath": "/private/tmp/ascent-source-reconstruction-policy.log",
+    "logSha256": "694c5c2c06dde785fb3b4c4db705b64f274b3adf0ef219959ec84dd02a91363b"
+  },
+  "native": [
+    {
+      "module": "t/qualification/ascent-storage-batch-test.ss",
+      "command": "GERBIL_PATH=\"$PWD/.cache/ascent/sdk\" just test-native t/qualification/ascent-storage-batch-test.ss",
+      "exitCode": 0,
+      "cases": 20,
+      "moduleOK": true,
+      "harnessOK": true,
+      "explicitOK": true,
+      "logPath": "/private/tmp/ascent-source-reconstruction-green-storage.log",
+      "logSha256": "89cd77dbcb5b94582b1b0c8cea42296569c7083ef926dc0b59cce1a29698343e"
+    },
+    {
+      "module": "t/qualification/scheme-session-deletion-test.ss",
+      "command": "GERBIL_PATH=\"$PWD/.cache/ascent/sdk\" just test-native t/qualification/scheme-session-deletion-test.ss",
+      "exitCode": 0,
+      "cases": 26,
+      "moduleOK": true,
+      "harnessOK": true,
+      "explicitOK": true,
+      "logPath": "/private/tmp/ascent-source-reconstruction-green-deletion.log",
+      "logSha256": "40962e61fd11af6300a727a669f31ab2672c295c5e339060fb31a2315d935c5f"
+    }
+  ],
+  "totalNativeCases": 46,
+  "paper": {
+    "url": "https://kmicinski.com/assets/byods.pdf",
+    "locator": "Section 3, PDF pages 5-9",
+    "inference": "Recovery starts from source injections and freshly concretized state; transient engine counters and materialized closure rows cannot serve as the source budget authority."
+  },
+  "limits": [
+    "Focused local source-bound checks, not full remote CI or full inventory.",
+    "No new Lean/TLA theorem or performance claim.",
+    "Retired graph/custom storage state is not marked ready and is not reused; successful source replacement selects fresh evaluation.",
+    "Provider state factories and arbitrary external callback effects retain existing assumptions."
+  ]
+}

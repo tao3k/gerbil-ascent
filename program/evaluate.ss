@@ -732,9 +732,12 @@
               (set! staged-total (+ staged-total 1))
               (set! dirty? #t))
             (def (append-source! name row)
-              (for-each gerbil-ascent-storage-check-state! storage-owners)
-              (when publication-failed?
-                (error "ASCENT engine publication requires source replay"))
+              ;; A successful replacement retires the incremental frames.
+              ;; Subsequent appends evaluate a fresh candidate from source logs.
+              (unless recompute-from-source?
+                (for-each gerbil-ascent-storage-check-state! storage-owners)
+                (when publication-failed?
+                  (error "ASCENT engine publication requires source replay")))
               (when first-run?
                 (error "ASCENT session must run before source updates"))
               (let* ((index (position-of name))
@@ -844,15 +847,19 @@
                      (width (vector-ref arity index)))
                 (gerbil-ascent-check-replacement-rows!
                  name rows width (vector-ref field-checkers index))
-                (let (next-count
-                      (+ (- source-count (length (source-rows-at index)))
-                         (length rows)))
+                ;; Failed incremental admission may have advanced its counter
+                ;; before recording a source. Count the complete prospective
+                ;; source cut, including duplicates, before fresh evaluation.
+                (let* ((candidate (source-program-with index rows))
+                       (next-count
+                        (apply + (map (lambda (relation)
+                                        (length (.ref relation 'rows)))
+                                      (.ref candidate 'relations)))))
                   (when (> next-count input-limit)
                     (error "ASCENT session input fact budget exceeded"))
-                  (let* ((candidate (source-program-with index rows))
-                         (result ((gerbil-ascent-make-engine
-                                   candidate #f analysis schema
-                                   measure-rule-times?))))
+                  (let (result ((gerbil-ascent-make-engine
+                                 candidate #f analysis schema
+                                 measure-rule-times?)))
                     (set! source-count next-count)
                     (vector-set! source-overrides index rows)
                     (vector-set! source-additions index [])

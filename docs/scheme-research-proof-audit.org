@@ -1829,3 +1829,34 @@ The [[file:research/scheme-dsl/byods-b23.org][B23 follow-up]] explains the concr
 implementation inference. No algebraic theorem or performance claim is added.
 The 545-file Scheme source digest was checked unchanged across the final
 qualification. Full CI remains bound to the subsequent pushed revision.
+
+
+* Fresh source recovery handoff and budget authority (2026-10-07)
+
+At base =fbe42d6=, four outcomes in one unchanged native fixture failed:
+=eqrel=, =trrel= and =trrel_uf= source replacement completed but later append
+still rejected the retired storage owner; a custom indexed admission failed
+between source counting and source-log publication, making a valid 33-row
+replacement exceed a 33-row input limit. The red command exited 70 with three
+storage replay diagnostics and one input budget diagnostic.
+
+Raw source replacement now counts its complete prospective source cut before
+fresh evaluation. Only successful evaluation publishes the authoritative count,
+override and result. Once replacement selects fresh recomputation, later
+appends do not check obsolete incremental storage/index state. That state is
+not repaired or marked ready; unreplaced engines retain the existing guards.
+
+The [[file:evidence/scheme-source-reconstruction-20261007/receipt.json][receipt]] binds identical red/green fixtures and 545 tracked Scheme sources.
+Only =program/evaluate.ss= differs between those source freezes. Green
+qualification passed 46 native Cases: storage/recovery 20 and Session deletion
+26, each exiting zero with module/harness completion and explicit =OK=. The
+new Case compares all three recovered graph relations against fresh evaluation,
+checks the exact input limit through later replacement/append and preserves
+the prior 32-fact result. The existing deletion matrix covers source log order,
+duplicates, lattice budgets, independent reuse and successive withdrawals.
+Policy build exited zero with 17 findings and no errors.
+
+The [[file:research/scheme-dsl/byods-b23.org][B23 follow-up]] distinguishes source injection logs, concretized relation
+facts and transient engine counters. This is a code-supported recovery design
+inference, not an extension of the paper's theorem to arbitrary callback
+exceptions. Full CI remains bound to the subsequent pushed revision.

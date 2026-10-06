@@ -5,11 +5,15 @@
 ;;; Finite operator lowering into rules, with the stable public facade.
 ;;; Descriptor construction, graph admission and set interpretation have
 ;;; separate owners; only this invocation emits private relation handles.
-(import "operator-descriptor.ss" "operator-analysis.ss" "operator-measurement.ss" "operator-reference.ss"
+(import (only-in :clan/poo/object .o .ref)
+        (only-in :clan/poo/mop define-type validate)
+        (only-in :core/types PooFlowNativeObjectContract. poo-flow-predicate-contract)
+        "operator-descriptor.ss" "operator-analysis.ss" "operator-measurement.ss" "operator-reference.ss"
         (only-in "objects.ss" gerbil-ascent-relation gerbil-ascent-program gerbil-ascent-rule
                  gerbil-ascent-atom gerbil-ascent-variable gerbil-ascent-fragment))
 
-(export relational-op-source relational-op-union relational-op-join
+(export GerbilAscentOperatorCompilerContract relational-op-compiler
+        relational-op-source relational-op-union relational-op-join
         relational-op-select-eq relational-op-project
         relational-op-flatmap relational-op-fix
         relational-op-function relational-op-apply
@@ -257,12 +261,50 @@
        (reverse relations) (reverse rules) (reverse sources)
        output (reverse source-labels)))))
 
+(def +compiler-procedure+
+  (poo-flow-predicate-contract 'ascent/operator-compiler-procedure procedure?
+                               (lambda (_value _context) [])))
+
+;;; Only behavior lives in the prototype. Each call owns graph admission,
+;;; private handles, memo tables and emitted relation/rule declarations.
+(define-type (GerbilAscentOperatorCompilerContract
+              @ PooFlowNativeObjectContract.)
+  identity: 'ascent/operator-compiler
+  proto: (.o)
+  responsibilities: (.o .make-relation: +compiler-procedure+
+                      .compile: +compiler-procedure+))
+
+(def OperatorCompiler. (.ref GerbilAscentOperatorCompilerContract 'proto))
+
+(def (check-compiler-budgets! input-limit derived-limit output-limit)
+  (unless (and (exact-integer? input-limit) (> input-limit 0)
+               (exact-integer? derived-limit) (> derived-limit 0)
+               (exact-integer? output-limit) (> output-limit 0))
+    (error "operator program budgets must be positive exact integers")))
+
+;;; The inherited method selects its final receiver's constructor once.
+;;; Descriptor traversal never performs prototype dispatch in its row loop.
+(def relational-op-compiler
+  (validate GerbilAscentOperatorCompilerContract
+    (.o (:: self OperatorCompiler.)
+        (.make-relation gerbil-ascent-relation)
+        (.compile
+         (let (make-relation (.ref self '.make-relation))
+           (lambda (root input-limit derived-limit output-limit)
+             (check-compiler-budgets! input-limit derived-limit output-limit)
+             (let-values (((relations rules sources output _labels)
+                           (lower-operator-graph root #f make-relation)))
+               (values
+                (gerbil-ascent-program relations rules
+                                       input-limit derived-limit output-limit sources)
+                output))))))))
+
 ;; relational-op-compile
-;;   : (-> RelationalOp Nat Nat Nat [RelationConstructor] (Values Program Symbol))
+;;   : (-> RelationalOp Nat Nat Nat [OperatorCompiler | RelationConstructor] (Values Program Symbol))
 ;;   | doc m%
 ;;       Lower a descriptor graph to the same admitted positive-rule
 ;;       program consumed by the Scheme relational lifecycle.
-;;       An optional compiler-owned constructor emits the final relation
+;;       An optional PO compiler or compiler-owned constructor emits the final relation
 ;;       representation directly; it is used only during compilation.
 ;;
 ;;       # Examples
@@ -274,24 +316,17 @@
 ;;       ```
 ;;     %
 ;;; The standalone compiler keeps explicit source names for named queries.
-;;; Its budget belongs to the resulting program, not to graph construction.
+;;; The optional owner is a derived compiler or the original constructor API.
 (def (relational-op-compile root input-limit derived-limit output-limit
-                           (make-relation gerbil-ascent-relation))
-  (unless (and (exact-integer? input-limit) (> input-limit 0)
-               (exact-integer? derived-limit) (> derived-limit 0)
-               (exact-integer? output-limit) (> output-limit 0))
-    (error "operator program budgets must be positive exact integers"))
-  ;; A compiler owner may supply its final relation representation. Emission
-  ;; still follows complete graph admission and keeps names, rules and order.
-  ;; The default constructor retains ordinary standalone/fragment semantics.
-  (unless (procedure? make-relation) (error "operator relation constructor must be a procedure"))
-  (let-values (((relations rules sources output _labels)
-                (lower-operator-graph root #f make-relation)))
-    (values
-     (gerbil-ascent-program relations rules
-                            input-limit derived-limit output-limit
-                            sources)
-     output)))
+                           (compiler relational-op-compiler))
+  (check-compiler-budgets! input-limit derived-limit output-limit)
+  (let* ((selected
+           (if (procedure? compiler)
+             (.o (:: @ relational-op-compiler) (.make-relation compiler))
+             compiler))
+         (checked (validate GerbilAscentOperatorCompilerContract selected))
+         (compile (.ref checked '.compile)))
+    (compile root input-limit derived-limit output-limit)))
 
 ;;; A builder graph can participate in the same fragment lifecycle as native
 ;;; rules. Every named source gets a fresh handle per call; output and source

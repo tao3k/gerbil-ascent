@@ -3,7 +3,7 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 (import (only-in :std/test check-equal? check-exception test-case test-suite)
-        (only-in :clan/poo/object .ref)
+        (only-in :clan/poo/object .o .ref .mix)
         (only-in :gerbil-ascent/program/operator
                  relational-op-data relational-op-inputs
                  relational-op-source relational-op-union
@@ -16,7 +16,9 @@
                  relational-op-measure
                  relational-op-measurement-join-probes
                  relational-op-measurement-fix-body-evaluations)
+        (only-in :gerbil-ascent/program/objects gerbil-ascent-relation)
         (only-in :gerbil-ascent/program/interface
+                 relational-op-compiler
                  relational-admit relational-solve relational-query-name
                  relational-compose relational-export
                  relational-open-session relational-session-run
@@ -107,6 +109,60 @@
 
 (def scheme-operator-test
   (test-suite "Scheme finite relation operator graph"
+    (test-case "PO compiler inherits late-bound construction and retains snapshots"
+      (let* ((calls [])
+             (base relational-op-compiler)
+             (left
+               (.o (:: @ base)
+                   (.make-relation
+                    (lambda (name arity rows)
+                      (set! calls (cons 'left calls))
+                      (gerbil-ascent-relation name arity rows)))))
+             (right
+               (.o (:: @ base)
+                   (.make-relation
+                    (lambda (name arity rows)
+                      (set! calls (cons 'right calls))
+                      (gerbil-ascent-relation name arity rows)))))
+             (combined (.mix left right))
+             (graph (relational-op-source 'edge 2 '((1 2)))))
+        ;; Force the original method first; a child must still read final self.
+        (.ref base '.compile)
+        (let-values (((program output)
+                      (relational-op-compile graph 8 8 16 combined)))
+          (check-equal? calls '(left))
+          (check-equal? (.ref (car (.ref program 'relations)) 'rows) '((1 2)))
+          (check-equal? (symbol? output) #t))
+        (set! calls [])
+        (let-values (((program output)
+                      (relational-op-compile graph 8 8 16 right)))
+          (check-equal? calls '(right))
+          (check-equal? (.ref (car (.ref program 'relations)) 'rows) '((1 2))))
+        (set! calls [])
+        (let-values (((program output)
+                      (relational-op-compile graph 8 8 16 base)))
+          (check-equal? calls []))
+        ;; A preselected method retains the same admission boundary.
+        (let (selected (.ref left '.compile))
+          (check-exception (selected graph 0 8 16) true)
+          (check-equal? calls [])
+          (let-values (((program output) (selected graph 8 8 16)))
+            (check-equal? calls '(left))))
+        (check-exception (relational-op-compile graph 8 8 16 (.o)) true)))
+    (test-case "constructor compatibility and PO admission precede graph execution"
+      (let ((calls 0) (graph (relational-op-source 'edge 2 '((1 2)))))
+        (let-values (((program output)
+                      (relational-op-compile graph 8 8 16
+                        (lambda (name arity rows)
+                          (set! calls (+ calls 1))
+                          (gerbil-ascent-relation name arity rows)))))
+          (check-equal? calls 1)
+          (check-equal? (relational-query-name
+                         (relational-solve (relational-admit program)) output)
+                        '((1 2))))
+        (check-exception
+         (relational-op-compile graph 8 8 16
+           (.o (:: @ relational-op-compiler) (.make-relation #f))) true)))
     (test-case "projected join compiles directly to its output relation"
       (let* ((edge (relational-op-source
                     'edge 2 '((0 1) (1 2) (2 0))))

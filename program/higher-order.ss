@@ -4,12 +4,13 @@
 
 ;;; Typed higher-order descriptors normalize to the existing positive IR.
 ;;; Builders run once during construction; admitted solves hold no callbacks.
-(import (only-in :gerbil-ascent/program/finite-arithmetic
+(import (only-in :clan/poo/object .o)
+        (only-in :gerbil-ascent/program/finite-arithmetic
                  relational-capped-product relational-capped-power)
         (only-in :gerbil-ascent/program/operator
                  relational-op-source relational-op-union relational-op-join
                  relational-op-project relational-op-select-eq relational-op-flatmap
-                 relational-op-fix relational-op-compile relational-op-kind)
+                 relational-op-fix relational-op-compile relational-op-compiler relational-op-kind)
         (only-in :gerbil-ascent/program/scheme-checked
                  relational-scalar? relational-copy-rows relational-finite-rows relational-finite-source)
         (only-in :std/list/list delete-duplicates/hash take))
@@ -477,6 +478,9 @@
     ;; ordinary program and rebuilding all relations repeated contract checks
     ;; and ownership copies without changing the lowered rules or handles.
     (relational-op-compile result-root input-limit derived-limit output-limit
-      (lambda (name arity rows)
-        (let (domain (or (hash-get source-domains name) atoms))
-          (relational-finite-source name arity rows (make-list arity domain))))))))
+      (.o (:: @ relational-op-compiler)
+          (.make-relation
+           (lambda (name arity rows)
+             (let (domain (or (hash-get source-domains name) atoms))
+               (relational-finite-source name arity rows
+                                        (make-list arity domain))))))))))

@@ -712,3 +712,83 @@ The final guarded expression path passed the complete local native pool:
 binding scopes improve CPU and allocation; short scopes still fail the original
 20% CPU gate. GitHub c3bc505 failed during cold library-make under its retained
 heap cap, before Cases, so remote qualification remains independent and open.
+
+* PO compilation behavior and retained factories（2026-10-06）
+
+The pinned LeanPoo =ContextualFactories=, =ObjectDefinition= and
+=MethodDictionary= examples share a useful sequence: compose declarations,
+select behavior using final self, retain the selected functions, then apply
+them to an exact input/context. =program/operator.ss= now follows this path
+in the existing operator compiler. =relational-op-compiler= is a validated PO
+prototype with =.make-relation= and =.compile= slots. The inherited compile
+slot resolves its final receiver's relation constructor once; each call still
+owns its checked graph, lexical handles and emission tables.
+
+=program/higher-order.ss= derives this compiler and overrides only
+=.make-relation= to emit finite-domain source declarations. It inherits the
+same admitted lowering and program budgets. Its source-domain context remains
+local to that typed compilation. =program/interface.ss= exports the prototype
+and contract alongside the existing function. The optional final argument of
+=relational-op-compile= accepts a derived compiler; the original constructor
+procedure API is adapted to the same prototype.
+
+#+begin_src scheme
+(def finite-compiler
+  (.o (:: @ relational-op-compiler)
+      (.make-relation
+       (lambda (name arity rows)
+         (relational-finite-source name arity rows
+                                  (make-list arity '(0 1 2)))))))
+(relational-op-compile graph 32 128 256 finite-compiler)
+#+end_src
+
+This introduces a composable behavior owner in the actual compilation path.
+It does not turn recursive descriptors into lazy self-reads: the existing
+least-closure engine and its admission/termination contracts remain the
+relation semantics. Storage/index providers already use this split between
+shared behavior prototypes and private evaluation state.
+
+** Functional pipeline and subsequent integration boundary
+
+Read the pinned producer's capability-family, preparation-cache,
+indexed-transaction, certified-consumer, context-cache, borrowed-view and
+observed-view contracts as one lifecycle:
+
+1. =Requirements.prepare= / named =factoryAt= choose only declared
+   capabilities. =reindex= binds retained functions to the current source
+   context. FunctionalDependency already uses this source-context contract;
+   the PO compiler now supplies the native behavior-selection counterpart.
+2. =CachedPreparation= retains selected functions and admission proofs/errors.
+   =applyTransactionCached= distinguishes a reusable certificate from freshly
+   prepared data while publishing the entire successful registry transaction.
+   ASCENT's existing Session commits full source updates only after a complete
+   solve. A future typed registry adapter must preserve that same boundary,
+   including unknown-name failures and all-or-nothing publication.
+3. =ContextSlot= retains built data at one exact context. Any ASCENT context
+   must include the admitted source cut and behavior version needed by its
+   claim. A source name or stable graph identity alone cannot justify a hit.
+4. =readView= keeps a broad cache across consumers; =observeProject= retains
+   one narrow public view. ASCENT query/proof readers could share admitted
+   dependency data before projecting requested outputs. The missing bridge is
+   a typed mapping from native snapshots and observations to those certified
+   families, with explicit analytic consequences. This bridge is not part of
+   the present implementation.
+
+These steps distinguish preparation, data construction, publication and public
+observation. They do not infer dependencies from opaque callbacks, grant a
+C4 object a relational fixed point, or establish runtime savings. The current
+code implements the behavior-composition step and uses the existing source
+context refinement; later cache stages need source-bound native qualification
+before adoption. No additional generic proof wrapper is introduced.
+
+** Native qualification
+
+The [[file:../evidence/scheme-po-compiler-20261006/receipt.json][source-bound receipt]] records exit 0 for all 28 operator Cases and
+33 typed higher-order Cases, with MODULE-OK, HARNESS-OK and final OK for both
+modules. The new discriminators cover final-self construction after forcing
+the base method, shared-base C4 selection, independent earlier receivers,
+constructor procedure compatibility, invalid capability rejection and
+budget preflight on a retained method. The complete existing suites qualify
+ordinary graph closure and typed finite-domain behavior through these paths.
+Original harness heap/progress/deadline controls remain in force. These are
+focused local native checks; submitted-head CI is a separate gate.

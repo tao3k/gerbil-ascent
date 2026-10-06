@@ -18,6 +18,7 @@
         relational-op-select-eq relational-op-project
         relational-op-flatmap relational-op-fix
         relational-op-function relational-op-apply
+        GerbilAscentOperatorCompilerContract relational-op-compiler
         relational-op-compile relational-op-fragment
         relational-op-reference relational-op-reference-change
         relational-op-measure relational-op-measurement?

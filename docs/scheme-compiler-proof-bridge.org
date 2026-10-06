@@ -1066,3 +1066,45 @@ The [[file:evidence/scheme-finite-frame-20261006/receipt.json][finite-frame qual
 finite-vector proofs and package checks to the qualified source. Historical cost
 and TLC runs retain their original pre-rebase boundary; exact-head CI is a
 separate release gate. Raw execution logs are not repository artifacts.
+
+* Complete finite-vector traversal (2026-10-06)
+
+The finite matcher now feeds =PositiveTraversal.scanVector= and
+=runBodyVector=, rather than leaving recursive continuation behavior outside
+the vector bridge. =scan_vector_refines= relates the complete candidate scan
+through both success and partial-write rejection. =body_vector_refines= composes
+that correspondence through every atom and the final emitter. Returned vectors
+represent every in-range cell of the actual dirty function-frame result;
+ordered outputs and duplicate multiplicity are preserved together.
+
+=compile_body_length= and =compile_body_bounds= derive the complete precompiled
+body extent. The final =finite_precompiled_refines= theorem accepts every
+capacity at least that extent, composes the existing ordinary binder traversal,
+and returns ordered reference-output equality, complete vector correspondence
+and preservation of the original environment for every extension value outside
+the vector. It requires no caller-supplied completion premise for this finite
+list traversal. It is not a termination theorem for native recursive solving.
+
+=PositiveSlots.observeVectorSlots= reads heads directly from the finite vector.
+=vector_head_observations= proves correspondence with the existing head reader
+when the name prefix fits the capacity; =vector_represents= transports ordinary
+bindings to the actual vector extension. The multihead qualification emitter
+uses this reader, discharging its output correspondence with that theorem.
+Wildcard/unbound observations remain explicit =none=; native head admission
+still rejects those cases according to its existing contract.
+
+Executable controls stay in =Tests/PositiveTraversalTests.lean=: arbitrary dirty
+initial cells, a nonempty false-valued initial binding, complete nine-emission
+nested traversal, repeated traversal on the actual returned vector, zero-atom
+and zero-arity duplicate emissions, a larger vector's untouched tail, nested
+bounds refusal, and corruption of a parent's slot by a continuation. Direct
+kernel-checked evaluation replaced two inefficient =decide= examples that hit
+the default heartbeat limit; the limit was not raised, and no native-evaluation
+axiom or custom axiom was introduced. Axiom reports stay under =Tests/=.
+
+The [[file:evidence/scheme-vector-traversal-20261006/receipt.json][vector traversal receipt]] records the proof boundary and exact source hashes.
+The next connected obligation is actual Scheme action/key/head and scalar/name
+decoding, followed by Provider snapshot/frontier instances and constructed
+least-model output. Callback execution, native scalar/hash conformance and
+arbitrary custom Provider laws remain separate. No duplicate TLA+ vector model
+is added: scheduling and publication keep their existing temporal owner.

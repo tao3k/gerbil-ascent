@@ -70,6 +70,8 @@ example : (compile ([.variable 42, .variable 42, .literal true] : List (Term Boo
 example (action : Action Bool) (member : action ∈ (compile terms names).1) :
     action.InRange 2 := compile_slots_bounded terms names action member
 
+#print axioms Ascent.PositiveSlots.vector_represents
+#print axioms Ascent.PositiveSlots.vector_head_observations
 #print axioms Ascent.PositiveSlots.vector_frame_rep
 #print axioms Ascent.PositiveSlots.vector_write_rep
 #print axioms Ascent.PositiveSlots.vector_run_refines

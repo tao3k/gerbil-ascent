@@ -4,8 +4,9 @@ import PositiveSlots
 
 /-! Raw-row positive traversal. Candidate failure and recursive return both
 thread the dirty frame into the next candidate, with no rollback. The provider
-is a fixed finite row list per atom; indexes, delta selection and native vector
-representation remain separate obligations. -/
+is a fixed finite row list per atom. The finite-vector traversal below refines
+the same computation; indexes, delta selection and native plan decoding remain
+separate obligations. -/
 namespace Ascent.PositiveTraversal
 open AtomicBinding PositiveSlots
 variable {Value Output : Type} [DecidableEq Value]
@@ -179,5 +180,146 @@ theorem precompiled_refines (body : List (Atom Value))
       reference body envEmit env := by
   rw [precompiled_walk]
   exact walk_refines body slotEmit envEmit emits arity names env frame rep
+
+/-! Finite mutable-frame correspondence for complete precompiled traversal.
+Bounds failure remains distinct from a candidate mismatch. Every recursive
+return, including partial writes on rejection, threads the actual vector. -/
+abbrev VectorResult (Value Output : Type) (n : Nat) := List Output × Vector Value n
+
+def ResultRep {n : Nat} (reference : Result Value Output)
+    (actual : VectorResult Value Output n) : Prop :=
+  actual.1 = reference.1 ∧ VectorRep reference.2 actual.2
+
+def scanVector {n : Nat} (actions : List (Action Value))
+    (next : Vector Value n → Option (VectorResult Value Output n)) :
+    List (List Value) → Vector Value n → Option (VectorResult Value Output n)
+  | [], frame => some ([], frame)
+  | row :: rows, frame => do
+      let matched ← runVector actions row frame
+      let branch ← if matched.1 then next matched.2 else some ([], matched.2)
+      let rest ← scanVector actions next rows branch.2
+      pure (branch.1 ++ rest.1, rest.2)
+
+theorem scan_vector_refines {n : Nat} (actions : List (Action Value))
+    (next : Frame Value → Result Value Output)
+    (vectorNext : Vector Value n → Option (VectorResult Value Output n))
+    (bounded : ∀ action ∈ actions, action.InRange n)
+    (continues : ∀ frame vector, VectorRep frame vector →
+      ∃ result, vectorNext vector = some result ∧ ResultRep (next frame) result)
+    (rows : List (List Value)) (frame : Frame Value) (vector : Vector Value n)
+    (rep : VectorRep frame vector) :
+    ∃ result, scanVector actions vectorNext rows vector = some result ∧
+      ResultRep (scan actions next rows frame) result := by
+  induction rows generalizing frame vector with
+  | nil => exact ⟨([], vector), rfl, rfl, rep⟩
+  | cons row rows ih =>
+      obtain ⟨matched, matchedRun, accepted, matchedRep⟩ :=
+        vector_run_refines actions row frame vector rep bounded
+      cases success : (run actions row frame).1 with
+      | false =>
+          have failed : matched.1 = false := accepted.trans success
+          obtain ⟨tail, tailRun, tailRep⟩ := ih (run actions row frame).2 matched.2 matchedRep
+          refine ⟨tail, ?_, ?_⟩
+          · simp [scanVector, matchedRun, failed, tailRun]
+          · simpa [scan, success, ResultRep] using tailRep
+      | true =>
+          have passed : matched.1 = true := accepted.trans success
+          obtain ⟨branch, branchRun, branchRep⟩ := continues _ _ matchedRep
+          obtain ⟨tail, tailRun, tailRep⟩ := ih (next (run actions row frame).2).2 branch.2 branchRep.2
+          refine ⟨(branch.1 ++ tail.1, tail.2), ?_, ?_⟩
+          · simp [scanVector, matchedRun, passed, branchRun, tailRun]
+          · constructor
+            · simp only [scan, success, ↓reduceIte]
+              rw [branchRep.1, tailRep.1]
+            · simpa [scan, success] using tailRep.2
+
+def runBodyVector {n : Nat} (body : List (SlotAtom Value)) (finalNames : List Nat)
+    (emit : List Nat → Vector Value n → List Output) :
+    Vector Value n → Option (VectorResult Value Output n) :=
+  match body with
+  | [] => fun frame => some (emit finalNames frame, frame)
+  | atom :: rest => scanVector atom.actions (runBodyVector rest finalNames emit) atom.rows
+
+def BodyBounds (n : Nat) (body : List (SlotAtom Value)) : Prop :=
+  ∀ atom ∈ body, ∀ action ∈ atom.actions, action.InRange n
+
+theorem body_vector_refines {n : Nat} (body : List (SlotAtom Value))
+    (finalNames : List Nat) (emit : List Nat → Frame Value → List Output)
+    (vectorEmit : List Nat → Vector Value n → List Output)
+    (emits : ∀ frame vector, VectorRep frame vector →
+      vectorEmit finalNames vector = emit finalNames frame)
+    (bounded : BodyBounds n body) (frame : Frame Value) (vector : Vector Value n)
+    (rep : VectorRep frame vector) :
+    ∃ result, runBodyVector body finalNames vectorEmit vector = some result ∧
+      ResultRep (runBody body finalNames emit frame) result := by
+  induction body generalizing frame vector with
+  | nil => exact ⟨(vectorEmit finalNames vector, vector), rfl, emits _ _ rep, rep⟩
+  | cons atom rest ih =>
+      apply scan_vector_refines atom.actions (runBody rest finalNames emit)
+      · exact bounded atom List.mem_cons_self
+      · intro candidate actual represented
+        exact ih (fun a member => bounded a (List.mem_cons_of_mem atom member)) candidate actual represented
+      · exact rep
+
+omit [DecidableEq Value] in
+theorem compile_body_length (body : List (Atom Value)) (names : List Nat) :
+    names.length ≤ (compileBody body names).2.length := by
+  induction body generalizing names with
+  | nil => exact Nat.le_refl _
+  | cons atom rest ih =>
+      exact Nat.le_trans (compile_length atom.terms names) (ih _)
+
+omit [DecidableEq Value] in
+theorem compile_body_bounds (body : List (Atom Value)) (names : List Nat) :
+    BodyBounds (compileBody body names).2.length (compileBody body names).1 := by
+  induction body generalizing names with
+  | nil => intro atom member; cases member
+  | cons atom rest ih =>
+      intro compiled member action present
+      simp only [compileBody] at member ⊢
+      rcases List.mem_cons.mp member with head | tail
+      · subst compiled
+        have slotBound := compile_slots_bounded atom.terms names action present
+        have extent := compile_body_length rest (compile atom.terms names).2
+        cases action <;> simp only [Action.InRange] at slotBound ⊢
+        · exact Nat.lt_of_lt_of_le slotBound extent
+        · exact Nat.lt_of_lt_of_le slotBound extent
+      · exact ih _ compiled tail action present
+
+/-- Complete finite traversal composes with ordinary binding: the emitted list
+is equal in order and multiplicity, and every returned vector cell represents
+the actual dirty function-frame return. No successful-completion premise is
+assumed for this structurally finite traversal. -/
+theorem finite_precompiled_refines {n : Nat} (body : List (Atom Value))
+    (slotEmit : List Nat → Frame Value → List Output)
+    (vectorEmit : List Nat → Vector Value n → List Output)
+    (envEmit : Env Value → List Output) (names : List Nat)
+    (emits : ∀ names env frame, Represents names env frame → slotEmit names frame = envEmit env)
+    (vectorEmits : ∀ frame vector, VectorRep frame vector →
+      vectorEmit (compileBody body names).2 vector = slotEmit (compileBody body names).2 frame)
+    (arity : Arity body) (env : Env Value)
+    (frame : Frame Value) (vector : Vector Value n)
+    (rep : Represents names env frame) (vectorRep : VectorRep frame vector)
+    (extent : (compileBody body names).2.length ≤ n) :
+    ∃ result, runBodyVector (compileBody body names).1 (compileBody body names).2 vectorEmit vector = some result ∧
+      result.1 = reference body envEmit env ∧
+      VectorRep (runBody (compileBody body names).1 (compileBody body names).2 slotEmit frame).2 result.2 ∧
+      ∀ outside, Represents names env (vectorFrame result.2 outside) := by
+  have bounded : BodyBounds n (compileBody body names).1 := by
+    intro atom member action present
+    have slotBound := compile_body_bounds body names atom member action present
+    cases action <;> simp only [Action.InRange] at slotBound ⊢
+    · exact Nat.lt_of_lt_of_le slotBound extent
+    · exact Nat.lt_of_lt_of_le slotBound extent
+  obtain ⟨result, actual, represented⟩ := body_vector_refines _ _ slotEmit vectorEmit
+    vectorEmits bounded frame vector vectorRep
+  have kept : Represents names env
+      (runBody (compileBody body names).1 (compileBody body names).2 slotEmit frame).2 := by
+    rw [precompiled_walk]
+    exact walk_reuse body names env slotEmit frame rep
+  exact ⟨result, actual,
+    represented.1.trans (precompiled_refines body slotEmit envEmit emits arity names env frame rep),
+    represented.2, fun outside => vector_represents names env _ result.2 outside kept
+      represented.2 (Nat.le_trans (compile_body_length body names) extent)⟩
 
 end Ascent.PositiveTraversal

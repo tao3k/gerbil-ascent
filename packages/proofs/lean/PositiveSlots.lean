@@ -6,9 +6,9 @@ import AtomicBinding
 Dense first-occurrence lowering and the callback-free in-place slot matcher.
 Frames outside the known prefix may contain arbitrary stale values. Failure
 keeps partial fresh writes, as in core/positive-plan.ss; it does not roll back.
-The total frame function abstracts a sufficiently large native vector. Raw
-hash-map identity, vector bounds and lawful native scalar equality remain
-representation obligations.
+The total frame function abstracts a sufficiently large native vector. Finite vector matching and head observation are now related to this model.
+Native hash-map identity, actual compiled plan decoding and lawful native
+scalar equality remain representation obligations.
 -/
 
 namespace Ascent.PositiveSlots
@@ -398,5 +398,42 @@ by
   cases action <;> simp only [Action.InRange] at bounded ⊢
   · exact Nat.lt_of_lt_of_le bounded extent
   · exact Nat.lt_of_lt_of_le bounded extent
+
+/-- Finite head observations read only the declared name prefix. Missing or
+wildcard outputs remain explicit none, matching the existing head boundary. -/
+def observeVectorSlots {n : Nat} (terms : List (Term Value)) (names : List Nat)
+    (vector : Vector Value n) : List (Option Value) :=
+  terms.map fun term => match term with
+    | .literal value => some value
+    | .variable name => (slot name names).bind (fun index => vector[index]?)
+    | .wildcard => none
+
+theorem vector_head_observations {n : Nat} (terms : List (Term Value))
+    (names : List Nat) (frame : Frame Value) (vector : Vector Value n)
+    (rep : VectorRep frame vector) (extent : names.length ≤ n) :
+    observeVectorSlots terms names vector = observeSlots terms names frame := by
+  apply List.map_congr_left
+  intro term _
+  cases term with
+  | literal value => rfl
+  | wildcard => rfl
+  | «variable» name =>
+      cases found : slot name names with
+      | none => simp [found]
+      | some index =>
+          have inside := Nat.lt_of_lt_of_le (slot_lt name names index found) extent
+          simp [found, inside, rep index inside]
+
+theorem vector_represents {n : Nat} (names : List Nat) (env : Env Value)
+    (frame : Frame Value) (vector : Vector Value n) (outside : Value)
+    (represented : Represents names env frame) (rep : VectorRep frame vector)
+    (extent : names.length ≤ n) : Represents names env (vectorFrame vector outside) := by
+  intro name
+  rw [represented name]
+  cases found : slot name names with
+  | none => rfl
+  | some index =>
+      have inside := Nat.lt_of_lt_of_le (slot_lt name names index found) extent
+      simp [vectorFrame, inside, rep index inside]
 
 end Ascent.PositiveSlots

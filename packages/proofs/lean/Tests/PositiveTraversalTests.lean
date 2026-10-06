@@ -75,4 +75,86 @@ example : ([[false], [false]] : List (List Bool)).flatMap
     (fun row => match AtomicBinding.bind [.variable 10] row [(10, false)] with
       | none => [] | some _ => [7]) = ([7, 7] : List Nat) := by decide
 
+#print axioms Ascent.PositiveTraversal.scan_vector_refines
+#print axioms Ascent.PositiveTraversal.body_vector_refines
+#print axioms Ascent.PositiveTraversal.compile_body_length
+#print axioms Ascent.PositiveTraversal.compile_body_bounds
+#print axioms Ascent.PositiveTraversal.finite_precompiled_refines
+
+def vectorEmit (names : List Nat) (vector : Vector Bool 3) :=
+  heads.map fun head => (head.1, observeVectorSlots head.2 names vector)
+
+theorem vectorEmits (frame : Frame Bool) (vector : Vector Bool 3)
+    (rep : VectorRep frame vector) :
+    vectorEmit (compileBody body []).2 vector = slotEmit (compileBody body []).2 frame := by
+  have finalNames : (compileBody body []).2 = [10, 20, 30] := by cbv
+  rw [finalNames]
+  simp only [vectorEmit, slotEmit]
+  apply List.map_congr_left
+  intro head _
+  exact congrArg (fun row => (head.1, row))
+    (vector_head_observations head.2 [10, 20, 30] frame vector rep (by decide))
+
+/-- The theorem is exercised on arbitrary dirty cells, not just a clean frame. -/
+example (vector : Vector Bool 3) :
+    ∃ result, runBodyVector (compileBody body []).1 (compileBody body []).2 vectorEmit vector = some result ∧
+      result.1 = reference body envEmit [] ∧
+      VectorRep (runBody (compileBody body []).1 (compileBody body []).2 slotEmit
+        (vectorFrame vector false)).2 result.2 ∧
+      ∀ outside, Represents [] [] (vectorFrame result.2 outside) :=
+  finite_precompiled_refines body slotEmit vectorEmit envEmit [] emits vectorEmits
+    arity [] _ vector (emptyRep _) (vector_frame_rep vector false) (by decide)
+
+example : (runBodyVector (compileBody body []).1 (compileBody body []).2
+    vectorEmit #v[true, false, true]).map Prod.fst = some (reference body envEmit []) := by cbv
+
+/-- Reuse the complete traversal's actual dirty return without resetting cells. -/
+example : (do
+    let first ← runBodyVector (compileBody body []).1 (compileBody body []).2 vectorEmit #v[true, false, true]
+    let second ← runBodyVector (compileBody body []).1 (compileBody body []).2 vectorEmit first.2
+    pure second.1) = some (reference body envEmit []) := by cbv
+
+example : runBodyVector [⟨[], [[], []]⟩] []
+    (fun _ _ => ([false, false] : List Bool)) (#v[] : Vector Bool 0) =
+    some ([false, false, false, false], #v[]) := by cbv
+example : runBodyVector ([] : List (SlotAtom Bool)) []
+    (fun _ _ => ([true, true] : List Bool)) (#v[] : Vector Bool 0) =
+    some ([true, true], #v[]) := by cbv
+
+/-- Bounds failure propagates through a nested atom rather than becoming a
+false match or allowing a partially emitted result to escape. -/
+example : runBodyVector [⟨[.fresh 0], [[true]]⟩, ⟨[.fresh 1], [[false]]⟩] []
+    (fun _ _ => ([7] : List Nat)) #v[false] = none := by cbv
+
+/-- A larger caller vector retains every cell beyond the compiled extent. -/
+example : (runBodyVector (compileBody body []).1 (compileBody body []).2
+    (fun names (vector : Vector Bool 4) => heads.map fun head =>
+      (head.1, observeVectorSlots head.2 names vector)) #v[true, false, true, true]).map
+      (fun result => result.2[3]) = some true := by cbv
+
+/-- A continuation that corrupts its parent's slot changes candidate reuse;
+the finite model detects the same failure as the function-frame model. -/
+example : scanVector ([.bound 0] : List (Action Bool))
+    (fun vector => some (([7] : List Nat), vector.set 0 true))
+    [[false], [false]] #v[false] = some ([7], #v[true]) := by cbv
+
+/-- A nonempty initial prefix remains represented after the actual finite
+return; only the existing false binding is fixed, newer cells are arbitrary. -/
+example (vector : Vector Bool 3) (bound : vector[0] = false) :
+    ∃ result, runBodyVector (compileBody body [10]).1 (compileBody body [10]).2 vectorEmit vector = some result ∧
+      result.1 = reference body envEmit [(10, false)] ∧
+      VectorRep (runBody (compileBody body [10]).1 (compileBody body [10]).2 slotEmit
+        (vectorFrame vector false)).2 result.2 ∧
+      ∀ outside, Represents [10] [(10, false)] (vectorFrame result.2 outside) := by
+  have initial : Represents [10] [(10, false)] (vectorFrame vector false) := by
+    intro name
+    by_cases same : name = 10 <;> simp [lookup, slot, same, vectorFrame, bound]
+  apply finite_precompiled_refines body slotEmit vectorEmit envEmit [10] emits
+  · have finalNames : (compileBody body [10]).2 = (compileBody body []).2 := by cbv
+    simpa only [finalNames] using vectorEmits
+  · exact arity
+  · exact initial
+  · exact vector_frame_rep vector false
+  · decide
+
 end Ascent.PositiveTraversalTests

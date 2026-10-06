@@ -379,9 +379,12 @@ H18/B22 contracts rather than being renamed an arrow delta.
 
 *** Immediate implementation order
 
-First compose finite vector scan/recursive traversal with the existing dirty
-frame laws, then establish native action/key/head decoding and scalar/name
-correspondence on the same admitted pure plan. Next instantiate Provider
+The finite-vector scan/recursive traversal is now composed with the existing
+dirty-frame and ordinary-binding laws in =finite_precompiled_refines=; direct
+finite head observation discharges the qualification emitter correspondence.
+The [[file:scheme-compiler-proof-bridge.org][compiler bridge]] records its precise model/native boundary.
+Next establish native action/key/head decoding and scalar/name correspondence
+on the same admitted pure plan. Next instantiate Provider
 snapshot/frontier contracts and connect constructed component output to the
 least-model result. Retain the existing full native registry, original ASCENT
 oracle shards and exact-head CI as release gates. Do not gate this work on MR

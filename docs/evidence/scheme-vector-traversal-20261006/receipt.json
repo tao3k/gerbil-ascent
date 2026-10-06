@@ -1,0 +1,74 @@
+{
+  "baseHead": "61fd71256500d6839be0af815faf7b78a3f4d3bb",
+  "changedModules": {
+    "packages/proofs/lean/PositiveSlots.lean": "1e429cc41869cb8f8458db7899f0074b41dab5b12f853caf49d9a925addd2b8e",
+    "packages/proofs/lean/PositiveTraversal.lean": "6fac63931b375520f71d98097091889da0af77d5554618bd3d7f8664f0784db4",
+    "packages/proofs/lean/Tests/PositiveSlotsTests.lean": "7376c2be748aca705ebd316ec3848806527b3cb8722e0208e36f7de078e797b2",
+    "packages/proofs/lean/Tests/PositiveTraversalTests.lean": "e8806800eec36d6c0b36d311d6c04278815089b8a057b2201fb94fc6c7d0fe35"
+  },
+  "controls": [
+    "Arbitrary initial dirty vector",
+    "Nonempty initialized false binding with arbitrary newer cells",
+    "Nine ordered nested multihead emissions including duplicate heads",
+    "Second traversal uses actual returned dirty vector",
+    "Empty body retains duplicate emissions",
+    "Zero-arity rows retain duplicate emissions",
+    "Oversized vector retains untouched tail",
+    "Nested out-of-range action refuses rather than returning a false candidate",
+    "Parent-slot corruption causes the independently expected loss of a later candidate"
+  ],
+  "mr": "Future consumer research; excluded from this library delivery.",
+  "nativeBoundary": "No production Scheme source changed in this slice. Previous native counts remain bound to their recorded heads; no new runtime or performance claim.",
+  "proofOwnership": "Lean owns traversal/value algebra. Existing TLA+ models continue to own work identity, scheduling, failure and publication; no duplicate vector protocol model.",
+  "rejectedChecks": [
+    "Initial proof elaboration errors were repaired.",
+    "Two decide examples exceeded the default 200000 heartbeat limit. Kernel-checked cbv completed them without raising the limit or introducing native evaluation axioms."
+  ],
+  "remaining": [
+    "Actual Scheme plan action/key/head decoding and derived slot bounds",
+    "Native scalar/hash and variable identity correspondence",
+    "Provider concretization/frontier contract instances",
+    "Native component stable-result and completed least-model correspondence"
+  ],
+  "schema": "ascent.vector-traversal-qualification",
+  "scope": "Complete finite-vector callback-free candidate scan, recursive precompiled traversal, finite head observations and original binding-prefix reuse. Composed ordered ordinary-binder output, not native Scheme plan decoding or recursive solver termination.",
+  "theorems": {
+    "body_vector_refines": [
+      "propext",
+      "Quot.sound"
+    ],
+    "compile_body_bounds": [
+      "propext",
+      "Quot.sound"
+    ],
+    "compile_body_length": [
+      "propext",
+      "Quot.sound"
+    ],
+    "finite_precompiled_refines": [
+      "propext",
+      "Classical.choice",
+      "Quot.sound"
+    ],
+    "scan_vector_refines": [
+      "propext",
+      "Quot.sound"
+    ],
+    "vector_head_observations": [
+      "propext",
+      "Quot.sound"
+    ],
+    "vector_represents": [
+      "propext"
+    ]
+  },
+  "verification": {
+    "command": "just check-lean-proofs",
+    "exitStatus": 0,
+    "jobs": 84,
+    "logSha256": "45cd971ce43723192adfc7363ac2f8551024b33026bf79e709bc094d9f3f4c8c",
+    "sourceCount": 43,
+    "sourceInventorySha256": "abe270a15d4b268d3469e32751925dc5ee561a61bce51082425f1296267fa07c"
+  },
+  "version": 1
+}

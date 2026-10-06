@@ -9,6 +9,19 @@ must be prepared first; this entry builds project modules, not the SDK.
 Scenario, library and receipt paths are explicit Scheme arguments. All
 executables, raw pairs and logs belong under ignored =.cache/ascent/=.
 
+=benchmark.ss= was generated with the public ASP
+=make-benchmark-fixture= API. It owns sample count, baseline identity,
+scenario sizes and the original relative thresholds. The runner checks
+=benchmark-fixture-contract-pass?= and delegates the series to
+=benchmark-run/result=; the saved receipt includes its standard p50/p95,
+timing source and runtime memory observations under =asp-receipt=.
+
+Each ASP sample is one alternating old/new pair with semantic checks.
+Its wall-clock p95 includes the pair, heap preconditions and those checks;
+it is diagnostic, separate from the compile-only relative gate.
+The narrow Gambit CPU/cumulative-allocation span remains necessary: ASP's
+heap observations are not the same counter as total allocated bytes.
+
 Each side constructs its own descriptors before timing. Each timed call
 includes validation, detached rows, lexical analysis, lowering and program
 construction. Fifty alternating pairs compare CPU and allocation. Outside
@@ -58,3 +71,12 @@ and ran its provenance suite successfully. It reused the installed SDK.
 This specifically checks the missing frozen-reference static module that
 failed CI at the baseline; cached performance compilation is not proof
 of a complete test dependency inventory.
+
+* ASP API migration qualification
+
+The generated fixture retains all historical scenario thresholds. Both
+50-pair native runs pass: 19 levels use 109434 -> 41217 CPU us and
+228789792 -> 126220704 allocated bytes (50/50 wins); the one-level control
+uses 8322 -> 8291 CPU us and 13586528 -> 13586176 bytes.
+Both API receipts contain 50 samples and preserve the raw compile pairs.
+Their diagnostic pair p95 values are 368496000 and 43478000 ns respectively.

@@ -5,6 +5,44 @@
 Compiler sources, checked calling conventions, lexical scope and finite types. Study notes and receipts retain their original revision and scope;
 historical source paths and timings are not current qualification claims.
 
+* Study: expression optimization conditions and compiler output
+
+[[https://docs.racket-lang.org/guide/performance.html][Racket's performance guide]] explains how immutable module bindings,
+known callees and small function bodies enable propagation and inlining.
+[[https://docs.racket-lang.org/reference/performance-hint.html][Its inline hints]] remain subject to compiler heuristics; forced expansion
+can interfere with them. This is a comparison of optimization conditions,
+not evidence that the two implementations share every optimization or
+evaluation rule. Racket's documented
+[[https://docs.racket-lang.org/guide/application.html][left-to-right application order]] must not be assumed for a different
+language solely because its surface syntax looks similar.
+
+At Gerbil revision =2591dcd=, =compiler/optimize.ss:163-179= collects
+mutators before generating specializers and lifting dispatch lambdas, then
+collects and refines type information to a fixed point. These are distinct
+passes with explicit analysis dependencies. =optimize-call.ss:89-131=
+requires equal arity and immutable arguments/references before substituting
+an immediately applied lambda. Quotes and stable references are substituted;
+other operands retain temporary bindings. =optimize-xform.ss:178-185=
+rejects mutation of an inline substitution.
+
+A project-local compiler probe used =compile-module= with optimization and
+generated Scheme only, without rebuilding the SDK. Its emitted static SCM
+shows the immediate immutable lambda reduced to one =##fx+= expression;
+the lambda with a mutated argument survives the Gerbil pass, and effectful
+operands retain bindings. Source execution separately checks both arithmetic
+results and that each effectful operand runs exactly once. This establishes
+the Gerbil source transform, not the final C compiler's closure allocation
+or a speedup. Probe sources and generated artifacts stay in ignored
+=.cache/ascent/expression-study/=.
+
+For our code, =core/rule-bindings.ss= already has direct calls for admitted
+small arities; =program/operator.ss= uses fixed local helper signatures.
+These require inspection of emitted code before further manual inlining.
+=table/funs.ss= selects the ordered projection condition once per batch,
+but retains a per-row branch; whether moving that branch saves complete
+solve work remains an unmeasured candidate. Preserve arbitrary/repeated
+column semantics and caller callback effects in any such experiment.
+
 * Study: descriptor ownership and shared lexical analysis
 
 Gerbil revision =2591dcd= separates compiler phases into modules. Its

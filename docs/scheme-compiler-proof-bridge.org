@@ -1314,3 +1314,14 @@ remain universal native representation bridges, not conclusions of these
 proofs. TLA+ owns publication, failure, credits and cancellation lifecycle;
 no algebraic state machine duplicate is added. No production runtime behavior
 change, speedup, general lattice law or MR integration is claimed.
+
+* Selected activation fixture correspondence correction (2026-10-06)
+
+The full Scheme CI at =4ac16d4= exposed a stale metadata fixture: it supplied
+four positive-plan fields, while the compiled plan owner requires the fifth
+atom-extent field. Head projection then failed reading index four. The empty
+body fixture now supplies extent zero; its native mask controls additionally
+check that selected projections preserve purity and extent. No runtime
+compatibility branch, weakened admission check or enlarged test deadline was
+introduced. The corrected selected-activation suite passes independently;
+the [[file:evidence/scheme-selected-activation-layout-20261006/receipt.json][receipt]] retains the original failed run and qualified source identity.

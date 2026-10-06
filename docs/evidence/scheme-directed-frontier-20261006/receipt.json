@@ -1,4 +1,36 @@
 {
+  "beforeHeaderIntegrationVerification": {
+    "qualifiedBaseHead": "ad60085875b0b007bb96ce590c8dcebd0f01698c",
+    "verification": {
+      "lean": {
+        "command": "just check-lean-proofs",
+        "exitStatus": 0,
+        "jobs": 88,
+        "logSha256": "910f23378b7af3f9008c78882a28985236f1c5f53155fe014cdd6293733a792e",
+        "sourceCount": 47,
+        "sourceInventorySha256": "97121f5c1a528d90ce7740acd5e5467f220cc7d71fed6d02461a4bc46d4775f3"
+      },
+      "native": {
+        "cases": 13,
+        "command": "just test-file t/qualification/ascent-byods-invariants-test.ss",
+        "compilerHeap": "1G",
+        "directedFrontierHistories": 4096,
+        "enumeratedFrontierHistories": 5120,
+        "executionSeconds": 3,
+        "exitStatus": 0,
+        "explicitOK": true,
+        "graphs": 512,
+        "idleSeconds": 5,
+        "logSha256": "a0efb3d784bc5299e5c2652ce12c3c6b1845d80af4e5336fd947a5844e22d77c",
+        "modules": 1,
+        "nonSingletonDirectedHistories": 4,
+        "sourceCount": 543,
+        "sourceInventorySha256": "958d1070ffb368e4d67aaa5b07c14a8e9b357899ea25eaa13b063e4d19e9a7a1",
+        "startupSeconds": 5,
+        "threeNodePrefixSteps": 23040
+      }
+    }
+  },
   "boundary": "Strict public trrel omits cycle-implied diagonals and is not asserted to be transitively closed on those diagonals. Latent closure and public visibility are distinct. Native hash/index/parent/member extraction is not proved by finite observations.",
   "changedModules": {
     "packages/proofs/lean/AscentProof.lean": "629db0bec5023253603231294e7976b43dd9ffe9913a0def406f532f41539785",
@@ -16,12 +48,25 @@
     "Four-node two-SCC bridges, explicit loops, existing eight-node and multi-producer/group controls.",
     "Lean counterexamples distinguish unknown diagonals, cyclic strict self omission, explicit self insertion, repeated edges and missing transitive bridge pairs."
   ],
-  "integration": "Rebased upstream custom lookup completeness and unique enumeration admission. Both appended B23 research and audit sections retained. Complete Lean and native BYODS suite rerun on combined source; prior output hashes retained.",
+  "failedFullCI": {
+    "failed": "scheme",
+    "head": "4ac16d4dbc3e133a7760da63a23254e036ce3074",
+    "passed": [
+      "formal",
+      "oracle (byods)",
+      "oracle (byods-scale)",
+      "oracle (other)"
+    ],
+    "rootCause": "Selected activation fixture used four plan fields; current projection requires compiled atom extent at field four. Corrected fixture qualified separately. Full CI must run again on the correction.",
+    "url": "https://github.com/tao3k/gerbil-ascent/actions/runs/37472308312"
+  },
+  "integration": "Rebased upstream custom lookup completeness and unique enumeration admission. Both appended B23 research and audit sections retained. Complete Lean and native BYODS suite rerun on combined source; prior output hashes retained. Subsequent Provider key/column argument isolation is retained; complete Lean and focused BYODS qualification rerun on that combined source.",
   "modelCalls": 0,
   "mr": "Deferred future library consumer.",
   "nativeRuntimeSource": {
     "program/index.ss": "d2b800005fda618b75319756730d0ef367e7b40cc562aa657f4251bbe9f428cd",
-    "table/provider.ss": "6d2e7560947a02c2f20bf67e251a9a69eeb917babdd188969c949ceea6cd7d53",
+    "table/access.ss": "7d39828036c38153e1d0be8458e7000da2277c2e1101df351738bd660e91fca8",
+    "table/provider.ss": "c9b80a8c04c1219daff01569519c4c0b56a7ea3a1de3022f496aad74d8ea88ae",
     "table/storage.ss": "e3330749ef4192032b4251325018f223564a3ec7e1f93202158219de104cbb02",
     "table/trrel-uf.ss": "68bed3e29151bb99f876dda8b4ba8b2bbca6567c7eb04cf219fe62ad7a621f7e",
     "table/trrel.ss": "b9994d27e806baf47b399447ded7881ae3439a53899a3bd00d0116ba1ef4b50e"
@@ -65,7 +110,7 @@
   },
   "productionRuntimeChanged": false,
   "proofOwnership": "Lean owns active domains, latent reach, strict/UF concretization and exact frontier algebra. Existing TLA+ owns publication, failure, credits and cancellation lifecycle; no temporal model changed.",
-  "qualifiedBaseHead": "ad60085875b0b007bb96ce590c8dcebd0f01698c",
+  "qualifiedBaseHead": "6458ec36d0d86ad3126850172572747654bae55a",
   "rejectedChecks": [
     "Std does not provide tauto; explicit propositional constructors replaced it.",
     "A proof binder used the reserved from token; renamed without changing the statement or assumptions."
@@ -141,11 +186,11 @@
       "explicitOK": true,
       "graphs": 512,
       "idleSeconds": 5,
-      "logSha256": "a0efb3d784bc5299e5c2652ce12c3c6b1845d80af4e5336fd947a5844e22d77c",
+      "logSha256": "d3a953201f6bb8993476b1d61449f060faa2ccbe4de24550e195deaeaa4562a2",
       "modules": 1,
       "nonSingletonDirectedHistories": 4,
       "sourceCount": 543,
-      "sourceInventorySha256": "958d1070ffb368e4d67aaa5b07c14a8e9b357899ea25eaa13b063e4d19e9a7a1",
+      "sourceInventorySha256": "061ca537be984fb1bb1569eb7ded7e267021f03062c83a0e3c3cac7f8cbb5ecc",
       "startupSeconds": 5,
       "threeNodePrefixSteps": 23040
     }

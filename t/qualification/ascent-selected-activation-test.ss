@@ -18,6 +18,16 @@
                    (old (activation-selected #t analysis affected))
                    (new (activation-selected #f analysis affected)))
               (check-equal? (activation-summary new) (activation-summary old))
+              ;; Projection retains both the purity flag and compiled atom extent.
+              ;; This metadata fixture has an empty body, hence extent zero.
+              (for-each
+               (lambda (rule)
+                 (let (plan (vector-ref rule 5))
+                   (when plan
+                     (check-equal? (vector-length plan) 5)
+                     (check-equal? (vector-ref plan 3) #t)
+                     (check-equal? (vector-ref plan 4) 0))))
+               (vector-ref new 0))
               (for-each (lambda (rule) (check-equal? (vector-length rule) 6)) (vector-ref pure 0))
               (check-equal? (map (lambda (rule) (vector-length rule)) (vector-ref (vector-ref analysis 5) 0)) '(6 6 6))))
           (iota 64))) '(#t #f)))

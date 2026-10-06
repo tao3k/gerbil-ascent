@@ -18,7 +18,7 @@
          (rules (map (lambda (index)
                        (let* ((heads (if partial? (list (vector index []) (vector (+ count index) []) (vector index []))
                                        (list (vector index []))))
-                              (plan (and positive? (vector (map (lambda (head) (vector head [])) heads) [] slots #t))))
+                              (plan (and positive? (vector (map (lambda (head) (vector head [])) heads) [] slots #t 0))))
                          (vector heads [] [] index '#() plan))) (iota count))))
     (vector-set! analysis 5 (vector rules)) analysis))
 (def (activation-selected old? analysis affected)

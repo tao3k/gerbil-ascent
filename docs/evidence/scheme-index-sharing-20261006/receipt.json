@@ -1374,9 +1374,11 @@
     "nativeFocused": {
       "exitCode": 0,
       "explicitFinalOK": true,
-      "invalidMatchingControls": 6,
+      "invalidMatchingControls": 5,
       "independentRequirementFamilies": 128,
-      "scope": "actual index entries, engine/SCC/actor ownership, failure recovery and ordered rows"
+      "scope": "actual index entries, engine/SCC/actor ownership, failure recovery and ordered rows",
+      "matchingControls": 6,
+      "validMatchingControls": 1
     },
     "lean": {
       "exitCode": 0,
@@ -1396,8 +1398,53 @@
       "advisories": 13,
       "hardErrors": 0
     },
-    "fullNative": "Interrupted before completion to integrate new upstream 4fe1174; not accepted as a pass",
     "scope": "Every returned layout is checked against reciprocal matching, strict subset edges, an explicitly verified tight cover and complete unique chain traversal. Lean constructs arbitrary competing partition adjacency and counts. Native graph/trie extraction and complete application benefit remain separate obligations.",
-    "paidCalls": 0
+    "paidCalls": 0,
+    "interruptedFullNative": "Interrupted before completion to integrate new upstream 4fe1174; not accepted as a pass",
+    "qualifiedCodeHead": "77fbabec443a4c7c22fbbc02febbb843f0fe0e85",
+    "fullNative": {
+      "exitCode": 0,
+      "modules": 82,
+      "caseOK": 731,
+      "explicitOK": 82,
+      "moduleWorkers": 4,
+      "logSha256": "a7a4fb4d09ab6a24bc1827dc7b4587a33e2239109e1b517fcd7a2fbf1a6dc720",
+      "scope": "Complete registry after upstream bounded batch preparation cache 4fe1174 and certificate rebase"
+    },
+    "rebasedPackage": {
+      "exitCode": 0,
+      "advisories": 13,
+      "hardErrors": 0,
+      "logSha256": "f624c20d1201ed62f447832a3be1eb039fb2e26aa38546d642c68cde392a6662"
+    },
+    "rebasedLean": {
+      "exitCode": 0,
+      "jobs": 84,
+      "logSha256": "60b07377b97b2b50a2f0d48b61ee9653480373bbe557f47f74e10dfe2dc4a3d0"
+    },
+    "modelCarrier": {
+      "artifactBinding": "ad3ce95da0e08bfbc9ef236e490882a87b846b65300b23d5eab7e2573ab9e4f4",
+      "buildExitCode": 0,
+      "offlineVerificationExitCode": 0
+    },
+    "sharingCost": {
+      "scenario": "solve-sharing",
+      "pairs": 50,
+      "exitCode": 0,
+      "measurementMode": "observe",
+      "performanceAdmitted": false,
+      "oldBytes": 379168,
+      "newBytes": 667232,
+      "oldCpuMicroseconds": 636,
+      "newCpuMicroseconds": 765,
+      "cpuWins": 2,
+      "receiptSha256": "605a1d234a99a3690ec80524f7f0bb969054d567d663f149f561e03753f00035",
+      "context": "Paired alternating complete solves; allocation deterministic and CPU observation only; offline native plan preparation overlapped this run. No whole-runtime benefit admitted."
+    },
+    "benchmarkPreparationFailure": {
+      "exitCode": 70,
+      "cause": "Native benchmark module was absent; explicit std/make preparation was required",
+      "qualification": "The later prepared run alone supplies the cost observation"
+    }
   }
 }

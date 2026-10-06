@@ -595,6 +595,12 @@ worker or publication state. No generation or iteration upper bound is imposed.
 
 The [[file:evidence/scheme-component-closure-20261006/receipt.json][receipt]] distinguishes this universal ground-rule theorem from the native
 recursive-diamond qualifier and the existing finite ready/credit protocol.
-Stable local iteration, complete head coverage and sound dependency ownership
-are explicit premises. A faithful binder-to-ground-rule bridge, native SCC/head
-projection and termination remain required for whole-engine closure.
+The original conditional theorem is retained. =local_stabilizes= now derives
+local stabilization from finite ground rule-head rank, including duplicate
+heads and arbitrary seeds. =planned_stable= supplies every component witness;
+=topological_least= consequently needs only complete head coverage and sound
+topological dependency ownership. Its =n <= rules.length= is a derived theorem,
+not a native round limit; the witness plan is noncomputable semantic evidence.
+See [[file:evidence/scheme-component-termination-20261006/receipt.json][follow-up receipt]]. A faithful binder-to-ground-rule bridge, native SCC/head
+projection, asynchronous refinement and general non-ground/lattice termination
+remain required for whole-engine closure.

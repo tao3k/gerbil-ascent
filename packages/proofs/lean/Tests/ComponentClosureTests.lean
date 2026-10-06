@@ -53,6 +53,35 @@ example : ¬ (iterate rules owner 1 initial 2 = iterate rules owner 1 initial 1)
   intro equal
   have observed := congrFun equal left1
   simp [iterate, step, Holds, rules, owner, initial] at observed
+/-- The recursive diamond has duplicate heads; no unique-head premise is needed. -/
+example (database : Database Fact) : ∃ n, n ≤ 5 ∧
+    iterate rules owner 1 database (n + 1) = iterate rules owner 1 database n := by
+  simpa only [rules, List.length_cons, List.length_nil] using
+    local_stabilizes rules owner 1 database
+example (database : Database Fact) :
+    iterate ([] : List (Rule Fact)) owner 1 database 1 = database := by
+  funext fact
+  simp [iterate, step]
+
+theorem firstTopology : Topological rules owner [1, 2, 3] := by
+  simp [Topological, Depends, rules, owner]
+theorem secondTopology : Topological rules owner [2, 1, 3] := by
+  simp [Topological, Depends, rules, owner]
+example (fact : Fact) : solve rules owner (planned rules owner [1, 2, 3] initial) initial fact ↔
+    Derivable rules initial fact :=
+  topological_least rules owner [1, 2, 3] initial
+    (by simpa [first] using firstHeads) firstTopology fact
+example : solve rules owner (planned rules owner [1, 2, 3] initial) initial =
+    solve rules owner (planned rules owner [2, 1, 3] initial) initial := by
+  funext fact
+  apply propext
+  exact (topological_least rules owner _ initial (by simpa [first] using firstHeads)
+    firstTopology fact).trans
+    (topological_least rules owner _ initial (by simpa [second] using secondHeads)
+      secondTopology fact).symm
+#print axioms Ascent.ComponentClosure.local_stabilizes
+#print axioms Ascent.ComponentClosure.planned_stable
+#print axioms Ascent.ComponentClosure.topological_least
 #print axioms Ascent.ComponentClosure.iterate_frame
 #print axioms Ascent.ComponentClosure.solve_closed
 #print axioms Ascent.ComponentClosure.least_closure

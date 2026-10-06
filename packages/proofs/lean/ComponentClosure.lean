@@ -1,10 +1,11 @@
 -- SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 -- SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 import SemiNaive
+import FiniteHeight
 
 /-! Ground positive rules, component-local saturation and least closure.
 This is semantic decomposition, not a scheduler state machine. Grounding,
-native SCC projection and termination are separate admission obligations. -/
+native SCC projection and general non-ground termination are separate obligations. -/
 namespace Ascent.ComponentClosure
 variable {Fact Component : Type}
 abbrev Database (Fact : Type) := Fact → Prop
@@ -193,6 +194,120 @@ theorem least_model (rules : List (Rule Fact)) (owner : Fact → Component)
   induction derived with
   | seed present => exact covers _ present
   | fire rule member body ih => exact closed rule member (fun f h => ih f h)
+
+/-- Count known rule-head occurrences. Duplicate heads may overestimate the
+height but cannot invalidate strict progress; facts outside heads are framed. -/
+noncomputable def headRank (rules : List (Rule Fact)) (database : Database Fact) : Nat := by
+  classical
+  exact Ascent.booleanRank (fun i : Fin rules.length => decide (database (rules.get i).head))
+
+theorem local_stabilizes (rules : List (Rule Fact)) (owner : Fact → Component)
+    (component : Component) (database : Database Fact) :
+    ∃ n, n ≤ rules.length ∧
+      iterate rules owner component database (n + 1) = iterate rules owner component database n := by
+  classical
+  have progress : ∀ before, step rules owner component before ≠ before →
+      headRank rules before < headRank rules (step rules owner component before) := by
+    intro before different
+    have fresh : ∃ fact, step rules owner component before fact ∧ ¬ before fact := by
+      apply Classical.byContradiction
+      intro absent
+      apply different
+      funext fact
+      apply propext
+      constructor
+      · intro present
+        apply Classical.byContradiction
+        intro missing
+        exact absent ⟨fact, present, missing⟩
+      · exact Or.inl
+    obtain ⟨fact, present, missing⟩ := fresh
+    have next := present
+    obtain old | ⟨rule, member, _, _, same⟩ := present
+    · exact False.elim (missing old)
+    obtain ⟨index, selected⟩ := List.mem_iff_get.mp member
+    apply Ascent.boolean_rank_strict
+    · intro i known
+      simp only [decide_eq_true_eq] at known ⊢
+      exact Or.inl known
+    · refine ⟨index, ?_, ?_⟩
+      · change decide (before (rules.get index).head) = false
+        simp only [selected, same, decide_eq_false_iff_not]
+        exact missing
+      · simp only [selected, same, decide_eq_true_eq]
+        exact next
+  have bounded : ∀ before, headRank rules before ≤ rules.length :=
+    fun before => Ascent.boolean_rank_bounded _
+  obtain ⟨n, bound, stable⟩ := Ascent.bounded_rank_stabilizes
+    (step rules owner component) database (headRank rules) rules.length bounded progress
+  have same : ∀ k, Ascent.iterateStep (step rules owner component) database k =
+      iterate rules owner component database k := by
+    intro k
+    induction k with
+    | zero => rfl
+    | succ k ih => simp only [Ascent.iterateStep, iterate, ih]
+  exact ⟨n, bound, by simpa only [same, iterate] using stable⟩
+
+noncomputable def rounds (rules : List (Rule Fact)) (owner : Fact → Component)
+    (component : Component) (database : Database Fact) : Nat :=
+  Classical.choose (local_stabilizes rules owner component database)
+
+theorem rounds_spec (rules : List (Rule Fact)) (owner : Fact → Component)
+    (component : Component) (database : Database Fact) :
+    rounds rules owner component database ≤ rules.length ∧
+      iterate rules owner component database (rounds rules owner component database + 1) =
+        iterate rules owner component database (rounds rules owner component database) :=
+  Classical.choose_spec (local_stabilizes rules owner component database)
+
+/-- Semantic plan selects proved stabilization witnesses; it is not a native
+scheduler or a runtime iteration cutoff. -/
+noncomputable def planned (rules : List (Rule Fact)) (owner : Fact → Component) :
+    List Component → Database Fact → List (Component × Nat)
+  | [], _ => []
+  | component :: rest, database =>
+      let n := rounds rules owner component database
+      (component, n) :: planned rules owner rest (iterate rules owner component database n)
+
+theorem planned_components (rules : List (Rule Fact)) (owner : Fact → Component)
+    (order : List Component) (database : Database Fact) :
+    (planned rules owner order database).map Prod.fst = order := by
+  induction order generalizing database with
+  | nil => rfl
+  | cons component rest ih => simp only [planned, List.map_cons, ih]
+
+theorem planned_stable (rules : List (Rule Fact)) (owner : Fact → Component)
+    (order : List Component) (database : Database Fact) :
+    StablePlan rules owner (planned rules owner order database) database := by
+  induction order generalizing database with
+  | nil => trivial
+  | cons component rest ih => exact ⟨(rounds_spec rules owner component database).2, ih _⟩
+
+def Topological (rules : List (Rule Fact)) (owner : Fact → Component) : List Component → Prop
+  | [] => True
+  | component :: rest => (∀ later ∈ rest, ¬ Depends rules owner later component) ∧
+      Topological rules owner rest
+
+theorem planned_ordered (rules : List (Rule Fact)) (owner : Fact → Component)
+    (order : List Component) (database : Database Fact) (topology : Topological rules owner order) :
+    Ordered rules owner (planned rules owner order database) := by
+  induction order generalizing database with
+  | nil => trivial
+  | cons component rest ih =>
+      refine ⟨?_, ih _ topology.2⟩
+      intro entry member
+      have present := List.mem_map_of_mem (f := Prod.fst) member
+      rw [planned_components] at present
+      exact topology.1 entry.1 present
+
+/-- Complete topological decomposition has no supplied stability premise:
+finite ground rule heads provide every required local termination witness. -/
+theorem topological_least (rules : List (Rule Fact)) (owner : Fact → Component)
+    (order : List Component) (seed : Database Fact)
+    (heads : ∀ rule ∈ rules, owner rule.head ∈ order)
+    (topology : Topological rules owner order) (fact : Fact) :
+    solve rules owner (planned rules owner order seed) seed fact ↔ Derivable rules seed fact :=
+  least_closure rules owner _ seed (by simpa only [planned_components] using heads)
+    (planned_ordered rules owner order seed topology) (planned_stable rules owner order seed) fact
 
 theorem orders_equal (rules : List (Rule Fact)) (owner : Fact → Component)
     (first second : List (Component × Nat)) (seed : Database Fact)

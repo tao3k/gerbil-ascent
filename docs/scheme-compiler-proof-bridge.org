@@ -114,7 +114,8 @@ result inside every closed model covering the seed. =orders_equal= proves equal
 results for alternative admitted component orders.
 
 This is a ground positive Set semantics theorem. Ground-rule completeness,
-native Tarjan/head projection, representation and termination are not inferred.
+native Tarjan/head projection and representation are not inferred. General
+non-ground and lattice termination are not inferred.
 =IndexedIteration= remains the compiled binder/history theorem; composing its
 operator with this ground presentation still needs a faithful grounding
 certificate. TLA+ owns the unchanged ready/credit protocol. Lean tests live in
@@ -122,6 +123,24 @@ certificate. TLA+ owns the unchanged ready/credit protocol. Lean tests live in
 component swap, premature successor and insufficient local rounds. The native
 same-case qualifier checks exact seed/left/right/output rows under both relation
 orders and 1/2/4 workers. See [[file:evidence/scheme-component-closure-20261006/receipt.json][source-bound receipt]].
+
+** Derived local termination
+
+=local_stabilizes= derives a stable local full iteration from the finite list
+of ground rules. =headRank= counts known rule-head occurrences; any genuine
+step change admits a fresh head and strictly increases that bounded rank.
+Duplicate heads are allowed, seed facts need no finite enumeration, and the
+proof requires neither a finite =Fact= type nor a supplied stable round.
+The witness satisfies =n <= rules.length=. This derived bound is not a Runtime
+cutoff or a generation constant.
+
+=planned_stable= selects these proved witnesses for each component, and
+=topological_least= computes exactly =Derivable= with only complete head
+coverage and no backward read dependency as plan premises. =planned= is a
+noncomputable semantic witness, not an extracted native scheduler. Tests under
+=Tests/= qualify both recursive-diamond orders without a supplied =StablePlan=,
+duplicate heads and empty rules. The existing premature-successor and short
+iteration controls remain. See [[file:evidence/scheme-component-termination-20261006/receipt.json][termination qualification receipt]].
 
 * Stated claim
 

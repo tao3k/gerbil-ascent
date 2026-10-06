@@ -1,0 +1,116 @@
+{
+  "qualifiedBaseHead": "e7f30331922971702ae3c5c18b3ee00cdd9fe1fb",
+  "sources": {
+    "packages/proofs/lean/ComponentClosure.lean": "285bb1d19fb5a065cf550549deeb73d399dce8d2d6b51e3b7695a94cad8ca32b",
+    "packages/proofs/lean/Tests/ComponentClosureTests.lean": "bec515bca4b40b96a124861b8383cf9ea98811813d55c1250f26c125646c5d08",
+    "packages/proofs/lean/AscentProof.lean": "5a4c22baa820a585f5be73fd3921786382e746abb058ba22f494f185fb77df7d",
+    "packages/proofs/lean/Tests/AscentProofTests.lean": "804beef4c75613079eeaa0267127d8f191f1a6f400ec1934de3f41037c027e23",
+    "packages/proofs/lean/lakefile.lean": "269eaa1e16878871d9ed6e3885d1c4a22e8841cddf132f6e2b572230ed5176b8",
+    "packages/proofs/lean/IndexedIteration.lean": "46a0451cc5be2cd28f11f5ce77e37b0a1e21539a3f81fca9f62561de1d8cf211",
+    "packages/proofs/lean/SemiNaive.lean": "c00da4759381f4004996ca299100c08e44fcf455093ddbddaf9d857924e30d51",
+    "program/positive-components.ss": "156a6ef8cb62c92a094638b299ac490738d0ea243a187320d9e460c40434c645",
+    "program/component-worker.ss": "9c4e215910f6c80915a26cb6237b541914ff9036e44ffe9414ec522a29123771",
+    "program/actor-round.ss": "f41bc8c8b6d7b7d9e5228af96ab40ba0dcd3f4325375aae508be6e9d0197465c",
+    "table/funs.ss": "9ecdd332294ce6487998c6e64fc2b88d4396d091c641cf1e61dc0576a5b222c0",
+    "t/qualification/ascent-positive-components-test.ss": "c751ea81bfa7676cbfb71d74a8f35d32d265215365fafe32666db7efa51aaac2",
+    "t/qualification/ascent-positive-plan-test.ss": "19cbb4b356245ddc770b8f833630787e36a6d34b663e2535c4b19476c1ea9e0d",
+    "packages/proofs/tla/ReadyComponents.tla": "f1ba05dd5e99e262de1116c83e725a8f3541d3113e011c46146c470bece8d34e",
+    "packages/proofs/tla/ActorRoundCredits.tla": "3b5de69e5b610222a5628105bc2cba104a8f42e304d7fc069f94307a57c90175",
+    "justfile": "4f47241a44a880be471880d7d8b43e912ad260dcc64ea3e236919602461a2e78",
+    "core/positive-plan.ss": "d51d7676d8ef49097219e812f3596ba589f0f6779e2a09e282222e84afa2f101",
+    "packages/proofs/lean/FiniteHeight.lean": "2769bf31367d45ba9eae23c54c60e4cd8e8c428f00ddf2c4294107d5b4c5396b",
+    "docs/scheme-compiler-proof-bridge.org": "d6326fc06cc282ce21114fbae2b1d166647da06491ca2885149786a2208fa27a",
+    "docs/scheme-research-proof-audit.org": "85d228a2d286249fde827d7982fc179365de8f0a79240501b19c991df570b5a5"
+  },
+  "scope": "Finite ground positive Horn component termination and least closure; arbitrary seed and duplicate heads admitted.",
+  "lean": {
+    "command": "just check-lean-proofs",
+    "exitCode": 0,
+    "buildJobs": 77,
+    "theorems": [
+      "local_stabilizes",
+      "rounds_spec",
+      "planned_components",
+      "planned_stable",
+      "planned_ordered",
+      "topological_least"
+    ],
+    "derivedBound": "A stabilization witness n <= rules.length follows from strictly increasing known-head occurrence rank; no runtime cutoff.",
+    "premises": [
+      "Finite list of ground positive rules",
+      "Complete head-component coverage",
+      "No backward read dependency in the component order"
+    ],
+    "removedPremise": "Externally supplied local stability / termination for each component",
+    "controls": [
+      "Recursive diamond with duplicate heads stabilizes for arbitrary seed",
+      "Empty rule list does not change the database",
+      "Both independent-component orders derive the same least closure without a supplied StablePlan",
+      "Existing premature successor and insufficient local iteration controls retained"
+    ],
+    "testsDirectory": "packages/proofs/lean/Tests",
+    "axioms": {
+      "local_stabilizes": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "planned_stable": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "topological_least": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    "witnessPlan": "Noncomputable semantic selection, not an extracted runtime scheduler"
+  },
+  "tla": {
+    "command": "TLC_JAR=<qualified tool> just check-ready-components-formal check-actor-credit-formal",
+    "exitCode": 0,
+    "modelsChanged": false,
+    "normalDistinctStates": [
+      134,
+      857,
+      857,
+      73,
+      121,
+      137
+    ],
+    "expectedNegativeControls": [
+      "ready-components-prerequisite Prerequisites",
+      "ready-components-early CompleteReturn",
+      "ready-components-snapshot DependencySnapshot",
+      "ready-components-tail CompletedDelivery",
+      "ready-components-credit CompletedDelivery",
+      "actor-credit-early CompleteReturn"
+    ],
+    "scope": "Finite ready admission, snapshot capture, terminal delivery, bounded assignment and drain. Independent of the new Lean algebra."
+  },
+  "native": {
+    "command": "t/harness/run.ss test-pool 2 t/qualification/ascent-positive-components-test.ss t/qualification/ascent-positive-plan-test.ss",
+    "exitCode": 0,
+    "pool": 2,
+    "suiteCases": 38,
+    "moduleOK": 2,
+    "explicitOK": 2,
+    "correspondingFixture": "Seed 0 derives cyclic left {0,1} and independent right {0}; their join derives out {0}. Both left/right declaration orders at workers 1,2,4 yield exact expected rows.",
+    "schedulingImplementationChanged": false
+  },
+  "qualificationCorrections": [
+    "TLC initially could not open its local Java RMI socket in sandbox; same gate reran with approved local socket access and exit 0"
+  ],
+  "remaining": [
+    "Faithful binder-to-ground-rule consequence certificate",
+    "Native Tarjan/projected head and dependency correspondence",
+    "Asynchronous linearization and native representation refinement",
+    "General non-ground and lattice termination"
+  ],
+  "modelCalls": 0,
+  "rustRuntimeChanges": false,
+  "performanceClaim": null,
+  "priorEvidence": "../scheme-component-closure-20261006/receipt.json"
+}

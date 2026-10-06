@@ -1201,3 +1201,43 @@ batch observations. It does not instantiate arbitrary lattice/custom Provider
 concretizations or prove universal Gambit hash extraction. No production
 Scheme runtime behavior changes here. TLA+ retains publication, ownership,
 cancellation and failure sequencing; no duplicate Set algebra model is added.
+
+* Constructed indexed stabilization and least result (2026-10-06)
+
+=snapshot_step_ground= identifies the canonical ordinary-binder operator with
+the constructed ground operator as functions on databases.
+=snapshot_naive_ground= transports that equality through every natural-number
+iteration. This joins the previously separate indexed history and finite
+ground stabilization arguments.
+
+=snapshotRounds= selects the existing proved finite-head stabilization witness.
+=snapshot_rounds_spec= derives a bound from the actual constructed ground-rule
+list and proves the corresponding ordinary iteration stable. The bound is a
+mathematical existence result, not a hardcoded generation limit, scheduler
+admission rule, timeout or runtime counter cap. Ground-rule multiplicity may
+make the bound conservative; no tight runtime complexity is claimed.
+
+=snapshot_indexed_least= proves that the actual modeled =indexed= result at
+that witness equals declarative derivability from the initial facts. The caller
+supplies no completed-result soundness, closure or stability.
+=snapshot_indexed_stays_least= extends that equality to every later natural
+round. Empty bodies, repeated/multiple heads and dirty binding frames retain
+the existing indexed/ground semantics. The proof needs no SCC topology because
+it uses a single semantic component containing the finite admitted program.
+
+Examples and axiom reports remain in =Tests/GroundedBindingTests=. The native
+positive-component suite now reexecutes each completed private component
+snapshot with a fresh worker and full initialization across all 512 three-node
+graph inputs. Any newly emitted consequence fails the test; every final row
+root must retain its identity. The original independent Floyd closure,
+per-owner emissions and external snapshot preservation checks remain in the
+same case. This tests completion beyond observing an empty delta loop.
+
+The [[file:evidence/scheme-indexed-least-20261006/receipt.json][source-bound receipt]] records the complete Lean collection and native SCC
+suite. The runtime's round loop and actor terminal event still need universal
+extraction to this semantic iteration. SCC projection, native scalar/hash
+representation and complete credit/tail trace correspondence remain distinct
+bridges. Existing TLA+ owns readiness, credits, terminal tails, failure and
+publication; no semantic iteration replica is added. No production runtime
+behavior change or performance improvement is inferred from this proof/test
+package, and MR integration remains deferred.

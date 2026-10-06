@@ -123,4 +123,24 @@ example (fact : Fact Nat Bool) :
         IndexedIteration.consequence rule (snapshotRows boolDomain) model item → model item) → model fact :=
   snapshot_component_least boolDomain boolRules (fun _ => ()) [()] (fun _ => False)
     (by simp) (by simp [Topological]) fact
+#print axioms Ascent.GroundedBinding.snapshot_step_ground
+#print axioms Ascent.GroundedBinding.snapshot_naive_ground
+#print axioms Ascent.GroundedBinding.snapshot_rounds_spec
+#print axioms Ascent.GroundedBinding.snapshot_indexed_least
+#print axioms Ascent.GroundedBinding.snapshot_indexed_stays_least
+
+example (fact : Fact Nat Bool) :
+    (IndexedIteration.indexed boolRules (snapshotRows boolDomain) (fun _ => False)
+      (snapshotRounds boolDomain boolRules (fun _ => False))).2 fact ↔
+    Derivable (programGround boolDomain boolRules) (fun _ => False) fact :=
+  snapshot_indexed_least boolDomain boolRules boolValid _ fact
+example : snapshotRounds boolDomain boolRules (fun _ => False) ≤ 4 := by
+  have size : (programGround boolDomain boolRules).length = 4 := rfl
+  rw [← size]
+  exact (snapshot_rounds_spec boolDomain boolRules (fun _ => False)).1
+example (extra : Nat) (fact : Fact Nat Bool) :
+    (IndexedIteration.indexed boolRules (snapshotRows boolDomain) (fun _ => False)
+      (snapshotRounds boolDomain boolRules (fun _ => False) + extra)).2 fact ↔
+    Derivable (programGround boolDomain boolRules) (fun _ => False) fact :=
+  snapshot_indexed_stays_least boolDomain boolRules boolValid _ extra fact
 end Ascent.GroundedBindingTests

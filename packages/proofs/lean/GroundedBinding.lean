@@ -312,4 +312,76 @@ theorem snapshot_component_least {Component : Type}
           ⟨rule, member, consequence⟩
       exact equal ▸ Derivable.fire clause present held
 
+/-- Canonical ordinary consequence and the constructed ground operator are
+the same function, not merely equivalent final expected answers. -/
+theorem snapshot_step_ground (domainRows : Key → List (List Value))
+    (rules : List (IndexedIteration.Rule Key Value (Fact Key Value)))
+    (database : Database (Fact Key Value)) :
+    IndexedIteration.fullStep rules (snapshotRows domainRows) database =
+      step (programGround domainRows rules) (fun _ => ()) () database := by
+  funext fact
+  apply propext
+  simp only [IndexedIteration.fullStep, step, true_and]
+  exact or_congr_right (program_exact domainRows _ (snapshot_rows_faithful domainRows) rules database fact)
+
+theorem snapshot_naive_ground (domainRows : Key → List (List Value))
+    (rules : List (IndexedIteration.Rule Key Value (Fact Key Value)))
+    (initial : Database (Fact Key Value)) (n : Nat) :
+    IndexedIteration.naive rules (snapshotRows domainRows) initial n =
+      iterate (programGround domainRows rules) (fun _ => ()) () initial n := by
+  induction n with
+  | zero => rfl
+  | succ n ih =>
+      simp only [IndexedIteration.naive, iterate, ih, snapshot_step_ground]
+
+/-- Select the existing proved finite-head stabilization witness. This is a
+semantic construction, not a fixed native timeout or runtime iteration cap. -/
+noncomputable def snapshotRounds (domainRows : Key → List (List Value))
+    (rules : List (IndexedIteration.Rule Key Value (Fact Key Value)))
+    (initial : Database (Fact Key Value)) : Nat :=
+  rounds (programGround domainRows rules) (fun _ => ()) () initial
+
+theorem snapshot_rounds_spec (domainRows : Key → List (List Value))
+    (rules : List (IndexedIteration.Rule Key Value (Fact Key Value)))
+    (initial : Database (Fact Key Value)) :
+    snapshotRounds domainRows rules initial ≤ (programGround domainRows rules).length ∧
+    IndexedIteration.naive rules (snapshotRows domainRows) initial
+      (snapshotRounds domainRows rules initial + 1) =
+    IndexedIteration.naive rules (snapshotRows domainRows) initial (snapshotRounds domainRows rules initial) := by
+  simpa only [snapshotRounds, snapshot_naive_ground] using
+    rounds_spec (programGround domainRows rules) (fun _ => ()) () initial
+
+/-- The compiled indexed result reaches the least model using a constructed
+finite stabilization witness; no result soundness, closure or stability is
+supplied as a premise. Native iteration/publication extraction stays separate. -/
+theorem snapshot_indexed_least (domainRows : Key → List (List Value))
+    (rules : List (IndexedIteration.Rule Key Value (Fact Key Value)))
+    (valid : ∀ rule ∈ rules, IndexedIteration.Valid (fun key row => row ∈ domainRows key) rule)
+    (initial : Database (Fact Key Value)) (fact : Fact Key Value) :
+    (IndexedIteration.indexed rules (snapshotRows domainRows) initial
+      (snapshotRounds domainRows rules initial)).2 fact ↔
+      Derivable (programGround domainRows rules) initial fact := by
+  rw [snapshot_indexed_history domainRows rules valid initial,
+    (snapshot_rounds_spec domainRows rules initial).2, snapshot_naive_ground]
+  simpa only [planned, solve, snapshotRounds] using
+    topological_least (programGround domainRows rules) (fun _ => ()) [()] initial
+      (by simp) (by simp [Topological]) fact
+
+/-- Every later indexed snapshot remains the same least model; no generation
+bound or runtime cutoff is introduced by the finite witness. -/
+theorem snapshot_indexed_stays_least (domainRows : Key → List (List Value))
+    (rules : List (IndexedIteration.Rule Key Value (Fact Key Value)))
+    (valid : ∀ rule ∈ rules, IndexedIteration.Valid (fun key row => row ∈ domainRows key) rule)
+    (initial : Database (Fact Key Value)) (extra : Nat) (fact : Fact Key Value) :
+    (IndexedIteration.indexed rules (snapshotRows domainRows) initial
+      (snapshotRounds domainRows rules initial + extra)).2 fact ↔
+      Derivable (programGround domainRows rules) initial fact := by
+  rw [IndexedIteration.stable_indexed rules _ _ valid
+    (snapshot_rows_admitted domainRows) (snapshot_rows_monotone domainRows)
+    initial _ (snapshot_rounds_spec domainRows rules initial).2 extra,
+    snapshot_naive_ground]
+  simpa only [planned, solve, snapshotRounds] using
+    topological_least (programGround domainRows rules) (fun _ => ()) [()] initial
+      (by simp) (by simp [Topological]) fact
+
 end Ascent.GroundedBinding

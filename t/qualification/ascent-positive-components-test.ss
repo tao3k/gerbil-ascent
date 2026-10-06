@@ -303,7 +303,18 @@
                                      (check-equal? (if (member row (vector-ref local index)) #t #f) #t)
                                      (check-equal? (if (member row (vector-ref frontier index)) #t #f) #t))
                                    (vector-ref expected index)))
-                       (check-equal? (eq? (vector-ref local index) (vector-ref before index)) #t))) (iota 6))))
+                       (check-equal? (eq? (vector-ref local index) (vector-ref before index)) #t))) (iota 6))
+                  ;; A completed private snapshot must already be closed under
+                  ;; a fresh full initialization, not merely have stopped its
+                  ;; delta loop. Seeded output membership suppresses old rows.
+                  (let (closed (vector-copy local))
+                    (gerbil-ascent-run-positive-component! component schema
+                     (make-component-snapshot local (vector-map length local))
+                     (lambda (atom row) (error "completed SCC emitted a missing consequence" atom row))
+                     (lambda () (void)))
+                    (for-each (lambda (index)
+                                (check-equal? (eq? (vector-ref local index) (vector-ref closed index)) #t))
+                              (iota 6)))))
               (gerbil-ascent-compile-positive-components analysis))
              (for-each (lambda (index)
                          (check-equal? (length (vector-ref frontier index)) (length (vector-ref expected index)))) (iota 6)))

@@ -10,7 +10,7 @@
     "owner": "Existing Scheme test coordinator and std/make",
     "parallelism": "std/make retains dependency ordering and parallel compilation within a layer; module process pool and Runtime actors remain separate capacities"
   },
-  "claim": "Full native qualification of this bound source; remote final-head CI remains an independent required gate. This build correction does not establish the remaining compiler, Provider, application or model research claims.",
+  "claim": "Recorded macOS native qualification of these source hashes; Linux CI rejected the combined Suite compiler process. Per-Suite compiler isolation supersedes that organization and requires fresh remote qualification. Remaining compiler, Provider, application and model research claims are independent.",
   "compilerRefusalControls": {
     "invalidSpecification": "Nonzero exit and no COMPILE-LAYER-OK",
     "missingModule": "Nonzero exit and no COMPILE-LAYER-OK"
@@ -47,6 +47,15 @@
       "completedModulesBeforeFailure": 39,
       "exitStatus": 70,
       "failure": "Selective activation fixture omitted the actual fourth plan field; vector-ref out of range"
+    },
+    "layeredLinuxCi": {
+      "admitted": false,
+      "failure": "Combined 82-Suite compiler process exhausted 1 GiB heap before native pool",
+      "head": "67da108a97de39722087b6bcabe8398d8b4163ba",
+      "job": 112155880441,
+      "productionLayerPassed": true,
+      "run": 37429219617,
+      "supportLayerPassed": true
     },
     "priorCi": {
       "failure": "Heap overflow in std/make#make-build before native execution",

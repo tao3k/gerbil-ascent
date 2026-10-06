@@ -268,9 +268,13 @@
     (compile-test-layer!
      (filter (lambda (module) (not (member module gerbil-ascent-library-modules))) modules)
      library)
-    (compile-test-layer!
-     (filter (lambda (module) (not (member module modules))) (map path-strip-extension tests))
-     library)
+    ;; A Suite is the consumer ownership boundary. Linux qualification showed
+    ;; that accumulating all Suite expansion contexts still exhausts the same
+    ;; 1 GiB heap after production/support succeeded. Release those contexts
+    ;; per Suite; do not reduce coverage or increase the heap contract.
+    (for-each
+     (lambda (module) (compile-test-layer! (list module) library))
+     (filter (lambda (module) (not (member module modules))) (map path-strip-extension tests)))
     (force-output)
     (setenv "ASCENT_TEST_LIBRARY" library)
     (setenv "ASCENT_PERFORMANCE_MODULES" module-file)

@@ -1467,3 +1467,40 @@ insertion. Existing producer and larger graph controls remain. Test controls
 stay under =Tests=, and existing TLA+ retains temporal protocol ownership.
 Universal native representation extraction, arbitrary lattice instances and
 actor trace refinement remain separate gates; MR remains deferred.
+
+
+* B23 native correspondence: protect lookup keys and column headers
+
+[[https://kmicinski.com/assets/byods.pdf][B23 Section 4 and Figure 1, PDF pages 11-12]] expose key lookup through a
+shared Rust key reference. Our Scheme transfer cannot treat a mutable list
+passed to an open receiver as an immutable borrow. The tuple fields retain
+their existing stable-value premise, but the list header itself belongs to
+the engine's evaluated key. Logical column lists likewise belong to admitted
+atom metadata and physical cache selection.
+
+The coverage guard reused the evaluated key after calling the Provider. A
+receiver could change the key header to an absent value and return an empty
+answer. The guard then found zero expected rows for the modified key, although
+the original key represented facts. A negative clause interpreted that empty
+answer as absence and could publish a false consequence. Mutating build or
+extend columns could also alter admitted metadata and cache hash keys.
+
+=table/access.ss= now supplies fresh list headers for custom build columns,
+extend columns and lookup keys. These copies isolate the dispatch receiver
+from the engine's logical columns and verification key. Values, order and
+callback count are preserved. Canonical trusted dispatch retains its direct
+path. Rows and nested field values are not deep-copied; this change does not
+claim arbitrary callback purity or immutable nested values.
+
+The native discriminator constructs a stratified negative rule over an actual
+32-row represented key. A receiver mutates its key to 99 and returns empty.
+The original engine accepted the false absence; the repaired engine rejects
+the omission against the original key, and the same failed Session then
+recovers with a valid receiver answer. Additional index lifecycle controls
+exercise build/extend header mutation, retained callback arguments, aliases,
+all/delta lanes, source versions and exceptional extension recovery. The
+[[file:evidence/scheme-provider-headers-20261006/receipt.json][receipt]] retains failing and final native source boundaries.
+
+This isolates engine-owned metadata spines across open dispatch. It adds
+header-copy work proportional to selected key width on custom receiver calls.
+No runtime improvement, general storage refinement or new theorem is claimed.

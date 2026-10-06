@@ -150,3 +150,19 @@ qualification tests both preflight and direct commit under matched input
 histories, rejection/retry, SCC observation preservation and component
 bridges. See [[file:../../evidence/scheme-directed-frontier-20261006/receipt.json][the receipt]]. General representation extraction and custom lattice
 laws remain separate, and no new Scheme performance benefit is claimed.
+
+
+* Lookup borrow ownership in Scheme (2026-10-06)
+
+Figure 1's =RelIndexRead::index_get= takes a shared key reference. At the
+Scheme receiver boundary, the engine now supplies a fresh header for the
+key list, and for build/extend column lists. This preserves the original
+evaluated key for coverage checking and the admitted columns for cache
+selection even if a custom receiver mutates its argument headers.
+
+A negative rule provides the concrete discriminator: a receiver changes a
+represented key to an absent key and returns empty. Without header isolation
+this can pass coverage and publish a false absence result. Native controls
+and the source-bound [[file:../../evidence/scheme-provider-headers-20261006/receipt.json][receipt]] distinguish this repair from the broader
+stable-value and callback-purity obligations. Only headers are copied; no
+new deep-value, runtime-benefit or universal Provider proof claim is made.

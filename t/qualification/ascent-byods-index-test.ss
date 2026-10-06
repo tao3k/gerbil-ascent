@@ -7,7 +7,8 @@
         (only-in :gerbil-ascent/program/objects
                  gerbil-ascent-program gerbil-ascent-relation gerbil-ascent-rule
                  gerbil-ascent-atom gerbil-ascent-literal gerbil-ascent-variable
-                 gerbil-ascent-pattern gerbil-ascent-guard)
+                 gerbil-ascent-pattern gerbil-ascent-guard
+                 gerbil-ascent-negation gerbil-ascent-wildcard)
         (only-in :core/observability/testing-case poo-flow-test-case)
         (only-in :gerbil-ascent/t/qualification/ascent-index-program-fixture
                  ascent-index-alist-provider)
@@ -126,6 +127,31 @@
 
 (def ascent-byods-index-test
   (test-suite "ASCENT BYODS storage and custom index composition"
+    (poo-flow-test-case "mutated lookup key cannot certify false absence in negation"
+      (let* ((corrupt? #t)
+             (provider (.o (:: @ gerbil-ascent-hash-index-provider)
+                           (.lookup-index
+                            (lambda (index key)
+                              (if corrupt?
+                                (begin (set-car! key 99) [])
+                                ((.ref gerbil-ascent-hash-index-provider '.lookup-index) index key))))))
+             (program
+              (gerbil-ascent-program
+               (list (gerbil-ascent-relation 'input 2
+                       (map (lambda (n) (list 0 n)) (iota 32)) provider)
+                     (gerbil-ascent-relation 'matched 0 []))
+               (list (gerbil-ascent-rule
+                      (list (gerbil-ascent-atom 'matched []))
+                      (list (gerbil-ascent-negation 'input
+                              (list (gerbil-ascent-literal 0) (gerbil-ascent-wildcard))))))
+               32 64 64))
+             (session (gerbil-ascent-open-session program)))
+        (check-equal?
+         (with-catch (lambda (e) (error-message e))
+           (lambda () (rows (gerbil-ascent-session-run session))))
+         "ASCENT index provider omitted matching rows")
+        (set! corrupt? #f)
+        (check-equal? (rows (gerbil-ascent-session-run session)) [])))
     (poo-flow-test-case "aggregate cannot consume duplicated or incomplete custom candidates"
       (let* ((override #f)
              (source (map (lambda (n) (list (modulo n 2) n)) (iota 32)))

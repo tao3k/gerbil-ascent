@@ -83,6 +83,54 @@
 
 (def ascent-index-entry-test
   (test-suite "Engine-owned stable physical index entries"
+    (test-case "custom receivers cannot mutate admitted or cached argument headers"
+      (let* ((captured []) (builds 0) (extensions 0)
+             (provider
+              (.o (:: @ gerbil-ascent-hash-index-provider)
+                  (.build-index
+                   (lambda (rows columns)
+                     (set! builds (+ builds 1))
+                     (let (index ((.ref gerbil-ascent-hash-index-provider '.build-index) rows columns))
+                       (set! captured (cons columns captured))
+                       (set-car! columns 1)
+                       index)))
+                  (.extend-index!
+                   (lambda (index rows columns)
+                     (set! extensions (+ extensions 1))
+                     (let (next ((.ref gerbil-ascent-hash-index-provider '.extend-index!) index rows columns))
+                       (set! captured (cons columns captured))
+                       (set-car! columns 1)
+                       next)))
+                  (.lookup-index
+                   (lambda (index key)
+                     (let (answer ((.ref gerbil-ascent-hash-index-provider '.lookup-index) index key))
+                       (set! captured (cons key captured))
+                       (set-cdr! key '(99))
+                       answer)))))
+             (rows (map (lambda (n) (list 0 n)) (iota 32)))
+             (h (index-entry-harness #f rows provider))
+             (query (vector-ref h 0)) (advance! (vector-ref h 1))
+             (columns (list 0))
+             (atom (index-entry-atom columns '(0) 2))
+             (alias (index-entry-atom (list 0) '(0) 2)))
+        (check-equal? (query atom [] #f #f) rows)
+        (check-equal? columns '(0))
+        (check-equal? (query alias [] #f #f) rows)
+        (check-equal? builds 1)
+        (advance! 0 '((0 32)))
+        (vector-set! (vector-ref h 2) 0 (cons '(0 32) rows))
+        (vector-set! (vector-ref h 4) 0 33)
+        (vector-set! (vector-ref h 6) 0 1)
+        (check-equal? columns '(0))
+        (check-equal? (query alias [] #f #f) (cons '(0 32) rows))
+        (check-equal? extensions 1)
+        ;; Retained callback headers cannot poison structural cache keys.
+        (for-each (lambda (header) (set-car! header 99)) captured)
+        (check-equal? (query atom [] #f #f) (cons '(0 32) rows))
+        (check-equal? builds 1)
+        (check-equal? (query atom [] #t #f) rows)
+        (check-equal? builds 2)
+        (check-equal? columns '(0))))
     (test-case "custom candidate membership follows all delta append and replacement versions"
       (let* ((override #f)
              (all (map (lambda (n) (list 0 n)) (iota 32)))

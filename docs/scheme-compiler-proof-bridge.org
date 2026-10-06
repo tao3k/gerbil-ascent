@@ -1145,3 +1145,59 @@ symbol identity mapping, universal descriptor decoding, callback refinement
 and native Provider/completed-component correspondence remain open bridges.
 TLA+ retains lifecycle/publication ownership. This adds no runtime validator,
 performance claim, model call or MR integration.
+
+* Constructed canonical Set frontier and ground model (2026-10-06)
+
+[[https://kmicinski.com/assets/byods.pdf][B23]] section 3.1 recovers ordinary relations through singleton injection and
+identity concretization. Section 3.2 equations (1)-(2) additionally require
+total/delta coverage and prohibit new facts from skipping delta. The canonical
+Set instance is now constructed in the existing =ProviderFrontier= and
+=GroundedBinding= owners rather than supplied as an enumeration premise.
+
+=ProviderFrontier.SetBatch.admit= consumes oldest-first candidates and retains
+newest-first accepted rows. =admitted_exact= characterizes precisely pending
+membership absent from the prior Set; =admitted_unique= and =published_unique=
+establish duplicate freedom. =published_exact= establishes singleton-injection
+union, =frontier_exact= equates accepted membership with the entire concrete
+Set difference, and =repeated_batch_empty= proves that replay adds nothing.
+These contracts preserve source occurrence logs separately from fact identity.
+
+=sourceAdmit= constructs the staged newest-first source-prefix path.
+=source_admitted_exact= excludes rows outside that prefix. =admit_disjoint= and
+=unique_whole_log= prove that unique whole logs produce exactly their original
+ordered value list, agreeing with the native shared-spine fast path. Native
+descriptor admission owns the bounded-count precondition; the model's =take=
+operation is not a native out-of-range validator. Pointer identity and hash
+key equality remain native representation obligations.
+
+=GroundedBinding.snapshotRows= constructs a finite admitted-universe filter.
+=snapshot_rows_faithful=, =snapshot_rows_admitted= and =snapshot_rows_monotone=
+derive enumeration and monotonicity. =snapshot_delta_exact= supplies the exact
+compiled-body frontier instance. =snapshot_compiled_ground_exact= connects the
+compiled binder to constructed ground witnesses without caller-supplied
+enumeration faithfulness. =snapshot_indexed_history= derives correspondence
+for every natural-number round, with no generation or iteration cutoff.
+
+=snapshot_component_least= equates the constructed finite ground component
+solver with membership in every ordinary-binder closed model covering the
+seed. Its existing ground planner constructs local stabilization; callers
+supply head coverage and topology, not a completed answer or stable-result
+premise. This theorem does not identify the native actor's completion with
+that planner. The finite universe, symbol/scalar interpretation, native SCC
+projection and credit/publication extraction remain necessary bridges.
+
+Executable examples and axiom reports remain in =Tests/GroundedBindingTests=.
+They include staged prefixes, false values, missing delta, duplicate seed
+heads, an indexed literal-key consumer, all-round history and one-component
+least-model instantiation. The existing native Set-batch suite now checks 640
+finite retained-state cases plus two false/nullary controls against independent
+list membership. Every new row enters delta, the union is complete, and replay
+uses the actual returned membership root. Existing 3282 prefix comparisons,
+first-occurrence identity and large shared/duplicate-log controls remain.
+The [[file:evidence/scheme-set-frontier-20261006/receipt.json][source-bound receipt]] records both verification collections.
+
+This closes the canonical finite Set model instance and qualifies its native
+batch observations. It does not instantiate arbitrary lattice/custom Provider
+concretizations or prove universal Gambit hash extraction. No production
+Scheme runtime behavior changes here. TLA+ retains publication, ownership,
+cancellation and failure sequencing; no duplicate Set algebra model is added.

@@ -1161,6 +1161,7 @@ least-model correspondence. Native finite probes qualify representation
 examples; they are not the universal extraction theorem. Callback/host closure
 refinement, typed change algebra and measured application benefit remain
 distinct obligations. MR is a future consumer of the accepted library.
+
 * A22 native correspondence: checked delta ordinals and one projection owner
 
 This Scheme implementation slice starts from PR #1 revision
@@ -1206,3 +1207,33 @@ It does not prove universal native compiler refinement, whole-framework paper
 replication or a performance improvement. Those audit gaps remain as stated;
 this supplies the executable selector/projection invariant for the separate
 semantic correspondence work.
+
+* Canonical Set instance through component least model (2026-10-06)
+
+The B23 primary text was reread at sections 3.1-3.2: ordinary Set singleton
+injection/identity concretization and total/delta coverage are distinct from
+the arbitrary abstract-domain theorem. The [[file:scheme-compiler-proof-bridge.org][compiler bridge]] now constructs
+this Set instance, including staged source prefixes, exact admitted frontier,
+duplicate freedom and replay. Actual native membership roots are checked with
+independent list truth; no runtime contract wrapper is introduced.
+
+The admitted-universe snapshot filter derives the previously supplied
+faithfulness, row admission and monotonicity premises. Those constructed laws
+feed compiled grounding and every indexed history round. The finite ground
+planner then characterizes the least ordinary-binder model with head coverage
+and topology, constructing its own stabilization witness. Examples and axiom
+reports stay under =Tests/=; TLA+ keeps the separate temporal protocols.
+
+The [[file:evidence/scheme-set-frontier-20261006/receipt.json][receipt]] records the complete native Set-batch suite, the complete Lean
+collection and repaired proof elaboration failures. This is a canonical Set
+semantic instance with native finite representation checks. Custom lattice
+frontiers, Gambit equality/hash and source/name decoding, native SCC/actor
+completed-result extraction and measured application benefit remain distinct.
+MR integration remains deferred.
+
+This package also rebases onto =27cd6ae47e8fb2e070deaf9aa94ec23b80be568c=,
+preserving the concurrent checked delta-ordinal and centralized output
+projection implementation above. Both appended audit sections are retained.
+The complete Lean collection and native Set-batch suite are qualified again
+on the combined source; the receipt keeps the earlier native source boundary
+separate. The selector/SCC receipt continues to own its own native results.

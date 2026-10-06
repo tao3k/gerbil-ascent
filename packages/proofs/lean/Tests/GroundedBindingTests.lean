@@ -23,14 +23,10 @@ example : ground domainRows emit atoms [] =
 example : ground domainRows (fun _ => [(3, [])]) [] [] = [⟨[], (3, [])⟩] := rfl
 example : ground domainRows emit [⟨9, [.wildcard]⟩] [] = [] := rfl
 
-noncomputable def rows (database : Database (Fact Nat Nat)) (key : Nat) : List (List Nat) := by
-  classical
-  exact (domainRows key).filter (fun row => decide (database (key, row)))
+noncomputable def rows := snapshotRows domainRows
 theorem faithful : ∀ database key row, row ∈ rows database key ↔
     row ∈ domainRows key ∧ database (key, row) := by
-  classical
-  intro database key row
-  simp [rows]
+  exact snapshot_rows_faithful domainRows
 example (database : Database (Fact Nat Nat)) (item : Fact Nat Nat) :
     (∃ rule ∈ ground domainRows emit atoms [], Holds database rule.body ∧ rule.head = item) ↔
     ∃ output, ProviderFrontier.body (PositiveConsequence.transition (rows database))
@@ -43,4 +39,88 @@ example (database : Database (Fact Nat Nat)) (item : Fact Nat Nat) :
 #print axioms Ascent.GroundedBinding.binder_least_model
 #print axioms Ascent.GroundedBinding.credited_compiled_closed
 #print axioms Ascent.GroundedBinding.completed_compiled_least
+#print axioms Ascent.GroundedBinding.snapshot_rows_faithful
+#print axioms Ascent.GroundedBinding.snapshot_rows_admitted
+#print axioms Ascent.GroundedBinding.snapshot_rows_monotone
+#print axioms Ascent.GroundedBinding.snapshot_delta_exact
+#print axioms Ascent.GroundedBinding.snapshot_compiled_ground_exact
+#print axioms Ascent.GroundedBinding.snapshot_indexed_history
+#print axioms Ascent.GroundedBinding.snapshot_component_least
+#print axioms Ascent.ProviderFrontier.SetBatch.admitted_exact
+#print axioms Ascent.ProviderFrontier.SetBatch.admitted_unique
+#print axioms Ascent.ProviderFrontier.SetBatch.published_exact
+#print axioms Ascent.ProviderFrontier.SetBatch.published_unique
+#print axioms Ascent.ProviderFrontier.SetBatch.frontier_exact
+#print axioms Ascent.ProviderFrontier.SetBatch.repeated_batch_empty
+#print axioms Ascent.ProviderFrontier.SetBatch.source_admitted_exact
+#print axioms Ascent.ProviderFrontier.SetBatch.admit_disjoint
+#print axioms Ascent.ProviderFrontier.SetBatch.unique_whole_log
+
+example : ProviderFrontier.SetBatch.admit [false, true, false] [true] = [false] := by decide
+example : ProviderFrontier.SetBatch.admit [false, true, false] ([] : List Bool) = [true, false] := by decide
+example : ProviderFrontier.SetBatch.publish [false, false] [true] = [false, true] := by decide
+example : ProviderFrontier.SetBatch.sourceAdmit [false, true, false] 0 [] = [] := by decide
+example : ProviderFrontier.SetBatch.sourceAdmit [false, true, false] 1 [] = [false] := by decide
+example : ProviderFrontier.SetBatch.sourceAdmit [false, true, false] 2 [] = [false, true] := by decide
+example : ProviderFrontier.SetBatch.sourceAdmit [false, true, false] 3 [] = [true, false] := by decide
+example : ProviderFrontier.SetBatch.admit [false, true, false]
+    (ProviderFrontier.SetBatch.publish [false, true, false] []) = [] := by decide
+/-- Empty/missing delta cannot satisfy the frontier of a genuinely new row. -/
+example : ProviderFrontier.delta (fun r : Bool => r ∈ [false])
+    (fun r => r ∈ ProviderFrontier.SetBatch.publish [true] [false]) true ∧
+    true ∉ ([] : List Bool) := by unfold ProviderFrontier.delta; decide
+example : snapshotRows domainRows (fun fact => fact ∈ reads) 0 = [[1, 1, 1]] := by
+  classical
+  simp [snapshotRows, domainRows, reads]
+example : snapshotRows domainRows (fun fact => fact ∈ reads) 9 = [] := by
+  classical
+  simp [snapshotRows, domainRows]
+
+example (before after : Database (Fact Nat Nat)) (grows : ∀ fact, before fact → after fact) :
+    IndexedPositiveTraversal.DeltaCovers
+      (IndexedIteration.instantiate [(⟨0, [.wildcard, .wildcard, .wildcard]⟩, [])]
+        (snapshotRows domainRows before) (snapshotRows domainRows after)) :=
+  IndexedPositiveTraversal.exact_covers _ (snapshot_delta_exact domainRows _ before after grows)
+def boolDomain : Nat → List (List Bool)
+  | 0 => [[false]]
+  | 1 => [[true]]
+  | _ => []
+def seedRule : IndexedIteration.Rule Nat Bool (Fact Nat Bool) :=
+  ⟨[], [], [], (fun _ => false), (fun _ => [(0, [false]), (0, [false])]),
+    (fun _ _ => [(0, [false]), (0, [false])])⟩
+def stepRule : IndexedIteration.Rule Nat Bool (Fact Nat Bool) :=
+  ⟨[(⟨0, [.literal false]⟩, [0])], [], [], (fun _ => true),
+    (fun _ => [(1, [true]), (1, [true])]), (fun _ _ => [(1, [true]), (1, [true])])⟩
+def boolRules := [seedRule, stepRule]
+example : programGround boolDomain boolRules =
+    [⟨[], (0, [false])⟩, ⟨[], (0, [false])⟩,
+     ⟨[(0, [false])], (1, [true])⟩, ⟨[(0, [false])], (1, [true])⟩] := rfl
+theorem boolValid : ∀ rule ∈ boolRules,
+    IndexedIteration.Valid (fun key row => row ∈ boolDomain key) rule := by
+  intro rule member
+  simp only [boolRules, List.mem_cons, List.not_mem_nil, or_false] at member
+  rcases member with rfl | rfl <;>
+    simp [IndexedIteration.Valid, IndexedIteration.Schema, seedRule, stepRule,
+      boolDomain, PositiveSlots.Represents, lookup, PositiveSlots.slot,
+      IndexedPositiveTraversal.KnownColumns, wanted]
+
+/-- Duplicate seed heads and an indexed literal-key consumer instantiate every
+round without supplied row-admission or monotonicity premises. -/
+example (n : Nat) : IndexedIteration.indexed boolRules (snapshotRows boolDomain) (fun _ => False) n =
+    (IndexedIteration.naive boolRules (snapshotRows boolDomain) (fun _ => False) n,
+     IndexedIteration.naive boolRules (snapshotRows boolDomain) (fun _ => False) (n + 1)) :=
+  snapshot_indexed_history boolDomain boolRules boolValid _ n
+
+/-- One component uses the constructed stabilization witness, rather than an
+assumed completed native answer or a fixed iteration cutoff. -/
+example (fact : Fact Nat Bool) :
+    solve (programGround boolDomain boolRules) (fun _ => ())
+      (planned (programGround boolDomain boolRules) (fun _ => ()) [()] (fun _ => False))
+      (fun _ => False) fact ↔
+    ∀ model : Database (Fact Nat Bool),
+      (∀ item, False → model item) →
+      (∀ rule ∈ boolRules, ∀ item,
+        IndexedIteration.consequence rule (snapshotRows boolDomain) model item → model item) → model fact :=
+  snapshot_component_least boolDomain boolRules (fun _ => ()) [()] (fun _ => False)
+    (by simp) (by simp [Topological]) fact
 end Ascent.GroundedBindingTests

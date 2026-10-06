@@ -51,6 +51,44 @@
 
 (def ascent-set-batch-test
   (test-suite "source-order Set batch admission"
+    (poo-flow-test-case "retained Set membership exposes every new frontier and no old occurrence"
+      (let ((comparisons 0)
+            (initials '(() ((0)) ((1)) ((2)) ((0) (1)) ((0) (2)) ((1) (2)) ((0) (1) (2)))))
+        (def (check-retained log initial share?)
+          (let (seen (make-hash-table))
+            (for-each (lambda (row) (hash-put! seen row #t)) initial)
+            (let-values (((expected known) (gold log (length log) initial))
+                         ((accepted present) (gerbil-ascent-set-batch-admit! log (length log) seen share?)))
+              (check-equal? accepted expected)
+              (check-equal? (hash-length present) (length known))
+              (for-each
+               (lambda (row)
+                 (let ((prior? (not (not (member row initial))))
+                       (next? (not (not (member row known))))
+                       (delta? (not (not (member row accepted)))))
+                   (check-equal? (hash-get present row) (and next? #t))
+                   (check-equal? delta? (and next? (not prior?)))
+                   (check-equal? next? (or prior? delta?))))
+               (append '((0) (1) (2) (absent)) log initial))
+              ;; Reuse the actual returned table, including the empty-owner
+              ;; sharing path which creates a new membership root.
+              (let-values (((again reused)
+                            (gerbil-ascent-set-batch-admit! log (length log) present share?)))
+                (check-equal? again [])
+                (check-equal? (hash-length reused) (length known))
+                (for-each (lambda (row) (check-equal? (hash-get reused row) #t)) known)))
+            (set! comparisons (+ comparisons 1))))
+        (for-each
+         (lambda (width)
+           (for-each (lambda (log)
+                       (for-each (lambda (initial)
+                                   (for-each (lambda (share?) (check-retained log initial share?)) '(#f #t)))
+                                 initials))
+                     (logs width)))
+         (iota 4))
+        (check-equal? comparisons 640)
+        (check-retained '((#f) () (#f) (#t)) '((#t)) #t)
+        (check-retained '((#f) () (#f) (#t)) '((#t)) #f)))
     (poo-flow-test-case "finite logs and staged prefixes preserve independent goldens and row identity"
       (let (comparisons 0)
         (for-each

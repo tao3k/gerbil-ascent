@@ -1,0 +1,186 @@
+{
+  "baseHead": "cdf5dd89918c50f595a17934a717b7cfc9bbb2e4",
+  "boundary": "Constructed canonical Set semantics and native finite observations are distinct evidence. No production Scheme runtime behavior changed; source count admission and pointer identity are native contracts. No general custom lattice theorem or performance gain is inferred.",
+  "changedModules": {
+    "packages/proofs/lean/GroundedBinding.lean": "1678e70527091e85d5a11d38cce2817922196f0079a1151c2b80946e13992348",
+    "packages/proofs/lean/ProviderFrontier.lean": "37903a63a66f3f63b3be59947dcd46a5726f33233466e8635d8d9238a53645a8",
+    "packages/proofs/lean/Tests/GroundedBindingTests.lean": "7e7151ad6416a6f23f470864768e8cd2250a9fd70afe18b25260b27351090866",
+    "t/qualification/ascent-set-batch-test.ss": "419f9252088104e6f45379215f59bed1a98b31825e201c167609af04c2e81018"
+  },
+  "controls": [
+    "All eight prior subsets and source logs of length zero through three over three rows, with both sharing modes",
+    "Independent list membership verifies exact frontier and complete union",
+    "Repeat each batch using the actual returned native hash root",
+    "False/nullary rows and existing heterogeneous rows",
+    "Staged newest-first prefixes and unique whole-log value-order agreement",
+    "Independent native first-occurrence identity and shared-spine controls",
+    "Missing-delta Lean counterexample",
+    "Duplicate seed heads and literal-key consumer ground-rule golden",
+    "Every natural-number indexed history with constructed admission/monotonicity",
+    "One-component least-model instance with constructed stabilization"
+  ],
+  "integratedNativeModules": {
+    "core/positive-plan.ss": "98026c69ded872f67cd80d1a99a1c79bee87814029538b12373a00c51ca6f44f",
+    "program/component-plan.ss": "830988182d40ef53c55a2ce21fc80bde33caeeecd7c927af549236875500816f",
+    "program/update-selection.ss": "68d9ebfa7ec6bbdaf8a1f416a34b6dd79d2beefbf8cb20f14d46b6e869d6445a",
+    "t/qualification/ascent-positive-plan-test.ss": "a5d9df1ea532e728e8409fe5fb57fcc0bb19a999aeffd50a73f216f406a0d264"
+  },
+  "integration": "Both parallel audit sections retained. Upstream checked delta selectors and centralized head projection are preserved; their native selector/SCC evidence retains its own receipt. Complete Lean and focused native Set-batch qualification rerun on combined source.",
+  "modelCalls": 0,
+  "mr": "Deferred future library consumer.",
+  "nativeStorageSource": {
+    "table/storage.ss": "e3330749ef4192032b4251325018f223564a3ec7e1f93202158219de104cbb02"
+  },
+  "papers": [
+    {
+      "id": "B23",
+      "sections": "3.1-3.2",
+      "url": "https://kmicinski.com/assets/byods.pdf",
+      "use": "Canonical Set singleton injection/identity concretization and total/delta coverage; broader abstract-domain theorem remains separate."
+    }
+  ],
+  "previousNativeVerification": {
+    "qualifiedBaseHead": "cdf5dd89918c50f595a17934a717b7cfc9bbb2e4",
+    "verification": {
+      "cases": 5,
+      "command": "just test-file t/qualification/ascent-set-batch-test.ss",
+      "compilerHeap": "1G",
+      "executionSeconds": 1,
+      "existingPrefixComparisons": 3282,
+      "exitStatus": 0,
+      "explicitOK": 1,
+      "falseNullaryControls": 2,
+      "idleSeconds": 5,
+      "logSha256": "811f161e6155bc146cc25f1144d6d4bf72b7c40a6e68f881cc1a0505878ef78e",
+      "modules": 1,
+      "nativeModulesOK": true,
+      "retainedFiniteCases": 640,
+      "sourceCount": 547,
+      "sourceInventorySha256": "0fd726c2a7fc34ddaec63d447e9bfd0a4f8f4e9079494178018f4903ba13661a",
+      "startupSeconds": 5
+    }
+  },
+  "proofOwnership": "Lean owns Set membership, injection/frontier, snapshot/binder/history and ground least-model algebra. Existing TLA+ lifecycle, ownership, scheduling and publication models are unchanged.",
+  "qualifiedBaseHead": "27cd6ae47e8fb2e070deaf9aa94ec23b80be568c",
+  "rejectedChecks": [
+    "A control needed the delta definition unfolded to expose its decidable proposition.",
+    "The unique whole-log proof required explicit reversal of the Nodup relation.",
+    "The literal-key fixture initially referred to wanted in the wrong namespace. All elaboration failures were repaired without changing budgets or limits."
+  ],
+  "remaining": [
+    "Universal Scheme descriptor/scalar/name interpretation and Gambit equality/hash correspondence",
+    "Non-Set/custom lattice Provider concretization/frontier instances",
+    "Native SCC projection and actor completion/credit/publication extraction to the constructed semantic solver",
+    "Host closure/callback refinement and measured application benefit"
+  ],
+  "schema": "ascent.set-frontier-qualification",
+  "scope": "Constructed canonical finite Set admission/frontier and frozen snapshot enumeration through compiled grounding, all-round indexed history and finite component least-model characterization.",
+  "theorems": {
+    "admit_disjoint": [
+      "propext"
+    ],
+    "admitted_exact": [
+      "propext",
+      "Classical.choice",
+      "Quot.sound"
+    ],
+    "admitted_unique": [
+      "propext",
+      "Classical.choice",
+      "Quot.sound"
+    ],
+    "frontier_exact": [
+      "propext",
+      "Classical.choice",
+      "Quot.sound"
+    ],
+    "published_exact": [
+      "propext",
+      "Classical.choice",
+      "Quot.sound"
+    ],
+    "published_unique": [
+      "propext",
+      "Classical.choice",
+      "Quot.sound"
+    ],
+    "repeated_batch_empty": [
+      "propext",
+      "Classical.choice",
+      "Quot.sound"
+    ],
+    "snapshot_compiled_ground_exact": [
+      "propext",
+      "Classical.choice",
+      "Quot.sound"
+    ],
+    "snapshot_component_least": [
+      "propext",
+      "Classical.choice",
+      "Quot.sound"
+    ],
+    "snapshot_delta_exact": [
+      "propext",
+      "Classical.choice",
+      "Quot.sound"
+    ],
+    "snapshot_indexed_history": [
+      "propext",
+      "Classical.choice",
+      "Quot.sound"
+    ],
+    "snapshot_rows_admitted": [
+      "propext",
+      "Classical.choice",
+      "Quot.sound"
+    ],
+    "snapshot_rows_faithful": [
+      "propext",
+      "Classical.choice",
+      "Quot.sound"
+    ],
+    "snapshot_rows_monotone": [
+      "propext",
+      "Classical.choice",
+      "Quot.sound"
+    ],
+    "source_admitted_exact": [
+      "propext",
+      "Classical.choice",
+      "Quot.sound"
+    ],
+    "unique_whole_log": [
+      "propext",
+      "Quot.sound"
+    ]
+  },
+  "verification": {
+    "lean": {
+      "command": "just check-lean-proofs",
+      "exitStatus": 0,
+      "jobs": 84,
+      "logSha256": "e0608e57ba78286d17b3cb4ff6804c7b988a59030706affe09ef899fd6a8fbdb",
+      "sourceCount": 43,
+      "sourceInventorySha256": "020800e435aa0951bf645126560e691065202de47365df75a0cbaf6aa058a171"
+    },
+    "native": {
+      "cases": 5,
+      "command": "just test-file t/qualification/ascent-set-batch-test.ss",
+      "compilerHeap": "1G",
+      "executionSeconds": 0,
+      "existingPrefixComparisons": 3282,
+      "exitStatus": 0,
+      "explicitOK": 1,
+      "falseNullaryControls": 2,
+      "idleSeconds": 5,
+      "logSha256": "936752e65ed23fe5ae4e1ffc82cf6af86a9015aac2fa88a818fca391b2a5cd25",
+      "modules": 1,
+      "nativeModulesOK": true,
+      "retainedFiniteCases": 640,
+      "sourceCount": 547,
+      "sourceInventorySha256": "c36ce17d5a1287c5a8711e6fd58241fad10d7ff72945003c7591ba3a636cdc94",
+      "startupSeconds": 5
+    }
+  },
+  "version": 1
+}

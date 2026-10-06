@@ -150,4 +150,103 @@ theorem new_consequence_pivot (old next : Key → Env → Env → Prop)
   · rintro ⟨fresh, absent⟩
     exact ⟨(projected_partition old next grows keys seed emit row).mpr (Or.inr fresh), absent⟩
 
+namespace SetBatch
+variable {Row : Type} [DecidableEq Row]
+
+/-- Consume oldest-first candidate occurrences, retaining the native newest-
+first accepted order. Membership, rather than occurrence identity, owns Set
+admission; callers retain separate source logs. -/
+def admit : List Row → List Row → List Row
+  | [], _ => []
+  | row :: rest, known =>
+      if row ∈ known then admit rest known
+      else admit rest (row :: known) ++ [row]
+
+theorem admitted_exact (pending known : List Row) (row : Row) :
+    row ∈ admit pending known ↔ row ∈ pending ∧ row ∉ known := by
+  induction pending generalizing known with
+  | nil => simp [admit]
+  | cons first rest ih =>
+      by_cases present : first ∈ known
+      · simp [admit, present, ih]; grind
+      · simp [admit, present, ih]; grind
+
+theorem admitted_unique (pending known : List Row) : (admit pending known).Nodup := by
+  induction pending generalizing known with
+  | nil => simp [admit]
+  | cons first rest ih =>
+      by_cases present : first ∈ known
+      · simpa [admit, present] using ih known
+      · rw [admit, if_neg present, List.nodup_append]
+        refine ⟨ih _, by simp, ?_⟩
+        intro a member b equal
+        have fresh := (admitted_exact rest (first :: known) a).mp member
+        simp only [List.mem_singleton] at equal
+        subst b
+        intro same
+        exact fresh.2 (by simp [same])
+
+/-- Injection followed by identity concretization adds exactly the frontier. -/
+def publish (pending known : List Row) : List Row := admit pending known ++ known
+
+theorem published_exact (pending known : List Row) (row : Row) :
+    row ∈ publish pending known ↔ row ∈ known ∨ row ∈ pending := by
+  simp only [publish, List.mem_append, admitted_exact]
+  by_cases prior : row ∈ known <;> simp [prior]
+
+theorem published_unique (pending known : List Row) (unique : known.Nodup) :
+    (publish pending known).Nodup := by
+  rw [publish, List.nodup_append]
+  refine ⟨admitted_unique pending known, unique, ?_⟩
+  intro a member b prior equal
+  subst b
+  exact ((admitted_exact pending known a).mp member).2 prior
+
+theorem frontier_exact (pending known : List Row) (row : Row) :
+    row ∈ admit pending known ↔ delta (fun r => r ∈ known)
+      (fun r => r ∈ publish pending known) row := by
+  simp only [admitted_exact, delta, published_exact]
+  grind
+
+theorem repeated_batch_empty (pending known : List Row) :
+    admit pending (publish pending known) = [] := by
+  apply List.eq_nil_iff_forall_not_mem.mpr
+  intro row member
+  have fresh := (admitted_exact pending (publish pending known) row).mp member
+  exact fresh.2 ((published_exact pending known row).mpr (Or.inr fresh.1))
+
+/-- Staged logs are newest-first; only the admitted prefix is consumed. Native
+descriptor admission owns the count <= log length precondition. -/
+def sourceAdmit (sourceLog : List Row) (count : Nat) (known : List Row) : List Row :=
+  admit (sourceLog.take count).reverse known
+
+theorem source_admitted_exact (sourceLog : List Row) (count : Nat) (known : List Row) (row : Row) :
+    row ∈ sourceAdmit sourceLog count known ↔ row ∈ sourceLog.take count ∧ row ∉ known := by
+  simp [sourceAdmit, admitted_exact]
+
+theorem admit_disjoint (pending known : List Row) (unique : pending.Nodup)
+    (disjoint : ∀ row ∈ pending, row ∉ known) : admit pending known = pending.reverse := by
+  induction pending generalizing known with
+  | nil => rfl
+  | cons first rest ih =>
+      have fresh := disjoint first List.mem_cons_self
+      have tailUnique := (List.nodup_cons.mp unique).2
+      have tailDisjoint : ∀ row ∈ rest, row ∉ first :: known := by
+        intro row member present
+        rcases List.mem_cons.mp present with equal | prior
+        · exact (List.nodup_cons.mp unique).1 (equal ▸ member)
+        · exact disjoint row (List.mem_cons_of_mem first member) prior
+      simp only [admit, if_neg fresh, List.reverse_cons]
+      rw [ih _ tailUnique tailDisjoint]
+
+theorem unique_whole_log (sourceLog : List Row) (unique : sourceLog.Nodup) :
+    sourceAdmit sourceLog sourceLog.length [] = sourceLog := by
+  unfold sourceAdmit
+  simp only [List.take_length]
+  have reversed : sourceLog.reverse.Nodup := by
+    simpa only [List.Nodup, List.pairwise_reverse, ne_comm] using unique
+  rw [admit_disjoint _ [] reversed (by simp)]
+  simp
+
+end SetBatch
 end Ascent.ProviderFrontier

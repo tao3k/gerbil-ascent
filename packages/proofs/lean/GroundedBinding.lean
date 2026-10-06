@@ -12,6 +12,43 @@ open AtomicBinding ComponentClosure
 variable {Key Value : Type} [DecidableEq Value]
 abbrev Fact (Key Value : Type) := Key × List Value
 
+/-- Canonical finite Set concretization, constructed from the frozen admitted
+row universe. No provider-faithfulness premise is supplied by the caller. -/
+noncomputable def snapshotRows (domainRows : Key → List (List Value)) :
+    IndexedIteration.Rows Key Value (Fact Key Value) := by
+  classical
+  exact fun database key => (domainRows key).filter (fun row => decide (database (key, row)))
+
+omit [DecidableEq Value] in
+theorem snapshot_rows_faithful (domainRows : Key → List (List Value))
+    (database : Database (Fact Key Value)) (key : Key) (row : List Value) :
+    row ∈ snapshotRows domainRows database key ↔ row ∈ domainRows key ∧ database (key, row) := by
+  classical
+  simp [snapshotRows]
+
+omit [DecidableEq Value] in
+theorem snapshot_rows_admitted (domainRows : Key → List (List Value)) :
+    IndexedIteration.RowsAdmitted (fun key row => row ∈ domainRows key) (snapshotRows domainRows) := by
+  intro database key row present
+  exact ((snapshot_rows_faithful domainRows database key row).mp present).1
+
+omit [DecidableEq Value] in
+theorem snapshot_rows_monotone (domainRows : Key → List (List Value)) :
+    IndexedIteration.RowsMonotone (snapshotRows domainRows) := by
+  intro before after grows key row present
+  obtain ⟨admitted, known⟩ := (snapshot_rows_faithful domainRows before key row).mp present
+  exact (snapshot_rows_faithful domainRows after key row).mpr ⟨admitted, grows _ known⟩
+
+/-- Exact row differences and canonical snapshots construct the indexed pivot
+frontier contract for every finite body and growing database pair. -/
+theorem snapshot_delta_exact (domainRows : Key → List (List Value))
+    (specs : List (IndexedIteration.Spec Key Value))
+    (before after : Database (Fact Key Value)) (grows : ∀ fact, before fact → after fact) :
+    IndexedPositiveTraversal.DeltaExact
+      (IndexedIteration.instantiate specs (snapshotRows domainRows before) (snapshotRows domainRows after)) :=
+  IndexedIteration.instantiated_delta specs _ _
+    (snapshot_rows_monotone domainRows before after grows)
+
 /-- Failed bindings produce no rule; successful paths retain every read fact.
 Empty bodies and repeated/multiple emitted heads retain their list semantics. -/
 def ground (domainRows : Key → List (List Value))
@@ -220,4 +257,59 @@ theorem completed_compiled_least
     induction derived with
     | seed present => exact covers _ present
     | fire rule member body ih => exact groundClosed rule member (fun f h => ih f h)
+/-- The canonical Set instance now connects actual compiled binding to the
+constructed ground rules without a caller-supplied enumeration axiom. -/
+theorem snapshot_compiled_ground_exact (domainRows : Key → List (List Value))
+    (rule : IndexedIteration.Rule Key Value (Fact Key Value))
+    (valid : IndexedIteration.Valid (fun key row => row ∈ domainRows key) rule)
+    (database : Database (Fact Key Value)) (item : Fact Key Value) :
+    item ∈ IndexedIteration.fullRun rule (snapshotRows domainRows) database ↔
+      ∃ clause ∈ ruleGround domainRows rule, Holds database clause.body ∧ clause.head = item :=
+  compiled_ground_exact domainRows (snapshotRows domainRows)
+    (snapshot_rows_faithful domainRows) rule valid database item
+
+/-- The constructed canonical enumerator supplies both admission and monotonic
+concretization to every natural-number indexed history. -/
+theorem snapshot_indexed_history (domainRows : Key → List (List Value))
+    (rules : List (IndexedIteration.Rule Key Value (Fact Key Value)))
+    (valid : ∀ rule ∈ rules, IndexedIteration.Valid (fun key row => row ∈ domainRows key) rule)
+    (initial : Database (Fact Key Value)) (n : Nat) :
+    IndexedIteration.indexed rules (snapshotRows domainRows) initial n =
+      (IndexedIteration.naive rules (snapshotRows domainRows) initial n,
+       IndexedIteration.naive rules (snapshotRows domainRows) initial (n + 1)) :=
+  IndexedIteration.indexed_iterations_equal rules _ _ valid
+    (snapshot_rows_admitted domainRows) (snapshot_rows_monotone domainRows) initial n
+
+/-- The constructed finite component solver is the least model of ordinary
+binder consequences for the canonical Set instance. Stability is constructed
+by the existing ground planner, not assumed of an arbitrary completed result. -/
+theorem snapshot_component_least {Component : Type}
+    (domainRows : Key → List (List Value))
+    (rules : List (IndexedIteration.Rule Key Value (Fact Key Value)))
+    (owner : Fact Key Value → Component) (order : List Component)
+    (seed : Database (Fact Key Value))
+    (heads : ∀ clause ∈ programGround domainRows rules, owner clause.head ∈ order)
+    (topology : Topological (programGround domainRows rules) owner order)
+    (fact : Fact Key Value) :
+    solve (programGround domainRows rules) owner
+      (planned (programGround domainRows rules) owner order seed) seed fact ↔
+    ∀ model : Database (Fact Key Value),
+      (∀ item, seed item → model item) →
+      (∀ rule ∈ rules, ∀ item,
+        IndexedIteration.consequence rule (snapshotRows domainRows) model item → model item) → model fact := by
+  constructor
+  · intro produced model covers closed
+    exact binder_least_model domainRows _ (snapshot_rows_faithful domainRows)
+      rules owner order seed model heads topology covers closed fact produced
+  · intro least
+    apply (topological_least (programGround domainRows rules) owner order seed heads topology fact).mpr
+    apply least (Derivable (programGround domainRows rules) seed)
+    · intro item present
+      exact Derivable.seed present
+    · intro rule member item consequence
+      obtain ⟨clause, present, held, equal⟩ :=
+        (program_exact domainRows _ (snapshot_rows_faithful domainRows) rules _ item).mp
+          ⟨rule, member, consequence⟩
+      exact equal ▸ Derivable.fire clause present held
+
 end Ascent.GroundedBinding

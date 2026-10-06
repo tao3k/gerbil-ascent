@@ -303,3 +303,37 @@ run. The algorithm, row order, field callback behavior and budget checks are
 preserved. Existing exhaustive deletion/dependency and lattice-budget Cases
 remain the semantic gate; native storage Cases cover the adjacent readiness
 boundary. See [[file:../../evidence/scheme-reuse-owner-20261006/receipt.json][the revision-bound receipt]].
+
+
+* Physical index revocation and engine publication are separate (2026-10-07)
+
+B23 §3.3, PDF pp. 7–9, requires represented total/delta facts to remain
+consistent with the concretization; §4 adds indexes as implementation
+structures. Those premises do not specify exception recovery for a mutable
+index callback after engine admission. A cache's revoked version is therefore
+insufficient evidence that the engine itself remains reusable.
+
+The Scheme Set source flush admits membership before extending a live total
+index. A custom extension that clears its index and raises can interrupt that
+flush before total/delta rows, sizes and versions advance. The previous raw
+engine accepted a second run, despite the interrupted membership publication.
+The executable counterexample observes this successful retry; it is not a
+performance result or a new algebraic proof.
+
+The evaluator now owns an engine-local =publication-failed?= flag. Its shared
+index advance dispatch marks this flag on any extension failure and rethrows
+the original condition. Raw run, timed run and both source append entrypoints
+require source replay thereafter. A successful whole-source replacement can
+clear the flag because it builds and evaluates a fresh candidate before
+adoption. Checked Session uses its existing reconstruction from the last
+committed source cut. Private graph/custom storage readiness remains a
+separate prerequisite and retains its original failure diagnostic.
+
+This wrapper covers Set flush, whole-round commit and non-Set source admission
+at their one index advance seam. A direct physical index owner can still revoke
+and rebuild its cache from committed rows; the engine has the stronger burden
+of preserving rows, membership, budgets and delta publication together.
+Arbitrary callback effects and mutable nested fields remain outside this
+recovery guarantee. The native Case checks ordinary and single-relation Set
+entrypoints, Session restoration and old snapshot stability. See
+[[file:../../evidence/scheme-engine-publication-20261007/receipt.json][the focused publication receipt]].

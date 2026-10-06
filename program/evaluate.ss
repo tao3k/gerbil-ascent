@@ -136,7 +136,8 @@
            (lattice-rows (make-vector count #f))
            (source-count 0)
            (source-materialized-count 0)
-           (derived-count 0))
+           (derived-count 0)
+           (publication-failed? #f))
       (def position-of
         (if (= count 1)
           (lambda (name)
@@ -148,7 +149,16 @@
               (unless slot (error "unknown ASCENT relation" name))
               (- slot 1)))))
       (def indexed-rows (row-indexes-rows indexes))
-      (def advance-all-indexes! (row-indexes-advance! indexes))
+      ;; Cache revocation alone cannot undo membership or rows already admitted
+      ;; by this engine. A failed index publication requires source reconstruction.
+      (def advance-all-indexes!
+        (let (advance! (row-indexes-advance! indexes))
+          (lambda (index rows (reverse-order? #f))
+            (with-catch
+             (lambda (failure)
+               (set! publication-failed? #t)
+               (raise failure))
+             (lambda () (advance! index rows reverse-order?))))))
       (call-with-values
        (lambda ()
          (gerbil-ascent-initialize-sources! relations schema
@@ -271,6 +281,8 @@
                (set! dirty? #f)))))
         (def (run-retained! (deadline #f))
          (for-each gerbil-ascent-storage-check-state! storage-owners)
+         (when publication-failed?
+           (error "ASCENT engine publication requires source replay"))
          (when dirty? (flush-staged-set-rows!))
          ;; One invocation owns the complete round workspace. Clearing slots
          ;; after commit releases pending state while delta keeps its row spine.
@@ -721,6 +733,8 @@
               (set! dirty? #t))
             (def (append-source! name row)
               (for-each gerbil-ascent-storage-check-state! storage-owners)
+              (when publication-failed?
+                (error "ASCENT engine publication requires source replay"))
               (when first-run?
                 (error "ASCENT session must run before source updates"))
               (let* ((index (position-of name))
@@ -806,6 +820,8 @@
                 (gerbil-ascent-storage-admit-state!
                  (vector-ref storage-states index))))
             (def (append-single-set-source! name row)
+              (when publication-failed?
+                (error "ASCENT engine publication requires source replay"))
               (if recompute-from-source?
                 (append-source! name row)
                 (begin
@@ -841,6 +857,7 @@
                     (vector-set! source-overrides index rows)
                     (vector-set! source-additions index [])
                     (set! recompute-from-source? #t)
+                    (set! publication-failed? #f)
                     (set! dirty? #f)
                     (set! last-result result)))))
             (def (run-session!)

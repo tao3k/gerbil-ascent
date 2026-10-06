@@ -1800,3 +1800,32 @@ policy and package build pass again. Six affected native modules pass
 82 Cases with all completion markers and no watchdog failure; source
 hashes and this distinct integration run are retained in the source
 initialization receipt.
+
+
+* Engine index publication failure and source reconstruction (2026-10-07)
+
+After integrating initialization owner revision =b7abe1b=, this slice closes
+an engine boundary adjacent to physical cache revocation. Set source flush
+admits membership before custom index extension. A mutate-then-raise extension
+previously allowed a second raw engine run to report success. Cache revocation
+alone did not repair the interrupted engine publication.
+
+One engine-local failure flag now wraps the shared index advance dispatch.
+It preserves the original exception and requires source replay for subsequent
+raw run, timed run and both append entrypoints. Checked Session reconstructs
+from its committed source cut. Whole-source replacement evaluates a fresh
+candidate before clearing this new flag. Storage owner readiness remains
+independent; direct physical index owners retain their existing rebuild path.
+
+The [[file:evidence/scheme-engine-publication-20261007/receipt.json][receipt]] binds the integrated source freeze to 42 native Cases: storage 19
+and index ownership 23. The new Case checks multi-relation and single-Set
+entrypoints, rejection after interrupted publication, Session recovery to all
+33 facts and stability of the previous 32-fact result. Both commands exited
+zero with native module/harness markers and explicit =OK=. Policy build exited
+zero with 17 findings and no errors. An intermediate malformed fixture is
+retained as development history, separate from the semantic counterexample.
+
+The [[file:research/scheme-dsl/byods-b23.org][B23 follow-up]] explains the concretization/index distinction as an
+implementation inference. No algebraic theorem or performance claim is added.
+The 545-file Scheme source digest was checked unchanged across the final
+qualification. Full CI remains bound to the subsequent pushed revision.

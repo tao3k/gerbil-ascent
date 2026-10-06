@@ -5,7 +5,7 @@
         (only-in :clan/poo/object .ref .o)
         (only-in :gerbil-ascent/program/objects gerbil-ascent-program gerbil-ascent-relation
                  gerbil-ascent-rule gerbil-ascent-atom gerbil-ascent-variable
-                 gerbil-ascent-guard)
+                 gerbil-ascent-guard gerbil-ascent-literal)
         (only-in :gerbil-ascent/program/evaluate gerbil-ascent-make-engine gerbil-ascent-evaluate-program)
         (only-in :gerbil-ascent/table/storage gerbil-ascent-set-storage-provider
                  gerbil-ascent-eqrel-storage-provider gerbil-ascent-trrel-storage-provider
@@ -31,6 +31,57 @@
       (cons (car rows) (first-rows (cdr rows) (cons (car rows) seen))))))
 (def ascent-storage-batch-test
   (test-suite "ASCENT complete storage batch admission"
+    (test-case "interrupted Set source index publication requires engine source replay"
+      (for-each
+       (lambda (single?)
+        (let* ((result-name (if single? 'input 'out))
+               (reject? #f) (extensions 0)
+             (provider
+              (.o (:: @ gerbil-ascent-hash-index-provider)
+                  (.extend-index!
+                   (lambda (index rows columns)
+                     (set! extensions (+ extensions 1))
+                     (when reject?
+                       (hash-clear! index)
+                       (error "Set index publication failure"))
+                     ((.ref gerbil-ascent-hash-index-provider '.extend-index!) index rows columns)))))
+             (x (gerbil-ascent-variable 'x))
+             (atom (gerbil-ascent-atom 'input (list (gerbil-ascent-literal 0) x)))
+             (program
+              (gerbil-ascent-program
+               (cons (gerbil-ascent-relation 'input 2
+                       (map (lambda (n) (list 0 n)) (iota 32)) provider)
+                     (if single? [] (list (gerbil-ascent-relation 'out 1 []))))
+               (list (gerbil-ascent-rule
+                      (list (gerbil-ascent-atom result-name
+                              (if single? (list (gerbil-ascent-literal 0) x) (list x)))) (list atom atom)))
+               128 128 256))
+             (engine (gerbil-ascent-make-engine program #t)))
+        ((.ref engine '.run))
+        ((.ref engine '.append-source!) 'input '(0 32))
+        (set! reject? #t)
+        (check-equal? (failure (lambda () ((.ref engine '.run)))) "Set index publication failure")
+        (check-equal? (> extensions 0) #t)
+        (set! reject? #f)
+        (check-equal? (failure (lambda () ((.ref engine '.run))))
+                      "ASCENT engine publication requires source replay")
+        (check-equal? (failure (lambda () ((.ref engine '.append-source!) 'input '(0 33))))
+                      "ASCENT engine publication requires source replay")
+        ;; Checked Session reconstructs from the last committed source snapshot.
+        (let* ((session (gerbil-ascent-open-session program))
+               (old (gerbil-ascent-session-run session)))
+          (gerbil-ascent-session-append-source! session 'input '(0 32))
+          (set! reject? #t)
+          (check-equal? (failure (lambda () (gerbil-ascent-session-run session)))
+                        "Set index publication failure")
+          (set! reject? #f)
+          (check-equal? (length ((.ref (gerbil-ascent-session-run session) 'rows-of) result-name)) 32)
+          (gerbil-ascent-session-append-source! session 'input '(0 32))
+          (let (updated (gerbil-ascent-session-run session))
+            (check-equal? (length ((.ref updated 'rows-of) result-name)) 33)
+            (check-equal? (and (member (if single? '(0 32) '(32)) ((.ref updated 'rows-of) result-name)) #t) #t)
+            (check-equal? (length ((.ref old 'rows-of) result-name)) 32)))))
+       '(#f #t)))
     (test-case "native graph state cannot suppress facts after field rejection"
       (for-each
        (lambda (provider expected)

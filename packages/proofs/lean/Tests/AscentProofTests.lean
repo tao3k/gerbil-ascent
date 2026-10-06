@@ -429,3 +429,47 @@ example (old next : Bool → Bool → Bool → Prop) (seed output : Bool) :
 #print axioms Ascent.SourceUpdateFrame.admitted_source_budget
 
 #print axioms Ascent.Lowering.exact_frontier_not_positive_arrow
+
+namespace Ascent.InsertionChangeTests
+open Operators Operators.InsertionChange
+
+def one : Signature := .relation 1
+def empty : Meaning one := fun _ => False
+def full : Meaning one := fun _ => True
+
+theorem identity_change : Relates (.arrow one one) (fun x => x)
+    (fun _ change => change) (fun x => x) := by
+  intro base change next related
+  exact related
+
+theorem reveal_change : Relates (.arrow one one) (fun _ => empty)
+    (fun base change => union base change) (fun x => x) := by
+  intro base change next related row
+  simpa [empty, union] using related row
+
+-- Changing the outer function exposes a base fact even when the argument
+-- change is empty. Substituting an empty intermediate loses that fact.
+example : Relates one empty (union full empty) full := by
+  intro row; simp [empty, full, union]
+
+example : ¬ Relates one empty (union empty empty) full := by
+  intro related
+  have impossible := related 0
+  simp [empty, full, union] at impossible
+
+example : Relates (.arrow one one) (fun x => (fun _ => empty) x)
+    (fun base change => union base change) (fun x => x) := by
+  exact composition one one one (fun x => x) (fun x => x)
+    (fun _ change => change) (fun _ => empty) (fun x => x)
+    (fun base change => union base change) identity_change reveal_change
+
+-- A changed function can expose a fact away from an observed input such as
+-- zero. The contract quantifies over all inputs, including the 37th position.
+example : Relates (.arrow (.relation 64) one) (fun _ => empty)
+    (fun base change _ => base 37 ∨ change 37) (fun next _ => next 37) := by
+  intro base change next related row
+  simpa [empty] using related 37
+
+#print axioms Operators.InsertionChange.application
+#print axioms Operators.InsertionChange.composition
+end Ascent.InsertionChangeTests

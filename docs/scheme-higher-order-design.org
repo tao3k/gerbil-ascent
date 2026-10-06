@@ -174,3 +174,28 @@ existing function-valued fixed-point extension require their own statements;
 the S20 recursion rule and discreteness cannot be transferred by name. Native
 complete recomputation is the reference, not evidence of an implemented
 higher-order derivative. Examples and axiom reports remain under =Tests=.
+
+* Base-dependent typed change composition
+
+=Operators.InsertionChange= recursively defines relation insertion changes
+and arrow changes for the existing semantic signatures. A relation change
+relates the next value to the union of its base and insertion; an arrow change
+accepts both a base input and a valid input change. The application law allows
+the function and its argument to change simultaneously. The composition law
+constructs the output change as =dg (f base) (df base change)=, preserving the
+old intermediate value instead of replacing it with bottom or the next value.
+Its statement includes arbitrarily nested input, intermediate and output arrows.
+
+The tests under =Tests.AscentProofTests= discriminate a changed outer function
+that exposes an existing fact with no argument insertion: discarding the base
+intermediate provably loses that fact. A separate universally quantified
+contract exposes a change at input position 37, rather than treating a sampled
+input as function equality. Both generic application and composition theorems
+use no axioms.
+
+These are validity/composition laws conditional on the supplied changes. They
+do not construct a derivative for every arbitrary semantic function, establish
+change monotonicity or erase the discrete-base variance obligation. No native
+derivative compiler, changed lexical closure translation, fixed-point change
+transformation or performance gain follows from this semantic interface alone.
+The Scheme model study remains frozen independently of these Lean-only changes.

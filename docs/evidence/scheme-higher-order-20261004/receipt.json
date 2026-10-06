@@ -383,5 +383,34 @@
     "version": 1
   },
   "sourceHead": "79629d63da41868e0ce940868a8b49993e801219",
-  "version": 1
+  "version": 1,
+  "typedInsertionChangeComposition20261006": {
+    "sourceParentHead": "76283377cb256678e543a948114dccc404e617ba",
+    "sourceHashes": {
+      "packages/proofs/lean/FiniteOperators.lean": "b8968119f7ec3874504024a876ac43a13056e80258c0fd0dc698977ce99e57b6",
+      "packages/proofs/lean/Tests/AscentProofTests.lean": "f916df0f356cf380408e4a1e79b78a28a87cc878a6c8041c33ddc614ea5ec195"
+    },
+    "lean": {
+      "jobs": 84,
+      "exitCode": 0,
+      "logSha256": "fc5c09fb40260c2c7f0212e8ae55ac96a61c5d8cb4d6cd819be52a92dcf4f747"
+    },
+    "theorems": {
+      "Ascent.Operators.InsertionChange.application": {
+        "axioms": []
+      },
+      "Ascent.Operators.InsertionChange.composition": {
+        "axioms": []
+      }
+    },
+    "discriminators": [
+      "Simultaneously changing function and argument contracts",
+      "Composition carries the old intermediate into the outer change",
+      "Discarding a base fact fails even with no input insertion",
+      "Universally quantified function change observes position 37 rather than sampled function equality"
+    ],
+    "scope": "Typed semantic change validity and composition for nested relation/arrow signatures. Conditional on supplied valid changes; no derivative synthesis, change monotonicity, modal descriptor or native compiler transformation asserted.",
+    "modelSchemeBytesChanged": false,
+    "modelCalls": 0
+  }
 }

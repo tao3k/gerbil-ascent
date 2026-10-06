@@ -113,6 +113,46 @@ def MonotoneArrow (input output : Signature)
     (function : Meaning (.arrow input output)) :=
   ∀ a b, Ordered input a b → Ordered output (function a) (function b)
 
+/- S20 insertion changes retain a discrete base input as well as its change.
+   This is a semantic contract, not an ordinary positive arrow signature or
+   an implementation of the native compiler's derivative transformation. -/
+namespace InsertionChange
+
+def Delta : Signature → Type
+  | .relation n => Fin n → Prop
+  | .arrow input output => Meaning input → Delta input → Delta output
+
+def Relates : (t : Signature) → Meaning t → Delta t → Meaning t → Prop
+  | .relation _, before, delta, after => ∀ row, after row ↔ before row ∨ delta row
+  | .arrow input output, before, delta, after =>
+      ∀ base change next, Relates input base change next →
+        Relates output (before base) (delta base change) (after next)
+
+theorem application (input output : Signature)
+    (before after : Meaning (.arrow input output))
+    (delta : Delta (.arrow input output))
+    (base next : Meaning input) (change : Delta input)
+    (functions : Relates (.arrow input output) before delta after)
+    (arguments : Relates input base change next) :
+    Relates output (before base) (delta base change) (after next) :=
+  functions base change next arguments
+
+/-- The outer derivative consumes the actual old intermediate value and the
+inner derivative's change. Both functions and the argument may change; input,
+intermediate and output signatures may themselves contain arbitrary arrows. -/
+theorem composition (input middle output : Signature)
+    (f f' : Meaning (.arrow input middle)) (df : Delta (.arrow input middle))
+    (g g' : Meaning (.arrow middle output)) (dg : Delta (.arrow middle output))
+    (inner : Relates (.arrow input middle) f df f')
+    (outer : Relates (.arrow middle output) g dg g') :
+    Relates (.arrow input output) (fun x => g (f x))
+      (fun base change => dg (f base) (df base change)) (fun x => g' (f' x)) := by
+  intro base change next arguments
+  exact outer (f base) (df base change) (f' next)
+    (inner base change next arguments)
+
+end InsertionChange
+
 theorem nested_application_ordered (input output : Signature)
     (f g : Meaning (.arrow input output)) (a b : Meaning input)
     (functions : Ordered (.arrow input output) f g)

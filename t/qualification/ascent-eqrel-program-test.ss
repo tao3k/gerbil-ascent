@@ -49,8 +49,78 @@
     (not (block from)))
    (bounds input-limit derived-limit output-limit)))
 
+;; Independent active-domain Floyd oracle: no provider component lookup.
+(def (eqrel-reference-step previous edge width)
+  (let* ((next (vector-copy previous)) (a (car edge)) (b (cadr edge)))
+    (vector-set! next (+ (* a width) a) #t)
+    (vector-set! next (+ (* b width) b) #t)
+    (vector-set! next (+ (* a width) b) #t)
+    (vector-set! next (+ (* b width) a) #t)
+    (for-each
+     (lambda (k)
+       (for-each
+        (lambda (i)
+          (for-each
+           (lambda (j)
+             (when (and (vector-ref next (+ (* i width) k))
+                        (vector-ref next (+ (* k width) j)))
+               (vector-set! next (+ (* i width) j) #t)))
+           (iota width)))
+        (iota width)))
+     (iota width))
+    next))
+
+(def (check-eqrel-frontiers edges group (width 3))
+  (let ((state (gerbil-ascent-storage-make-state gerbil-ascent-eqrel-storage-provider))
+        (previous (make-vector (* width width) #f)) (all []))
+    (for-each
+     (lambda (edge)
+       (let* ((next (eqrel-reference-step previous edge width))
+              (row (if group (cons group edge) edge))
+              (expected
+               (filter-map
+                (lambda (n)
+                  (and (vector-ref next n) (not (vector-ref previous n))
+                       (let (pair (list (quotient n width) (modulo n width)))
+                         (if group (cons group pair) pair))))
+                (iota (* width width))))
+              (needed (length expected)))
+         ;; Reject on the very same state, then retry at its exact delta size.
+         (when (> needed 0)
+           (check-exception
+            (gerbil-ascent-storage-extend gerbil-ascent-eqrel-storage-provider
+                                         state all [] row (- needed 1))
+            true))
+         (let (actual (gerbil-ascent-storage-extend gerbil-ascent-eqrel-storage-provider
+                                                   state all [] row needed))
+           (check-equal? (length actual) needed)
+           (for-each (lambda (fact) (check-equal? (not (not (member fact actual))) #t))
+                     expected)
+           (check-equal? (gerbil-ascent-storage-extend gerbil-ascent-eqrel-storage-provider
+                                                     state all [] row 0) [])
+           (set! all (append actual all))
+           (set! previous next))))
+     edges)))
+
 (def ascent-eqrel-program-test
   (test-suite "ASCENT BYODS equivalence storage"
+    (poo-flow-test-case "eqrel exact frontier and rejected retry over every three-node graph"
+      (for-each
+       (lambda (mask)
+         (let (edges (filter-map
+                      (lambda (n)
+                        (and (odd? (quotient mask (expt 2 n)))
+                             (list (quotient n 3) (modulo n 3))))
+                      (iota 9)))
+           (check-eqrel-frontiers edges #f)
+           (check-eqrel-frontiers (reverse edges) "group"))
+         (when (zero? (modulo (+ mask 1) 32))
+           (displayln "EQREL-FRONTIER graphs=" (+ mask 1) "/512")
+           (force-output)))
+       (iota 512)))
+    (poo-flow-test-case "eqrel joins two non-singleton components with exact cross delta"
+      (check-eqrel-frontiers '((0 1) (2 3) (1 2) (0 3)) #f 4)
+      (check-eqrel-frontiers '((2 3) (0 1) (2 1) (3 0)) "group" 4))
     (poo-flow-test-case "binary eqrel yields reflexive symmetric transitive facts"
       (let (rows
             ((.ref (ascent-eqrel-fixture-evaluate

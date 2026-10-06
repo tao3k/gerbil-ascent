@@ -110,3 +110,13 @@ the index version and require rebuilding. See the
 This closes candidate membership for stable values, not lookup completeness
 or arbitrary Provider refinement. The custom boundary uses an additional
 equality table per physical index; runtime benefit has not been measured.
+* eqrel frontier instance follow-up (2026-10-06)
+
+The primary text was reread at sections 3.1 and 3.3. The active-domain eqrel
+instance now has Lean least-insertion and finite-history laws, reusable state
+invariants, group isolation and exact emitted/total decomposition. The
+[[file:../../evidence/scheme-eqrel-frontier-20261006/receipt.json][source-bound receipt]] records native independent Floyd per-batch qualification,
+budget rejection/retry and non-singleton merges. This closes this algebraic
+instance; it does not close arbitrary Provider contracts or universal hash /
+component representation extraction. Section 5.1's asymptotic and measured
+benefits are retained as paper results, not attributed to this Scheme change.

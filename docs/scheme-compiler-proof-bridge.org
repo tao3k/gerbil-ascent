@@ -1241,3 +1241,38 @@ bridges. Existing TLA+ owns readiness, credits, terminal tails, failure and
 publication; no semantic iteration replica is added. No production runtime
 behavior change or performance improvement is inferred from this proof/test
 package, and MR integration remains deferred.
+
+* Equivalence Provider insertion and exact frontier (2026-10-06)
+
+=EquivalenceComponents= instantiates B23's equivalence concretization with an
+explicit active-node domain. Unseen nodes are not globally reflexive. Adding
+an edge first admits its endpoints, then joins their components with both
+cross products. =insert_least= proves the smallest symmetric/transitive
+extension containing the prior relation and edge; =extendState= constructs
+all support, reflexivity, symmetry and transitivity invariants for reuse.
+=injectMany_least=, =injectMany_inputs= and =injectMany_monotone= extend this
+characterization to every finite insertion sequence without a generation cap.
+
+=emitted_exact= proves that new-node diagonals plus the guarded cross products
+are exactly the new concrete facts. =total_delta= reconstructs the complete
+new view from prior total and emitted frontier. Already connected endpoints
+emit no facts, repeated unseen endpoints emit one diagonal, and =other_group=
+preserves every untargeted group. Tests and axiom reports reside exclusively
+in =Tests/EquivalenceComponentsTests=.
+
+The native suite independently computes active-domain Floyd closure at each
+insertion for all 512 three-node graphs, with binary forward and ternary
+reverse orders. It compares the exact delta set and cardinality, rejects at
+one below that independently calculated size, retries using the same state,
+and requires zero-budget replay to return nothing. Four-node controls merge
+two non-singleton components. Existing grouped, producer, session and failure
+controls run in the same suite. See the
+[[file:evidence/scheme-eqrel-frontier-20261006/receipt.json][source-bound receipt]].
+
+This closes the algebraic eqrel instance and qualifies these native finite
+observations. It does not extract Gambit hash equality, component-pointer
+identity, membership-list iteration, budget arithmetic or row ordering into
+Lean. B23's general custom lattice contracts and universal native actor
+completion/trace refinement remain separate obligations. TLA+ continues to
+own private-state publication, failure and credit lifecycle; no duplicate
+algebraic protocol model is introduced. No runtime speedup is claimed.

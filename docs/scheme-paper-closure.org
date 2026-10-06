@@ -250,3 +250,21 @@ source. This section updates the conclusion for concrete Sets. Remaining
 mainline obligations include composed native slot/binder/index/pivot
 correspondence, general Provider gamma contracts and unbounded TLA/native trace
 refinement.
+
+* B23 active-domain eqrel concretization (2026-10-06)
+
+The [[https://kmicinski.com/assets/byods.pdf][B23 primary paper]] sections 3.1 and 3.3 motivate a representation-specific
+closure/frontier instance, rather than assuming arbitrary Providers satisfy
+Set semantics. =EquivalenceComponents= constructs active-domain reflexivity,
+symmetry and transitivity after each injection, least closure after every
+finite input sequence, exact newly emitted facts and isolated group updates.
+The corresponding native suite checks exact per-insertion deltas against
+independent Floyd closure, including rejected budget and retry on the actual
+state. The [[file:evidence/scheme-eqrel-frontier-20261006/receipt.json][qualification receipt]] separates general algebra from bounded native
+observations and lists the remaining representation extraction boundary.
+
+This advances eqrel's semantic instance. General gamma/join/injection laws,
+other non-Set/custom lattice instances, universal Scheme equality/component
+extraction and native actor trace refinement remain distinct work. Existing
+TLA+ publication/credit/failure models are unchanged; Lean owns these algebraic
+laws. Published B23 performance does not establish a Scheme speedup.

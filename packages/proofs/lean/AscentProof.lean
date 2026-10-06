@@ -25,6 +25,7 @@ import IndexedIteration
 import ProviderFrontier
 import SemiNaive
 import TransitiveComponents
+import EquivalenceComponents
 import PositiveConsequence
 
 import ComponentClosure

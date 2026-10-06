@@ -631,3 +631,39 @@ TLA models and seven required counterexamples. The package's toolchain and
 LeanPoo revision are fixed by its checked-in Lake metadata. This supersedes
 the earlier shell proof runner for current qualification; historical receipts
 keep their original toolchain, source hashes and result counts.
+
+* Positive traversal to consequence bridge（2026-10-06）
+
+[[file:../packages/proofs/lean/PositiveConsequence.lean][PositiveConsequence]] connects the slot traversal and iteration artifacts,
+instead of treating their separate successes as a combined refinement.
+
+Declared atoms retain source keys and ordinary binder terms. =instantiate=
+supplies frozen finite rows to PositiveTraversal; =transition= describes a
+successful AtomicBinding witness from those same rows. =reference_membership=
+proves that ordered row traversal, observed as membership, equals the arbitrary
+positive-body path relation. =precompiled_membership= composes this with the
+dirty-frame/precompiled traversal proof and a represented pure singleton head.
+
+Repeated sources and variables, empty bodies, failed partial writes and
+duplicate outputs are included. Full ordered-list refinement remains in
+PositiveTraversal; Set membership deliberately forgets multiplicity only at
+the consequence boundary. Multiple heads can be considered per pure head;
+this bridge does not prove the native head decoder.
+
+A fixed admitted finite tuple domain supplies a mathematical row enumerator.
+=admitted_rows_faithful= proves its completeness within that domain, and
+=enumerated_view_monotone= derives the concrete view premise from enumeration
+and successful binder witnesses. =admitted_binder_iterations_equal= then applies
+the all-Nat iteration theorem to this concrete row/binder view. No infinite
+database enumeration, native generation cap or termination premise is used.
+
+Native scalar/row encoding, descriptor and head lowering, index lookup
+completeness, actual pivot positions, mutable row admission, general Provider
+gamma/injection and asynchronous trace refinement remain open. The mathematical
+enumerator is not emitted Scheme code or a performance claim.
+
+Tests now live exclusively under =packages/proofs/lean/Tests/=, including the
+new [[file:../packages/proofs/lean/Tests/PositiveConsequenceTests.lean][bridge qualification]]. The =AscentProofTests= Lake library remains the
+existing acceptance target and explicitly names the =Tests.*= roots. Proof
+modules import no test modules. Historical JSON receipts retain original
+paths and hashes; [[file:evidence/scheme-positive-consequence-20261006/receipt.json][the current qualification receipt]] binds the relocated sources.

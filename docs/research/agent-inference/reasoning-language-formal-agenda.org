@@ -263,7 +263,7 @@ disjoint batch; =pending= selects affected and new obligations;
 =closePending= requires fresh evidence for those selected. The module
 retains typed patch/certificate reuse and invalidation laws. Atomic publication
 belongs to the TLA+ Session models; no Lean publication wrapper is counted. Concrete qualification cases live in
-[[file:../../../packages/proofs/lean/AscentProofTests.lean][AscentProofTests]]. These statements require an accurate dependency
+[[file:../../../packages/proofs/lean/Tests/AscentProofTests.lean][AscentProofTests]]. These statements require an accurate dependency
 list and completed =resultOf=; native source-dependency closure, typed
 row representation and evaluator correspondence remain open. The same
 module makes =StratifiedNegation.IndexExact= a LeanPOO obligation over a
@@ -308,7 +308,7 @@ heads, and head admission receives only its own old rows and new emissions.
 =completed_reuse= theorem composes that interpreter with the existing source
 log and bitmap proofs without a separate =readsMatch= hypothesis.
 
-The [[file:../../../packages/proofs/lean/RuleBodyFrameTests.lean][interpreter qualification]] executes the same eight-relation shape used by
+The [[file:../../../packages/proofs/lean/Tests/RuleBodyFrameTests.lean][interpreter qualification]] executes the same eight-relation shape used by
 the native stratified matrix. The old cut reaches a recursive path and sum
 12; a blocker/odd-weight replacement keeps that path but produces an empty
 weighted group and sum 0. The theorem is instantiated with completed runs

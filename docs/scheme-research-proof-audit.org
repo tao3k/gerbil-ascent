@@ -124,6 +124,20 @@ uses 4, the default exploration configuration uses 2. Counterexample checks
 require both TLC's violation exit code and the expected violated property;
 parse/tool crashes cannot count as successful fault detection.
 
+* Runtime 主线整体验收修正
+
+本轮发现并修复真实 owner 的中间批次与旧 =Agrees= 前提不相容的问题。
+=SnapshotClosure.ExternalAgrees= 保持外部读，已发布自身事实可包含于最终
+局部闭包；=credited_terminal_closed= 处理信用批次前缀与终端尾批。
+=GroundedBinding.credited_compiled_closed= 将有效编译 binder、实际构造的
+有限 ground clauses 和完成发布连接成同一个输出闭包结论。相关 Tests
+显式证明旧前提失败而新终端定理可用，不能继续套用旧的过强前提。
+
+全量 native、完整 formal target 集合和 pinned oracle 属于此次统一验收，
+实际 SCC worker 逐条 emission 的 512 图对照与取消/merge 失败回收是新增
+实现对应证据。[[file:scheme-paper-closure.org][全局收口矩阵]] 保留全部论文功能和应用门槛；不以
+“某个编译器测试通过”替代完整复刻。见 [[file:evidence/scheme-integrated-closure-20261006/receipt.json][统一源码回执]]。
+
 * Ordered implementation plan and exit conditions
 
 Advance the implementation and formal connections on the same usable native

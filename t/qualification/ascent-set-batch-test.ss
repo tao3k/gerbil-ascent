@@ -26,6 +26,8 @@
       (vector rows present seen))))
 (def (verify log count share? initial)
   (let-values (((expected known) (gold log count initial)))
+    (verify-known log count share? initial expected known)))
+(def (verify-known log count share? initial expected known)
     (for-each
      (lambda (admit)
        (let* ((result (run admit log count share? initial))
@@ -45,7 +47,7 @@
          (when (and share? (null? initial) (= count (length log))
                     (= count (length known)))
            (check-equal? (eq? rows log) #t))))
-     (list ascent-set-batch-reference-admit! gerbil-ascent-set-batch-admit!))))
+     (list ascent-set-batch-reference-admit! gerbil-ascent-set-batch-admit!)))
 
 (def ascent-set-batch-test
   (test-suite "source-order Set batch admission"
@@ -79,4 +81,7 @@
         (verify log 10000 #f '((0)))
         (verify log 9999 #t [])))
     (poo-flow-test-case "unique full logs retain the original spine"
-      (verify (reverse (map list (iota 10000))) 10000 #t []))))
+      ;; iota supplies independent unique keys. Repeated linear membership in
+      ;; gold would perform quadratic work solely to rediscover that property.
+      (let (log (reverse (map list (iota 10000))))
+        (verify-known log 10000 #t [] log log)))))

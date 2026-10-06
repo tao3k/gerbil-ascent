@@ -29,11 +29,42 @@
 是后续工程义务。B23 的自定义数据结构接口与论文应用实验需要分别验收。
 原论文性能数字不构成 Scheme 性能证据。
 
+* 当前 Runtime 主线的统一验收
+
+2026-10-06 的审计发现此前 =SnapshotClosure.Agrees= 要求当前自身事实仍与
+旧快照相同；真实 owner 已接收 credit 批次，所以不能直接将该前提移到
+完成时的 live frontier。现以外部 read frame 和已发布自身事实包含于完成
+闭包替代，=credited_terminal_closed= 接通 credit 前缀与终端尾批。
+=GroundedBinding.credited_compiled_closed= 将 row/binder/index 的既有有效性、
+构造 grounding、快照帧和实际终端完整性交到同一个 compiled-rule closure
+结论。中间批次可靠性与完成闭包分别验证，不能把前者晋升为后者。
+=GroundedBinding.completed_compiled_least= 将种子覆盖、可靠发布和所有
+编译规则闭合连接到整个结果恰好等于最小模型。
+
+本轮必须一起验收以下主线，不再以两个选定模块作为整体结果：
+
+| 验收环节 | 实现与证明连接 | 判定方式 |
+|----------+----------------+----------|
+| 实际 worker 迭代与发出候选 | component-worker / IndexedIteration / GroundedBinding | 全部 512 个三节点图，独立 Floyd 真值逐条核验 emission；私有完成根与 owner 根均必须精确相等 |
+| 分批发布与终端完成 | actor-round / SnapshotClosure / ReadyComponents / ActorRoundCredits | credit 前缀可改变自身事实；tail 完整后形成闭包；旧快照相等条件的失败对照必须保留 |
+| 取消与 merge 异常 | actor owner drain / ActorRound / ActorSession | worker finally 已执行，失败不调用 completed；全量 Session 原子发布测试同时验收 |
+| 已接受 Library 行为 | 当前所有 native modules | 并发 lane 与隔离 lane 全量执行；逐模块真实 Cases、显式 OK 与父进程退出均核对 |
+| Rust 比较与形式门槛 | pinned oracle / 全部 Lean roots 与 TLC targets | 当前源执行，不借用早先提交的绿色结果；负对照保留 |
+
+回执：[[file:evidence/scheme-integrated-closure-20261006/receipt.json][统一验收证据]]。它不会把有限 graph corpus 解释为整个 Gerbil VM 的
+通用证明，也不会把尚无实现的论文项目改名为已完成。论文全部复刻仍须
+保留本文件其余功能、应用、规模与收益门槛。一般整数递归或无界 lattice
+不可能一概证明收敛；有限域/高度证书与显式预算失败必须分别验收，绝不
+将截断结果发布成 complete。
+
 * ASCENT 行为覆盖
 
 下表“已有验证”引用现有 [[file:rust-parity.org][Rust 0.8.0 差分矩阵]] 和代码，
-不是本轮重新执行全部 Rust 差分的宣称。证明目录链接列出相关命题，
-不是这些命题已经证明整条 native evaluator 的宣称。
+本轮执行结果由统一回执绑定：74 项常规对照、1 项 Release 全规模对照
+和 ASP Rust 门槛均通过；对照中明确判定的上游差异继续保留。
+全规模 Debug 参考的 180 秒未完成结果保留，Release 相同输入/真值
+在 34.5 秒完成；GitHub CI 单独执行此全规模门槛。证明目录链接说明
+各命题及其前提，实际 native 对应由回执中的独立运行验收。
 
 | 功能 | 实现 / 已有验证 | Lean / TLA+ 对应 | 尚未闭合的验收义务 |
 |------+-----------------+------------------+----------------------|

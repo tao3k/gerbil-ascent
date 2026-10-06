@@ -723,9 +723,7 @@ _binding-benchmark:
     started=$SECONDS
     mkdir -p "{{ justfile_directory() }}/.cache/ascent/tmp"
     log="$(mktemp "{{ justfile_directory() }}/.cache/ascent/tmp/run.XXXXXX")"
-    (while sleep 10; do printf '[binding-benchmark] RUNNING (%ss)\n' "$((SECONDS - started))"; done) &
-    progress_pid=$!
-    trap 'kill "$progress_pid" 2>/dev/null || true; wait "$progress_pid" 2>/dev/null || true; rm -f "$log"' EXIT
+    trap 'rm -f "$log"' EXIT
     printf '[binding-benchmark] BUILD compiled current/reference engines (%s cores)\n' "$GERBIL_BUILD_CORES"
     timeout 150s gxi {{ gerbil_test_runtime_options }} tools/build-binding-benchmark.ss
     printf '[binding-benchmark] RUN alternating old/new, 1000 samples per case\n'
@@ -747,9 +745,7 @@ _strata-benchmark:
     started=$SECONDS
     mkdir -p "{{ justfile_directory() }}/.cache/ascent/tmp"
     log="$(mktemp "{{ justfile_directory() }}/.cache/ascent/tmp/run.XXXXXX")"
-    (while sleep 10; do printf '[strata-benchmark] RUNNING (%ss)\n' "$((SECONDS - started))"; done) &
-    progress_pid=$!
-    trap 'kill "$progress_pid" 2>/dev/null || true; wait "$progress_pid" 2>/dev/null || true; rm -f "$log"' EXIT
+    trap 'rm -f "$log"' EXIT
     printf '[strata-benchmark] BUILD current planning and relaxation oracle\n'
     timeout 60s gxi {{ gerbil_test_runtime_options }} tools/build-strata-benchmark.ss
     printf '[strata-benchmark] RUN alternating old/new, 1000 samples per case\n'
@@ -777,9 +773,6 @@ _performance-scenario name:
     esac
     started=$SECONDS
     printf '[ascent-ss] START %s (1000 samples)\n' "$name"
-    (while sleep 10; do printf '[ascent-ss] RUNNING %s (%ss)\n' "$name" "$((SECONDS - started))"; done) &
-    progress_pid=$!
-    trap 'kill "$progress_pid" 2>/dev/null || true; wait "$progress_pid" 2>/dev/null || true' EXIT
     if ASCENT_SS_SCENARIO="$path" ASCENT_GXTEST_TIMEOUT="${ASCENT_GXTEST_TIMEOUT:-120s}" just _test-file "$test_module"; then
         printf '[ascent-ss] PASS %s (%ss)\n' "$name" "$((SECONDS - started))"
     else
@@ -793,22 +786,16 @@ _performance:
     set -euo pipefail
     # The ASP runner reports after its 1000 timed attempts; printing from a
     # timed thunk would change the samples. Each native test process has a
-    # bounded total timeout and the scenario wrapper prints progress.
+    # bounded total timeout; only actual build/test/results report progress.
     run_case() {
         local name="$1"
         shift
         printf '[ascent-ss] START %s (1000 samples)\n' "$name"
         local started=$SECONDS
-        (while sleep 10; do printf '[ascent-ss] RUNNING %s (%ss)\n' "$name" "$((SECONDS - started))"; done) &
-        local heartbeat=$!
         if "$@"; then
-            kill "$heartbeat" 2>/dev/null || true
-            wait "$heartbeat" 2>/dev/null || true
             printf '[ascent-ss] PASS %s (%ss)\n' "$name" "$((SECONDS - started))"
         else
             local status=$?
-            kill "$heartbeat" 2>/dev/null || true
-            wait "$heartbeat" 2>/dev/null || true
             printf '[ascent-ss] FAIL %s (%ss, exit=%s)\n' "$name" "$((SECONDS - started))" "$status" >&2
             return "$status"
         fi
@@ -1008,7 +995,8 @@ oracle:
     set -euo pipefail
     export PATH="${CARGO_HOME:-$HOME/.cargo}/bin:$PATH"
     if [[ "$(uname -s)" == Darwin ]]; then
-        export SDKROOT="$(xcrun --sdk macosx --show-sdk-path)"
+        unset SDKROOT DEVELOPER_DIR
+        export SDKROOT="$(/usr/bin/xcrun --sdk macosx --show-sdk-path)"
         export CC=/usr/bin/clang
         export RUSTFLAGS="${RUSTFLAGS:+$RUSTFLAGS }-C linker=/usr/bin/clang -C link-arg=-isysroot -C link-arg=$SDKROOT"
     fi

@@ -231,6 +231,44 @@ terminal-tail/stale-snapshot controls remain. TLA+ checks delivery/credit order
 separately. The native worker-to-candidate trace certificate, cancellation,
 and complete mutable representation refinement remain open. See [[file:evidence/scheme-batch-closure-20261006/receipt.json][batch closure receipt]].
 
+* Integrated runtime admission obligation
+
+The completed-snapshot theorem alone was insufficient for the actual owner:
+credited batches already extend the evaluating component's owned facts before
+terminal delivery. Its original =Agrees= premise must not be asserted on that
+live frontier. =ExternalAgrees= now frames only foreign body reads;
+=partial_merge_closed= allows owned facts already published as a subset of the
+completed local evaluation. =credited_terminal_closed= derives the remaining
+tail obligation from published-prefix membership and complete delivery.
+=publish_append= identifies sequential credit/tail folding with complete batch
+publication. The test =credited= explicitly violates old =Agrees= but satisfies
+the corrected terminal closure theorem.
+
+=GroundedBinding.credited_compiled_closed= is the integrated theorem: faithful
+finite row enumeration and admitted schema/frame/emitter laws connect compiled
+binder output to constructed ground clauses; external read framing, actual
+credit-prefix membership, complete tail delivery and local stability then imply
+that every owned output of every admitted compiled rule is already in the final
+database. It composes the existing contracts, not a new scheduler state machine.
+The native worker-to-trace correspondence remains a qualification obligation,
+rather than an axiom silently discharged by this algebraic theorem.
+
+=GroundedBinding.completed_compiled_least= closes whole-result admission:
+seed coverage, sound publication and closure under every admitted compiled rule
+characterize exactly the inductively generated least model. Its premises are
+explicit; the theorem does not assume a fixed generation limit or prove that
+arbitrary infinite-height programs terminate.
+
+The native discriminator directly invokes the actual SCC worker for all 512
+three-node graphs. Every emitted row must belong to independent Floyd closure,
+be new, and be owned; completed private roots and owner-published roots must
+both match all expected relations. Foreign borrowed roots retain identity.
+Merge failure and credit-time cancellation must drain the actual worker's
+=finally= and invoke no completion callback. The unified acceptance also runs
+all native modules, all existing formal gate targets and pinned Rust differential
+cases. See [[file:evidence/scheme-integrated-closure-20261006/receipt.json][source-bound acceptance receipt]]. Finite qualification is kept distinct from
+a machine-checked operational semantics of the Gerbil VM and compiler.
+
 * Stated claim
 
 [[file:../packages/proofs/lean/LexicalLowering.lean][LexicalLowering]] supplies a typed expression calculus, lexical environments,

@@ -41,4 +41,6 @@ example (database : Database (Fact Nat Nat)) (item : Fact Nat Nat) :
 #print axioms Ascent.GroundedBinding.program_exact
 #print axioms Ascent.GroundedBinding.closed_exact
 #print axioms Ascent.GroundedBinding.binder_least_model
+#print axioms Ascent.GroundedBinding.credited_compiled_closed
+#print axioms Ascent.GroundedBinding.completed_compiled_least
 end Ascent.GroundedBindingTests

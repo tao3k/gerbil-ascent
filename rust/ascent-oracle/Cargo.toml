@@ -19,3 +19,6 @@ path = "tests/integration/main.rs"
 [[test]]
 name = "asp_rust_gate"
 path = "tests/unit/asp_rust_gate.rs"
+
+# This test-only oracle is independent of any consumer workspace containing the checkout.
+[workspace]

@@ -2,6 +2,7 @@
 -- SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 import ComponentClosure
 import IndexedIteration
+import SnapshotClosure
 
 /-! Construct finite ground rules from actual successful ordinary binder paths.
 The admitted row universe is frozen independently of database membership.
@@ -154,4 +155,69 @@ theorem binder_least_model {Component : Type}
   induction derived with
   | seed present => exact covers _ present
   | fire rule member body ih => exact groundClosed rule member (fun f h => ih f h)
+
+/-- Integrated admission law: completed credit/tail delivery under the native
+read frame makes every admitted compiled rule closed in the final database.
+Grounding, indexed binding and partial snapshot rebasing are composed here. -/
+theorem credited_compiled_closed {Component : Type}
+    (domainRows : Key → List (List Value))
+    (rows : IndexedIteration.Rows Key Value (Fact Key Value))
+    (faithful : ∀ database key row, row ∈ rows database key ↔
+      row ∈ domainRows key ∧ database (key, row))
+    (rules : List (IndexedIteration.Rule Key Value (Fact Key Value)))
+    (valid : ∀ rule ∈ rules, IndexedIteration.Valid (fun key row => row ∈ domainRows key) rule)
+    (owner : Key → Component) (component : Component)
+    (snapshot current : Database (Fact Key Value)) (n : Nat)
+    (creditedBatches tail : List (List (Fact Key Value)))
+    (external : SnapshotClosure.ExternalAgrees (programGround domainRows rules)
+      (fun fact => owner fact.1) component snapshot current)
+    (credited : ∀ fact, owner fact.1 = component →
+      (current fact ↔ snapshot fact ∨ fact ∈ creditedBatches.flatten))
+    (complete : ∀ fact, owner fact.1 = component →
+      (iterate (programGround domainRows rules) (fun fact => owner fact.1) component snapshot n fact ↔
+        snapshot fact ∨ fact ∈ (creditedBatches ++ tail).flatten))
+    (stable : iterate (programGround domainRows rules) (fun fact => owner fact.1) component snapshot (n + 1) =
+      iterate (programGround domainRows rules) (fun fact => owner fact.1) component snapshot n)
+    (rule : IndexedIteration.Rule Key Value (Fact Key Value)) (member : rule ∈ rules)
+    (item : Fact Key Value) (owned : owner item.1 = component)
+    (produced : item ∈ IndexedIteration.fullRun rule rows
+      (SnapshotClosure.publish (fun fact => owner fact.1) component current tail)) :
+    SnapshotClosure.publish (fun fact => owner fact.1) component current tail item := by
+  have closed := SnapshotClosure.credited_terminal_closed (programGround domainRows rules)
+    (fun fact => owner fact.1) component snapshot current n creditedBatches tail external credited complete stable
+  have consequence := (IndexedIteration.full_run_exact rule rows _ (valid rule member)
+    (fun database key row present => ((faithful database key row).mp present).1) _ item).mp produced
+  obtain ⟨clause, clauseMember, body, head⟩ :=
+    (program_exact domainRows rows faithful rules _ item).mp ⟨rule, member, consequence⟩
+  have headOwned : owner clause.head.1 = component := by simpa only [head] using owned
+  have present := closed clause clauseMember headOwned body
+  exact head ▸ present
+
+/-- Whole-result admission: compiled closure plus sound publication and seed
+coverage characterize the least model, rather than only one component's result. -/
+theorem completed_compiled_least
+    (domainRows : Key → List (List Value))
+    (rows : IndexedIteration.Rows Key Value (Fact Key Value))
+    (faithful : ∀ database key row, row ∈ rows database key ↔
+      row ∈ domainRows key ∧ database (key, row))
+    (rules : List (IndexedIteration.Rule Key Value (Fact Key Value)))
+    (valid : ∀ rule ∈ rules, IndexedIteration.Valid (fun key row => row ∈ domainRows key) rule)
+    (seed result : Database (Fact Key Value))
+    (covers : ∀ fact, seed fact → result fact)
+    (sound : ∀ fact, result fact → Derivable (programGround domainRows rules) seed fact)
+    (closed : ∀ rule ∈ rules, ∀ item, item ∈ IndexedIteration.fullRun rule rows result → result item)
+    (fact : Fact Key Value) : result fact ↔ Derivable (programGround domainRows rules) seed fact := by
+  have binderClosed : ∀ rule ∈ rules, ∀ item,
+      IndexedIteration.consequence rule rows result item → result item := by
+    intro rule member item consequence
+    exact closed rule member item
+      ((IndexedIteration.full_run_exact rule rows _ (valid rule member)
+        (fun database key row present => ((faithful database key row).mp present).1) result item).mpr consequence)
+  have groundClosed := (closed_exact domainRows rows faithful rules result).mp binderClosed
+  constructor
+  · exact sound fact
+  · intro derived
+    induction derived with
+    | seed present => exact covers _ present
+    | fire rule member body ih => exact groundClosed rule member (fun f h => ih f h)
 end Ascent.GroundedBinding

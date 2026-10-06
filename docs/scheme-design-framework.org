@@ -321,6 +321,7 @@ as rejected evidence. The carrier initializes the real Gerbil expander for this
 module; native generation does not substitute expected diagnostics or assertions.
 This historical qualification used LeanPoo =9e16095=. The current dependency
 and consumer migration are recorded in [[file:scheme-compiler-proof-bridge.org][the compiler proof bridge]].
+The current Lean library and concrete tests build with LeanPoo =247d1d6=.
 =ActorTestPool.tla= checks capacities 1/2/3 and rejects premature return. This is
 protocol safety over a finite exploration, not worker liveness or a native
 refinement theorem. Existing unbounded solver round laws remain unchanged.

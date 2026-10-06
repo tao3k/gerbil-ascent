@@ -70,4 +70,28 @@ example : ¬ (∀ fact, owner fact = 1 →
 #print axioms Ascent.SnapshotClosure.published_iteration_sound
 #print axioms Ascent.SnapshotClosure.terminal_publish_exact
 #print axioms Ascent.SnapshotClosure.terminal_publish_closed
+
+def credited : Database ComponentClosureTests.Fact := publish owner 1 current [[left0]]
+example : ¬ Agrees rules owner 1 initial credited := by
+  intro agree
+  have difference := agree left0 (Or.inl rfl)
+  simp [credited, publish, admit, current, iterate, step, Holds, rules, owner, initial] at difference
+example : ClosedAt rules owner 1 (publish owner 1 credited [[left1]]) := by
+  apply credited_terminal_closed rules owner 1 initial credited 2 [[left0]] [[left1]]
+  · intro rule member owned fact present foreign
+    simp [rules] at member
+    rcases member with equal | equal | equal | equal | equal
+    all_goals subst rule; simp [owner] at owned
+    all_goals simp at present; subst fact
+    all_goals simp [owner] at foreign
+    all_goals simp [credited, publish, admit, current, iterate, step, Holds, rules, owner, initial]
+  · intro fact owned
+    cases fact <;> simp [owner] at owned <;>
+      simp [credited, publish, admit, current, iterate, step, Holds, rules, owner, initial]
+  · intro fact owned
+    cases fact <;> simp [owner] at owned <;>
+      simp [iterate, step, Holds, rules, owner, initial]
+  · exact snapshotStable
+#print axioms Ascent.SnapshotClosure.partial_merge_closed
+#print axioms Ascent.SnapshotClosure.credited_terminal_closed
 end Ascent.SnapshotClosureTests

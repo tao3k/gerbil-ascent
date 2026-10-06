@@ -2,10 +2,12 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 (import (only-in :std/test check-equal? test-case test-suite)
+        (only-in :std/list/list append-map)
         (only-in :clan/poo/object .ref)
         :gerbil-ascent/program/objects
         :gerbil-ascent/program/actor-round
         :gerbil-ascent/program/positive-components
+        (only-in :gerbil-ascent/program/component-worker make-component-snapshot gerbil-ascent-run-positive-component!)
         (only-in :gerbil-ascent/t/performance/component-scope/fixture
                  component-scope-program component-scope-request component-scope-plan
                  component-scope-normalize component-scope-run)
@@ -255,6 +257,80 @@
            (when (zero? (modulo (+ bits 1) 16))
              (displayln "COMPONENT-GRAPHS-CHECKED " (+ bits 1) "/512") (force-output))))
        (iota 512)))
+    (test-case "actual SCC workers emit exact semantic closure from frozen snapshots"
+      (for-each
+       (lambda (bits)
+         (let ((edges []) (reach (make-vector 9 #f)))
+           (for-each (lambda (i)
+                       (when (not (zero? (bitwise-and bits (arithmetic-shift 1 i))))
+                         (set! edges (cons (list (quotient i 3) (modulo i 3)) edges))
+                         (vector-set! reach i #t))) (iota 9))
+           (for-each
+            (lambda (k)
+              (for-each (lambda (i)
+                          (for-each (lambda (j)
+                                      (when (and (vector-ref reach (+ (* 3 i) k))
+                                                 (vector-ref reach (+ (* 3 k) j)))
+                                        (vector-set! reach (+ (* 3 i) j) #t))) (iota 3))) (iota 3))) (iota 3))
+           (let* ((truth (filter (lambda (edge) (vector-ref reach (+ (* 3 (car edge)) (cadr edge))))
+                                 (append-map (lambda (i) (map (lambda (j) (list i j)) (iota 3))) (iota 3))))
+                  (request (component-scope-request (program edges)))
+                  (analysis (vector-ref request 0)) (schema (vector-ref request 1))
+                  (frontier (vector-copy (vector-ref request 2)))
+                  (expected (vector edges truth edges edges '((7) (8)) '((7) (8))))
+                  (emitted (make-hash-table)))
+             (for-each
+              (lambda (component)
+                (let* ((before (vector-copy frontier)) (local (vector-copy frontier))
+                       (sizes (vector-map length local)))
+                  (gerbil-ascent-run-positive-component! component schema
+                   (make-component-snapshot local sizes)
+                   (lambda (atom row)
+                     (let* ((index (vector-ref atom 0)) (key (cons index row)))
+                       (check-equal? (if (memv index (positive-component-members component)) #t #f) #t)
+                       (check-equal? (if (member row (vector-ref expected index)) #t #f) #t)
+                       (check-equal? (hash-get emitted key) #f)
+                       (hash-put! emitted key #t)
+                       (vector-set! frontier index (cons row (vector-ref frontier index)))))
+                   (lambda () (void)))
+                  (for-each
+                   (lambda (index)
+                     (if (memv index (positive-component-members component))
+                       (begin
+                         (check-equal? (length (vector-ref local index)) (length (vector-ref expected index)))
+                         (check-equal? (length (vector-ref frontier index)) (length (vector-ref expected index)))
+                         (for-each (lambda (row)
+                                     (check-equal? (if (member row (vector-ref local index)) #t #f) #t)
+                                     (check-equal? (if (member row (vector-ref frontier index)) #t #f) #t))
+                                   (vector-ref expected index)))
+                       (check-equal? (eq? (vector-ref local index) (vector-ref before index)) #t))) (iota 6))))
+              (gerbil-ascent-compile-positive-components analysis))
+             (for-each (lambda (index)
+                         (check-equal? (length (vector-ref frontier index)) (length (vector-ref expected index)))) (iota 6)))
+           (when (zero? (modulo (+ bits 1) 16))
+             (displayln "WORKER-TRACES-CHECKED " (+ bits 1) "/512") (force-output))))
+       (iota 512)))
+    (test-case "merge failure and credited cancellation drain without completion"
+      (for-each
+       (lambda (mode)
+         (let ((terminated? #f) (merged 0) (completed 0))
+           (check-equal?
+            (rejected?
+             (lambda ()
+               (gerbil-ascent-run-actor-round! (vector mode) '(producer) 2
+                (lambda (_ emit! checkpoint!)
+                  (try (for-each (lambda (n) (emit! 'out (list n))) (iota 65))
+                       (finally (set! terminated? #t))))
+                (lambda (_ row)
+                  (set! merged (+ merged 1))
+                  (when (eq? mode 'merge-failure) (error "planned merge failure")))
+                (lambda () (and (eq? mode 'cancel) (>= merged 32)))
+                (lambda (_) #t)
+                (lambda (_) (set! completed (+ completed 1)))))) #t)
+           (check-equal? terminated? #t)
+           (check-equal? completed 0)
+           (check-equal? merged (if (eq? mode 'cancel) 32 1))))
+       '(merge-failure cancel)))
     (test-case "multi-head plans project into their exact relation SCC"
       (let* ((engine (gerbil-ascent-make-engine (program '((0 1))) #t))
              (components (gerbil-ascent-positive-components (.ref engine '.analysis))))

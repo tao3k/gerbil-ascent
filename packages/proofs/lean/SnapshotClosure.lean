@@ -199,4 +199,92 @@ theorem terminal_publish_closed (rules : List (Rule Fact)) (owner : Fact → Com
   rw [terminal_publish_exact rules owner component snapshot current n batches agree delivered]
   exact stable_closed rules owner component current n
     (stable_transfers rules owner component snapshot current n agree stable)
+
+/-- External reads stay framed while owned facts may already contain credited
+partial batches. This is the native owner's actual terminal state. -/
+def ExternalAgrees (rules : List (Rule Fact)) (owner : Fact → Component)
+    (component : Component) (snapshot current : Database Fact) : Prop :=
+  ∀ rule ∈ rules, owner rule.head = component → ∀ fact ∈ rule.body,
+    owner fact ≠ component → (snapshot fact ↔ current fact)
+
+theorem partial_merge_closed (rules : List (Rule Fact)) (owner : Fact → Component)
+    (component : Component) (snapshot current : Database Fact) (n : Nat)
+    (external : ExternalAgrees rules owner component snapshot current)
+    (bounded : ∀ fact, owner fact = component → current fact →
+      iterate rules owner component snapshot n fact)
+    (stable : iterate rules owner component snapshot (n + 1) = iterate rules owner component snapshot n) :
+    ClosedAt rules owner component
+      (merge owner component current (iterate rules owner component snapshot n)) := by
+  classical
+  intro rule member owned held
+  have body : Holds (iterate rules owner component snapshot n) rule.body := by
+    intro fact present
+    rcases held fact present with known | ⟨same, produced⟩
+    · by_cases same : owner fact = component
+      · exact bounded fact same known
+      · exact (iterate_frame rules owner component snapshot n fact same).mpr
+          ((external rule member owned fact present same).mpr known)
+    · exact produced
+  exact Or.inr ⟨owned, stable_closed rules owner component snapshot n stable rule member owned body⟩
+
+/-- Complete terminal delivery extends an already published prefix. Seed facts
+need not be replayed; credited own facts are allowed to exceed the old snapshot. -/
+theorem partial_terminal_exact (rules : List (Rule Fact)) (owner : Fact → Component)
+    (component : Component) (snapshot current : Database Fact) (n : Nat)
+    (tail : List (List Fact))
+    (remaining : ∀ fact, owner fact = component →
+      (iterate rules owner component snapshot n fact ↔ current fact ∨ fact ∈ tail.flatten)) :
+    publish owner component current tail =
+      merge owner component current (iterate rules owner component snapshot n) := by
+  funext fact
+  apply propext
+  rw [publish_exact]
+  constructor
+  · rintro (old | ⟨owned, delivered⟩)
+    · exact Or.inl old
+    · exact Or.inr ⟨owned, (remaining fact owned).mpr (Or.inr delivered)⟩
+  · rintro (old | ⟨owned, produced⟩)
+    · exact Or.inl old
+    · rcases (remaining fact owned).mp produced with old | delivered
+      · exact Or.inl old
+      · exact Or.inr ⟨owned, delivered⟩
+
+theorem partial_terminal_closed (rules : List (Rule Fact)) (owner : Fact → Component)
+    (component : Component) (snapshot current : Database Fact) (n : Nat)
+    (tail : List (List Fact))
+    (external : ExternalAgrees rules owner component snapshot current)
+    (remaining : ∀ fact, owner fact = component →
+      (iterate rules owner component snapshot n fact ↔ current fact ∨ fact ∈ tail.flatten))
+    (stable : iterate rules owner component snapshot (n + 1) = iterate rules owner component snapshot n) :
+    ClosedAt rules owner component (publish owner component current tail) := by
+  rw [partial_terminal_exact rules owner component snapshot current n tail remaining]
+  exact partial_merge_closed rules owner component snapshot current n external
+    (fun fact owned present => (remaining fact owned).mpr (Or.inl present)) stable
+
+theorem publish_append (owner : Fact → Component) (component : Component)
+    (current : Database Fact) (creditedBatches tail : List (List Fact)) :
+    publish owner component current (creditedBatches ++ tail) =
+      publish owner component (publish owner component current creditedBatches) tail := by
+  induction creditedBatches generalizing current with
+  | nil => rfl
+  | cons batch rest ih => exact ih _
+
+/-- Credited prefix membership and complete delivery derive the remaining-tail
+contract. Current owned facts are permitted to differ from the frozen snapshot. -/
+theorem credited_terminal_closed (rules : List (Rule Fact)) (owner : Fact → Component)
+    (component : Component) (snapshot current : Database Fact) (n : Nat)
+    (creditedBatches tail : List (List Fact))
+    (external : ExternalAgrees rules owner component snapshot current)
+    (credited : ∀ fact, owner fact = component →
+      (current fact ↔ snapshot fact ∨ fact ∈ creditedBatches.flatten))
+    (complete : ∀ fact, owner fact = component →
+      (iterate rules owner component snapshot n fact ↔ snapshot fact ∨ fact ∈ (creditedBatches ++ tail).flatten))
+    (stable : iterate rules owner component snapshot (n + 1) = iterate rules owner component snapshot n) :
+    ClosedAt rules owner component (publish owner component current tail) := by
+  apply partial_terminal_closed rules owner component snapshot current n tail external
+  · intro fact owned
+    rw [complete fact owned, credited fact owned]
+    simp only [List.flatten_append, List.mem_append]
+    exact (or_assoc).symm
+  · exact stable
 end Ascent.SnapshotClosure

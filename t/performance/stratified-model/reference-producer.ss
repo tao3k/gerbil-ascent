@@ -7,8 +7,6 @@
 ;;; order is stratum then rule/fact order; the separate checker remains the
 ;;; authority for the returned proof. This is not a Why-Not producer.
 (import (only-in :gerbil-ascent/candidate/datum candidate-copy-pairs)
-        (only-in :gerbil-ascent/candidate/closure-index
-                 make-closure-index closure-index-rows closure-index-member?)
         (only-in :std/hash/misc hash-ensure-modify!)
         (only-in :gerbil-ascent/candidate/types
                  reasoning-snapshot-relations
@@ -21,7 +19,7 @@
                  candidate-fixed-clause candidate-strata-of)
         (only-in :gerbil-ascent/candidate/finite-evidence
                  candidate-verified-finite-closure)
-        (only-in :gerbil-ascent/candidate/stratified-proof
+        (only-in :gerbil-ascent/t/performance/stratified-model/reference-proof
                  candidate-verify-stratified-proof))
 
 (export candidate-produce-stratified-proof)
@@ -65,7 +63,6 @@
         (let* ((schema (candidate-schema-of snapshot spec))
                (rules (reasoning-candidate-rules spec))
                (levels (candidate-strata-of schema rules))
-               (model (make-closure-index closure))
                (nodes (make-vector +maximum-nodes+ #f))
                (by-row (make-hash-table))
                (by-relation (make-hash-table-eq))
@@ -78,7 +75,7 @@
             (when (> steps proof-work-budget) (set! bounded? #t))
             (not bounded?))
           (def (rows name)
-            (closure-index-rows model name))
+            (caddr (assq name closure)))
           (def (level name)
             (cdr (candidate-required-entry name levels)))
           (def (node-id name row)
@@ -86,7 +83,7 @@
           (def (add-node! kind name row label witnesses)
             (when (and (not bounded?)
                        (not (node-id name row))
-                       (closure-index-member? model name row))
+                       (member row (rows name)))
               (if (>= node-count +maximum-nodes+)
                 (set! bounded? #t)
                 (let ((id node-count)

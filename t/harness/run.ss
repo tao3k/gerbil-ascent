@@ -175,6 +175,10 @@
                               "t/performance/index-build/reference-evaluate"
                               "t/performance/index-build/fixture")
                             [])
+                          (if (member "t/qualification/ascent-stratified-proof-test.ss" tests)
+                            '("t/performance/stratified-model/reference-proof"
+                              "t/performance/stratified-model/reference-producer")
+                            [])
                           (if (member "t/qualification/ascent-source-log-test.ss" tests)
                             '("t/performance/source-log/reference-update-selection"
                               "t/performance/source-log/reference-reuse"

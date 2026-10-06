@@ -61,6 +61,22 @@ are documented in [[file:../../t/performance/index-projection/README.org][index 
 
 * Study: descriptor ownership and shared lexical analysis
 
+The same invocation-owned pattern applies to stratified proofs.
+=candidate/closure-index.ss= now gives one verified model relation a named
+record containing ordered rows, structural membership and optional source
+occurrence positions. Both producer and checker allocate their own indexes
+after independent finite replay; the original lists retain enumeration order
+and budget charging. Source positions use vectors without collapsing duplicate
+occurrences. Index lookup does not replace proof checking or finite replay.
+
+The public ASP qualification measures the complete producer call, including
+its checker and both replay phases. Source/derived CPU medians improve by
+approximately 62%/54%; small inputs incur four extra microseconds and 7984
+extra bytes. A separate source map failed the small allocation gate; unifying
+relation metadata passed all unchanged gates. Frozen old producer/checker,
+control results and negative measurements are described in
+[[file:../../t/performance/stratified-model/README.org][stratified model qualification]].
+
 Gerbil revision =2591dcd= separates compiler phases into modules. Its
 =compiler/optimize-base.ss:24-29= gives one optimizer-info record ownership
 of identity tables. =std/list/list.ss:24-33= provides linear identity-aware

@@ -167,6 +167,20 @@ _performance-index-projection:
         timeout 90s .cache/ascent/index-projection/native-entry {{ gerbil_test_runtime_options }} "$scenario" "$library" ".cache/ascent/index-projection/$scenario.sexp"
     done
 
+# Matched full proof production, replay and checker with source controls.
+performance-stratified-model:
+    {{ test_runner }} run -- just _performance-stratified-model
+
+_performance-stratified-model:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    library="{{ justfile_directory() }}/.cache/ascent/native-library/lib"
+    mkdir -p .cache/ascent/stratified-model
+    gxi {{ gerbil_test_runtime_options }} t/performance/stratified-model-build.ss "$library" "{{ justfile_directory() }}/.cache/ascent/stratified-model/native-entry"
+    for scenario in source derived relations duplicates small; do
+        timeout 90s .cache/ascent/stratified-model/native-entry {{ gerbil_test_runtime_options }} "$scenario" "$library" ".cache/ascent/stratified-model/$scenario.sexp"
+    done
+
 # Matched complete operator compilation with shared lexical dependencies.
 performance-operator-scope:
     {{ test_runner }} run -- just _performance-operator-scope

@@ -76,6 +76,7 @@
    "candidate/stratified-provenance"
     "candidate/nonmembership"
     "candidate/finite-evidence"
+    "candidate/closure-index"
     "candidate/stratified-proof"
     "candidate/stratified-producer"
     "candidate/reasoning"

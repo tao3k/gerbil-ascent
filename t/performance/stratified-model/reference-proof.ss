@@ -7,8 +7,6 @@
 ;;; stratum replay. This is a bounded proof for one inspected candidate, not
 ;;; provenance completeness or source authentication. The producer is separate.
 (import (only-in :gerbil-ascent/candidate/datum reasoning-bounded-data?)
-        (only-in :gerbil-ascent/candidate/closure-index
-                 make-closure-index closure-index-rows closure-index-member? closure-index-source)
         (only-in :gerbil-ascent/candidate/types
                  reasoning-snapshot-relations
                  reasoning-candidate-relations
@@ -107,7 +105,6 @@
           (let* ((schema (candidate-schema-of snapshot spec))
                  (rules (reasoning-candidate-rules spec))
                  (levels (candidate-strata-of schema rules))
-                 (model (make-closure-index closure (reasoning-snapshot-relations snapshot)))
                  (nodes (cadr proof))
                  (roots (caddr proof))
                  (by-id (list->vector nodes))
@@ -119,7 +116,7 @@
               (when (> steps proof-work-budget) (set! bounded? #t))
               (not bounded?))
             (def (rows name)
-              (closure-index-rows model name))
+              (caddr (candidate-required-entry name closure)))
             (def (node-ref id before relation)
               (and (exact-integer? id) (<= 0 id) (< id before)
                    (let (node (vector-ref by-id id))
@@ -259,18 +256,21 @@
                    (let (declaration (assq (cadr node) schema))
                      (and declaration
                           (ground-row? (caddr node) (cdr declaration))
-                          (closure-index-member? model (cadr node) (caddr node))))
+                          (member (caddr node) (rows (cadr node)))))
                    (list? (list-ref node 4))
                    (case (car node)
                      ((source)
                       (and (null? (list-ref node 4))
-                           (let (source (closure-index-source model (cadr node)))
-                             (and source
+                           (let (entry
+                                 (assq (cadr node)
+                                       (reasoning-snapshot-relations
+                                        snapshot)))
+                             (and entry
                                   (exact-integer? (cadddr node))
                                   (<= 1 (cadddr node))
-                                  (<= (cadddr node) (vector-length source))
+                                  (<= (cadddr node) (length (caddr entry)))
                                   (equal? (caddr node)
-                                          (vector-ref source
+                                          (list-ref (caddr entry)
                                                     (- (cadddr node) 1)))))))
                      ((candidate)
                       (and (null? (list-ref node 4))

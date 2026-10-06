@@ -21,7 +21,13 @@
         (only-in :gerbil-ascent/candidate/stratified-proof
                  candidate-verify-stratified-proof)
         (only-in :gerbil-ascent/candidate/stratified-producer
-                 candidate-produce-stratified-proof))
+                 candidate-produce-stratified-proof)
+        (rename-in (only-in :gerbil-ascent/t/performance/stratified-model/reference-producer
+                           candidate-produce-stratified-proof)
+                   (candidate-produce-stratified-proof old-produce))
+        (rename-in (only-in :gerbil-ascent/t/performance/stratified-model/reference-proof
+                           candidate-verify-stratified-proof)
+                   (candidate-verify-stratified-proof old-verify)))
 
 (export ascent-stratified-proof-test)
 
@@ -171,6 +177,51 @@
 
 (def ascent-stratified-proof-test
   (test-suite "bounded stratified derivation checker"
+    (test-case "indexed closure preserves exact ordered proofs and both budget boundaries"
+      (let* ((source (reasoning-source-snapshot 'indexed-proof 1
+                       '((s 1 ((#f) (a) (a) (3))))))
+             (datum '(candidate (relation p 1) (rule (p ?x) (s ?x))
+                               (query p ?x) (limits 16 64 128)))
+             (receipt (reasoning-attempt source datum))
+             (spec (candidate-inspect source datum))
+             (digest (reasoning-receipt-candidate-digest receipt))
+             (rows (reasoning-receipt-rows receipt))
+             (finite (candidate-finite-evidence source spec digest 'complete rows 5000)))
+        (let-values (((status proof) (candidate-produce-stratified-proof
+                                     source spec digest 'complete rows finite 5000 5000))
+                     ((old-status old-proof) (old-produce
+                                             source spec digest 'complete rows finite 5000 5000)))
+          (check-equal? status 'complete)
+          (check-equal? (list status proof) (list old-status old-proof))
+          (for-each
+           (lambda (budget)
+             (let-values (((current-status current-proof) (candidate-produce-stratified-proof
+                                source spec digest 'complete rows finite 5000 budget))
+                          ((prior-status prior-proof) (old-produce
+                                source spec digest 'complete rows finite 5000 budget)))
+               (check-equal? (list current-status current-proof) (list prior-status prior-proof)))
+             (check-equal? (candidate-verify-stratified-proof
+                             source spec digest 'complete rows finite 5000 proof budget)
+                           (old-verify source spec digest 'complete rows finite 5000 proof budget))
+             (let-values (((current-status current-proof) (candidate-produce-stratified-proof
+                                source spec digest 'complete rows finite budget 5000))
+                          ((prior-status prior-proof) (old-produce
+                                source spec digest 'complete rows finite budget 5000)))
+               (check-equal? (list current-status current-proof) (list prior-status prior-proof))))
+           (iota 80 1))
+          (let (duplicate-position (copy-pairs proof))
+            (set-car! (cdddr (cadr (cadr duplicate-position))) 3)
+            (check-equal? (candidate-verify-stratified-proof
+                            source spec digest 'complete rows finite 5000 duplicate-position 5000) 'valid)
+            (check-equal? (old-verify
+                            source spec digest 'complete rows finite 5000 duplicate-position 5000) 'valid))
+          (let (mutated (copy-pairs proof))
+            ;; A duplicate source occurrence is a valid position. The same
+            ;; row at a different, unequal position must be rejected by both.
+            (set-car! (cdddr (car (cadr mutated))) 4)
+            (check-equal? (candidate-verify-stratified-proof
+                            source spec digest 'complete rows finite 5000 mutated 5000) 'invalid)
+            (check-equal? (old-verify source spec digest 'complete rows finite 5000 mutated 5000) 'invalid)))))
     (test-case "hypothetical fact support is bound to its clause label"
       (let* ((source (snapshot 1))
              (datum

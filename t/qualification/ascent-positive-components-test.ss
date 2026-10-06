@@ -74,6 +74,38 @@
          (lambda (task) (set! done (cons task done))))
         (check-equal? (length done) 3)
         (check-equal? merged '((a 1) (b 2)))))
+    (test-case "successor snapshot waits for terminal tail after credited predecessor batch"
+      (let ((producer #f) (released? #f) (done []) (merged []) (snapshot #f))
+        (gerbil-ascent-run-actor-round! (vector 'terminal-snapshot) '(a b) 2
+         (lambda (task emit! checkpoint!)
+           (case task
+             ((a)
+              (set! producer (current-thread))
+              ;; The 32nd row yields a batch and waits for owner credit.
+              (for-each (lambda (n) (emit! 'a (list n))) (iota 32))
+              (unless (eq? (thread-receive 1 'timeout) 'finish)
+                (error "owner did not observe credited predecessor batch"))
+              (emit! 'a '(32)))
+             ((b)
+              (check-equal? (length snapshot) 33)
+              (check-equal? (map cadr snapshot) (iota 33))
+              (emit! 'b '(33)))))
+         (lambda (atom row) (set! merged (append merged (list (cons atom row)))))
+         (lambda () #f)
+         (lambda (task)
+           (if (eq? task 'a) #t
+             (begin
+               (when (and (= (length merged) 32) (not released?))
+                 (check-equal? (memq 'a done) #f)
+                 (set! released? #t)
+                 (thread-send producer 'finish))
+               (and (memq 'a done)
+                    (begin (set! snapshot (map values merged)) #t)))))
+         (lambda (task) (set! done (cons task done))))
+        (check-equal? released? #t)
+        (check-equal? (length merged) 34)
+        (check-equal? (length snapshot) 33)
+        (check-equal? (length done) 2)))
     (test-case "multi-head plans project into their exact relation SCC"
       (let* ((engine (gerbil-ascent-make-engine (program '((0 1))) #t))
              (components (gerbil-ascent-positive-components (.ref engine '.analysis))))

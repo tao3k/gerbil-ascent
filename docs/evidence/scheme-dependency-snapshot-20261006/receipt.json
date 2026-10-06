@@ -1,0 +1,82 @@
+{
+  "qualifiedBaseHead": "92f268b7614a9042387856f8dbb54abe698a1b2e",
+  "sources": {
+    "program/positive-components.ss": "156a6ef8cb62c92a094638b299ac490738d0ea243a187320d9e460c40434c645",
+    "program/component-worker.ss": "9c4e215910f6c80915a26cb6237b541914ff9036e44ffe9414ec522a29123771",
+    "program/actor-round.ss": "f41bc8c8b6d7b7d9e5228af96ab40ba0dcd3f4325375aae508be6e9d0197465c",
+    "program/index.ss": "05408894570b9dd1ebc5812f7cb3929f0bf2bf4c38b30ef7ab4608700e64055d",
+    "packages/proofs/lean/IndexedIteration.lean": "46a0451cc5be2cd28f11f5ce77e37b0a1e21539a3f81fca9f62561de1d8cf211",
+    "packages/proofs/lean/Tests/IndexedIterationTests.lean": "736b99af8447614923ec0801ecb24f4db417c12bf7dba4f3f92973bf69033179",
+    "packages/proofs/tla/ReadyComponents.tla": "f1ba05dd5e99e262de1116c83e725a8f3541d3113e011c46146c470bece8d34e",
+    "packages/proofs/tla/ReadyComponents.cfg": "98e88bb60ba9b790b936c6c66a1a989618dd3554cd710e3529bc316816aca87a",
+    "packages/proofs/tla/ActorRoundCredits.tla": "3b5de69e5b610222a5628105bc2cba104a8f42e304d7fc069f94307a57c90175",
+    "packages/proofs/tla/ActorRoundCredits.cfg": "96834facac4c68bb5a3aac2364d1b3685067b12dd2b2f8f2ce3ae5db5a38695c",
+    "t/qualification/ascent-positive-components-test.ss": "3539d408c5e9d3f7684a37b9971697e9c47833973dacd7e3d5e4343e4770af4f",
+    "t/qualification/ascent-actor-round-test.ss": "b0953922e53739af57c9e5ce3611815f5b7fe9ece968ba4188810406a8a76dca",
+    "justfile": "dd97dd4023415044c1a6c31a8400c6b0a00f8ba9ff52eadb50d51202245e6151"
+  },
+  "papers": [
+    {
+      "url": "https://thomas.gilray.org/pdf/seamless-deductive.pdf",
+      "section": "4, pp. 82-83; SCC dependence graph, local total/delta/new and topological execution",
+      "reopened": "2026-10-06",
+      "mapping": "SCC successors require completed predecessor output before snapshot capture. The batch/tail protocol is our runtime refinement obligation, not a theorem proved by the paper."
+    }
+  ],
+  "correction": "Correct source/design descriptions: task completion after credited batches and terminal-tail merge releases successors and permits worker reuse; worker/monitor joins occur at whole-pool exit. Scheduling behavior is unchanged.",
+  "lean": {
+    "command": "just check-lean-proofs",
+    "exitCode": 0,
+    "buildJobs": 75,
+    "proofChanges": false,
+    "scope": "Incoming IndexedIteration proves synchronous compiled indexed batch/history equivalence; scheduler protocol remains TLA+ territory."
+  },
+  "tla": {
+    "command": "TLC_JAR=<qualified tool> just check-ready-components-formal check-actor-credit-formal",
+    "exitCode": 0,
+    "readyComponentsDistinctStatesByCapacity": {
+      "1": 134,
+      "2": 857,
+      "3": 857
+    },
+    "unchangedCreditDistinctStatesByCapacity": {
+      "1": 73,
+      "2": 121,
+      "3": 137
+    },
+    "expectedNegativeControls": [
+      "ready-components-prerequisite Prerequisites",
+      "ready-components-early CompleteReturn",
+      "ready-components-snapshot DependencySnapshot",
+      "ready-components-tail CompletedDelivery",
+      "ready-components-credit CompletedDelivery",
+      "actor-credit-early CompleteReturn"
+    ],
+    "scope": "Existing finite ReadyComponents DAG fixture now captures dispatch snapshots, an intermediate batch and terminal tail, and credit before completion. Cancel may drain a task before any batch, but outstanding credit is refused before completion. No arbitrary DAG semantic closure or fairness/native extraction claim."
+  },
+  "native": {
+    "command": "t/harness/run.ss test-pool 2 t/qualification/ascent-positive-components-test.ss t/qualification/ascent-actor-round-test.ss",
+    "exitCode": 0,
+    "pool": 2,
+    "suiteCases": 34,
+    "moduleOK": 2,
+    "explicitOK": 2,
+    "discriminator": "Predecessor emits 32-row batch, receives merge credit, then blocks. Successor stays unassigned until predecessor transfers its terminal 1-row tail; captured snapshot contains all 33 rows and remains at 33 after successor emits.",
+    "existingControls": [
+      "Successor dispatch overlaps unrelated assigned component",
+      "Recursive independent truth and global budgets",
+      "Ready predicate failure and dependency deadlock",
+      "Worker/monitor drain and caller task spine preservation"
+    ]
+  },
+  "discardedApproach": "An initial extension of ActorRoundCredits duplicated existing ReadyComponents admission ownership. Reverted it completely; extended ReadyComponents and retained the credit model unchanged.",
+  "remaining": [
+    "General DAG-to-relational-closure proof",
+    "Native encoding/equality/vector ownership refinement",
+    "Complete provider/cache and asynchronous execution trace refinement",
+    "General abstract gamma/injection and termination contracts"
+  ],
+  "modelCalls": 0,
+  "rustRuntimeChanges": false,
+  "performanceClaim": null
+}

@@ -24,7 +24,7 @@
 ;;
 ;;     ```scheme
 ;;     (gerbil-ascent-run-positive-component! component schema snapshot emit! checkpoint!)
-;;     ;; => completes the assigned SCC before its terminal join
+;;     ;; => completes the assigned SCC before reporting terminal task completion
 ;;     ```
 ;;   %
 (def (gerbil-ascent-run-positive-component! component schema snapshot emit! checkpoint!)

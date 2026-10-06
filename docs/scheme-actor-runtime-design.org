@@ -413,7 +413,8 @@ Candidate batches still use the existing 32-row credit and 64-traversal-step
 checkpoint protocol. The coordinator alone deduplicates and calls the engine's
 existing global budget admission. It extends a tentative frontier for completed
 predecessor reads; completion is accepted only after every batch receives merge
-credit and the worker/monitor joins. The outer engine installs the complete
+credit and the terminal tail is merged. Workers may then be reused; the
+worker/monitor pool joins at whole-run exit. The outer engine installs the complete
 pending cut once all required SCCs close. Source-derived rows are not reclassified
 as new source facts in another engine, and no per-component budget reset can
 bypass the global derived/output limits.
@@ -439,7 +440,13 @@ without an inference of multicore CPU scaling.
 completion and dispatch alongside unrelated active work. It explores capacities
 1/2/3 for prerequisite,
 partition, capacity and complete-return safety. Premature dispatch and early
-return mutations must fail =Prerequisites= and =CompleteReturn=. These fragments
+return mutations must fail =Prerequisites= and =CompleteReturn=. The model
+now captures a predecessor batch and terminal tail, owner merge credit, and the
+actual dispatch snapshot. Stale snapshots, dropped tails and completion before
+merge credit must violate =DependencySnapshot= or =CompletedDelivery=. The
+native terminal-tail rendezvous confirms that a credited intermediate batch
+does not release a successor and that its eventual snapshot contains all 33
+predecessor rows. These fragments
 do not prove the complete Gerbil/Tarjan/head-projection/VM refinement or liveness.
 
 ** Paper obligations and performance boundary

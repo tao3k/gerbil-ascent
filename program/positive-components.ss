@@ -17,7 +17,7 @@
 ;;     Coordinate projected SCCs against a private tentative frontier. Each ready
 ;;     assignment receives its own root/size vectors, with persistent row roots.
 ;;     Only the owner charges global unique rows and admits successors after
-;;     terminal join and all predecessor merge credits. Worker state is never
+;;     terminal task completion and all predecessor merge credits. Worker state is never
 ;;     shared with that owner or with another assignment.
 ;;
 ;;     # Examples

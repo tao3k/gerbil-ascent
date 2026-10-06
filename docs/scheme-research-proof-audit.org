@@ -563,3 +563,23 @@ cache recovery protocol and native mutation/raise/retry checks. Native recursive
 component cases exercise scalar/composite keys with 1, 2 and 4 workers. General
 native encoding/equality and asynchronous trace refinement remain open; no
 whole-framework closure or end-to-end performance gain follows from this fix.
+
+* SCC successor snapshots and terminal delivery
+
+The compiled indexed history proof now comes from =IndexedIteration=; this
+follow-up checks its scheduler boundary in the existing =ReadyComponents.tla=.
+The finite batch/tail fixture distinguishes an intermediate credited batch
+from terminal task completion, records the actual dispatch snapshot, and
+requires all predecessor output witnesses before successor admission. Faults
+for stale snapshots, dropped terminal tails and completion before merge credit
+must fail alongside the existing premature-dispatch/early-return controls.
+=ActorRoundCredits= remains unchanged and owns bounded assignment and drain;
+Lean remains responsible for pure ordered emissions and iteration history.
+
+The native 32+1-row rendezvous blocks a predecessor after its credited batch,
+verifies its successor remains unassigned, then releases the terminal tail and
+checks all 33 rows in the captured snapshot. Worker reuse follows task completion;
+worker/monitor joins occur at whole-pool exit, not at each SCC completion. This
+corrects source and design descriptions without changing scheduling behavior.
+See [[file:evidence/scheme-dependency-snapshot-20261006/receipt.json][qualification receipt]]. General DAG-to-relational-closure and complete native
+representation/trace refinement remain open; finite TLC is protocol evidence.

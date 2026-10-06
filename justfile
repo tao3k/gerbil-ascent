@@ -1196,11 +1196,14 @@ check-ready-components-formal:
       sed "s/Capacity = 2/Capacity = $capacity/" packages/proofs/tla/ReadyComponents.cfg > "$temp/$capacity.cfg"
       "${tlc[@]}" -workers 1 -config "$temp/$capacity.cfg" -metadir "$temp/$capacity" packages/proofs/tla/ReadyComponents.tla
     done
-    for mutation in prerequisite early; do
+    for mutation in prerequisite early snapshot tail credit; do
       sed "s/Mutation = \"none\"/Mutation = \"$mutation\"/" packages/proofs/tla/ReadyComponents.cfg > "$temp/$mutation.cfg"
       code=0
       "${tlc[@]}" -workers 1 -config "$temp/$mutation.cfg" -metadir "$temp/$mutation" packages/proofs/tla/ReadyComponents.tla > "$temp/$mutation.out" 2>&1 || code=$?
-      if [[ "$mutation" = prerequisite ]]; then invariant=Prerequisites; else invariant=CompleteReturn; fi
+      invariant=CompletedDelivery
+      if [[ "$mutation" = prerequisite ]]; then invariant=Prerequisites; fi
+      if [[ "$mutation" = early ]]; then invariant=CompleteReturn; fi
+      if [[ "$mutation" = snapshot ]]; then invariant=DependencySnapshot; fi
       [[ "$code" = 12 ]] && grep -q "Invariant $invariant is violated" "$temp/$mutation.out"
       echo "COUNTEREXAMPLE-OK ready-components-$mutation $invariant"
     done

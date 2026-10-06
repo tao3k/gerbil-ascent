@@ -88,6 +88,18 @@ belongs to TLA+ and native runtime checks. Neither finite TLC nor the source
 inspection constitutes a whole-engine extraction proof.
 
 
+* SCC scheduling boundary for indexed history
+
+=IndexedIteration= proves synchronous indexed batch/history correspondence.
+The existing =ReadyComponents= TLA+ model now captures successor snapshots and
+predecessor batch/tail merge ordering. =program/positive-components.ss= captures
+private root/size vectors only after predecessor task completion, which follows
+owner merge credit and terminal-tail merging in =actor-round.ss=. Whole-pool
+worker/monitor joins happen at run exit; they do not gate each successor.
+The [[file:evidence/scheme-dependency-snapshot-20261006/receipt.json][receipt]] records a native 32+1-row rendezvous and discriminating protocol
+faults. This supplies a checked scheduling premise, not a proof of arbitrary
+DAG closure or a complete native Lean extraction/refinement.
+
 * Stated claim
 
 [[file:../packages/proofs/lean/LexicalLowering.lean][LexicalLowering]] supplies a typed expression calculus, lexical environments,

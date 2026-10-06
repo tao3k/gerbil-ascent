@@ -8,8 +8,9 @@
 * Acceptance rule
 
 Advance one usable native lifecycle across admission, solve, source updates,
-publication and evidence, then qualify its application costs and model
-comprehension. Full R1--R7 closure retains the obligations below.
+publication and evidence, then qualify its application costs. Current ASCENT
+library closure covers R1--R5. R6 remains a separate model-comprehension study;
+R7 consumer integration is deferred outside this library acceptance scope.
 
 This matrix defines the scope of design closure. An implemented interface,
 a semantic argument, a passing discriminator and measured application benefit
@@ -21,21 +22,22 @@ Historical receipts bind their own sources and do not certify later commits.
 * Current closure plan (2026-10-06)
 
 The [[file:scheme-research-proof-audit.org::#current-closure-plan][current integrated design audit]] supersedes historical next-step wording
-in dated sections below. It retains the R1-R7 acceptance scope and the full
+in dated sections below. It retains the R1-R5 library acceptance scope and the full
 [[file:scheme-paper-closure.org][ASCENT/BYODS closure matrix]]. The immediate mainline is native acceptance,
 admitted compiler/row/execution refinement, then Provider/index and actor
 contracts, update/evidence semantics, higher-order changes and complete
-application measurements. Real-model validation follows a newly frozen and
-authorized source batch; MRR Rust integration remains last.
+application measurements. Model validation requires its own frozen-source and
+paid-call authorization. MR/MRR integration is a separate future research task,
+not a prerequisite or a deliverable of current ASCENT library closure. The
+pinned Rust ASCENT oracle remains a library differential reference.
 
-The original audit baseline =665f57c= failed Scheme dependency compilation.
-The compiler ownership repair =5a75020= subsequently passed every exact-head
-GitHub job. The receiver/proof source =80f1af4= integrates concurrent native PO
-composition and prepared-query changes; its formal GitHub job has passed while
-remaining jobs are pending. The complete 82-module/722-Case native result binds
-the predecessor implementation before the prepared-query update. That update's
-retained-operator suite separately passes; these receipts do not constitute a
-new full-registry run. Historical rejected results remain recorded.
+The [[file:evidence/scheme-index-sharing-20261006/receipt.json][current native receipt]] binds Scheme source =77fbabe= to 82 modules, 731
+Cases and explicit successful exits, after the latest retained transaction
+preparation update. The [[file:evidence/scheme-higher-order-20261004/receipt.json][typed-change receipt]] binds the later =6efc911=
+Lean source to an 84-job build and axiom-free application/composition laws.
+No Scheme source changed between those revisions. Final-head GitHub checks
+remain an independent release gate. Earlier compiler heap, package-policy and
+progress failures remain historical rejected results in their own receipts.
 
 * Implemented framework
 
@@ -75,8 +77,8 @@ model call or new accuracy/benefit score belongs to this migration.
 | R3 | General deletion requires multi-support and cyclic support semantics | Remove one of two supports, remove final support, break a recursive cycle; compare every transaction with full recomputation and measure work | Implemented native dependency invalidation for the checked DSL; custom providers and opaque callbacks recompute |
 | R4 | Complete provenance needs an explicit recursive provenance algebra and certificate cost bounds | Independent witness enumeration on finite models, cyclic cases, tamper and size limits | Complete finite stratified alternative graph implemented and independently rebuilt; negative/group observations included; arbitrary numeric semiring valuations and lattice-join histories remain separate obligations |
 | R5 | Architecture benefit must be measured separately from correctness | Same semantics, input set, dependency versions and budgets; operation counts and time/memory distributions | Partial: historical solve-boundary samples and 17,280 batched results independently checked; native allocation counters implemented; fresh-update POO self-field recursion corrected; integrated b8c695d plus published patch passed 141 native Cases and [[file:scheme-retained-benefit.org][180 three-arm groups with 5,400 independent verdicts]]; only the 48-edge independent-source condition reduced all measured costs; general benefit remains open |
-| R6 | Model validation measures comprehension of actual Scheme and reasoning, with actual native feedback after a response | Freeze tasks/source/invocation, score raw acceptance and semantic correctness separately, retain timeouts and status mismatches; compare reasoning and feedback conditions | Open; no preset semantic prompts, tutorials, answer prefills or repair loops |
-| R7 | MRR Rust integration follows native and model acceptance | Preserve exact statuses, ABI limits and semantic authority through a byte-level binding; independent conformance on the accepted subset | Deferred until the preceding acceptance gates; no Rust runtime changes in this slice |
+| R6 / separate research | Model validation measures comprehension of actual Scheme and reasoning, with actual native feedback after a response | Freeze tasks/source/invocation, score raw acceptance and semantic correctness separately, retain timeouts and status mismatches; compare reasoning and feedback conditions | Open; no preset semantic prompts, tutorials, answer prefills or repair loops |
+| R7 / future consumer research | MR/MRR integration | A future consumer study must preserve library statuses, identity, resources and Scheme semantic authority | Outside current ASCENT library acceptance; no consumer binding or Rust runtime work is scheduled |
 
 R1 now includes the [[file:scheme-compiler-proof-bridge.org][typed lexical lowering proof slice]]: universal normalization
 preservation for the stated positive grammar, logical monotonicity, finite tuple
@@ -178,7 +180,8 @@ than teach a predetermined solution. The evaluation target is the model's
 understanding of Scheme logic and its own reasoning ability. Any transport
 format acceptance failure must remain visible separately from semantic accuracy.
 A post hoc extraction result cannot replace the raw-interface acceptance rate.
-Native correctness alone cannot close R6 or justify MRR integration.
+Native correctness cannot establish R6 model comprehension. R6 and future
+MR/MRR integration do not replace the library semantic and release gates.
 
 * Evidence and integration
 

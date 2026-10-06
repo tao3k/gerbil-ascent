@@ -8,7 +8,8 @@
 * Closure conclusions and criteria
 
 Deliver a usable native reasoning lifecycle, then assess architectural benefits
-and model comprehension on the same scenarios. This matrix retains every
+on the same library scenarios. Model comprehension is separately qualified
+research, and MR/MRR consumer integration is deferred. This matrix retains every
 obligation for full replication; passing finite scenarios does not establish
 complete coverage of a paper.
 
@@ -29,7 +30,8 @@ An item closes only when all of the following evidence agrees:
    constraints to execution results for the current source.
 5. Support claimed performance benefits with identical inputs and semantics,
    alternating measurement order, and retained negative results.
-6. Verify CI and consumer pins against the final GitHub commit.
+6. Verify ASCENT CI and pinned reference versions against the final GitHub
+   commit. External consumer integration and consumer pins are separate work.
 
 Sources: [[https://thomas.gilray.org/pdf/seamless-deductive.pdf][A22]] and [[https://kmicinski.com/assets/byods.pdf][B23]], reread on 2026-10-05.
 A22 presents parallelization as future work; the current actor architecture adds
@@ -139,8 +141,9 @@ Rust runtime integration.
 4. Complete paper applications, interaction cases, datasets and performance/
    memory comparisons, retaining upstream differences.
 5. Once every closure item has current source, native/Rust/Lean/TLA+ evidence,
-   negative controls and benefit evidence, verify final-head and consumer-pin CI
-   before declaring complete ASCENT/BYODS closure.
+   negative controls and evidence for each claimed benefit, verify ASCENT
+   final-head CI before declaring complete ASCENT/BYODS library closure.
+   MR/MRR integration is outside this acceptance decision.
 
 The 2026-10-05 frontier round initially passed 50 Cases in five modules. After
 integrating concurrent source-cut, default actor capacity and completed-reuse

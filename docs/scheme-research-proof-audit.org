@@ -150,7 +150,47 @@ not establish full replication. See the [[file:evidence/scheme-integrated-closur
 :CUSTOM_ID: current-closure-plan
 :END:
 
-** Source and acceptance baseline
+** Current library scope and evidence
+
+ASCENT is the native Scheme library under acceptance. MR/MRR is a future
+consumer research task: do not schedule its Rust runtime, binding or ABI
+integration in this mainline, and do not require it to declare library closure.
+The original Rust ASCENT oracle remains a semantic differential reference;
+that comparison is distinct from an MR consumer runtime. Existing R7 records
+retain their historical scope but are not an active library gate.
+
+The current Scheme receipt binds =77fbabe= to 82 modules / 731 Cases with
+explicit successful exits and package-policy qualification. Later =6efc911=
+changes only Lean/proof documentation and qualifies the 84-job proof build,
+including typed insertion-change application/composition with no axioms. See
+[[file:evidence/scheme-index-sharing-20261006/receipt.json][index and native acceptance]] and [[file:evidence/scheme-higher-order-20261004/receipt.json][higher-order evidence]]. Final-head CI remains
+independent. These results do not close concrete native representation bridges,
+full higher-order change compilation or complete paper application benefits.
+
+The active sequence is the six library milestones below. R6 model study is
+separate research: its frozen plan remains pending explicit source/fee
+authorization and is not a dependency of these implementation/proof milestones.
+No new paid model call is authorized by this scope revision.
+Historical MR scheduling statements below are superseded by this library scope.
+
+Primary sources reopened for this scope revision are [[https://thomas.gilray.org/pdf/seamless-deductive.pdf][A22]],
+[[https://kmicinski.com/assets/byods.pdf][B23]], [[https://www.rntz.net/files/seminaive-datafun.pdf][S20]], [[https://ojs.aaai.org/index.php/AAAI/article/view/11554][H18]], and the [[https://arxiv.org/abs/2203.16684][B22 record]] with
+its [[https://www.vldb.org/pvldb/vol16/p1601-budiu.pdf][2023 published DBSP paper]]. This is a design synthesis for the library,
+not a transfer of their implementation results or formal verification claims.
+
+The immediate research question is how actual admitted descriptors, finite
+scalar/row representations and emitted native actions discharge the premises
+of the existing consequence/lowering theorems. Close that representation bridge
+before counting additional abstract theorems as compiler verification. B23
+Theorem 3.5 also needs the actual concretization and total/delta contracts;
+index optimality alone does not provide them. S20 requires an executable typed
+change transformation with discrete base inputs; the newly proved composition
+interface is necessary evidence, not the transformation itself. H18 support
+counts and B22 signed streams require separate algorithm decisions before
+optimizing the existing founded-recovery baseline.
+
+
+** Historical source and acceptance baseline (superseded)
 
 This audit binds GitHub PR #1 implementation head
 =665f57c88f907a4ae7064ce6b4eb94fbf8ece6c6=. Its [[https://github.com/tao3k/gerbil-ascent/actions/runs/37426004971][exact-head CI run]] passed the
@@ -214,20 +254,19 @@ separate stated build resource contract.
 ** Connected delivery milestones
 
 Each milestone joins a paper premise, implementation owner, formal obligation
-and independent executable discriminator. This is the existing R1-R7 closure
-scope; it introduces no new language version, namespace or wrapper framework.
+and independent executable discriminator. This is the existing R1-R5 library
+closure scope; it introduces no new language version, namespace or wrapper framework.
 
 | Order / existing scope | Paper and concrete implementation deliverable | Formal responsibility | Acceptance gate |
 |------------------------+----------------------------------------------+-----------------------+-----------------|
-| 0 / release evidence | Current native package, harness and pinned oracle; first resolve the CI compiler heap overflow through dependency-closure/build ownership and measured memory, then diagnose the native progress failures by actual process/module stage | Existing proofs and temporal controls remain independent evidence | Full native module registry, explicit Cases/OK/exit propagation, all oracle shards including full scale, formal and final-head CI pass on the same source; retain rejected runs and watchdog limits |
+| 0 / release evidence | Current native package, harness and pinned oracle; preserve the qualified compiler-layer ownership, complete registry and actual process/module progress controls; earlier heap/progress failures remain rejected historical evidence | Existing proofs and temporal controls remain independent evidence | Full native module registry, explicit Cases/OK/exit propagation, all oracle shards including full scale, formal and final-head CI pass on the same source; retain rejected runs and watchdog limits |
 | 1 / R1-R2 admitted compiler | A22 section 4, F16 section 5.3, H13 kernel boundary, F20/L25 composition: connect higher-order descriptors, lexical captures, finite domains, row equality, generated actions, indexes and complete positive component output; owners: program/higher-order.ss, program/operator.ss, core/positive-plan.ss, program/component-worker.ss | Lean: compose DescriptorScope, LexicalLowering, RecursiveLowering, FiniteHeight, PositiveSlots, IndexedIteration and GroundedBinding with actual representation obligations. Derive terminal premises from admitted execution rather than assume native completion | Shared captures, fresh identities, empty/zero-arity domains, nested arrows, duplicate rows, repeated variables, host expressions and impurity discriminators; independently computed output equals the least model for the admitted finite subset. Budget failure remains distinct from proved termination |
 | 2 / R1-R3 Provider and indexes | B23 sections 3-4 and 5.5: specify gamma, injection, total/delta enumeration and lookup contracts; implement shared physical index layout/selection from actual logical requirements; owners: table/storage.ss, table/provider.ss, program/index.ss | Lean: establish Provider contract instances and semantic lookup/frontier preservation; prove sharing coverage and representation equivalence. TLA+: staged root installation and version visibility only | Independently enumerate represented rows and every emitted frontier; repeated/grouped/producer interactions, failed insertion and rollback pass. Shared layouts cover every required lookup and reduce physical structures on a discriminating workload; minimal layout and runtime benefit are separate claims |
 | 3 / R3 actor execution | Preserve ready SCC dispatch, immutable reads, one merge owner and credited tail completion. Define partitioning for a large SCC and explicit custom Provider/lattice ownership before enabling either; owners: program/component-plan.ss, positive-components.ss, actor-round.ss, actor-session.ss | Lean: finite computation and merge/index algebra. TLA+: work identity, dependency cuts, stale replies, cancellation, drain, close and native event refinement; state fairness assumptions for any progress claim | Independent truth under reordered/delayed/duplicate completion and failures; bounded capacity and no incomplete publication; demonstrate successor dispatch before unrelated work finishes. Claim multicore benefit only after matched measurements |
 | 4 / R3-R4 updates and evidence | H18 sections 3-4 and B22: retain source occurrences separately from derived facts; connect affected-component rederivation, complete alternatives and founded witnesses; owners: program/source-log.ss, update-selection.ss, reuse.ss, candidate provenance/support | Lean: FunctionalDependency, SourceUpdateFrame and founded/stratum-relative evidence laws. TLA+: source/result transaction, pending/resume, ABA and failed publication | Fresh recomputation after every accepted update agrees; final-support removal, multiple supports, unrooted cycles, lower-stratum changes, interrupted updates, tampering and exhaustion retain exact status. DRedc and DBSP names require their actual algorithms, not equivalent final rows alone |
-| 5 / R1-R5 higher-order change semantics | S20 sections 4.2-4.3 and 6-7: define typed insertion changes for admitted relation/arrow types and implement an actual preserving compiler transformation; owners: program/higher-order.ss, operator.ss and lowering | Lean: application/change logical relation and transformation preservation, including dependence on base input and input change. Ordinary Set body pivots are not function derivatives; deletion is a separate contract | Compare transformed and full evaluation on shared/captured/nested functions and fixed points. Report semantic equality before operation counts or speed. Full finite lowering preservation precedes optimization of function changes |
+| 5 / R1-R5 higher-order change semantics | S20 sections 4.2-4.3 and 6-7: define typed insertion changes for admitted relation/arrow types and implement an actual preserving compiler transformation; owners: program/higher-order.ss, operator.ss and lowering | Lean: recursive insertion-change validity and base-dependent application/composition laws now exist; connect an actual compiler transformation to that relation, including discrete-base variance and changed lexical captures. Ordinary Set body pivots are not function derivatives; deletion is a separate contract | Compare transformed and full evaluation on shared/captured/nested functions and fixed points. Report semantic equality before operation counts or speed. Full finite lowering preservation precedes optimization of function changes |
 | 6 / R5 full application acceptance | B23 section 5: complete Scheme Steensgaard, Polonius, PageRank and LLVM/index-sharing counterparts with pinned input identity; qualify lattice/concurrency prerequisites for workloads that need them | Reuse completed semantic/protocol contracts; add a proof only for a concrete new obligation exposed by the application | Complete outputs and reproducible datasets; paired identical-input/semantic controls with alternating order; admission, planning, invalidation, solve and publication cost boundaries; work, CPU, wall, allocation and peak memory reported separately. Retain regressions and upstream differences |
-| 7 / R6 actual model comprehension | Freeze current actual Scheme module/task bytes only after compiler/publication stabilization; native scoring owns truth, Python owns byte transport | No theorem certifies model understanding. Native inert normalization and truth computation remain independent controls | Newly approved exact-source paid batch; no semantic instructions, tutorials, examples, answer-prefill, repairs or truth-guided selection. Compare raw interface acceptance, semantic correctness, reasoning and genuine post-response feedback against history-only control; include every timeout/rejection in denominators |
-| 8 / R7 MRR integration | Rust binding follows reviewed native, architecture, application and model gates | ABI/status conformance preserves Scheme semantic authority and source/result identity | Independent byte/status/resource controls; completed, provisional, bounded, unsupported and failed remain distinct; no Rust runtime admission before the preceding gates |
+| Separate research / R6 actual model comprehension | Freeze current actual Scheme module/task bytes only after compiler/publication stabilization; native scoring owns truth, Python owns byte transport | No theorem certifies model understanding. Native inert normalization and truth computation remain independent controls | Newly approved exact-source paid batch; no semantic instructions, tutorials, examples, answer-prefill, repairs or truth-guided selection. Compare raw interface acceptance, semantic correctness, reasoning and genuine post-response feedback against history-only control; include every timeout/rejection in denominators |
 
 Milestone 0 is the release gate, not a reason to stop useful design/proof work.
 Milestone 1 is the immediate semantic implementation priority. Provider laws and
@@ -236,6 +275,15 @@ release claims require the integrated path. Milestone 3 must respect milestone
 2's capabilities; adding threads does not make a custom Provider safe.
 Milestone 4 can advance on the existing admitted grammar. S20 changes and
 application optimizations must not redefine semantics silently.
+
+Library closure requires every adopted paper obligation to identify its exact
+location, native owner, semantic/protocol theorem and independently executed
+falsifier. A22 owns the consequence/compiler boundary; B23 owns Provider
+concretization, emitted frontiers and physical layout; S20 owns typed changes
+and variance. H18 support maintenance and B22 signed-stream circuits are
+different algorithms: snapshot equality alone cannot qualify either name.
+Complete application outputs and measured cost remain milestone 6; no MR
+adapter or model score can discharge these library obligations.
 
 ** Paper coverage and proof ownership
 

@@ -6,6 +6,9 @@ from pathlib import Path
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch, Mock
+import contextlib
+import io
 
 sys.path.insert(0, str(Path(__file__).parents[1] / 'src'))
 from ascent_test_support import model_study as study
@@ -36,5 +39,45 @@ class ProviderByteContext(unittest.TestCase):
             root=Path(temp);(root/'f-initial.input.ss').write_text('TOO-LONG')
             with self.assertRaises(ValueError):
                 study.request_for({'maxInputBytes':1},root,{'case':'f-initial','arm':'initial-none'}, {})
+
+class ProviderProgress(unittest.TestCase):
+    def run_stream(self, frames):
+        clock=[0.0]
+        connection=Mock()
+        response=Mock(status=200)
+        connection.getresponse.return_value=response
+        remaining=iter(frames)
+        def read():
+            elapsed, payload=next(remaining, (0, b''))
+            clock[0]+=elapsed
+            return payload
+        response.readline.side_effect=read
+        with tempfile.TemporaryDirectory() as temp:
+            destination=Path(temp)/'response.json'
+            with patch.object(study.http.client,'HTTPSConnection',return_value=connection), \
+                 patch.object(study.time,'monotonic',side_effect=lambda:clock[0]), \
+                 contextlib.redirect_stdout(io.StringIO()):
+                raw, metadata=study.provider({'stream':True}, 'TEST-ONLY-KEY', destination)
+            self.assertTrue(connection.close.called)
+            self.assertEqual(json.loads(destination.read_text()),metadata)
+        return raw, metadata
+
+    def test_live_reasoning_can_exceed_180_seconds(self):
+        reasoning=b'data: {"type":"response.reasoning_text.delta","delta":"working"}\n'
+        completed=b'data: {"type":"response.completed","response":{"status":"completed"}}\n'
+        raw, result=self.run_stream([(40,reasoning)]*5+[(20,completed)])
+        self.assertIsNone(result['error'])
+        self.assertEqual(result['terminal']['status'],'completed')
+        self.assertEqual(result['providerSeconds'],220)
+        self.assertEqual(result['reasoningEvents'],5)
+        self.assertIsNone(result['absoluteWallDeadlineSeconds'])
+
+    def test_keepalive_and_unknown_events_do_not_renew_progress(self):
+        for payload in (b': keepalive\n', b'data: {"type":"response.keepalive"}\n'):
+            with self.subTest(payload=payload):
+                raw,result=self.run_stream([(10,payload)]*5)
+                self.assertEqual(result['error']['type'],'TimeoutError')
+                self.assertIsNone(result['terminal'])
+                self.assertEqual(result['providerSeconds'],50)
 
 if __name__=='__main__':unittest.main()

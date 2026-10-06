@@ -2,6 +2,22 @@
   "algorithm": "Existing conservative grounded DRed and coarse Session rederivation, not recursive/nonrecursive DRedc counters or signed-weight DBSP",
   "benefitAdmitted": false,
   "date": "2026-10-06",
+  "fullNativeQualification": {
+    "caseOk": 725,
+    "exitStatus": 0,
+    "explicitOk": 82,
+    "jobs": 4,
+    "modules": 82,
+    "schemeSourceParentHead": "3002cccc9cd772c13a7cb2b4ca6e5aa1fba35b3e",
+    "scope": "Before concurrent prepared atomic source transaction update and index-owner policy repair",
+    "sourcesSha256": {
+      "program/evaluate.ss": "6d0617497367f2ea002596f7cb1db905e43be93be696f87c22f43b8cfd277d01",
+      "program/index.ss": "e481190f08110a883abe1887cb1584002487fa1caf1b856f765f14a1eaac8da9",
+      "program/operator-session.ss": "e03ffcde8372f5aa4013fdcf5ec430e3f44a1445e51515f7fb0be1afa49c8c61",
+      "program/scheme-session.ss": "72d345a54785bc4ae0ddcb53e3901f7c70b5230ea12518a8fef837d69ff45465",
+      "t/qualification/scheme-provenance-graph-test.ss": "a0fa2ba3f388bb881a88767bfdc8162771baf8af76ab711bf6b48ceeab27e3e9"
+    }
+  },
   "lean": {
     "exitStatus": 0,
     "jobs": 84,

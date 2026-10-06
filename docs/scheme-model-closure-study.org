@@ -82,8 +82,9 @@ Missing usage is unknown; actual invoice cost is not inferred from token usage.
 No gain is promised before measurement, and zero or negative gain is retained.
 
 The proposed frozen bounds are 655360 serialized input bytes, 8192 output
-tokens including reasoning, 45-second network read timeout and 180-second
-provider wall deadline. Native checks retain 1GB heap, 5-second progress and
+tokens including reasoning and a 45-second observable-progress/network idle
+deadline. An actively progressing response has no absolute wall cutoff.
+Native checks retain 1GB heap, 5-second progress and
 120-second module bounds. Peak uncached input USD 0.30/M and output USD 1.20/M
 give a conservative USD 12.404736 bound including 1024 framing tokens per call;
 the requested batch ceiling is USD 13. Pricing source:
@@ -96,3 +97,20 @@ replaying a paid batch. The plan must pass native and offline checks before
 new source-exfiltration and fee authorization. No live calls are part of the
 native receipts. Real model benefit and MRR integration remain pending until
 this measurement and its acceptance are complete.
+
+* Observable provider progress
+
+The former 180-second wall cutoff could terminate an actively computing stream.
+The transport now renews its idle deadline only for actual response lifecycle,
+reasoning and text events. SSE keepalive comments and unknown events do not renew
+it. A partial response, missing terminal event or idle failure remains a failed
+scheduled attempt even if partial text happens to contain the right datum.
+This changes byte-transport liveness; it supplies no semantic instructions,
+correction, retries or native scoring authority to Python.
+
+Four offline byte-context/progress controls pass, including a virtual 220-second
+active reasoning stream and silent/unknown keepalive rejection. No external model
+calls or fees are part of this qualification. Frozen plans must be regenerated
+because producer hashes and the timeout contract changed. The [[https://api-docs.deepseek.com/quick_start/pricing/?tab=case-studies][official peak prices]]
+were rechecked on 2026-10-06 and retain the conservative USD 13 batch ceiling.
+See the [[file:evidence/scheme-provider-progress-20261006/receipt.json][source-bound transport receipt]].

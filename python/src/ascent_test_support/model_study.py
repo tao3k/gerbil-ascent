@@ -24,6 +24,7 @@ MAX_OUTPUT_TOKENS = 8192
 MAX_CALLS = 60
 BUDGET_USD = 13
 FRAME_TOKEN_PADDING = 1024
+PROVIDER_IDLE_SECONDS = 45
 
 
 def digest(data):
@@ -121,7 +122,8 @@ def prepare(output):
                 'sourceHead': subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip(),
                 'maxCalls': MAX_CALLS, 'retries': 0, 'maxInputBytes': MAX_INPUT_BYTES,
                 'maxOutputTokens': MAX_OUTPUT_TOKENS, 'budgetCeilingUsd': BUDGET_USD,
-                'requestReadTimeoutSeconds': 45, 'requestWallDeadlineSeconds': 180,
+                'requestReadTimeoutSeconds': PROVIDER_IDLE_SECONDS, 'requestWallDeadlineSeconds': None,
+                'providerProgressContract': 'Actual response/reasoning/text events renew the idle deadline; keepalive lines do not; no absolute cutoff while computation progresses',
                 'priceSource': PRICE_URL, 'peakInputUsdPerMillion': .3, 'peakOutputUsdPerMillion': 1.2,
                 'framingTokenPadding': FRAME_TOKEN_PADDING,
                 'conservativeMaximumUsd': MAX_CALLS * ((MAX_INPUT_BYTES+FRAME_TOKEN_PADDING)*.3 + MAX_OUTPUT_TOKENS*1.2)/1_000_000,
@@ -198,7 +200,9 @@ def validate(preview, approved):
     plan=json.loads(encoded)
     if (plan['maxCalls']!=60 or plan['retries']!=0 or plan['budgetCeilingUsd']!=13 or
         plan['maxInputBytes']!=MAX_INPUT_BYTES or plan['maxOutputTokens']!=MAX_OUTPUT_TOKENS or
-        plan['producerHashes']!=producer_hashes()):
+        plan['producerHashes']!=producer_hashes() or
+        plan['requestReadTimeoutSeconds']!=PROVIDER_IDLE_SECONDS or
+        plan['requestWallDeadlineSeconds'] is not None):
         raise ValueError('frozen producer/budget contract changed')
     subprocess.run(['gxi',str(ROOT/'t/harness/artifact.ss'),'check'],cwd=ROOT,check=True)
     if plan['sourceBinding']!=json.loads((ROOT/'.cache/ascent/native-library/dsl-closure.json').read_text()):
@@ -237,30 +241,34 @@ def provider(request, api_key, destination):
     started=time.monotonic(); raw=''; terminal=None; reason_events=0; first_text=None
     packet=json.dumps(request,ensure_ascii=False).encode()
     response_error=None
-    connection=http.client.HTTPSConnection('api.deepseek.com',timeout=45)
+    connection=http.client.HTTPSConnection('api.deepseek.com',timeout=PROVIDER_IDLE_SECONDS)
     try:
         connection.connect()
         wire=connection.sock
-        remaining=180-(time.monotonic()-started)
-        if remaining<=0: raise TimeoutError('frozen provider wall deadline exceeded')
-        wire.settimeout(min(45,remaining))
+        wire.settimeout(PROVIDER_IDLE_SECONDS)
         connection.request('POST','/responses',body=packet,
                            headers={'Content-Type':'application/json','Authorization':'Bearer '+api_key})
         response=connection.getresponse()
         if response.status!=200:
             raise RuntimeError(f'provider HTTP status {response.status}')
+        last_progress=time.monotonic()
         with destination.with_suffix('.events.jsonl').open('x') as events:
             while True:
-                remaining=180-(time.monotonic()-started)
-                if remaining<=0: raise TimeoutError('frozen provider wall deadline exceeded')
-                wire.settimeout(min(45,remaining))
+                remaining=PROVIDER_IDLE_SECONDS-(time.monotonic()-last_progress)
+                if remaining<=0: raise TimeoutError('provider made no observable progress before idle deadline')
+                wire.settimeout(remaining)
                 line=response.readline()
+                if time.monotonic()-last_progress>PROVIDER_IDLE_SECONDS:
+                    raise TimeoutError('provider made no observable progress before idle deadline')
                 if not line: break
-                if time.monotonic()-started>180:
-                    raise TimeoutError('frozen provider wall deadline exceeded')
                 if not line.startswith(b'data: '): continue
                 event=json.loads(line[6:]); events.write(json.dumps(event,ensure_ascii=False)+'\n');events.flush()
                 kind=event.get('type','')
+                if (kind.startswith(('response.output_text.', 'response.reasoning')) or
+                    kind in {'response.created','response.in_progress','response.output_item.added',
+                             'response.output_item.done','response.content_part.added','response.content_part.done',
+                             'response.completed','response.incomplete','response.failed'}):
+                    last_progress=time.monotonic()
                 if kind=='response.output_text.delta':
                     raw+=event['delta'];first_text=first_text or time.monotonic()-started
                     print('.',end='',flush=True)
@@ -275,7 +283,8 @@ def provider(request, api_key, destination):
     finally:
         connection.close()
     metadata={'terminal':terminal,'error':response_error,'reasoningEvents':reason_events,
-              'providerSeconds':time.monotonic()-started,'firstVisibleTextSeconds':first_text}
+              'providerSeconds':time.monotonic()-started,'firstVisibleTextSeconds':first_text,
+              'progressIdleSeconds':PROVIDER_IDLE_SECONDS,'absoluteWallDeadlineSeconds':None}
     destination.write_text(json.dumps(metadata,ensure_ascii=False,indent=2)+'\n')
     return raw, metadata
 

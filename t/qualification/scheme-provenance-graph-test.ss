@@ -201,6 +201,46 @@
         (check-equal? (provenance-maintenance-rows state) '((1)))
         (let-values (((rows work) (candidate-provenance-withdraw! state '((s 1)))))
           (check-equal? rows []))))
+    (test-case "every simultaneous source withdrawal agrees with independent matrix truth"
+      (for-each
+       (lambda (mask)
+         (let* ((edges (edges-for-mask mask))
+                (initial (matrix-closure edges))
+                (snapshot (reasoning-source-snapshot 'batch-corpus mask
+                            (list (list 'edge 2 edges))))
+                (spec (make-reasoning-candidate
+                       '((path . 2)) []
+                       (list (vector '(path ?x ?y) '((edge ?x ?y)) 10)
+                             (vector '(path ?x ?z) '((path ?x ?y) (edge ?y ?z)) 11))
+                       (vector '(path ?x ?y) 12) '(16 64 128)))
+                (graph (candidate-positive-provenance
+                        snapshot spec 'batch-corpus 'complete initial 10000)))
+           (for-each
+            (lambda (cut)
+              (let* ((selected (filter (lambda (position)
+                                        (odd? (quotient cut (expt 2 (- position 1)))))
+                                      (iota (length edges) 1)))
+                     (remaining (filter-map
+                                 (lambda (edge position)
+                                   (and (not (memv position selected)) edge))
+                                 edges (iota (length edges) 1)))
+                     (selectors (map (lambda (position) (list 'edge position))
+                                     (reverse selected)))
+                     (state (candidate-open-provenance-maintenance
+                             snapshot spec 'batch-corpus 'complete initial graph 10000)))
+                ;; Repeated selectors denote the same occurrence, not a second
+                ;; deletion. Reverse order must not select a different cut.
+                (let-values (((rows work)
+                              (candidate-provenance-withdraw!
+                               state (append selectors selectors))))
+                  (check-row-set rows (matrix-closure remaining))
+                  (let-values (((again repeated-work)
+                                (candidate-provenance-withdraw! state selectors)))
+                    (check-row-set again rows)))))
+            (iota (expt 2 (length edges))))
+           (displayln "PROVENANCE-BATCH-CHECKED " mask " cuts " (expt 2 (length edges)))
+           (force-output)))
+       (iota 64)))
     (test-case "all sixty-four graphs preserve complete alternatives and every withdrawal"
       (for-each
        (lambda (mask)

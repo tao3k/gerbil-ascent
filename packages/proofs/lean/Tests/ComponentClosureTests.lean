@@ -103,6 +103,17 @@ example (fact : Nat) :
       Derivable cycle (fun n => n = 0) fact :=
   recovery_exact cycle _ _ _ (by intro f present outside; exact False.elim (outside trivial))
     (by intro rule member premise read affected; trivial) fact
+example (fact : Nat) :
+    Derivable cycle
+      (fun f => False ∨ retained cycle (fun n => n = 0)
+        (affectedFromSources cycle (fun n => n = 0) (fun _ => False)) f) fact ↔
+      Derivable cycle (fun _ => False) fact :=
+  constructed_recovery cycle _ _ fact
+example : (⟨[2], 1⟩ : Rule Nat) ∈ dependencyRules cycle := by
+  simp [dependencyRules, cycle]
+#print axioms SourceWithdrawal.constructed_closed
+#print axioms SourceWithdrawal.constructed_sources
+#print axioms SourceWithdrawal.constructed_recovery
 end Withdrawal
 
 end Ascent.ComponentClosureTests

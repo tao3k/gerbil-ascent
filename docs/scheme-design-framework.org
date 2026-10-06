@@ -28,12 +28,14 @@ contracts, update/evidence semantics, higher-order changes and complete
 application measurements. Real-model validation follows a newly frozen and
 authorized source batch; MRR Rust integration remains last.
 
-The implementation baseline is =665f57c=. Its exact-head formal and regular
-BYODS CI jobs passed during the audit. Scheme CI failed in dependency compilation
-with heap overflow before native execution; other oracle jobs were still pending.
-Historical 80-module
-qualification and abstract least-model theorems do not close the rejected
-rebased full-native run or the remaining operational proof premises.
+The original audit baseline =665f57c= failed Scheme dependency compilation.
+The compiler ownership repair =5a75020= subsequently passed every exact-head
+GitHub job. The receiver/proof source =80f1af4= integrates concurrent native PO
+composition and prepared-query changes; its formal GitHub job has passed while
+remaining jobs are pending. The complete 82-module/722-Case native result binds
+the predecessor implementation before the prepared-query update. That update's
+retained-operator suite separately passes; these receipts do not constitute a
+new full-registry run. Historical rejected results remain recorded.
 
 * Implemented framework
 

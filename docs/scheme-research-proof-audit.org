@@ -923,3 +923,22 @@ transaction publication and cancellation remain TLA+ responsibilities. Native
 support-graph completeness and its correspondence to Session invalidation remain
 explicit premises to discharge. All examples and axiom reports reside in =Tests=.
 The complete Lean collection passes 84 jobs. This source needs its own GitHub CI.
+
+** Constructed ground invalidation and all simultaneous withdrawal cuts
+
+=SourceWithdrawal.dependencyRules= constructs one dependency edge per admitted
+ground rule premise. =constructed_closed= proves closure of propagation from
+withdrawn seeds, and =constructed_sources= proves preservation of unaffected
+seeds. =constructed_recovery= supplies both premises to exact least-model
+recovery. Neither stability nor dependency closure is supplied by the caller.
+Complete native grounding/representation remains an explicit bridge; this does
+not establish H18 DRedc recursive/nonrecursive counter maintenance or B22 DBSP.
+
+The existing native graph suite now checks all 729 simultaneous withdrawal
+cuts across 64 three-node graphs against independent Floyd matrix closure.
+Selectors are reversed and duplicated, and every withdrawal is repeated to
+check occurrence idempotence. The full suite passes with explicit OK and exit
+zero under the unchanged progress contract. Existing exact-budget parity,
+failed publication, complete-alternative tampering and last cyclic support
+controls remain included. The complete Lean collection passes 84 build jobs.
+See the [[file:evidence/scheme-founded-recovery-20261006/receipt.json][source-bound recovery receipt]].

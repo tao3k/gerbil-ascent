@@ -345,6 +345,39 @@ theorem unaffected_remains (rules : List (Rule Fact))
       intro affectedPremise
       exact outside (closed rule member premise read affectedPremise)
 
+/-- Ground overdeletion uses one dependency edge for each rule premise, not
+an AND rule. Any changed premise invalidates the head conservatively. -/
+def dependencyRules (rules : List (Rule Fact)) : List (Rule Fact) :=
+  rules.flatMap (fun rule => rule.body.map (fun premise => ⟨[premise], rule.head⟩))
+
+def withdrawnSeeds (oldSeed newSeed : Database Fact) : Database Fact :=
+  fun fact => oldSeed fact ∧ ¬newSeed fact
+
+def affectedFromSources (rules : List (Rule Fact))
+    (oldSeed newSeed : Database Fact) : Database Fact :=
+  Derivable (dependencyRules rules) (withdrawnSeeds oldSeed newSeed)
+
+theorem dependency_member (rules : List (Rule Fact)) (rule : Rule Fact)
+    (member : rule ∈ rules) (premise : Fact) (read : premise ∈ rule.body) :
+    (⟨[premise], rule.head⟩ : Rule Fact) ∈ dependencyRules rules := by
+  exact List.mem_flatMap.mpr ⟨rule, member, List.mem_map.mpr ⟨premise, read, rfl⟩⟩
+
+/-- Dependency closure follows from the constructed graph; it is no longer a
+caller-supplied stability/closure assumption. -/
+theorem constructed_closed (rules : List (Rule Fact)) (oldSeed newSeed : Database Fact) :
+    DependencyClosed rules (affectedFromSources rules oldSeed newSeed) := by
+  intro rule member premise read affected
+  apply Derivable.fire ⟨[premise], rule.head⟩ (dependency_member rules rule member premise read)
+  intro fact present
+  have same : fact = premise := by simpa using present
+  subst fact
+  exact affected
+
+theorem constructed_sources (rules : List (Rule Fact)) (oldSeed newSeed : Database Fact)
+    (fact : Fact) (old : oldSeed fact) (outside : ¬affectedFromSources rules oldSeed newSeed fact) :
+    newSeed fact := by
+  exact Classical.byContradiction (fun absent => outside (Derivable.seed ⟨old, absent⟩))
+
 /-- Completed unaffected facts are founded in the remaining sources. Cyclic
 support alone cannot be used as a seed in this argument. -/
 def retained (rules : List (Rule Fact)) (oldSeed affected : Database Fact) : Database Fact :=
@@ -368,6 +401,16 @@ theorem recovery_exact (rules : List (Rule Fact))
     induction derived with
     | seed present => exact Derivable.seed (Or.inl present)
     | fire rule member body ih => exact Derivable.fire rule member ih
+
+/-- Concrete ground dependency propagation supplies both recovery premises.
+The support graph must still represent every admitted ground rule/seed. -/
+theorem constructed_recovery (rules : List (Rule Fact))
+    (oldSeed newSeed : Database Fact) (fact : Fact) :
+    Derivable rules
+      (fun f => newSeed f ∨ retained rules oldSeed (affectedFromSources rules oldSeed newSeed) f) fact ↔
+      Derivable rules newSeed fact :=
+  recovery_exact rules oldSeed newSeed _ (constructed_sources rules oldSeed newSeed)
+    (constructed_closed rules oldSeed newSeed) fact
 
 /-- Every rule having a premise forbids source-free derivations. Empty-body
 rules are deliberately excluded: those are independently founded constants. -/

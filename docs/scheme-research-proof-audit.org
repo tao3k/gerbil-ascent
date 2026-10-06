@@ -899,3 +899,27 @@ explorations and 33 required counterexamples. All seven existing default-path
 cost gates passed; the explicit shared fixture remains observational and its
 negative outcome is retained. The compiler-only parent =5a75020= passed every
 GitHub CI job. The final receiver commit must independently pass exact-head CI.
+
+** Rebased qualification and founded recovery
+
+The current receiver implementation integrates upstream mutable callback
+semantics and native PO compiler composition through =59c1710=. The complete
+requalification passes all 82 native modules, 722 CASE-OK, 82 explicit OK and
+exit zero with four workers and unchanged heap/startup/idle contracts. The
+717-Case result above remains historical; it is not relabeled as this run.
+The [[file:evidence/scheme-index-sharing-20261006/receipt.json][receipt]] records both source boundaries.
+
+Lean additionally proves that appending only missing columns covers each next
+chain requirement, preserves every earlier prefix, and retains a duplicate-free
+physical permutation. This closes the chain construction coverage step without
+claiming general maximum-matching optimality or extracted native trie correctness.
+
+=ComponentClosure.SourceWithdrawal= proves exact least-model recovery from
+remaining sources plus unaffected founded facts for any dependency-closed
+invalidation set. It also distinguishes duplicate source occurrences from fact
+identity and rules out source-free cycles when every rule has a nonempty body.
+Empty-body constants remain independent foundations. These are semantic laws;
+transaction publication and cancellation remain TLA+ responsibilities. Native
+support-graph completeness and its correspondence to Session invalidation remain
+explicit premises to discharge. All examples and axiom reports reside in =Tests=.
+The complete Lean collection passes 84 jobs. This source needs its own GitHub CI.

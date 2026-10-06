@@ -87,4 +87,22 @@ example : solve rules owner (planned rules owner [1, 2, 3] initial) initial =
 #print axioms Ascent.ComponentClosure.least_closure
 #print axioms Ascent.ComponentClosure.least_model
 #print axioms Ascent.ComponentClosure.orders_equal
+#print axioms Ascent.ComponentClosure.SourceWithdrawal.unaffected_remains
+#print axioms Ascent.ComponentClosure.SourceWithdrawal.recovery_exact
+#print axioms Ascent.ComponentClosure.SourceWithdrawal.source_free_absent
+
+namespace Withdrawal
+open SourceWithdrawal
+def cycle : List (Rule Nat) := [⟨[0], 1⟩, ⟨[1], 2⟩, ⟨[2], 1⟩]
+example : sourceFacts (fun (_ : Bool) => (0 : Nat)) (fun source => source = true) 0 :=
+  remaining_occurrence _ _ true rfl
+example : ¬Derivable cycle (fun _ => False) 1 :=
+  source_free_absent cycle (by intro rule member; simp [cycle] at member; rcases member with rfl | rfl | rfl <;> simp) 1
+example (fact : Nat) :
+    Derivable cycle (fun f => f = 0 ∨ retained cycle (fun n => n = 0) (fun _ => True) f) fact ↔
+      Derivable cycle (fun n => n = 0) fact :=
+  recovery_exact cycle _ _ _ (by intro f present outside; exact False.elim (outside trivial))
+    (by intro rule member premise read affected; trivial) fact
+end Withdrawal
+
 end Ascent.ComponentClosureTests

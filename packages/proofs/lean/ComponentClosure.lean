@@ -320,4 +320,78 @@ theorem orders_equal (rules : List (Rule Fact)) (owner : Fact → Component)
   apply propext
   exact (least_closure rules owner first seed firstHeads firstOrder firstStable fact).trans
     (least_closure rules owner second seed secondHeads secondOrder secondStable fact).symm
+/-! Founded recovery after source withdrawal. A dependency-closed overdeletion
+set may be coarse (whole affected components) or fine (ground support nodes).
+No transaction/scheduler protocol or counter optimization is modeled here. -/
+namespace SourceWithdrawal
+
+def DependencyClosed (rules : List (Rule Fact)) (affected : Database Fact) : Prop :=
+  ∀ rule ∈ rules, ∀ premise ∈ rule.body, affected premise → affected rule.head
+
+theorem unaffected_remains (rules : List (Rule Fact))
+    (oldSeed newSeed affected : Database Fact)
+    (sources : ∀ fact, oldSeed fact → ¬affected fact → newSeed fact)
+    (closed : DependencyClosed rules affected) (fact : Fact)
+    (derived : Derivable rules oldSeed fact) (outside : ¬affected fact) :
+    Derivable rules newSeed fact := by
+  revert outside
+  induction derived with
+  | seed present => intro outside; exact Derivable.seed (sources _ present outside)
+  | fire rule member body ih =>
+      intro outside
+      apply Derivable.fire rule member
+      intro premise read
+      apply ih premise read
+      intro affectedPremise
+      exact outside (closed rule member premise read affectedPremise)
+
+/-- Completed unaffected facts are founded in the remaining sources. Cyclic
+support alone cannot be used as a seed in this argument. -/
+def retained (rules : List (Rule Fact)) (oldSeed affected : Database Fact) : Database Fact :=
+  fun fact => Derivable rules oldSeed fact ∧ ¬affected fact
+
+theorem recovery_exact (rules : List (Rule Fact))
+    (oldSeed newSeed affected : Database Fact)
+    (sources : ∀ fact, oldSeed fact → ¬affected fact → newSeed fact)
+    (closed : DependencyClosed rules affected) (fact : Fact) :
+    Derivable rules (fun f => newSeed f ∨ retained rules oldSeed affected f) fact ↔
+      Derivable rules newSeed fact := by
+  constructor
+  · intro derived
+    induction derived with
+    | seed present =>
+        rcases present with current | ⟨previous, outside⟩
+        · exact Derivable.seed current
+        · exact unaffected_remains rules oldSeed newSeed affected sources closed _ previous outside
+    | fire rule member body ih => exact Derivable.fire rule member ih
+  · intro derived
+    induction derived with
+    | seed present => exact Derivable.seed (Or.inl present)
+    | fire rule member body ih => exact Derivable.fire rule member ih
+
+/-- Every rule having a premise forbids source-free derivations. Empty-body
+rules are deliberately excluded: those are independently founded constants. -/
+theorem source_free_absent (rules : List (Rule Fact))
+    (nonempty : ∀ rule ∈ rules, rule.body ≠ []) (fact : Fact) :
+    ¬Derivable rules (fun _ => False) fact := by
+  intro derived
+  induction derived with
+  | seed present => exact present
+  | fire rule member body ih =>
+      cases shape : rule.body with
+      | nil => exact (nonempty rule member) shape
+      | cons first rest => exact ih first (by simp [shape])
+
+/-- Two source occurrences may denote the same fact. Withdrawing an occurrence
+removes its support, rather than deleting the fact's other source occurrences. -/
+def sourceFacts {Occurrence : Type} (value : Occurrence → Fact)
+    (active : Occurrence → Prop) : Database Fact :=
+  fun fact => ∃ occurrence, active occurrence ∧ value occurrence = fact
+
+theorem remaining_occurrence {Occurrence : Type} (value : Occurrence → Fact)
+    (active : Occurrence → Prop) (occurrence : Occurrence)
+    (present : active occurrence) : sourceFacts value active (value occurrence) :=
+  ⟨occurrence, present, rfl⟩
+end SourceWithdrawal
+
 end Ascent.ComponentClosure

@@ -547,6 +547,64 @@ theorem lookup_membership (columns : List Nat) (rows : List (List V))
     (wanted : Nat → Option V) (row : List V) :
     row ∈ lookup columns rows wanted ↔ row ∈ rows ∧ Matches columns row wanted := by
   simp [lookup]
+/-- The native chain planner appends only newly introduced columns. -/
+def extendPermutation (prior next : List Nat) : List Nat :=
+  prior ++ next.filter fun column => !prior.contains column
+
+theorem extension_coverage (prior next : List Nat)
+    (included : ∀ column ∈ prior, column ∈ next) (column : Nat) :
+    column ∈ extendPermutation prior next ↔ column ∈ next := by
+  simp only [extendPermutation, List.mem_append, List.mem_filter]
+  constructor
+  · intro member
+    exact member.elim (included column) And.left
+  · intro member
+    by_cases previous : column ∈ prior
+    · exact Or.inl previous
+    · exact Or.inr ⟨member, by simp [List.contains_eq_mem, previous]⟩
+
+theorem extension_prefix (prior next : List Nat) (depth : Nat)
+    (inside : depth ≤ prior.length) :
+    (extendPermutation prior next).take depth = prior.take depth := by
+  exact List.take_append_of_le_length inside
+
+theorem extension_nodup (prior next : List Nat)
+    (priorUnique : prior.Nodup) (nextUnique : next.Nodup) :
+    (extendPermutation prior next).Nodup := by
+  apply List.nodup_append.mpr
+  refine ⟨priorUnique, nextUnique.filter _, ?_⟩
+  intro column oldMember other newMember same
+  subst other
+  have absent : column ∉ prior := by
+    simpa [List.contains_eq_mem] using (List.mem_filter.mp newMember).2
+  exact absent oldMember
+
+theorem extension_permutation (prior next : List Nat)
+    (priorUnique : prior.Nodup) (nextUnique : next.Nodup)
+    (included : ∀ column ∈ prior, column ∈ next) :
+    (extendPermutation prior next).Perm next := by
+  exact (List.perm_ext_iff_of_nodup (extension_nodup prior next priorUnique nextUnique)
+    nextUnique).mpr (extension_coverage prior next included)
+
+theorem new_requirement_covered (prior next : List Nat)
+    (priorUnique : prior.Nodup) (nextUnique : next.Nodup)
+    (included : ∀ column ∈ prior, column ∈ next) (column : Nat) :
+    column ∈ next ↔ column ∈ (extendPermutation prior next).take next.length := by
+  have sameLength := (extension_permutation prior next priorUnique nextUnique included).length_eq
+  rw [← sameLength, List.take_length]
+  exact (extension_coverage prior next included column).symm
+
+/-- Every earlier logical view keeps its physical prefix after introducing a
+larger requirement. This is the chain-construction step, independent of the
+maximum-matching optimization or trie storage representation. -/
+theorem chain_prefix_preserved (logical prior next : List Nat) (depth : Nat)
+    (inside : depth ≤ prior.length)
+    (coverage : ∀ column, column ∈ logical ↔ column ∈ prior.take depth)
+    (rows : List (List V)) (wanted : Nat → Option V) :
+    lookup logical rows wanted = lookup ((extendPermutation prior next).take depth) rows wanted := by
+  rw [extension_prefix prior next depth inside]
+  exact prefix_lookup logical prior depth coverage rows wanted
+
 end SharedIndex
 
 end Ascent.IndexedPositiveTraversal

@@ -135,6 +135,46 @@
     "supportModules": 142
   },
   "rawLogsCommitted": false,
+  "rebasedQualification": {
+    "lean": {
+      "additionalLaws": [
+        "Universal chain append preserves earlier prefixes and covers each new requirement",
+        "Dependency-closed source withdrawal recovers exactly the remaining-source least model",
+        "Remaining duplicate source occurrences retain support; nonempty-body cycles cannot seed themselves"
+      ],
+      "exitStatus": 0,
+      "jobs": 84
+    },
+    "native": {
+      "caseOk": 722,
+      "compilerHeap": "1G",
+      "exitStatus": 0,
+      "explicitOk": 82,
+      "idleSeconds": 5,
+      "jobs": 4,
+      "modules": 82,
+      "startupSeconds": 5
+    },
+    "remoteCi": "Pending separate exact-head qualification; compiler-only green result is historical",
+    "sourceParentHead": "97b8f656cf99386fa2915265beb60b477fd37bbb",
+    "sourcesSha256": {
+      "core/expression-plan.ss": "8c0c99f5896c91fbb1a4d14842bf271c3447912e8d23c984bea0fcf34ccd9955",
+      "core/positive-plan.ss": "4e5c53d18e514439fad5343cee5b375079b0b7a64334d751a262f44f4478a9b1",
+      "packages/proofs/lean/ComponentClosure.lean": "f9c8a1d88acece92527749fdb255b7920f5d0db892f0115d4877320b0f65997a",
+      "packages/proofs/lean/IndexedPositiveTraversal.lean": "2e140cbbaefcd586a449d427a053a58e9008f7f842ae93cfd5c851cee095b297",
+      "packages/proofs/lean/Tests/ComponentClosureTests.lean": "d185e408eac02e00c73c7a98bc367f14e4718915c00b42b9d3e94f39e6276ec0",
+      "packages/proofs/lean/Tests/IndexedPositiveTraversalTests.lean": "24319f4846f5e9a72beba1143d664bd06c1bcedb7d70ea732081a4c8667b09db",
+      "program/component-worker.ss": "d980c1453431108a054157c39bc506389f10a66911b51494c31ab89d97bdcaa5",
+      "program/evaluate.ss": "6d0617497367f2ea002596f7cb1db905e43be93be696f87c22f43b8cfd277d01",
+      "program/higher-order.ss": "e55601ee7788b073c72509e5710bb9e99986ff49798c651c69487f9fe9019498",
+      "program/index.ss": "e481190f08110a883abe1887cb1584002487fa1caf1b856f765f14a1eaac8da9",
+      "program/operator.ss": "5f59d9fae8b81d9bb3d6a2b787adcf0aaeb93519767a958f6bf1826a2195bbbe",
+      "table/index-sharing.ss": "a84672835ec42129857f8faef031b859cc112c442d218f8bf31bff7e31dd1944",
+      "table/provider.ss": "2b5d250f0c3d2ff72dbb438833e2919d3e18029e0991e540a8507c40a14483aa"
+    },
+    "temporal": "Sources unchanged from the separately recorded 19 normal explorations and 33 required counterexamples; not a new temporal execution",
+    "upstreamHead": "59c17106063f2caa250de47905c9dfaf52bd91b8"
+  },
   "rejectedEvidence": {
     "firstCompleteNativeRun": {
       "caseOkBeforeFailure": 432,

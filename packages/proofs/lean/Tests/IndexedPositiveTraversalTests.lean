@@ -142,4 +142,12 @@ example : SharedIndex.lookup [1] ([[false, true], [true, false]].reverse ++ [[tr
 example : (∀ column, column ∈ ([0, 1] : List Nat) ↔ column ∈ ([1, 0, 2] : List Nat).take 2) := by
   intro column; simp; grind
 
+#print axioms Ascent.IndexedPositiveTraversal.SharedIndex.extension_coverage
+#print axioms Ascent.IndexedPositiveTraversal.SharedIndex.extension_nodup
+#print axioms Ascent.IndexedPositiveTraversal.SharedIndex.extension_permutation
+#print axioms Ascent.IndexedPositiveTraversal.SharedIndex.new_requirement_covered
+#print axioms Ascent.IndexedPositiveTraversal.SharedIndex.chain_prefix_preserved
+example : SharedIndex.extendPermutation [1] [0, 1] = [1, 0] := by decide
+example : SharedIndex.extendPermutation [1, 0] [0, 1, 2] = [1, 0, 2] := by decide
+
 end Ascent.IndexedPositiveTraversalTests

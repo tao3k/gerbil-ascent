@@ -1015,3 +1015,20 @@ extension and foreign-owner interference; it does not repeat lookup algebra.
 The [[file:evidence/scheme-index-sharing-20261006/receipt.json][receipt]] binds both collections to source and retains rejected cost outcomes.
 These results do not imply a universal native matching/trie extraction theorem
 or complete Polonius/LLVM application benefit.
+
+* Chain construction and founded source recovery
+
+=SharedIndex.extendPermutation= models the actual append-missing-columns chain
+step. Its coverage, permutation and prefix-preservation theorems establish each
+new requirement and retain every earlier logical lookup prefix. They do not
+establish maximum-matching optimality or Gambit hash/trie extraction.
+
+=ComponentClosure.SourceWithdrawal.recovery_exact= proves least-model equality
+for recovery from remaining seeds and unaffected founded facts. Its premises
+require dependency-closed invalidation and preservation of unaffected seeds.
+=source_free_absent= excludes self-founded cycles under nonempty rule bodies;
+=remaining_occurrence= retains support through distinct occurrence identities.
+These universal statements do not replace complete native graph enumeration,
+source-selector decoding or transaction publication evidence. Tests and axiom
+prints remain in the corresponding =Tests= modules. The complete Lean build
+passes 84 jobs; the source-bound [[file:evidence/scheme-index-sharing-20261006/receipt.json][receipt]] retains separate native and temporal scopes.

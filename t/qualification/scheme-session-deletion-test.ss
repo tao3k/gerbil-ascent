@@ -774,17 +774,23 @@
     (test-case "opaque index lookup cannot authorize completed-result reuse"
       ;; A custom Provider may capture state outside the declared rule graph.
       ;; With 32 candidate rows, the bound second atom must use its index.
-      ;; The opaque lookup then hides that match after the first completed
-      ;; solve. Full evaluation must observe it; retaining joined is stale.
-      (let* ((lookup-open? #t)
+      ;; Change admissible enumeration order and observe the captured mode.
+      ;; The physical index must still return every matching row. An incomplete
+      ;; batch is a separate rejected transaction, not an alternate meaning.
+      (let* ((reverse-lookups? #f)
+             (observed-reverse? #f)
+             (omit-matches? #f)
              (lookups 0)
              (provider
               (.o (:: @ gerbil-ascent-hash-index-provider)
                   (.lookup-index (lambda (index key)
                                    (set! lookups (+ lookups 1))
-                                   (if lookup-open?
-                                     (or (hash-get index key) []) [])))))
-             (right-rows (map (lambda (n) (list n n)) (iota 32)))
+                                   (set! observed-reverse? reverse-lookups?)
+                                   (let (matching (or (hash-get index key) []))
+                                     (if omit-matches? []
+                                       (if reverse-lookups? (reverse matching) matching)))))))
+             (right-rows (map (lambda (n) (list (modulo n 4) n)) (iota 32)))
+             (expected-joined (filter (lambda (row) (= (car row) 0)) right-rows))
              (base
               (relational-program
                (relation left (key) '((0)))
@@ -802,17 +808,29 @@
                                            (cons custom-right (cddr source-relations)))))
              (session (gerbil-ascent-open-session program)))
         (check-equal? (gerbil-ascent-update-eligible? program) #f)
-        (check-set (rows (gerbil-ascent-session-run session) 'joined) '((0 0)))
+        (check-set (rows (gerbil-ascent-session-run session) 'joined) expected-joined)
         (check-equal? (> lookups 0) #t)
+        (check-equal? observed-reverse? #f)
         (let (before-update-lookups lookups)
-          (set! lookup-open? #f)
+          (set! reverse-lookups? #t)
           (let* ((replacements '((cold (8))))
                  (updated (gerbil-ascent-session-replace-sources! session replacements)))
             (check-equal? (> lookups before-update-lookups) #t)
             (check-equal? (.ref updated 'evaluation-path) 'stratified-semi-naive)
             (check-equal? (.ref updated 'reused-relations) '())
-            (check-set (rows updated 'joined) '())
-            (check-fresh updated (fresh-replacement-program program replacements))))))
+            (check-equal? observed-reverse? #t)
+            (check-set (rows updated 'joined) expected-joined)
+            (check-fresh updated (fresh-replacement-program program replacements))
+            ;; A genuinely incomplete lookup must fail atomically. Restoring
+            ;; the receiver leaves the accepted cold(8) source, never cold(9).
+            (set! omit-matches? #t)
+            (check-exception
+             (gerbil-ascent-session-replace-sources! session '((cold (9)))) true)
+            (set! omit-matches? #f)
+            (let (recovered (gerbil-ascent-session-run session))
+              (check-set (rows recovered 'joined) expected-joined)
+              (check-set (rows recovered 'seen) '((8)))
+              (check-fresh recovered (fresh-replacement-program program replacements)))))))
     (test-case "a forged descriptor cannot authorize an opaque callback for result reuse"
       (let* ((allow? #t)
              (base (path-program '((0 1))))

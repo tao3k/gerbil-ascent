@@ -162,6 +162,27 @@ remain open. Lean tests live in =Tests/GroundedBindingTests.lean=; the matching
 native fixture combines repeated variables, a constant, a shared-key join,
 duplicate heads and a zero-arity head. See [[file:evidence/scheme-binder-grounding-20261006/receipt.json][source-bound receipt]].
 
+** Relation projection and component dependency contract
+
+[[file:../packages/proofs/lean/ComponentProjection.lean][ComponentProjection]] maps every finite ground clause to a relation rule with
+one head and an atom read for each body fact. =reads_exact= establishes exact
+direct source-to-head edges, including repeated reads. =depends_exact= lifts
+these relation edges through relation ownership to the fact-level =Depends=
+premise. =topological_of_projection= derives the closure theorem's topological
+order from unique component ordering and absence of backward projected edges.
+This connects semantic graph metadata to =ComponentClosure=; it does not prove
+the native Tarjan implementation universally correct.
+
+Native qualification independently enumerates all 512 directed graphs on
+three relations, including self edges, isolated roots and cycles. An independent
+Floyd closure checks exact SCC equivalence; projected plans check single owner
+coverage, head multiplicity, exact immediate predecessor sets and source-before-
+target order. The existing multi-head qualifier covers head splitting. Lean
+controls distinguish direct edges from transitive reachability, detect an omitted
+required dependency and reject reversed order. Tests remain under =Tests/=.
+See [[file:evidence/scheme-component-projection-20261006/receipt.json][projection receipt]]. Arbitrary-size native graph extraction, relation encoding
+and asynchronous execution refinement remain open.
+
 * Stated claim
 
 [[file:../packages/proofs/lean/LexicalLowering.lean][LexicalLowering]] supplies a typed expression calculus, lexical environments,

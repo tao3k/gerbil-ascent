@@ -619,3 +619,16 @@ SCC correspondence. It does not close arbitrary generated domains, lattices,
 mutable index publication or asynchronous execution refinement. TLA+ retains
 protocol ownership and no new overlapping temporal model is introduced.
 See [[file:evidence/scheme-binder-grounding-20261006/receipt.json][qualification receipt]].
+
+* Relation projection and native SCC qualification
+
+=ComponentProjection.reads_exact= proves that ground fact reads project exactly
+to direct relation read edges. =depends_exact= then transports relation ownership
+to component dependencies; =topological_of_projection= derives the ground
+closure order premise from no backward projected edges and a unique order.
+The native 512-graph qualifier uses independent Floyd reachability to inspect
+SCC equivalence, total unique ownership, immediate predecessors, topological
+IDs and preserved projected head count. This closes the semantic projection
+contract and strengthens bounded native correspondence evidence. It is not a
+universal native Tarjan proof, nor a temporal scheduler proof. TLA+ models stay
+unchanged and retain ready/credit protocol ownership. See [[file:evidence/scheme-component-projection-20261006/receipt.json][source-bound receipt]].

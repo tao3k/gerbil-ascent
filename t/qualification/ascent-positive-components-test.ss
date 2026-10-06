@@ -132,6 +132,73 @@
                   (check-equal? (canonical result 'right) '((0)))
                   (check-equal? (canonical result 'out) '((0))))) '(1 2 4))))
          (list (list seed left right out) (list seed right left out)))))
+    (test-case "all three-relation graphs preserve exact SCC partition edges and head ownership"
+      (for-each
+       (lambda (bits)
+         (let* ((names '(a b c)) (edges []) (reach (make-vector 9 #f)))
+           (for-each (lambda (i) (vector-set! reach (+ (* 3 i) i) #t)) (iota 3))
+           (for-each
+            (lambda (i)
+              (when (not (zero? (bitwise-and bits (arithmetic-shift 1 i))))
+                (let ((source (quotient i 3)) (target (modulo i 3)))
+                  (set! edges (cons (cons source target) edges))
+                  (vector-set! reach i #t)))) (iota 9))
+           ;; Independent Floyd closure: no production adjacency or Tarjan reuse.
+           (for-each
+            (lambda (k)
+              (for-each (lambda (i)
+                          (for-each (lambda (j)
+                                      (when (and (vector-ref reach (+ (* 3 i) k))
+                                                 (vector-ref reach (+ (* 3 k) j)))
+                                        (vector-set! reach (+ (* 3 i) j) #t))) (iota 3))) (iota 3))) (iota 3))
+           (let* ((p (gerbil-ascent-program
+                      (map (lambda (name) (gerbil-ascent-relation name 0 [])) names)
+                      (map (lambda (edge)
+                             (gerbil-ascent-rule
+                              (list (gerbil-ascent-atom (list-ref names (cdr edge)) []))
+                              (list (gerbil-ascent-atom (list-ref names (car edge)) [])))) edges)
+                      64 64 64))
+                  (analysis (.ref (gerbil-ascent-make-engine p #t) '.analysis))
+                  (components (gerbil-ascent-compile-positive-components analysis))
+                  (owners (make-vector 3 #f)))
+             (for-each
+              (lambda (component)
+                (for-each (lambda (relation)
+                            (check-equal? (vector-ref owners relation) #f)
+                            (vector-set! owners relation (positive-component-id component)))
+                          (positive-component-members component))
+                (for-each
+                 (lambda (rule)
+                   (for-each (lambda (output)
+                               (check-equal? (if (memv (vector-ref (vector-ref output 0) 0)
+                                                      (positive-component-members component)) #t #f) #t))
+                             (vector-ref (vector-ref rule 0) 0)))
+                 (positive-component-rules component))) components)
+             (check-equal? (apply + (map (lambda (component)
+                                         (apply + (map (lambda (rule) (length (vector-ref (vector-ref rule 0) 0)))
+                                                       (positive-component-rules component)))) components))
+                           (length edges))
+             (for-each
+              (lambda (i)
+                (check-equal? (number? (vector-ref owners i)) #t)
+                (for-each
+                 (lambda (j)
+                   (check-equal? (= (vector-ref owners i) (vector-ref owners j))
+                                 (and (vector-ref reach (+ (* 3 i) j)) (vector-ref reach (+ (* 3 j) i))))) (iota 3))) (iota 3))
+             (for-each
+              (lambda (target)
+                (for-each
+                 (lambda (source)
+                   (let* ((a (positive-component-id source)) (b (positive-component-id target))
+                          (expected (and (not (= a b))
+                                         (ormap (lambda (edge) (and (= a (vector-ref owners (car edge)))
+                                                                   (= b (vector-ref owners (cdr edge))))) edges)))
+                          (actual (if (memv a (positive-component-predecessors target)) #t #f)))
+                     (check-equal? actual expected)
+                     (when expected (check-equal? (< a b) #t)))) components)) components))
+           (when (zero? (modulo (+ bits 1) 16))
+             (displayln "COMPONENT-GRAPHS-CHECKED " (+ bits 1) "/512") (force-output))))
+       (iota 512)))
     (test-case "multi-head plans project into their exact relation SCC"
       (let* ((engine (gerbil-ascent-make-engine (program '((0 1))) #t))
              (components (gerbil-ascent-positive-components (.ref engine '.analysis))))

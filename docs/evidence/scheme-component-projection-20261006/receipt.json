@@ -1,0 +1,106 @@
+{
+  "qualifiedBaseHead": "068b147bb937c757092bd1c9f638b7603934d53c",
+  "sources": {
+    "packages/proofs/lean/ComponentClosure.lean": "285bb1d19fb5a065cf550549deeb73d399dce8d2d6b51e3b7695a94cad8ca32b",
+    "packages/proofs/lean/Tests/ComponentClosureTests.lean": "bec515bca4b40b96a124861b8383cf9ea98811813d55c1250f26c125646c5d08",
+    "packages/proofs/lean/AscentProof.lean": "055392b7462f89568511f0b5c42768b8b012b3dfb7cb1a381bfedbce867c1e1e",
+    "packages/proofs/lean/Tests/AscentProofTests.lean": "32f5be0e32220b1166c61a54a689c874bd8e3c3b2cb6f6c459b9184d3afe5956",
+    "packages/proofs/lean/lakefile.lean": "2a0f3b745e55803bc4ed3530794805da79cfe124aa631b01c15464d35fbcf781",
+    "packages/proofs/lean/IndexedIteration.lean": "46a0451cc5be2cd28f11f5ce77e37b0a1e21539a3f81fca9f62561de1d8cf211",
+    "packages/proofs/lean/SemiNaive.lean": "c00da4759381f4004996ca299100c08e44fcf455093ddbddaf9d857924e30d51",
+    "program/positive-components.ss": "156a6ef8cb62c92a094638b299ac490738d0ea243a187320d9e460c40434c645",
+    "program/component-worker.ss": "9c4e215910f6c80915a26cb6237b541914ff9036e44ffe9414ec522a29123771",
+    "program/actor-round.ss": "f41bc8c8b6d7b7d9e5228af96ab40ba0dcd3f4325375aae508be6e9d0197465c",
+    "table/funs.ss": "9ecdd332294ce6487998c6e64fc2b88d4396d091c641cf1e61dc0576a5b222c0",
+    "t/qualification/ascent-positive-components-test.ss": "0df8836344838c5a4111bab0472a40b98c2507d3fe9e442934762f4c136cd2e8",
+    "t/qualification/ascent-positive-plan-test.ss": "578d56134f7e2cf3a3a067f02cd98e1f57cc428527230ef6d63e7e995e62e027",
+    "packages/proofs/tla/ReadyComponents.tla": "f1ba05dd5e99e262de1116c83e725a8f3541d3113e011c46146c470bece8d34e",
+    "packages/proofs/tla/ActorRoundCredits.tla": "3b5de69e5b610222a5628105bc2cba104a8f42e304d7fc069f94307a57c90175",
+    "justfile": "6d80834beac000774567490e94362efa2c231802d9a05968fbd18ef283862095",
+    "core/positive-plan.ss": "d51d7676d8ef49097219e812f3596ba589f0f6779e2a09e282222e84afa2f101",
+    "packages/proofs/lean/FiniteHeight.lean": "2769bf31367d45ba9eae23c54c60e4cd8e8c428f00ddf2c4294107d5b4c5396b",
+    "docs/scheme-compiler-proof-bridge.org": "43fb026017b90dfffb1f92472e6e1ee46024ad1e8b1e8aa6e9b97edfb85f199e",
+    "docs/scheme-research-proof-audit.org": "af42d55c9fcb4ae4dd8332d2f9753bed9a7dcca7b9bdc0701232d1fe7cc9050f",
+    "packages/proofs/lean/GroundedBinding.lean": "a31874e3b819fc44f4a1f73026d7886041a40e988af89460587254844e512b00",
+    "packages/proofs/lean/Tests/GroundedBindingTests.lean": "3a9f90dfad8be8ade805d9116dee33722e506a21bea473a7b469da12c77afc1c",
+    "packages/proofs/lean/PositiveConsequence.lean": "f19e72ab251f4ef43612dc93ef6c564c3b5dae4416b47dca25f5fadce97a0598",
+    "packages/proofs/lean/AtomicBinding.lean": "5249177555d43df70517c5a04aabe7365500e2b8691dd314e466793af88a6e70",
+    "packages/proofs/lean/ComponentProjection.lean": "87dafa0b7bc30c1bb969c6c18090aea597ae3c341a8796427845b8d7e27af162",
+    "packages/proofs/lean/Tests/ComponentProjectionTests.lean": "12bcaab27afa0e30380f6bd9732b7f1da3184c0bc04a5122c0bd4f0f5b6d2eee",
+    "packages/proofs/lean/RuleGraphClosure.lean": "cbad359a81d876369dd2a599102e6b9058a1e8ddb015f1f78ada5158473fe876",
+    "program/component-plan.ss": "d5d89ae2d1cda032cf4f37eb4bfc2e0355a6b02691197077deca19f00773afe5",
+    "core/dependency-graph.ss": "797d32b47c195d1f26d0ea95d7ed4b5e73f66f4f7c096fa22c066cf35d489ce7",
+    "core/rule-semantics.ss": "5b63ae1d781c59c75c4fa9295fbd8346ae2f6d9297bb40858308474358de2615",
+    "t/harness/run.ss": "9508bf92dbbd2dd3dceaa88522200be0e8aa57893bcd21c1f7ecad2e0d159fec",
+    "table/trrel-uf.ss": "68bed3e29151bb99f876dda8b4ba8b2bbca6567c7eb04cf219fe62ad7a621f7e"
+  },
+  "scope": "Exact pure ground-to-relation dependency projection and bounded native SCC/planning correspondence",
+  "lean": {
+    "exitCode": 0,
+    "command": "just check-lean-proofs",
+    "buildJobs": 81,
+    "theorems": [
+      "reads_exact",
+      "depends_exact",
+      "topological_of_projection"
+    ],
+    "axioms": [
+      "propext",
+      "Quot.sound"
+    ],
+    "premises": [
+      "Fact relation key projection is faithful",
+      "Ownership depends on relation key",
+      "Component order is unique and has no backward projected read edge"
+    ],
+    "testsDirectory": "packages/proofs/lean/Tests",
+    "controls": [
+      "Direct edges are distinct from transitive reachability",
+      "Required dependency cannot be omitted",
+      "Reversed component order is rejected"
+    ]
+  },
+  "native": {
+    "exitCode": 0,
+    "pool": 2,
+    "suiteCases": 40,
+    "moduleOK": 2,
+    "explicitOK": 2,
+    "command": "t/harness/run.ss test-pool 2 t/qualification/ascent-positive-components-test.ss t/qualification/ascent-positive-plan-test.ss",
+    "exhaustiveGraphDomain": {
+      "vertices": 3,
+      "directedGraphs": 512,
+      "selfEdges": true,
+      "oracle": "Independent reflexive Floyd transitive closure from input edge bits, without production adjacency/Tarjan reuse"
+    },
+    "checks": [
+      "Every relation has exactly one component owner",
+      "Component equality iff mutual independent reachability",
+      "Projected output belongs to its owner",
+      "Projected head occurrence count equals source head count",
+      "Immediate predecessors equal original intercomponent edge projection",
+      "Every intercomponent edge points to a larger component ID"
+    ],
+    "existingMultiHeadQualifierRetained": true,
+    "productionRuntimeChangedByThisSlice": false
+  },
+  "tla": {
+    "modelsChanged": false,
+    "rerunThisRound": false,
+    "retainedEvidence": "../scheme-component-termination-20261006/receipt.json",
+    "role": "Temporal ready/credit protocol remains separate from pure graph projection"
+  },
+  "qualificationCorrections": [
+    "The new graph enumerator initially referenced an unavailable bitwise-bit-set? identifier; changed to supported bitwise-and/arithmetic-shift and reran both native modules successfully"
+  ],
+  "remaining": [
+    "Universal native Tarjan algorithm/representation refinement beyond the bounded exhaustive domain",
+    "Native binder/scalar/row and relation-key encoding",
+    "Asynchronous linearization and mutable publication refinement",
+    "General non-ground and lattice termination"
+  ],
+  "modelCalls": 0,
+  "rustRuntimeChanges": false,
+  "performanceClaim": null,
+  "requalification": "Lean and both native qualification modules rerun after rebasing over 068b147 canonical reach-table SCC commit optimization; current harness and UF source hashes included."
+}

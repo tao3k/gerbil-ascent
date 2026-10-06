@@ -29,3 +29,4 @@ import PositiveConsequence
 
 import ComponentClosure
 import GroundedBinding
+import ComponentProjection

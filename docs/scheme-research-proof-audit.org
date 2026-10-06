@@ -1449,3 +1449,21 @@ Trusted canonical and engine-owned curried paths retain their representations.
 Stable nested values, callback purity, field equality laws, storage Provider
 concretization and universal native-to-proof extraction remain premises or
 separate obligations. No Lean/TLA source is changed by this implementation.
+* B23 directed concretization and retained frontier (2026-10-06)
+
+The B23 primary paper sections 3.3 and 5.3-5.4 were reread to connect delta
+visibility with directional closure and SCC representation. =DirectedFrontier=
+now supplies a reusable active-domain directed state, exact public UF and
+strict trrel frontier decompositions, UF least insertion and finite latent
+least histories. Strict trrel self rows are proved to track explicit self
+inputs; UF diagonals track active endpoints. These are the declared native
+provider meanings, not interchangeable claims of ordinary transitivity.
+
+The [[file:evidence/scheme-directed-frontier-20261006/receipt.json][receipt]] binds the complete Lean collection and native BYODS suite.
+Graph truth is computed independently of provider predecessor/successor and
+SCC tables. Exact/generous budgets, rejected retry, structure counts, binary /
+ternary order permutations and non-singleton SCC bridges are checked at each
+insertion. Existing producer and larger graph controls remain. Test controls
+stay under =Tests=, and existing TLA+ retains temporal protocol ownership.
+Universal native representation extraction, arbitrary lattice instances and
+actor trace refinement remain separate gates; MR remains deferred.

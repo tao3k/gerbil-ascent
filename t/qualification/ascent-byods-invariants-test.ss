@@ -133,17 +133,35 @@
        (check-equal? (not (not (member row actual))) #t))
      wanted)))
 
-(def (check-frontier-trace kind provider ordered)
-  (let ((state (gerbil-ascent-storage-make-state provider)) (inputs []) (seen []))
+(def (check-frontier-trace kind provider ordered (group #f))
+  (let ((state (gerbil-ascent-storage-make-state provider))
+        (generous (gerbil-ascent-storage-make-state provider))
+        (inputs []) (seen []))
     (for-each
      (lambda (edge)
        (set! inputs (cons edge inputs))
-       (let* ((wanted (reference-rows kind inputs))
+       (let* ((concrete (reference-rows kind inputs))
+              (wanted (if group (grouped-rows group concrete) concrete))
               (fresh (filter (lambda (row) (not (member row seen))) wanted))
-              (emitted (gerbil-ascent-storage-extend provider state seen [] edge 9)))
-         (check-equal? (length emitted) (length fresh))
-         (for-each (lambda (row) (check-equal? (not (not (member row emitted))) #t)) fresh)
-         (set! seen (append emitted seen)))) ordered)))
+              (row (if group (cons group edge) edge))
+              (needed (length fresh))
+              (before (and (eq? kind 'trrel-uf)
+                           (gerbil-ascent-trrel-uf-observation state))))
+         (when (> needed 0)
+           (check-exception
+            (gerbil-ascent-storage-extend provider state seen [] row (- needed 1)) true)
+           (when before
+             (check-equal? (gerbil-ascent-trrel-uf-observation state) before)))
+         (let ((emitted (gerbil-ascent-storage-extend provider state seen [] row needed))
+               (loose (gerbil-ascent-storage-extend provider generous seen [] row 16)))
+           (check-equal? (length emitted) needed)
+           (check-equal? (length loose) needed)
+           (for-each
+            (lambda (fact)
+              (check-equal? (not (not (member fact emitted))) #t)
+              (check-equal? (not (not (member fact loose))) #t)) fresh)
+           (check-equal? (gerbil-ascent-storage-extend provider state seen [] row 0) [])
+           (set! seen (append emitted seen))))) ordered)))
 
 ;;; Repeated Provider reads share variables; a relay delays the second producer
 ;;; to a later frontier. Expected heads come from independent graph closure,
@@ -253,7 +271,10 @@
            (for-each
             (lambda (kind provider)
               (check-frontier-trace kind provider edges)
-              (check-frontier-trace kind provider (reverse edges)))
+              (check-frontier-trace kind provider (reverse edges))
+              (unless (eq? kind 'eqrel)
+                (check-frontier-trace kind provider edges "alpha")
+                (check-frontier-trace kind provider (reverse edges) "alpha")))
             '(eqrel trrel trrel-uf)
             (list gerbil-ascent-eqrel-storage-provider
                   gerbil-ascent-trrel-storage-provider
@@ -263,6 +284,15 @@
              (displayln "PROGRESS independent BYODS frontier graphs " checked "/512")
              (force-output)))
          (subsets +possible-edges+))))
+    (poo-flow-test-case "directed frontier bridge merges non-singleton SCCs and preserves explicit loops"
+      (for-each
+       (lambda (kind provider)
+         (check-frontier-trace kind provider
+           '((0 1) (1 0) (2 3) (3 2) (1 2) (3 0) (0 0)))
+         (check-frontier-trace kind provider
+           '((3 2) (2 3) (1 0) (0 1) (2 1) (0 3) (3 3)) "alpha"))
+       '(trrel trrel-uf)
+       (list gerbil-ascent-trrel-storage-provider gerbil-ascent-trrel-uf-storage-provider)))
     (poo-flow-test-case "eqrel preflight preserves state and deterministic emission order"
       (let (state (gerbil-ascent-storage-make-state
                    gerbil-ascent-eqrel-storage-provider))

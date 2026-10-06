@@ -24,6 +24,7 @@ import IndexedPositiveTraversal
 import IndexedIteration
 import ProviderFrontier
 import SemiNaive
+import DirectedFrontier
 import TransitiveComponents
 import EquivalenceComponents
 import PositiveConsequence

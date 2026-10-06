@@ -1276,3 +1276,41 @@ Lean. B23's general custom lattice contracts and universal native actor
 completion/trace refinement remain separate obligations. TLA+ continues to
 own private-state publication, failure and credit lifecycle; no duplicate
 algebraic protocol model is introduced. No runtime speedup is claimed.
+
+* Directed Provider frontiers and active domains (2026-10-06)
+
+=DirectedFrontier= supplies the missing concrete semantics around
+=TransitiveComponents.insertEdge=. Its reusable state carries a reflexive
+latent preorder with an explicit active domain. =uf_partition= and
+=uf_emitted_exact= prove the complete new public UF view and its exact newly
+visible facts, including newly admitted endpoint diagonals. =uf_insert_least=
+proves the smallest extension containing old public facts, the new edge and
+active-domain diagonals under transitivity.
+
+The strict =trrel= view exposes off-diagonal reachability and explicit source
+self edges only. =strict_partition= and =strict_emitted_exact= characterize
+its native candidate filter; =strict_self_exact= distinguishes an explicit
+self edge from an implied cycle. This filtered view is not asserted to be a
+transitive relation on diagonal facts. =Snapshot= retains explicit self-edge
+support through every update. Finite-history theorems characterize the least
+latent preorder, all inserted edges, monotonic reach, exact active endpoints
+and exact explicit self inputs. Arbitrary finite histories have no semantic
+length or generation cap. Group updates preserve every other snapshot.
+
+Tests and axiom reports are in =Tests/DirectedFrontierTests=. Native BYODS
+qualification compares each insertion against independent graph traversal,
+in forward/reverse binary and ternary histories over 512 three-node graphs.
+Every nonempty frontier is rejected at one below its independently calculated
+size, then retried on the same state. A second provider state uses a generous
+budget, exercising both direct commit and planned preflight paths in =trrel=.
+UF refusal also preserves physical SCC observation counts. Replays return no
+facts at zero budget; larger controls merge two non-singleton SCCs and then
+admit an explicit loop. Existing eight-node, producer and group controls are
+retained. See the [[file:evidence/scheme-directed-frontier-20261006/receipt.json][source-bound receipt]].
+
+These are concrete algebra and finite native observations. Hash/index
+membership, parent/root selection, SCC merge and member-rectangle extraction
+remain universal native representation bridges, not conclusions of these
+proofs. TLA+ owns publication, failure, credits and cancellation lifecycle;
+no algebraic state machine duplicate is added. No production runtime behavior
+change, speedup, general lattice law or MR integration is claimed.

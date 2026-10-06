@@ -268,3 +268,19 @@ other non-Set/custom lattice instances, universal Scheme equality/component
 extraction and native actor trace refinement remain distinct work. Existing
 TLA+ publication/credit/failure models are unchanged; Lean owns these algebraic
 laws. Published B23 performance does not establish a Scheme speedup.
+
+* B23 directed Provider instances (2026-10-06)
+
+Following the eqrel instance, =DirectedFrontier= proves the active-domain
+=trrel_uf= view and the explicit-self-filtered =trrel= view, including exact
+new frontier, least UF insertion and least latent preorder over every finite
+input history. Active membership and explicit self inputs are characterized
+exactly. This completes the algebraic frontier instances for these declared
+providers alongside canonical Set and eqrel; it does not instantiate arbitrary
+custom lattices or prove universal native hash/SCC extraction.
+
+The [[file:evidence/scheme-directed-frontier-20261006/receipt.json][qualification receipt]] links every law to the complete Lean build and
+finite native per-insertion checks. TLA+ retains temporal responsibilities.
+B23 sections 5.3-5.4 supply the representation motivation; their performance
+results are not attributed to the Scheme implementation. Native actor
+completion/trace and general representation correspondence remain open.

@@ -139,3 +139,14 @@ This is a concrete finite coverage check under stable-value and admitted-key
 premises. It does not establish arbitrary callback purity, general storage
 refinement or the full semi-naive equivalence theorem. Per-key counts add
 verification cost; the paper's performance results are not transferred.
+* Directed frontier instances follow-up (2026-10-06)
+
+The primary text was reread at sections 3.3 and 5.3-5.4. =DirectedFrontier=
+connects directional insertion to exact UF/strict public frontier laws and
+finite-history least latent closure. The strict explicit-self filter follows
+the current native contract; it is not presented as an unqualified diagonal
+transitivity theorem or attributed to the paper's abstract laws. Native
+qualification tests both preflight and direct commit under matched input
+histories, rejection/retry, SCC observation preservation and component
+bridges. See [[file:../../evidence/scheme-directed-frontier-20261006/receipt.json][the receipt]]. General representation extraction and custom lattice
+laws remain separate, and no new Scheme performance benefit is claimed.

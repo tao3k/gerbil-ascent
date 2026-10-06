@@ -164,6 +164,8 @@
                             '("t/performance/trrel-uf/reference") [])
                           ;; Compile the complete independent reference graph
                           ;; for both ordinary module tests and AOT linkage.
+                          (if (member "t/qualification/ascent-index-entry-test.ss" tests)
+                            '("t/performance/index-sharing/reference") [])
                           (if (member "t/qualification/ascent-index-lifecycle-test.ss" tests)
                             '("t/qualification/ascent-index-reference-funs"
                               "t/qualification/ascent-index-reference-provider"

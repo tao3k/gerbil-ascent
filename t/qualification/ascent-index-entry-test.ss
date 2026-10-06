@@ -1,7 +1,9 @@
 ;;; -*- Gerbil -*-
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
-(import (only-in :std/test check-equal? test-case test-suite)
+(import (only-in :clan/poo/object .o .ref)
+        (only-in :gerbil-ascent/table/provider gerbil-ascent-hash-index-provider)
+        (only-in :std/test check-equal? test-case test-suite)
         :gerbil-ascent/t/performance/index-entry/fixture
         (only-in :gerbil-ascent/program/evaluate gerbil-ascent-evaluate-program)
         (rename-in (only-in :gerbil-ascent/t/performance/index-entry/reference-evaluate gerbil-ascent-evaluate-program)
@@ -69,7 +71,50 @@
     (test-case "all delta shared atoms and returned extension values preserve traces"
       (check-equal? (run-lifecycle #f #f) (run-lifecycle #t #f)))
     (test-case "failed extension and rebuild preserve retryable versions"
-      (check-equal? (run-lifecycle #f #t) (run-lifecycle #t #t)))
+      (let ((current (run-lifecycle #f #t)) (prior (run-lifecycle #t #t)))
+        (check-equal? (cadr current) (cadr prior))
+        ;; Revocation adds one rebuild after a failed extension; callbacks and
+        ;; emitted rows otherwise retain their order.
+        (check-equal? (filter (lambda (e) (not (eq? (car e) 'build))) (car current))
+                      (filter (lambda (e) (not (eq? (car e) 'build))) (car prior)))
+        (check-equal? (length (filter (lambda (e) (eq? (car e) 'build)) (car current)))
+                      (+ 1 (length (filter (lambda (e) (eq? (car e) 'build)) (car prior))))))
+    (test-case "mutate-then-raise revokes shared total cache and leaves delta isolated"
+      (def (trial old?)
+        (let* ((fail? #t) (rows (map (lambda (n) (list 0 n)) (iota 32)))
+               (provider (.o (:: @ gerbil-ascent-hash-index-provider)
+                            (.extend-index!
+                             (lambda (table batch columns)
+                               (if fail?
+                                 (begin
+                                   (hash-put! table '(0) (cons '(0 999) (hash-get table '(0))))
+                                   (error "mutated extension failure"))
+                                 ((.ref gerbil-ascent-hash-index-provider '.extend-index!) table batch columns))))))
+               (h (index-entry-harness old? rows provider))
+               (query (vector-ref h 0)) (advance! (vector-ref h 1))
+               (atom (index-entry-atom '(0) '(0)))
+               (alias (index-entry-atom (list 0) '(0))))
+          (check-equal? (query atom [] #f #f) rows)
+          (check-equal? (query atom [] #t #f) rows)
+          (check-equal? (with-catch (lambda (e) (error-message e))
+                          (lambda () (advance! 0 '((0 32))) 'unexpected-success))
+                        "mutated extension failure")
+          (let (after (query alias [] #f #f))
+            (check-equal? (query atom [] #t #f) rows)
+            (check-equal? (vector-ref (vector-ref h 2) 0) rows)
+            (check-equal? (vector-ref (vector-ref h 6) 0) 0)
+            (set! fail? #f)
+            (advance! 0 '((0 32)))
+            (vector-set! (vector-ref h 2) 0 (cons '(0 32) rows))
+            (vector-set! (vector-ref h 4) 0 33)
+            (vector-set! (vector-ref h 6) 0 1)
+            (list after (query atom [] #f #f) rows))))
+      (let ((current (trial #f)) (prior (trial #t)))
+        (check-equal? (car current) (caddr current))
+        (check-equal? (cadr current) (cons '(0 32) (caddr current)))
+        ;; The frozen previous implementation exposes the poisoned cache.
+        (check-equal? (car prior) (cons '(0 999) (caddr prior)))
+        (check-equal? (equal? (car prior) (car current)) #f))))
     (test-case "cold build failure does not publish an index or skip later build"
       (for-each
        (lambda (old?)

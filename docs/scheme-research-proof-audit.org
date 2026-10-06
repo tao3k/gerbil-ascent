@@ -546,3 +546,19 @@ exact and overlapping frontiers in the publication/consume protocol; Lean
 proves arbitrary finite-body algebra rather than repeating this state machine.
 See [[file:evidence/scheme-frontier-coverage-20261006/receipt.json][qualification receipt]]. General abstract gamma/injection laws and native
 representation/async refinement remain separate obligations.
+
+* Physical index recovery along the traversal mainline
+
+The current-snapshot premise of =IndexedPositiveTraversal= must also survive
+provider failures. =program/index.ss= used to leave a matching cache version
+when an in-place extension raised after mutation. It now clears validity before
+provider dispatch and publishes a new version only after success. Failed reads
+rebuild from committed rows; rows/version publication remains coordinator owned.
+Actor workers create private indexes over frozen row/version vector copies in
+=program/evaluate.ss=, so this change introduces no shared worker cache.
+
+The [[file:evidence/scheme-index-recovery-20261006/receipt.json][source-bound receipt]] separates Lean's unchanged algebra, finite TLA+
+cache recovery protocol and native mutation/raise/retry checks. Native recursive
+component cases exercise scalar/composite keys with 1, 2 and 4 workers. General
+native encoding/equality and asynchronous trace refinement remain open; no
+whole-framework closure or end-to-end performance gain follows from this fix.

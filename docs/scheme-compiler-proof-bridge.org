@@ -51,6 +51,25 @@ Symbol/hash-map decoding, native vector ownership and mutable cache publication
 remain representation obligations; custom provider membership alone does not
 promise canonical emission order.
 
+* Physical cache failure recovery
+
+The indexed traversal theorem assumes candidates from the current committed
+row snapshot. =program/index.ss= now revokes an entry version before calling
+=.extend-index!=: a provider may mutate its supplied lookup and then raise.
+A failed entry is rebuilt from committed rows at the next indexed read; only a
+successful extension receives the prospective version. Equivalent atom
+identities share this revoked entry, while all/delta caches remain separate.
+Successful incremental extension retains its existing ordered bucket behavior.
+
+=ComponentIndex.tla= checks failed mutation, revocation, rebuild and retry in
+addition to extension/install publication. Its fault control keeps an old valid
+version on a poisoned lookup and must violate =Consistent=. Native qualification
+reproduces that fault using the frozen prior implementation, then verifies the
+corrected engine's rows, alias lookup, delta isolation and successful retry.
+See [[file:evidence/scheme-index-recovery-20261006/receipt.json][qualification receipt]]. Lean retains the frozen-row algebra; this lifecycle
+belongs to TLA+ and native runtime checks. Neither finite TLC nor the source
+inspection constitutes a whole-engine extraction proof.
+
 * Stated claim
 
 [[file:../packages/proofs/lean/LexicalLowering.lean][LexicalLowering]] supplies a typed expression calculus, lexical environments,

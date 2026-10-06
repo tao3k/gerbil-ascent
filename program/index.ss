@@ -111,6 +111,10 @@
                (lambda (columns entry)
                  (when (and (physical-index-entry-version entry)
                             (= (physical-index-entry-version entry) version))
+                   ;; A provider may mutate its lookup before raising. Revoke
+                   ;; the old version before dispatch so failure forces rebuild
+                   ;; from still-committed rows on the next read.
+                   (physical-index-entry-version-set! entry #f)
                    (let (extended (gerbil-ascent-physical-index-extend!
                                    provider (physical-index-entry-lookup entry) rows columns))
                      (physical-index-entry-lookup-set! entry extended)

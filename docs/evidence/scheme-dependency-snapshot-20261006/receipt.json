@@ -1,5 +1,5 @@
 {
-  "qualifiedBaseHead": "92f268b7614a9042387856f8dbb54abe698a1b2e",
+  "qualifiedBaseHead": "5e549ce8d17c3fd942cdb50eb36cee825c06f795",
   "sources": {
     "program/positive-components.ss": "156a6ef8cb62c92a094638b299ac490738d0ea243a187320d9e460c40434c645",
     "program/component-worker.ss": "9c4e215910f6c80915a26cb6237b541914ff9036e44ffe9414ec522a29123771",
@@ -13,7 +13,10 @@
     "packages/proofs/tla/ActorRoundCredits.cfg": "96834facac4c68bb5a3aac2364d1b3685067b12dd2b2f8f2ce3ae5db5a38695c",
     "t/qualification/ascent-positive-components-test.ss": "3539d408c5e9d3f7684a37b9971697e9c47833973dacd7e3d5e4343e4770af4f",
     "t/qualification/ascent-actor-round-test.ss": "b0953922e53739af57c9e5ce3611815f5b7fe9ece968ba4188810406a8a76dca",
-    "justfile": "dd97dd4023415044c1a6c31a8400c6b0a00f8ba9ff52eadb50d51202245e6151"
+    "justfile": "35c05355334e1e7c00df89fabe9e500853be3ecf3a8408eb4be8fe78db2e9e32",
+    "table/funs.ss": "9ecdd332294ce6487998c6e64fc2b88d4396d091c641cf1e61dc0576a5b222c0",
+    "table/access.ss": "b90a362ddc0ef0b0b6eb8c77043148829857274d5fb271b242454a0cfa44562b",
+    "core/positive-plan.ss": "a9e98344585d9cfab15de0f9f23b7c7edbbc93e71600409ff3f922d6359a32ef"
   },
   "papers": [
     {
@@ -78,5 +81,7 @@
   ],
   "modelCalls": 0,
   "rustRuntimeChanges": false,
-  "performanceClaim": null
+  "performanceClaim": null,
+  "qualifiedSourceHead": "7880fff30d072f8084c0e77a700de987d74c5092",
+  "requalificationReason": "Rebase also integrated e0fa93e physical index projection and hash updates, changing justfile. All three gates reran successfully on 7880fff; source hashes refreshed."
 }

@@ -14,7 +14,8 @@
         (only-in :gerbil-ascent/program/analysis
                  gerbil-ascent-program-analysis gerbil-ascent-program-schema)
         (only-in :gerbil-ascent/core/positive-plan gerbil-ascent-compile-positive-plan
-                 gerbil-ascent-run-positive-plan!)
+                 gerbil-ascent-run-positive-plan! gerbil-ascent-index-key
+                 gerbil-ascent-pure-positive-plan?)
         (only-in :gerbil-ascent/table/funs gerbil-ascent-index-build gerbil-ascent-index-extend!)
         (only-in :gerbil-ascent/program/index gerbil-ascent-make-row-indexes row-indexes-rows row-indexes-advance!)
         (only-in :gerbil-ascent/core/rule-bindings gerbil-ascent-bind-row
@@ -134,6 +135,56 @@
 
 (def ascent-positive-plan-test
   (test-suite "Complete positive rule slot plans"
+    (poo-flow-test-case "stored atom keys and heads preserve admitted action representation"
+      (for-each
+       (lambda (columns)
+         (let* ((first (vector 0 '((variable . x)) []))
+                (second (vector 1 '((variable . x) (literal . #f) (variable . y)) columns))
+                (head (vector 2 '((variable . y) (literal . #f) (variable . x) (variable . y))))
+                (plan (gerbil-ascent-compile-positive-plan
+                       (list head head) (list (vector 'atom first) (vector 'atom second))))
+                (expected-terms '((bound . 0) (literal . #f) (fresh . 1)))
+                (expected-key (map (lambda (column) (list-ref '((bound . 0) (literal . #f)) column)) columns))
+                (frame (vector 'dirty-x 'dirty-y 'untouched)) (outputs []) (reads 0))
+           (check-equal? (vector-ref plan 2) 2)
+           (check-equal? (gerbil-ascent-pure-positive-plan? plan) #t)
+           (check-equal? (vector-ref (car (vector-ref plan 1)) 1) '((fresh . 0)))
+           (check-equal? (vector-ref (cadr (vector-ref plan 1)) 1) expected-terms)
+           (check-equal? (vector-ref (cadr (vector-ref plan 1)) 2) expected-key)
+           (for-each (lambda (output)
+                       (check-equal? (vector-ref output 1)
+                                     '((bound . 1) (literal . #f) (bound . 0) (bound . 1))))
+                     (vector-ref plan 0))
+           (def (run!)
+             (gerbil-ascent-run-positive-plan! plan frame -1
+               (lambda (atom environment delta? slot-terms)
+                 (case (vector-ref atom 0)
+                   ((0) '((#f) (7)))
+                   ((1)
+                    (set! reads (+ reads 1))
+                    ;; The independent ordinary environment owns key truth;
+                    ;; the fresh y cell must not contribute to the key.
+                    (let* ((x (vector-ref environment 0))
+                           (ordinary (list (cons 'x x))))
+                      (check-equal?
+                       (gerbil-ascent-index-key (vector-ref atom 1) columns environment slot-terms)
+                       (gerbil-ascent-index-key (vector-ref atom 1) columns ordinary #f))
+                      (list (list x #f 11) (list x #f #f))))
+                   (else (error "unexpected stored action atom" atom))))
+               (lambda (_ row) (set! outputs (cons row outputs)))))
+           (run!)
+           (run!)
+           (check-equal? reads 4)
+           (check-equal? (reverse outputs)
+             (append '((11 #f #f 11) (11 #f #f 11) (#f #f #f #f) (#f #f #f #f)
+                       (11 #f 7 11) (11 #f 7 11) (#f #f 7 #f) (#f #f 7 #f))
+                     '((11 #f #f 11) (11 #f #f 11) (#f #f #f #f) (#f #f #f #f)
+                       (11 #f 7 11) (11 #f 7 11) (#f #f 7 #f) (#f #f 7 #f))))
+           (check-equal? frame (vector 7 #f 'untouched))))
+       '(() (0) (0 0) (0 1) (1 0) (1 0 1)))
+      (check-equal? (gerbil-ascent-compile-positive-plan
+                     (list (vector 1 '((variable . absent))))
+                     (list (vector 'atom (vector 0 '((variable . x)) [])))) #f))
     (poo-flow-test-case "finite frame extent rejects before reads and preserves unused dirty slots"
       (let* ((head (vector 2 '((variable . x) (variable . y))))
              (atom (vector 0 '((variable . x) (variable . y)) []))

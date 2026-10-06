@@ -13,6 +13,16 @@ open AtomicBinding PositiveSlots IndexedPositiveTraversal
 def names : List Nat := [10]
 def input : Env Bool := [(10, false)]
 def dirty : Frame Bool := fun _ => false
+/-- Selected columns keep their order and multiplicity; fresh cells are not
+known prefix keys, even when a dirty vector contains a value there. -/
+example : compiledVectorKey ([.variable 20, .variable 10, .literal true] : List (Term Bool))
+    [2, 1, 2] names #v[false, true] = [some true, some false, some true] := by decide
+example : compiledVectorKey ([.variable 20, .variable 10] : List (Term Bool))
+    [0] names #v[false, true] ≠ envKey [.variable 20, .variable 10] [0] input := by decide
+example : compiledVectorKey ([.variable 10] : List (Term Bool))
+    [] names (#v[] : Vector Bool 0) = [] := by decide
+#print axioms Ascent.IndexedPositiveTraversal.vector_action_value
+#print axioms Ascent.IndexedPositiveTraversal.compiled_vector_key_refines
 def second : Atom Bool :=
   ⟨[.variable 20, .variable 10, .variable 20, .literal false], [3, 1, 1],
    List.replicate 32 [false, false, false, false] ++ List.replicate 32 [true, false, true, false],

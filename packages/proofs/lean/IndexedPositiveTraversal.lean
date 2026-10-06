@@ -737,4 +737,44 @@ end MatchingCertificate
 
 end SharedIndex
 
+def actionValueVector {n : Nat} (vector : Vector Value n) : Action Value → Option Value
+  | .literal value => some value
+  | .fresh index | .bound index => vector[index]?
+  | .wildcard => none
+
+omit [DecidableEq Value] in
+theorem vector_action_value {n : Nat} (frame : Frame Value) (vector : Vector Value n)
+    (rep : VectorRep frame vector) (action : Action Value) (bounded : action.InRange n) :
+    actionValueVector vector action = actionValue frame action := by
+  cases action <;> simp only [Action.InRange] at bounded
+  · simp [actionValueVector, actionValue, bounded, rep _ bounded]
+  · simp [actionValueVector, actionValue, bounded, rep _ bounded]
+  · rfl
+  · rfl
+
+def compiledVectorKey {n : Nat} (terms : List (Term Value)) (columns names : List Nat)
+    (vector : Vector Value n) : List (Option Value) :=
+  columns.map fun i => (compile terms names).1[i]?.bind (actionValueVector vector)
+
+omit [DecidableEq Value] in
+theorem compiled_vector_key_refines {n : Nat} (terms : List (Term Value))
+    (columns names : List Nat) (env : Env Value) (frame : Frame Value) (vector : Vector Value n)
+    (rep : Represents names env frame) (vectorRep : VectorRep frame vector)
+    (extent : (compile terms names).2.length ≤ n) (known : KnownColumns terms columns env) :
+    compiledVectorKey terms columns names vector = envKey terms columns env := by
+  rw [← compiled_key_refines terms columns names env frame rep known]
+  apply List.map_congr_left
+  intro index _
+  cases found : (compile terms names).1[index]? with
+  | none => rfl
+  | some action =>
+      have member := List.mem_of_getElem? found
+      have slotBound := compile_slots_bounded terms names action member
+      have bounded : action.InRange n := by
+        cases action <;> simp only [Action.InRange] at slotBound ⊢
+        · exact Nat.lt_of_lt_of_le slotBound extent
+        · exact Nat.lt_of_lt_of_le slotBound extent
+      simp only [found, Option.bind_some]
+      exact vector_action_value frame vector vectorRep action bounded
+
 end Ascent.IndexedPositiveTraversal

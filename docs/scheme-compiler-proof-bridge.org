@@ -1108,3 +1108,40 @@ decoding, followed by Provider snapshot/frontier instances and constructed
 least-model output. Callback execution, native scalar/hash conformance and
 arbitrary custom Provider laws remain separate. No duplicate TLA+ vector model
 is added: scheduling and publication keep their existing temporal owner.
+
+* Stored head and finite key correspondence (2026-10-06)
+
+=PositiveSlots.compileHead= lowers the admitted literal/bound head grammar.
+=compiled_head_vector_refines= equates reading those stored actions with
+sequencing ordinary finite-vector observations, preserving order, repeated
+terms and literal false. Unbound variables and wildcard heads are outside this
+grammar. =readHeadVector= separates missing cells and body-only fresh actions
+from successful output; this model refusal is not a new native decoder.
+=compiled_head_binding_refines= composes that stored reader directly with
+ordinary declared-head observations under the represented environment.
+
+=IndexedPositiveTraversal.compiled_vector_key_refines= transports the actual
+selected compiled actions to finite vectors. Compiler-derived slot bounds and
+=VectorRep= provide the read correspondence. The existing =KnownColumns=
+premise remains essential: key evaluation precedes candidate matching, so a
+fresh variable cannot be admitted merely because its dirty cell is readable.
+Columns retain their declared order and multiplicity, including an empty key.
+
+The existing native positive-plan suite now inspects actual compiler-produced
+vectors and tagged action pairs. Six ordered column layouts cover empty,
+singleton, repeated, increasing, decreasing and mixed selections. It checks
+the dense extent, distinct body/head action roles, immutable duplicated heads,
+the purity flag, false-valued keys and complete ordered emissions over two
+dirty-frame traversals. The ordinary association-list key reader supplies
+independent key truth. An unbound head variable makes direct compilation
+unsupported. Wildcard head rejection belongs to source admission: the private
+compiler assumes admitted descriptors and does not validate that contract.
+
+Lean executable controls and axiom reports stay under =Tests/=; they include
+the inadmissible fresh-key counterexample and missing head cells. The
+[[file:evidence/scheme-stored-actions-20261006/receipt.json][stored-action receipt]] separates universal model laws from native finite
+representation checks. Actual Scheme scalar/equality/hash interpretation,
+symbol identity mapping, universal descriptor decoding, callback refinement
+and native Provider/completed-component correspondence remain open bridges.
+TLA+ retains lifecycle/publication ownership. This adds no runtime validator,
+performance claim, model call or MR integration.

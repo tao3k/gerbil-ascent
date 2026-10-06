@@ -91,4 +91,19 @@ example : runVector [.bound 0] [true] #v[false] = some (false, #v[false]) := by 
 example : runVector [.wildcard] [false] (#v[] : Vector Bool 0) =
     some (true, #v[]) := by decide
 
+/-- Stored heads preserve literal false, repetition and declared order. -/
+example : compileHead ([.variable 20, .literal false, .variable 10, .variable 20] :
+    List (Term Bool)) [10, 20] =
+    some [.bound 1, .literal false, .bound 0, .bound 1] := by decide
+example : readHeadVector [.bound 1, .literal false, .bound 0, .bound 1]
+    #v[true, false, true] = some [false, false, true, false] := by decide
+example : compileHead ([.variable 30] : List (Term Bool)) [10, 20] = none := by decide
+example : compileHead ([.wildcard] : List (Term Bool)) [10, 20] = none := by decide
+/-- Body-only actions and missing cells are outside the admitted head grammar. -/
+example : readHeadVector [.fresh 0] #v[false] = none := by decide
+example : readHeadVector [.bound 1] #v[false] = none := by decide
+example : readHeadVector [] (#v[] : Vector Bool 0) = some [] := by decide
+#print axioms Ascent.PositiveSlots.compiled_head_vector_refines
+#print axioms Ascent.PositiveSlots.compiled_head_binding_refines
+
 end Ascent.PositiveSlotsTests

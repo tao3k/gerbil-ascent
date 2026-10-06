@@ -436,4 +436,71 @@ theorem vector_represents {n : Nat} (names : List Nat) (env : Env Value)
       have inside := Nat.lt_of_lt_of_le (slot_lt name names index found) extent
       simp [vectorFrame, inside, rep index inside]
 
+/-- Head lowering admits only literals and variables already present in the
+compiled body scope. It never allocates a fresh slot. -/
+def lowerHead (term : Term Value) (names : List Nat) : Option (Action Value) :=
+  match term with
+  | .literal value => some (.literal value)
+  | .variable name => (slot name names).map Action.bound
+  | .wildcard => none
+
+def compileHead : List (Term Value) → List Nat → Option (List (Action Value))
+  | [], _ => some []
+  | term :: terms, names => do
+      let action ← lowerHead term names
+      let rest ← compileHead terms names
+      pure (action :: rest)
+
+/-- Decode the stored literal/bound head actions as finite values, refusing
+missing cells or body-only constructors instead of silently emitting a row. -/
+def readHeadVector {n : Nat} : List (Action Value) → Vector Value n → Option (List Value)
+  | [], _ => some []
+  | .literal value :: rest, vector => (readHeadVector rest vector).map (value :: ·)
+  | .bound index :: rest, vector => do
+      let value ← vector[index]?
+      let tail ← readHeadVector rest vector
+      pure (value :: tail)
+  | _ :: _, _ => none
+
+theorem compiled_head_vector_refines {n : Nat} (terms : List (Term Value))
+    (names : List Nat) (vector : Vector Value n) :
+    (compileHead terms names).bind (fun actions => readHeadVector actions vector) =
+      (observeVectorSlots terms names vector).mapM id := by
+  induction terms with
+  | nil => rfl
+  | cons term terms ih =>
+      cases term with
+      | literal value =>
+          change _ = (some value :: observeVectorSlots terms names vector).mapM id
+          rw [List.mapM_cons]
+          simp only [id_eq, Option.bind_some]
+          rw [← ih]
+          cases tail : compileHead terms names with
+          | none => simp [compileHead, lowerHead, tail]
+          | some actions =>
+              cases values : readHeadVector actions vector <;>
+                simp [compileHead, lowerHead, readHeadVector, tail, values]
+      | wildcard =>
+          change _ = (none :: observeVectorSlots terms names vector).mapM id
+          simp [compileHead, lowerHead]
+      | «variable» name =>
+          change _ = ((slot name names).bind (fun index => vector[index]?) ::
+            observeVectorSlots terms names vector).mapM id
+          rw [List.mapM_cons, ← ih]
+          cases found : slot name names <;>
+            cases tail : compileHead terms names <;>
+              simp [compileHead, lowerHead, readHeadVector, found, tail]
+
+/-- Stored output actions read precisely the ordinary declared head under the
+same represented environment, with no allocation or fresh-cell observation. -/
+theorem compiled_head_binding_refines {n : Nat} (terms : List (Term Value))
+    (names : List Nat) (env : Env Value) (frame : Frame Value)
+    (vector : Vector Value n) (represented : Represents names env frame)
+    (rep : VectorRep frame vector) (extent : names.length ≤ n) :
+    (compileHead terms names).bind (fun actions => readHeadVector actions vector) =
+      (observeHead terms env).mapM id := by
+  rw [compiled_head_vector_refines,
+    vector_head_observations terms names frame vector rep extent,
+    head_observations terms names env frame represented]
+
 end Ascent.PositiveSlots

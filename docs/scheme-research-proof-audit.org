@@ -1136,3 +1136,28 @@ matching controls and independent exhaustive partition comparisons qualify the
 implementation separately. The [[file:evidence/scheme-index-sharing-20261006/receipt.json][receipt]] retains source identity, verification
 results and the negative complete-solve cost result. No model or Rust result is
 implied by minimum physical root count.
+
+* Connected compiler representation closure (2026-10-06)
+
+The finite-vector traversal package is now followed by stored head and key
+correspondence in the existing proof owners. This continues the A22/B23
+compiler/index sequence: ordinary binding, dense action lowering, finite dirty
+traversal, declared head reads and selected prior-prefix keys. The new key law
+keeps =KnownColumns= explicit, preserving the distinction between an available
+cell and a logically bound variable. S20 function/argument change translation
+is still a separate transfer argument; these Set/slot laws do not supply it.
+
+The native positive-plan discriminator checks actual compiled tagged pairs and
+vectors against independent expected actions and ordinary association-list
+keys. It retains head order, duplicates, false values, dirty frame reuse and
+the unbound-head unsupported result. All Lean examples and axiom reports remain
+in =Tests/=. No TLA+ matching/vector algebra is added: existing protocol models
+retain scheduling, cancellation, ownership and publication responsibilities.
+See the [[file:scheme-compiler-proof-bridge.org][compiler bridge]] and [[file:evidence/scheme-stored-actions-20261006/receipt.json][source-bound receipt]].
+
+The remaining connected gate is universal native descriptor/scalar/name
+interpretation, then concrete Provider frontier and completed component
+least-model correspondence. Native finite probes qualify representation
+examples; they are not the universal extraction theorem. Callback/host closure
+refinement, typed change algebra and measured application benefit remain
+distinct obligations. MR is a future consumer of the accepted library.

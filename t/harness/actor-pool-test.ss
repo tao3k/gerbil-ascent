@@ -1,11 +1,50 @@
 ;;; -*- Gerbil -*-
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
-(import :std/test (only-in "actor-pool.ss" run-actor-pool!))
+(import :std/test (only-in "actor-pool.ss" run-actor-pool!)
+        (only-in "native-child.ss" make-native-receipt native-receipt-line!
+                 native-receipt-ok? run-test-child))
 (export actor-pool-test)
 
 (def actor-pool-test
   (test-suite "Native actor test coordinator"
+    (test-case "native receipt rejects missing verdicts, empty modules and swallowed errors"
+      (let* ((path "t/harness/native-entry-test.ss")
+             (module (path-expand "gerbil-ascent/t/harness/native-entry-test.ssi"
+                                  (getenv "ASCENT_TEST_LIBRARY")))
+             (lines (list "NATIVE-MODULES-OK" (string-append "MODULE " module)
+                          "CASE control" (string-append "MODULE-OK " module)
+                          (string-append "HARNESS-OK " path) "OK")))
+        (def (admitted? trace status)
+          (let (receipt (make-native-receipt path))
+            (for-each (lambda (line) (native-receipt-line! receipt line)) trace)
+            (native-receipt-ok? receipt status)))
+        (check-equal? (admitted? lines 0) #t)
+        (for-each (lambda (marker)
+                    (check-equal? (admitted? (filter (lambda (line) (not (equal? line marker))) lines) 0) #f))
+                  (list "NATIVE-MODULES-OK" "CASE control"
+                        (string-append "MODULE-OK " module)
+                        (string-append "HARNESS-OK " path) "OK"))
+        (for-each (lambda (error-line)
+                    (check-equal? (admitted? (append lines (list error-line)) 0) #f))
+                  '("ERROR CASE injected" "ERROR CHECK injected" "ERROR MODULE injected"
+                    "ERROR HARNESS injected" "*** Heap overflow" "*** Stack overflow"
+                    "MODULE-OK other-module"))
+        (check-equal? (admitted? lines 42) #f)))
+    (test-case "direct child preserves setup, Case, cleanup and empty Suite failures"
+      (let ((path "t/harness/native-entry-test.ss")
+            (previous (getenv "ASCENT_NATIVE_ENTRY_CONTROL" "")))
+        (try
+          (for-each
+           (lambda (control)
+             (setenv "ASCENT_NATIVE_ENTRY_CONTROL" (car control))
+             ;; Nested negative transcripts belong to the control's receipt,
+             ;; not the enclosing successful Suite's admission stream.
+             (check-equal? (run-test-child path void) (cdr control))
+             (displayln "NATIVE-CHILD-CONTROL-OK " (car control) " exit=" (cdr control))
+             (force-output))
+           '(("" . 0) ("setup" . 42) ("case" . 42) ("cleanup" . 42) ("empty" . 70)))
+          (finally (setenv "ASCENT_NATIVE_ENTRY_CONTROL" previous)))))
     (test-case "two assigned tasks overlap without a wall clock assumption"
       (let* ((observed [])
              (barrier (spawn/name 'qualification-barrier

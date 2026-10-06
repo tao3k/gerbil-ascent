@@ -10,6 +10,7 @@
         :std/misc/process :std/os/flock :std/os/device
         (only-in "native-entry.ss" prepare-native-tests!)
         (only-in "actor-pool.ss" run-actor-pool!)
+        (only-in "native-child.ss" run-test-child)
         (only-in "artifact.ss" artifact-main artifact-sources artifact-matching-sources? artifact-digest)
         (only-in "../../build.ss" gerbil-ascent-library-modules)
         (only-in :asp-gerbil-scheme/src/build-api/core-capacity
@@ -143,7 +144,7 @@
          (modules (append gerbil-ascent-library-modules
                           '("t/performance/native-library" "t/performance/ascent-ss-profile"
                             "t/scenarios/performance/ascent-table-expression/baseline"
-                            "t/harness/artifact" "t/harness/prediction" "t/harness/actor-pool")
+                            "t/harness/artifact" "t/harness/prediction" "t/harness/actor-pool" "t/harness/native-child")
                           (if (member "t/qualification/ascent-callback-plan-test.ss" tests)
                             '("t/performance/callback-plan/expression-reference") [])
                           (if (member "t/qualification/ascent-expression-plan-test.ss" tests)
@@ -288,21 +289,6 @@
   (let (jobs (if (equal? value "auto") (initialize-native-build-core-capacity!) (string->number value)))
     (unless (and (integer? jobs) (> jobs 0)) (error "invalid test jobs" value))
     (inexact->exact jobs)))
-
-(def (run-test-child path emit)
-  (let (status 70)
-    (run-process ["python3" "-m" "ascent_test_support.supervision"
-                  "--startup-seconds" "5" "--idle-seconds" "5"
-                  "--" "just" "_test-file" path]
-      stderr-redirection: #t
-      check-status: (lambda (raw settings)
-                      (set! status (if (zero? (bitwise-and raw #xff))
-                                    (quotient raw 256) (+ 128 (bitwise-and raw #xff)))))
-      coprocess: (lambda (process)
-                   (let loop ()
-                     (let (line (read-line process))
-                       (unless (eof-object? line) (emit line) (loop))))))
-    status))
 
 (def (run-native-pool! jobs parallel exclusive)
   (let* ((paths (append parallel exclusive))

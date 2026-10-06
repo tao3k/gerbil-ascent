@@ -1,0 +1,98 @@
+{
+  "constraints": {
+    "idleSeconds": 5,
+    "jobs": 12,
+    "maxHeap": "1G",
+    "processDeadlineSeconds": 120,
+    "startupSeconds": 5
+  },
+  "controls": {
+    "caseOK": 10,
+    "command": "just check-actor-pool",
+    "exitStatus": 0,
+    "logSha256": "534bbe0787023c316ebe8cd11bf98dcfec9951d1063ed117d78ed46388401c19",
+    "realChildControls": {
+      "case": 42,
+      "cleanup": 42,
+      "empty": 70,
+      "setup": 42,
+      "success": 0
+    },
+    "receiptRejections": [
+      "missing native, module, harness or explicit OK",
+      "empty module",
+      "Case/Check/Module/Harness error",
+      "heap or stack overflow",
+      "wrong module completion",
+      "nonzero child exit"
+    ],
+    "registryControls": [
+      "missing",
+      "unknown",
+      "extra"
+    ]
+  },
+  "diagnostic": {
+    "directRegistryLaunch": {
+      "exitStatuses": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "firstNativeReadySecondsRange": [
+        0.389,
+        0.587
+      ],
+      "tasks": 12
+    },
+    "limit": "Matched registry keys, not an application throughput benchmark or isolation of a single OS subprocess.",
+    "recipeLaunch": {
+      "failedStartupBeforeSTART": 1,
+      "tasks": 12
+    }
+  },
+  "failedCI": {
+    "failure": "Opaque lookup fixture omitted matching rows; physical completeness admission correctly rejected it.",
+    "head": "128815e78b8c5a67d90e2ace88b2e858d91f911b",
+    "logSha256": "9b2ce495c4ab8033fe1c397a569ad3a5a323d971f5d6b6b7cbcdec68393f4223",
+    "passed": [
+      "formal",
+      "oracle (byods)",
+      "oracle (byods-scale)",
+      "oracle (other)"
+    ],
+    "url": "https://github.com/tao3k/gerbil-ascent/actions/runs/37476920391"
+  },
+  "firstDirectFullRun": {
+    "exitStatus": 70,
+    "logSha256": "46308c34bc47550dc23483f95289477940588eb10b8c90ddb21eb5428395b979",
+    "rootCause": "Index-build fixture still expected shared custom row list spines after a1b69b9 introduced isolation; upstream b351520 already corrects this expectation. Rebase and full inventory qualification required.",
+    "watchdogFailures": 0
+  },
+  "initialFullRun": {
+    "exitStatus": 70,
+    "logSha256": "8e8c4800deca8d2e6bfa57b00318d445844812656a846f3ada52e0b2c415a345",
+    "scope": "Twelve-worker recipe launch; assigned workers drained; complete inventory not admitted.",
+    "watchdogFailures": 4
+  },
+  "modelCalls": 0,
+  "owners": {
+    "t/harness/actor-pool-test.ss": "a19dde4bf2f295f93fb731c372a0ed9ebead9bfbb64a0f345feeae577cf085f8",
+    "t/harness/native-child.ss": "e957e7f24b60417c6fc51c5f0eadbb0065b06848c47c55664eeb729589401f5a",
+    "t/harness/run.ss": "163ac31524333521c952c8f2ef9929e46e1f90549dad4180d46bc13c4667fff9",
+    "t/qualification/scheme-session-deletion-test.ss": "3e04cc053cc35c78fcebb4254f39f0b0305b722fa0560f76f571be55250ac5a2"
+  },
+  "qualifiedBaseHead": "70557a17c3d6fc53998b83a7252256ac1cb29288",
+  "schema": "ascent.native-child-admission-qualification",
+  "scope": "Scheme directly launches and admits frozen AOT children. Existing Python process supervision remains transport only. ActorTestPool lifecycle protocol is unchanged; no new formal theorem or end-to-end model gain is claimed.",
+  "version": 1
+}

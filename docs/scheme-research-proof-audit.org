@@ -1715,3 +1715,19 @@ boundaries. This closes the native graph publication gap under stable field
 values and independent constructors; external effects, general lattice laws
 and native-to-proof extraction remain open. No Lean/TLA source or speed claim
 is changed by this implementation.
+* Opaque index Session admission and native launch closure (2026-10-06)
+
+The second integrated CI run at =128815e= passed formal and all three Rust
+oracle jobs, but Scheme rejected an opaque lookup fixture that deliberately
+omitted matching rows. Physical index completeness is an admission contract.
+The corrected fixture changes lookup order while returning the complete bucket
+and verifies that an unrelated source update still reruns the opaque lookup
+without completed-result reuse. A separate incomplete-bucket control must fail
+and preserve the previously accepted Session outputs and source snapshot.
+
+The full inventory then exposed launch-chain output watchdog failures under
+twelve-worker admission. Direct native carrier admission replaces the per-task
+recipe/shell/filter chain while retaining every verdict and resource gate.
+The [[file:scheme-actor-runtime-design.org][actor runtime design]] describes the ownership boundary and diagnostic limits.
+This correction does not strengthen the algebraic proof coverage or claim
+that all ASCENT/BYODS research obligations have been discharged.

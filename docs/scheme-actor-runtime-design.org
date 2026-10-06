@@ -669,3 +669,29 @@ The existing Actor Session TLA model explores 162 distinct states and rejects
 stale-publication and early-close mutations. Rejected preparation is a
 stuttering step on that protocol state; TLC does not model row copying.
 Its finite generation constraint remains exploration-only.
+
+* Direct native child admission (2026-10-06)
+
+The actor coordinator now launches the frozen AOT registry directly through
+=t/harness/native-child.ss=. A child no longer re-enters =just _test-file=,
+starts a recipe shell or creates a =tee=/text-filter pipeline. Scheme owns
+the receipt: native module resolution, discovered Cases, the expected compiled
+module completion, harness completion, explicit =OK=, child exit status and
+error markers must all agree. A zero process exit with an incomplete receipt
+is rejected. The single-file shell adapter remains a separate entry point.
+
+The existing Python supervisor still observes process output and terminates
+stalled process groups. It provides no semantic verdict. The five-second
+startup/idle gates, 120-second deadline and 1 GiB runtime heap remain unchanged.
+The coordinator's capacity, mailbox isolation, output credits, failure admission
+and assigned-worker draining remain the protocol modeled by =ActorTestPool=.
+No new TLA+ transition or Lean theorem is claimed for this adapter change.
+
+The first full run at twelve workers failed four output watchdogs before
+completion. An isolated twelve-process recipe launch also failed one startup
+gate before its START marker. The same twelve registry keys launched directly
+all produced =NATIVE-MODULES-OK= within approximately 0.4--0.6 seconds and passed.
+This isolates the extra launch chain as an avoidable qualification cost; it is
+not an application throughput claim or an identification of one specific OS
+subprocess as the cause. Negative controls exercise setup, Case, cleanup, empty
+Suite and incomplete receipt rejection on the direct path.

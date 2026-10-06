@@ -2,7 +2,14 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 (import (only-in :std/test check-equal? test-case test-suite)
-        (only-in :clan/poo/object .ref)
+        (only-in :clan/poo/object .ref .o)
+        (only-in :gerbil-ascent/program/objects gerbil-ascent-program gerbil-ascent-relation
+                 gerbil-ascent-rule gerbil-ascent-atom gerbil-ascent-variable)
+        (only-in :gerbil-ascent/program/evaluate gerbil-ascent-make-engine gerbil-ascent-evaluate-program)
+        (only-in :gerbil-ascent/table/storage gerbil-ascent-set-storage-provider
+                 gerbil-ascent-eqrel-storage-provider gerbil-ascent-trrel-storage-provider
+                 gerbil-ascent-trrel-uf-storage-provider gerbil-ascent-storage-extension)
+        (only-in :gerbil-ascent/table/provider gerbil-ascent-hash-index-provider)
         (only-in :gerbil-ascent/program/admission gerbil-ascent-prepare-storage-batch)
         (only-in :gerbil-ascent/t/performance/storage-batch/reference old-prepare-storage-batch)
         :gerbil-ascent/t/performance/storage-batch/fixture
@@ -22,6 +29,103 @@
       (cons (car rows) (first-rows (cdr rows) (cons (car rows) seen))))))
 (def ascent-storage-batch-test
   (test-suite "ASCENT complete storage batch admission"
+    (test-case "retained custom storage output rows cannot rewrite a published result"
+      (let* ((emitted (list (list 1) (list 2)))
+             (program (storage-batch-program 1 (lambda (_) emitted)))
+             (first (storage-batch-engine-run #f program '(0))))
+        (check-equal? (storage-batch-rows first) '((1) (2)))
+        (set-car! (car emitted) 99)
+        (set-cdr! emitted [])
+        (check-equal? (storage-batch-rows first) '((1) (2)))))
+    (test-case "custom storage owns borrowed all pending and input row spines"
+      (let* ((captured [])
+             (provider
+              (.o (:: @ gerbil-ascent-set-storage-provider)
+                  (.extend-rows
+                   (lambda (_state all pending row _budget)
+                     (set! captured (cons (list all pending row) captured))
+                     (list row)))))
+             (source (list (list 1) (list 2)))
+             (program (gerbil-ascent-program
+                       (list (gerbil-ascent-relation 'input 1 source
+                               gerbil-ascent-hash-index-provider provider)) [] 16 16 64))
+             (engine (gerbil-ascent-make-engine program #t))
+             (run (.ref engine '.run))
+             (first (run)))
+        (check-equal? (storage-batch-rows first) '((1) (2)))
+        (for-each
+         (lambda (args)
+           (for-each
+            (lambda (rows)
+              (when (pair? rows) (set-car! (car rows) 99) (set-cdr! rows [])))
+            (take args 2))
+           (set-car! (list-ref args 2) 99))
+         captured)
+        (check-equal? source '((1) (2)))
+        (check-equal? (storage-batch-rows first) '((1) (2)))
+        ((.ref engine '.append-source!) 'input '(3))
+        (check-equal? (storage-batch-rows (run)) '((1) (2) (3)))
+        (check-equal? (storage-batch-rows first) '((1) (2)))))
+    (test-case "rule-produced custom storage rows remain detached after materialization"
+      (let* ((retained [])
+             (provider (.o (:: @ gerbil-ascent-set-storage-provider)
+                           (.extend-rows
+                            (lambda (_state _all _pending row _budget)
+                              (set! retained (cons row retained)) (list row)))))
+             (x (gerbil-ascent-variable 'x))
+             (program (gerbil-ascent-program
+                       (list (gerbil-ascent-relation 'source 1 '((1) (2)))
+                             (gerbil-ascent-relation 'input 1 []
+                               gerbil-ascent-hash-index-provider provider))
+                       (list (gerbil-ascent-rule
+                              (list (gerbil-ascent-atom 'input (list x)))
+                              (list (gerbil-ascent-atom 'source (list x)))))
+                       16 16 64))
+             (result (gerbil-ascent-evaluate-program program)))
+        (check-equal? (storage-batch-rows result) '((1) (2)))
+        (for-each (lambda (row) (set-car! row 99)) retained)
+        (check-equal? (storage-batch-rows result) '((1) (2)))))
+    (test-case "custom shape preflight rejects malformed packets before stored field callbacks"
+      (let ((cycle (list 1)) (outer (list '(2))))
+        (set-cdr! cycle cycle) (set-cdr! outer outer)
+        (for-each
+         (lambda (batch)
+           (let* ((calls 0)
+                  (provider (storage-batch-provider (lambda (_) batch)))
+                  (program (gerbil-ascent-program
+                            (list (gerbil-ascent-relation 'input 1 []
+                                    gerbil-ascent-hash-index-provider provider
+                                    (list (lambda (_) (set! calls (+ calls 1)) #t))))
+                            [] 16 16 64))
+                  (engine (gerbil-ascent-make-engine program #t)))
+             (check-equal? (storage-batch-rows ((.ref engine '.run))) [])
+             (check-equal? (failure (lambda () ((.ref engine '.append-source!) 'input '(0))))
+                           (if (list? batch) "invalid ASCENT storage provider row"
+                             "ASCENT storage provider returned non-list rows"))
+             ;; The input row is checked once; no returned row reaches a checker.
+             (check-equal? calls 1)
+             (check-equal? (storage-batch-rows ((.ref engine '.run))) [])))
+         (list 7 outer (list '(2) '(3 4)) (list '(2) '(3 . 4)) (list '(2) cycle)))))
+    (test-case "native storage dispatch stays direct and derived receivers own spines"
+      (for-each
+       (lambda (provider)
+         (check-equal? (eq? (gerbil-ascent-storage-extension provider 3)
+                            (.ref provider '.extend-rows)) #t)
+         (let (derived (.o (:: @ provider)))
+           (check-equal? (eq? (gerbil-ascent-storage-extension derived 3)
+                              (.ref derived '.extend-rows)) #f)))
+       (list gerbil-ascent-set-storage-provider gerbil-ascent-eqrel-storage-provider
+             gerbil-ascent-trrel-storage-provider gerbil-ascent-trrel-uf-storage-provider))
+      (let* ((field (vector 'stable)) (all (list (list field)))
+             (provider (.o (:: @ gerbil-ascent-set-storage-provider)
+                           (.extend-rows
+                            (lambda (_state rows pending row _budget)
+                              (check-equal? (eq? rows pending) #t)
+                              (check-equal? (eq? rows all) #f)
+                              (check-equal? (eq? (caar rows) field) #t)
+                              (list row)))))
+             (answer ((gerbil-ascent-storage-extension provider 1) #f all all (list field) 4)))
+        (check-equal? (eq? (caar answer) field) #t)))
     (test-case "finite duplicate traces match independent first-row filtering"
       (for-each
        (lambda (mask)

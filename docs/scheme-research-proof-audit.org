@@ -1592,3 +1592,43 @@ No automatic retry occurs inside a failing read. Rebuild can still fail if the
 Provider remains invalid. Nested field stability, host side effects and general
 storage refinement remain open. No Lean/TLA source or performance claim is
 changed by this Scheme repair.
+
+* B23 native correspondence: isolate storage injection spines (2026-10-06)
+
+[[https://kmicinski.com/assets/byods.pdf][B23 Sections 3.1 and 3.3]] express injection and concretization as operations
+on abstract relation state. The Scheme implementation supplies concrete row
+snapshots to a StorageProvider. An independent ownership condition is needed
+so retaining those lists cannot modify source authority or previously
+published facts outside the evaluator's admission and publication paths.
+
+The unrepaired native storage suite shows both failures. A retained extension
+output changes a published =((1) (2))= into =((99) (2))=. Retaining and mutating
+input rows changes the original source to =((99) (99))=. Both checks reject;
+a compile-only constructor arity mistake was corrected before recording this
+semantic counterexample run.
+
+=table/storage.ss= now owns a schema-selected extension function. Four native
+receiver identities are privately retained and keep direct dispatch. Derived
+or caller-defined receivers get copies of all/pending outer and row spines,
+plus the input row spine. Equal all/pending roots reuse one private copy,
+preserving this observable header identity without lending engine roots.
+Field values retain identity. Returned packets must be proper lists; every
+row is checked with a traversal bounded by the admitted arity before copying.
+This admits the complete shape before any stored-field callback.
+
+=program/analysis.ss= caches this dispatch with the immutable schema, so the
+initial source, derived rule emission and retained append paths all use the
+same boundary. Their membership, budgets, callbacks and publication owners
+remain in the evaluator and admission module. Native controls cover retained
+arguments and outputs, prior results, rule materialization, malformed/cyclic
+rows and batches, field-callback exclusion, native receiver selection and
+shared nested-field identity. Existing duplicate order, budget refusal,
+Session recovery and built-in BYODS composition remain required regression
+checks. See the [[file:evidence/scheme-storage-spines-20261006/receipt.json][source-bound receipt]].
+
+The new custom boundary changes malformed-packet callback ordering: no stored
+field callback runs before the entire shape batch is admitted. It does not
+prove semantic completeness of a custom extension or roll back its private
+state. Nested field stability and arbitrary closure effects remain premises.
+Copying costs scale with supplied all/pending snapshots and the emitted batch.
+No new Lean/TLA source, provider speedup or general refinement is claimed.

@@ -3,7 +3,8 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 ;;; Immutable declaration schema and rule-plan cache shared by evaluation engines.
-(import (only-in :clan/poo/object .ref))
+(import (only-in :clan/poo/object .ref)
+        (only-in :gerbil-ascent/table/storage gerbil-ascent-storage-extension))
 
 (export gerbil-ascent-program-analysis
         gerbil-ascent-program-schema)
@@ -83,7 +84,7 @@
                (let (provider (.ref relation 'storage-provider))
                  (vector-set! storage-providers index provider)
                  (vector-set! storage-extensions index
-                   (.ref provider '.extend-rows))))))
+                   (gerbil-ascent-storage-extension provider width))))))
          relations (iota count))
         (let (fresh (vector relations names arity field-checkers positions
                             index-providers storage-extensions lattice-joins

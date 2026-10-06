@@ -203,3 +203,27 @@ See the [[file:../../scheme-research-proof-audit.org][research audit]] and
 Rebuilding requires a Provider that can build a valid index again. Shared
 nested field stability, external effects and general storage rollback remain
 separate premises; this is not a new DLDS theorem or a performance claim.
+
+* Storage injection ownership in Scheme (2026-10-06)
+
+Sections 3.1 and 3.3 separate injection into private representation from the
+facts exposed by total/delta concretization. At our Scheme boundary an
+extension receives admitted facts and returns newly visible facts. It must
+not retain writable access to the evaluator's source or published row spines.
+Two native counterexamples exposed that access: mutating a returned row
+changed an already-published result; mutating a retained input row changed the
+source declaration used for recovery.
+
+The immutable relation schema now selects storage dispatch once. Native Set,
+=eqrel=, =trrel= and =trrel_uf= receivers retain direct dispatch by privately
+captured identity. Custom receivers receive owned all/pending/input row spines;
+a proper returned batch passes bounded arity admission before its spines are
+detached. Initialization, rule emission and retained append share this seam.
+Nested field identity remains shared, and all/pending header identity is
+preserved when the engine supplied the same root.
+
+The [[file:../../scheme-research-proof-audit.org][audit]] and
+[[file:../../evidence/scheme-storage-spines-20261006/receipt.json][receipt]] bind native ownership and malformed-packet controls. This does not
+prove arbitrary concretization completeness or roll back private Provider
+state after a failed extension. Custom copies add work proportional to the
+supplied snapshots and returned batch; no speedup is claimed.

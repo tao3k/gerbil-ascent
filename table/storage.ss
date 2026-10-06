@@ -26,6 +26,7 @@
         gerbil-ascent-trrel-storage-provider
         gerbil-ascent-trrel-uf-storage-provider
         gerbil-ascent-storage-make-state
+        gerbil-ascent-storage-extension
         gerbil-ascent-set-batch-admit!
         gerbil-ascent-storage-extend)
 
@@ -153,3 +154,42 @@
             (.o (:: @ gerbil-ascent-set-storage-provider)
                 (.make-state gerbil-ascent-trrel-uf-state)
                 (.extend-rows gerbil-ascent-trrel-uf-extension))))
+
+;;; Retain native receiver identities privately. Rebinding public declarations
+;;; or deriving a receiver does not grant borrowed engine row access.
+(def +native-storage-providers+
+  (list +canonical-set-storage-provider+ gerbil-ascent-eqrel-storage-provider
+        gerbil-ascent-trrel-storage-provider gerbil-ascent-trrel-uf-storage-provider))
+
+(def (owned-storage-rows rows)
+  (map (lambda (row) (map values row)) rows))
+
+;;; Compile the storage dispatch seam once per immutable relation schema.
+;;; Native implementations keep their admitted borrowed-row protocol. Custom
+;;; receivers own argument and result spines; field values remain shared.
+;; : (-> StorageProvider Nat StorageExtension)
+(def (gerbil-ascent-storage-extension provider width)
+  (let (extend (.ref provider '.extend-rows))
+    (if (memq provider +native-storage-providers+)
+      extend
+      (lambda (state all pending row budget)
+        (let* ((owned-all (owned-storage-rows all))
+               (owned-pending (if (eq? all pending) owned-all
+                                (owned-storage-rows pending)))
+               (expanded (extend state owned-all owned-pending
+                                 (map values row) budget)))
+          (unless (list? expanded)
+            (error "ASCENT storage provider returned non-list rows"))
+          ;; Bound each shape walk by admitted arity before any copying or
+          ;; field callback, including improper and cyclic returned row spines.
+          (for-each
+           (lambda (stored)
+             (let loop ((remaining stored) (left width))
+               (if (= left 0)
+                 (unless (null? remaining)
+                   (error "invalid ASCENT storage provider row"))
+                 (if (pair? remaining)
+                   (loop (cdr remaining) (- left 1))
+                   (error "invalid ASCENT storage provider row")))))
+           expanded)
+          (owned-storage-rows expanded))))))

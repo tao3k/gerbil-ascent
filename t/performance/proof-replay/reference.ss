@@ -34,10 +34,6 @@
   (status snapshot-identity snapshot-generation snapshot-digest
           candidate-digest query work-budget nodes roots))
 (defstruct proof-node (id kind relation row label inputs))
-;;; One replay owns these queue spines and row indexes. Only proof nodes are
-;;; published; a queue is extended only between completed grounding rounds.
-;; : (-> ProofNodes (Maybe Pair) RowIndex ProofRelation)
-(defstruct proof-relation (nodes tail members))
 (def (positive-atom? atom)
   (and (pair? atom) (symbol? (car atom))
        (not (memq (car atom) '(not where compute reduce)))))
@@ -127,29 +123,21 @@
             (bounded? #f)
             (derived-limit (cadr (reasoning-candidate-limits spec))))
         (def (facts name)
-          (let (relation (hash-get index name))
-            (if relation (proof-relation-nodes relation) [])))
-        (def (known? name row)
-          (let (relation (hash-get index name))
-            (and relation (hash-get (proof-relation-members relation) row))))
-        (def (install! node)
-          (let* ((name (proof-node-relation node))
-                 (relation (or (hash-get index name)
-                               (let (owned (make-proof-relation [] #f (make-hash-table)))
-                                 (hash-put! index name owned) owned)))
-                 (cell (list node)))
-            (if (proof-relation-tail relation)
-              (set-cdr! (proof-relation-tail relation) cell)
-              (proof-relation-nodes-set! relation cell))
-            (proof-relation-tail-set! relation cell)
-            (hash-put! (proof-relation-members relation) (proof-node-row node) node)
-            (set! nodes (cons node nodes))))
+          (or (hash-get index name) []))
+        (def (known? name row extra)
+          (or (find (lambda (node) (equal? (proof-node-row node) row))
+                    (facts name))
+              (find (lambda (node)
+                      (and (eq? (proof-node-relation node) name)
+                           (equal? (proof-node-row node) row)))
+                    extra)))
         (def (add! kind name row label inputs)
-          (unless (known? name row)
+          (unless (known? name row [])
             (let (node (make-proof-node next-id kind name (candidate-copy-pairs row)
                                        label (candidate-copy-pairs inputs)))
               (set! next-id (+ next-id 1))
-              (install! node))))
+              (hash-put! index name (append (facts name) (list node)))
+              (set! nodes (cons node nodes)))))
         (for-each
          (lambda (entry)
            (for-each
@@ -163,7 +151,7 @@
                  (vector-ref fact 2) []))
          (reasoning-candidate-facts spec))
         (let saturate ()
-          (let ((pending []) (pending-count 0) (pending-index #f))
+          (let (pending [])
             (for-each
              (lambda (rule)
                (let ((head (vector-ref rule 0))
@@ -174,25 +162,17 @@
                      (if (null? remaining)
                        (let* ((name (car head))
                               (row (instantiate-head head bindings)))
-                         (unless (or (known? name row)
-                                     (let (members (and pending-index (hash-get pending-index name)))
-                                       (and members (hash-get members row))))
-                           (when (>= (+ derived-count pending-count)
+                         (unless (known? name row pending)
+                           (when (>= (+ derived-count (length pending))
                                      derived-limit)
                              (set! bounded? #t))
                            (unless bounded?
-                             (let* ((node (make-proof-node
-                                           (+ next-id pending-count)
-                                           'rule name (candidate-copy-pairs row) label
-                                           (reverse inputs)))
-                                    (members (or (and pending-index (hash-get pending-index name))
-                                                 (let (table (make-hash-table))
-                                                   (unless pending-index
-                                                     (set! pending-index (make-hash-table-eq)))
-                                                   (hash-put! pending-index name table) table))))
-                               (hash-put! members (proof-node-row node) node)
-                               (set! pending (cons node pending))
-                               (set! pending-count (+ pending-count 1))))))
+                             (set! pending
+                               (cons (make-proof-node
+                                      (+ next-id (length pending))
+                                      'rule name (candidate-copy-pairs row) label
+                                      (reverse inputs))
+                                     pending)))))
                        (let (clause (car remaining))
                          (if (positive-fixed-clause? clause)
                            (begin
@@ -242,9 +222,15 @@
                 (begin
                   ;; Assign stable IDs in production order; every dependency
                   ;; came from an earlier completed round.
-                  (for-each install! (reverse pending))
-                  (set! next-id (+ next-id pending-count))
-                  (set! derived-count (+ derived-count pending-count))
+                  (for-each
+                   (lambda (node)
+                     (hash-put! index (proof-node-relation node)
+                                (append (facts (proof-node-relation node))
+                                        (list node)))
+                     (set! nodes (cons node nodes)))
+                   (reverse pending))
+                  (set! next-id (+ next-id (length pending)))
+                  (set! derived-count (+ derived-count (length pending)))
                   (saturate))))))))))
 
 (def (candidate-positive-proof snapshot spec candidate-digest
@@ -260,21 +246,6 @@
   (candidate-positive-proof/option
    snapshot spec candidate-digest native-status native-rows
    max-steps #t))
-
-;;; Compile private replay metadata lookup by admitted collection shape.
-;;; Empty/singleton collections need no table. General labels retain the
-;;; first entry, matching assq/find without choosing order through a hash.
-;; : (-> MetadataEntries (-> MetadataKey (Maybe Metadata)))
-(def (proof-metadata-lookup entries)
-  (match entries
-    ([] (lambda (_) #f))
-    ([entry] (lambda (key) (and (equal? key (car entry)) (cdr entry))))
-    (else
-     (let (index (make-hash-table))
-       (for-each (lambda (entry)
-                   (unless (hash-get index (car entry))
-                     (hash-put! index (car entry) (cdr entry)))) entries)
-       (lambda (key) (hash-get index key))))))
 
 ;;; Recheck an externally held proof without trusting its rule nodes.
 ;;; This checks one derivation per native row, not provenance completeness
@@ -320,20 +291,7 @@
               (source (reasoning-snapshot-relations snapshot))
               (facts (reasoning-candidate-facts spec))
               (rules (reasoning-candidate-rules spec))
-              (query (positive-proof-query proof))
-              (source-rows (proof-metadata-lookup
-                            (map (lambda (entry) (cons (car entry) (list->vector (caddr entry)))) source)))
-              (fact-keys (and (pair? facts) (make-hash-table)))
-              (rule-labels (proof-metadata-lookup
-                            (map (lambda (rule)
-                                   (cons (vector-ref rule 2)
-                                     (cons rule (length (filter positive-atom? (vector-ref rule 1)))))) rules))))
-         ;; Independent replay owns its lookup tables. Source vectors retain
-         ;; duplicate occurrence positions; label lookup retains find's first
-         ;; rule even when supplied labels repeat. No producer index is reused.
-         (for-each (lambda (fact)
-                     (hash-put! fact-keys
-                       (list (vector-ref fact 2) (vector-ref fact 0) (vector-ref fact 1)) #t)) facts)
+              (query (positive-proof-query proof)))
          (def (existing-input? id before)
            (and (exact-integer? id) (<= 0 id) (< id before)))
          (def (node-valid? node index)
@@ -346,30 +304,42 @@
                 (case (proof-node-kind node)
                   ((source)
                    (and (null? (proof-node-inputs node))
-                        (let (rows
-                              (source-rows (proof-node-relation node)))
-                          (and rows
+                        (let (entry
+                              (assq (proof-node-relation node) source))
+                          (and entry
                                (exact-integer? (proof-node-label node))
                                (<= 1 (proof-node-label node))
                                (<= (proof-node-label node)
-                                   (vector-length rows))
+                                   (length (caddr entry)))
                                (equal? (proof-node-row node)
-                                       (vector-ref rows
+                                       (list-ref
+                                        (caddr entry)
                                         (- (proof-node-label node) 1)))))))
                   ((candidate)
                    (and (null? (proof-node-inputs node))
-                        fact-keys
-                        (hash-get fact-keys
-                          (list (proof-node-label node) (proof-node-relation node)
-                                (proof-node-row node)))))
+                        (find
+                         (lambda (fact)
+                           (and (equal? (proof-node-label node)
+                                        (vector-ref fact 2))
+                                (eq? (proof-node-relation node)
+                                     (vector-ref fact 0))
+                                (equal? (proof-node-row node)
+                                        (vector-ref fact 1))))
+                         facts)))
                   ((rule)
-                   (let* ((entry (rule-labels (proof-node-label node)))
-                          (rule (and entry (car entry))))
+                   (let (rule
+                         (find
+                          (lambda (candidate)
+                            (equal? (proof-node-label node)
+                                    (vector-ref candidate 2)))
+                          rules))
                      (and rule
                           (eq? (proof-node-relation node)
                                (car (vector-ref rule 0)))
                           (= (length (proof-node-inputs node))
-                             (cdr entry))
+                             (length
+                              (filter positive-atom?
+                                      (vector-ref rule 1))))
                           (let loop ((clauses (vector-ref rule 1))
                                      (inputs (proof-node-inputs node))
                                      (bindings []))

@@ -649,3 +649,22 @@ to operator emission after graph admission. This avoids constructing a
 temporary ordinary Program and rebuilding every relation a second time.
 The ordinary four-argument compiler and fragment calls keep their default
 representation; the constructor callback is never retained in the runtime IR.
+
+* Keep ordered proof execution separate from lookup metadata
+
+Gerbil's known-call optimizer preserves ordered operand bindings when eliminating
+lambda application. Its =std/list/list-builder.ss= uses an explicitly owned
+head/tail spine to avoid repeated append copying. Apply both ideas to positive
+proof replay: committed relation queues determine grounding order and first
+witnesses; structural membership tables answer only existence. Round-local
+pending tables never become grounding inputs. Queue mutation occurs after a
+round finishes, and published proof lists do not expose that queue spine.
+
+Independent verification prepares its own occurrence vectors and label/fact
+lookup from admitted source and program data. Source duplicates preserve their
+original positions and repeated labels preserve first-match semantics. Shape
+specialization matters: eager tables failed the small allocation gate, so empty
+and singleton lookups stay direct and pending tables are lazy. Complete native
+producer-plus-verifier comparisons and boundary qualification are documented in
+=t/performance/proof-replay/README.org=; these results do not establish solver
+or actor throughput gains.

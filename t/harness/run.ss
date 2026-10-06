@@ -51,6 +51,7 @@
     "t/qualification/ascent-positive-plan-test.ss"
     "t/qualification/ascent-positive-components-test.ss"
     "t/qualification/ascent-positive-provenance-test.ss"
+    "t/qualification/ascent-proof-replay-test.ss"
     "t/qualification/ascent-reasoning-library-test.ss"
     "t/qualification/ascent-request-projection-test.ss"
     "t/qualification/ascent-result-publication-test.ss"
@@ -128,6 +129,8 @@
                           '("t/performance/native-library" "t/performance/ascent-ss-profile"
                             "t/scenarios/performance/ascent-table-expression/baseline"
                             "t/harness/artifact" "t/harness/prediction" "t/harness/actor-pool")
+                          (if (member "t/qualification/ascent-proof-replay-test.ss" tests)
+                            '("t/performance/proof-replay/reference") [])
                           (if (member "t/qualification/ascent-typed-domain-test.ss" tests)
                             '("t/performance/typed-domain/operator-reference" "t/performance/typed-domain/reference") [])
                           (if (member "t/qualification/ascent-nonmembership-index-test.ss" tests)

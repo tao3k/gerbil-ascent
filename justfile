@@ -167,6 +167,20 @@ _performance-index-projection:
         timeout 90s .cache/ascent/index-projection/native-entry {{ gerbil_test_runtime_options }} "$scenario" "$library" ".cache/ascent/index-projection/$scenario.sexp"
     done
 
+# Complete positive proof production and independent replay, matched natively.
+performance-proof-replay:
+    {{ test_runner }} run -- just _performance-proof-replay
+
+_performance-proof-replay:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    library="{{ justfile_directory() }}/.cache/ascent/native-library/lib"
+    mkdir -p .cache/ascent/proof-replay
+    gxi {{ gerbil_test_runtime_options }} t/performance/proof-replay-build.ss "$library" "{{ justfile_directory() }}/.cache/ascent/proof-replay/native-entry"
+    for scenario in copy duplicate source small; do
+        timeout 90s .cache/ascent/proof-replay/native-entry {{ gerbil_test_runtime_options }} "$scenario" "$library" ".cache/ascent/proof-replay/$scenario.sexp"
+    done
+
 # Cold typed-expression compilation with matched native semantic checks.
 performance-typed-domain:
     {{ test_runner }} run -- just _performance-typed-domain

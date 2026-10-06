@@ -18,6 +18,23 @@ The [[file:scheme-closure-contract.org][closure contract]] supplies the semantic
 [[file:native-library-acceptance.org][Library acceptance contract]] supplies the general execution gates.
 Historical receipts bind their own sources and do not certify later commits.
 
+* Current closure plan (2026-10-06)
+
+The [[file:scheme-research-proof-audit.org::#current-closure-plan][current integrated design audit]] supersedes historical next-step wording
+in dated sections below. It retains the R1-R7 acceptance scope and the full
+[[file:scheme-paper-closure.org][ASCENT/BYODS closure matrix]]. The immediate mainline is native acceptance,
+admitted compiler/row/execution refinement, then Provider/index and actor
+contracts, update/evidence semantics, higher-order changes and complete
+application measurements. Real-model validation follows a newly frozen and
+authorized source batch; MRR Rust integration remains last.
+
+The implementation baseline is =665f57c=. Its exact-head formal and regular
+BYODS CI jobs passed during the audit. Scheme CI failed in dependency compilation
+with heap overflow before native execution; other oracle jobs were still pending.
+Historical 80-module
+qualification and abstract least-model theorems do not close the rejected
+rebased full-native run or the remaining operational proof premises.
+
 * Implemented framework
 
 | ID | Boundary and owner | Guarantee and limit | Implementation | Discriminator |
@@ -209,7 +226,7 @@ object locks are recovered under the existing exclusive build lane. Failure
 controls reject staged-only, foreign-run, expired, changed-source and changed
 binary artifacts. This is a byte-publication guarantee, not a semantic proof.
 
-* Latest integrated acceptance
+* Historical integrated acceptance (2026-10-04)
 
 The [[file:evidence/scheme-ci-repair-20261004/receipt.json][integrated repair receipt]] binds source =e732b2b= to a compiler-exit-zero
 artifact built in 149.4 seconds. All twelve native Suites / 121 Cases, the five

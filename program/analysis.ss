@@ -4,7 +4,7 @@
 
 ;;; Immutable declaration schema and rule-plan cache shared by evaluation engines.
 (import (only-in :clan/poo/object .ref)
-        (only-in :gerbil-ascent/table/storage gerbil-ascent-storage-extension))
+        (only-in :gerbil-ascent/table/storage gerbil-ascent-storage-engine-extension))
 
 (export gerbil-ascent-program-analysis
         gerbil-ascent-program-schema)
@@ -84,7 +84,7 @@
                (let (provider (.ref relation 'storage-provider))
                  (vector-set! storage-providers index provider)
                  (vector-set! storage-extensions index
-                   (gerbil-ascent-storage-extension provider width))))))
+                   (gerbil-ascent-storage-engine-extension provider width))))))
          relations (iota count))
         (let (fresh (vector relations names arity field-checkers positions
                             index-providers storage-extensions lattice-joins

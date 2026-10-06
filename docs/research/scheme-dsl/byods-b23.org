@@ -250,3 +250,27 @@ and prior-result preservation. Native providers keep their raw state and
 existing preflight laws. This prevents silent reuse of uncertain custom state;
 it does not clone or roll back arbitrary private representation or undo host
 side effects. Fresh independent state construction remains a Provider premise.
+
+* Native kernel atomicity versus engine publication (2026-10-06)
+
+Section 3.3's total/delta conditions apply to the facts actually consumed by
+the evaluator. A native graph kernel can successfully inject an edge before a
+stored-field checker or later guard rejects the enclosing evaluation. Its
+standalone budget preflight does not undo that successful injection. Native
+=eqrel= then remembers the edge and can suppress its entire four-fact frontier
+on raw engine retry, even though the engine published none of those facts.
+
+The schema now selects engine-specific storage dispatch. Native graph states
+use the same readiness owner as custom states; their raw algorithms still get
+borrowed rows and their original state values. Canonical Set remains direct.
+The public raw algorithm dispatch and constructor retain the native protocol,
+including standalone budget refusal/retry. Engine dispatch conservatively
+requires source replay after a graph extension failure or interrupted round.
+Session reconstructs fresh states through its existing recovery path.
+
+The [[file:../../evidence/scheme-native-storage-state-20261006/receipt.json][native receipt]] binds the zero-frontier counterexample, stored-field
+rejection and later-guard controls for all three native graph Providers,
+Session recovery and raw algorithm regression. This extends the concrete
+publication protocol; it does not prove arbitrary callback purity, private
+state rollback or full native refinement. Added readiness work has no measured
+performance benefit attributed to it.

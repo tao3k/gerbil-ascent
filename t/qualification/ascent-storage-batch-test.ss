@@ -9,7 +9,8 @@
         (only-in :gerbil-ascent/program/evaluate gerbil-ascent-make-engine gerbil-ascent-evaluate-program)
         (only-in :gerbil-ascent/table/storage gerbil-ascent-set-storage-provider
                  gerbil-ascent-eqrel-storage-provider gerbil-ascent-trrel-storage-provider
-                 gerbil-ascent-trrel-uf-storage-provider gerbil-ascent-storage-extension)
+                 gerbil-ascent-trrel-uf-storage-provider gerbil-ascent-storage-extension
+                 gerbil-ascent-storage-engine-extension)
         (only-in :gerbil-ascent/table/provider gerbil-ascent-hash-index-provider)
         (only-in :gerbil-ascent/program/admission gerbil-ascent-prepare-storage-batch)
         (only-in :gerbil-ascent/t/performance/storage-batch/reference old-prepare-storage-batch)
@@ -30,6 +31,96 @@
       (cons (car rows) (first-rows (cdr rows) (cons (car rows) seen))))))
 (def ascent-storage-batch-test
   (test-suite "ASCENT complete storage batch admission"
+    (test-case "native graph state cannot suppress facts after field rejection"
+      (for-each
+       (lambda (provider expected)
+         (let* ((reject? #t) (calls 0)
+                (predicate (lambda (_value)
+                             (set! calls (+ calls 1))
+                             (not (and reject? (> calls 2)))))
+                (program (gerbil-ascent-program
+                          (list (gerbil-ascent-relation 'input 2 []
+                                  gerbil-ascent-hash-index-provider provider
+                                  (list predicate predicate))) [] 16 16 64))
+                (engine (gerbil-ascent-make-engine program #t)))
+           ((.ref engine '.run))
+           (check-equal? (failure (lambda () ((.ref engine '.append-source!) 'input '(1 2))))
+                         "ASCENT relation field type mismatch")
+           (set! reject? #f)
+           (check-equal?
+            (with-catch (lambda (e) (error-message e))
+              (lambda ()
+                ((.ref engine '.append-source!) 'input '(1 2))
+                (storage-batch-rows ((.ref engine '.run)))))
+            "ASCENT storage state requires source replay")
+           (let (session (gerbil-ascent-open-session program))
+             (gerbil-ascent-session-run session)
+             (gerbil-ascent-session-append-source! session 'input '(1 2))
+             (check-equal? (list-sort (lambda (a b)
+                                       (or (< (car a) (car b))
+                                           (and (= (car a) (car b)) (< (cadr a) (cadr b)))))
+                                      (storage-batch-rows (gerbil-ascent-session-run session))) expected))))
+       (list gerbil-ascent-eqrel-storage-provider gerbil-ascent-trrel-storage-provider
+             gerbil-ascent-trrel-uf-storage-provider)
+       (list '((1 1) (1 2) (2 1) (2 2)) '((1 2)) '((1 1) (1 2) (2 2)))))
+    (test-case "Session replay recovers native graph state after stored field rejection"
+      (for-each
+       (lambda (provider expected)
+         (let* ((reject? #t) (calls 0)
+                (predicate (lambda (_value)
+                             (set! calls (+ calls 1))
+                             (not (and reject? (> calls 2)))))
+                (program (gerbil-ascent-program
+                          (list (gerbil-ascent-relation 'input 2 []
+                                  gerbil-ascent-hash-index-provider provider
+                                  (list predicate predicate))) [] 16 16 64))
+                (session (gerbil-ascent-open-session program))
+                (first (gerbil-ascent-session-run session)))
+           (check-equal? (failure (lambda () (gerbil-ascent-session-append-source! session 'input '(1 2))))
+                         "ASCENT relation field type mismatch")
+           (check-equal? (storage-batch-rows (gerbil-ascent-session-run session)) [])
+           (set! reject? #f)
+           (gerbil-ascent-session-append-source! session 'input '(1 2))
+           (check-equal? (list-sort (lambda (a b)
+                                     (or (< (car a) (car b))
+                                         (and (= (car a) (car b)) (< (cadr a) (cadr b)))))
+                                    (storage-batch-rows (gerbil-ascent-session-run session))) expected)
+           (check-equal? (storage-batch-rows first) [])))
+       (list gerbil-ascent-eqrel-storage-provider gerbil-ascent-trrel-storage-provider
+             gerbil-ascent-trrel-uf-storage-provider)
+       (list '((1 1) (1 2) (2 1) (2 2)) '((1 2)) '((1 1) (1 2) (2 2)))))
+    (test-case "native graph injections remain tentative through a later rule failure"
+      (for-each
+       (lambda (provider expected)
+         (let* ((reject? #t) (calls 0)
+                (x (gerbil-ascent-variable 'x)) (y (gerbil-ascent-variable 'y))
+                (program (gerbil-ascent-program
+                          (list (gerbil-ascent-relation 'source 2 '((1 2) (2 3)))
+                                (gerbil-ascent-relation 'input 2 []
+                                  gerbil-ascent-hash-index-provider provider))
+                          (list (gerbil-ascent-rule
+                                 (list (gerbil-ascent-atom 'input (list x y)))
+                                 (list (gerbil-ascent-atom 'source (list x y))
+                                       (gerbil-ascent-guard '(x y)
+                                         (lambda (_x _y)
+                                           (set! calls (+ calls 1))
+                                           (when (and reject? (= calls 2))
+                                             (error "later native guard failure")) #t)))))
+                          16 32 64))
+                (engine (gerbil-ascent-make-engine program #t)))
+           (check-equal? (failure (lambda () ((.ref engine '.run)))) "later native guard failure")
+           (set! reject? #f)
+           (check-equal? (failure (lambda () ((.ref engine '.run))))
+                         "ASCENT storage state requires source replay")
+           (let (fresh (gerbil-ascent-make-engine program #t))
+             (check-equal? (list-sort (lambda (a b)
+                                       (or (< (car a) (car b))
+                                           (and (= (car a) (car b)) (< (cadr a) (cadr b)))))
+                                      (storage-batch-rows ((.ref fresh '.run)))) expected))))
+       (list gerbil-ascent-eqrel-storage-provider gerbil-ascent-trrel-storage-provider
+             gerbil-ascent-trrel-uf-storage-provider)
+       (list (foldr append [] (map (lambda (a) (map (lambda (b) (list a b)) '(1 2 3))) '(1 2 3)))
+             '((1 2) (1 3) (2 3)) '((1 1) (1 2) (1 3) (2 2) (2 3) (3 3)))))
     (test-case "failed mutable storage states require source replay before engine reuse"
       (for-each
        (lambda (mode)
@@ -221,6 +312,9 @@
        (lambda (provider)
          (check-equal? (eq? (gerbil-ascent-storage-extension provider 3)
                             (.ref provider '.extend-rows)) #t)
+         (check-equal? (eq? (gerbil-ascent-storage-engine-extension provider 3)
+                            (.ref provider '.extend-rows))
+                       (eq? provider gerbil-ascent-set-storage-provider))
          (let (derived (.o (:: @ provider)))
            (check-equal? (eq? (gerbil-ascent-storage-extension derived 3)
                               (.ref derived '.extend-rows)) #f)))

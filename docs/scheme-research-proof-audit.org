@@ -1675,3 +1675,43 @@ construction and stable fields. It does not prove arbitrary concretization
 completeness, rollback private state, or reverse external closure side effects.
 Native extraction and those remaining Provider laws still require separate
 work. No Lean/TLA source is changed by this implementation.
+
+* B23 native correspondence: graph state readiness beyond kernel preflight (2026-10-06)
+
+[[https://kmicinski.com/assets/byods.pdf][B23 Section 3.3]] requires represented facts to cross the evaluator's
+appropriate total/delta frontier. A kernel's successful private injection and
+a complete engine publication are separate events. The native graph Providers
+have atomic budget preflight in their raw APIs, but a later field checker or
+rule guard can still reject the enclosing engine update after injection.
+
+The unrepaired native =eqrel= control admits an edge's input fields, injects
+=(1,2)= privately, then rejects a returned field. A raw engine retry silently
+returns zero rows: the components already regard that edge as connected,
+while the engine never published its four concrete pairs. This exposes why
+kernel preflight alone cannot establish callback-sensitive engine atomicity.
+
+=program/analysis.ss= now caches engine-specific dispatch from
+=table/storage.ss=. Stateful native and custom engine states have private
+readiness owners. A shared call boundary marks them pending, unwraps the
+original private value for the kernel and preserves raised diagnostics.
+The existing complete source/round publication owner restores readiness.
+Failed or pending public engine reuse requires source replay. Native kernels
+retain their borrowed-row execution without custom all/pending packet copies;
+Canonical Set retains direct state and procedure dispatch.
+
+Raw =gerbil-ascent-storage-make-state=, =gerbil-ascent-storage-extend= and native
+algorithm dispatch remain unchanged. Their standalone preflight/refusal laws
+are tested separately from engine admission. Raw engine failure is treated
+conservatively even for a kernel-only budget refusal; Session recovery handles
+that refusal by reconstructing its accepted source snapshot. No exception
+classification by message text or generic private-state cloning is introduced.
+
+Native controls exercise field rejection, raw retry refusal, Session recovery
+and later guard failure for =eqrel=, =trrel= and =trrel_uf=. Fresh solves compare
+against explicit independent two-/three-node concrete relations. Existing
+custom state/row ownership and raw native graph budget/frontier qualification
+remain required regressions. The [[file:evidence/scheme-native-storage-state-20261006/receipt.json][receipt]] retains exact source and native log
+boundaries. This closes the native graph publication gap under stable field
+values and independent constructors; external effects, general lattice laws
+and native-to-proof extraction remain open. No Lean/TLA source or speed claim
+is changed by this implementation.

@@ -26,7 +26,7 @@
         gerbil-ascent-trrel-storage-provider
         gerbil-ascent-trrel-uf-storage-provider
         gerbil-ascent-storage-make-state
-        gerbil-ascent-storage-extension
+        gerbil-ascent-storage-extension gerbil-ascent-storage-engine-extension
         gerbil-ascent-storage-engine-state gerbil-ascent-storage-owned-states
         gerbil-ascent-storage-check-state! gerbil-ascent-storage-admit-state!
         gerbil-ascent-set-batch-admit!
@@ -163,14 +163,14 @@
   (list +canonical-set-storage-provider+ gerbil-ascent-eqrel-storage-provider
         gerbil-ascent-trrel-storage-provider gerbil-ascent-trrel-uf-storage-provider))
 
-;;; Custom state remains tentative until the evaluator commits the complete
+;;; Stateful engine storage remains tentative until the evaluator commits the complete
 ;;; source batch or rule round. Private mutations cannot be rolled back in
 ;;; general; an interrupted owner requires source replay into a fresh engine.
 (defstruct storage-state-owner (value phase))
 
 (def (gerbil-ascent-storage-engine-state provider)
   (let (state (gerbil-ascent-storage-make-state provider))
-    (if (memq provider +native-storage-providers+) state
+    (if (gerbil-ascent-canonical-set-storage-provider? provider) state
       (make-storage-state-owner state 'ready))))
 
 (def (gerbil-ascent-storage-owned-states states)
@@ -188,46 +188,62 @@
 (def (owned-storage-rows rows)
   (map (lambda (row) (map values row)) rows))
 
-;;; Compile the storage dispatch seam once per immutable relation schema.
-;;; Native implementations keep their admitted borrowed-row protocol. Custom
-;;; receivers own argument and result spines; field values remain shared.
+;;; One readiness protocol for mutable native and custom state. Native kernels
+;;; still receive their raw state and borrowed rows; custom dispatch owns spines.
+(def (call-with-storage-state state invoke)
+  (when (storage-state-owner? state)
+    (when (eq? (storage-state-owner-phase state) 'failed)
+      (error "ASCENT storage state requires source replay"))
+    (storage-state-owner-phase-set! state 'pending))
+  (with-catch
+   (lambda (failure)
+     (when (storage-state-owner? state)
+       (storage-state-owner-phase-set! state 'failed))
+     (raise failure))
+   (lambda ()
+     (invoke (if (storage-state-owner? state)
+               (storage-state-owner-value state) state)))))
+
+;;; Public algorithm dispatch keeps native procedure identity. Custom receivers
+;;; own argument and result spines; field values remain shared.
 ;; : (-> StorageProvider Nat StorageExtension)
 (def (gerbil-ascent-storage-extension provider width)
   (let (extend (.ref provider '.extend-rows))
     (if (memq provider +native-storage-providers+)
       extend
       (lambda (state all pending row budget)
-        ;; Pending states may accept more rows inside the same rule round.
-        ;; Public engine entry checks require ready states instead.
-        (when (storage-state-owner? state)
-          (when (eq? (storage-state-owner-phase state) 'failed)
-            (error "ASCENT storage state requires source replay"))
-          (storage-state-owner-phase-set! state 'pending))
-        (with-catch
-         (lambda (failure)
-           (when (storage-state-owner? state)
-             (storage-state-owner-phase-set! state 'failed))
-           (raise failure))
-         (lambda ()
-        (let* ((owned-all (owned-storage-rows all))
-               (owned-pending (if (eq? all pending) owned-all
-                                (owned-storage-rows pending)))
-               (expanded (extend (if (storage-state-owner? state)
-                                     (storage-state-owner-value state) state)
-                                 owned-all owned-pending
-                                 (map values row) budget)))
-          (unless (list? expanded)
-            (error "ASCENT storage provider returned non-list rows"))
-          ;; Bound each shape walk by admitted arity before any copying or
-          ;; field callback, including improper and cyclic returned row spines.
-          (for-each
-           (lambda (stored)
-             (let loop ((remaining stored) (left width))
-               (if (= left 0)
-                 (unless (null? remaining)
-                   (error "invalid ASCENT storage provider row"))
-                 (if (pair? remaining)
-                   (loop (cdr remaining) (- left 1))
-                   (error "invalid ASCENT storage provider row")))))
-           expanded)
-          (owned-storage-rows expanded))))))))
+        (call-with-storage-state
+         state
+         (lambda (raw-state)
+           (let* ((owned-all (owned-storage-rows all))
+                  (owned-pending (if (eq? all pending) owned-all
+                                   (owned-storage-rows pending)))
+                  (expanded (extend raw-state owned-all owned-pending
+                                    (map values row) budget)))
+             (unless (list? expanded)
+               (error "ASCENT storage provider returned non-list rows"))
+             ;; Bound row shape traversal before copying or field callbacks.
+             (for-each
+              (lambda (stored)
+                (let loop ((remaining stored) (left width))
+                  (if (= left 0)
+                    (unless (null? remaining)
+                      (error "invalid ASCENT storage provider row"))
+                    (if (pair? remaining)
+                      (loop (cdr remaining) (- left 1))
+                      (error "invalid ASCENT storage provider row")))))
+              expanded)
+             (owned-storage-rows expanded))))))))
+
+;;; The schema selects engine dispatch separately from the raw graph API.
+;;; Canonical Set has no mutable storage state. Other native kernels borrow
+;;; admitted rows without copying, but their readiness lasts through publication.
+;; : (-> StorageProvider Nat StorageExtension)
+(def (gerbil-ascent-storage-engine-extension provider width)
+  (if (and (memq provider +native-storage-providers+)
+           (not (gerbil-ascent-canonical-set-storage-provider? provider)))
+    (let (extend (.ref provider '.extend-rows))
+      (lambda (state all pending row budget)
+        (call-with-storage-state state
+          (lambda (raw-state) (extend raw-state all pending row budget)))))
+    (gerbil-ascent-storage-extension provider width)))

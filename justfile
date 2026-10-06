@@ -167,6 +167,20 @@ _performance-index-projection:
         timeout 90s .cache/ascent/index-projection/native-entry {{ gerbil_test_runtime_options }} "$scenario" "$library" ".cache/ascent/index-projection/$scenario.sexp"
     done
 
+# Matched SCC commit and complete construction control through ASP benchmarks.
+performance-uf-commit:
+    {{ test_runner }} run -- just _performance-uf-commit
+
+_performance-uf-commit:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    library="{{ justfile_directory() }}/.cache/ascent/native-library/lib"
+    mkdir -p .cache/ascent/uf-commit
+    gxi {{ gerbil_test_runtime_options }} t/performance/uf-commit-build.ss "$library" "{{ justfile_directory() }}/.cache/ascent/uf-commit/native-entry"
+    for scenario in partial cycle lifecycle dag duplicate islands; do
+        timeout 90s .cache/ascent/uf-commit/native-entry {{ gerbil_test_runtime_options }} "$scenario" "$library" ".cache/ascent/uf-commit/$scenario.sexp"
+    done
+
 # Matched cold slot compilation and native traversal with shape controls.
 performance-slot-projection:
     {{ test_runner }} run -- just _performance-slot-projection

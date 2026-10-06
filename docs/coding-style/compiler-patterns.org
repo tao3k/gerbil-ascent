@@ -534,3 +534,32 @@ and check long graphs at the 512-parent-edge bound and isolated missing-parent
 cycles. Lens integration covers disconnected/out-of-window cycles, absent event
 data, self loops and preservation of a previously verified answer. Current
 verification results belong in [[file:qualification-history.org][qualification history]].
+
+* Canonical roots and SCC commit ownership
+
+Gerbil's runtime separates a table's iterator from its materialized entry
+list (=runtime/hash.ss:590-603=). In =table/trrel-uf.ss= that lesson exposed a
+larger ownership issue: SCC commit reconstructed every reach table even though
+keys were already canonical component roots. Complete transitive closure makes
+the winner's outgoing table contain every external successor of every absorbed
+root. Preserve that owned table and remove only absorbed keys, using a stable
+root list rather than mutating an iterated hash table.
+
+Recognize structural admission before writing temporary state. If all roots in
+the group enter one SCC, all newly implied component arcs are internal and
+would immediately disappear. Concrete rectangles and budget admission still
+happen in their original order; those temporary hash writes can be omitted.
+The resulting winner releases its obsolete reach array. Partial merges retain
+external keys and preserve existing frontier/member order and winner ties.
+
+=t/performance/uf-commit/= qualifies the complete closing-edge transaction and
+a construction lifecycle control through public ASP benchmarks. Its frozen
+provider is byte-identical to =08c9c7e=. Independent small-graph closure plus
+budget rejection/retry and successive SCC traces check the representation
+invariant. Failed direct-iteration and redundant-union experiments remain in
+ignored cache receipts; neither CPU thresholds nor output semantics are relaxed.
+
+Unrelated components should not inherit cycle-size work. The commit first tests
+whether a surviving root reaches the winner; disconnected roots need no key
+removal. A 64-node SCC with 384 unrelated singleton components qualifies this
+case separately, without changing the original scenario gates.

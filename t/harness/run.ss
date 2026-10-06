@@ -125,6 +125,8 @@
                           '("t/performance/native-library" "t/performance/ascent-ss-profile"
                             "t/scenarios/performance/ascent-table-expression/baseline"
                             "t/harness/artifact" "t/harness/prediction" "t/harness/actor-pool")
+                          (if (member "t/qualification/ascent-uf-commit-test.ss" tests)
+                            '("t/performance/uf-commit/reference") [])
                           (if (member "t/qualification/ascent-trrel-uf-test.ss" tests)
                             '("t/performance/trrel-uf/reference") [])
                           ;; Compile the complete independent reference graph

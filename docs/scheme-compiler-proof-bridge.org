@@ -926,43 +926,33 @@ the restoration control compiles as a kernel-checked pending-membership proof.
 This gate qualifies the updated Lean consumer; it supplies no new native
 performance or publication receipt.
 
-** Code alignment: indexed witness to source result
+** Existing consumer migration: prepare reads independently of the cut
 
-[[file:../packages/proofs/lean/LeanPooAlignment.lean][LeanPooAlignment]] now consumes
-=LeanPoo.Functional.SolverTransport= directly. This is a concrete alignment
-of the existing ASCENT indexed iteration theorem with the producer's public
-input-indexed solver workflow:
+=FunctionalDependency.lean= now uses the producer's context adaptation workflow
+in its existing implementation. =provider= selects source-reading functions
+whose context is the complete typed source cut. =Program.prepare= depends only
+on a target's checklist. =Program.step= adapts that prepared tuple to the
+current cut with =Requirements.reindex= and feeds the existing rule evaluator.
+Previously each provider captured one source cut before preparation.
 
-| Producer contract | ASCENT implementation |
-|-------------------+-----------------------|
-| =Problem.Input= | =Request= binds the exact initial database and round |
-| =Problem.Valid= | Compiled rule schema/frame/head validity, row admission and row monotonicity |
-| Target =Problem.Result/Correct= | Pair equals the actual =IndexedIteration.indexed= result |
-| Source =Problem.Result/Correct= | Database equals =IndexedIteration.naive= at round + 1 |
-| =CertifiedTransformation.forward/preserves= | Preserve the exact request and its admitted schema |
-| =extract/sound= | Select the newer snapshot; =indexed_iterations_equal= proves its source correctness |
-| =Solver= | =indexedSolver= returns the actual mathematical compiled result and exact-result proof |
-| =pullSolver= | =sourceSolver= transports that witness and certificate through the producer API |
+=Program.step_eq_prepared_cut= proves the migrated evaluator equals its
+previous per-cut behavior for every source/checklist. =Program.prepare_at=
+applies upstream =prepare_reindex= to prove the adapted
+tuple equals independent preparation at the exact cut, including the complete
+success/error outcome. =Program.local= combines this law with =prepare_congr=;
+=SourceUpdateFrame.completed_reuse= and the downstream RuleBodyFrame proof
+continue to use the same locality contract. No separate solver-route module
+is part of this migration.
 
-=supplied_solver_correct= covers any target solver certifying the same exact
-indexed result. It does not accept arbitrary equal-looking source IDs or
-unproved output. =sourceSolver_value= shows the transported data is exactly
-the target's newer snapshot, avoiding a separate reference evaluation in the
-extraction path. The correctness proposition compares it to the reference.
+The existing AscentProofTests retain one checklist with heterogeneous Nat/Bool
+values and a repeated Nat key, then adapt that same tuple to two source cuts.
+They check current values and duplicate request order, while the existing
+self-read and completed-frame fixtures qualify the changed consumer. Preparation
+is independent of the cut; these Lean contracts do not demonstrate a native
+cache or a runtime speedup. The native Scheme implementation has not changed.
 
-[[file:../packages/proofs/lean/Tests/LeanPooAlignmentTests.lean][LeanPooAlignmentTests]] routes the existing empty-body seed/dependent-rule
-fixture through this API for every round. =routed_seed= proves the transported
-initial full round contains its seed; =wrong_snapshot_rejected= proves that
-extracting the older snapshot violates the source contract. This catches the
-round-offset distinction in the actual ASCENT result representation.
-
-The route reuses our semantic refinement and the producer's transport code.
-Its evaluator still uses mathematical databases, so it does not certify Scheme
-encoding, native index fidelity, actor publication or runtime speed. The C4
-provider-registry mapping discussed above remains a separate unimplemented
-capability; indexed witness transport is now implemented and qualified.
-
-Qualification: =direnv exec . just check-lean-proofs= completes with exit 0
-and 88 Lake jobs. The route, data equality, generic transport, routed fixture
-and wrong-snapshot rejection report only standard Lean axioms, without
-=sorryAx= or custom axioms.
+Qualification: =direnv exec . just check-lean-proofs= succeeds with exit 0
+and 84 Lake jobs. The preparation correspondence and evaluator equivalence
+report only =propext=; the existing completed-frame theorem retains its
+standard-only axiom report. The earlier solver-route files and imports have
+been removed because they did not migrate the existing consumer.

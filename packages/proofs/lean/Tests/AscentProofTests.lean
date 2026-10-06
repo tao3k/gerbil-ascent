@@ -7,7 +7,6 @@ import Tests.PositiveTraversalTests
 import Tests.PositiveConsequenceTests
 import Tests.IndexedPositiveTraversalTests
 import Tests.IndexedIterationTests
-import Tests.LeanPooAlignmentTests
 import Tests.ComponentClosureTests
 import Tests.GroundedBindingTests
 import Tests.ComponentProjectionTests
@@ -20,6 +19,41 @@ namespace Ascent.ProofTests
 
 open LeanPoo.Proof
 open Ascent.SourceCertificates
+
+/-- Retain one heterogeneous checklist and bind it to successive source cuts.
+Repeated requests retain order; rebinding must not freeze old source values. -/
+abbrev readTypes : Bool → Type
+  | .true => Nat
+  | .false => Bool
+
+def firstReadCut : Ascent.FunctionalDependency.Source Bool readTypes
+  | .true => 7
+  | .false => false
+
+def nextReadCut : Ascent.FunctionalDependency.Source Bool readTypes
+  | .true => 9
+  | .false => true
+
+def retainedReads : LeanPoo.Functional.Requirements.Factories
+    (Ascent.FunctionalDependency.Source Bool readTypes)
+    (fun _ key => readTypes key) [true, false, true] :=
+  (fun state => state true, fun state => state false, fun state => state true, PUnit.unit)
+
+example : LeanPoo.Functional.Requirements.prepare
+    (Ascent.FunctionalDependency.provider (Value := readTypes)) [true, false, true] =
+      .ok retainedReads := rfl
+
+example : (LeanPoo.Functional.Requirements.reindex
+    (fun (_ : Unit) => firstReadCut) retainedReads).1 () = 7 := rfl
+example : (LeanPoo.Functional.Requirements.reindex
+    (fun (_ : Unit) => nextReadCut) retainedReads).1 () = 9 := rfl
+example : (LeanPoo.Functional.Requirements.reindex
+    (fun (_ : Unit) => nextReadCut) retainedReads).2.1 () = true := rfl
+example : (LeanPoo.Functional.Requirements.reindex
+    (fun (_ : Unit) => nextReadCut) retainedReads).2.2.1 () = 9 := rfl
+
+#print axioms Ascent.FunctionalDependency.Program.prepare_at
+#print axioms Ascent.FunctionalDependency.Program.step_eq_prepared_cut
 
 /-- Every positive, negative and aggregate read contributes a source-to-head
 edge; guard, generator and binding clauses contribute none. Duplicate heads

@@ -24,7 +24,7 @@
 ;;; Custom indexes may overselect candidates, but each must still represent
 ;;; a complete relation tuple. Check the whole batch before term callbacks.
 ;;; Traversal is bounded by admitted arity, including improper/cyclic rows.
-(defstruct provider-row-witness (keys counts))
+(defstruct provider-row-witness (keys counts occurrences))
 
 (def (checked-provider-rows rows terms witness key)
   (for-each
@@ -48,31 +48,35 @@
        (let (represented-key (hash-get (provider-row-witness-keys witness) row))
          (unless represented-key
            (error "ASCENT index provider returned foreign row"))
-         (when (hash-get seen row)
+         ;; Initial source snapshots can contain equal row occurrences.
+         ;; Reject only enumeration beyond this lane/version's admitted count.
+         (let (enumerated (or (hash-get seen row) 0))
+          (when (>= enumerated (hash-get (provider-row-witness-occurrences witness) row))
            (error "ASCENT index provider returned duplicate row"))
-         (hash-put! seen row #t)
+          (hash-put! seen row (+ enumerated 1)))
          (when (equal? represented-key key) (set! matched (+ matched 1)))))
      snapshot)
-    ;; Unique represented candidates cover this key iff their count equals
-    ;; the snapshot's unique key count. No second key-expression evaluation.
+    ;; Represented occurrences cover this key iff their count equals the
+    ;; snapshot's key count. No second key-expression evaluation.
     (unless (= matched (or (hash-get (provider-row-witness-counts witness) key) 0))
       (error "ASCENT index provider omitted matching rows"))
     snapshot))
 
 (def (extend-provider-row-witness! witness rows columns)
   (let ((keys (provider-row-witness-keys witness))
-        (counts (provider-row-witness-counts witness)))
+        (counts (provider-row-witness-counts witness))
+        (occurrences (provider-row-witness-occurrences witness)))
     (for-each
      (lambda (row)
-       (unless (hash-get keys row)
-         (let (key (row-key row columns))
+       (let (key (or (hash-get keys row) (row-key row columns)))
            (hash-put! keys row key)
-           (hash-put! counts key (+ 1 (or (hash-get counts key) 0)))))) rows))
+           (hash-put! occurrences row (+ 1 (or (hash-get occurrences row) 0)))
+           (hash-put! counts key (+ 1 (or (hash-get counts key) 0))))) rows))
   witness)
 
 (def (build-provider-row-witness rows columns)
   (extend-provider-row-witness!
-   (make-provider-row-witness (make-hash-table) (make-hash-table)) rows columns))
+   (make-provider-row-witness (make-hash-table) (make-hash-table) (make-hash-table)) rows columns))
 
 ;;; Index ownership includes discovery of the logical lookup requirements.
 ;;; The three execution owners supply admitted metadata, never row snapshots

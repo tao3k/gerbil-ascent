@@ -57,8 +57,10 @@
 ;;; existing candidates, but indexes cannot introduce new relation facts.
 ;;; Failed dispatch or candidate admission revokes the engine cache version;
 ;;; the next read rebuilds from committed rows and propagates the original error.
-;;; Lookup must include every snapshot row with the requested key, once per
-;;; candidate. The engine checks key coverage and duplicate enumeration.
+;;; Lookup must include every snapshot occurrence with the requested key.
+;;; Initial source rows may repeat; enumeration cannot exceed any row's
+;;; admitted occurrence count, including overselected rows. The engine checks
+;;; key coverage and excess duplicate enumeration per all/delta version.
 (.defgeneric (gerbil-ascent-index-provider-lookup provider index key)
   slot: .lookup-index)
 

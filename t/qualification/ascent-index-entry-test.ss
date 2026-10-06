@@ -83,6 +83,51 @@
 
 (def ascent-index-entry-test
   (test-suite "Engine-owned stable physical index entries"
+    (test-case "custom index coverage counts admitted occurrences per lane and version"
+      (let (observation
+            (with-catch
+             (lambda (e) (error-message e))
+             (lambda ()
+               (let* ((mode #f)
+                      (rows (append (map (lambda (n) (list 0 n)) (iota 31)) '((0 0))))
+                      (provider
+                       (.o (:: @ gerbil-ascent-hash-index-provider)
+                           (.lookup-index
+                            (lambda (index key)
+                              (let (packet ((.ref gerbil-ascent-hash-index-provider '.lookup-index) index key))
+                                (case mode
+                                  ((excess) (cons (car packet) packet))
+                                  ((missing) (cdr packet))
+                                  (else packet)))))))
+                      (h (index-entry-harness #f rows provider))
+                      (native (index-entry-harness #f rows gerbil-ascent-hash-index-provider))
+                      (query (vector-ref h 0))
+                      (atom (index-entry-atom '(0) '(0) 2))
+                      (alias (index-entry-atom (list 0) '(0) 2)))
+                 ;; Preserve admitted occurrences, rather than silently deduping
+                 ;; either the provider input or its returned candidate packet.
+                 (check-equal? (query atom [] #f #f) ((vector-ref native 0) atom [] #f #f))
+                 (check-equal? (query alias [] #t #f) rows)
+                 (set! mode 'excess)
+                 (check-equal? (with-catch (lambda (e) (error-message e))
+                                 (lambda () (query alias [] #f #f) 'accepted))
+                               "ASCENT index provider returned duplicate row")
+                 (set! mode 'missing)
+                 (check-equal? (with-catch (lambda (e) (error-message e))
+                                 (lambda () (query atom [] #f #f) 'accepted))
+                               "ASCENT index provider omitted matching rows")
+                 (set! mode #f)
+                 (check-equal? (query alias [] #f #f) rows)
+                 ;; Low-level extension admits one more occurrence in all.
+                 ;; Delta retains its independently owned multiplicity witness.
+                 ((vector-ref h 1) 0 '((0 0)))
+                 (vector-set! (vector-ref h 2) 0 (cons '(0 0) rows))
+                 (vector-set! (vector-ref h 4) 0 33)
+                 (vector-set! (vector-ref h 6) 0 1)
+                 (check-equal? (query atom [] #f #f) (cons '(0 0) rows))
+                 (check-equal? (query alias [] #t #f) rows)
+                 'ok))))
+        (check-equal? observation 'ok)))
     (test-case "failed custom lookups revoke aliases without poisoning the other lane"
       (for-each
        (lambda (mode)

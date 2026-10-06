@@ -20,6 +20,7 @@ import SourceUpdateFrame
 import RuleBodyFrame
 import PositiveSlots
 import PositiveTraversal
+import IndexedPositiveTraversal
 import ProviderFrontier
 import SemiNaive
 import TransitiveComponents

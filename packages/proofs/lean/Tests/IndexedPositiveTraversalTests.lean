@@ -1,0 +1,118 @@
+-- SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+-- SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+import IndexedPositiveTraversal
+
+namespace Ascent.IndexedPositiveTraversalTests
+open AtomicBinding PositiveSlots IndexedPositiveTraversal
+#print axioms Ascent.IndexedPositiveTraversal.compiled_key_refines
+#print axioms Ascent.IndexedPositiveTraversal.precompiled_indexed_pivot_refines
+#print axioms Ascent.IndexedPositiveTraversal.row_partition
+#print axioms Ascent.IndexedPositiveTraversal.new_output_indexed_pivot
+#print axioms Ascent.IndexedPositiveTraversal.indexed_pivot_output_sound
+
+def names : List Nat := [10]
+def input : Env Bool := [(10, false)]
+def dirty : Frame Bool := fun _ => false
+def second : Atom Bool :=
+  ⟨[.variable 20, .variable 10, .variable 20, .literal false], [3, 1, 1],
+   List.replicate 32 [false, false, false, false] ++ List.replicate 32 [true, false, true, false],
+   List.replicate 32 [true, false, true, false], List.replicate 32 [false, false, false, false]⟩
+def last : Atom Bool :=
+  ⟨[.variable 30, .variable 20, .variable 30, .variable 10], [3, 1],
+   List.replicate 32 [false, false, false, false] ++ List.replicate 32 [true, true, true, false],
+   List.replicate 32 [true, true, true, false], List.replicate 32 [false, false, false, false]⟩
+def body : List (Atom Bool) := [second, last]
+def heads : List (Term Bool) := [.variable 10, .variable 20, .variable 30, .literal false]
+def slotEmit (names : List Nat) (frame : Frame Bool) : List (List (Option Bool)) :=
+  [observeSlots heads names frame, observeSlots heads names frame]
+def envEmit (env : Env Bool) : List (List (Option Bool)) :=
+  [observeHead heads env, observeHead heads env]
+
+theorem rep : Represents names input dirty := by
+  intro name; by_cases same : name = 10 <;> simp [names, input, lookup, slot, dirty, same]
+
+theorem emits (names : List Nat) (env : Env Bool) (frame : Frame Bool)
+    (represented : Represents names env frame) : slotEmit names frame = envEmit env := by
+  simp only [slotEmit, envEmit, head_observations heads names env frame represented]
+
+theorem admitted (pivot : Option Nat) : Admitted body pivot 0 names := by
+  refine ⟨?_, ?_, ?_, ?_, trivial⟩
+  · intro row member
+    unfold lane at member
+    split at member <;> simp_all [second]
+    rcases member with rfl | rfl <;> rfl
+  · intro env frame represented
+    have value := represented 10
+    have found : lookup 10 env = some (frame 0) := by simpa [names, slot] using value
+    simp [KnownColumns, second, wanted, found]
+  · intro row member
+    unfold lane at member
+    split at member <;> simp_all [last]
+    rcases member with rfl | rfl <;> rfl
+  · intro env frame represented
+    have valueA := represented 10
+    have valueB := represented 20
+    have foundA : lookup 10 env = some (frame 0) := by
+      simpa [second, names, compile, lower, slot] using valueA
+    have foundB : lookup 20 env = some (frame 1) := by
+      simpa [second, names, compile, lower, slot] using valueB
+    simp [KnownColumns, last, wanted, foundA, foundB]
+
+theorem exactDelta : DeltaExact body := by
+  simp [DeltaExact, body, second, last]
+  constructor <;> intro row <;> grind
+
+example (pivot : Option Nat) :
+    (runBody (compileBody body names).1 pivot 0 (compileBody body names).2 slotEmit dirty).1 =
+      PositiveTraversal.reference (rawBody body pivot 0) envEmit input :=
+  precompiled_indexed_pivot_refines body pivot 0 slotEmit envEmit emits names input dirty (admitted pivot) rep
+
+example (pivot : Option Nat) : Represents names input (walk body pivot 0 names slotEmit dirty).2 :=
+  indexed_reuse body pivot 0 names input slotEmit dirty rep
+
+/-- Physical threshold: below 32 candidates scan unchanged; at 32 the
+canonical ordered bucket filters even a repeated arbitrary column list. -/
+example : selectedRows {second with allRows := List.replicate 31 [false, true, false, false]}
+    none 0 names dirty = List.replicate 31 [false, true, false, false] := by decide
+example : selectedRows {second with allRows := List.replicate 32 [false, true, false, false]}
+    none 0 names dirty = [] := by decide
+example : compiledKey second.terms second.columns names dirty = [some false, some false, some false] := by decide
+
+/-- Row difference cannot be replaced by environment difference: wildcard
+projection can map a new row to an already derivable environment. -/
+def collapsed : Atom Bool := ⟨[.wildcard], [], [[false], [true]], [[true]], [[false]]⟩
+example : transition Atom.deltaRows collapsed [] [] ∧
+    ¬ ProviderFrontier.changed (transition Atom.oldRows collapsed)
+      (transition Atom.allRows collapsed) [] [] := by
+  constructor
+  · exact ⟨[true], by simp [collapsed], rfl⟩
+  · intro changed
+    exact changed.2 ⟨[false], by simp [collapsed], rfl⟩
+
+example (item : List (Option Bool))
+    (current : ∃ output, ProviderFrontier.body (transition Atom.allRows) body input output ∧ item ∈ envEmit output)
+    (absent : ¬ ∃ output, ProviderFrontier.body (transition Atom.oldRows) body input output ∧ item ∈ envEmit output) :
+    ∃ pivot, pivot < body.length ∧ item ∈
+      (runBody (compileBody body names).1 (some pivot) 0 (compileBody body names).2 slotEmit dirty).1 :=
+  new_output_indexed_pivot body slotEmit envEmit emits exactDelta names input dirty rep
+    (fun pivot => admitted (some pivot)) item current absent
+def newHead : List (Option Bool) := [some false, some true, some true, some false]
+theorem newCurrent : ∃ output,
+    ProviderFrontier.body (transition Atom.allRows) body input output ∧ newHead ∈ envEmit output := by
+  refine ⟨[(30, true), (20, true), (10, false)], ?_, by decide⟩
+  refine ⟨[(20, true), (10, false)], ?_, ?_⟩
+  · exact ⟨[true, false, true, false], by simp [second], rfl⟩
+  · exact ⟨[(30, true), (20, true), (10, false)],
+      ⟨[true, true, true, false], by simp [last], rfl⟩, rfl⟩
+
+theorem newAbsent : ¬ ∃ output,
+    ProviderFrontier.body (transition Atom.oldRows) body input output ∧ newHead ∈ envEmit output := by
+  simp [ProviderFrontier.body, transition, body, second, last, AtomicBinding.bind,
+    lookup, input, envEmit, observeHead, heads, wanted, newHead]
+
+example : ∃ pivot, pivot < body.length ∧ newHead ∈
+    (runBody (compileBody body names).1 (some pivot) 0 (compileBody body names).2 slotEmit dirty).1 :=
+  new_output_indexed_pivot body slotEmit envEmit emits exactDelta names input dirty rep
+    (fun pivot => admitted (some pivot)) newHead newCurrent newAbsent
+
+end Ascent.IndexedPositiveTraversalTests

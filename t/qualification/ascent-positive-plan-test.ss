@@ -15,6 +15,8 @@
                  gerbil-ascent-program-analysis gerbil-ascent-program-schema)
         (only-in :gerbil-ascent/core/positive-plan gerbil-ascent-compile-positive-plan
                  gerbil-ascent-run-positive-plan!)
+        (only-in :gerbil-ascent/table/funs gerbil-ascent-index-build gerbil-ascent-index-extend!)
+        (only-in :gerbil-ascent/program/index gerbil-ascent-make-row-indexes row-indexes-rows)
         (only-in :gerbil-ascent/core/rule-bindings gerbil-ascent-bind-row
                  gerbil-ascent-head-row)
         (only-in :gerbil-ascent/program/reuse gerbil-ascent-activate-rules)
@@ -94,6 +96,26 @@
                (when bound (visit (cdr remaining) bound))))
            (cdr atom)))))
     (visit atoms [])
+    (reverse emitted)))
+
+(def (make-slot-indexes all delta provider)
+  (let (sizes (lambda (sources) (list->vector (map length (vector->list sources)))))
+    (gerbil-ascent-make-row-indexes all delta (sizes all) (sizes delta)
+      (make-vector 3 0) (make-vector 3 0) (make-vector 3 provider))))
+
+(def (indexed-slot-stream plan frame pivot all delta provider positions (retained #f))
+  (let* ((indexes (or retained (make-slot-indexes all delta provider)))
+         (access (row-indexes-rows indexes)) (emitted []) (reads []))
+    (gerbil-ascent-run-positive-plan!
+     plan frame pivot
+     (lambda (atom environment delta? slot-terms)
+       (let (position
+             (let loop ((rest positions) (n 0))
+               (if (eq? atom (car rest)) n (loop (cdr rest) (+ n 1)))))
+         (set! reads (cons (list position delta?) reads))
+         (access atom environment delta? slot-terms)))
+     (lambda (head row) (set! emitted (cons (cons (vector-ref head 0) row) emitted))))
+    (for-each (lambda (read) (check-equal? (cadr read) (= (car read) pivot))) reads)
     (reverse emitted)))
 
 (def ascent-positive-plan-test
@@ -178,6 +200,88 @@
                   (displayln "SLOT-NESTED-CHECKED stale=" stale " pass=" pass " emitted=" (length emitted))
                   (force-output))) '(first dirty-repeat))))
          '(#f 0 1 stale-slot))))
+    (poo-flow-test-case "physical bucket selection and occurrence delta pivots refine the whole traversal"
+      (let* ((palette '(#f 0 1 2))
+             (quadruples
+              (append-map (lambda (x)
+                (append-map (lambda (y)
+                  (append-map (lambda (z)
+                    (map (lambda (w) (list x y z w)) palette)) palette)) palette)) palette))
+             (first-rows (cons '(#f) (let loop ((n 0)) (if (= n 39) [] (cons (list n) (loop (+ n 1)))))))
+             (first-delta '((#f) (0)))
+             (changed (filter (lambda (row) (memv (car row) '(1 2))) quadruples))
+             (prior (filter (lambda (row) (not (memv (car row) '(1 2)))) quadruples))
+             (first '((variable . a)))
+             (middle '((variable . b) (variable . a) (variable . b) (literal . 0)))
+             (last '((variable . c) (variable . b) (variable . c) (variable . a)))
+             (output '((variable . a) (variable . b) (variable . c) (literal . #f)))
+             (heads (list (vector 3 output) (vector 4 (reverse output)) (vector 3 output)))
+             (all (vector first-rows quadruples quadruples))
+             (delta (vector first-delta changed changed))
+             (old (vector (filter (lambda (row) (not (member row first-delta))) first-rows) prior prior))
+             (all-output (body-binding-stream (list (cons first first-rows) (cons middle quadruples) (cons last quadruples)) heads))
+             (old-output (body-binding-stream (list (cons first (vector-ref old 0)) (cons middle prior) (cons last prior)) heads)))
+        (check-equal? (length quadruples) 256)
+        (check-equal? (length changed) 128)
+        (for-each
+         (lambda (columns)
+           (for-each
+            (lambda (shared?)
+              (let* ((atom0 (vector 0 first [] first []))
+                     (atom1 (vector 1 middle columns middle (map (lambda (c) (list-ref middle c)) columns)))
+                     (atom2 (vector (if shared? 1 2) last columns last (map (lambda (c) (list-ref last c)) columns)))
+                     (positions (list atom0 atom1 atom2))
+                     (plan (gerbil-ascent-compile-positive-plan heads (map (lambda (atom) (vector 'atom atom)) positions)))
+                     (pivot-output []))
+                (for-each
+                 (lambda (pivot)
+                   (let* ((selected (list (if (= pivot 0) first-delta first-rows)
+                                          (if (= pivot 1) changed quadruples)
+                                          (if (= pivot 2) changed quadruples)))
+                          (expected (body-binding-stream
+                                     (map cons (list first middle last) selected) heads)))
+                     (set! pivot-output (append pivot-output expected))
+                     (for-each
+                      (lambda (stale)
+                        (let* ((builds 0)
+                               (probe (.o (:: @ gerbil-ascent-hash-index-provider)
+                                 (.build-index (lambda (rows cols)
+                                   (set! builds (+ builds 1))
+                                   (gerbil-ascent-index-build rows cols)))
+                                 (.extend-index! gerbil-ascent-index-extend!)
+                                 (.lookup-index (lambda (index key) (or (hash-get index key) [])))))
+                               (frame (make-vector (vector-ref plan 2) stale))
+                               (probe-indexes (make-slot-indexes all delta probe))
+                               (canonical-indexes (make-slot-indexes all delta gerbil-ascent-hash-index-provider)))
+                          (check-equal? (indexed-slot-stream plan frame pivot all delta probe positions probe-indexes) expected)
+                          (let (cold-builds builds)
+                            (check-equal? (indexed-slot-stream plan frame pivot all delta probe positions probe-indexes) expected)
+                            (check-equal? builds cold-builds))
+                          (check-equal? (> builds 0) (not (null? columns)))
+                          ;; The canonical receiver also exercises scalar keys
+                          ;; for single-column indexes, using the dirty return.
+                          (check-equal? (indexed-slot-stream plan frame pivot all delta
+                                          gerbil-ascent-hash-index-provider positions canonical-indexes) expected)
+                          (check-equal? (indexed-slot-stream plan frame pivot all delta
+                                          gerbil-ascent-hash-index-provider positions canonical-indexes) expected)))
+                      '(#f 0 1 stale-slot))
+                     (displayln "SLOT-INDEX-PIVOT-CHECKED columns=" columns " shared=" shared? " pivot=" pivot
+                                " emitted=" (length expected))
+                     (force-output))) '(0 1 2))
+                (for-each (lambda (row) (check-equal? (and (member row all-output) #t) #t)) pivot-output)
+                (for-each
+                 (lambda (row) (unless (member row old-output)
+                                 (check-equal? (and (member row pivot-output) #t) #t))) all-output)
+                ;; A wrong occurrence or a dropped candidate must be visible.
+                (let* ((expected (body-binding-stream
+                                  (list (cons first first-rows) (cons middle changed) (cons last quadruples)) heads))
+                       (wrong (indexed-slot-stream plan (make-vector (vector-ref plan 2) 'stale)
+                                2 all delta gerbil-ascent-hash-index-provider positions))
+                       (dropped (vector first-delta [] changed)))
+                  (check-equal? (equal? wrong expected) #f)
+                  (check-equal? (equal? (indexed-slot-stream plan (make-vector (vector-ref plan 2) 'stale)
+                                        1 all dropped gerbil-ascent-hash-index-provider positions) expected) #f))))
+            '(#f #t))) '(() (1) (1 3) (3 1) (1 1)))))
     (poo-flow-test-case "failed partial writes require the next fresh overwrite"
       (let* ((patterns '((variable . b) (variable . a) (variable . b)))
              (heads (list (vector 2 '((variable . a) (variable . b)))))

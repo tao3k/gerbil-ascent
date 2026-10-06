@@ -14,7 +14,8 @@
                  gerbil-ascent-physical-index-single-rows)
         (only-in :gerbil-ascent/table/provider gerbil-ascent-canonical-hash-index-provider?
                  gerbil-ascent-curried-index-provider?)
-        (rename-in (only-in :gerbil-ascent/table/funs gerbil-ascent-index-key)
+        (rename-in (only-in :gerbil-ascent/table/funs gerbil-ascent-index-key
+                           gerbil-ascent-index-row-snapshot)
                    (gerbil-ascent-index-key row-key)))
 (export gerbil-ascent-make-row-indexes row-indexes-rows row-indexes-advance! row-indexes-plan-atoms! row-indexes-plan-rules! row-indexes-plan-actions!)
 
@@ -38,7 +39,10 @@
    rows)
   ;; Membership follows complete shape admission, before any term matching.
   ;; The witness belongs to this physical entry's all/delta version.
-  (let ((seen (make-hash-table)) (matched 0))
+  ;; Detach the admitted packet from retained Provider references before
+  ;; checking membership and before any rule callback can mutate those refs.
+  (let ((snapshot (gerbil-ascent-index-row-snapshot rows))
+        (seen (make-hash-table)) (matched 0))
     (for-each
      (lambda (row)
        (let (represented-key (hash-get (provider-row-witness-keys witness) row))
@@ -48,12 +52,12 @@
            (error "ASCENT index provider returned duplicate row"))
          (hash-put! seen row #t)
          (when (equal? represented-key key) (set! matched (+ matched 1)))))
-     rows)
+     snapshot)
     ;; Unique represented candidates cover this key iff their count equals
     ;; the snapshot's unique key count. No second key-expression evaluation.
     (unless (= matched (or (hash-get (provider-row-witness-counts witness) key) 0))
-      (error "ASCENT index provider omitted matching rows")))
-  rows)
+      (error "ASCENT index provider omitted matching rows"))
+    snapshot))
 
 (def (extend-provider-row-witness! witness rows columns)
   (let ((keys (provider-row-witness-keys witness))

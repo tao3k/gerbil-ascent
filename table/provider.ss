@@ -40,7 +40,8 @@
 
 ;;; Build starts from the evaluator's current immutable row snapshot.
 ;;; Physical engine dispatch gives custom receivers fresh column/key list
-;;; headers. Cells preserve identity; rows and nested values remain borrowed.
+;;; headers and row spines. Field values preserve identity and remain shared.
+;;; Validated custom lookup packets are detached before rule callbacks run.
 (.defgeneric (gerbil-ascent-index-provider-build provider rows columns)
   slot: .build-index)
 ;;; Extend receives only newly admitted rows, preserving index cache reuse.

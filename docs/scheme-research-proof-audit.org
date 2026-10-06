@@ -1515,3 +1515,45 @@ check that selected projections preserve purity and extent. No runtime
 compatibility branch, weakened admission check or enlarged test deadline was
 introduced. The corrected selected-activation suite passes independently;
 the [[file:evidence/scheme-selected-activation-layout-20261006/receipt.json][receipt]] retains the original failed run and qualified source identity.
+
+* B23 native correspondence: isolate custom index row spines
+
+[[https://kmicinski.com/assets/byods.pdf][B23 Sections 3.1, 3.3 and 4]] distinguish represented facts, their injection
+and total/delta enumeration. In our Scheme split the storage/evaluation
+owner supplies those facts; a physical IndexProvider cannot overwrite them
+through a borrowed list. This is a concrete ownership requirement of the
+transfer, not an additional theorem claimed from the paper.
+
+A native counterexample exposed a transaction leak. A custom build changed
+one supplied row's first cell from 0 to 9, then raised. Session recovery
+rebuilt from its accepted source log, but the log and engine had shared that
+row spine. Retrying a literal-0 rule produced 31 rows instead of the independent
+32-row expectation. The first build exception was propagated correctly; the
+accepted source identity had nevertheless changed outside source admission.
+
+=table/funs.ss= now owns the pure admitted-row snapshot algorithm. Custom
+build and extend dispatch in =table/access.ss= copy the outer list and every
+row spine before handing them to the receiver. =program/index.ss= first
+performs bounded shape admission of a custom lookup answer, then detaches the
+complete candidate packet before membership/coverage checks and term
+callbacks. This order preserves rejection of improper and cyclic rows without
+copying them first. Returned packet order and field identities are preserved;
+row/list addresses are intentionally private to the receiving owner.
+
+The repaired native Session retries the same failed build and obtains all
+32 independently expected consequences. Index-entry controls retain build
+arguments, mutate row cells and outer list tails after lookup, and check both
+the source root and admitted packet against separately constructed rows.
+They also retain append arguments and mutate them after extension/witness
+publication: the accepted batch remains unchanged, invalid Provider state
+rejects as foreign, and a new version rebuilds from the intact root. All/delta
+isolation and prior header/coverage/aggregate controls remain qualified in
+the [[file:evidence/scheme-provider-row-spines-20261006/receipt.json][source-bound native receipt]].
+
+This closes mutable list/row-spine access through physical index dispatch.
+Nested field values are still shared and retain their stability/equality
+premises. General storage callbacks and arbitrary host closure side effects
+remain separate obligations. Trusted canonical and engine-owned shared paths
+retain their existing representations. Custom copying costs scale with batch
+size times row width; no speed or allocation improvement is claimed here.
+No Lean/TLA source is changed by this Scheme implementation.

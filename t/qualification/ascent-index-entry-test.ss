@@ -83,6 +83,44 @@
 
 (def ascent-index-entry-test
   (test-suite "Engine-owned stable physical index entries"
+    (test-case "retained custom row spines cannot mutate roots batches or admitted packets"
+      (let* ((retained #f) (extended-rows #f)
+             (provider (.o (:: @ gerbil-ascent-hash-index-provider)
+                           (.build-index (lambda (rows _columns) (set! retained rows) rows))
+                           (.extend-index!
+                            (lambda (index rows _columns)
+                              (set! extended-rows rows) (append rows index)))
+                           (.lookup-index (lambda (index _key) index))))
+             (rows (map (lambda (n) (list 0 n)) (iota 32)))
+             (expected (map (lambda (n) (list 0 n)) (iota 32)))
+             (h (index-entry-harness #f rows provider))
+             (query (vector-ref h 0)) (advance! (vector-ref h 1))
+             (atom (index-entry-atom '(0) '(0) 2))
+             (packet (query atom [] #f #f)))
+        (def (reject)
+          (check-equal? (with-catch (lambda (e) (error-message e))
+                          (lambda () (query atom [] #f #f) 'accepted))
+                        "ASCENT index provider returned foreign row"))
+        (set-car! (cdr (car retained)) 999)
+        (set-cdr! retained [])
+        (check-equal? rows expected)
+        (check-equal? packet expected)
+        (reject)
+        ;; Rebuild from the intact engine root, then mutate retained append
+        ;; arguments after witness publication. The accepted batch stays intact.
+        (vector-set! (vector-ref h 6) 0 1)
+        (check-equal? (query atom [] #f #f) expected)
+        (let (batch (list (list 0 32)))
+          (advance! 0 batch)
+          (set-car! (cdr (car extended-rows)) 999)
+          (check-equal? batch '((0 32)))
+          (vector-set! (vector-ref h 2) 0 (append batch rows))
+          (vector-set! (vector-ref h 4) 0 33)
+          (vector-set! (vector-ref h 6) 0 2)
+          (reject)
+          (vector-set! (vector-ref h 6) 0 3)
+          (check-equal? (query atom [] #f #f) (append batch expected)))
+        (check-equal? (query atom [] #t #f) expected)))
     (test-case "custom receivers cannot mutate admitted or cached argument headers"
       (let* ((captured []) (builds 0) (extensions 0)
              (provider

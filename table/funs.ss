@@ -5,7 +5,12 @@
 ;;; Private index algorithms. The evaluator owns cache invalidation.
 
 (export gerbil-ascent-index-build gerbil-ascent-index-extend! gerbil-ascent-index-order!
-        gerbil-ascent-index-key)
+        gerbil-ascent-index-key gerbil-ascent-index-row-snapshot)
+
+;;; Copy admitted outer/row spines while preserving field value identity.
+;;; Custom lookup callers must finish bounded row-shape admission first.
+(def (gerbil-ascent-index-row-snapshot rows)
+  (map (lambda (row) (map values row)) rows))
 
 ;; : (-> Row (List ColumnIndex) Key)
 (def (gerbil-ascent-index-key row columns)

@@ -166,3 +166,20 @@ this can pass coverage and publish a false absence result. Native controls
 and the source-bound [[file:../../evidence/scheme-provider-headers-20261006/receipt.json][receipt]] distinguish this repair from the broader
 stable-value and callback-purity obligations. Only headers are copied; no
 new deep-value, runtime-benefit or universal Provider proof claim is made.
+
+* Row ownership and failed index builds (2026-10-06)
+
+The storage/evaluation owner enumerates represented facts for physical indexes.
+A native failure/retry counterexample showed that mutating a supplied row
+spine during build could also mutate the Session's accepted source log:
+after an exception, retry returned 31 of 32 expected facts. The interface now
+copies custom build/extend row spines and detaches custom lookup packets
+after bounded shape admission. Retained receiver references therefore cannot
+rewrite source roots, accepted append batches or already-admitted packets.
+
+The [[file:../../scheme-research-proof-audit.org][ownership audit]] and
+[[file:../../evidence/scheme-provider-row-spines-20261006/receipt.json][native receipt]] retain the counterexample and repaired execution. This is
+a concrete preservation condition for the Section 3/4 transfer, not general
+Provider refinement. Field values remain shared: nested-value stability and
+callback purity remain separate. Custom snapshot cost is explicit and no
+paper performance result is attributed to this change.

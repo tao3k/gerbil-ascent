@@ -127,6 +127,36 @@
 
 (def ascent-byods-index-test
   (test-suite "ASCENT BYODS storage and custom index composition"
+    (poo-flow-test-case "failed custom build cannot corrupt committed source row spines"
+      (let* ((corrupt? #t)
+             (provider
+              (.o (:: @ gerbil-ascent-hash-index-provider)
+                  (.build-index
+                   (lambda (rows columns)
+                     (if corrupt?
+                       (begin (set-car! (car rows) 9)
+                              (error "planned build row mutation"))
+                       ((.ref gerbil-ascent-hash-index-provider '.build-index) rows columns))))))
+             (program
+              (gerbil-ascent-program
+               (list (gerbil-ascent-relation 'input 2
+                       (map (lambda (n) (list 0 n)) (iota 32)) provider)
+                     (gerbil-ascent-relation 'matched 1 []))
+               (list (gerbil-ascent-rule
+                      (list (gerbil-ascent-atom 'matched (list (gerbil-ascent-variable 'y))))
+                      (list (gerbil-ascent-atom 'input
+                              (list (gerbil-ascent-literal 0) (gerbil-ascent-variable 'y))))))
+               32 64 64))
+             (session (gerbil-ascent-open-session program)))
+        (check-equal?
+         (with-catch (lambda (e) (error-message e))
+           (lambda () (gerbil-ascent-session-run session) 'accepted))
+         "planned build row mutation")
+        (set! corrupt? #f)
+        (let (result (rows (gerbil-ascent-session-run session)))
+          (check-equal? (length result) 32)
+          (for-each (lambda (n) (check-equal? (not (not (member (list n) result))) #t))
+                    (iota 32)))))
     (poo-flow-test-case "mutated lookup key cannot certify false absence in negation"
       (let* ((corrupt? #t)
              (provider (.o (:: @ gerbil-ascent-hash-index-provider)

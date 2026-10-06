@@ -1,0 +1,77 @@
+{
+  "ci": {
+    "qualifiedHeadRun": "https://github.com/tao3k/gerbil-ascent/actions/runs/37459855002",
+    "status": "in_progress_at_receipt_creation"
+  },
+  "historicalCostRun": {
+    "benefitAdmitted": false,
+    "boundary": "Does not isolate this patch, current rebased-head cost or whole-application CPU/peak-memory benefit.",
+    "exitStatus": 0,
+    "pairedSamplesPerScenario": 1000,
+    "scenarios": 7,
+    "scope": "Final empty-owner implementation before shared-index projection rebase, using existing positive-plan-benchmark against frozen association-list evaluator",
+    "sourceOnlyAllocationWins": 994,
+    "sourceOnlyCurrentMedianBytes": 17152,
+    "sourceOnlyReferenceMedianBytes": 17728
+  },
+  "historicalFormalRun": {
+    "boundary": "Finite TLC exploration is not universal temporal proof.",
+    "exitStatus": 0,
+    "markers": 9,
+    "normalTlcModels": 19,
+    "requiredCounterexamples": 33,
+    "scope": "Before concurrent shared-index projection rebase; TLA sources unchanged"
+  },
+  "lean": {
+    "axioms": [
+      "propext",
+      "Quot.sound"
+    ],
+    "command": "just check-lean-proofs",
+    "exitStatus": 0,
+    "jobs": 84,
+    "moduleSha256": "f671296fca3f769aa4426680f87a5c6926a1b96f34ccfc74164de253cf5cd91e",
+    "testsOwner": "packages/proofs/lean/Tests/PositiveSlotsTests.lean",
+    "testsSha256": "5ec97b13766a9e9ad84356c92c55a15d26a9d512663ab6f0f6ed140ad3887f97",
+    "theorems": [
+      "vector_frame_rep",
+      "vector_write_rep",
+      "vector_run_refines",
+      "compiled_vector_refines"
+    ]
+  },
+  "native": {
+    "binarySha256": "1419258ca526610dcbef5b180e59ec5ac3f711eba3e949992f590c6c3df2cf04",
+    "cases": 736,
+    "command": "just test 4",
+    "exitStatus": 0,
+    "explicitOK": 82,
+    "modules": 82,
+    "registrySha256": "a2d524c30549b7495e7c4305bfca19873542e09a2e4843e7e6dfed99fe4c0b6d",
+    "sourceEntries": 541,
+    "sourceInventorySha256": "4091ced0082568bdf56b9cfb567500c4759369005463a8291630093305d73c48",
+    "workers": 4
+  },
+  "package": {
+    "advisories": 15,
+    "command": "ASP_GERBIL_SCHEME_POLICY=1 gxi build.ss compile",
+    "errors": 0,
+    "exitStatus": 0
+  },
+  "qualifiedHead": "8f317af1f68a45c88a08e77ec947d71066665802",
+  "rejectedRuns": [
+    "Benchmark waiting for full-suite lane exceeded existing lock deadline; no samples admitted.",
+    "Original source-only allocation gate failed: 17760 reference bytes versus 20352 current bytes. Removed unused physical index owner without changing the gate.",
+    "Benchmark mixed old dependency modules with new evaluator entry; undefined symbols and exit 139. Explicit index/actor build dependencies corrected.",
+    "Pre-rebase native run interrupted; not final source acceptance.",
+    "Rebased native link lacked upstream shared-index reference support module. Added dependency to existing harness support layer."
+  ],
+  "remaining": [
+    "Decode actual Scheme compiled actions and prove their extracted slot bounds.",
+    "Relate Scheme scalar/list encoding and host callbacks to the semantic grammar.",
+    "Compose descriptor lowering, indexed traversal and complete least-model output."
+  ],
+  "schema": "ascent.finite-frame-qualification",
+  "scope": "Finite vector model for callback-free slot actions, native entry capacity admission, and empty physical index ownership for rule-free engines. Not complete native compiler refinement.",
+  "version": 1
+}

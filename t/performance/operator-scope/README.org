@@ -1,0 +1,60 @@
+#+title: Operator lexical scope compilation qualification
+
+=reference.ss= freezes =program/operator.ss= at
+=f8ad9d9f39edfdabad2a14e9edd83985309acc33=. Only its two relative imports
+are qualified so it can coexist with the production implementation.
+
+Run =just performance-operator-scope=. The existing project library and SDK
+must be prepared first; this entry builds project modules, not the SDK.
+Scenario, library and receipt paths are explicit Scheme arguments. All
+executables, raw pairs and logs belong under ignored =.cache/ascent/=.
+
+Each side constructs its own descriptors before timing. Each timed call
+includes validation, detached rows, lexical analysis, lowering and program
+construction. Fifty alternating pairs compare CPU and allocation. Outside
+the timed region, normalized emitted relation/rule topology must match,
+and each program must solve natively to the independent expected row =((7))=.
+
+The scaling scenario has 19 shared union levels and one bound parameter.
+It retains the gate fixed before the first 18-level sample: 20% less median CPU,
+35% less allocation and 35/50 CPU wins. The one-level control allows
+5% + 20 us CPU overhead and 2 KiB
+allocation overhead. Neither gate measures solver speed or wall time.
+
+The initial 14-level =diamond= scenario remains callable. It failed the
+same 80% gate: CPU 49,251 -> 47,165 us and allocation 101,052,176 ->
+94,933,872 bytes. Its 49/50 wins do not establish a substantial complete
+compile gain. At this size object construction dominates the saved lexical
+analysis. At 18 levels, =shared-diamond= improved CPU from 74,805 to
+39,461 us (50/50 wins) and allocation from 169,848,416 to 119,963,392
+bytes. The 29.4% allocation reduction failed its 35% gate; that scenario
+remains callable with the same gate. The 19-level scaling run retains
+these thresholds rather than weakening the allocation requirement.
+
+The 22-level =deep-diamond= experiment could not produce pairs:
+the frozen baseline raised stack overflow in lowering. It remains callable
+with the original 80% gate. Do not report a percentage speedup for that
+experiment. The production unit test independently compiles and solves
+this 22-level graph, also checking escaped bindings and later pointer cycles.
+
+* Native qualification, 2026-10-06
+
+| Complete compile scenario | Old CPU us | New CPU us | Old bytes | New bytes | CPU wins |
+|---------------------------+------------+------------+-----------+-----------+----------|
+| 19 shared levels | 108609 | 41227 | 228786896 | 126220192 | 50/50 |
+| One-level control | 8082 | 8121 | 13586480 | 13586336 | 24/50 |
+
+The admitted 19-level run saves 62.0% median CPU and 44.8% allocation.
+These are complete compiler-call results for this shared graph, not solve
+or application throughput. The control is 0.5% slower in median CPU,
+with unchanged allocation within 144 bytes; its overhead gate passed.
+Four relevant native modules passed 74 Cases,
+including the 22-level completion control. Selected policy over the five
+production owners reported zero findings and zero errors.
+
+An isolated project checkout with initially empty native library also
+passed 35 operator/provenance Cases, built the complete static DSL closure
+and ran its provenance suite successfully. It reused the installed SDK.
+This specifically checks the missing frozen-reference static module that
+failed CI at the baseline; cached performance compilation is not proof
+of a complete test dependency inventory.

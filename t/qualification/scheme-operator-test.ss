@@ -316,6 +316,23 @@
         (check-equal? (same-rows? actual '((10) (11) (12) (13))) #t)
         (check-equal? (same-rows? actual
                                   (relational-op-reference graph)) #t)))
+    (test-case "deep shared parameter DAG retains finite lowering and fresh scope admission"
+      (let* ((seed (relational-op-source 'diamond-seed 1 '((7))))
+             (escaped #f)
+             (graph (relational-op-fix
+                     1 (lambda (parameter)
+                         (let loop ((n 22) (node parameter))
+                           (if (zero? n)
+                             (begin (set! escaped node) (relational-op-union seed node))
+                             (loop (- n 1) (relational-op-union node node))))))))
+        (let-values (((program output) (relational-op-compile graph 64 256 256)))
+          (check-equal? (length (.ref program 'relations)) 24)
+          (check-equal? (length (.ref program 'rules)) 46)
+          (check-equal? (relational-query-name (relational-solve (relational-admit program)) output) '((7))))
+        (check-exception (relational-op-compile escaped 64 256 256) true)
+        (check-exception (relational-op-reference escaped) true)
+        (set-car! (relational-op-inputs escaped) escaped)
+        (check-exception (relational-op-fragment graph 'output) true)))
     (test-case "shared ordinary pipeline emits its private sources once"
       (let* ((pairs
               (relational-op-source 'pair 2 '((1 a) (2 b) (2 c))))

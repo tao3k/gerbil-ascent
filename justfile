@@ -153,7 +153,21 @@ _performance-actor-admission baseline lane:
         timeout 90s .cache/ascent/actor-admission/native-entry {{ gerbil_test_runtime_options }} "$scenario" "$library" "$receipt_dir/$scenario.sexp" "{{ baseline }}"
     done
 
-# Paired SCC planning and complete coordinator/worker component closures.
+# Matched complete operator compilation with shared lexical dependencies.
+performance-operator-scope:
+    {{ test_runner }} run -- just _performance-operator-scope
+
+_performance-operator-scope:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    library="{{ justfile_directory() }}/.cache/ascent/native-library/lib"
+    mkdir -p .cache/ascent/operator-scope
+    gxi {{ gerbil_test_runtime_options }} t/performance/operator-scope-build.ss "$library" "{{ justfile_directory() }}/.cache/ascent/operator-scope/native-entry"
+    for scenario in scaled-diamond small; do
+        timeout 90s .cache/ascent/operator-scope/native-entry {{ gerbil_test_runtime_options }} "$scenario" "$library" ".cache/ascent/operator-scope/$scenario.sexp"
+    done
+
+# Grounded provenance maintenance with independent frozen semantics.
 performance-provenance-maintenance:
     {{ test_runner }} run -- just _performance-provenance-maintenance
 

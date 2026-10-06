@@ -5,6 +5,42 @@
 Compiler sources, checked calling conventions, lexical scope and finite types. Study notes and receipts retain their original revision and scope;
 historical source paths and timings are not current qualification claims.
 
+* Study: descriptor ownership and shared lexical analysis
+
+Gerbil revision =2591dcd= separates compiler phases into modules. Its
+=compiler/optimize-base.ss:24-29= gives one optimizer-info record ownership
+of identity tables. =std/list/list.ss:24-33= provides linear identity-aware
+deduplication when supplied an eq table, with an explicit first-occurrence
+policy. The applicable lesson is to retain analysis once per compilation
+and distinguish node identity from the number of paths reaching it.
+
+Our former 691-line =program/operator.ss= combined builders, validation,
+scope analysis, lowering, interpretation and counters. Production ownership
+now follows these boundaries:
+
+| Module | Responsibility |
+|--------+----------------|
+| =operator-descriptor.ss= | finite builders and descriptor identities |
+| =operator-analysis.ss= | graph admission, owned rows, free parameter sets |
+| =operator.ss= | lexical instances and rule emission; stable public facade |
+| =operator-reference.ss= | independent bounded set interpretation |
+| =operator-measurement.ss= | public dynamic interpreter counters |
+
+The facade is 299 lines. A shared union DAG formerly duplicated parameter
+entries once per path, and lowering recomputed validation's free lists.
+Analysis now deduplicates parameters by identity in first traversal order;
+lowering retains the same invocation's analysis record. Binding-dependent
+memoization still uses the actual relation handles for every free parameter.
+Every public call revalidates mutable descriptors. No analysis cache crosses
+calls, and no contract checks or row ownership copies are bypassed.
+
+Tests stay in =t/qualification/= and =t/performance/=. Production counters
+remain public reference/change functionality. Deep sharing, escaped bindings,
+pointer cycles, mutable rows and independent transformation instances are
+semantic controls. The frozen matched compile benchmark and its negative
+14-level result are described in
+[[file:../../t/performance/operator-scope/README.org][operator scope qualification]].
+
 * Study: admitted callback arguments and ordered pattern extension
 
 The installed compiler's =optimize-call.ss:90-131= only substitutes lambda

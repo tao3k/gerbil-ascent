@@ -214,6 +214,34 @@ example : falseObligation ∉
     simp [sampleUpdates] at touched
   · simp at added
 
+/-- Caller workflow from LeanPoo's usage guide: retain the certificate across
+ordered unrelated edits, with batch and stepwise publication agreeing. -/
+def unrelatedStages : List (Patch Bool (fun _ => Nat)) :=
+  [Patch.set true 7, Patch.set true 9]
+
+theorem stagedReuse : falseObligation.holds
+    (unrelatedStages.foldl append certifiedSource).state := by
+  rw [← append_composeAll]
+  apply reuse certifiedSource (Patch.composeAll unrelatedStages)
+    certifiedSource_ok falseObligation (by simp [certifiedSource])
+  apply (unaffected_composeAll_iff falseObligation unrelatedStages).mpr
+  intro patch member key dependency touched
+  have equal : key = false := by
+    simpa [falseObligation, resultObligation] using dependency
+  subst key
+  simp [unrelatedStages] at member
+  rcases member with rfl | rfl <;> simp [Patch.set] at touched
+
+/-- Restoring the original value does not erase the edit footprint. A touched
+source obligation still needs admission, even if its final value agrees. -/
+example : falseObligation ∈ pending certifiedSource
+    (Patch.setMany ([⟨false, 5⟩, ⟨false, 0⟩] : List (Sigma fun _ : Bool => Nat))) := by
+  apply (pending_after_batch certifiedSource _ [] falseObligation).mpr
+  exact Or.inl ⟨by simp [certifiedSource], false,
+    by simp [falseObligation, resultObligation], by simp⟩
+
+#print axioms stagedReuse
+
 /-- A changed source and its cached result are patched together. The old
     correctness obligation becomes pending and is proved for the new cut. -/
 def pairedObligation : Obligation Bool (fun _ => Nat) :=

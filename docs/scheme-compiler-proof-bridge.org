@@ -867,3 +867,61 @@ new [[file:../packages/proofs/lean/Tests/PositiveConsequenceTests.lean][bridge q
 existing acceptance target and explicitly names the =Tests.*= roots. Proof
 modules import no test modules. Historical JSON receipts retain original
 paths and hashes; [[file:evidence/scheme-positive-consequence-20261006/receipt.json][the current qualification receipt]] binds the relocated sources.
+
+* LeanPoo usage and API synchronization（2026-10-06）
+
+The consumer now pins published LeanPoo main
+=247d1d6094b6af1bb873f69564b271bc978730ed= in both Lake files,
+using Lean =v4.34.0=. The producer's local feature branch is not the
+consumer release identity. Historical qualification receipts retain their
+original dependency revisions.
+
+** Use case to consumer mapping
+
+Read the pinned [[https://github.com/tao3k/lean-poo/blob/247d1d6094b6af1bb873f69564b271bc978730ed/docs/use-case.md][PO use case]],
+[[https://github.com/tao3k/lean-poo/blob/247d1d6094b6af1bb873f69564b271bc978730ed/docs/usage.org][usage guide]] and
+[[https://github.com/tao3k/lean-poo/blob/247d1d6094b6af1bb873f69564b271bc978730ed/docs/reusable-contracts.org][reusable contracts]] together.
+The primary PO path declares typed behavior, composes declarations through
+C4, then evaluates slots through a shared lazy instance. Proof objects are
+an additional capability for consumers carrying obligations across changes.
+ASCENT currently consumes that proof capability for source/result cuts.
+
+| Workflow | LeanPoo API | ASCENT responsibility |
+|----------+-------------+-----------------------|
+| Declare correctness once | =Obligation=, =ProofObject=, =Certificate= | =resultObligation= states derive/observed equality; RuleBodyFrame supplies semantic locality |
+| Apply ordered source edits | =Patch.setMany=, =Patch.composeAll= | Admit the actual source cut and preserve last-write order |
+| Carry an unaffected proof | =reuse=, =unaffected_setMany_iff= | Prove dependency/touched-key disjointness from the compiled rule closure |
+| Select affected obligations | =pending=, =mem_pending_iff= | Revalidate touched positive, negative and aggregate dependencies |
+| Publish a complete certificate | =closePending= | Discharge every selected old or newly added obligation |
+| Relate staged and batched edits | =append_composeAll=, =unaffected_composeAll_iff= | Check every constituent footprint, including repeated writes |
+
+The compiled =stagedReuse= use case in AscentProofTests applies two edits
+to an unrelated source and carries the original certificate into the exact
+stepwise result through the producer's composition laws. A control writes a
+dependency and then restores its original value: it remains pending. Final
+value equality alone cannot authorize proof reuse.
+
+** New capability boundary
+
+The updated reusable-contract modules also expose typed capability families,
+prepared consumer caches, indexed registry transactions, narrow/public views
+and certified solver transport. =applyTransactionCached= publishes the full
+registry transaction and distinguishes =reused= from =fresh=; fresh data still
+requires an analytic certificate. =CertifiedTransformation= requires supplied
+forward validity and reverse witness soundness; =pullSolver= transports an
+already admitted solver's data and proof. These are concrete public APIs,
+not automatic dependency discovery or a solver generator.
+
+ASCENT's current source state is a dependent key/value function, not a C4
+provider registry. Its native planner, physical index and publication protocol
+still need their own source-bound qualification. The existing Proof APIs
+remain compatible at this revision; adopting the new registry workflow would
+require an explicit provider/context mapping and a refinement to this source
+cut. This synchronization records the usable boundary and qualifies the
+current consumer against the new producer without claiming that mapping.
+
+Qualification: =direnv exec . just check-lean-proofs= completes with exit 0
+and 83 Lake jobs. =stagedReuse= reports only =propext= and =Quot.sound=;
+the restoration control compiles as a kernel-checked pending-membership proof.
+This gate qualifies the updated Lean consumer; it supplies no new native
+performance or publication receipt.

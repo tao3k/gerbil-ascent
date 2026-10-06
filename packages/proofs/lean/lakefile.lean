@@ -8,7 +8,7 @@ package «gerbil-ascent-proof» where
 
 require LeanPoo from git
   "https://github.com/tao3k/lean-poo.git"
-  @ "9e160953ebe94c416317c9d758b3d9290e85ac77"
+  @ "247d1d6094b6af1bb873f69564b271bc978730ed"
 
 @[default_target]
 lean_lib AscentProof where

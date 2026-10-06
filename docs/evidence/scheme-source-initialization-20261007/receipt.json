@@ -41,6 +41,24 @@
     "exitStatus": 0,
     "logSha256": "12395f4e7f888201f7074662535f6486554b451c3ae40af35692fb7e7fc4ca16"
   },
+  "postRebaseReuseIntegration": {
+    "base": "df0f716",
+    "cases": 82,
+    "exitStatus": 0,
+    "explicitOKMarkers": 6,
+    "logSha256": "7923a8caed78121670edab0ebb93fe00c00d68fc05e4428ecc1b573e9a478660",
+    "modules": 6,
+    "nativeReadyMarkers": 6,
+    "owners": {
+      "build.ss": "bf2f5558c32b7491803552790503e06aea9badbfbc3b52fd60028257da315c85",
+      "program/evaluate.ss": "0d2c0a1907de21b61ea2e341bd0611a3e9596b4bba6f906a46a2cc6a70a0da98",
+      "program/initialization.ss": "fdde386cef1f1015cde78e38c31ba4c15ab070f346895dc1a38b261232506956",
+      "program/reuse.ss": "1262e74be8805d13f7603f7782b6172080f219e78d4e2b3ab425973656702e0a"
+    },
+    "policyErrors": 0,
+    "policyLogSha256": "931f183c33970e943c253caacba2e3584c677709317b2dd72c13062d7178cd70",
+    "watchdogFailures": 0
+  },
   "schema": "ascent.source-initialization-qualification",
   "version": 1
 }

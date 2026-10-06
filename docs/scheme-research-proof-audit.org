@@ -1792,3 +1792,11 @@ zero errors. Ten affected native modules pass 106 Cases with all native and
 explicit completion markers and no watchdog failure. The [[file:evidence/scheme-source-initialization-20261007/receipt.json][source-bound receipt]]
 retains the CI failure and controls. Full CI on the corrected revision remains
 required; previous successful formal/oracle results are not relabeled.
+
+Integration with =df0f716= preserves the independent completed-closure seeding
+owner in =program/reuse.ss=: initial source admission completes first, then
+reuse admits completed rows, then the evaluator coordinates execution. Both
+policy and package build pass again. Six affected native modules pass
+82 Cases with all completion markers and no watchdog failure; source
+hashes and this distinct integration run are retained in the source
+initialization receipt.

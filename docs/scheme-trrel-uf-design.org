@@ -403,3 +403,128 @@ The mapping is =current <=> captured revision equals published revision= during
 an active reader; this correspondence is documented, not machine-checked source
 refinement. Multi-reader credits, whole-engine compression, exact legacy export
 order and measured retention/allocation benefits remain integration gates.
+* Frozen representation implementation (2026-10-07)
+:PROPERTIES:
+:CUSTOM_ID: frozen-native-representations
+:END:
+
+This implementation integrates PR revision
+=3653d21=, including the other thread's ProviderRectangles/ProviderViews artifacts
+and native API controls. Both Provider and engine view adapters share one carrier
+and insertion kernel. This implementation follows the architecture review above. The earlier source
+inspection describes its stated revision, not the current evaluator. Native
+qualification and measured costs are recorded in
+[[file:evidence/scheme-relation-views-20261007/receipt.json][the representation receipt]].
+
+** One production path
+
+=core/relation-view.ss= supplies immutable relation identity, source generation,
+representation revision, total/delta lane, logical cardinality, keyed/full
+visitation and membership. Invocation-local visitors own traversal progress.
+Explicit snapshots detach public list and row spines and retain duplicate order.
+Nested field values retain the existing stable-value premise.
+
+=table/trrel-uf.ss= freezes copied component-member spines and component reach
+rectangles. Captured views contain no mutable parent pointers or reach tables.
+Exact insertion delta captures the pre-merge member lists; missing rectangles
+are disjoint, and their Cartesian sizes are counted before mutation. The old
+explicit kernel extension still exports its original ordered frontier.
+
+=program/view-state.ss= coordinates staged graph admission and publication of
+frozen total/delta, logical sizes and representation revision. Initialization,
+derived heads, append, private index dispatch, size observation and retained
+results consume this representation. No expanded UF tuple membership or tuple
+index is installed on this path. Compiled slot consumers bind the captured
+prefix/from/to fields directly, avoiding one temporary Cartesian row per join
+candidate. General row consumers retain the ordinary detached row visitor; both
+interfaces traverse the same rectangles and keyed member selection. Zero logical
+frontiers do not add retained union wrappers. Full =rows-of= export replays frozen injections and allocates public rows on
+demand. Result size observation reads cached logical cardinality.
+
+The compressed path is admitted for the exact built-in UF storage and canonical
+hash index. Custom storage/index receivers continue using their checked explicit
+protocol. This is a private representation seam; it does not publish a new
+extensible Provider API. Explicit Set execution keeps its direct row loop and
+existing physical index receiver. Component scheduling and closure reuse retain
+their Set eligibility restrictions.
+
+Pure actor tasks can read frozen UF cuts. The fresh round identity contains the
+frozen total/delta vectors; task/worker assignments and reply credits use that
+identity. The coordinator drains readers before committing staged owners.
+Cancellation and failure preserve existing drain and source-replay behavior.
+Callbacks, custom Providers and lattices retain serial eligibility rules.
+
+** Contracts and limits
+
+UF denotes a relation of facts. Engine visitors follow the captured component
+rectangles; explicit Set occurrence order and the UF kernel frontier order are
+retained. Public UF export replays a frozen injection journal, with separate
+source/append and derived-round orientation. That journal stores injected rows,
+not closure pairs or frontier rectangles. It is distinct from authoritative
+Session source recovery. Old results retain their own journal root. Tests check
+exact legacy public order for matched source, append and derived injections,
+and compare logical facts for actor and repeated-join execution. Internal keyed
+visitation can change operational emission order; no universal callback-trace
+refinement is established by these fixtures.
+
+Logical input/output/derived limits remain independent of descriptor counts.
+Budget rejection precedes graph mutation; later callback failures quarantine the
+staged owner and require source reconstruction. Old result cuts survive merge,
+source replacement and failed admission. No timeout or generation ceiling is
+introduced.
+
+DAG reachability and exact frontier descriptors can remain quadratic. Bound
+coordinate selection filters captured blocks before creating rows, but currently
+scans rectangles; this is not an asymptotically optimal keyed UF index. Structural
+observation reports total member cells plus rectangle descriptors, excluding
+closure/header/index/journal/engine costs. It is not a byte or peak-memory
+measurement. Derived injection journals can themselves be quadratic on dense
+programs; replay allocates a temporary UF owner and every exported pair, so full
+ordered export is a separate measured cost.
+Full export must still emit every logical pair. Native tests establish bounded
+correspondence; the separate Lean/TLA thread owns formal view and lifecycle
+refinement, and its obligations are not closed by these tests.
+
+** Acceptance sequence
+
+The five implementation stages are one representation change: explicit carrier,
+UF total/delta, evaluator/publication/recovery, actor consumption, then matched
+whole-engine qualification. Qualification freezes all Scheme sources including
+new files, runs the native regression suite and policy gate, and records the
+comparison evaluator's identity. Sparse observation and full export are separate
+conditions. Warmed alternating pairs cover DAG/cycle, grouped repeated joins and
+retained updates. CPU, elapsed time, cumulative allocation and sampled post-GC
+live memory have separate evidence boundaries. A sampled post-GC peak is not a
+continuous process high-water mark. Negative measurements remain in the receipt.
+
+
+** Final native and matched cost receipt
+
+The final frozen Scheme cut passes 85 native modules and 793 Cases, with 85
+native-module, harness and explicit =OK= markers, exit zero. Package policy
+passes with zero errors and 18 advisory findings. The standalone cost module
+passes all 12 Cases and emits 72 warmed alternating pairs, including held-old
+retained updates. See the receipt for all individual samples and source hashes.
+
+| Condition | Explicit CPU median, us | Frozen CPU median, us | Explicit allocated bytes | Frozen allocated bytes |
+|-----------+-------------------------+-----------------------+--------------------------+------------------------|
+| 128-node DAG, sparse observation | 6413.5 | 4009.5 | 8762072 | 6269376 |
+| 128-node cycle, sparse observation | 11193 | 3390.5 | 14947696 | 6457440 |
+| 128-node DAG, ordered full export | 6560.5 | 8138.5 | 8760696 | 13477416 |
+| 128-node cycle, ordered full export | 11215.5 | 9575 | 14947504 | 19699208 |
+| Two 16-node cycle groups, repeated join | 2357 | 2408 | 2164544 | 2194704 |
+| Three retained updates, 64-node held old cut | 1546.5 | 554 | 2191264 | 995680 |
+
+Retained update timing excludes initialization, forced GC and truth checks.
+Sampled live peaks include initialization and every update while the old result
+and its exported rows remain held: median 6640488 explicit bytes and 5856480
+frozen bytes. These include ambient runtime and do not measure continuous peak
+RSS or transient allocations. The installed runtime's live field was checked
+with a retained million-slot vector; it increased by 8000176 bytes. Counter
+meanings follow [[https://raw.githubusercontent.com/gambit/gambit/master/lib/_kernel.scm][Gambit's primary runtime definition]] and local calibration.
+
+Sparse/retained gains are admitted only for these workloads. DAG ordered export
+regresses both CPU and allocation; cycle export still increases allocation.
+The grouped join remains slightly above the explicit path after eliminating
+candidate tuple construction. No universal speedup, asymptotic DAG compression
+or paper-application replication is accepted from these measurements.

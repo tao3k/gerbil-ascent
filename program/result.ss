@@ -6,6 +6,7 @@
 ;;; every publication owns its vector. Promises close only persistent row roots;
 ;;; unchanged roots share a promise without retaining membership or index state.
 ;;; Slot zero carries the invocation deadline and is never captured by results.
+(import :gerbil-ascent/core/relation-view)
 (export gerbil-ascent-publication-cache gerbil-ascent-publish-rows
         gerbil-ascent-snapshot-rows gerbil-ascent-snapshot-sizes
         gerbil-ascent-result-observation gerbil-ascent-public-snapshot-rows)
@@ -41,31 +42,35 @@
 ;;       ;; => a fresh vector whose promise yields '((1) (2))
 ;;       ```
 ;;     %
-(def (gerbil-ascent-publish-rows all cache)
+(def (gerbil-ascent-publish-rows all cache (sizes #f))
   (let (snapshots (make-vector (vector-length all) []))
-    (publish-index! all (vector-ref cache 1) (vector-ref cache 2) snapshots 0)
+    (publish-index! all (vector-ref cache 1) (vector-ref cache 2) snapshots 0 sizes)
     snapshots))
 
 ;; : (-> RowsVector RowsVector RowsVector RowsVector Nat Void)
-(def (publish-index! all roots ordered snapshots index)
+(def (publish-index! all roots ordered snapshots index sizes)
   (when (< index (vector-length all))
     (let (rows (vector-ref all index))
       (unless (eq? rows (vector-ref roots index))
-        (vector-set! ordered index (delay (reverse rows)))
+        (vector-set! ordered index (if (relation-view? rows) rows
+                                    (gerbil-ascent-lazy-explicit-view (delay (reverse rows))
+                                      (if sizes (vector-ref sizes index) (length rows)))))
         (vector-set! roots index rows))
       (vector-set! snapshots index (vector-ref ordered index)))
-    (publish-index! all roots ordered snapshots (+ index 1))))
+    (publish-index! all roots ordered snapshots (+ index 1) sizes)))
 
 ;; : (forall (a) (-> (U [a] (Promise [a])) [a]))
 ;; : (-> RowSnapshot Rows)
 (def (gerbil-ascent-snapshot-rows rows)
-  (if (promise? rows) (force rows) rows))
+  (cond ((relation-view? rows) (gerbil-ascent-view-rows rows))
+        ((promise? rows) (force rows)) (else rows)))
 
 ;; Session results can seed later replacements. Public list and row spines
 ;; must not alias those retained roots; immutable scalar values remain shared.
 (def (gerbil-ascent-public-snapshot-rows snapshot session?)
   (let (stored (gerbil-ascent-snapshot-rows snapshot))
-    (if session? (map (lambda (row) (map identity row)) stored) stored)))
+    (if (and session? (not (relation-view? snapshot)))
+      (map (lambda (row) (map identity row)) stored) stored)))
 
 ;; gerbil-ascent-snapshot-sizes
 ;;   : (-> Names SnapshotVector RelationSizes)
@@ -82,7 +87,8 @@
 ;;     %
 (def (gerbil-ascent-snapshot-sizes names snapshots)
   (map (lambda (name rows)
-         (cons name (length (gerbil-ascent-snapshot-rows rows))))
+         (cons name (if (relation-view? rows) (relation-view-count rows)
+                                (length (gerbil-ascent-snapshot-rows rows)))))
        (vector->list names) (vector->list snapshots)))
 
 ;; : (forall (a) (-> (Maybe Vector) Vector (Vector [a]) (Maybe Vector) Vector))

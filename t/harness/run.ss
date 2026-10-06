@@ -37,6 +37,7 @@
     "t/qualification/ascent-finite-evidence-test.ss"
     "t/qualification/ascent-index-lifecycle-test.ss"
     "t/qualification/ascent-index-program-test.ss"
+    "t/qualification/ascent-relation-view-test.ss"
     "t/qualification/ascent-index-entry-test.ss"
     "t/qualification/ascent-index-build-test.ss"
     "t/qualification/ascent-storage-batch-test.ss"

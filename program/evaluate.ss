@@ -4,7 +4,11 @@
 
 ;;; Generic stratified semi-naive evaluator. Mutable row buffers belong to one
 ;;; session; public declarations and returned snapshots are POO values.
-(import (only-in "positive-components.ss" gerbil-ascent-run-positive-components! gerbil-ascent-component-mode?)
+(import :gerbil-ascent/core/relation-view
+        (only-in "view-state.ss" gerbil-ascent-view-relation? gerbil-ascent-stage-view!
+                 gerbil-ascent-view-journal-event gerbil-ascent-view-export-cut
+                 gerbil-ascent-commit-view! gerbil-ascent-empty-view gerbil-ascent-add-frontier)
+        (only-in "positive-components.ss" gerbil-ascent-run-positive-components! gerbil-ascent-component-mode?)
         (only-in "actor-round.ss" gerbil-ascent-run-actor-round! gerbil-ascent-actor-round-eligible?)
         (only-in "source-log.ss" gerbil-ascent-source-log-rows)
         (only-in :clan/poo/object .o .ref object?)
@@ -134,6 +138,8 @@
            (kinds (vector-ref schema 8))
            (storage-providers (vector-ref schema 9))
            (lattice-rows (make-vector count #f))
+           (view-generation (gensym 'ascent-source))
+           (view-journals (make-vector count []))
            (source-count 0)
            (source-materialized-count 0)
            (derived-count 0)
@@ -149,6 +155,13 @@
               (unless slot (error "unknown ASCENT relation" name))
               (- slot 1)))))
       (def indexed-rows (row-indexes-rows indexes))
+      (def (view-relation? index)
+        (gerbil-ascent-view-relation? (vector-ref storage-providers index)
+                                     (vector-ref index-providers index)))
+      (def (commit-view! index frontier)
+        (gerbil-ascent-commit-view! index (vector-ref storage-states index) frontier
+          all delta all-size delta-size all-version delta-version
+          (vector-ref names index) (cons view-generation source-count) (vector-ref view-journals index)))
       ;; Cache revocation alone cannot undo membership or rows already admitted
       ;; by this engine. A failed index publication requires source reconstruction.
       (def advance-all-indexes!
@@ -168,6 +181,16 @@
        (lambda (inputs materialized)
          (set! source-count inputs)
          (set! source-materialized-count materialized)))
+      (for-each (lambda (index)
+        (when (view-relation? index)
+          (vector-set! view-journals index
+            (list (gerbil-ascent-view-journal-event 'source (.ref (list-ref relations index) 'rows))))
+          (let (frozen (gerbil-ascent-view-export-cut (if (relation-view? (vector-ref all index)) (vector-ref all index)
+                          gerbil-ascent-empty-view) (vector-ref view-journals index)))
+            (vector-set! all index (gerbil-ascent-view-bind frozen (vector-ref names index)
+                                    (cons view-generation source-count) 0 'total))
+            (vector-set! delta index (gerbil-ascent-view-bind frozen (vector-ref names index)
+                                      (cons view-generation source-count) 0 'delta))))) (iota count))
       ;; Source admission uses the prospective input and budgets. Reuse owns
       ;; completed-row admission into these same private engine buffers.
       ;; Neither phase can publish a failed prospective Session.
@@ -295,6 +318,7 @@
            (set! active-by-stratum (gerbil-ascent-activate-rules analysis)))
          (let ((pending (make-vector count []))
                (pending-seen (make-vector count #f))
+               (pending-injections (make-vector count []))
                (pending-lattice-keys (make-vector count []))
                (pending-count 0)
                (component-mode? (gerbil-ascent-component-mode? session? workers canceled? analysis schema)))
@@ -319,7 +343,16 @@
                           fresh))))
                 (let (check (vector-ref field-checkers index))
                   (when check (check row)))
-                (if (vector-ref lattice-joins index)
+                (cond
+                 ((view-relation? index)
+                  (let (frontier (gerbil-ascent-stage-view! (vector-ref storage-states index) row
+                                  (- output-limit (+ source-materialized-count derived-count pending-count))
+                                  (vector-ref field-checkers index)))
+                    (when (> (gerbil-ascent-row-count frontier) 0)
+                      (vector-set! pending-injections index (cons (map values row) (vector-ref pending-injections index))))
+                    (set! pending-count (+ pending-count (gerbil-ascent-row-count frontier)))
+                    (vector-set! pending index (gerbil-ascent-add-frontier (vector-ref pending index) frontier))))
+                 ((vector-ref lattice-joins index)
                   (let* ((key (gerbil-ascent-lattice-key row))
                          (staged (hash-get pending-table key))
                          (prior (or staged
@@ -338,7 +371,8 @@
                         (set! pending-count (+ pending-count 1)))
                       (hash-put! pending-table key merged)
                       (vector-set! pending-lattice-keys index
-                        (cons key (vector-ref pending-lattice-keys index)))))
+                        (cons key (vector-ref pending-lattice-keys index))))))
+                 (else
                   (if (gerbil-ascent-canonical-set-storage-provider?
                        (vector-ref storage-providers index))
                     ;; The built-in extension is exactly (list row). Preserve
@@ -357,7 +391,7 @@
                       (for-each
                        (lambda (stored)
                          (admit-stored! index pending-table stored))
-                       expanded))))
+                       expanded)))))
                 (when (> (+ derived-count pending-count) derived-limit)
                   (error "ASCENT derived fact budget exceeded"))
                 (when (> (+ source-materialized-count
@@ -373,7 +407,7 @@
                     (let* ((atom (vector-ref clause 1))
                            (rows (indexed-rows atom environment
                                                (= depth delta-at) #f)))
-                      (for-each
+                      (gerbil-ascent-for-each-row
                        (lambda (row)
                          (let (bound (gerbil-ascent-bind-row (vector-ref atom 3)
                                                 row environment))
@@ -384,7 +418,7 @@
                    ((eq? (vector-ref clause 0) 'negation)
                     (let* ((atom (vector-ref clause 1))
                            (rows (indexed-rows atom environment #f #f)))
-                      (unless (ormap
+                      (unless (gerbil-ascent-any-row?
                                (lambda (row)
                                  (gerbil-ascent-bind-row (vector-ref atom 3)
                                            row environment))
@@ -396,7 +430,7 @@
                            (rows (indexed-rows atom environment #f #f))
                            (variables (vector-ref clause 3))
                            (tuples []))
-                      (for-each
+                      (gerbil-ascent-for-each-row
                        (lambda (row)
                          (let (bound (gerbil-ascent-bind-row (vector-ref atom 3)
                                                 row environment))
@@ -480,7 +514,7 @@
                         (vector-ref delta index))
                       []))
                   (vector-set! delta-size index
-                    (length (vector-ref delta index)))
+                    (gerbil-ascent-row-count (vector-ref delta index)))
                   (vector-set! delta-version index
                     (+ 1 (vector-ref delta-version index)))
                   (reset-delta (+ index 1)))))
@@ -582,6 +616,26 @@
             (set! active? #f)
             (let commit ((index 0))
               (when (< index count)
+                (if (view-relation? index)
+                  (let (frontier (vector-ref pending index))
+                    (if (> (gerbil-ascent-row-count frontier) 0)
+                      (begin
+                             (vector-set! view-journals index
+                               (cons (gerbil-ascent-view-journal-event 'derived (reverse (vector-ref pending-injections index)))
+                                     (vector-ref view-journals index)))
+                             (commit-view! index frontier)
+                             (set! derived-count (+ derived-count (gerbil-ascent-row-count frontier)))
+                             (set! active? #t))
+                      (begin
+                             (let (total (vector-ref all index))
+                               (vector-set! delta index
+                                 (gerbil-ascent-view-bind gerbil-ascent-empty-view
+                                   (relation-view-identity total) (relation-view-generation total)
+                                   (relation-view-revision total) 'delta)))
+                             (vector-set! delta-size index 0)))
+                    (vector-set! pending index [])
+                    (vector-set! pending-injections index []))
+                  (begin
                 (if (vector-ref lattice-joins index)
                   (let ((table (vector-ref pending-seen index))
                         (visited (make-hash-table))
@@ -649,6 +703,7 @@
                   (vector-set! pending index [])
                   (vector-set! pending-lattice-keys index [])
                   (hash-clear! (vector-ref pending-seen index)))
+                ))
                 (commit (+ index 1))))
             ;; Private storage state becomes reusable only after the entire
             ;; round has published rows, membership, versions and indexes.
@@ -673,8 +728,13 @@
            (set! materialized-dirty? #f))
          (let* ((snapshots
                  (if (vector? deadline)
-                     (gerbil-ascent-publish-rows all deadline)
-                     (vector-map (lambda (rows) (reverse rows)) all)))
+                     (gerbil-ascent-publish-rows all deadline all-size)
+                     (vector-map (lambda (rows) (if (relation-view? rows) rows (reverse rows))) all)))
+                (sizes (vector-copy all-size))
+                (representations (map (lambda (name rows size)
+                                   (list name (if (relation-view? rows) 'rectangles 'explicit)
+                                         size (if (relation-view? rows) (relation-view-units rows) size)))
+                                     (vector->list names) (vector->list all) (vector->list sizes)))
                 (observation
                  (gerbil-ascent-result-observation
                   (and reuse (native-reuse-affected reuse)) names active-by-stratum rule-ticks)))
@@ -685,7 +745,8 @@
                  (reused-relations (vector-ref observation 1))
                  (active-rule-count (vector-ref observation 2))
                  (rule-time-nanoseconds (vector-ref observation 3))
-                 (relation-sizes (lambda () (gerbil-ascent-snapshot-sizes names snapshots)))
+                 (representation-observation (lambda () (map (lambda (row) (map values row)) representations)))
+                 (relation-sizes (lambda () (map cons (vector->list names) (vector->list sizes))))
                  (rows-of (lambda (name)
                             (gerbil-ascent-public-snapshot-rows
                              (vector-ref snapshots (position-of name)) session?)))))))
@@ -774,8 +835,21 @@
                     (set! dirty? #f)
                     (set! last-result result)))
                  (else
-                  (if built-in-set?
-                    (append-set-source! index row)
+                  (cond
+                   ((view-relation? index)
+                    (flush-staged-set-rows!)
+                    (let (frontier (gerbil-ascent-stage-view! (vector-ref storage-states index) row
+                                    (- output-limit (+ source-materialized-count derived-count))
+                                    (vector-ref field-checkers index)))
+                      (set! source-count (+ source-count 1))
+                      (when (> (gerbil-ascent-row-count frontier) 0)
+                        (set! dirty? #t) (set! materialized-dirty? #t)
+                        (set! source-materialized-count (+ source-materialized-count (gerbil-ascent-row-count frontier)))
+                        (vector-set! view-journals index
+                          (cons (gerbil-ascent-view-journal-event 'source (list row)) (vector-ref view-journals index)))
+                        (commit-view! index (gerbil-ascent-add-frontier (vector-ref delta index) frontier)))))
+                   (built-in-set? (append-set-source! index row))
+                   (else
                   (begin
                     (flush-staged-set-rows!)
                     (let* ((expanded
@@ -817,7 +891,7 @@
                       (vector-set! all-version index
                         (+ 1 (vector-ref all-version index)))
                       (vector-set! delta-version index
-                        (+ 1 (vector-ref delta-version index))))))))))
+                        (+ 1 (vector-ref delta-version index)))))))))))
                 (unless (or (vector-ref source-overrides index)
                             built-in-set?)
                   (vector-set! source-additions index

@@ -546,3 +546,22 @@ SCC decoding and future compressed-view actor integration remain separate
 obligations. The accepted gate covers 90 Lean jobs, 55,197 view safety states,
 315 lifetime states and seven deliberate fault controls; it makes no new
 whole-engine speedup or application replication claim.
+* Engine representation migration (2026-10-07)
+
+The [[file:../../scheme-trrel-uf-design.org::#frozen-native-representations][engine follow-up]] integrates the proved Provider API into one frozen carrier,
+then carries total/delta cardinality through source admission, derived rounds,
+append, indexes, retained publication and actor consumption. Canonical UF/hash
+execution retains component rectangles instead of expanded membership/index
+pairs. Public ordered export replays a frozen injection journal; source replay
+continues to use only authoritative sources. See the
+[[file:../../evidence/scheme-relation-views-20261007/receipt.json][source-bound native/cost receipt]].
+
+This makes B23's distinction between representation and concretization concrete
+in the engine. Sparse keyed observation, repeated grouped joins, retained updates
+and ordered full export have separate costs. Full export regenerates both a
+transient graph owner and output tuples; a descriptor count is not a whole-engine
+memory result. Qualified negative costs remain published. The matched reference
+is the repository's explicit evaluator running the same current UF kernel,
+not a claim of exact performance against the entire previous PR revision or
+replication of the paper's applications. General callback-trace and native
+Lean/TLA refinement remain separate obligations.

@@ -4,7 +4,9 @@
 
 ;;; Private positive-rule execution plans. Plans are immutable and shared;
 ;;; each engine owns its variable frames, including nested/concurrent solves.
-(import (only-in "expression-plan.ss" gerbil-ascent-compile-frame-call gerbil-ascent-compile-frame-sequence
+(import (only-in "relation-view.ss" relation-view? gerbil-ascent-for-each-row
+                 gerbil-ascent-row-parts? gerbil-ascent-for-each-row-parts)
+        (only-in "expression-plan.ss" gerbil-ascent-compile-frame-call gerbil-ascent-compile-frame-sequence
                  gerbil-ascent-compile-input-guard)
         (only-in "rule-bindings.ss" gerbil-ascent-expression-value gerbil-ascent-head-row gerbil-ascent-call-with-bindings))
 (export gerbil-ascent-prepare-rule-activations gerbil-ascent-positive-plan gerbil-ascent-compile-positive-plan gerbil-ascent-run-positive-plan!
@@ -263,6 +265,22 @@
              ((wildcard) #t))
            (match-row! (cdr terms) (cdr row) frame)))))
 
+;; : (-> Terms Prefix Value Value Frame Boolean)
+(def (match-parts! terms prefix left right frame)
+  (if (pair? prefix)
+    (and (match-value! (car terms) (car prefix) frame)
+         (match-parts! (cdr terms) (cdr prefix) left right frame))
+    (and (match-value! (car terms) left frame)
+         (match-value! (cadr terms) right frame))))
+;; : (-> SlotTerm Value Frame Boolean)
+(def (match-value! term value frame)
+  (case (car term)
+    ((fresh) (vector-set! frame (cdr term) value) #t)
+    ((bound) (equal? (vector-ref frame (cdr term)) value))
+    ((literal) (equal? (cdr term) value))
+    ((expression) (equal? ((cdr term) frame) value))
+    ((wildcard) #t)))
+
 ;; : (-> SlotTerm Frame Value)
 (def (term-value term frame)
   (case (car term)
@@ -299,7 +317,7 @@
                         frame
                         delta-at 0 rows-access emit-row! checkpoint!))
 
-;;; Recursion passes the frame explicitly; no closure is allocated per pivot.
+;;; Explicit rows keep the direct list loop; frozen views invoke a local visitor.
 ;; : (-> Atoms Heads Frame Integer Nat RowsAccess EmitRow Void)
 (def (visit-positive-atoms! atoms heads frame delta-at depth rows-access emit-row! checkpoint!)
   (if (null? atoms)
@@ -319,13 +337,27 @@
         (else
          (let (rows (rows-access (vector-ref action 0) frame
                                  (= depth delta-at) (vector-ref action 2)))
-           (let candidates ((remaining rows))
-             (unless (null? remaining)
-               (when checkpoint! (checkpoint!))
-               (when (match-row! (vector-ref action 1) (car remaining) frame)
-                 (visit-positive-atoms! (cdr atoms) heads frame delta-at (+ depth 1)
-                                        rows-access emit-row! checkpoint!))
-               (candidates (cdr remaining))))))))))
+           (if (or (pair? rows) (null? rows))
+             (let candidates ((remaining rows))
+               (unless (null? remaining)
+                 (when checkpoint! (checkpoint!))
+                 (when (match-row! (vector-ref action 1) (car remaining) frame)
+                   (visit-positive-atoms! (cdr atoms) heads frame delta-at (+ depth 1)
+                                          rows-access emit-row! checkpoint!))
+                 (candidates (cdr remaining))))
+             (if (gerbil-ascent-row-parts? rows)
+               (gerbil-ascent-for-each-row-parts
+                (lambda (prefix left right)
+                  (when checkpoint! (checkpoint!))
+                  (when (match-parts! (vector-ref action 1) prefix left right frame)
+                    (visit-positive-atoms! (cdr atoms) heads frame delta-at (+ depth 1)
+                                           rows-access emit-row! checkpoint!))) rows)
+               (gerbil-ascent-for-each-row
+                (lambda (row)
+                  (when checkpoint! (checkpoint!))
+                  (when (match-row! (vector-ref action 1) row frame)
+                    (visit-positive-atoms! (cdr atoms) heads frame delta-at (+ depth 1)
+                                           rows-access emit-row! checkpoint!))) rows)))))))))
 
 ;;; Build the provider's ordered key after index construction. Compiled terms
 ;;; read proved frame slots; the general path preserves expression callbacks.

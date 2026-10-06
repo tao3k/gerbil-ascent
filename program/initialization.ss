@@ -3,14 +3,18 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 ;;; Initial source admission owns the engine's fresh row/state buffers.
-(import (only-in :clan/poo/object .ref)
+(import :gerbil-ascent/core/relation-view
+        (only-in :clan/poo/object .ref)
         (only-in "admission.ss" gerbil-ascent-initialize-source-row!
                  gerbil-ascent-admit-source-row!)
         (only-in :gerbil-ascent/core/rule-semantics gerbil-ascent-lattice-key
                  gerbil-ascent-lattice-value gerbil-ascent-joined-row)
         (only-in :gerbil-ascent/table/storage gerbil-ascent-storage-engine-state
                  gerbil-ascent-storage-admit-state!
-                 gerbil-ascent-canonical-set-storage-provider?))
+                 gerbil-ascent-canonical-set-storage-provider?
+                 gerbil-ascent-canonical-uf-storage-provider?
+                 gerbil-ascent-storage-view-extension! gerbil-ascent-storage-freeze-view)
+        (only-in :gerbil-ascent/table/provider gerbil-ascent-canonical-hash-index-provider?))
 (export make-initial-source-state gerbil-ascent-initialize-sources!)
 
 ;;; Private vectors are borrowed only during construction of one engine.
@@ -107,7 +111,17 @@
                  (set! lattice-events (cons key lattice-events)))
                ;; Initial duplicates remain rows; the exact built-in Set
                ;; extension only wraps this row in a temporary list.
-               (if (gerbil-ascent-canonical-set-storage-provider?
+               (cond
+                ((and (gerbil-ascent-canonical-uf-storage-provider? (vector-ref storage-providers index))
+                      (gerbil-ascent-canonical-hash-index-provider? (vector-ref (vector-ref schema 5) index)))
+                 (let (frontier (gerbil-ascent-storage-view-extension!
+                                 (vector-ref storage-states index) row
+                                 (- output-limit source-materialized-count)))
+                   (let (check (vector-ref field-checkers index))
+                     (when check (gerbil-ascent-for-each-row check frontier)))
+                   (set! source-materialized-count (+ source-materialized-count (gerbil-ascent-row-count frontier)))
+                   (gerbil-ascent-storage-admit-state! (vector-ref storage-states index))))
+                ((gerbil-ascent-canonical-set-storage-provider?
                     (vector-ref storage-providers index))
                  (set! source-materialized-count
                    ;; With no field callback, nothing can invalidate the
@@ -118,7 +132,8 @@
                        (gerbil-ascent-initialize-source-row! row width check
                          present all index source-materialized-count output-limit)
                        (gerbil-ascent-admit-source-row! row present all index
-                         source-materialized-count output-limit))))
+                         source-materialized-count output-limit)))))
+                (else
                  (let (materialized
                        ((vector-ref storage-extensions index)
                         (vector-ref storage-states index)
@@ -134,8 +149,11 @@
                           source-materialized-count output-limit)))
                     materialized)
                    (gerbil-ascent-storage-admit-state!
-                    (vector-ref storage-states index))))))
+                    (vector-ref storage-states index)))))))
            rows)
+          (when (and (gerbil-ascent-canonical-uf-storage-provider? (vector-ref storage-providers index))
+                     (gerbil-ascent-canonical-hash-index-provider? (vector-ref (vector-ref schema 5) index)))
+            (vector-set! all index (gerbil-ascent-storage-freeze-view (vector-ref storage-states index))))
           (when (eq? kind 'lattice)
             (let ((keyed (vector-ref lattice-rows index))
                   (visited (make-hash-table))
@@ -151,7 +169,7 @@
               (vector-set! all index (reverse accepted))))
           (vector-set! seen index present)
           (vector-set! delta index (vector-ref all index))
-          (vector-set! all-size index (length (vector-ref all index)))
+          (vector-set! all-size index (gerbil-ascent-row-count (vector-ref all index)))
           (vector-set! delta-size index
             (vector-ref all-size index))
           (initialize (cdr remaining) (+ index 1)))))

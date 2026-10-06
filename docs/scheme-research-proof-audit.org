@@ -1997,7 +1997,8 @@ protocol observations and avoids duplicating the relation algebra. Its seeded
 counterexamples establish design discriminators, not five production incidents.
 
 The existing UF list entrypoint consumes the same compressed frontier plan.
-The evaluator still materializes that frontier at its current row boundary.
+At this unit's qualified revision (=2040128=), the evaluator still materializes
+that frontier at its row boundary.
 Thus this acceptance unit validates the representation/lifetime design; the
 whole-engine representation migration and measured benefit remain separately
 required before claiming B23's compressed-storage application result.
@@ -2041,3 +2042,25 @@ reader-lifetime abstraction; five safety and two temporal seeded faults caught.
 The [[file:scheme-trrel-uf-design.org][UF design]] documents the abstraction mapping,
 remaining premises and engine integration gates. No new Scheme runtime behavior,
 model API experiment or whole-engine performance benefit is claimed here.
+
+* UF engine representation correspondence (2026-10-07)
+
+[[file:scheme-trrel-uf-design.org::#frozen-native-representations][The engine integration]] reuses ProviderRectangles/ProviderViews and the native
+Provider API from =3653d21=. The API and production adapter share the same
+carrier and insertion kernel. Existing exhaustive Provider controls are retained;
+new tests traverse source/derived/append, repeated atoms, logical budgets,
+retained old results, timed resumes, actor cancellation and public row ownership.
+[[file:evidence/scheme-relation-views-20261007/receipt.json][The receipt]] binds the final Scheme source cut, full native inventory, policy
+result and matched whole-engine measurements.
+
+The abstract algebra still assumes disjoint rectangles and exact frontier
+concretization; native field equality/hash extraction remains an obligation.
+The actor key contains frozen total/delta vectors, and existing scheduler
+assignment/reply/drain controls remain in force. This is an implementation
+correspondence checked by native fixtures, not a mechanically extracted mailbox
+refinement. Total cardinality observation avoids export. Public ordered export
+replays injection history separately from source recovery; its cost and retained
+journal are included in engine measurements. These changes close the concrete
+explicit-row retention seam for the admitted UF/hash path, while general custom
+Provider/lattice concurrency, universal callback traces, continuous heap peak and
+paper application replication retain their stated gates.

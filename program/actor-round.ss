@@ -2,7 +2,8 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 (import (only-in :gerbil-ascent/core/positive-plan gerbil-ascent-pure-positive-plan?)
-        (only-in :gerbil-ascent/table/storage gerbil-ascent-canonical-set-storage-provider?)
+        (only-in :gerbil-ascent/table/storage gerbil-ascent-canonical-set-storage-provider?
+                 gerbil-ascent-canonical-uf-storage-provider?)
         (only-in :gerbil-ascent/table/provider gerbil-ascent-canonical-hash-index-provider?))
 (export gerbil-ascent-run-actor-round! gerbil-ascent-actor-round-eligible?)
 
@@ -10,7 +11,7 @@
 ;; : (forall (r s i l f) (-> [r] (Vector s) (Vector i) (Vector l) (Vector f) Boolean))
 ;; : (-> AdmittedRulePlans StorageProviders IndexProviders LatticeJoins FieldCheckers Boolean)
 ;; | doc m%
-;;     Admit parallel computation only for pure plans and private canonical Set
+;;     Admit parallel computation only for pure plans and private canonical Set or frozen UF
 ;;     storage/index receivers, without lattice or user field callbacks. The
 ;;     evaluator still owns worker options and the private source/frontier cut.
 ;;
@@ -23,7 +24,9 @@
 ;;   %
 (def (gerbil-ascent-actor-round-eligible? rules storages indexes joins fields)
   (and (andmap (lambda (rule) (gerbil-ascent-pure-positive-plan? (vector-ref rule 5))) rules)
-       (andmap gerbil-ascent-canonical-set-storage-provider? (vector->list storages))
+       (andmap (lambda (provider) (or (gerbil-ascent-canonical-set-storage-provider? provider)
+                                    (gerbil-ascent-canonical-uf-storage-provider? provider)))
+               (vector->list storages))
        (andmap gerbil-ascent-canonical-hash-index-provider? (vector->list indexes))
        (andmap not (vector->list joins))
        (andmap not (vector->list fields))))

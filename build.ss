@@ -10,6 +10,7 @@
 
 (def gerbil-ascent-library-modules
   '("core/binary-relation"
+    "core/relation-view"
     "table/expression"
     "table/funs"
     "table/eqrel"
@@ -50,6 +51,7 @@
     "program/analysis"
     "program/summary"
     "program/admission"
+    "program/view-state"
     "program/initialization"
     "program/result"
     "program/source-log"

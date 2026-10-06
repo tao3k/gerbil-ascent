@@ -17,9 +17,12 @@
         (only-in "trrel.ss" gerbil-ascent-trrel-state
                  gerbil-ascent-trrel-extension)
         (only-in "trrel-uf.ss" gerbil-ascent-trrel-uf-state
-                 gerbil-ascent-trrel-uf-extension))
+                 gerbil-ascent-trrel-uf-extension
+                 gerbil-ascent-trrel-uf-insert! gerbil-ascent-trrel-uf-freeze))
 
-(export GerbilAscentStorageProviderContract
+(export gerbil-ascent-canonical-uf-storage-provider?
+        gerbil-ascent-storage-view-extension! gerbil-ascent-storage-freeze-view
+        GerbilAscentStorageProviderContract
         gerbil-ascent-set-storage-provider
         gerbil-ascent-canonical-set-storage-provider?
         gerbil-ascent-eqrel-storage-provider
@@ -247,3 +250,17 @@
         (call-with-storage-state state
           (lambda (raw-state) (extend raw-state all pending row budget)))))
     (gerbil-ascent-storage-extension provider width)))
+
+(def +canonical-uf-storage-provider+ gerbil-ascent-trrel-uf-storage-provider)
+;; : (-> StorageProvider Boolean)
+(def (gerbil-ascent-canonical-uf-storage-provider? provider)
+  (eq? provider +canonical-uf-storage-provider+))
+;; : (-> StorageOwner Row Natural FrozenView)
+(def (gerbil-ascent-storage-view-extension! state row budget)
+  (call-with-storage-state state
+    (lambda (raw) (gerbil-ascent-trrel-uf-insert! raw row budget))))
+;; : (-> StorageOwner FrozenView)
+(def (gerbil-ascent-storage-freeze-view state)
+  (when (eq? (storage-state-owner-phase state) 'failed)
+    (error "ASCENT storage state requires source replay"))
+  (gerbil-ascent-trrel-uf-freeze (storage-state-owner-value state)))

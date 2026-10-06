@@ -4,7 +4,8 @@
 
 ;;; One engine's physical indexes over live all/delta vectors. Metadata plans
 ;;; stay immutable; source admission and row/version publication stay in evaluate.
-(import (only-in :gerbil-ascent/table/index-sharing gerbil-ascent-index-sharing-layout
+(import :gerbil-ascent/core/relation-view
+        (only-in :gerbil-ascent/table/index-sharing gerbil-ascent-index-sharing-layout
                  gerbil-ascent-shared-index-build gerbil-ascent-shared-index-extend!
                  gerbil-ascent-shared-index-rows)
         (only-in :gerbil-ascent/core/positive-plan gerbil-ascent-index-key
@@ -189,6 +190,11 @@
         (let* ((index (vector-ref atom 0))
                (columns (vector-ref atom 2))
                (rows (vector-ref (if use-delta? delta all) index)))
+          (if (relation-view? rows)
+            (gerbil-ascent-view-select rows columns
+              (if slot-terms
+                (gerbil-ascent-index-key (vector-ref atom 1) columns environment slot-terms)
+                (gerbil-ascent-index-key/terms (vector-ref atom 4) environment)))
           (if (or (null? columns)
                   (< (vector-ref (if use-delta? delta-size all-size)
                                  index)
@@ -278,7 +284,7 @@
                          (checked-provider-rows
                           (gerbil-ascent-physical-index-rows provider lookup key)
                           (vector-ref atom 1)
-                          (physical-index-entry-witness entry) key))))))))))))
+                          (physical-index-entry-witness entry) key)))))))))))))
       (def (advance-all-indexes! index new-rows (reverse-order? #f))
         (let (cache (and all-indexes (vector-ref all-indexes index)))
           (when (and cache (pair? new-rows))

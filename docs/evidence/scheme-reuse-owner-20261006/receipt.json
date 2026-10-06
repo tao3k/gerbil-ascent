@@ -1,0 +1,86 @@
+{
+  "qualifiedBaseHead": "9eda9fcff147d6c1152c5b341fb51b89e5e17427",
+  "scope": "Completed-closure admission moved to reuse owner; engine retains source admission, readiness and publication. Existing 43 seed algorithm lines preserved apart from indentation.",
+  "sources": {
+    "program/evaluate.ss": "d4ad106c710d044483506fd7fcfb66ff5efae6f08ceba394cd054f666e9a323e",
+    "program/reuse.ss": "1262e74be8805d13f7603f7782b6172080f219e78d4e2b3ab425973656702e0a",
+    "program/update-selection.ss": "68d9ebfa7ec6bbdaf8a1f416a34b6dd79d2beefbf8cb20f14d46b6e869d6445a",
+    "program/activation.ss": "d4189e85f55d3f2bb178e89134c19e5232ee0bd72f9a3f19a1b8116febbfccc4",
+    "program/analysis.ss": "23a8f4634df8bc1999975832fec1a357b1fa5523c8f2fcb68e74ef06c3f9da82",
+    "program/admission.ss": "3dcdbb27a9321f147556f6439171935ee0394380bb26cf6b844488d6a4650b78",
+    "program/session.ss": "e0d0c2d088bb9599d2dc68ac85f4376b984c6335bb2cb97ebb21c86376e6c20c",
+    "program/result.ss": "176b217b4bdad2f2c2aef6c420e807bc71d4eea925399713a9386960b3cf20c8",
+    "table/storage.ss": "5ebd76d7515fdab7c4f2e2ac82afe45eaf2607eff97c6346719962dc2db8484b",
+    "build.ss": "3435a28db97d4a27b174e0b142b94c9d17196a9e6dad323566db6de2dcad4d3b",
+    "t/harness/run.ss": "163ac31524333521c952c8f2ef9929e46e1f90549dad4180d46bc13c4667fff9",
+    "t/harness/native-child.ss": "2abe4cc3e429fe3e45d7c491dde943db3d5868fafe6d50962e71f2d7f3f52809",
+    "t/qualification/scheme-session-deletion-test.ss": "3e04cc053cc35c78fcebb4254f39f0b0305b722fa0560f76f571be55250ac5a2",
+    "t/qualification/ascent-storage-batch-test.ss": "0e03e956234d75583e1f4b10b5f9971f077e4d15e642a0993ab72d6a30f79cfb",
+    "t/qualification/ascent-byods-index-test.ss": "f144c332c49deaf7cc223266733d7e22e5bfd3b3e26eba17d50c4eeea5b6fd8a"
+  },
+  "trackedSchemeSourceCount": 544,
+  "trackedSchemeSourceDigest": "38bbe5e79109f8c3768ab6c4762e68e4afc2762a137ebcc3e1a3bab7e4c1f326",
+  "trackedSchemeDigestFormat": "Sorted tracked .ss paths; UTF-8 path + NUL + content SHA256 + newline",
+  "redCI": {
+    "head": "4bcdb4cababf98339766bd35c79e820cacc90f42",
+    "jobUrl": "https://github.com/tao3k/gerbil-ascent/actions/runs/37489245799/job/112357292683",
+    "error": "GERBIL-SCHEME-MOD-R002 program/evaluate.ss carries 1006 effective lines and 4 definitions",
+    "failedStep": "Build Scheme package before test execution",
+    "logPath": "/private/tmp/ascent-ci-4bcdb4c-scheme.log",
+    "logSha256": "87d05c29c1a81e30e925b806dd522ceccbef036cd82fbe5d8e6eba3a0ff7f2fc"
+  },
+  "policy": {
+    "command": "GERBIL_PATH=\"$PWD/.cache/ascent/sdk\" just check-policy",
+    "exitCode": 0,
+    "errors": 0,
+    "findings": 16,
+    "logPath": "/private/tmp/ascent-reuse-owner-policy-final.log",
+    "logSha256": "f983b9f7d88a8b8c8e134c706fbc301de92cb1cb85107d811c51ebeb2090f26b"
+  },
+  "native": [
+    {
+      "module": "t/qualification/scheme-session-deletion-test.ss",
+      "command": "GERBIL_PATH=\"$PWD/.cache/ascent/sdk\" just test-native t/qualification/scheme-session-deletion-test.ss",
+      "exitCode": 0,
+      "cases": 26,
+      "explicitOK": true,
+      "moduleOK": true,
+      "harnessOK": true,
+      "logPath": "/private/tmp/ascent-reuse-owner-deletion.log",
+      "logSha256": "6a5b17ddf1a53a3f0b6bfd188a8a503fb901fdb29a0b53c254cf5379c1956216"
+    },
+    {
+      "module": "t/qualification/ascent-storage-batch-test.ss",
+      "command": "GERBIL_PATH=\"$PWD/.cache/ascent/sdk\" just test-native t/qualification/ascent-storage-batch-test.ss",
+      "exitCode": 0,
+      "cases": 18,
+      "explicitOK": true,
+      "moduleOK": true,
+      "harnessOK": true,
+      "logPath": "/private/tmp/ascent-reuse-owner-storage.log",
+      "logSha256": "4948173b6fe19558b456371690c96d0f9498187afcbb9493f8d938de51b4a15d"
+    },
+    {
+      "module": "t/qualification/ascent-byods-index-test.ss",
+      "command": "GERBIL_PATH=\"$PWD/.cache/ascent/sdk\" just test-native t/qualification/ascent-byods-index-test.ss",
+      "exitCode": 0,
+      "cases": 8,
+      "explicitOK": true,
+      "moduleOK": true,
+      "harnessOK": true,
+      "logPath": "/private/tmp/ascent-reuse-owner-byods.log",
+      "logSha256": "93cd90e611c8bd10d57a0953996ebac4964ff78320b37d3d9dede3d06f905212"
+    }
+  ],
+  "totalNativeCases": 52,
+  "paper": {
+    "url": "https://kmicinski.com/assets/byods.pdf",
+    "locator": "Section 3.3, PDF pages 7-9",
+    "inference": "Enumerated closure reuse does not establish reconstruction of arbitrary Provider private state; exact Set or stable lattice reuse remains separately admitted."
+  },
+  "limits": [
+    "Focused local native checks, not full inventory or exact-head remote CI success.",
+    "No new Lean/TLA theorem or performance claim.",
+    "Stable nested values and external callback effects retain existing admission restrictions."
+  ]
+}

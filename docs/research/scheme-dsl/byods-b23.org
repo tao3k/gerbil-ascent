@@ -274,3 +274,32 @@ Session recovery and raw algorithm regression. This extends the concrete
 publication protocol; it does not prove arbitrary callback purity, private
 state rollback or full native refinement. Added readiness work has no measured
 performance benefit attributed to it.
+
+
+* Completed closure reuse has a different state obligation (2026-10-06)
+
+B23 §3.3, PDF pp. 7–9, relates each represented total/delta pair to its
+concretization. It does not establish that copying enumerated closure rows
+reconstructs an arbitrary Provider's private mutable state. In this Scheme
+implementation, =gerbil-ascent-update-eligible?= admits exact Set storage or
+registered stable lattice joins, exact hash indexes, and stable scalar values
+and callbacks. =eqrel=, =trrel=, =trrel_uf= and custom storage stay outside that
+completed-closure reuse admission; Session reconstructs them from source.
+This is an implementation boundary inferred from the paper's premises, not
+a claim that the paper proves the engine's failure recovery protocol.
+
+=program/reuse.ss= now owns completed-row seeding as well as reuse capsule
+admission. A private =closure-seed-state= groups prospective engine buffers.
+The seed checks every retained row, counts unique derived rows against the
+prospective source membership, enforces derived/output budgets, and seeds
+both total and initial delta. Lattice membership uses final joined source
+rows, so source joins do not consume the reused derived budget. The evaluator
+keeps engine readiness and whole-round publication. No completed result or
+cached analysis retains this mutable buffer frame.
+
+This owner split repairs a concrete build gate: =program/evaluate.ss= reached
+1006 effective lines and violated =GERBIL-SCHEME-MOD-R002= before tests could
+run. The algorithm, row order, field callback behavior and budget checks are
+preserved. Existing exhaustive deletion/dependency and lattice-budget Cases
+remain the semantic gate; native storage Cases cover the adjacent readiness
+boundary. See [[file:../../evidence/scheme-reuse-owner-20261006/receipt.json][the revision-bound receipt]].

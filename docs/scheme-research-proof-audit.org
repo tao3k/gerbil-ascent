@@ -1756,3 +1756,27 @@ index construction and Session actors. All six native/explicit completion
 markers were present and no watchdog failed. This focused integration result
 is recorded separately from the earlier full inventory; the latest GitHub
 revision still requires its full CI gates.
+
+
+* Completed reuse admission owner and Scheme build gate (2026-10-06)
+
+At =4bcdb4c= the Scheme CI build failed before any tests:
+=GERBIL-SCHEME-MOD-R002= reported 1006 effective lines in
+=program/evaluate.ss=. After integrating latest revision =9eda9fc=, completed
+row seeding moved to =program/reuse.ss= with a private buffer frame. The 43
+algorithm lines, including row order, membership, lattice keys and budget
+checks, were preserved apart from indentation. Engine readiness and complete
+round publication remain in the evaluator.
+
+The final source freeze passed the policy build with zero errors and 52
+native Cases: deletion/reuse 26, storage admission 18, BYODS composition 8.
+Every native command exited zero with =MODULE-OK=, =HARNESS-OK= and explicit
+=OK=. Deletion covers exhaustive three-node dependencies and consecutive
+withdrawals, lattice reused budget and opaque/mutable reuse refusal. The
+[[file:evidence/scheme-reuse-owner-20261006/receipt.json][receipt]] binds these checks to source and log digests. These are focused
+local results; full remote CI must be read at the new pushed revision.
+
+The [[file:research/scheme-dsl/byods-b23.org][B23 follow-up]] distinguishes concretized total/delta facts from private
+Provider reconstruction. Custom and graph storage do not qualify for completed
+closure reuse. No theorem owner, public Provider protocol or performance
+qualification changed in this slice.

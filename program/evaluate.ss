@@ -22,8 +22,8 @@
         (only-in "index.ss" gerbil-ascent-make-row-indexes row-indexes-rows row-indexes-advance! row-indexes-plan-rules! row-indexes-plan-actions!)
         (only-in "types.ss" GerbilAscentSessionContract)
         (only-in "reuse.ss" gerbil-ascent-prepare-native-reuse
-                 gerbil-ascent-activate-rules gerbil-ascent-activate-selected-rules native-reuse?
-                 native-reuse-result native-reuse-affected)
+                 gerbil-ascent-activate-rules gerbil-ascent-activate-selected-rules
+                 gerbil-ascent-seed-native-reuse! make-closure-seed-state native-reuse-affected)
         (only-in "analysis.ss" gerbil-ascent-program-analysis
                  gerbil-ascent-program-schema)
         (only-in :gerbil-ascent/core/rule-semantics gerbil-ascent-lattice-feeds-relation?
@@ -243,51 +243,13 @@
             (vector-set! delta-size index
               (vector-ref all-size index))
             (initialize (cdr remaining) (+ index 1)))))
-      ;; Source admission above uses the real prospective input and budgets.
-      ;; Seed only independent completed components; never seed affected SCCs.
+      ;; Reuse owns completed-row admission; these buffers still belong only
+      ;; to the prospective engine. A failed seed cannot publish a Session.
       (when reuse
-        (unless (native-reuse? reuse) (error "invalid native reuse capsule"))
-        (let seed ((index 0))
-          (when (< index count)
-            (unless (vector-ref (native-reuse-affected reuse) index)
-              (let* ((rows ((.ref (native-reuse-result reuse) 'rows-of) (vector-ref names index)))
-                     (base (vector-ref all index))
-                     (check (vector-ref field-checkers index))
-                     ;; Set admission already populated this source membership.
-                     ;; Lattice admission joins source rows by key instead, so
-                     ;; build membership from its final joined source rows.
-                     (base-present
-                      (and (not check)
-                       (if (vector-ref lattice-joins index)
-                        (let (membership (make-hash-table))
-                          (for-each (lambda (row) (hash-put! membership row #t))
-                                    base)
-                          membership)
-                        (vector-ref seen index))))
-                     (present (make-hash-table)))
-                (for-each
-                 (lambda (row)
-                   (unless (and (list? row) (= (length row) (vector-ref arity index)))
-                     (error "invalid completed reuse row"))
-                   (when check (check row))
-                   (unless (hash-get present row)
-                     (hash-put! present row #t)
-                     ;; User field callbacks retain the original equality walk.
-                     (unless (if base-present (hash-get base-present row) (member row base))
-                       (set! derived-count (+ derived-count 1))))) rows)
-                (when (or (> derived-count derived-limit)
-                          (> (+ source-materialized-count derived-count) output-limit))
-                  (error "ASCENT reused closure fact budget exceeded"))
-                (when (vector-ref lattice-joins index)
-                  (let (keyed (make-hash-table))
-                    (for-each (lambda (row) (hash-put! keyed (gerbil-ascent-lattice-key row) row)) rows)
-                    (vector-set! lattice-rows index keyed)))
-                (vector-set! all index (reverse rows))
-                (vector-set! seen index present)
-                (vector-set! delta index (vector-ref all index))
-                (vector-set! all-size index (length rows))
-                (vector-set! delta-size index (length rows))))
-            (seed (+ index 1)))))
+        (set! derived-count
+          (gerbil-ascent-seed-native-reuse! reuse schema
+            (make-closure-seed-state all seen delta all-size delta-size lattice-rows)
+            source-materialized-count derived-limit output-limit)))
       (let* ((storage-owners (gerbil-ascent-storage-owned-states storage-states))
              (analysis
               ;; Source-only replacement preserves declarations and rules.

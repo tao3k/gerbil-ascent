@@ -72,6 +72,7 @@
     "applications/steensgaard"
     "applications/polonius"
     "applications/polonius-paths"
+    "applications/finite-flow-program"
     "core/binary-program"
     "candidate/closure"
     "candidate/datum"

@@ -18,3 +18,15 @@ example : ((512 + 7) / 8) * 2048 = 131072 := by decide
 #print axioms merged_difference_exact
 #print axioms target_blocker_removes_fresh
 #print axioms payload_bound
+
+example : transfer (maskJoin (1 : BitVec 65) 18446744073709551616) 1 =
+    (18446744073709551616 : BitVec 65) := by decide
+example : transfer (3 : BitVec 2) (maskJoin 1 2) = 0 := by decide
+#print axioms maskJoin_associative
+#print axioms maskJoin_commutative
+#print axioms maskJoin_idempotent
+#print axioms gamma_join
+#print axioms gamma_transfer
+#print axioms transfer_join
+#print axioms transfer_monotone
+#print axioms transfer_blockers_antitone

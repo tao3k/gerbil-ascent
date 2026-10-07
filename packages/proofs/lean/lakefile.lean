@@ -13,7 +13,7 @@ require LeanPoo from git
 @[default_target]
 lean_lib AscentProof where
   roots := #[`AscentProof, `AtomicBinding, `CappedArithmetic, `DependencyInvalidation, `DescriptorScope,
-             `ProviderRectangles, `ProviderRouting, `ProviderEncoding, `ProviderAdmission, `ProviderIteration, `LatticeProjection, `StrictDependencies, `PendingKeys, `LatticeAdmission, `PipeCapture, `FunctionalDependency, `EquivalenceComponents, `DirectedFrontier,
+             `PoloniusInitialization, `ProviderRectangles, `ProviderRouting, `ProviderEncoding, `ProviderAdmission, `ProviderIteration, `LatticeProjection, `StrictDependencies, `PendingKeys, `LatticeAdmission, `PipeCapture, `FunctionalDependency, `EquivalenceComponents, `DirectedFrontier,
              `FiniteHeight, `FiniteOperators, `LexicalLowering,
              `NativeBitmapWorklist, `NativeGraphWorklist,
              `PositiveNonmembership,
@@ -22,4 +22,4 @@ lean_lib AscentProof where
              `RuleGraphClosure, `RuleBodyFrame, `PositiveSlots, `PositiveTraversal, `IndexedPositiveTraversal, `IndexedIteration, `ComponentClosure, `GroundedBinding, `ComponentProjection, `SnapshotClosure, `ProviderFrontier, `SemiNaive, `PositiveConsequence, `TransitiveComponents]
 
 lean_lib AscentProofTests where
-  roots := #[`Tests.AscentProofTests, `Tests.RuleBodyFrameTests, `Tests.PositiveSlotsTests, `Tests.PositiveTraversalTests, `Tests.PositiveConsequenceTests, `Tests.IndexedPositiveTraversalTests, `Tests.IndexedIterationTests, `Tests.ComponentClosureTests, `Tests.GroundedBindingTests, `Tests.ComponentProjectionTests, `Tests.SnapshotClosureTests, `Tests.EquivalenceComponentsTests, `Tests.DirectedFrontierTests, `Tests.ProviderRectanglesTests, `Tests.ProviderRoutingTests, `Tests.TransitiveComponentsTests, `Tests.ProviderEncodingTests, `Tests.ProviderAdmissionTests, `Tests.ProviderIterationTests, `Tests.LatticeProjectionTests, `Tests.StrictDependenciesTests, `Tests.PendingKeysTests, `Tests.LatticeAdmissionTests, `Tests.PipeCaptureTests]
+  roots := #[`Tests.PoloniusInitializationTests, `Tests.AscentProofTests, `Tests.RuleBodyFrameTests, `Tests.PositiveSlotsTests, `Tests.PositiveTraversalTests, `Tests.PositiveConsequenceTests, `Tests.IndexedPositiveTraversalTests, `Tests.IndexedIterationTests, `Tests.ComponentClosureTests, `Tests.GroundedBindingTests, `Tests.ComponentProjectionTests, `Tests.SnapshotClosureTests, `Tests.EquivalenceComponentsTests, `Tests.DirectedFrontierTests, `Tests.ProviderRectanglesTests, `Tests.ProviderRoutingTests, `Tests.TransitiveComponentsTests, `Tests.ProviderEncodingTests, `Tests.ProviderAdmissionTests, `Tests.ProviderIterationTests, `Tests.LatticeProjectionTests, `Tests.StrictDependenciesTests, `Tests.PendingKeysTests, `Tests.LatticeAdmissionTests, `Tests.PipeCaptureTests]

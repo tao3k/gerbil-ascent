@@ -69,6 +69,7 @@
     "program/actor-session"
     "program/interface"
     "applications/steensgaard"
+    "applications/polonius"
     "core/binary-program"
     "candidate/closure"
     "candidate/datum"

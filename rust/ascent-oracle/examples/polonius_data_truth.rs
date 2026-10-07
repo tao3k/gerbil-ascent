@@ -282,9 +282,9 @@ fn main() -> io::Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    struct Inputs(std::path::PathBuf);
+    pub(super) struct Inputs(pub(super) std::path::PathBuf);
     impl Inputs {
-        fn empty() -> Self {
+        pub(super) fn empty() -> Self {
             let nonce = std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)
                 .unwrap()
@@ -316,7 +316,7 @@ mod tests {
             }
             Self(directory)
         }
-        fn write(&self, name: &str, data: &str) {
+        pub(super) fn write(&self, name: &str, data: &str) {
             fs::write(self.0.join(format!("{name}.facts")), data).unwrap();
         }
     }
@@ -399,3 +399,7 @@ mod tests {
         }
     }
 }
+
+#[cfg(test)]
+#[path = "polonius_data_truth/controls.rs"]
+mod control_tests;

@@ -819,3 +819,83 @@ The complete Scheme Polonius application, its representation refinement and
 matched resource benefits remain open. PageRank's lawful numeric contribution
 maps and LLVM's complete parsing/context-sensitive analysis remain subsequent
 application gates. MR/MRR and new paid model calls remain deferred.
+
+* Complete native Polonius rule chain and initialization laws (2026-10-07)
+
+=applications/polonius.ss= now constructs one ordinary Program containing the
+complete Polonius 0.13.0 Naive initialization, liveness, placeholder preprocessing
+and borrow-checking rules. All eighteen raw input relations are required,
+including empty relations; duplicate, missing and unknown names are rejected.
+The Program owns no mutable application state. Existing exact relation storage,
+stratification, actor cancellation and immutable result publication contracts
+apply. The two origin-inequality predicates are actual algorithmic comparisons,
+not model instructions or precomputed answers.
+
+The public input =loan_invalidated_at= retains =(Point, Loan)= order, while
+=errors= and =loan_live_at= expose =(Loan, Point)=. The input remains observable
+as a source relation; the upstream never-populated output carrier is not
+presented as a computed empty logical relation. =subset= excludes diagonal
+pairs at both seed and consequence insertion. =placeholder_origin= is derived from =universal_region=, not from the first
+column of =placeholder=. =known_subset= is independently closed before the
+negative placeholder-error test. Universal origins become
+live only at CFG endpoints, exactly as in the selected reference preprocessing.
+
+The committed =t/qualification/fixtures/polonius/controls.sexp= carries ten
+complete input/result pairs: the combined rule chain, source-point loan kills,
+raw invalidation field permutation, child-path direction, cyclic known
+placeholder subsets, dead origins, uninitialized drops, conflicting move and
+assignment seeds, isolated point scopes, and empty input. Each pair contains
+all eighteen sources and thirteen computed observations, including every error
+relation. Rust's restricted data reader executes no Scheme; it reloads the raw
+facts into the pinned independent engine, recomputes Naive, exports the public
+observations and compares every frozen result byte for byte. Scheme compares
+exact set membership and cardinality through both published row and visitor
+interfaces, at one and two workers. Source replacement retains the old cut;
+actor cancellation must fail before a clean retry matches all observations.
+
+The selected semantics here are explicitly =Naive=. Full DatafrogOpt reference
+observations from the previous section remain a separate algorithm-qualified
+baseline; intermediate dumps are not silently treated as interchangeable.
+The previous reference receipt binds its recorded runner and binary to the
+previous commit. Adding reference tests does not rewrite that historical
+measurement or imply a new full-data performance sample.
+
+The dead-origin control found and corrected a translation defect before
+acceptance: deriving =placeholder_origin= from =placeholder= instead of
+=universal_region= produced three spurious subset errors. The initial combined
+control had identical origin rosters and could not distinguish those rules.
+The two input rosters now differ in a permanent regression control; the
+independent reference observations were retained unchanged.
+
+** Lean and TLA+ responsibilities
+
+=PoloniusInitialization.lean= proves four laws without axioms:
+
+1. Every propagated exit fact is exactly a finite CFG path from a seed, with
+   blockers checked at each propagated successor.
+2. At a blocked target, an exit fact exists exactly when the target itself is
+   a seed. A move and assignment at the same point therefore need not erase
+   either independently seeded may fact.
+3. A seed-free cyclic CFG cannot invent initialization or uninitialization.
+4. Enlarging blockers can only remove propagated exit facts.
+
+Initialization instantiates these laws once with assignment seeds and move
+blockers, and once with move seeds and assignment blockers. Tests reside under
+=packages/proofs/lean/Tests=. These are relation-level proofs, not extraction
+proofs of the native Program compiler, all Polonius rules, or bitmap storage.
+The existing Session/actor publication and cancellation TLA+ models remain the
+protocol owners. No new application publication protocol was introduced, so
+copying those models into an application-specific state machine would duplicate
+their obligations. A future compact representation must extend protocol
+verification only where it introduces domain/index publication transitions.
+
+** Acceptance boundary
+
+This closes native implementation and matched semantic controls for the complete
+Naive rule chain. It does not close the full =clap-rs= Scheme run: its
+291,826,811-row uninitialized-path output still requires admitted compact
+storage, exact indexed selection and delta/refinement laws. No full-input native
+speedup, memory improvement or whole-BYODS closure is claimed. The next coupled
+implementation gate is that representation and its proofs, followed by the
+complete source-bound application comparison. PageRank and LLVM remain on the
+same application plan; MR/MRR integration remains deferred.

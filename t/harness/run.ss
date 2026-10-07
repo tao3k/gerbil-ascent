@@ -21,6 +21,7 @@
 (def parallel-modules
   '("t/qualification/ascent-aggregate-program-test.ss"
     "t/qualification/ascent-steensgaard-test.ss"
+    "t/qualification/ascent-polonius-test.ss"
     "t/qualification/ascent-actor-round-test.ss"
     "t/qualification/ascent-actor-session-test.ss"
     "t/qualification/ascent-binary-program-test.ss"

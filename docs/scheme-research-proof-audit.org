@@ -2474,3 +2474,23 @@ and artifact admission; it is not a continuously sampled live-space proof.
 Native extraction into the abstract eqrel laws, arbitrary derived traversal
 order, universal complexity and unbounded actor refinement remain obligations.
 Lean/TLA theorem ownership remains with the proof thread.
+
+** Latest PR integration and native build capacity (2026-10-07)
+
+Integration onto =618a2b1= retains the index construction-history proofs,
+independent symmetric graph tests and canonical Eqrel frozen worker reads.
+The [[file:evidence/scheme-eqrel-publication-20261007/integration.json][integration receipt]] supersedes preintegration implementation status.
+The final native pool passes 834 Cases in 87 modules. Full OpenJDK count
+agreement remains aggregate admission; no full tuple or universal complexity
+claim follows from it.
+
+Numeric test-pool capacity previously bypassed build-core initialization.
+The compiler now initializes =GERBIL_BUILD_CORES= for every entry, honoring
+explicit overrides. Independent Suite compiler children use the existing
+bounded actor pool, private specifications/dependency caches, and one 1 GiB
+heap each. Production and support layers complete before Suite admission.
+Four Suite processes share the 12-core budget at three cores per child; the
+linked native compiler uses the total budget. Two Python glue regressions
+exercise the real compiler child with explicit and missing overrides.
+The observed integrated build/test run completes in about 356 seconds using
+existing cached modules. This is not a controlled cold-build speedup estimate.

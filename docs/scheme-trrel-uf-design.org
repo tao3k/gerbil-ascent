@@ -1106,7 +1106,7 @@ arbitrary lattice concretizations. The paper was reread for this integration.
 | Obligation | Native owner and discriminator | Existing formal correspondence | Remaining refinement obligation |
 |------------+--------------------------------+--------------------------------+--------------------------------|
 | Owned immutable members and exact pair count | trrel-uf freeze / old cuts after SCC merge; row and parts exports agree | ProviderRectangles count_exact, component_plan_separate, component_plan_nodup | Extract native member ownership, candidate root-pair completeness and decoding |
-| Every implied fact enters delta exactly once | trrel-uf insert / independent Floyd checks for insertion prefixes; retained ordered delta callbacks | DirectedFrontier uf_emitted_exact; ProviderRectangles component_plan_reach_uniform, uf_selected_exact, successive_union_exact | Relate actual candidate rectangles and root homogeneity to Lean parameters |
+| Every implied fact enters delta exactly once | trrel-uf insert / independent Floyd checks for insertion prefixes; retained ordered delta callbacks and frozen-kernel ordered frontier control | DirectedFrontier uf_emitted_exact; ProviderRectangles component_plan_uf_uniform, component_uf_selected_exact, root_plan_exact, root_plan_nodup, successive_union_exact | Extract native SCC/member lists into the supported root plan; refine candidate construction and private adjacency |
 | Key access is a complete ordered filter | relation-view routing / scan-versus-indexed keys, repeated and reordered columns, false group keys and equal-but-distinct host members | ProviderRectangles lookup_exact covers the abstract first coordinate | Prove generic routing bucket coverage, stored-value identity and parts binder correspondence |
 | Publication preserves old views and accepted sources on failure | view-state, evaluate, Session / prospective callback failure followed by recovery and successful retry | ProviderViews FrozenRead, AtomicPublication, LogicalBudget | Connect multi-relation staging and journal cuts to model steps |
 | Readers finish before the owner advances | actor-round / canceled run followed by successful retry and grouped worker controls | ReaderLifetime ReaderAlive, CreditBalance, ReaderCompletion under per-reader weak fairness | Native task/reader credit/drain correspondence and VM scheduling refinement |
@@ -1120,9 +1120,10 @@ separate obligations in =scheme-paper-closure.org=. This thread owns Scheme,
 consumer tests and correspondence documentation; the theorem thread owns the
 Lean/TLA implementations.
 
-The previous receipt remains a historical source cut. The follow-up receipt
-must bind all current Scheme sources, source/native/oracle gates, individual
-paired costs and exact-head CI without substituting earlier passes.
+The previous receipt remains a historical source cut. The runtime closure
+receipt binds all current Scheme sources, source/native/oracle gates and
+individual paired costs. Exact published-head CI is checked separately;
+earlier passes do not substitute for this source cut.
 
 ** Plan-selected routing and native differential entry
 
@@ -1165,3 +1166,9 @@ The new ordered-frontier Case compares every insertion with the frozen
 =c131042= UF kernel across activation, partial SCC unions, external bridges,
 grouped keys and zero-budget rejection; held frozen cuts remain stable. This
 is an implementation discriminator, not a new extracted adjacency theorem.
+
+The first four-process full native run stopped at the existing opaque
+64-graph reasoning Case. It now reports each completed eight-graph group only
+after both receipt-status and independent closure assertions succeed. This
+retains the same 64 masks and five-second deadline; the rejected run is excluded
+from the final acceptance receipt.

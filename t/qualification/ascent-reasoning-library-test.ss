@@ -656,5 +656,8 @@
              (check-equal? (reasoning-receipt-status receipt) 'complete)
              (check-equal?
               (same-rows? (reasoning-receipt-rows receipt)
-                          (reference-closure edges)) #t)))
+                          (reference-closure edges)) #t)
+             (when (zero? (modulo (+ mask 1) 8))
+               (displayln "REASONING-GRAPHS-CHECKED " (+ mask 1) "/64")
+               (force-output))))
          (iota 64))))))

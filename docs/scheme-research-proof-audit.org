@@ -2111,3 +2111,28 @@ execution scheduling in this environment, not an intrinsic Lean theorem or
 TLC search speedup, statistical result, or a cold GitHub benchmark. Concurrent
 processes use additional resources. The separate native Scheme CI lane remains
 the complete workflow's dominant cost. See [[file:evidence/scheme-provider-views-20261007/formal-execution-cost.json][the cost and equivalence receipt]].
+
+* Isolated TLC standard module extraction (2026-10-07)
+
+The exact =bef6caf= GitHub formal job failed with exit 150 after the complete
+90-job Lean build passed. =PositiveNonmembershipSession= reported an unexpected
+EOF while parsing =/tmp/TLC.tla=. The concurrent lanes were sharing the JVM's
+default temporary directory. The pinned checker's =SimpleFilenameToStream.read=
+extracts standard modules to =TMPDIR/module-name= with =FileOutputStream= and
+=deleteOnExit=; =FilenameToStream.TMPDIR= reads =java.io.tmpdir=. Concurrent JVMs
+can therefore truncate or delete each other's extracted modules. Source:
+[[https://raw.githubusercontent.com/tlaplus/tlaplus/v1.7.4/tlatools/org.lamport.tlatools/src/util/SimpleFilenameToStream.java][pinned upstream resolver]], verified against the exact pinned jar bytecode.
+
+Every default JVM-backed TLA leaf gate now sets =java.io.tmpdir= to its existing
+private temporary directory. Its configurations, state directories and standard
+module extraction consequently belong to the same invocation. Sequential JVMs
+inside a leaf share that directory only after the preceding JVM has exited.
+The two verification lanes remain concurrent and their failure join remains
+strict. External =TLC_BIN= implementations retain their own temporary-directory
+responsibility; the standard launcher uses the pinned jar. This changes no
+model, bound, property, worker count, timeout or heap setting.
+
+The [[file:evidence/scheme-provider-views-20261007/tlc-extraction-isolation.json][isolation receipt]] binds the observed remote failure, resolver mechanism,
+private extraction paths and complete positive/negative gate results. Earlier
+parallel timing probes are historical measurements and do not establish
+collision-free execution for their old launcher.

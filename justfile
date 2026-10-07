@@ -601,6 +601,9 @@ check-nonmembership-formal: check-lean-proofs
     [[ "$cutoff" =~ ^[0-9]+$ ]] && (( cutoff >= 2 )) || { echo 'TLC generation cutoff must be an integer >= 2' >&2; exit 2; }
     temp="$(mktemp -d)"
     trap 'rm -rf "$temp"' EXIT
+    # TLC extracts standard modules under java.io.tmpdir; concurrent JVMs
+    # must not truncate/delete each other's module files.
+    if [[ "${tlc[0]}" == java ]]; then tlc=(java "-Djava.io.tmpdir=$temp" "${tlc[@]:1}"); fi
     for model in PositiveNonmembershipSession SessionTransaction NativeSessionPublication; do
       sed "s/TLCGenerationCutoff = [0-9][0-9]*/TLCGenerationCutoff = $cutoff/" "packages/proofs/tla/$model.cfg" > "$temp/$model.cfg"
       echo "TLA-CHECK $model generation-cutoff=$cutoff (TLC enumeration only)"
@@ -646,6 +649,9 @@ check-actor-round-formal: check-nonmembership-formal
     if [[ -n "${TLC_BIN:-}" ]]; then tlc=("$TLC_BIN"); else tlc=(java -XX:+UseParallelGC -cp "${TLC_JAR:-.cache/ascent/tools/tla2tools-v1.7.4.jar}" tlc2.TLC); fi
     temp=$(mktemp -d)
     trap 'rm -rf "$temp"' EXIT
+    # TLC extracts standard modules under java.io.tmpdir; concurrent JVMs
+    # must not truncate/delete each other's module files.
+    if [[ "${tlc[0]}" == java ]]; then tlc=(java "-Djava.io.tmpdir=$temp" "${tlc[@]:1}"); fi
     generations="${ASCENT_ACTOR_TLC_GENERATION_CUTOFF:-2}"
     rounds="${ASCENT_ACTOR_TLC_ROUND_CUTOFF:-4}"
     [[ "$generations" =~ ^[0-9]+$ && "$rounds" =~ ^[0-9]+$ && "$generations" -ge 2 && "$rounds" -ge 3 ]]
@@ -669,6 +675,9 @@ check-actor-credit-formal:
     if [[ -n "${TLC_BIN:-}" ]]; then tlc=("$TLC_BIN"); else tlc=(java -XX:+UseParallelGC -cp "${TLC_JAR:-.cache/ascent/tools/tla2tools-v1.7.4.jar}" tlc2.TLC); fi
     temp=$(mktemp -d)
     trap 'rm -rf "$temp"' EXIT
+    # TLC extracts standard modules under java.io.tmpdir; concurrent JVMs
+    # must not truncate/delete each other's module files.
+    if [[ "${tlc[0]}" == java ]]; then tlc=(java "-Djava.io.tmpdir=$temp" "${tlc[@]:1}"); fi
     for capacity in 1 2 3; do
       sed "s/Capacity = 2/Capacity = $capacity/" packages/proofs/tla/ActorRoundCredits.cfg > "$temp/$capacity.cfg"
       "${tlc[@]}" -workers 1 -config "$temp/$capacity.cfg" -metadir "$temp/$capacity" packages/proofs/tla/ActorRoundCredits.tla
@@ -687,6 +696,9 @@ check-actor-pool-formal:
     if [[ -n "${TLC_BIN:-}" ]]; then tlc=("$TLC_BIN"); else tlc=(java -XX:+UseParallelGC -cp "${TLC_JAR:-.cache/ascent/tools/tla2tools-v1.7.4.jar}" tlc2.TLC); fi
     temp=$(mktemp -d)
     trap 'rm -rf "$temp"' EXIT
+    # TLC extracts standard modules under java.io.tmpdir; concurrent JVMs
+    # must not truncate/delete each other's module files.
+    if [[ "${tlc[0]}" == java ]]; then tlc=(java "-Djava.io.tmpdir=$temp" "${tlc[@]:1}"); fi
     for capacity in 1 2 3; do
       sed "s/Capacity = 2/Capacity = $capacity/" packages/proofs/tla/ActorTestPool.cfg > "$temp/$capacity.cfg"
       "${tlc[@]}" -workers 1 -config "$temp/$capacity.cfg" -metadir "$temp/$capacity" packages/proofs/tla/ActorTestPool.tla
@@ -1301,6 +1313,9 @@ check-actor-session-formal:
     if [[ -n "${TLC_BIN:-}" ]]; then tlc=("$TLC_BIN"); else tlc=(java -XX:+UseParallelGC -cp "${TLC_JAR:-.cache/ascent/tools/tla2tools-v1.7.4.jar}" tlc2.TLC); fi
     temp=$(mktemp -d)
     trap 'rm -rf "$temp"' EXIT
+    # TLC extracts standard modules under java.io.tmpdir; concurrent JVMs
+    # must not truncate/delete each other's module files.
+    if [[ "${tlc[0]}" == java ]]; then tlc=(java "-Djava.io.tmpdir=$temp" "${tlc[@]:1}"); fi
     generations="${ASCENT_SESSION_TLC_GENERATION_CUTOFF:-4}"
     [[ "$generations" =~ ^[0-9]+$ && "$generations" -ge 3 ]]
     sed "s/TLCGenerationCutoff = [0-9][0-9]*/TLCGenerationCutoff = $generations/" packages/proofs/tla/ActorSession.cfg > "$temp/normal.cfg"
@@ -1321,6 +1336,9 @@ check-ready-components-formal:
     if [[ -n "${TLC_BIN:-}" ]]; then tlc=("$TLC_BIN"); else tlc=(java -XX:+UseParallelGC -cp "${TLC_JAR:-.cache/ascent/tools/tla2tools-v1.7.4.jar}" tlc2.TLC); fi
     temp=$(mktemp -d)
     trap 'rm -rf "$temp"' EXIT
+    # TLC extracts standard modules under java.io.tmpdir; concurrent JVMs
+    # must not truncate/delete each other's module files.
+    if [[ "${tlc[0]}" == java ]]; then tlc=(java "-Djava.io.tmpdir=$temp" "${tlc[@]:1}"); fi
     for capacity in 1 2 3; do
       sed "s/Capacity = 2/Capacity = $capacity/" packages/proofs/tla/ReadyComponents.cfg > "$temp/$capacity.cfg"
       "${tlc[@]}" -workers 1 -config "$temp/$capacity.cfg" -metadir "$temp/$capacity" packages/proofs/tla/ReadyComponents.tla
@@ -1344,6 +1362,9 @@ check-component-index-formal:
     if [[ -n "${TLC_BIN:-}" ]]; then tlc=("$TLC_BIN"); else tlc=(java -XX:+UseParallelGC -cp "${TLC_JAR:-.cache/ascent/tools/tla2tools-v1.7.4.jar}" tlc2.TLC); fi
     temp=$(mktemp -d)
     trap 'rm -rf "$temp"' EXIT
+    # TLC extracts standard modules under java.io.tmpdir; concurrent JVMs
+    # must not truncate/delete each other's module files.
+    if [[ "${tlc[0]}" == java ]]; then tlc=(java "-Djava.io.tmpdir=$temp" "${tlc[@]:1}"); fi
     "${tlc[@]}" -workers 1 -config packages/proofs/tla/ComponentIndex.cfg -metadir "$temp/correct" packages/proofs/tla/ComponentIndex.tla
     for mutation in order early failed alias foreign; do
       sed "s/Mutation = \"none\"/Mutation = \"$mutation\"/" packages/proofs/tla/ComponentIndex.cfg > "$temp/$mutation.cfg"
@@ -1361,6 +1382,9 @@ check-provider-frontier-formal:
     if [[ -n "${TLC_BIN:-}" ]]; then tlc=("$TLC_BIN"); else tlc=(java -XX:+UseParallelGC -cp "${TLC_JAR:-.cache/ascent/tools/tla2tools-v1.7.4.jar}" tlc2.TLC); fi
     temp=$(mktemp -d)
     trap 'rm -rf "$temp"' EXIT
+    # TLC extracts standard modules under java.io.tmpdir; concurrent JVMs
+    # must not truncate/delete each other's module files.
+    if [[ "${tlc[0]}" == java ]]; then tlc=(java "-Djava.io.tmpdir=$temp" "${tlc[@]:1}"); fi
     "${tlc[@]}" -workers 1 -config packages/proofs/tla/ProviderFrontier.cfg -metadir "$temp/good" packages/proofs/tla/ProviderFrontier.tla
     sed 's/InitialInputs = {}/InitialInputs <- SeededInputs/' packages/proofs/tla/ProviderFrontier.cfg > "$temp/seeded.cfg"
     "${tlc[@]}" -workers 1 -config "$temp/seeded.cfg" -metadir "$temp/seeded" packages/proofs/tla/ProviderFrontier.tla
@@ -1389,6 +1413,9 @@ check-transitive-components-formal:
     if [[ -n "${TLC_BIN:-}" ]]; then tlc=("$TLC_BIN"); else tlc=(java -XX:+UseParallelGC -cp "${TLC_JAR:-.cache/ascent/tools/tla2tools-v1.7.4.jar}" tlc2.TLC); fi
     temp=$(mktemp -d)
     trap 'rm -rf "$temp"' EXIT
+    # TLC extracts standard modules under java.io.tmpdir; concurrent JVMs
+    # must not truncate/delete each other's module files.
+    if [[ "${tlc[0]}" == java ]]; then tlc=(java "-Djava.io.tmpdir=$temp" "${tlc[@]:1}"); fi
     "${tlc[@]}" -workers 1 -config packages/proofs/tla/TransitiveComponents.cfg -metadir "$temp/good" packages/proofs/tla/TransitiveComponents.tla
     for mutation in split stale reject raw diagonal old; do
       invariant=SCCExact
@@ -1410,6 +1437,9 @@ check-provider-views-formal:
     if [[ -n "${TLC_BIN:-}" ]]; then tlc=("$TLC_BIN"); else tlc=(java -XX:+UseParallelGC -Xmx1g -cp "${TLC_JAR:-.cache/ascent/tools/tla2tools-v1.7.4.jar}" tlc2.TLC); fi
     temp=$(mktemp -d)
     trap 'rm -rf "$temp"' EXIT
+    # TLC extracts standard modules under java.io.tmpdir; concurrent JVMs
+    # must not truncate/delete each other's module files.
+    if [[ "${tlc[0]}" == java ]]; then tlc=(java "-Djava.io.tmpdir=$temp" "${tlc[@]:1}"); fi
     cutoff="${ASCENT_TLC_GENERATION_CUTOFF:-3}"
     [[ "$cutoff" =~ ^[0-9]+$ ]] || { echo 'Invalid TLC exploration bound' >&2; exit 2; }
     sed "s/ExplorationBound = [0-9][0-9]*/ExplorationBound = $cutoff/" packages/proofs/tla/ProviderViews.cfg > "$temp/base.cfg"

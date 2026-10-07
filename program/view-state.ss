@@ -4,6 +4,7 @@
 ;;; Publication over one relation owner's staged representation. The frozen
 ;;; total/delta and their counts move together; no concrete UF membership map.
 (import :gerbil-ascent/core/relation-view
+        (only-in "view-replay.ss" gerbil-ascent-small-journal-export)
         (only-in :clan/poo/object .ref)
         (only-in :gerbil-ascent/table/storage gerbil-ascent-canonical-uf-storage-provider?
                  gerbil-ascent-storage-view-extension! gerbil-ascent-storage-freeze-view)
@@ -107,6 +108,9 @@
 ;; legacy batch reversal. Delta cuts replay old injections without expanding
 ;; their pairs, then export precisely the contiguous admitted suffix.
 (def (export-events events budget skip (delta? #f))
+  (or (gerbil-ascent-small-journal-export events view-event-kind view-event-rows budget skip delta?)
+      (replay-uf-events events budget skip delta?)))
+(def (replay-uf-events events budget skip delta?)
       (let ((state (gerbil-ascent-trrel-uf-state)) (output []) (admitted 0))
         (for-each (lambda (event)
           (let ((batch []) (derived? (and (not delta?) (eq? (view-event-kind event) 'derived))))

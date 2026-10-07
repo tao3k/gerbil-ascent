@@ -7,6 +7,20 @@
 (export ascent-selected-activation-test)
 (def ascent-selected-activation-test
   (test-suite "Selective engine-owned rule activation"
+    (test-case "plan comparison retains head actions keys and frame extent"
+      (let* ((head (vector 2 '((variable . x)))) (atom (vector 0 '((variable . x)) '(0)))
+             (terms '((bound . 0))) (key '((bound . 0)))
+             (output (vector head terms (lambda args 'unused)))
+             (action (vector atom terms key (lambda args #t) #f))
+             (plan (vector (list output) (list action) 1 #t 1))
+             (expected (vector (list (vector head terms)) (list (vector atom terms key)) 1)))
+        (check-equal? (activation-plan-data plan) expected)
+        (check-equal? (equal? (activation-plan-data
+          (vector (list output) (list action) 2 #t 1)) expected) #f)
+        (check-equal? (equal? (activation-plan-data
+          (vector (list output) (list (vector atom terms '((literal . #f)) (lambda args #t) #f)) 1 #t 1)) expected) #f)
+        (check-equal? (equal? (activation-plan-data
+          (vector (list (vector head '((literal . #f)) (lambda args 'unused))) (list action) 1 #t 1)) expected) #f)))
     (test-case "every mask preserves ordered duplicate outputs and generic fallback"
       (for-each
        (lambda (positive?)

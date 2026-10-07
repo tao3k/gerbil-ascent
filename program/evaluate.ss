@@ -24,7 +24,7 @@
         (only-in "planning.ss" gerbil-ascent-prepare-program)
         (only-in :gerbil-ascent/core/positive-plan gerbil-ascent-run-positive-plan!
                  gerbil-ascent-emit-heads!)
-        (only-in "index.ss" gerbil-ascent-make-row-indexes row-indexes-rows row-indexes-advance! row-indexes-plan-rules! row-indexes-plan-actions!)
+        (only-in "index.ss" gerbil-ascent-make-row-indexes row-indexes-rows row-indexes-visit-parts row-indexes-advance! row-indexes-plan-rules! row-indexes-plan-actions!)
         (only-in "types.ss" GerbilAscentSessionContract)
         (only-in "reuse.ss" gerbil-ascent-prepare-native-reuse
                  gerbil-ascent-activate-rules gerbil-ascent-activate-selected-rules
@@ -560,7 +560,7 @@
                           (pivots (vector-ref rule 2))
                           (prunable (vector-ref rule 4)))
                      (def (visit! pivot)
-                       (gerbil-ascent-run-positive-plan! plan frame pivot rows emit! checkpoint!))
+                       (gerbil-ascent-run-positive-plan! plan frame pivot rows emit! checkpoint! (row-indexes-visit-parts private-indexes)))
                      (if (null? pivots)
                        (when (and (= round 1) first-run?) (visit! -1))
                        (if (and (= round 1) (or first-run? (> stratum 0)))
@@ -582,12 +582,13 @@
                      (prunable (vector-ref rule 4))
                      (positive-plan (vector-ref rule 5))
                      (frame (vector-ref rule 6)))
-                 (let (rows-access (if ordered-execution? callback-rows indexed-rows))
+                 (let ((rows-access (if ordered-execution? callback-rows indexed-rows))
+                       (parts-access (and (not ordered-execution?) (row-indexes-visit-parts indexes))))
                  (if (null? positions)
                    (when (and (= round 1) first-run?)
                      (if positive-plan
                        (gerbil-ascent-run-positive-plan!
-                        positive-plan frame -1 rows-access emit-row!)
+                        positive-plan frame -1 rows-access emit-row! #f parts-access)
                        (visit-body body -1 0 []
                          (lambda (environment)
                            (gerbil-ascent-emit-heads! heads environment emit-row!)))))
@@ -598,7 +599,7 @@
                      ;; position without emitting the same join repeatedly.
                      (if positive-plan
                        (gerbil-ascent-run-positive-plan!
-                        positive-plan frame -1 rows-access emit-row!)
+                        positive-plan frame -1 rows-access emit-row! #f parts-access)
                        (visit-body body -1 0 []
                          (lambda (environment)
                            (gerbil-ascent-emit-heads! heads environment emit-row!))))
@@ -611,7 +612,7 @@
                                           (vector-ref prunable delta-at)) 0))
                           (if positive-plan
                             (gerbil-ascent-run-positive-plan!
-                             positive-plan frame delta-at rows-access emit-row!)
+                             positive-plan frame delta-at rows-access emit-row! #f parts-access)
                             (visit-body body delta-at 0 []
                               (lambda (environment)
                                 (gerbil-ascent-emit-heads! heads environment emit-row!))))))

@@ -1261,7 +1261,7 @@ The =43ee40d= research revision is integrated. Its ProviderAdmission and
 ProviderIteration laws and native retained-injection/custom-packet controls
 remain proof-thread-owned; the runtime bridge retains their stated premises.
 
-** Qualified runtime cut and remaining costs
+** Earlier qualified runtime cut and cost baseline
 
 [[file:evidence/scheme-view-runtime-closure-20261007/receipt.json][The runtime closure receipt]] binds 551 Scheme sources at published =978b294= with digest
 =89527a08478920e4ceef362fe1e7ec0fda567e1ba004c9e7f9245c0c07541493=.
@@ -1291,8 +1291,10 @@ Git revision. Both construction and selected routing recapture are measured.
 
 The retained workload's sampled live-byte ratio is 0.884; this samples initial
 and updated cuts while old rows remain held, not continuous peak RSS. Full
-export still replays UF injections and allocates the concrete output family;
-its remaining regressions and the grouped routing overhead are open cost work.
+export at that earlier cut replayed UF injections and allocated the concrete
+output family; its export and grouped regressions prompted the implementation
+repair below. This table remains the historical baseline, not the status of
+the repaired code.
 No general speedup or full paper-application replication is admitted. Native
 routing/binder extraction, VM scheduling correspondence and full application
 experiments remain the separate research gates listed above. Exact published
@@ -1417,3 +1419,109 @@ truth. This adapter belongs to the existing test oracle; it is not MRR integrati
 or a new production Rust runtime. See
 [[file:evidence/scheme-provider-views-20261007/oracle-byte-admission.json][the source-bound receipt]]
 for final acceptance, defect evidence and the remaining cause boundary.
+
+* Export and grouped-consumer cost repair (2026-10-07)
+
+** Ordered export without a second retained owner
+
+=program/view-replay.ss= reconstructs only an invocation-local ordered cut.
+Each width/group scope admits at most 256 journal injections into the packed
+path, bounding its vertex population by 512 and temporary flags by 32 KiB.
+Larger histories retain the existing adjacency-based UF replay. This dispatch
+bound is an implementation choice; it is not a convergence or semantic limit.
+Neither replay flags nor expanded output rows become part of a frozen view.
+
+The packed path stores first-observed vertex values and reproduces UF root
+and component member order. Admission counts a whole injection before writing
+its missing component blocks. Component blocks partition the matrix by
+pre-merge roots, so writing one missing block cannot invalidate the remaining
+block tests. SCC members merge only after writing. Source and derived batches
+retain their distinct legacy total/delta orientations. Output and batch list
+spines are private to the invocation, permitting destructive reversal without
+mutating journal histories, component members or held results.
+
+Native controls compare exact replay sequences with the UF frontier reference
+for all 512 three-node graph masks, opposite injection orders, derived batches,
+false/true groups and delta cut boundaries. Separate controls reject split
+frontiers and insufficient budgets, and exercise both sides of the packed
+dispatch boundary. These are executable representation discriminators; they
+do not establish a universal native matrix/hash extraction theorem.
+
+** Synchronous field traversal and captured identities
+
+Pure canonical plans can consume indexed frozen fields synchronously through
+their engine or worker's private index owner. This avoids allocating a row
+stream for each repeated lookup. Declined access falls through to existing
+row lookup; candidate checkpoints and repeated-variable matching remain in
+the compiled runner. Ordered callbacks, custom receivers and field checks use
+the existing observable-order path.
+
+Routing buckets retain descriptor references and stored singleton member
+spines. Equal query objects select the actual captured member in each group.
+They do not replace it with the caller's equal query object. Parts traversal
+uses direct member loops instead of a fresh callback per left member. Routing
+metadata contains no Cartesian pair tuples and is constructed before view
+publication. Native controls compare streamed and synchronous field access
+for reordered/repeated columns, missing keys and captured host-object identity.
+
+Admitted compiled columns and the key builder establish nonnegative range,
+arity and key-length checks before repeated access. The private canonical
+index owner passes that admission to built-in parts visitors; ordinary public
+visitors still validate arbitrary columns/keys and per-block widths. Both
+visitor modes are compared across the complete valid-key control corpus.
+
+Common pure coordinate layouts compile their slot actions once. The exact
+canonical selected path can omit a prior-bound comparison only when that
+coordinate is present in the compiled key with the same slot action. Generic
+row access, including overselected custom candidates, keeps the full matcher.
+Controls compare exact selected parts, ordinary selected rows and deliberately
+overselected rows; all must admit the same matching outputs. Repeated-variable
+failures, false values and rejected-frame checks retain independent controls.
+
+The immutable parts-visitor record separates checked public access from
+compiled canonical access with fixed argument protocols. Single-descriptor
+prefix routing drops only the group constraint already established by that
+bucket; repeated constraints and multi-descriptor buckets retain their checks.
+Terminal parts outputs carry a compiled slot getter with each head. Projection
+shares the same output identities and getters, preserving duplicate/multiple
+head order while avoiding repeated head-action interpretation.
+
+** Evidence boundary
+
+Performance qualification uses the explicit reference evaluator and the new
+evaluator on the same admitted program, shared current UF kernels and warmed
+analysis. It measures complete calls, including requested public exports and
+repeated grouped tuple regeneration. The reference is not a historical binary
+checkout. Paired raw counters, semantic controls and final source identities
+will be recorded together; previous negative measurements remain historical
+evidence in their original receipts.
+
+The final source cut contains 552 Scheme files. Native qualification passed
+819 Cases across 85 modules with propagated exits and final =OK= markers.
+Source loading, module policy (zero errors), native DSL binding plus stale
+manifest rejection, and 11 BYODS differential controls passed. A separate
+native cost run passed 21 Cases and all 72 alternating paired measurements.
+The separate BYODS scale gate remains outside those 11 controls.
+
+| Workload | CPU ratio | elapsed ratio | allocated bytes ratio |
+|----------+-----------+---------------+-----------------------|
+| sparse DAG | 0.671 | 0.690 | 0.732 |
+| full DAG export | 0.941 | 0.941 | 0.887 |
+| sparse cycle | 0.435 | 0.435 | 0.488 |
+| full cycle export | 0.736 | 0.736 | 0.660 |
+| grouped query | 0.961 | 0.961 | 0.935 |
+| retained update, old result held | 0.328 | 0.325 | 0.411 |
+
+These are median paired ratios against the matched explicit reference at
+this source cut. The retained sampled-live ratio is 0.885. Both independent
+final-code cost runs put the targeted export/grouped CPU and allocation
+measurements below the reference. They do not establish a universal workload
+or full paper-application speedup. Full-suite cost samples are excluded from
+performance admission because other test modules may share CPU.
+
+The complete source identities, raw pairs, qualification counts and historical
+development controls are in
+[[file:evidence/scheme-view-export-optimization-20261007/receipt.json][the export and grouped-consumer repair receipt]].
+The =0f20eb9= oracle byte-admission repair is included. Subsequent =c74645d=
+collector cleanup preserves every qualification input hash. Exact published
+revision CI remains a separate gate.

@@ -51,6 +51,7 @@
     "program/analysis"
     "program/summary"
     "program/admission"
+    "program/view-replay"
     "program/view-state"
     "program/initialization"
     "program/result"

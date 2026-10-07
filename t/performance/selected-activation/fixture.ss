@@ -12,7 +12,7 @@
                    (gerbil-ascent-update-active-plans old-select))
         (rename-in (only-in :gerbil-ascent/t/performance/selected-activation/reference-evaluate gerbil-ascent-make-updated-engine)
                    (gerbil-ascent-make-updated-engine old-updated)))
-(export activation-metadata activation-selected activation-summary activation-request activation-run)
+(export activation-metadata activation-selected activation-plan-data activation-summary activation-request activation-run)
 (def (activation-metadata count slots (partial? #f) (positive? #t))
   (let* ((analysis (make-vector 7 #f))
          (rules (map (lambda (index)
@@ -24,6 +24,17 @@
 (def (activation-selected old? analysis affected)
   (if old? (old-select (old-activate analysis) affected)
     (gerbil-ascent-activate-selected-rules analysis affected)))
+;; Preserve the entire original execution data. Additional compiled visitors
+;; have fresh procedure identities; their behavior is checked by native plans.
+(def (activation-plan-data plan)
+  (and plan
+    (vector
+      (map (lambda (output) (vector (vector-ref output 0) (vector-ref output 1))) (vector-ref plan 0))
+      (map (lambda (action)
+             (if (vector? (vector-ref action 0))
+               (vector (vector-ref action 0) (vector-ref action 1) (vector-ref action 2)) action))
+           (vector-ref plan 1))
+      (vector-ref plan 2))))
 (def (activation-summary active)
   (vector-map (lambda (rules) (map (lambda (rule)
                                   (list (vector-ref rule 0) (vector-ref rule 3)
@@ -31,9 +42,7 @@
                                         ;; compare ordered execution data, while the
                                         ;; current effect flag is qualified separately.
                                         (let (plan (vector-ref rule 5))
-                                          (and plan (vector (vector-ref plan 0)
-                                                            (vector-ref plan 1)
-                                                            (vector-ref plan 2))))
+                                          (activation-plan-data plan))
                                         (and (vector-ref rule 6) (vector-length (vector-ref rule 6))))) rules)) active))
 (def (activation-request count width)
   (let* ((variables (map (lambda (n) (gerbil-ascent-variable (string->symbol (string-append "x" (number->string n))))) (iota width)))

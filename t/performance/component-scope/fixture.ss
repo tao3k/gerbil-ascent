@@ -31,6 +31,17 @@
             (list->vector (map (lambda (relation) (reverse (.ref relation 'rows))) (.ref program 'relations))))))
 (def (component-scope-plan old? request)
   ((if old? old-compile gerbil-ascent-compile-positive-components) (vector-ref request 0)))
+;; Preserve the entire original execution data. Additional compiled visitors
+;; have fresh procedure identities; their behavior is checked by native plans.
+(def (component-scope-plan-data plan)
+  (and plan
+    (vector
+      (map (lambda (output) (vector (vector-ref output 0) (vector-ref output 1))) (vector-ref plan 0))
+      (map (lambda (action)
+             (if (vector? (vector-ref action 0))
+               (vector (vector-ref action 0) (vector-ref action 1) (vector-ref action 2)) action))
+           (vector-ref plan 1))
+      (vector-ref plan 2))))
 (def (component-scope-normalize old? components)
   (map (lambda (component)
          (list ((if old? old-id positive-component-id) component)
@@ -39,8 +50,7 @@
                ;; plans additionally carry an independently tested purity flag.
                (map (lambda (rule)
                       (let (plan (vector-ref rule 0))
-                        (vector (vector (vector-ref plan 0) (vector-ref plan 1)
-                                        (vector-ref plan 2))
+                        (vector (component-scope-plan-data plan)
                                 (vector-ref rule 1))))
                     ((if old? old-rules positive-component-rules) component))
                ((if old? old-predecessors positive-component-predecessors) component))) components))

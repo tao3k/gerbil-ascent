@@ -18,9 +18,9 @@
         (rename-in (only-in :gerbil-ascent/table/funs gerbil-ascent-index-key
                            gerbil-ascent-index-row-snapshot)
                    (gerbil-ascent-index-key row-key)))
-(export gerbil-ascent-make-row-indexes row-indexes-rows row-indexes-advance! row-indexes-plan-atoms! row-indexes-plan-rules! row-indexes-plan-actions!)
+(export gerbil-ascent-make-row-indexes row-indexes-rows row-indexes-visit-parts row-indexes-advance! row-indexes-plan-atoms! row-indexes-plan-rules! row-indexes-plan-actions!)
 
-(defstruct row-indexes (rows advance! plan-atoms!))
+(defstruct row-indexes (rows advance! plan-atoms! visit-parts))
 
 ;;; Custom indexes may overselect candidates, but each must still represent
 ;;; a complete relation tuple. Check the whole batch before term callbacks.
@@ -134,7 +134,7 @@
      (error "ASCENT empty index owner has no lookup consumer"))
    (lambda (index rows (reverse-order? #f)) (void))
    (lambda (atoms)
-     (unless (null? atoms) (error "ASCENT empty index owner has lookup requirements")))))
+     (unless (null? atoms) (error "ASCENT empty index owner has lookup requirements"))) #f))
 
 (defstruct physical-index-entry (version lookup shared? witness))
 (defstruct atom-index-view (entry permutation))
@@ -203,6 +203,15 @@
                       (iota (vector-length all)))
             ;; Metadata publication follows successful complete planning.
             (set! layouts fresh) (set! planned-atoms #f))))
+      (def (visit-parts atom environment use-delta? slot-terms consume)
+        (let (captured (vector-ref (if use-delta? delta all) (vector-ref atom 0)))
+          (and (relation-view? captured) (gerbil-ascent-row-parts? captured)
+            (begin
+              ((if slot-terms gerbil-ascent-visit-admitted-view-parts! gerbil-ascent-visit-view-parts!) captured (vector-ref atom 2)
+                (if slot-terms
+                  (gerbil-ascent-index-key (vector-ref atom 1) (vector-ref atom 2) environment slot-terms)
+                  (gerbil-ascent-index-key/terms (vector-ref atom 4) environment)) consume)
+              #t))))
       (def (indexed-rows atom environment use-delta? slot-terms (ordered? #f))
         (let* ((index (vector-ref atom 0))
                (columns (vector-ref atom 2))
@@ -330,4 +339,4 @@
                         (physical-index-entry-witness entry) rows columns))
                      (physical-index-entry-version-set! entry (+ version 1)))))
                cache)))))
-    (make-row-indexes indexed-rows advance-all-indexes! plan-atoms!)))
+    (make-row-indexes indexed-rows advance-all-indexes! plan-atoms! visit-parts)))

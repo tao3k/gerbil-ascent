@@ -1,7 +1,8 @@
 ;;; -*- Gerbil -*-
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
-(import (only-in :std/test check-equal? check-exception test-suite)
+(import (only-in :gerbil-ascent/program/view-replay gerbil-ascent-small-journal-export)
+        (only-in :std/test check-equal? check-exception test-suite)
         (only-in :core/observability/testing-case poo-flow-test-case)
         (only-in :gerbil-ascent/core/relation-view gerbil-ascent-view-rows)
         (only-in :gerbil-ascent/program/view-state
@@ -49,8 +50,48 @@
   (check-equal? (length actual) (length expected))
   (for-each (lambda (row) (check-equal? (and (member row actual) #t) #t)) expected))
 
+(def (journal-reference events budget skip delta?)
+  (let ((state (gerbil-ascent-trrel-uf-state)) (rows []) (admitted 0))
+    (for-each (lambda (event)
+      (let ((batch []) (derived? (and (not delta?) (eq? (vector-ref event 0) 'derived))))
+        (for-each (lambda (row)
+          (let* ((frontier (gerbil-ascent-trrel-uf-frontier-extension state row budget))
+                 (exported (export-view frontier)) (next (+ admitted (length exported))))
+            (when (> next skip)
+              (when (> skip admitted) (error "split injection"))
+              (if derived? (set! batch (append (reverse exported) batch))
+                  (set! rows (append rows exported))))
+            (set! admitted next))) (vector-ref event 1))
+        (when derived? (set! rows (append rows batch))))) (reverse events)) rows))
+(def (packed-journal events budget skip delta?)
+  (gerbil-ascent-small-journal-export events
+    (lambda (e) (vector-ref e 0)) (lambda (e) (vector-ref e 1)) budget skip delta?))
+
 (def ascent-provider-views-test
   (test-suite "frozen BYODS Provider views"
+    (poo-flow-test-case "packed ordered replay matches all three-node graph histories"
+      (let (edges (apply append (map (lambda (a) (map (lambda (b) (list a b)) (iota 3))) (iota 3))))
+        (for-each (lambda (mask)
+          (let* ((input (filter values (map (lambda (edge bit) (and (not (zero? (bitwise-and mask (arithmetic-shift 1 bit)))) edge))
+                                   edges (iota 9))))
+                 (source (vector 'source (if (even? mask) input (reverse input))))
+                 (derived (vector 'derived '((2 0) (0 2))))
+                 (groups (vector 'source '((#f 0 1) (#t 1 0) (#f 1 0))))
+                 (old (list derived source)) (events (cons groups old))
+                 (boundary (length (journal-reference old 128 0 #f))))
+            (check-equal? (packed-journal events 128 0 #f) (journal-reference events 128 0 #f))
+            (check-equal? (packed-journal events 128 boundary #t) (journal-reference events 128 boundary #t))
+            (check-equal? (packed-journal old 128 0 #f) (journal-reference old 128 0 #f)))
+          (when (zero? (modulo (+ mask 1) 32))
+            (displayln "JOURNAL-GRAPHS-CHECKED " (+ mask 1) "/512") (force-output))) (iota 512))))
+    (poo-flow-test-case "packed replay budget boundary and bounded matrix fallback"
+      (let* ((events (list (vector 'source '((0 1)))))
+             (limit (list (vector 'source (map (lambda (_) '(0 1)) (iota 256)))))
+             (large (list (vector 'source (map (lambda (_) '(0 1)) (iota 257))))))
+        (check-equal? (packed-journal limit 3 0 #f) '((0 0) (1 1) (0 1)))
+        (check-equal? (packed-journal large 3 0 #f) #f)
+        (check-exception (packed-journal events 2 0 #f) true)
+        (check-exception (packed-journal events 3 1 #t) true)))
     (poo-flow-test-case "all graph prefixes preserve exact frontiers counts and frozen old views"
       (for-each (lambda (mask)
         (for-each (lambda (order)

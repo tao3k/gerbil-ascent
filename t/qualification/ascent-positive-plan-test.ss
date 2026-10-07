@@ -15,7 +15,7 @@
                  gerbil-ascent-program-analysis gerbil-ascent-program-schema)
         (only-in :gerbil-ascent/core/positive-plan gerbil-ascent-compile-positive-plan
                  gerbil-ascent-run-positive-plan! gerbil-ascent-index-key
-                 gerbil-ascent-pure-positive-plan?)
+                 gerbil-ascent-pure-positive-plan? gerbil-ascent-positive-plan-with-outputs)
         (only-in :gerbil-ascent/table/funs gerbil-ascent-index-build gerbil-ascent-index-extend!)
         (only-in :gerbil-ascent/program/index gerbil-ascent-make-row-indexes row-indexes-rows row-indexes-advance!)
         (only-in :gerbil-ascent/core/rule-bindings gerbil-ascent-bind-row
@@ -135,6 +135,63 @@
 
 (def ascent-positive-plan-test
   (test-suite "Complete positive rule slot plans"
+    (poo-flow-test-case "exact parts matching preserves duplicate and projected output heads"
+      (let* ((head (vector 2 '((variable . g) (variable . x) (variable . y))))
+             (other (vector 3 '((variable . y) (variable . x))))
+             (first (vector 0 '((variable . g) (variable . x)) []))
+             (second (vector 1 '((variable . g) (variable . x) (variable . y)) '(0 1)))
+             (plan (gerbil-ascent-compile-positive-plan
+                     (list head other head) (list (vector 'atom first) (vector 'atom second))))
+             (partial (gerbil-ascent-positive-plan-with-outputs plan (list (cadr (vector-ref plan 0)))))
+             (rows '((#f 1 a) (#f 2 rejected) (#t 2 c))))
+        (for-each (lambda (mode)
+          (for-each (lambda (projected?)
+            (let ((outputs []) (frame (make-vector 3 'stale)))
+              (def (selected)
+                (filter (lambda (row) (and (equal? (car row) (vector-ref frame 0))
+                                           (equal? (cadr row) (vector-ref frame 1)))) rows))
+              (gerbil-ascent-run-positive-plan! (if projected? partial plan) frame -1
+                (lambda (atom _frame _delta _terms)
+                  (if (= (vector-ref atom 0) 0) '((#f 1) (#t 2))
+                      (if (eq? mode 'overselected) rows (selected))))
+                (lambda (head row) (set! outputs (cons (cons (vector-ref head 0) row) outputs))) #f
+                (and (eq? mode 'direct)
+                  (lambda (atom _frame _delta _terms consume)
+                    (and (= (vector-ref atom 0) 1)
+                      (begin
+                        (for-each (lambda (row) (consume (list (car row)) (cadr row) (caddr row))) (selected))
+                        #t)))))
+              (check-equal? (reverse outputs)
+                (if projected? '((3 a 1) (3 c 2))
+                  '((2 #f 1 a) (3 a 1) (2 #f 1 a) (2 #t 2 c) (3 c 2) (2 #t 2 c)))))) '(#f #t)))
+          '(direct selected overselected))))
+    (poo-flow-test-case "synchronous parts preserve candidate checkpoints and declined access"
+      (let* ((head (vector 2 '((variable . x) (variable . x))))
+             (atom (vector 0 '((variable . x) (variable . x)) []))
+             (plan (gerbil-ascent-compile-positive-plan (list head) (list (vector 'atom atom))))
+             (rows '((#f #f) (1 2) (1 1))))
+        (let (accesses 0)
+          (check-exception
+            (gerbil-ascent-run-positive-plan! plan [] -1
+              (lambda args (set! accesses (+ accesses 1)) rows)
+              (lambda args (error "unexpected rejected-frame emission")) #f
+              (lambda args (set! accesses (+ accesses 1)) #t)) true)
+          (check-equal? accesses 0))
+        (for-each (lambda (direct?)
+          (let ((reads 0) (parts 0) (trace []) (outputs []))
+            (gerbil-ascent-run-positive-plan! plan (make-vector 1 'stale) -1
+              (lambda args (set! reads (+ reads 1)) rows)
+              (lambda (_ row) (set! outputs (cons row outputs)) (set! trace (cons row trace)))
+              (lambda () (set! trace (cons 'candidate trace)))
+              (lambda (_atom _frame _delta _terms consume)
+                (set! parts (+ parts 1))
+                (and direct? (begin
+                  (for-each (lambda (row) (consume [] (car row) (cadr row))) rows) #t))))
+            (check-equal? reads (if direct? 0 1))
+            (check-equal? parts 1)
+            (check-equal? (reverse outputs) '((#f #f) (1 1)))
+            (check-equal? (reverse trace) '(candidate (#f #f) candidate candidate (1 1)))))
+          '(#f #t))))
     (poo-flow-test-case "stored atom keys and heads preserve admitted action representation"
       (for-each
        (lambda (columns)

@@ -30,10 +30,12 @@
 (def (rejected call) (with-catch (lambda (e) (error-message e)) (lambda () (call) 'accepted)))
 (def (selected-rows view columns key (parts? #f))
   (let ((rows []) (stream (gerbil-ascent-view-select view columns key)))
-    (if parts?
-      (gerbil-ascent-for-each-row-parts
-        (lambda (prefix left right) (set! rows (cons (append prefix (list left right)) rows))) stream)
-      (gerbil-ascent-for-each-row (lambda (row) (set! rows (cons row rows))) stream))
+    (def (consume prefix left right) (set! rows (cons (append prefix (list left right)) rows)))
+    (cond ((memq parts? '(direct admitted))
+           ((if (eq? parts? 'admitted) gerbil-ascent-visit-admitted-view-parts! gerbil-ascent-visit-view-parts!)
+             view columns key consume))
+          (parts? (gerbil-ascent-for-each-row-parts consume stream))
+          (else (gerbil-ascent-for-each-row (lambda (row) (set! rows (cons row rows))) stream)))
     (reverse rows)))
 (def (cycle-program n (cycle? #t) (output-limit (* n n 3)))
   (let* ((y (gerbil-ascent-variable 'y))
@@ -47,6 +49,16 @@
       (* n 4) (* n n 2) output-limit)))
 (def ascent-relation-view-test
   (test-suite "Frozen relation representations through the engine"
+    (test-case "custom three-argument parts remain usable through streams and unions"
+      (let* ((custom (make-relation-view 'custom #f 0 'total 1 1
+                       (lambda (_columns _key consume) (consume '(1 2)))
+                       (lambda (row) (equal? row '(1 2))) #f
+                       (lambda (_columns _key consume) (consume [] 1 2))))
+             (builtin (gerbil-ascent-rectangle-view (list (make-rectangle [] '(3) '(4))) 1 2))
+             (combined (gerbil-ascent-view-union custom builtin)))
+        (check-equal? (selected-rows custom [] [] #t) '((1 2)))
+        (check-equal? (selected-rows combined [] [] #t) '((1 2) (3 4)))
+        (check-equal? (selected-rows combined [] []) '((1 2) (3 4)))))
     (test-case "indexed descriptors preserve row and parts order for every key shape"
       (let* ((a '(0 1)) (b '(2)) (c '(3 4))
              (blocks (list (make-rectangle '(#f) a a) (make-rectangle '(#f) a b)
@@ -57,7 +69,9 @@
           (for-each (lambda (key)
             (let (expected (selected-rows scan columns key))
               (check-equal? (selected-rows indexed columns key) expected)
-              (check-equal? (selected-rows indexed columns key #t) expected)))
+              (check-equal? (selected-rows indexed columns key #t) expected)
+              (check-equal? (selected-rows indexed columns key 'direct) expected)
+              (check-equal? (selected-rows indexed columns key 'admitted) expected)))
             (case (length columns)
               ((0) '(())) ((1) '((#f) (#t) (0) (1) (2) (3) (9)))
               ((2) '((#f 0) (#t 3) (0 1) (1 0) (1 1) (1 2) (2 2) (9 9)))
@@ -74,6 +88,19 @@
         (check-equal? (eq? (caar (selected-rows view '(0) (list query))) stored) #t)
         (check-equal? (selected-rows view '(0 0) '("node" "missing")) [])
         (check-equal? (selected-rows view '(0 1) '("node" "node") #t) '(("node" "node")))))
+    (test-case "equal keys select the stored identity of each routed group"
+      (let* ((a (string-copy "node")) (b (string-copy "node")) (query (string-copy "node"))
+             (left-a (list a)) (left-b (list b))
+             (view (gerbil-ascent-rectangle-view
+                     (list (make-rectangle '(#f) left-a '(0))
+                           (make-rectangle '(#t) left-b '(1))) 2 6 #t)))
+        (for-each (lambda (parts?)
+          (let (rows (selected-rows view '(1) (list query) parts?))
+            (check-equal? (eq? (cadar rows) a) #t)
+            (check-equal? (eq? (cadadr rows) b) #t))
+          (check-equal? (eq? (cadar (selected-rows view '(0 1) (list #t query) parts?)) b) #t)
+          (check-equal? (selected-rows view '(0 0) '(#f #t) parts?) []))
+          '(#f #t direct admitted))))
     (test-case "callbacks expressions and first failures preserve legacy UF traces"
       (for-each (lambda (n)
         (let ((x (gerbil-ascent-variable 'x)) (y (gerbil-ascent-variable 'y))

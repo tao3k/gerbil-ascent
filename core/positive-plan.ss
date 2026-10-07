@@ -195,7 +195,8 @@
                                      (project-slot-terms terms columns))))
                         ;; Key evaluation precedes row matching. Changed inputs
                         ;; must not read row-local slots left by prior candidates.
-                        (vector atom terms keys)))
+                        (vector atom terms keys (compile-parts-matcher terms)
+                                (compile-selected-parts-matcher terms columns keys))))
                      ((guard)
                       (vector 'guard (lower-call (vector-ref clause 1)
                                                 (vector-ref clause 2) "unbound ASCENT clause variable")))
@@ -209,8 +210,8 @@
                      (else (unsupported #f)))) body))
              (outputs
                (map (lambda (head)
-                      (vector head (map (lambda (term) (lower term #t))
-                                        (vector-ref head 1)))) heads)))
+                      (let (terms (map (lambda (term) (lower term #t)) (vector-ref head 1)))
+                        (vector head terms (compile-parts-output terms)))) heads)))
         (vector outputs (compile-action-segments actions) count pure?
                 (length (filter (lambda (action) (vector? (vector-ref action 0))) actions)))))))
 
@@ -265,6 +266,16 @@
              ((wildcard) #t))
            (match-row! (cdr terms) (cdr row) frame)))))
 
+;; Bind each argument once; parts traversal uses this case directly rather
+;; than making three additional matcher calls for every regenerated tuple.
+(defrule (match-value! term value frame)
+  (let ((selected term) (stored value) (bindings frame))
+    (case (car selected)
+      ((fresh) (vector-set! bindings (cdr selected) stored) #t)
+      ((bound) (equal? (vector-ref bindings (cdr selected)) stored))
+      ((literal) (equal? (cdr selected) stored))
+      ((expression) (equal? ((cdr selected) bindings) stored))
+      ((wildcard) #t))))
 ;; : (-> Terms Prefix Value Value Frame Boolean)
 (def (match-parts! terms prefix left right frame)
   (if (pair? prefix)
@@ -272,14 +283,47 @@
          (match-parts! (cdr terms) (cdr prefix) left right frame))
     (and (match-value! (car terms) left frame)
          (match-value! (cadr terms) right frame))))
-;; : (-> SlotTerm Value Frame Boolean)
-(def (match-value! term value frame)
-  (case (car term)
-    ((fresh) (vector-set! frame (cdr term) value) #t)
-    ((bound) (equal? (vector-ref frame (cdr term)) value))
-    ((literal) (equal? (cdr term) value))
-    ((expression) (equal? ((cdr term) frame) value))
-    ((wildcard) #t)))
+
+;; Compile the frequent pure coordinate layouts once. Fall back for other
+;; actions and shapes, retaining left-to-right failures and host callbacks.
+(def (compile-parts-matcher terms)
+  (let (tags (map car terms))
+    (cond
+      ((equal? tags '(fresh fresh))
+       (let ((a (cdar terms)) (b (cdadr terms)))
+         (lambda (prefix left right frame)
+           (if (null? prefix)
+             (begin (vector-set! frame a left) (vector-set! frame b right) #t)
+             (match-parts! terms prefix left right frame)))))
+      ((equal? tags '(fresh fresh fresh))
+       (let ((a (cdar terms)) (b (cdadr terms)) (c (cdaddr terms)))
+         (lambda (prefix left right frame)
+           (if (and (pair? prefix) (null? (cdr prefix)))
+             (begin (vector-set! frame a (car prefix)) (vector-set! frame b left)
+                    (vector-set! frame c right) #t)
+             (match-parts! terms prefix left right frame)))))
+      ((equal? tags '(bound bound fresh))
+       (let ((a (cdar terms)) (b (cdadr terms)) (c (cdaddr terms)))
+         (lambda (prefix left right frame)
+           (if (and (pair? prefix) (null? (cdr prefix)))
+             (and (equal? (vector-ref frame a) (car prefix))
+                  (equal? (vector-ref frame b) left)
+                  (begin (vector-set! frame c right) #t))
+             (match-parts! terms prefix left right frame)))))
+      (else (lambda (prefix left right frame) (match-parts! terms prefix left right frame))))))
+
+;; The synchronous index owner guarantees exact canonical key selection.
+;; Only prior-bound actions present in the key can omit their second equality
+;; test. Generic/overselecting row access continues to use the full matcher.
+(def (compile-selected-parts-matcher terms columns keys)
+  (and (equal? (map car terms) '(bound bound fresh))
+       (member 0 columns) (member 1 columns)
+       (andmap (lambda (column key) (equal? key (list-ref terms column))) columns keys)
+       (let (slot (cdaddr terms))
+         (lambda (prefix left right frame)
+           (if (and (pair? prefix) (null? (cdr prefix)))
+             (begin (vector-set! frame slot right) #t)
+             (match-parts! terms prefix left right frame))))))
 
 ;; : (-> SlotTerm Frame Value)
 (def (term-value term frame)
@@ -287,6 +331,27 @@
     ((literal) (cdr term))
     ((expression) ((cdr term) frame))
     (else (vector-ref frame (cdr term)))))
+
+;; Terminal parts already own a proved frame. Compile common output slot
+;; reads once; row consumers retain their original map path. The getter is
+;; stored with its output, so projected/multiple heads preserve order/identity.
+(def (compile-parts-output terms)
+  (if (and (memq (length terms) '(1 2 3)) (andmap (lambda (term) (eq? (car term) 'bound)) terms))
+    (let (slots (map cdr terms))
+      (case (length slots)
+        ((1) (let (a (car slots)) (lambda (frame) (list (vector-ref frame a)))))
+        ((2) (let ((a (car slots)) (b (cadr slots)))
+               (lambda (frame) (list (vector-ref frame a) (vector-ref frame b)))))
+        (else (let ((a (car slots)) (b (cadr slots)) (c (caddr slots)))
+                (lambda (frame) (list (vector-ref frame a) (vector-ref frame b) (vector-ref frame c)))))))
+    (lambda (frame) (map (lambda (term) (term-value term frame)) terms))))
+(def (emit-parts-heads! heads frame emit-row!)
+  (unless (null? heads)
+    (let (head (car heads))
+      (emit-row! (vector-ref head 0)
+        (if (> (vector-length head) 2) ((vector-ref head 2) frame)
+            (map (lambda (term) (term-value term frame)) (vector-ref head 1)))))
+    (emit-parts-heads! (cdr heads) frame emit-row!)))
 
 ;;; The engine supplies row/index access and the authoritative output admission
 ;;; function. This runner changes binding representation, not fact admission.
@@ -302,7 +367,7 @@
 ;;       ;; => void after admitting the matching heads
 ;;       ```
 ;;     %
-(def (gerbil-ascent-run-positive-plan! plan frame delta-at rows-access emit-row! (checkpoint! #f))
+(def (gerbil-ascent-run-positive-plan! plan frame delta-at rows-access emit-row! (checkpoint! #f) (parts-access #f))
   ;; The compiled extent covers every read/write, including failed candidates.
   ;; Reject an invalid caller frame before lookup, callbacks or partial writes.
   (unless (and (vector? frame) (>= (vector-length frame) (vector-ref plan 2)))
@@ -315,11 +380,13 @@
     (error "ASCENT positive plan delta selector outside compiled atom extent"))
   (visit-positive-atoms! (vector-ref plan 1) (vector-ref plan 0)
                         frame
-                        delta-at 0 rows-access emit-row! checkpoint!))
+                        delta-at 0 rows-access emit-row! checkpoint! parts-access))
 
+;;; PartsAccess is private exact canonical selection, synchronous and complete.
+;;; A false return must invoke no consumer; custom/overselecting providers use RowsAccess.
 ;;; Explicit rows keep the direct list loop; frozen views invoke a local visitor.
 ;; : (-> Atoms Heads Frame Integer Nat RowsAccess EmitRow Void)
-(def (visit-positive-atoms! atoms heads frame delta-at depth rows-access emit-row! checkpoint!)
+(def (visit-positive-atoms! atoms heads frame delta-at depth rows-access emit-row! checkpoint! parts-access)
   (if (null? atoms)
     (let outputs ((remaining heads))
       (unless (null? remaining)
@@ -333,8 +400,16 @@
         ((callbacks)
          (when ((vector-ref action 1) frame)
            (visit-positive-atoms! (cdr atoms) heads frame delta-at depth
-                                  rows-access emit-row! checkpoint!)))
+                                  rows-access emit-row! checkpoint! parts-access)))
         (else
+         (unless (and parts-access
+                   (parts-access (vector-ref action 0) frame (= depth delta-at) (vector-ref action 2)
+                     (lambda (prefix left right)
+                       (when checkpoint! (checkpoint!))
+                       (when ((or (vector-ref action 4) (vector-ref action 3)) prefix left right frame)
+                         (if (null? (cdr atoms)) (emit-parts-heads! heads frame emit-row!)
+                           (visit-positive-atoms! (cdr atoms) heads frame delta-at (+ depth 1)
+                             rows-access emit-row! checkpoint! parts-access))))))
          (let (rows (rows-access (vector-ref action 0) frame
                                  (= depth delta-at) (vector-ref action 2)))
            (if (or (pair? rows) (null? rows))
@@ -343,21 +418,21 @@
                  (when checkpoint! (checkpoint!))
                  (when (match-row! (vector-ref action 1) (car remaining) frame)
                    (visit-positive-atoms! (cdr atoms) heads frame delta-at (+ depth 1)
-                                          rows-access emit-row! checkpoint!))
+                                          rows-access emit-row! checkpoint! parts-access))
                  (candidates (cdr remaining))))
              (if (gerbil-ascent-row-parts? rows)
                (gerbil-ascent-for-each-row-parts
                 (lambda (prefix left right)
                   (when checkpoint! (checkpoint!))
-                  (when (match-parts! (vector-ref action 1) prefix left right frame)
+                  (when ((vector-ref action 3) prefix left right frame)
                     (visit-positive-atoms! (cdr atoms) heads frame delta-at (+ depth 1)
-                                           rows-access emit-row! checkpoint!))) rows)
+                                           rows-access emit-row! checkpoint! parts-access))) rows)
                (gerbil-ascent-for-each-row
                 (lambda (row)
                   (when checkpoint! (checkpoint!))
                   (when (match-row! (vector-ref action 1) row frame)
                     (visit-positive-atoms! (cdr atoms) heads frame delta-at (+ depth 1)
-                                           rows-access emit-row! checkpoint!))) rows)))))))))
+                                           rows-access emit-row! checkpoint! parts-access))) rows))))))))))
 
 ;;; Build the provider's ordered key after index construction. Compiled terms
 ;;; read proved frame slots; the general path preserves expression callbacks.

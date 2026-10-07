@@ -1,5 +1,17 @@
 # Binary execution and persistent result publication
 
+## Historical collector retirement (2026-10-07)
+
+This directory records a historical measurement, not a current execution entry.
+The one-shot Python collectors and continuation scheduler were removed after
+the Scheme harness migration. Their original code remains in Git commit
+0f20eb900d5a082e445d93e574c4d71eed0b29cb. Retained receipts and negative results
+refer to their recorded source versions; they do not qualify current source.
+Use `just test`, `just test-file <module>` and `just performance` through the
+current Scheme harness for current acceptance. Scheme benchmark/reference
+modules remain available. Collector names below describe historical work.
+
+
 This change follows one public query from validated declarations to bounded
 execution and persistent result demand. The baseline is the exact committed
 Ascent source in `baseline.txt` (ASP Scheme v0.1.2.2).
@@ -32,14 +44,7 @@ cache state between evaluations. This study makes no allocation claim.
 Use the isolated dependency environment recorded in the manifests and the
 native build core setting, not an arbitrary worker count:
 
-```sh
-GERBIL_PATH=/private/tmp/ascent-asp-v0122-gerbil GERBIL_BUILD_CORES=12 \
-  python3 tools/test_execution.py run -- \
-  python3 t/performance/binary-dispatch/qualify.py
-python3 t/performance/binary-dispatch/report.py
-GERBIL_PATH=/private/tmp/ascent-asp-v0122-gerbil GERBIL_BUILD_CORES=12 \
-  python3 t/performance/binary-dispatch/production.py
-```
+The retired collector commands are available in the frozen Git commit above.
 
 The matched collector holds one exclusive test lease. The production collector
 runs performance gates under an exclusive lease, then releases it before the
@@ -146,10 +151,8 @@ used the configured 12-worker scheduler, followed by 15 isolated modules.
 All per-module logs are retained in `modules/`; `suite-coverage.json` records
 every passing Case. There was no performance gate recheck.
 
-Run `GERBIL_PATH=/private/tmp/ascent-asp-v0122-gerbil python3
-t/performance/binary-dispatch/verify.py` from the repository root to check
-source/artifact hashes, recompute statistics, validate gate markers, and audit
-all module receipts. `final-audit.json` also records expected Git blob identities
+The retired verifier checked source/artifact hashes, recomputed statistics,
+validated gate markers, and audited all module receipts at the recorded source. `final-audit.json` also records expected Git blob identities
 for the two changed production modules and the permanent regression file.
 These are local native receipts; remote CI and deployment are not established
 by this study.

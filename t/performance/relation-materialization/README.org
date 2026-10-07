@@ -1,5 +1,17 @@
 #+TITLE: Complete bounded relation materialization and traversal qualification
 
+
+* Historical collector retirement (2026-10-07)
+
+This directory records a historical measurement, not a current execution entry.
+The one-shot Python collectors and continuation scheduler were removed after
+the Scheme harness migration. Their original code remains in Git commit
+0f20eb900d5a082e445d93e574c4d71eed0b29cb. Retained receipts and negative results
+refer to their recorded source versions; they do not qualify current source.
+Use =just test=, =just test-file <module>= and =just performance= through the
+current Scheme harness for current acceptance. Scheme benchmark/reference
+modules remain available. Collector names below describe historical work.
+
 * One execution representation for the relation family
 
 This change replaces repeated source traversal and per-pair neighbor closures

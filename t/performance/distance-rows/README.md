@@ -1,5 +1,17 @@
 # Optional distance rows in the production relation engine
 
+## Historical collector retirement (2026-10-07)
+
+This directory records a historical measurement, not a current execution entry.
+The one-shot Python collectors and continuation scheduler were removed after
+the Scheme harness migration. Their original code remains in Git commit
+0f20eb900d5a082e445d93e574c4d71eed0b29cb. Retained receipts and negative results
+refer to their recorded source versions; they do not qualify current source.
+Use `just test`, `just test-file <module>` and `just performance` through the
+current Scheme harness for current acceptance. Scheme benchmark/reference
+modules remain available. Collector names below describe historical work.
+
+
 ## Scope
 
 This is the production integration of the distance-storage seam identified by
@@ -28,18 +40,7 @@ there is no global cache, new dependency, thread or test-scheduling change.
 
 ## Evidence and reproduction
 
-```sh
-GERBIL_PATH=/private/tmp/ascent-test-scheduling-gerbil GERBIL_BUILD_CORES=12 \
-  python3 tools/test_execution.py run -- \
-  python3 t/performance/distance-rows/qualify.py
-python3 t/performance/distance-rows/report.py
-GERBIL_PATH=/private/tmp/ascent-test-scheduling-gerbil GERBIL_BUILD_CORES=12 \
-  python3 tools/test_execution.py run -- \
-  python3 t/performance/distance-rows/gates.py
-# Run the functional suite after the exclusive collector has exited:
-GERBIL_PATH=/private/tmp/ascent-test-scheduling-gerbil GERBIL_BUILD_CORES=12 \
-  python3 t/performance/distance-rows/run-suite.py
-```
+The retired collector commands are available in the frozen Git commit above.
 
 The native collector reconstructs the exact reference from Git, builds both
 implementations privately, and retains source and compiled artifact hashes.

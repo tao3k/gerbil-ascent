@@ -1,5 +1,17 @@
 # Prepared general binary rules and per-round delta indexes
 
+## Historical collector retirement (2026-10-07)
+
+This directory records a historical measurement, not a current execution entry.
+The one-shot Python collectors and continuation scheduler were removed after
+the Scheme harness migration. Their original code remains in Git commit
+0f20eb900d5a082e445d93e574c4d71eed0b29cb. Retained receipts and negative results
+refer to their recorded source versions; they do not qualify current source.
+Use `just test`, `just test-file <module>` and `just performance` through the
+current Scheme harness for current acceptance. Scheme benchmark/reference
+modules remain available. Collector names below describe historical work.
+
+
 This commit optimizes the complete general binary fixed point: immutable rule
 preparation, recursive execution, delta index lifecycle, and result publication.
 The exact preceding committed source is recorded in `baseline.txt`; its table
@@ -56,16 +68,7 @@ not successful qualification evidence.
 
 ## Reproduction
 
-```sh
-GERBIL_PATH=/private/tmp/ascent-asp-v0122-gerbil GERBIL_BUILD_CORES=12 \
-  python3 tools/test_execution.py run -- \
-  python3 t/performance/general-rounds/qualify.py
-python3 t/performance/general-rounds/report.py
-GERBIL_PATH=/private/tmp/ascent-asp-v0122-gerbil GERBIL_BUILD_CORES=12 \
-  python3 t/performance/general-rounds/production.py
-GERBIL_PATH=/private/tmp/ascent-asp-v0122-gerbil \
-  python3 t/performance/general-rounds/verify.py
-```
+The retired collector commands are available in the frozen Git commit above.
 
 Run the production collector after the paired collector releases its lease.
 Performance collection uses one exclusive lease; the functional suite starts

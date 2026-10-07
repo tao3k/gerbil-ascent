@@ -1,5 +1,17 @@
 # One admission ledger for the general binary fixed point
 
+## Historical collector retirement (2026-10-07)
+
+This directory records a historical measurement, not a current execution entry.
+The one-shot Python collectors and continuation scheduler were removed after
+the Scheme harness migration. Their original code remains in Git commit
+0f20eb900d5a082e445d93e574c4d71eed0b29cb. Retained receipts and negative results
+refer to their recorded source versions; they do not qualify current source.
+Use `just test`, `just test-file <module>` and `just performance` through the
+current Scheme harness for current acceptance. Scheme benchmark/reference
+modules remain available. Collector names below describe historical work.
+
+
 This change follows one evaluation through source capture, admission, join
 rounds, commit, budgets and immutable result publication. The preceding commit
 is frozen in `baseline.txt`; reference modules differ only in exported names
@@ -59,16 +71,7 @@ padding and the dense-to-sparse boundary.
 
 ## Reproduction
 
-```sh
-GERBIL_PATH=/private/tmp/ascent-asp-v0122-gerbil GERBIL_BUILD_CORES=12 \
-  python3 tools/test_execution.py run -- \
-  python3 t/performance/binary-admission/qualify.py
-python3 t/performance/binary-admission/report.py
-GERBIL_PATH=/private/tmp/ascent-asp-v0122-gerbil GERBIL_BUILD_CORES=12 \
-  python3 t/performance/binary-admission/production.py
-GERBIL_PATH=/private/tmp/ascent-asp-v0122-gerbil \
-  python3 t/performance/binary-admission/verify.py
-```
+The retired collector commands are available in the frozen Git commit above.
 
 Start the production collector after matched collection releases its exclusive
 lease. Performance gates run with isolation; the functional suite starts

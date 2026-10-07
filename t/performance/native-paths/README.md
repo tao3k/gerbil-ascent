@@ -1,5 +1,17 @@
 # Shared native path analysis
 
+## Historical collector retirement (2026-10-07)
+
+This directory records a historical measurement, not a current execution entry.
+The one-shot Python collectors and continuation scheduler were removed after
+the Scheme harness migration. Their original code remains in Git commit
+0f20eb900d5a082e445d93e574c4d71eed0b29cb. Retained receipts and negative results
+refer to their recorded source versions; they do not qualify current source.
+Use `just test`, `just test-file <module>` and `just performance` through the
+current Scheme harness for current acceptance. Scheme benchmark/reference
+modules remain available. Collector names below describe historical work.
+
+
 This change integrates one guarded path engine into `table/expression.ss`.
 Canonical snapshots with 32–128 nodes and at least `ceil(3 * radix / 4)`
 outgoing edges in every row use integer bit rows. Closure and shortest distance
@@ -139,14 +151,7 @@ Use the same installed dependency tree named in the receipts, or rebuild all
 receipts against the replacement dependency tree. Local absolute artifact paths
 in manifests refer to the original qualification checkout.
 
-```sh
-export GERBIL_PATH=/private/tmp/ascent-test-scheduling-gerbil
-export GERBIL_BUILD_CORES=12
-python3 tools/test_execution.py run -- python3 t/performance/native-paths/qualify.py
-python3 t/performance/native-paths/report.py
-python3 tools/test_execution.py run -- python3 t/performance/native-paths/gates.py
-python3 t/performance/native-paths/run-suite.py > t/performance/native-paths/suite-collection.log 2>&1
-```
+The retired collector commands are available in the frozen Git commit above.
 
 Run the functional suite after the exclusive collectors have exited. Its own
 module scheduler handles the shared/exclusive lanes; it must not inherit a
@@ -159,15 +164,12 @@ If the aggregate 360-second collection deadline interrupts an otherwise
 progressing run, preserve it and complete only the missing modules against the
 same verified snapshot, with their original Case/module limits:
 
-```sh
-timeout 300s python3 t/performance/native-paths/complete-suite.py > t/performance/native-paths/completed-functional-suite.log 2>&1
-```
+The retired collector commands are available in the frozen Git commit above.
 
 This produces a combined coverage receipt with explicit interruption and
 completion provenance. It must not be described as a successful uninterrupted
 full-suite run.
 
-After coverage is complete, run `python3 t/performance/native-paths/verify.py`
-to verify the saved sources, artifacts, markers, and sample statistics. It
-records the failed experimental timing assertion separately from successful
+The retired verifier checked the saved sources, artifacts, markers, and
+sample statistics after coverage was complete. It recorded the failed experimental timing assertion separately from successful
 semantic coverage and original production gates.

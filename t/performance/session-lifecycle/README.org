@@ -1,5 +1,17 @@
 #+TITLE: Native performance qualification lifecycle
 
+
+* Historical collector retirement (2026-10-07)
+
+This directory records a historical measurement, not a current execution entry.
+The one-shot Python collectors and continuation scheduler were removed after
+the Scheme harness migration. Their original code remains in Git commit
+0f20eb900d5a082e445d93e574c4d71eed0b29cb. Retained receipts and negative results
+refer to their recorded source versions; they do not qualify current source.
+Use =just test=, =just test-file <module>= and =just performance= through the
+current Scheme harness for current acceptance. Scheme benchmark/reference
+modules remain available. Collector names below describe historical work.
+
 * Scope and preceding implementation
 
 This change repairs the execution path of the complete performance entrypoint.
@@ -74,14 +86,7 @@ No forced per-sample GC or budget relaxation is introduced.
 
 * Reproduction and evidence
 
-#+begin_src sh
-GERBIL_PATH=/private/tmp/ascent-test-scheduling-gerbil GERBIL_BUILD_CORES=12 \
-  just performance
-GERBIL_PATH=/private/tmp/ascent-test-scheduling-gerbil GERBIL_BUILD_CORES=12 \
-  python3 tools/test_execution.py run -- \
-  python3 t/performance/session-lifecycle/qualify.py
-python3 -m unittest discover -s tools/tests
-#+end_src
+The retired collector commands are available in the frozen Git commit above.
 
 The normal performance entrypoint remains fail-fast. The qualification collector
 executes all 17 unchanged gates independently so that an early failure does not

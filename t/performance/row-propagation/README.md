@@ -1,5 +1,17 @@
 # Closed relation row propagation study
 
+## Historical collector retirement (2026-10-07)
+
+This directory records a historical measurement, not a current execution entry.
+The one-shot Python collectors and continuation scheduler were removed after
+the Scheme harness migration. Their original code remains in Git commit
+0f20eb900d5a082e445d93e574c4d71eed0b29cb. Retained receipts and negative results
+refer to their recorded source versions; they do not qualify current source.
+Use `just test`, `just test-file <module>` and `just performance` through the
+current Scheme harness for current acceptance. Scheme benchmark/reference
+modules remain available. Collector names below describe historical work.
+
+
 ## Question and code seam
 
 Production `table/expression.ss` publishes ordered packed pairs, but its closure
@@ -54,12 +66,7 @@ overridden neighbor callback.
 
 Use the existing installed Gerbil package environment and execute:
 
-```sh
-GERBIL_PATH=/private/tmp/ascent-test-scheduling-gerbil GERBIL_BUILD_CORES=12 \
-  python3 tools/test_execution.py run -- \
-  python3 t/performance/row-propagation/qualify.py
-python3 t/performance/row-propagation/report.py
-```
+The retired collector commands are available in the frozen Git commit above.
 
 The qualifier holds the exclusive measurement lane, builds both native modules,
 verifies the exact frozen reference against Git with only two export name

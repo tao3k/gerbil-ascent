@@ -1,5 +1,17 @@
 #+TITLE: Demand-driven persistent result publication
 
+
+* Historical collector retirement (2026-10-07)
+
+This directory records a historical measurement, not a current execution entry.
+The one-shot Python collectors and continuation scheduler were removed after
+the Scheme harness migration. Their original code remains in Git commit
+0f20eb900d5a082e445d93e574c4d71eed0b29cb. Retained receipts and negative results
+refer to their recorded source versions; they do not qualify current source.
+Use =just test=, =just test-file <module>= and =just performance= through the
+current Scheme harness for current acceptance. Scheme benchmark/reference
+modules remain available. Collector names below describe historical work.
+
 * One publication lifecycle
 
 Retained engines publish an independent vector of row promises. Each promise
@@ -87,11 +99,7 @@ one-shot construction, and makes retained row views demand-driven.
 
 * Reproduction
 
-#+begin_src sh
-GERBIL_PATH=/private/tmp/ascent-test-scheduling-gerbil GERBIL_BUILD_CORES=12 \
-  python3 t/performance/result-publication/qualify.py
-python3 t/performance/result-publication/verify-reference.py
-#+end_src
+The retired collector commands are available in the frozen Git commit above.
 
 The qualifier runs two isolated complete-output pairs, production policy,
 complete functional suite, and four unchanged original Session SS scenarios.

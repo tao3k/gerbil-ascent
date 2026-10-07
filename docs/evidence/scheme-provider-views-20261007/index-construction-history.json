@@ -1,0 +1,213 @@
+{
+  "version": 1,
+  "date": "2026-10-07",
+  "base_commit": "c30f057fd7963703f9234105303caa612ee470f6",
+  "paper": {
+    "url": "https://kmicinski.com/assets/byods.pdf",
+    "location": "Section 4, PDF page 11",
+    "obligation": "Logical indexes agree on concretization; keyed and read-all observations cover represented tuples.",
+    "additional_native_contract": "Occurrence counts, keyed traversal order and captured row identity are ASCENT consumer contracts, not paper Set semantics."
+  },
+  "delivery_scope": {
+    "packages": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10
+    ],
+    "completed_packages": [],
+    "advanced_obligation": "Package 3 constructed index history, with package 4 installation safety controls.",
+    "deferred": "MR/MRR integration; signed DBSP circuits and real-model comprehension are separate research gates."
+  },
+  "source_sha256": {
+    "packages/proofs/lean/ProviderRouting.lean": "982e05f917013d43cb209a3d9df7545d218b88c7653b9a9b827f341673f59e74",
+    "packages/proofs/lean/Tests/ProviderRoutingTests.lean": "a9cafde38c2e4657db13ac9bc6500b2d06f75964fc88cfabe40f865c5d14ccfa",
+    "packages/proofs/lean/lakefile.lean": "f803f22dfa9de21b5566d61a27eea63c05c9cb382b6ae80b89eb81b5eecc97de",
+    "packages/proofs/lean/lean-toolchain": "8733782dc070a99b312039cda424f601b80f3be6f6f512627da5ba25adc27632",
+    "packages/proofs/tla/ComponentIndex.tla": "f97a70d6395e523a95aaebad64e462e2cd10a71d8227b5bb4f4345df92194a7a",
+    "packages/proofs/tla/ComponentIndex.cfg": "e2668792abd0e021a14f9dbae7b5f0dc0e07545ce9ea8f19e19d060a2e7a3018",
+    "justfile": "6876e91d59476146be4c2def7c2134df4fbfc45afacabc748641eb2a3c5d70e4",
+    "table/funs.ss": "82602b2f5afd364c693b5e83394fb55ab87b02b64427271ca9f11f9a9e0eb76c",
+    "table/access.ss": "04b0916e264e63f6dafeb6452ad5aa50962797a0942f98056d8a0e5bd1ab7823",
+    "table/index-sharing.ss": "7d866e1d7f4041be225b0d12fae0265d6b97a3f05d40e447fea650af5e647190",
+    "table/provider.ss": "23c04a69bdcb1de446aed2552319c1f8f0dd42d64b33dce1ad122d4e9dbc467f",
+    "core/relation-view.ss": "abbb9ac0981df8480d6316bb7818213a06573ff1321d914fb85b9e4ee9d471c8",
+    "program/index.ss": "d938ca429446a3c06a74fbd9fb57a03a46d51c8a257edc040663881f5ae4a45f",
+    "program/evaluate.ss": "88f98d982370f13e80814b20c1930a03671deb836b37a3afecf0c46e8c276039",
+    "t/qualification/ascent-index-build-test.ss": "2bf5907f323437fdeedce6674088124d0ff2ae38f5f4b635946d10b6cc4caa81",
+    "t/performance/index-build/fixture.ss": "22437e1d1afc121592bd0c6ae79f6da690d05df41bd8fedd6af020caeea83da5",
+    "t/performance/index-build/reference-index.ss": "76d4bce8e9ff2d3ca5db96b33e29a6252ed5247dce8eb64190ffc18f35ec5cf8",
+    "t/harness/run.ss": "38502ab3ba2bd7bf0cedc1613036fcb0df0511411871396560f8e7c91d83660d",
+    "t/harness/native-entry.ss": "0da981b6265fb747341229fc6d87fc1bb3cbb304263b8c83df675bf4f6fde610",
+    "t/harness/artifact.ss": "3bf7ec77d4ef7ea005ebd9e57f7171e23fd346390fda6021c660fc8c5379d94a",
+    "gerbil.pkg": "526334723a6aad8d0ecdf8f4abad3e50afc22aa95af177827a5ef54215331cd9",
+    "build.ss": "a00edec608bb921b50927a98d77d34d34e57d307a23bbb693040f91e1210fbb5"
+  },
+  "lean": {
+    "command": "just check-lean-proofs (included in just check-formal)",
+    "toolchain": "leanprover/lean4:v4.34.0",
+    "jobs": 109,
+    "new_theorems": [
+      "prepend_batch_exact",
+      "build_buckets_exact",
+      "extend_buckets_exact",
+      "replay_buckets_exact",
+      "encoded_build_exact",
+      "built_candidate_routing_exact",
+      "key_scan_count",
+      "build_read_all_count",
+      "complete_read_all_count",
+      "replay_read_all_count"
+    ],
+    "new_examples": 8,
+    "additional_axioms": [],
+    "axioms_in_new_theorems": [
+      "propext",
+      "Quot.sound"
+    ],
+    "scope": "Functional dictionary construction and arbitrary finite batch history; native dictionary/encoding extraction remains open."
+  },
+  "tla": {
+    "command": "just check-component-index-formal (included in just check-formal)",
+    "model": "ComponentIndex",
+    "generated": 113,
+    "distinct": 49,
+    "owners": 2,
+    "configured_input_batches": 2,
+    "generation_limit": null,
+    "controls": {
+      "order": "Consistent",
+      "early": "Consistent",
+      "failed": "Consistent",
+      "alias": "Consistent",
+      "foreign": "Consistent",
+      "reset": "Consistent",
+      "held": "HeldStable"
+    },
+    "required_fault_exit": 12,
+    "scope": "Finite staged installation, failure/rebuild, aliases, owner isolation and held-reader safety; no general temporal liveness theorem."
+  },
+  "integrated_formal": {
+    "command": "just check-formal",
+    "exit": 0,
+    "positive_models": 30,
+    "named_counterexamples": 87,
+    "marker": "ALL-FORMAL-CHECK-OK",
+    "transcript_sha256": "17d3ee28f03884b781b168f444aafa91bc679a3e6da87236d44baa8c7d0c5de6"
+  },
+  "native": {
+    "command": "just test 4",
+    "exit": 0,
+    "workers": 4,
+    "module_ok_markers": 85,
+    "module_pass_markers": 85,
+    "case_ok_markers": 820,
+    "target_suite_cases": 7,
+    "initial_row_sets": 256,
+    "logical_layouts": 11,
+    "subsequent_batches": 3,
+    "key_queries_per_batch": 9,
+    "truth": "Independent direct list-ref scan; exact order, occurrences, row identity and held bucket stability.",
+    "environment": "Captured devenv launcher with repository dependency prefix, Apple clang and Nix SDK flags cleared for Gerbil compilation.",
+    "transcript_sha256": "95e770a86f97e55b4ce9601035daed8b3e3465d56a82f11142ca11b9e7943251",
+    "binary_sha256": "17d7e723c8bbf79a0881d570ff4099a99fe17097567dfd036fda0f2a84e635a3",
+    "generated_entry_sha256": "42902c8ffecfda197430d1ac9f267d92889f07c4ba259a90b0f1cbba094317f4"
+  },
+  "rejected_attempts": [
+    {
+      "transcript_sha256": "32a48419bed673a7afca4a317780a741a011cdf98a8a24c37ca643c07feeaa4d",
+      "exit": 70,
+      "cause": "Missing building-api in default Gerbil prefix; no Cases executed."
+    },
+    {
+      "transcript_sha256": "2080c2e5e30de93273453d6afe8aa5655ccf766a4fc49c2abd0f30fe100b2ae4",
+      "exit": 70,
+      "cause": "Captured Nix SDK contaminated Gerbil C compilation: unknown FILE."
+    },
+    {
+      "transcript_sha256": "d8514c1d668d7fd938397053ee5396cd72e82a32b1cbe0b30e75d8175311cc38",
+      "exit": 70,
+      "cause": "New test had an unclosed let binding list; fixed before execution."
+    },
+    {
+      "transcript_sha256": "a11d163457dea0ae5192fe774ff85adb840ac5a4a6fcb38e95955b4b2215961a",
+      "exit": 255,
+      "cause": "TLC cfg cannot assign the sequence literal directly; corrected with operator substitution."
+    }
+  ],
+  "remaining": [
+    "Native lawful equality/hash and mutable dictionary interpretation",
+    "Stepped scalar/composite projection and curried trie/rectangle visitor extraction",
+    "Custom Provider semantic laws and asynchronous domains",
+    "Full ten-package implementation and final GitHub CI",
+    "Complete paper application datasets and work/CPU/wall/allocation/peak-memory qualification"
+  ],
+  "benefit_claim": null,
+  "model_calls": 0,
+  "raw_transcripts_committed": false,
+  "integration": {
+    "upstream_full_commit": "1fdc9004b6328e020433146e136538e1e5130364",
+    "qualification_parent": "1fdc900 (canonical parts admission and Steensgaard source/application receipts)",
+    "preserved": [
+      "637e695 canonical admission and native Steensgaard",
+      "1fdc900 integrated acceptance and pinned paper source"
+    ],
+    "conflict_resolution": "Concatenated both independent research/closure sections; preserved both runtime edits and proof algebra. No runtime or test assertions were weakened.",
+    "source_sha256": {
+      "packages/proofs/lean/ProviderRouting.lean": "982e05f917013d43cb209a3d9df7545d218b88c7653b9a9b827f341673f59e74",
+      "packages/proofs/lean/Tests/ProviderRoutingTests.lean": "a9cafde38c2e4657db13ac9bc6500b2d06f75964fc88cfabe40f865c5d14ccfa",
+      "packages/proofs/lean/lakefile.lean": "f803f22dfa9de21b5566d61a27eea63c05c9cb382b6ae80b89eb81b5eecc97de",
+      "packages/proofs/lean/lean-toolchain": "8733782dc070a99b312039cda424f601b80f3be6f6f512627da5ba25adc27632",
+      "packages/proofs/tla/ComponentIndex.tla": "f97a70d6395e523a95aaebad64e462e2cd10a71d8227b5bb4f4345df92194a7a",
+      "packages/proofs/tla/ComponentIndex.cfg": "e2668792abd0e021a14f9dbae7b5f0dc0e07545ce9ea8f19e19d060a2e7a3018",
+      "justfile": "6071ce68c57dfe0c21d6e51823e20f60db12645cb6214def6e96c19e50a9b804",
+      "table/funs.ss": "82602b2f5afd364c693b5e83394fb55ab87b02b64427271ca9f11f9a9e0eb76c",
+      "table/access.ss": "04b0916e264e63f6dafeb6452ad5aa50962797a0942f98056d8a0e5bd1ab7823",
+      "table/index-sharing.ss": "7d866e1d7f4041be225b0d12fae0265d6b97a3f05d40e447fea650af5e647190",
+      "table/provider.ss": "23c04a69bdcb1de446aed2552319c1f8f0dd42d64b33dce1ad122d4e9dbc467f",
+      "core/relation-view.ss": "3198c2828899e3c2969e41974fe319928d5adc59b4a5af56c7845117dd686343",
+      "program/index.ss": "378f27917b5468d7a709a90f307cde6ec005f25805a5e91ac0d5bf034bcb6a45",
+      "program/evaluate.ss": "88f98d982370f13e80814b20c1930a03671deb836b37a3afecf0c46e8c276039",
+      "t/qualification/ascent-index-build-test.ss": "2bf5907f323437fdeedce6674088124d0ff2ae38f5f4b635946d10b6cc4caa81",
+      "t/performance/index-build/fixture.ss": "22437e1d1afc121592bd0c6ae79f6da690d05df41bd8fedd6af020caeea83da5",
+      "t/performance/index-build/reference-index.ss": "76d4bce8e9ff2d3ca5db96b33e29a6252ed5247dce8eb64190ffc18f35ec5cf8",
+      "t/harness/run.ss": "3fc89e8ec3feef10fc1e819af56a26c4f71c142e343e650c17685b684bfb62fd",
+      "t/harness/native-entry.ss": "0da981b6265fb747341229fc6d87fc1bb3cbb304263b8c83df675bf4f6fde610",
+      "t/harness/artifact.ss": "3bf7ec77d4ef7ea005ebd9e57f7171e23fd346390fda6021c660fc8c5379d94a",
+      "gerbil.pkg": "526334723a6aad8d0ecdf8f4abad3e50afc22aa95af177827a5ef54215331cd9",
+      "build.ss": "3e44a8e44de8396088439681bb56a2d7a1012a1d8c40e57bd9b2d021b07dad63",
+      "applications/steensgaard.ss": "a67153316e7b42c9b032c9da3566b06666b489764d8056e3d1cdf5dd6dee0e1d",
+      "t/qualification/ascent-steensgaard-test.ss": "d23a527a16b4a5be787d13251f52c6ec18898f2c19168445d0919565e2dde7a3",
+      "t/qualification/ascent-provider-views-test.ss": "7a3522c597eb1d0024046917007e830c52af2479013fa575fa61de47f9f1df25",
+      "t/qualification/ascent-relation-view-test.ss": "0d7539acb789f26711f17b6580f41b014ae5c67161211a8bd2a577d0e33b50e8",
+      "t/harness/dsl-closure.ss": "da6c50672590ae7f2d3039e8ae1886aa75b579de223d784779841499aa605ce0"
+    },
+    "native": {
+      "command": "just test 4",
+      "exit": 0,
+      "workers": 4,
+      "modules": 86,
+      "case_ok_markers": 826,
+      "transcript_sha256": "421d4c99f120283bd4e3de6cee4b70a486110adff8d3e9fcdd0764ed879c487a",
+      "binary_sha256": "64d5f416dd11d1b2edc255c5d799a01bb4a575404105e620daaa1dbac86ff3bf",
+      "generated_entry_sha256": "1ab130a9446e89a90ac078a12737590c6e96e07a9890d44d53c14e05da10203a"
+    },
+    "formal": {
+      "command": "just check-formal",
+      "exit": 0,
+      "lean_jobs": 109,
+      "positive_models": 30,
+      "named_counterexamples": 87,
+      "transcript_sha256": "c446e6155bb51c4c2b2b1ae0145d59b7ee7b7b52123ea07b4e94c1f50a2e050b"
+    },
+    "application_boundary": "Native Steensgaard program and small complete fixtures are preserved; pinned OpenJDK inputs contain 47069 rows. Full Scheme dataset solving and continuous peak memory remain unadmitted.",
+    "application_receipt": "docs/evidence/scheme-application-admission-20261007/receipt.json",
+    "historical_evidence": "Top-level source hashes/native/formal entries belong to the pre-integration c30f057 source cut. This integration entry qualifies current sources."
+  }
+}

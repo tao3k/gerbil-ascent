@@ -2338,3 +2338,47 @@ current eager eqrel buffers retain a concrete B23 linear-storage gap; full
 OpenJDK solving and continuous peak memory remain separate obligations.
 Cross-thread VM allocation subtraction is invalid and is excluded from
 worker comparisons. See the [[file:scheme-trrel-uf-design.org][implementation design]] and its integrated receipt.
+
+* Connected library delivery and constructed indexes (2026-10-07)
+
+The ten authorized library packages are now enumerated in the existing
+[[file:scheme-paper-closure.org][closure matrix]], with implementation owners and falsifiable completion
+conditions. Their count describes acceptance packages, not absent capabilities.
+The support boundary is precise: finite positive recursive Boolean provenance
+and finite stratified recursive derivation provenance already exist. The latter
+includes exact negative and reduction observations. The open maintenance work
+is retained Session integration, changed-model observation validity and further
+valuation contracts; it is not an absence of all recursive/stratified evidence.
+
+ProviderRouting now derives bucket completeness from the functional counterpart
+of native prepend/build/reverse operations. Ten additional laws cover exact
+build, extension and arbitrary finite history, injective semantic key encoding,
+constructed coordinate routing and occurrence-count preservation through
+ReadAll. No bucket-coverage premise is supplied to the build theorem. Native
+hash equality, mutable table extraction, stepped column projection and curried
+trie/rectangle visitor correspondence remain distinct obligations. Key encoding
+injectivity does not require collision-free hashing: native tables must resolve
+collisions using lawful equality, rather than treat hash values as keys.
+
+ReadAll requires complete unique semantic keys; duplicate keys multiply the
+occurrence count, and omitted keys remove rows. Bucket enumeration order is not
+assumed to match source order. This complements ordered keyed reads, rather
+than imposing an unsupported ordered ReadAll contract on BYODS.
+Occurrence counts and stored object identity are additional ASCENT consumer
+contracts; they must not be attributed to the paper's extensional Set semantics.
+
+ComponentIndex now checks two input batches per owner, partial private install,
+failed extension/reconstruction, aliases and foreign owners. A captured initial
+reader remains stable through both installations. New reset and held mutations
+must violate Consistent and HeldStable respectively. The finite input fixture
+does not impose a runtime generation limit; no unbounded temporal or callback
+liveness claim is made. Lean owns constructed index algebra; TLA owns these
+protocol interleavings.
+
+The native index construction Suite adds all 256 three-field Boolean row sets,
+eleven scalar/composite/empty/repeated/reordered layouts and three accepted
+batches, including an empty batch. An independent direct list-ref scan checks
+every selected key and absent keys after every batch. Stored row identities,
+duplicate occurrences and a retained pre-update bucket are checked separately.
+These checks strengthen package 3; they do not close all ten packages or supply
+whole-application speed/memory evidence.

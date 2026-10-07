@@ -136,6 +136,40 @@ Rust runtime integration.
 
 * Implementation order and final acceptance gates
 
+** Authorized connected work packages (2026-10-07)
+
+The following ten packages are the current library delivery scope. They are
+non-overlapping acceptance units, not a percentage, a theorem count, or ten
+missing features. All ten remain open until their own implementation and
+acceptance conditions are satisfied. Later entries in this document update
+specific obligations; historical progress paragraphs do not close a package.
+
+| Package | Implementation owners | Required closure output |
+|---------+-----------------------+-------------------------|
+| 1. Admitted language and compiler | program/higher-order.ss, operator.ss, rule-bindings and core/rule-semantics.ss | Decode actual owned descriptors, captures, types, rows and plans; connect native rule steps to the consequence operator and least-model chain. Finite-height premises must come from admitted domains, not budgets. |
+| 2. Provider and UF correspondence | table/storage.ss, eqrel.ss, trrel.ss, trrel-uf.ss | Extract native state, parent/member/SCC and gamma/delta laws; connect constructed frontiers and complete-join injection to arbitrary admitted positive bodies and finite histories. Caller semantic laws remain explicit contracts. |
+| 3. Index and physical-plan correspondence | table/funs.ss, access.ss, index-sharing.ss, core/relation-view.ss, program/index.ss | Derive lookup completeness from construction and extension; connect scalar/composite/curried keys, ordinal traversal and optimized visitors to common concretization. Validate all logical indexes across updates and failures. |
+| 4. Session and actor protocol correspondence | program/session.ss, reuse.ss, actor-round.ss, component-worker.ss | Relate actual publication, source identity, cancellation, drain and recovery traces to the protocol models. State external effects and callback liveness assumptions explicitly; do not infer unbounded progress from TLC. |
+| 5. API and diagnostic coverage | program/syntax.ss, summary.ss, schema and admission owners | Inventory every pinned Rust syntax/attribute/API/diagnostic family, implement the admitted Scheme counterparts, and retain declared semantic divergences with independent negative admission cases. |
+| 6. Concurrent extensibility and partitioning | actor eligibility, component-worker and Provider owners | Define lawful concurrent custom-domain/lattice capabilities before enabling them; implement large-task partitioning and ownership-safe execution, including cancel, late/duplicate output and exact semantic controls. |
+| 7. Maintenance and evidence | source-log.ss, update-selection.ss, candidate/provenance-graph.ss and stratified evidence | Integrate finer grounded maintenance with retained Session transactions without changing candidate authority; validate founded alternatives, simultaneous withdrawal, negation/aggregate observations and each claimed provenance valuation. |
+| 8. Typed function changes | program/higher-order.ss and operator lowering | Implement an actual S20 insertion-change compiler transformation with base-dependent function/argument changes, lexical captures and nested arrows; prove preservation against full evaluation before claiming saved work. |
+| 9. Complete paper applications | native Scheme application modules and independent truth/oracle fixtures | Deliver Steensgaard, Polonius, PageRank and LLVM/index-sharing counterparts with complete program/input identity and full outputs. Small graph fixtures do not replace the paper workloads. |
+| 10. Whole-application benefit | existing native benchmark framework and structured evidence | Paired identical-input semantic controls and alternating measurements covering admission, planning, invalidation, solve and publication; record work, CPU, wall, allocation and peak memory, including regressions. |
+
+Packages 1--4 establish the shared correspondence before widening packages
+5--8. Application implementations in package 9 may proceed with explicit
+capability prerequisites, but package 10 is admitted only after their output
+truth passes. Closure requires the final GitHub commit's complete CI, not a
+previous successful head. Lean owns semantic/algebraic correspondence and TLA+
+owns operational interleavings; native discriminators remain independent.
+
+Signed-weight DBSP circuits and raw real-model comprehension retain separate
+research gates outside these ten library packages. MR/MRR integration remains
+deferred. This authorization creates no new paid model-call budget.
+
+** Final acceptance sequence
+
 1. Connect admitted DSL, native row/binder/index/rule steps and the consequence
    operator through refinement, composing the existing local statements.
    Align input capabilities, exit status and semantic budgets.
@@ -518,3 +552,41 @@ threads' research sections. The native artifact was rebuilt for the changed
 11 BYODS tests, Clippy, the full-data Rust model unit test and 18 Python support
 tests. Valid/stale artifact controls respectively succeed and reject before
 result output. Remote final-revision CI remains separate from these receipts.
+
+* Constructed index histories and ReadAll (2026-10-07)
+
+Package 3 now has a constructed dictionary boundary: prependRow/prependBatch
+model native head insertion, fresh bucket reversal derives ordered builds, and
+arbitrary finite replay derives exact newest-first cuts. ReadAll occurrence
+counts are derived from complete unique semantic key enumeration; repeated keys
+and omitted keys have explicit negative examples. Ten new Lean laws connect
+construction, extension, key encoding, selected-coordinate routing and read-all
+history without assuming that built buckets were already complete.
+
+The native discriminator covers all 256 three-column Boolean input sets,
+eleven logical layouts and three subsequent batches. Every keyed output agrees
+with independent full scanning, including duplicates, missing keys, false keys,
+row identity and unchanged held pre-update buckets. The full native module pool
+is qualified independently of the formal algebra.
+
+ComponentIndex separately owns staged installation, failed mutation/rebuild,
+cross-owner isolation and a held reader through multiple input batches. Its
+Inputs constant is configured by operator substitution; no runtime generation
+cap is introduced. Seven faults include second-batch reset and held-reader
+mutation. Finite TLC safety is not an unbounded native trace or liveness proof.
+
+The [[file:evidence/scheme-provider-views-20261007/index-construction-history.json][source-bound receipt]] retains successful gates and rejected preparation /
+configuration attempts. Native equality/hash/encoding and optimized projection /
+curried visitor extraction remain obligations. Package 3 and the ten-package
+library delivery are not declared complete by this constructed index boundary.
+No application speedup, peak-memory benefit or paid model study is claimed.
+
+The integration entry rebases this boundary onto =1fdc900=, preserving the
+canonical parts capability correction and native Steensgaard application.
+Both independently authored research sections are retained. The final combined
+gates pass 86 native modules / 826 Case verdicts, 109 Lean build jobs, 30 positive
+TLC models and 87 named counterexample controls. Pre-integration qualification
+is retained separately in the receipt. Steensgaard has complete small-input
+fixtures and pinned 47,069-row OpenJDK source admission; full Scheme dataset
+solving and continuous peak-memory admission remain open. Final GitHub CI is
+still a separate commit-specific gate.

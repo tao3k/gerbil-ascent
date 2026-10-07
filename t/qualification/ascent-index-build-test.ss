@@ -10,6 +10,40 @@
 (export ascent-index-build-test)
 (def ascent-index-build-test
   (test-suite "Owned physical index construction"
+    (test-case "every logical index agrees through exhaustive retained batch histories"
+      ;; Reference projection is direct list-ref, independent of stepped-key.
+      ;; Distinct row objects with equal fields exercise value hashing.
+      (let* ((universe (apply append
+                         (map (lambda (a) (apply append
+                           (map (lambda (b) (map (lambda (c) (list a b c)) '(#f #t))) '(#f #t)))) '(#f #t))))
+             (columns-family '(() (0) (1) (2) (0 1) (1 2) (0 2) (0 1 2) (2 0) (0 0) (2 1 2)))
+             (project (lambda (row columns) (map (lambda (c) (list-ref row c)) columns))))
+        (for-each (lambda (mask)
+          (let* ((source (filter values
+                          (map (lambda (row bit)
+                            (and (not (zero? (bitwise-and mask (arithmetic-shift 1 bit)))) row))
+                               universe (iota 8))))
+                 (first (list (list #f #t #f) (list #t #f #t) (list #f #t #f)))
+                 (last (list (list #t #t #t) (list #f #f #f)))
+                 (history (list first [] last)))
+            (for-each (lambda (columns)
+              (let* ((index (gerbil-ascent-physical-index-build gerbil-ascent-hash-index-provider source columns))
+                     (key (project (list #f #t #f) columns))
+                     (held (gerbil-ascent-physical-index-rows gerbil-ascent-hash-index-provider index key))
+                     (held-copy (map values held)) (cut source)
+                     (queries (map (lambda (row) (project row columns))
+                                  (cons '(missing missing missing) universe))))
+                (for-each (lambda (batch)
+                  (gerbil-ascent-physical-index-extend! gerbil-ascent-hash-index-provider index batch columns)
+                  (set! cut (append (reverse batch) cut))
+                  (check-equal? held held-copy)
+                  (for-each (lambda (query)
+                    (let* ((actual (gerbil-ascent-physical-index-rows gerbil-ascent-hash-index-provider index query))
+                           (expected (filter (lambda (row) (equal? (project row columns) query)) cut)))
+                      (check-equal? actual expected)
+                      (for-each (lambda (a b) (check-equal? (eq? a b) #t)) actual expected))) queries)) history))) columns-family))
+          (when (zero? (modulo (+ mask 1) 32))
+            (displayln "INDEX-HISTORIES-CHECKED " (+ mask 1) "/256") (force-output))) (iota 256))))
     (test-case "all ordered repeated and arbitrary columns preserve finite row order"
       (for-each
        (lambda (size)

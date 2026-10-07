@@ -628,3 +628,23 @@ identities. This is the precise motivation for =PrivateArcs=, member ownership
 and direct-parent/root correspondence in this unit. The paper distinguishes
 large SCC workloads from DAG workloads; no new asymptotic or end-to-end gain
 is inferred from the correctness checks above.
+
+* Grouped encoding and presentation journal progress (2026-10-07)
+
+The BYODS refinement now includes eleven Lean encoding/orientation laws and
+a separate TLA ProviderReplay publication model. Encoding a two-column row
+and encoding a three-column false-group row are provably distinct. Exact
+encoded frontiers derive from the constructed root/member plan; derived batch
+orientation preserves facts, uniqueness and counts. The TLA model uses a
+constructed predecessor/successor step and an independent input-closure oracle;
+six faults discriminate scope aliasing, early/omitted journal events, erased
+derived kind, mutable old cuts and refusal writes. Native Scheme tests cover
+false/true/ungrouped isolation, actual public export order, old cuts, detached
+row spines and whole-batch orientation.
+
+These are representation and publication obligations around Sections 3.3 and
+5.4. Export order is an additional Scheme Library contract, not a BYODS semantic
+requirement. Full custom-provider/lattice admission, application and benefit
+coverage remains open. Continue with universal storage/replay refinement and
+application controls under the existing closure matrix; MR/MRR remains deferred.
+See [[file:../../scheme-trrel-uf-design.org][the UF design]] for the complete ownership/scope mapping.

@@ -791,3 +791,73 @@ machine-checked refinement of mutable Scheme storage, arbitrary parent depth,
 grouped prefix decoding and ordered journal replay remains separate work.
 The new audit does not establish an end-to-end speedup. See
 [[file:evidence/scheme-provider-views-20261007/operational-scc-refinement.json][the operational receipt]].
+
+* Group encoding and frozen journal correspondence (2026-10-07)
+
+The next representation boundary is now qualified separately from SCC merging.
+The native two-column carrier uses no prefix; the three-column carrier owns one
+group value. The state key is =(width, group)=, so an ungrouped row and a row
+in the =#f= group must not alias. =ProviderEncoding.encode= models these cases
+as =Option.none= and =Option.some group= and emits ordinary two/three-element
+lists. =decode_encode= and =encode_injective= derive reversible encoding and
+=scopes_disjoint= separation.
+=encoded_member=, =encoded_nodup= and =encoded_count= preserve membership,
+unique-fact counts and budgets. =root_plan_encoded_exact= composes this boundary
+with the constructed root/member frontier proof; it assumes component coverage
+and SCC equivalence, not an exact-candidate or exact-frontier premise.
+
+The presentation journal is a separate Library contract. BYODS Section 3.3,
+Theorem 3.5 requires new implied facts to enter delta before consumers can miss
+them; it does not prescribe Scheme export order. =orient_member=,
+=orient_count= and =orient_nodup= prove that reversing a derived batch changes
+presentation while preserving concretization, count and uniqueness.
+=program/view-state.ss= stores detached event rows newest first, replays events
+chronologically, and reverses the complete derived batch rather than reversing
+each input's frontier independently. Source/append batches keep arrival order.
+An export cut captures the old event list; a later publication must not substitute
+the owner's latest journal. This journal is not the authoritative source log and
+is not a crash-recovery, arbitrary deletion or arbitrary lattice proof.
+
+=ProviderReplay= models private staging, commit, refusal and one held export cut.
+Its =Step= constructs the new scope-local closure from current predecessor and
+successor reach and endpoint diagonals. The independent =Expected= input closure
+appears only in =PublishedExact=. =Replay= reconstructs a newest-first journal;
+=JournalExact=, =OrderExact=, =HeldExact= and =RefusalAtomic= check completeness,
+orientation, stable cuts and rejected work. Six seeded faults merge scopes,
+publish a staged event early, omit an event, erase derived kind, read the latest
+journal for an old cut or append on refusal. Each must fail the named invariant
+with TLC exit 12. The correct model explores 23,972 distinct states.
+
+The configuration has two nodes and two scope identities (ungrouped and a false
+group); each of four non-self input edges can be admitted once. This is an
+explicit finite exploration population, not a semantic generation or history
+limit. Provider enumeration is abstracted by a deterministic row order; the
+model does not prove the precise UF iteration order or multi-injection batching.
+Native tests supply those discriminators using literal expected public exports.
+One cut is explored here; multi-reader lifetimes remain owned by =ProviderViews=.
+
+Native qualification now has nine cases. It retains all 512 graphs and adds:
+- Simultaneous ungrouped, =#f= and =#t= rows; rejection and a cycle in =#f=
+  preserve the other scopes and the old cut (six nodes, five SCCs, two arcs).
+- Source/derived/source journal replay with a later SCC merge; public ordering
+  and old cut survive caller input and returned row-spine mutation.
+- A derived batch with two inputs; all seven new rows reverse as one batch.
+
+The ordered assertions invoke =gerbil-ascent-view-rows=, which uses the journal
+export callback. The generic row visitor intentionally uses descriptor order;
+its order is not the public presentation contract. An initial test incorrectly
+used that visitor, and failed despite identical facts; the test was corrected
+to exercise the actual public export seam. No native provider defect was found
+in these controls. The negative model traces are design discriminators, not
+claims that the correct current implementation contains those seeded defects.
+
+| Obligation | Current evidence | Remaining scope |
+| Public grouped row encoding | Eleven Lean laws, group isolation and exact frontier controls | Stable equality of nested Scheme fields remains an admission premise |
+| Journal semantic preservation | Orientation algebra and independent TLA input-closure assertion | Universal refinement of the complete mutable replay implementation |
+| Journal publication and held cut | Six new typed faults, source/derived/cycle and multi-input native controls | Concurrent reader protocol remains in the existing ProviderViews gate |
+| Complete BYODS design | These controls strengthen Sections 3.3 and 5.4 correspondence | User-defined providers, general lattices, application replication and matched scale/benefit evidence remain in the paper closure matrix |
+
+The full gate retains two concurrent verification lanes and isolates standard
+module extraction in every JVM leaf, including the new replay leaf. No new
+execution cache, timeout relaxation or speedup claim is introduced. See
+[[file:evidence/scheme-provider-views-20261007/grouped-journal-refinement.json][the grouped/journal receipt]].

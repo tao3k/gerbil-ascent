@@ -570,7 +570,7 @@ prepare-tlc:
 check-formal: prepare-tlc
     #!/usr/bin/env bash
     set -euo pipefail
-    just check-actor-round-formal check-actor-pool-formal check-actor-credit-formal check-actor-session-formal check-transitive-components-formal &
+    just check-actor-round-formal check-actor-pool-formal check-actor-credit-formal check-actor-session-formal check-transitive-components-formal check-provider-replay-formal &
     contracts=$!
     status=0
     just check-ready-components-formal check-component-index-formal check-provider-frontier-formal check-provider-views-formal || status=$?
@@ -1499,3 +1499,28 @@ check-provider-views-formal:
     echo 'COUNTEREXAMPLE-OK sealed-round-unfair Completion exit=13'
     echo 'SEALED-ROUND-GLOBAL-FAIRNESS-OK'
     echo 'PROVIDER-VIEWS-CHECK-OK'
+
+# Grouped UF journal publication, presentation order and immutable export cuts.
+check-provider-replay-formal:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [[ -n "${TLC_BIN:-}" ]]; then tlc=("$TLC_BIN"); else tlc=(java -XX:+UseParallelGC -cp "${TLC_JAR:-.cache/ascent/tools/tla2tools-v1.7.4.jar}" tlc2.TLC); fi
+    temp=$(mktemp -d)
+    trap 'rm -rf "$temp"' EXIT
+    if [[ "${tlc[0]}" == java ]]; then tlc=(java "-Djava.io.tmpdir=$temp" "${tlc[@]:1}"); fi
+    "${tlc[@]}" -workers 1 -config packages/proofs/tla/ProviderReplay.cfg -metadir "$temp/good" packages/proofs/tla/ProviderReplay.tla
+    for mutation in scope early drop kind cut reject; do
+      case "$mutation" in
+        scope) invariant=PublishedExact ;;
+        early|drop) invariant=JournalExact ;;
+        kind) invariant=OrderExact ;;
+        cut) invariant=HeldExact ;;
+        reject) invariant=RefusalAtomic ;;
+      esac
+      sed -e "s/Mutation = \"none\"/Mutation = \"$mutation\"/" -e "s/INVARIANTS .*/INVARIANTS $invariant/" packages/proofs/tla/ProviderReplay.cfg > "$temp/$mutation.cfg"
+      code=0
+      "${tlc[@]}" -workers 1 -config "$temp/$mutation.cfg" -metadir "$temp/$mutation" packages/proofs/tla/ProviderReplay.tla > "$temp/$mutation.out" 2>&1 || code=$?
+      [[ "$code" = 12 ]] && grep -q "Invariant $invariant is violated" "$temp/$mutation.out"
+      echo "COUNTEREXAMPLE-OK provider-replay-$mutation $invariant"
+    done
+    echo 'PROVIDER-REPLAY-CHECK-OK'

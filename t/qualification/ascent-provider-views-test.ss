@@ -3,6 +3,9 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 (import (only-in :std/test check-equal? check-exception test-suite)
         (only-in :core/observability/testing-case poo-flow-test-case)
+        (only-in :gerbil-ascent/core/relation-view gerbil-ascent-view-rows)
+        (only-in :gerbil-ascent/program/view-state
+                 gerbil-ascent-view-journal-event gerbil-ascent-view-export-cut)
         (only-in :gerbil-ascent/table/trrel-uf
                  gerbil-ascent-trrel-uf-state gerbil-ascent-trrel-uf-extension
                  gerbil-ascent-trrel-uf-frontier-extension gerbil-ascent-trrel-uf-snapshot
@@ -118,6 +121,58 @@
             (check-equal? (gerbil-ascent-trrel-uf-view-lookup old '(0) '(#t)) [])
             (check-exception (gerbil-ascent-trrel-uf-view-lookup total '(3) '(0)) true)
             (check-exception (gerbil-ascent-trrel-uf-view-lookup total '(0 1) '(#t)) true)))))
+    (poo-flow-test-case "ungrouped false and true scopes remain distinct across cycle and refusal"
+      (let (state (gerbil-ascent-trrel-uf-state))
+        (for-each (lambda (row)
+          (gerbil-ascent-trrel-uf-frontier-extension state row 3))
+          '((0 1) (#f 0 1) (#t 0 1)))
+        (let ((old (gerbil-ascent-trrel-uf-snapshot state))
+              (physical (gerbil-ascent-trrel-uf-observation state)))
+          (check-exception (gerbil-ascent-trrel-uf-frontier-extension state '(#f 1 0) 0) true)
+          (check-equal? (gerbil-ascent-trrel-uf-observation state) physical)
+          (check-equal? (export-view (gerbil-ascent-trrel-uf-frontier-extension state '(#f 1 0) 1))
+                        '((#f 1 0)))
+          (check-equal? (gerbil-ascent-trrel-uf-validate state) #t)
+          (check-equal? (gerbil-ascent-trrel-uf-observation state) '#(6 5 2))
+          (check-rows (export-view old)
+            '((0 0) (1 1) (0 1) (#f 0 0) (#f 1 1) (#f 0 1)
+              (#t 0 0) (#t 1 1) (#t 0 1)))
+          (check-rows (export-view (gerbil-ascent-trrel-uf-snapshot state))
+            '((0 0) (1 1) (0 1) (#f 0 0) (#f 1 1) (#f 0 1) (#f 1 0)
+              (#t 0 0) (#t 1 1) (#t 0 1))))))
+    (poo-flow-test-case "newest-first journal preserves source derived order and captured cut"
+      (let* ((state (gerbil-ascent-trrel-uf-state)) (input (list (list 0 1)))
+             (source (gerbil-ascent-view-journal-event 'source input)))
+        ;; Event construction detaches caller-owned row spines.
+        (set-car! (car input) 99)
+        (gerbil-ascent-trrel-uf-frontier-extension state '(0 1) 3)
+        (gerbil-ascent-trrel-uf-frontier-extension state '(1 2) 3)
+        (let* ((derived (gerbil-ascent-view-journal-event 'derived '((1 2))))
+               (events (list derived source))
+               (old (gerbil-ascent-view-export-cut (gerbil-ascent-trrel-uf-snapshot state) events))
+               (expected '((0 0) (1 1) (0 1) (0 2) (1 2) (2 2))))
+          (check-equal? (gerbil-ascent-view-rows old) expected)
+          (gerbil-ascent-trrel-uf-frontier-extension state '(2 0) 3)
+          (let* ((cycle (gerbil-ascent-view-journal-event 'source '((2 0))))
+                 (latest (gerbil-ascent-view-export-cut
+                           (gerbil-ascent-trrel-uf-snapshot state) (cons cycle events))))
+            (check-equal? (gerbil-ascent-view-rows latest)
+              '((0 0) (1 1) (0 1) (0 2) (1 2) (2 2) (1 0) (2 1) (2 0)))
+            (check-equal? (gerbil-ascent-view-rows old) expected)
+            (let (rows (gerbil-ascent-view-rows old)) (set-car! (car rows) 88))
+            (check-equal? (gerbil-ascent-view-rows old) expected)
+            (check-equal? (gerbil-ascent-trrel-uf-view-count latest) 9)))))
+    (poo-flow-test-case "derived journal reverses a complete multi-injection batch"
+      (let (state (gerbil-ascent-trrel-uf-state))
+        (for-each (lambda (row) (gerbil-ascent-trrel-uf-frontier-extension state row 10))
+                  '((0 1) (1 2) (2 3)))
+        (let* ((source (gerbil-ascent-view-journal-event 'source '((0 1))))
+               (derived (gerbil-ascent-view-journal-event 'derived '((1 2) (2 3))))
+               (cut (gerbil-ascent-view-export-cut
+                      (gerbil-ascent-trrel-uf-snapshot state) (list derived source))))
+          (check-equal? (gerbil-ascent-view-rows cut)
+            '((0 0) (1 1) (0 1) (2 3) (0 3) (1 3) (3 3) (0 2) (1 2) (2 2)))
+          (check-equal? (gerbil-ascent-trrel-uf-view-count cut) 10))))
     (poo-flow-test-case "compressed cycle total remains queryable without a tuple cache"
       (let (state (gerbil-ascent-trrel-uf-state))
         (for-each (lambda (n)

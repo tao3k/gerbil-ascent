@@ -83,6 +83,52 @@
 
 (def ascent-index-entry-test
   (test-suite "Engine-owned stable physical index entries"
+    (test-case "custom packets preserve counts under permutation and reject compensated omission"
+      (let* ((mode 'good)
+             ;; Cross the real index threshold in both lanes; smaller inputs scan.
+             (other-key (map (lambda (n) (list 1 n)) (iota 31)))
+             (rows (append '((0 #f) (0 #f) (0 b)) other-key))
+             (delta-rows (cons '(0 #f) other-key))
+             (provider
+              (.o (:: @ gerbil-ascent-hash-index-provider)
+                  (.build-index (lambda (snapshot _columns) snapshot))
+                  (.lookup-index
+                   (lambda (snapshot _key)
+                     (case mode
+                       ((substitute) (append '((0 #f) (0 b) (0 b)) other-key))
+                       ((missing) (append '((0 #f) (0 b)) other-key))
+                       ((cross-lane) rows)
+                       ((good) (reverse rows))
+                       ((delta) delta-rows)
+                       (else snapshot))))))
+             (h (index-entry-harness #f rows provider))
+             (query (vector-ref h 0)) (atom (index-entry-atom '(0) '(0) 2)))
+        ;; Legal overselection and reordered equal occurrences retain their bag.
+        (check-equal? (query atom [] #f #f) (reverse rows))
+        ;; Same total count, same matching-key count and same Set membership:
+        ;; one omitted false occurrence is compensated by an excess b occurrence.
+        (set! mode 'substitute)
+        (check-equal? (with-catch (lambda (e) (error-message e))
+                        (lambda () (query atom [] #f #f) 'accepted))
+                      "ASCENT index provider returned duplicate row")
+        (set! mode 'missing)
+        (check-equal? (with-catch (lambda (e) (error-message e))
+                        (lambda () (query atom [] #f #f) 'accepted))
+                      "ASCENT index provider omitted matching rows")
+        (set! mode 'good)
+        (check-equal? (query atom [] #f #f) (reverse rows))
+        (vector-set! (vector-ref h 3) 0 delta-rows)
+        (vector-set! (vector-ref h 5) 0 (length delta-rows))
+        (vector-set! (vector-ref h 7) 0 1)
+        (set! mode 'delta)
+        (check-equal? (query atom [] #t #f) delta-rows)
+        (set! mode 'cross-lane)
+        (check-equal? (with-catch (lambda (e) (error-message e))
+                        (lambda () (query atom [] #t #f) 'accepted))
+                      "ASCENT index provider returned duplicate row")
+        (set! mode 'delta)
+        (check-equal? (query atom [] #t #f) delta-rows)))
+
     (test-case "custom index coverage counts admitted occurrences per lane and version"
       (let (observation
             (with-catch

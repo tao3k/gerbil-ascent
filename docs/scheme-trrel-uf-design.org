@@ -861,3 +861,87 @@ The full gate retains two concurrent verification lanes and isolates standard
 module extraction in every JVM leaf, including the new replay leaf. No new
 execution cache, timeout relaxation or speedup claim is introduced. See
 [[file:evidence/scheme-provider-views-20261007/grouped-journal-refinement.json][the grouped/journal receipt]].
+
+* General provider laws and custom index occurrence admission (2026-10-07)
+
+Rechecking B23 Section 3.3, equations (1) and (2), and Section 4 exposed a proof
+coverage gap. The ordered bucket calculus is appropriate for canonical indexes
+and receivers satisfying its ordering premise. The custom index boundary already
+checks key coverage and occurrence caps, but a Set-only observation discards
+admitted duplicate source occurrences. It cannot establish aggregate or callback
+multiplicity. =IndexedPositiveTraversal= now states this boundary explicitly.
+No native defect is asserted from this proof/documentation gap.
+
+=ProviderAdmission.Domain= expresses the abstract obligations separately from
+POO procedure/row-shape validation: concretization is monotone along admitted
+state growth, the old state lies below its merge with changes, total/delta views
+cover exactly the merged concretization, and every newly visible fact appears
+in delta. The type does not infer these laws from an arbitrary Scheme procedure
+or constitute a runtime certification API. Its delta may overlap total and may
+contain old facts; exact difference is an additional built-in Provider choice.
+
+=old_visible_preserved=, =tau_sound=, =delta_sound= and
+=fresh_cannot_skip_delta= derive their respective observational obligations.
+=provider_body_partition= proves the decomposition of any finite positive body
+into an all-old body or a path using a provider delta occurrence, with other
+occurrences reading the merged concrete snapshot. =domain_body_partition=
+connects it directly to the abstract Domain laws, including repeated relation
+occurrences. Tests construct an overlapping powerset Provider and reject the
+partition-only design that sends a newly visible fact exclusively to total.
+These statements supply a general positive-body component of B23's argument;
+they do not mechanize the entire abstract-lattice iteration theorem, joins,
+injection, termination, arbitrary lattices or every runtime callback.
+
+For physical indexes, =mass= sums returned occurrence counts over the finite
+matching-key bucket. =cap_and_mass_exact= proves that per-row caps plus equal
+aggregate mass force every matching row's exact count. =key_occurrences_exact=
+extends this to all matching values with finite bucket coverage;
+=foreign_occurrences_zero= derives rejection of absent values. Row uniqueness,
+hash/key witness extraction and stable Scheme equality remain implementation
+premises. The conclusion is occurrence equality, not ordered packet equality.
+A negative test substitutes counts =(1,2)= for source counts =(2,1)=: total mass
+and Set membership are equal, but one quota is exceeded while another fact is
+missing. This is the discriminator that a cardinality-only check misses.
+
+The =ProviderAdmission= TLA model owns a different responsibility: choosing
+all/delta witnesses, completing admission before callbacks, detaching accepted
+packets from retained buffers, revoking failed cache entries and rebuilding on
+retry. It includes duplicated total facts, a narrower delta and a foreign row.
+Six seeded faults remove caps, compare only Set membership, use total's witness
+for delta, invoke callbacks on a rejected batch, borrow the mutable buffer or
+retain the failed cache entry. Exact selected counts, output, detached packets,
+callback admission and cache revocation must hold for the correct design.
+The finite packet population includes missing, excess and foreign occurrences;
+it does not bound runtime generation or arbitrary Provider history. Row shapes,
+key-expression extraction and individual callback bodies are abstracted here.
+
+The new native =ascent-index-entry-test= control accepts a reordered packet
+with duplicated false-valued rows and legal overselection; rejects a compensated
+omission even though cardinality and Set membership agree; rejects a missing
+occurrence and cross-lane total packet; and verifies recovery on the same cache
+owner. Existing native controls retain malformed/improper/cyclic tuples,
+callback-before-admission failures, key ownership, aliases and all/delta version
+updates. The primitive Provider input snapshot order is an implementation detail;
+the test controls its packet explicitly instead of assuming build input order.
+
+| Boundary | General Lean law | Protocol / concrete discriminator |
+| Abstract concretization and merge | Domain growth, view coverage and fresh-delta laws | Existing ProviderFrontier overlap and skipped-delta controls |
+| Arbitrary finite positive bodies | domain_body_partition with delta coverage and soundness | Existing finite positive-rule/UF consumer controls |
+| Custom physical key lookup | Per-row caps plus aggregate mass imply exact occurrences | New ProviderAdmission model and compensated-omission native control |
+| Stable packet and failure recovery | Stable equality and witness extraction remain premises | Buffer mutation, early callback and cache retention faults |
+
+This advances the generic Provider portion of BYODS beyond the canonical UF
+representation. Universal native witness-extraction refinement and abstract-lattice
+iteration/injection refinement remain explicit obligations. Application and
+matched benefit qualification remain governed by the paper closure matrix.
+See [[file:evidence/scheme-provider-views-20261007/custom-provider-admission.json][the admission receipt]].
+
+The checker hoists the already-required idle-phase guard before enumerating
+Submit packets. This preserves every transition and exploration bound while
+avoiding disabled packet enumeration. An isolated fixed-seed A/B/A check retained
+41,528 generated and 20,807 distinct states in all three runs: elapsed time was
+30.81 / 2.71 / 27.94 seconds; user CPU was 12.88 / 2.53 / 11.87 seconds. Six typed
+faults still fail as expected. These measurements concern this one model only;
+host background load remains uncontrolled and no full CI or Scheme runtime
+speedup is asserted. Full qualification passed 95 Lean build jobs, 25 positive
+TLC configurations, 64 fault controls and 25 native index cases with final =OK=.

@@ -5,8 +5,9 @@ import ProviderFrontier
 
 /-! Ordered physical bucket selection and per-occurrence delta lanes are
 composed with the dirty-slot traversal. Canonical buckets retain source order;
-custom providers with weaker membership contracts require a set observation.
-Snapshots remain fixed throughout a traversal. -/
+custom providers may reorder candidates. ProviderAdmission proves their checked
+key-matching occurrence counts; ordered callback traces additionally require a
+receiver-order premise. Snapshots remain fixed throughout a traversal. -/
 namespace Ascent.IndexedPositiveTraversal
 open AtomicBinding PositiveSlots PositiveTraversal
 variable {Value Output : Type} [DecidableEq Value]

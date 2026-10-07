@@ -2156,3 +2156,23 @@ requirement. Full custom-provider/lattice admission, application and benefit
 coverage remains open. Continue with universal storage/replay refinement and
 application controls under the existing closure matrix; MR/MRR remains deferred.
 See [[file:scheme-trrel-uf-design.org][the UF design]] for the complete ownership/scope mapping.
+
+* General Provider and custom-index admission progress (2026-10-07)
+
+B23 Section 3.3 equations (1)/(2) permit overlapping total/delta concretizations
+and require newly visible facts in delta. ProviderAdmission now states these
+abstract laws and derives arbitrary finite positive-body completeness directly
+from them, alongside growth and soundness. The Domain record is a proof-level
+contract; POO procedure validation does not certify arbitrary semantic behavior.
+
+Section 4 requires relation indexes to agree on concretization. Native custom
+lookup preserves admitted occurrence counts, including duplicate source rows;
+a Set observation cannot establish aggregate multiplicity. Per-row quota caps
+plus equal matching-key mass now derive exact occurrence counts in Lean. The
+TLA packet protocol distinguishes six faults, and a native control rejects
+compensated omission despite equal cardinality and Set membership, accepts
+reordered complete packets and checks delta ownership/recovery. Ordered callback
+traces require the additional receiver-order premise retained in the canonical
+bucket calculus. Native witness extraction, full abstract-lattice iteration and
+paper application/benefit qualification remain open. See [[file:scheme-trrel-uf-design.org][the UF design]]
+for proof ownership, implementation seams and admission evidence.

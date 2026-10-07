@@ -570,7 +570,7 @@ prepare-tlc:
 check-formal: prepare-tlc
     #!/usr/bin/env bash
     set -euo pipefail
-    just check-actor-round-formal check-actor-pool-formal check-actor-credit-formal check-actor-session-formal check-transitive-components-formal check-provider-replay-formal &
+    just check-actor-round-formal check-actor-pool-formal check-actor-credit-formal check-actor-session-formal check-transitive-components-formal check-provider-replay-formal check-provider-admission-formal &
     contracts=$!
     status=0
     just check-ready-components-formal check-component-index-formal check-provider-frontier-formal check-provider-views-formal || status=$?
@@ -1524,3 +1524,28 @@ check-provider-replay-formal:
       echo "COUNTEREXAMPLE-OK provider-replay-$mutation $invariant"
     done
     echo 'PROVIDER-REPLAY-CHECK-OK'
+
+# Custom index bag coverage, lane ownership, detachment and error revocation.
+check-provider-admission-formal:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [[ -n "${TLC_BIN:-}" ]]; then tlc=("$TLC_BIN"); else tlc=(java -XX:+UseParallelGC -cp "${TLC_JAR:-.cache/ascent/tools/tla2tools-v1.7.4.jar}" tlc2.TLC); fi
+    temp=$(mktemp -d)
+    trap 'rm -rf "$temp"' EXIT
+    if [[ "${tlc[0]}" == java ]]; then tlc=(java "-Djava.io.tmpdir=$temp" "${tlc[@]:1}"); fi
+    "${tlc[@]}" -workers 1 -config packages/proofs/tla/ProviderAdmission.cfg -metadir "$temp/good" packages/proofs/tla/ProviderAdmission.tla
+    for mutation in nocap set allwitness early borrow retain; do
+      case "$mutation" in
+        nocap|set) invariant=MatchingExact ;;
+        allwitness) invariant=CountCaps ;;
+        early) invariant=NoEarlyCallbacks ;;
+        borrow) invariant=DetachedPacket ;;
+        retain) invariant=FailedCacheRevoked ;;
+      esac
+      sed -e "s/Mutation = \"none\"/Mutation = \"$mutation\"/" -e "s/INVARIANTS .*/INVARIANTS $invariant/" packages/proofs/tla/ProviderAdmission.cfg > "$temp/$mutation.cfg"
+      code=0
+      "${tlc[@]}" -workers 1 -config "$temp/$mutation.cfg" -metadir "$temp/$mutation" packages/proofs/tla/ProviderAdmission.tla > "$temp/$mutation.out" 2>&1 || code=$?
+      [[ "$code" = 12 ]] && grep -q "Invariant $invariant is violated" "$temp/$mutation.out"
+      echo "COUNTEREXAMPLE-OK provider-admission-$mutation $invariant"
+    done
+    echo 'PROVIDER-ADMISSION-CHECK-OK'

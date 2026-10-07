@@ -71,3 +71,12 @@ fn empty_eof_is_complete_without_inventing_progress() {
     assert!(result.bytes.is_empty());
     assert!(result.error.is_none());
 }
+
+#[test]
+fn panic_cause_is_retained_outside_shared_stderr() {
+    super::install_panic_receipt();
+    let result = std::thread::spawn(|| panic!("CONTROLLED-PANIC receipt witness")).join();
+    assert!(result.is_err());
+    let saved = std::fs::read_to_string(super::panic_receipt_path()).expect("retained panic cause");
+    assert!(saved.contains("CONTROLLED-PANIC receipt witness"));
+}

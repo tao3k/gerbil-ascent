@@ -1525,3 +1525,36 @@ development controls are in
 The =0f20eb9= oracle byte-admission repair is included. Subsequent =c74645d=
 collector cleanup preserves every qualification input hash. Exact published
 revision CI remains a separate gate.
+
+* Multi-column Provider routing correspondence (2026-10-07)
+
+B23 Section 4 requires every logical index to enumerate the corresponding
+represented tuples. The native rectangle router chooses a small descriptor
+bucket, then checks the remaining constraints. Its optimized row/parts visitor
+uses stored members rather than query representatives. Choosing a cheaper bucket
+is sound only when every matching occurrence remains a candidate.
+
+=ProviderRouting= proves seven laws over arbitrary row/value types and finite
+constraint/row lists. =routed_exact= proves ordered list equality with a full
+scan under explicit candidate coverage. =coordinate_bucket_exact= derives that
+coverage from membership of the selected constraint. =constraints_permuted=
+allows reordered keys; =conflicting_duplicate= rejects incompatible repeated
+columns; =bucket_choice_independent= permits changing the cost heuristic without
+changing results. =stored_occurrence= retains original rows and multiplicity.
+These laws replace the first-coordinate-only proof boundary for abstract routing;
+they do not assert that native hash bucket construction meets coverage by fiat.
+
+The TLA+ model owns operational lazy enumeration by independent row/parts
+cursors: build one candidate lane, consume one occurrence at a time, reject a
+nonmatching row, finish only after exhaustion, or cancel. Completed output must
+equal the captured full scan including identity/order. Four faults remove a
+candidate, reverse the bucket, return a representative identity, or check only
+the first constraint. This is a finite cursor safety check, not another atomic
+publication model and not a universal scheduler liveness claim.
+
+Native correspondence still requires admitted key/arity checks, equality/hash
+coherence, stable bucket coverage, captured member ownership, ordinal traversal
+and the optimized grouped visitor. Existing scan/indexed and row/parts controls
+exercise repeated/reordered/absent keys and equal-but-distinct stored members.
+No Scheme defect is inferred solely from an injected model fault. See
+[[file:evidence/scheme-provider-views-20261007/multi-column-routing.json][the source-bound receipt]].

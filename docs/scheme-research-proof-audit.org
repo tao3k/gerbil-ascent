@@ -2277,3 +2277,44 @@ the model to the test adapter. No synthetic progress, widened deadline, retry of
 failed model calls or relaxation of row truth is introduced. Native OS/thread
 extraction and historical failure causality remain explicit boundaries. See
 [[file:evidence/scheme-provider-views-20261007/oracle-byte-admission.json][the receipt]].
+
+* Multi-column routing proof boundary (2026-10-07)
+
+ProviderRectangles.lookup_exact covers an abstract first-coordinate query.
+ProviderRouting now covers arbitrary selected coordinates and constraint lists:
+complete candidate coverage implies exact ordered scan output, with original
+occurrences preserved; key permutation and inconsistent repeated keys are handled
+explicitly. Selecting a different admitted bucket changes no result.
+
+Lean owns universal list/key algebra. TLA+ owns the build/read/finish/cancel
+interleavings of independent lazy row/parts cursors, with four faults that must
+produce CompleteExact violations and TLC exit 12. Neither layer assumes that
+actual Scheme bucket construction has been extracted into the abstract model.
+Native shape validation, hash/equality coherence, ordinal sorting and captured
+member identity retain their own source/test correspondence. Fault injection is
+a discrimination result, not evidence of a production defect. See
+[[file:evidence/scheme-provider-views-20261007/multi-column-routing.json][the receipt]].
+
+The synchronized =9cd4897= CI passed Scheme, BYODS, scale and formal gates, but
+the other oracle shard failed eight tests without a retained panic cause. A
+current parallel reproduction passed 66/66; this does not erase that CI failure
+or identify its historical cause. The existing test adapter now keeps panic
+diagnostics in an ignored ordinary file, serializes concurrent diagnostic
+writes, and forwards the original panic hook. CI prints that receipt only on
+failure and preserves the original exit status. One controlled panic verifies
+that its cause is retained. Neither retries nor relaxed result assertions turn
+a failure into successful evidence. Raw diagnostic files are not committed.
+
+The ordinary-file diagnostic is best effort if the cache is not writable; the
+original hook and panic failure remain in effect. CI output is bounded to the
+first 8,192 bytes of each diagnostic file. This logging boundary changes neither
+Scheme row truth nor process/request/stream admission.
+
+Before publication, concurrent commit =8afd5af= repaired the non-Gambit exec
+boundary by restoring blocking standard descriptors. Its controlled actual
+Gerbil/Rust backpressure reproduces incomplete unadapted logging; the exact
+historical syscall remains unobserved. This fix is preserved alongside panic
+receipts. The integrated execution entry passed 67/67 other-shard cases and
+14/14 Python framework tests, including four backpressure controls. The repair
+is test-process transport, not a Scheme semantic rewrite. See
+[[file:evidence/scheme-application-admission-20261007/transport.json][the concurrent transport evidence]].

@@ -66,7 +66,37 @@ fn reader_panic(payload: &(dyn std::any::Any + Send)) -> &str {
         .unwrap_or("non-string reader panic payload")
 }
 
+fn panic_receipt_path() -> PathBuf {
+    root()
+        .join(".cache/ascent")
+        .join(format!("oracle-panics-{}.out", std::process::id()))
+}
+
+fn install_panic_receipt() {
+    static INSTALL: std::sync::Once = std::sync::Once::new();
+    INSTALL.call_once(|| {
+        let path = panic_receipt_path();
+        let _ = std::fs::create_dir_all(path.parent().expect("panic receipt directory"));
+        let previous = std::panic::take_hook();
+        std::panic::set_hook(Box::new(move |info| {
+            static WRITER: std::sync::Mutex<()> = std::sync::Mutex::new(());
+            // Keep the actual cause even when the shared stderr stream cannot
+            // deliver the default hook. This never turns a panic into success.
+            if let Ok(_guard) = WRITER.lock()
+                && let Ok(mut output) = std::fs::OpenOptions::new()
+                    .create(true)
+                    .append(true)
+                    .open(&path)
+            {
+                let _ = writeln!(output, "{info}");
+            }
+            previous(info);
+        }));
+    });
+}
+
 pub(super) fn scheme_output(recipe: &str, request: &str) -> String {
+    install_panic_receipt();
     let root = root();
     let mut command = Command::new("just");
     command

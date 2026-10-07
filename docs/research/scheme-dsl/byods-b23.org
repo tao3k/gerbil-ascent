@@ -765,3 +765,26 @@ algebra theorem or Rust runtime integration. The historical syscall cause is
 unknown because its diagnostic was lost. The original graph truth and deadlines
 are retained. See [[file:../../scheme-trrel-uf-design.org][the design]] and
 [[file:../../evidence/scheme-provider-views-20261007/oracle-byte-admission.json][the receipt]].
+
+* Logical index routing refinement (2026-10-07)
+
+Section 4, PDF page 11, requires key lookup to return all tuples corresponding
+to the indexed columns and requires all logical indexes to share a concretization.
+The Scheme rectangle router is an implementation of this obligation.
+
+ProviderRouting proves ordered full-scan equivalence for arbitrary multi-column
+constraints under candidate coverage, derives coverage for a selected coordinate,
+and separates stored row identity from query value equality. Reordered keys and
+conflicting repeated columns have explicit theorems. TLA+ checks independent lazy
+row/parts cursors and four faulty traversals; it does not duplicate the list
+algebra or claim concurrent publication refinement. Native hash/equality and
+owned-member correspondence remain explicit premises. These results strengthen
+index semantics; they do not establish the paper's application/time/memory gains.
+See [[file:../../evidence/scheme-provider-views-20261007/multi-column-routing.json][the receipt]].
+
+The paper's common-concretization requirement is extensional. Exact ordered
+list output, duplicate occurrences and Scheme object identity are stronger
+ASCENT callback-interface obligations. A representative-identity fault is an
+ASCENT contract violation; it is not claimed as a counterexample to the paper's
+value-level formalization. The correspondence keeps those responsibilities
+separate.

@@ -465,3 +465,14 @@ This removes obsolete orchestration, not an outstanding native refinement
 obligation. Provider multi-column routing correspondence and complete paper
 application/time/memory acceptance remain on the mainline closure plan. See
 [[file:evidence/scheme-provider-views-20261007/retired-collectors.json][the deletion inventory and qualified source boundary]].
+
+* Multi-column Provider lookup (2026-10-07)
+
+The B23 Section 4 logical-index obligation now has universal selected-coordinate,
+candidate-coverage, ordered-output, key-permutation and repeated-key laws in
+ProviderRouting. Separate TLA+ checks exercise independent lazy row/parts cursor
+completion and four incorrect traversals. The source correspondence is explicit:
+native bucket construction/equality and optimized visitor extraction remain
+premises until refined, and full paper application/cost replication is not
+established by these routing laws. See
+[[file:evidence/scheme-provider-views-20261007/multi-column-routing.json][the receipt]].

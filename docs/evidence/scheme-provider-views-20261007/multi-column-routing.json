@@ -1,0 +1,174 @@
+{
+  "version": 1,
+  "date": "2026-10-07",
+  "base_commit": "9cd4897d06132b39d78ee117077454f1f6f088a4",
+  "integration": {
+    "scheme_base": "9cd4897d06132b39d78ee117077454f1f6f088a4",
+    "integrated_base_commit": "8afd5afbc68825576bcdc664e8ff9bf4e16322ad",
+    "delta": "Preserved concurrent Scheme optimization and blocking-stdio transport fix; rebased proof/diagnostic changes without runtime edits.",
+    "transport_receipt": "docs/evidence/scheme-application-admission-20261007/transport.json",
+    "historical_cause_boundary": "Controlled Gerbil/Rust backpressure reproduced incomplete logging and missing panic diagnostics; exact historical syscall remains unobserved."
+  },
+  "paper": {
+    "url": "https://kmicinski.com/assets/byods.pdf",
+    "location": "Section 4, PDF page 11",
+    "obligation": "All logical indexes share a concretization; key lookup enumerates corresponding tuples.",
+    "additional_native_contract": "Stable list order, occurrence multiplicity and stored object identity refine ASCENT callbacks; they are not attributed to the paper extensional semantics."
+  },
+  "source_sha256": {
+    "packages/proofs/lean/ProviderRouting.lean": "3b2ffbf4f357c7efa142707de1ad802e7b15aa63c57984bd8fcab9a403344be6",
+    "packages/proofs/lean/Tests/ProviderRoutingTests.lean": "774d1c16bf11e066de5ba5498414d6be3bc268d6f3a279c9b9aeccd261cb7c03",
+    "packages/proofs/lean/lakefile.lean": "f803f22dfa9de21b5566d61a27eea63c05c9cb382b6ae80b89eb81b5eecc97de",
+    "packages/proofs/tla/ProviderRouting.tla": "f172b4b61636436b04353b59449004f03227291738332924cef046b0a2a7521d",
+    "packages/proofs/tla/ProviderRouting.cfg": "480d19552b60c30f0251c1e718f4e9adaa2cab973bbe29af2ea842c1bf8f8e81",
+    "core/relation-view.ss": "abbb9ac0981df8480d6316bb7818213a06573ff1321d914fb85b9e4ee9d471c8",
+    "core/positive-plan.ss": "cf447a40ea54a62c243f489e9757d2b50c4fd313882dcc0e6cff2d894999b3e8",
+    "program/index.ss": "d938ca429446a3c06a74fbd9fb57a03a46d51c8a257edc040663881f5ae4a45f",
+    "program/view-state.ss": "aaea2d0d58613ddcc20dee25330cb4b65098ff951baeef57f6f1395f0ba28284",
+    "program/view-replay.ss": "ff0e554d642a38301557c5787269f5571d59880676f4154a00f390a180f6050e",
+    "program/evaluate.ss": "88f98d982370f13e80814b20c1930a03671deb836b37a3afecf0c46e8c276039",
+    "t/qualification/ascent-relation-view-test.ss": "054138dd13a704e9177296830afc710d6d056d573567c88a7729dd1ce6ead84b",
+    "t/harness/artifact.ss": "3bf7ec77d4ef7ea005ebd9e57f7171e23fd346390fda6021c660fc8c5379d94a",
+    "rust/ascent-oracle/tests/integration/common.rs": "a1a82ebae087d20c185dd389c6f7bb0e6a530621855963814cb9c18e2b7e6fb7",
+    "rust/ascent-oracle/tests/unit/pipe_capture.rs": "de8b9dae1460dadab9712617af0419c660b6c02d2534aa67dd3bc172ed82b6d5",
+    ".github/workflows/ci.yml": "d70826d607bc44c0926c9d8a4b9f43154505dce3ed37724f39cd744e9c40d74f",
+    "justfile": "e3a3380b7dabe8b040295f600a04a4ccdf4d48a5c859be4e2f60928dd12789e8",
+    "python/src/ascent_test_support/blocking_stdio.py": "0024de7310792f0230ad981be7698c6b9b8429bec531a6cbac167daec5ab16f1",
+    "python/tests/test_blocking_stdio.py": "0910cd0ff9fe9108065b94bb7604520ae8618061a7758f7e0c32dee4aa557c52"
+  },
+  "lean": {
+    "exit_code": 0,
+    "build_jobs": 109,
+    "module": "ProviderRouting",
+    "theorems": [
+      "selected_constraint",
+      "routed_exact",
+      "coordinate_bucket_exact",
+      "stored_occurrence",
+      "conflicting_duplicate",
+      "constraints_permuted",
+      "bucket_choice_independent"
+    ],
+    "examples": 4,
+    "test_owner": "packages/proofs/lean/Tests/ProviderRoutingTests.lean",
+    "reported_axioms": [
+      "propext",
+      "Quot.sound",
+      "Classical.choice"
+    ],
+    "boundary": "Arbitrary row/value types and finite lists. Candidate coverage or membership of a selected constraint is explicit; Scheme equality/identity and native bucket extraction are not assumed proved."
+  },
+  "tla": {
+    "positive": {
+      "exit_code": 0,
+      "generated": 4417,
+      "distinct": 2116
+    },
+    "faults": {
+      "drop": {
+        "exit_code": 12,
+        "invariant": "CompleteExact",
+        "generated": 662,
+        "distinct": 334
+      },
+      "order": {
+        "exit_code": 12,
+        "invariant": "CompleteExact",
+        "generated": 1486,
+        "distinct": 746
+      },
+      "representative": {
+        "exit_code": 12,
+        "invariant": "CompleteExact",
+        "generated": 1486,
+        "distinct": 746
+      },
+      "prefix": {
+        "exit_code": 12,
+        "invariant": "CompleteExact",
+        "generated": 1762,
+        "distinct": 905
+      }
+    },
+    "population": {
+      "readers": 2,
+      "queries": 5,
+      "rows": 4
+    },
+    "boundary": "Finite independent lazy cursor safety; no universal liveness or publication proof. Populations are not runtime or generation limits."
+  },
+  "formal": {
+    "command": "just check-formal",
+    "exit_code": 0,
+    "positive_models": 30,
+    "named_counterexamples": 85,
+    "final_marker": "ALL-FORMAL-CHECK-OK"
+  },
+  "native": {
+    "command": "just test-file t/qualification/ascent-relation-view-test.ss",
+    "exit_code": 0,
+    "cases": 21,
+    "final_markers": [
+      "SUITE-OK",
+      "MODULE-OK",
+      "HARNESS-OK",
+      "OK"
+    ],
+    "controls": "Independent scan/index and row/parts/direct/admitted paths, reordered/repeated/absent keys and stored member identities.",
+    "artifact_command": "just build-dsl-closure",
+    "artifact_exit_code": 0,
+    "artifact_binding": "aab0c02a0b5918ad5767fcef1d8cd2192e8e0b125e90aa46343bfdfe07fda59e"
+  },
+  "rust": {
+    "unit_tests": 4,
+    "unit_exit_code": 0,
+    "clippy_all_targets_warnings_denied_exit_code": 0,
+    "parallel_other": {
+      "command": "gerbil env env PATH=\"$PATH\" python3 python/src/ascent_test_support/blocking_stdio.py -- cargo test --locked --manifest-path rust/ascent-oracle/Cargo.toml --test scheme_parity -- --skip byods:: --nocapture",
+      "passed": 67,
+      "failed": 0,
+      "filtered": 12,
+      "elapsed_seconds": 125.08,
+      "exit_code": 0
+    },
+    "diagnostic_control": "Controlled panic retains cause in an ignored regular file, while the original hook and panic failure remain in effect. Concurrent writes serialize.",
+    "ci_exit_controls": [
+      0,
+      7
+    ]
+  },
+  "negative_evidence": {
+    "base_ci": {
+      "url": "https://github.com/tao3k/gerbil-ascent/actions/runs/37572457930",
+      "head": "9cd4897d06132b39d78ee117077454f1f6f088a4",
+      "other_passed": 58,
+      "other_failed": 8,
+      "other_cause": "Not present in original CI diagnostic; no cause inferred from successful reruns.",
+      "passed_jobs": [
+        "scheme",
+        "oracle (byods)",
+        "oracle (byods-scale)",
+        "formal"
+      ]
+    },
+    "preparation_rejected": {
+      "reason": "New formal recipe changed build metadata after the old native artifact was bound. The old entry correctly rejected the stale artifact.",
+      "complete_shard": false,
+      "exit_code": 70,
+      "remedy": "Rebuild the final frozen source contract; keep admission checks unchanged."
+    }
+  },
+  "remaining_obligations": [
+    "Extract admitted key/arity, native hash/equality, bucket coverage, ordinal ordering and grouped visitor into the abstract routing model.",
+    "Scheme object identity must be represented explicitly in Row; mathematical equality alone is not native pointer equality.",
+    "Verify the resulting exact GitHub head; the negative base CI is retained.",
+    "Complete paper application/time/memory replication separately. No new performance or real-model gain is claimed."
+  ],
+  "raw_logs_committed": false,
+  "python_framework": {
+    "exit_code": 0,
+    "tests": 14,
+    "command": "python3 -m unittest discover -s python/tests -v",
+    "backpressure_controls": 4
+  }
+}

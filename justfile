@@ -580,7 +580,7 @@ check-formal: prepare-tlc
     just check-actor-round-formal check-actor-pool-formal check-actor-credit-formal check-actor-session-formal check-transitive-components-formal check-provider-replay-formal check-provider-admission-formal &
     contracts=$!
     status=0
-    just check-ready-components-formal check-component-index-formal check-provider-frontier-formal check-provider-views-formal check-lattice-projection-formal check-oracle-transport-formal || status=$?
+    just check-ready-components-formal check-component-index-formal check-provider-frontier-formal check-provider-views-formal check-lattice-projection-formal check-oracle-transport-formal check-provider-routing-formal || status=$?
     wait "$contracts" || status=$?
     [[ "$status" = 0 ]] || exit "$status"
     echo 'ALL-FORMAL-CHECK-OK'
@@ -1612,3 +1612,21 @@ check-oracle-transport-formal:
       echo "COUNTEREXAMPLE-OK oracle-transport-$mutation $invariant"
     done
     echo 'ORACLE-TRANSPORT-CHECK-OK'
+
+
+check-provider-routing-formal:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [[ -n "${TLC_BIN:-}" ]]; then tlc=("$TLC_BIN"); else tlc=(java -XX:+UseParallelGC -cp "${TLC_JAR:-.cache/ascent/tools/tla2tools-v1.7.4.jar}" tlc2.TLC); fi
+    temp=$(mktemp -d)
+    trap 'rm -rf "$temp"' EXIT
+    if [[ "${tlc[0]}" == java ]]; then tlc=(java "-Djava.io.tmpdir=$temp" "${tlc[@]:1}"); fi
+    "${tlc[@]}" -workers 1 -config packages/proofs/tla/ProviderRouting.cfg -metadir "$temp/good" packages/proofs/tla/ProviderRouting.tla
+    for mutation in drop order representative prefix; do
+      sed "s/Mutation = \"none\"/Mutation = \"$mutation\"/" packages/proofs/tla/ProviderRouting.cfg > "$temp/$mutation.cfg"
+      code=0
+      "${tlc[@]}" -workers 1 -config "$temp/$mutation.cfg" -metadir "$temp/$mutation" packages/proofs/tla/ProviderRouting.tla > "$temp/$mutation.out" 2>&1 || code=$?
+      [[ "$code" = 12 ]] && grep -q "Invariant CompleteExact is violated" "$temp/$mutation.out"
+      echo "COUNTEREXAMPLE-OK provider-routing-$mutation CompleteExact"
+    done
+    echo 'PROVIDER-ROUTING-CHECK-OK'

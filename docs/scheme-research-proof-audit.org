@@ -2084,3 +2084,30 @@ ceiling or state constraint, and retains a 315-state one-reader control. Eleven
 seeded defects are caught across the view and reader models. This formal unit
 uses the engine migration at =9fd161f=; it adds no new Scheme behavior or cost
 claim and does not replace the migration's native/cost evidence.
+
+* Formal execution cost and parallel scheduling (2026-10-07)
+
+The previous GitHub formal job took 170 seconds: environment installation
+used 22 seconds and the combined Lean/TLA step 135 seconds. The CI command
+serialized nine independent recipe groups. Lake already tracks proof inputs
+and builds incrementally; the optimization does not skip kernel compilation
+for changed dependencies or cache admission decisions.
+
+=just check-formal= verifies the pinned TLC artifact before launching two
+independent lanes. The contracts lane builds Lean once, then checks actor,
+Session and SCC gates. The other checks ready components, indices, concrete
+frontiers and frozen views. Each leaf recipe retains its configurations,
+properties, mutations, worker count, heap policy and exploration bounds.
+The aggregate waits for both lanes and fails if either fails; synthetic exit
+41 and 42 controls check the join behavior without representing model receipts.
+TLC transcripts and counterexamples are recomputed on every invocation.
+
+A same-environment incremental-build probe measured 94 seconds serial,
+68 seconds with the initial split and 67 seconds with the balanced split.
+The last reduction is 28.72 percent. All 23 positive distinct-state counts
+and 45 negative-control markers match the serial baseline; the complete
+90-job Lean build passes. These sequential single-run observations qualify
+execution scheduling in this environment, not an intrinsic Lean theorem or
+TLC search speedup, statistical result, or a cold GitHub benchmark. Concurrent
+processes use additional resources. The separate native Scheme CI lane remains
+the complete workflow's dominant cost. See [[file:evidence/scheme-provider-views-20261007/formal-execution-cost.json][the cost and equivalence receipt]].

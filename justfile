@@ -551,6 +551,33 @@ check-lean-proofs:
     cd packages/proofs/lean
     lake -v build AscentProof AscentProofTests
 
+# Bootstrap the pinned checker before independent verification lanes start.
+prepare-tlc:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [[ -n "${TLC_BIN:-}" ]]; then exit 0; fi
+    jar="${TLC_JAR:-.cache/ascent/tools/tla2tools-v1.7.4.jar}"
+    if [[ ! -f "$jar" ]]; then
+      mkdir -p "$(dirname "$jar")"
+      curl -fLsS "{{ tlc_release_url }}" -o "$jar.download"
+      mv "$jar.download" "$jar"
+    fi
+    actual="$(shasum -a 256 "$jar" | awk '{print $1}')"
+    [[ "$actual" == "{{ tlc_sha256 }}" ]] || { echo "TLC jar checksum mismatch: $jar" >&2; exit 2; }
+
+# Two independent lanes; both must finish successfully. Leaf gates retain all
+# original configurations, properties, mutations, workers and exploration bounds.
+check-formal: prepare-tlc
+    #!/usr/bin/env bash
+    set -euo pipefail
+    just check-actor-round-formal check-actor-pool-formal check-actor-credit-formal check-actor-session-formal check-transitive-components-formal &
+    contracts=$!
+    status=0
+    just check-ready-components-formal check-component-index-formal check-provider-frontier-formal check-provider-views-formal || status=$?
+    wait "$contracts" || status=$?
+    [[ "$status" = 0 ]] || exit "$status"
+    echo 'ALL-FORMAL-CHECK-OK'
+
 # Lean proofs and bounded TLC publication models. Supply TLC_JAR or TLC_BIN.
 check-nonmembership-formal: check-lean-proofs
     #!/usr/bin/env bash

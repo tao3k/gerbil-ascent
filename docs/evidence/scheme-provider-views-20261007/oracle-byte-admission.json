@@ -1,0 +1,116 @@
+{
+  "version": 1,
+  "date": "2026-10-07",
+  "base_commit": "7abd3d6c658c534c17d5a4d6b98cabcef7565c3e",
+  "scope": "BYODS oracle transport admission; no new BYODS algebra theorem or MRR integration",
+  "historical_failure": {
+    "run_url": "https://github.com/tao3k/gerbil-ascent/actions/runs/37564278116",
+    "job": "oracle (other)",
+    "test": "byods_lattice_timeout::eqrel_lattice_negative_aggregate_matches_10000_disjoint_pairs",
+    "diagnostic": "join Scheme fixture stdout reader: Any { .. }",
+    "root_cause_boundary": "The old reader hid its error behind a thread join panic. The original read error is unavailable; Interrupted is not a confirmed historical cause."
+  },
+  "source_sha256": {
+    "rust/ascent-oracle/tests/integration/common.rs": "cb92241c7fa83bc73e3c6dba024e649e62c2c7169db3dd04d22f76ab15a62bda",
+    "rust/ascent-oracle/tests/support/pipe_capture.rs": "7838bf0f40f7c6dfbb42a46b23c81b4717a002c08fc596c314133b08394f3acd",
+    "rust/ascent-oracle/tests/unit/pipe_capture.rs": "97153879b816cee298c65240f3e720c375eb4201a47112e2ad94ac6212d33c52",
+    "rust/ascent-oracle/tests/integration/byods_lattice_timeout.rs": "282b707a22f9aa159fdae2de5044e6c99aa9e3dbccfb52846d197cad080dc095",
+    "t/qualification/ascent-byods-lattice-scale-output.ss": "41f795950852f5da344a70cfd90837dd68269ebf89196561309bea12650f584b",
+    "packages/proofs/lean/PipeCapture.lean": "23d94b2328fd44686dc1fddf2667ef27b8c2b7cf94403de968ef5af173b7a30b",
+    "packages/proofs/lean/Tests/PipeCaptureTests.lean": "db8676d71571c3cec69a706ae3b11bfc41409ac66ac942f83dbfe632ab0a4596",
+    "packages/proofs/lean/lakefile.lean": "de01079f3c40f285922d5ad19f4f8ae59f0d4ad712012903e9eb8bf6e80bd2fe",
+    "packages/proofs/tla/OracleTransport.tla": "7c456ed6c3e016bd8fb1d995301ba787cf54cc5fefbbe4bcaf9faebbde41c0cb",
+    "packages/proofs/tla/OracleTransport.cfg": "2ec409bab56c0fb108430d17ecbc70f8088fd3b0f94e33b54a240a585cb1330e",
+    "justfile": "fecff2fd2c63f3705ad3986e63c533a6eef9f17f586610db2ab216c4cd860884"
+  },
+  "rust": {
+    "unit_tests": 3,
+    "unit_exit_code": 0,
+    "clippy_all_targets_warnings_denied_exit_code": 0,
+    "other_shard_command": "cargo test --locked --manifest-path rust/ascent-oracle/Cargo.toml --test scheme_parity -- --skip byods:: --nocapture",
+    "other_shard": {
+      "exit_code": 0,
+      "passed": 66,
+      "failed": 0,
+      "filtered": 12,
+      "elapsed_seconds": 122.16,
+      "test_threads": "default parallel execution"
+    },
+    "original_failing_test_passed": true,
+    "policy": "Preserve bytes and terminal errors; interruptions do not count as progress; unchanged semantic assertions and timeouts."
+  },
+  "native": {
+    "command": "just build-dsl-closure",
+    "exit_code": 0,
+    "bound_artifact": "2c6d6f28c7c126670c61bda0b00cd5bc5577d2a2e6ff415ca92d590694d4b856"
+  },
+  "lean": {
+    "command": "just check-lean-proofs",
+    "exit_code": 0,
+    "build_jobs": 107,
+    "module": "PipeCapture",
+    "theorems": [
+      "interrupted_inert",
+      "terminal_replay",
+      "live_payload_exact",
+      "capture_exact",
+      "partial_bytes_retained",
+      "error_rejected",
+      "missing_eof_rejected",
+      "process_failure_rejected",
+      "request_failure_rejected"
+    ],
+    "test_owner": "packages/proofs/lean/Tests/PipeCaptureTests.lean",
+    "examples": 4,
+    "reported_axioms": [
+      "propext"
+    ]
+  },
+  "tla": {
+    "positive": {
+      "exit_code": 0,
+      "states_generated": 2243,
+      "distinct_states": 568
+    },
+    "fault_controls": {
+      "early": {
+        "invariant": "CompleteReaders",
+        "exit_code": 12,
+        "states_generated": 148,
+        "distinct_states": 66
+      },
+      "swallow": {
+        "invariant": "ReaderClean",
+        "exit_code": 12,
+        "states_generated": 848,
+        "distinct_states": 266
+      },
+      "tail": {
+        "invariant": "CompleteBytes",
+        "exit_code": 12,
+        "states_generated": 2243,
+        "distinct_states": 568
+      },
+      "interrupt": {
+        "invariant": "ReaderErrorSound",
+        "exit_code": 12,
+        "states_generated": 8,
+        "distinct_states": 8
+      }
+    },
+    "scope": "Finite interleavings of independent stdout/stderr readers and request/process completion; fixture populations are not runtime payload limits."
+  },
+  "full_formal": {
+    "command": "just check-formal",
+    "exit_code": 0,
+    "positive_models": 29,
+    "named_counterexamples": 81,
+    "final_marker": "ALL-FORMAL-CHECK-OK"
+  },
+  "proof_boundary": [
+    "Lean proves event replay and admission for arbitrary event lists; TLA checks concurrent completion and deliberate faulty transitions.",
+    "OS read behavior, thread scheduling and extraction from native execution remain implementation premises.",
+    "The current receipt records execution before commit. GitHub CI must qualify the resulting exact commit."
+  ],
+  "raw_logs_committed": false
+}

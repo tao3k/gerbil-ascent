@@ -5,7 +5,7 @@
 
 use std::{
     cmp::Ordering,
-    io::{Read, Write},
+    io::Write,
     path::PathBuf,
     process::{Command, Stdio},
 };
@@ -52,6 +52,20 @@ fn root() -> PathBuf {
         .to_path_buf()
 }
 
+#[path = "../support/pipe_capture.rs"]
+mod pipe_capture;
+#[path = "../unit/pipe_capture.rs"]
+#[cfg(test)]
+mod pipe_capture_tests;
+
+fn reader_panic(payload: &(dyn std::any::Any + Send)) -> &str {
+    payload
+        .downcast_ref::<String>()
+        .map(String::as_str)
+        .or_else(|| payload.downcast_ref::<&str>().copied())
+        .unwrap_or("non-string reader panic payload")
+}
+
 pub(super) fn scheme_output(recipe: &str, request: &str) -> String {
     let root = root();
     let mut command = Command::new("just");
@@ -73,62 +87,57 @@ pub(super) fn scheme_output(recipe: &str, request: &str) -> String {
     // Preserve the exact fixture bytes while exposing real IO progress. The
     // readers drain both streams independently, preventing pipe backpressure
     // and exposing real admission diagnostics without changing row bytes.
-    let mut stdout = child.stdout.take().expect("Scheme fixture stdout");
+    let stdout = child.stdout.take().expect("Scheme fixture stdout");
     let reader_recipe = recipe.to_owned();
     let reader = std::thread::spawn(move || {
-        let mut bytes = Vec::new();
-        let mut chunk = [0u8; 8192];
-        loop {
-            let count = stdout.read(&mut chunk).expect("read Scheme fixture stdout");
-            if count == 0 {
-                break;
-            }
-            bytes.extend_from_slice(&chunk[..count]);
-            eprintln!(
-                "ORACLE-FIXTURE-READ recipe={reader_recipe} bytes={}",
-                bytes.len()
-            );
-        }
-        bytes
+        pipe_capture::capture(stdout, |count| {
+            eprintln!("ORACLE-FIXTURE-READ recipe={reader_recipe} bytes={count}");
+        })
     });
-    let mut stderr = child.stderr.take().expect("Scheme fixture stderr");
+    let stderr = child.stderr.take().expect("Scheme fixture stderr");
     let stderr_recipe = recipe.to_owned();
     let stderr_reader = std::thread::spawn(move || {
-        let mut bytes = Vec::new();
-        let mut chunk = [0u8; 8192];
-        loop {
-            let count = stderr.read(&mut chunk).expect("read Scheme fixture stderr");
-            if count == 0 {
-                break;
-            }
-            bytes.extend_from_slice(&chunk[..count]);
-            eprintln!(
-                "ORACLE-FIXTURE-STDERR recipe={stderr_recipe} bytes={}",
-                bytes.len()
-            );
-        }
-        bytes
+        pipe_capture::capture(stderr, |count| {
+            eprintln!("ORACLE-FIXTURE-STDERR recipe={stderr_recipe} bytes={count}");
+        })
     });
-    child
+    // Always close stdin and collect the child/readers before admitting bytes.
+    // A write/read failure must retain typed diagnostics, not a reader Any panic.
+    let request_result = child
         .stdin
         .take()
         .expect("Scheme fixture stdin")
-        .write_all(request.as_bytes())
-        .expect("write Scheme fixture request");
-    let output = child
-        .wait_with_output()
-        .expect("collect Scheme fixture output");
-    let stdout = reader.join().expect("join Scheme fixture stdout reader");
-    let stderr = stderr_reader
-        .join()
-        .expect("join Scheme fixture stderr reader");
+        .write_all(request.as_bytes());
+    let status = child.wait().expect("collect Scheme fixture status");
+    let stdout = reader.join().unwrap_or_else(|payload| {
+        panic!(
+            "Scheme stdout reader panicked recipe={recipe}: {}",
+            reader_panic(payload.as_ref())
+        )
+    });
+    let stderr = stderr_reader.join().unwrap_or_else(|payload| {
+        panic!(
+            "Scheme stderr reader panicked recipe={recipe}: {}",
+            reader_panic(payload.as_ref())
+        )
+    });
+    assert!(
+        request_result.is_ok() && stdout.error.is_none() && stderr.error.is_none(),
+        "Scheme fixture transport failed recipe={recipe} status={status}: request={request_result:?} stdout={:?} stderr={:?}\npartial stdout:\n{}\npartial stderr:\n{}",
+        stdout.error,
+        stderr.error,
+        String::from_utf8_lossy(&stdout.bytes),
+        String::from_utf8_lossy(&stderr.bytes)
+    );
+    let stdout = stdout.bytes;
+    let stderr = stderr.bytes;
     eprintln!(
         "ORACLE-FIXTURE-END recipe={recipe} status={} bytes={}",
-        output.status,
+        status,
         stdout.len()
     );
     assert!(
-        output.status.success(),
+        status.success(),
         "Scheme fixture failed:\nstdout:\n{}\nstderr:\n{}",
         String::from_utf8_lossy(&stdout),
         String::from_utf8_lossy(&stderr)

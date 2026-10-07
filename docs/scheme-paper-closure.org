@@ -427,3 +427,20 @@ case and typed budget refusal/held-result/reconstruction comparison. No runtime
 failure was found in these controls; injected faults demonstrate discrimination.
 See [[file:scheme-trrel-uf-design.org][the design and resource semantics]] and
 [[file:evidence/scheme-provider-views-20261007/effective-lattice-admission.json][the receipt]].
+
+
+* Oracle evidence admission (2026-10-07)
+
+The 7abd3d6 formal/Scheme/BYODS/BYODS-scale gates succeeded, but the other shard's
+10,000-pair case failed in a stdout reader. No wrong lattice result was shown;
+the reader panic's original error was hidden by the join diagnostic. The adapter
+now preserves typed read failures and partial bytes, handles interruption without
+inventing progress, and requires both pipe EOFs plus process/request success.
+
+PipeCapture proves ordered chunk replay and failure/completion admission laws.
+OracleTransport checks the concurrent exit/drain/admit boundary with four faults.
+These strengthen the evidence path rather than the paper's lattice algebra:
+actual BYODS graph/row comparisons remain required. Historical EINTR causality
+is not asserted without the missing diagnostic. See
+[[file:scheme-trrel-uf-design.org][the investigation]] and
+[[file:evidence/scheme-provider-views-20261007/oracle-byte-admission.json][the receipt]].

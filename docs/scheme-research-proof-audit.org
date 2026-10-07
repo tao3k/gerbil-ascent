@@ -2260,3 +2260,20 @@ They passed; no newly discovered native defect is claimed. The design and
 receipt distinguish this typed component closure from universal native hash,
 callback/SCC extraction and full paper application/cost replication. See
 [[file:evidence/scheme-provider-views-20261007/effective-lattice-admission.json][the receipt]].
+
+
+* Transport soundness behind BYODS acceptance (2026-10-07)
+
+A complete 7abd3d6 CI run exposed a transport failure in the 10,000-pair other
+oracle test, while Scheme, BYODS, scale and formal checks passed. The reader join
+reported Any rather than the original read error. Current evidence proves that
+the transport failed; it does not diagnose EINTR or a Scheme semantic mismatch.
+
+PipeCapture owns universal byte-order/prefix and terminal admission properties.
+OracleTransport owns independent reader/process/request completion and rejects
+early admission, swallowed errors, dropped tail bytes and interruption failures.
+Rust scripted read controls and the actual parallel other-shard rerun connect
+the model to the test adapter. No synthetic progress, widened deadline, retry of
+failed model calls or relaxation of row truth is introduced. Native OS/thread
+extraction and historical failure causality remain explicit boundaries. See
+[[file:evidence/scheme-provider-views-20261007/oracle-byte-admission.json][the receipt]].

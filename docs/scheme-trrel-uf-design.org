@@ -1373,3 +1373,47 @@ actual fault states and native acceptance. Remaining representation obligations
 are Scheme hash/equality, field/callback validation, native emitted-list order
 and deduplication, SCC/vector extraction and asynchronous custom-lattice execution.
 Full BYODS application/time/memory replication is a separate acceptance track.
+
+
+* Oracle byte admission and CI failure investigation (2026-10-07)
+
+The complete CI for =7abd3d6= passed Scheme, BYODS, BYODS-scale and formal gates,
+but the other oracle shard failed its 10,000 disjoint-pair lattice case. The
+failure was =join Scheme fixture stdout reader: Any { .. }= at the process
+adapter, after partial stdout had been collected. This is evidence of a reader
+failure, not evidence of an incorrect Scheme lattice result. The original read
+error is absent from the retained CI diagnostic; EINTR is not claimed as the
+confirmed historical cause.
+
+The test-only Rust adapter now drains both pipes through a byte-preserving
+capture function. Interrupted system calls resume without adding bytes or
+progress markers. A terminal read error returns its partial bytes and typed
+error; it cannot be admitted as EOF. Request write failures are retained until
+child/readers are collected. Both EOF/error results and successful process/request
+completion are required before strict whole-packet UTF-8 decoding. Unexpected
+reader panics include their original string payload rather than only =Any=.
+Deadlines, model-call budgets and Scheme row assertions are unchanged.
+
+=PipeCapture= owns nine universal laws: interrupted events are inert, terminal
+states are absorbing, replay equals the input chunk concatenation up to EOF/error,
+partial bytes survive a failure, and each missing completion/success condition
+rejects admission. OS syscall behavior, Rust thread joining and the stream-to-event
+extraction are representation premises. Byte order and multiplicity are preserved;
+the model does not replace row-level BYODS truth checks or prove UTF-8 decoding.
+
+=OracleTransport= owns the concurrent protocol: process completion may precede
+pipe draining, stdin can fail, and either reader can fail. Admission waits for
+both readers and rejects failures. Four faults distinguish early admission,
+swallowed read errors, a dropped terminal byte and treating interruption as a
+hard failure. Finite fixture lengths are exploration populations, not payload
+limits or generation caps. Only exit 12 with the named invariant counts as an
+accepted fault witness.
+
+The Rust unit controls split one Unicode scalar across reads with interruptions,
+retain a partial row on terminal failure, and verify that empty EOF invents no
+progress. The actual other oracle shard is rerun with its existing parallelism,
+including the previously failed 10,000-pair computation and independent graph
+truth. This adapter belongs to the existing test oracle; it is not MRR integration
+or a new production Rust runtime. See
+[[file:evidence/scheme-provider-views-20261007/oracle-byte-admission.json][the source-bound receipt]]
+for final acceptance, defect evidence and the remaining cause boundary.

@@ -1004,3 +1004,56 @@ fault controls. The native BYODS invariants suite passed 14 cases with final
 =OK=, including all three retained-injection Provider controls. The receipt
 retains the actual five-state overwrite counterexample and source SHA256s;
 raw execution transcripts are excluded from Git history.
+
+* Keyed replacement lattice and settled projection (2026-10-07)
+
+B23 Sections 3.2 and 5.6 require separate reasoning for map lattices whose
+concretization returns only the current value for each key. Improving a value
+can remove an earlier concrete tuple. Abstract map growth therefore does not
+imply Set inclusion of materialized rows. The general monotone-gamma iteration
+result cannot be applied to this observation without an additional argument.
+The native compiler treats lattice-to-ordinary-relation dependencies as strict
+stratum edges and rejects a strict projection cycle.
+
+=LatticeProjection= models the actual keyed update seam: consult the pending
+value first, otherwise the committed value; join the prior value with the
+incoming value; publish one final row per touched key and retain untouched keys.
+=update_inflationary= and =stage_inflationary= establish abstract growth under
+associative, commutative, idempotent join laws. =update_twice= connects repeated
+same-key inputs to their joined injection. =publish_stage_exact= derives exact
+publication of the staged fold. =gamma_unique= and =old_key_removed= establish
+one current value and removal of superseded tuple observations. =encode_key=
+and =encode_value= connect last-column encoding to the native butlast/last
+convention. Pending event ordering, complete pending-key coverage, stable field
+equality and Scheme hash lookup still require native representation refinement.
+No shape check certifies a caller's arbitrary join procedure as a semilattice.
+
+The TLA model owns the transaction boundary rather than join algebra. It admits
+a finite batch in any order, checks the private map against an independent
+minimum over all admitted events, permits projection only after all events are
+collected, replaces visible tuple rows, and preserves a previously held snapshot.
+Seven faults overwrite instead of join, consult only committed values, ignore
+the false-key identity, retain superseded projected rows, settle before collecting
+the full batch, mutate held results or publish a stale projection. Checker parse
+or runtime exceptions are failures, not accepted fault evidence.
+
+The model represents one finite refinement transaction with two abstract keys
+and three values. These are exploration populations, not a runtime generation
+limit, convergence bound or proof of arbitrary joins. Native tests use actual
+false/true group fields, two-column keys and multiple same-key updates in both
+input orders. They check the final min map and ordinary projection, improved
+and ineffective appends, source replacement/recomputation, and immutable old
+results. Expected values are explicit independent minima; an earlier weaker
+value must not remain in the current ordinary relation.
+
+This closes the stated keyed update/publication algebra and finite settled
+projection protocol, with source-bound native controls. Universal lowered-rule
+stratum extraction, all custom callback/hash representations, generic recursive
+aggregate semantics and asynchronous lattice execution remain separate gates.
+See [[file:evidence/scheme-provider-views-20261007/keyed-lattice-projection.json][the keyed projection receipt]].
+
+Qualification passed 99 Lean build jobs, 26 positive TLC configurations and 72
+fault controls. The new transaction explored 1,651 generated and 858 distinct
+states; all seven mutations produced exit 12 with their named invariant. The
+native lattice suite passed 12 cases with final =OK=. Evidence contains source
+hashes and actual counterexample states, without committing execution logs.

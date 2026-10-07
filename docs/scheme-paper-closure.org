@@ -111,7 +111,7 @@ Three built-in closure Providers alone do not cover the entire paper.
 | Delta visibility | Independent closure and split-producer discriminator; retained Rust eqrel omission difference | ProviderAdmission finite-body decomposition; ProviderIteration complete-join injection, arbitrary-round abstract history equivalence, least-state construction and ranked convergence; TLA accumulated-head overwrite control and native retained three-body sessions | Conditional abstract merged-snapshot core proved; native binder/gamma/head extraction, asynchronous custom-domain histories and arbitrary infinite-height execution convergence remain separate |
 | Duplicate input, budgets, failure atomicity, retained updates | Native preflight/retry, byods_session and timeout comparisons | Every step checks frontier uniqueness and completeness | Complete models/refinement of external Provider state interacting with timeout, source replacement and strata |
 | Index sharing (ind_share) | Engine/worker-owned curried physical chains; maximum matching over logical subset requirements; ordered adapters and batch invalidation | All 128 three-column requirement families compared with independent minimum chain partitions; exact rows/duplicates/reordered keys; serial and component actor solve truth; Lean prefix coverage and ordered extension; TLA alias/foreign-root controls | Universal native planner/trie refinement, full Polonius/LLVM datasets and peak-memory/application cost evidence remain required; the runtime tight-cover certificate and Lean minimum-partition theorem establish the mathematical optimality criterion; lazy ordered views also retain row-reference spines |
-| User-defined lattices and concurrent Providers | Finite serial lattice comparisons; actor eligibility restricted to pure Set and frozen built-in UF/hash paths | Set frontier theorems retain their stated scope | General lattice/recursive aggregate contracts; concurrent access, iteration and merge protocols; race/failure/refinement |
+| User-defined lattices and concurrent Providers | Finite serial lattice comparisons; actor eligibility restricted to pure Set and frozen built-in UF/hash paths | LatticeProjection keyed join staging, current-row replacement and last-column encoding; settled projection TLA with seven faults; native false/true multi-field keys and retained projection controls | Arbitrary callback join laws/purity, lowered strict-edge/hash extraction, general recursive aggregate semantics and asynchronous custom-lattice execution remain gates; monotone-gamma iteration does not cover replacement row observations automatically |
 | Paper applications and benefits | Closure examples and selected Rust package examples | Retained negative performance results | Complete Steensgaard, Polonius, PageRank and LLVM/index-sharing programs, reproducible datasets and cost/memory measurements await acceptance; full experimental replication has not been established |
 
 * Other papers and the proof chain
@@ -364,3 +364,19 @@ acceptance gates. Lean algebra is separated from the TLA accumulated-head
 publication fault and native retained-session truth controls. See
 [[file:scheme-trrel-uf-design.org][the design]] and
 [[file:evidence/scheme-provider-views-20261007/abstract-provider-iteration.json][the iteration receipt]].
+
+* Keyed replacement projection closure (2026-10-07)
+
+LatticeProjection closes the stated keyed update/staging/publication algebra and
+last-column row encoding component. The settled min-map transaction has seven
+discriminating TLA faults; native tests check actual false/true multi-field keys,
+multiple same-key inputs in both orders, improved/ineffective updates, source
+replacement and immutable earlier projections. Superseded tuple values must not
+remain in the ordinary relation.
+
+The projection model covers one finite transaction, not arbitrary convergence
+or asynchronous joins. User join laws/purity, hash/key equality, pending-key
+coverage and lowered strict-stratum extraction remain native refinement gates.
+This is distinct from ProviderIteration's monotone-gamma admission contract.
+See [[file:scheme-trrel-uf-design.org][the design]] and
+[[file:evidence/scheme-provider-views-20261007/keyed-lattice-projection.json][the projection receipt]].

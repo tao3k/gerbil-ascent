@@ -1,0 +1,282 @@
+{
+  "version": 1,
+  "date": "2026-10-07",
+  "base_commit": "43ee40d28dbba69a67eb097dff3017133f2d9434",
+  "paper": {
+    "url": "https://kmicinski.com/assets/byods.pdf",
+    "location": "Section 3.2 concretization monotonicity boundary; Section 5.6 last-column partial-map lattices",
+    "interpretation": "Abstract map growth does not imply inclusion of current-value tuples; strict ordinary projection needs settled state and replacement/recomputation."
+  },
+  "source_sha256": {
+    "packages/proofs/lean/LatticeProjection.lean": "66485cbe79f7072c8d2b77c17162b29bef8e281707b041b69cc1af9161ae3e40",
+    "packages/proofs/lean/Tests/LatticeProjectionTests.lean": "626063b3979ec693d86a22ce80fcceca7a667cc3c03a61c6801ec8e94736a448",
+    "packages/proofs/lean/lakefile.lean": "0a0c4386389589655334123affc6e89d405d6779b5cba13eaa6dae3a8fabf49a",
+    "packages/proofs/tla/LatticeProjection.tla": "347332998ed8e3b230ad47e9cf7f85161b4dab2f77ab1033cdea09fa920c11b9",
+    "packages/proofs/tla/LatticeProjection.cfg": "74a1ea2574a0ab3ae896b7dbaef1a81dbd02e0c4499832d2b770925c61682d44",
+    "t/qualification/ascent-lattice-program-test.ss": "fcf84213f0e7a2fb6e4f3c665b666d32b5d4b256cd7bc8e9021fa7c396d29aef",
+    "core/rule-semantics.ss": "5b63ae1d781c59c75c4fa9295fbd8346ae2f6d9297bb40858308474358de2615",
+    "program/evaluate.ss": "62d6a099929915765eea33fe0160532a4a0228b6027514e11a1ab9265c234fbe",
+    "program/session.ss": "91546d4eb34292efb9f21207b5e08ad122fc47f01dbbb9a0a78fb8103aea1de3",
+    "justfile": "b2f082fed4e7056b001f8437301fdaad0327a29240dee77633a188a3bf5af0fe"
+  },
+  "lean": {
+    "module": "LatticeProjection",
+    "new_theorems": [
+      "update_hit",
+      "update_other",
+      "gamma_unique",
+      "replaced_row_absent",
+      "join_above_left",
+      "below_trans",
+      "update_inflationary",
+      "update_twice",
+      "store_below_trans",
+      "stage_inflationary",
+      "stage_untouched",
+      "publish_exact",
+      "publish_stage_exact",
+      "replacement_member",
+      "old_key_removed",
+      "encode_key",
+      "encode_value"
+    ],
+    "test_examples": 7,
+    "test_owner": "packages/proofs/lean/Tests/LatticeProjectionTests.lean",
+    "build_jobs": 99,
+    "axiom_boundary": [
+      "propext",
+      "Quot.sound"
+    ],
+    "native_seam": "Pending-before-committed keyed join; final touched-key publication replacing old tuple rows; native butlast/last encoding.",
+    "laws": "Key hit/other preservation, current value uniqueness, superseded row absence, abstract update/fold growth, same-key join accumulation, untouched-key preservation, exact fold publication and last-column encoding.",
+    "premises": [
+      "Associative, commutative, idempotent user join for abstract growth",
+      "Stable field/key equality and pure join callbacks",
+      "Complete pending-key coverage and correct native hash lookup",
+      "Admitted nonempty row shape for last-column extraction"
+    ],
+    "not_claimed": "No automatic procedure-shape certification of user join laws and no universal native hash/lowered-rule extraction theorem."
+  },
+  "tla": {
+    "model": "LatticeProjection",
+    "command": "just check-lattice-projection-formal",
+    "keys": [
+      0,
+      1
+    ],
+    "false_key_identity": 0,
+    "values": [
+      0,
+      1,
+      2
+    ],
+    "seed": {
+      "0": 2,
+      "1": 2
+    },
+    "generated_states": 1651,
+    "distinct_states": 858,
+    "depth": 10,
+    "semantic_generation_limit": false,
+    "scope": "One finite refinement/settled-publication transaction, arbitrary admitted batch order; no runtime convergence cutoff.",
+    "independent_truth": "Expected computes the unique minimum per key from the entire admitted event Set, without replaying staged update order.",
+    "invariants": [
+      "MapExact",
+      "SnapshotExact",
+      "PrivateStable",
+      "HeldStable"
+    ],
+    "faults": {
+      "overwrite": {
+        "observed_exit": 12,
+        "diagnostic": "Invariant MapExact is violated",
+        "witness_states": 4,
+        "final_state": {
+          "applied": "{<<0, 0>>, <<0, 1>>}",
+          "rows": "{<<0, 2>>, <<1, 2>>}",
+          "held": "{<<0, 2>>, <<1, 2>>}",
+          "current": "(0 :> 1 @@ 1 :> 2)",
+          "phase": "\"collecting\"",
+          "cut": "{<<0, 0>>, <<0, 1>>}"
+        },
+        "transcript_sha256": "f65f49ddf1bdca4feefdc3e71613c56547b43700a58293f70acef6344c79ef85"
+      },
+      "prior": {
+        "observed_exit": 12,
+        "diagnostic": "Invariant MapExact is violated",
+        "witness_states": 4,
+        "final_state": {
+          "applied": "{<<0, 0>>, <<0, 1>>}",
+          "rows": "{<<0, 2>>, <<1, 2>>}",
+          "held": "{<<0, 2>>, <<1, 2>>}",
+          "current": "(0 :> 1 @@ 1 :> 2)",
+          "phase": "\"collecting\"",
+          "cut": "{<<0, 0>>, <<0, 1>>}"
+        },
+        "transcript_sha256": "7898830ad0404d1c930106cb30a5fb5bc4a3db7b33c4207f116e03d6bcbf2977"
+      },
+      "false": {
+        "observed_exit": 12,
+        "diagnostic": "Invariant MapExact is violated",
+        "witness_states": 3,
+        "final_state": {
+          "applied": "{<<0, 0>>}",
+          "rows": "{<<0, 2>>, <<1, 2>>}",
+          "held": "{<<0, 2>>, <<1, 2>>}",
+          "current": "(0 :> 2 @@ 1 :> 2)",
+          "phase": "\"collecting\"",
+          "cut": "{<<0, 0>>}"
+        },
+        "transcript_sha256": "7c1520aa6b0fce14100b7f4149e2a71c94f91ef5411cc6130603e40ec7b58d97"
+      },
+      "retain": {
+        "observed_exit": 12,
+        "diagnostic": "Invariant SnapshotExact is violated",
+        "witness_states": 5,
+        "final_state": {
+          "applied": "{<<0, 0>>}",
+          "rows": "{<<0, 0>>, <<0, 2>>, <<1, 2>>}",
+          "held": "{<<0, 2>>, <<1, 2>>}",
+          "current": "(0 :> 0 @@ 1 :> 2)",
+          "phase": "\"finished\"",
+          "cut": "{<<0, 0>>}"
+        },
+        "transcript_sha256": "fbe71978676a9aa61344e13c7f2a1d248a3f7a6ad6bc0c8b87367a3716b0cf2c"
+      },
+      "early": {
+        "observed_exit": 12,
+        "diagnostic": "Invariant SnapshotExact is violated",
+        "witness_states": 4,
+        "final_state": {
+          "applied": "{}",
+          "rows": "{<<0, 2>>, <<1, 2>>}",
+          "held": "{<<0, 2>>, <<1, 2>>}",
+          "current": "(0 :> 2 @@ 1 :> 2)",
+          "phase": "\"finished\"",
+          "cut": "{<<0, 0>>}"
+        },
+        "transcript_sha256": "2667ed307c2986804d0e3d2ff7f244f83ecadb9e26910e375954793d1d0056d0"
+      },
+      "borrow": {
+        "observed_exit": 12,
+        "diagnostic": "Invariant HeldStable is violated",
+        "witness_states": 5,
+        "final_state": {
+          "applied": "{<<0, 0>>}",
+          "rows": "{<<0, 0>>, <<1, 2>>}",
+          "held": "{<<0, 0>>, <<1, 2>>}",
+          "current": "(0 :> 0 @@ 1 :> 2)",
+          "phase": "\"finished\"",
+          "cut": "{<<0, 0>>}"
+        },
+        "transcript_sha256": "95b6000ed4f4239f8a25c9e53b888b2655b759c0a6df3afb00cb8e98de8d3618"
+      },
+      "stale": {
+        "observed_exit": 12,
+        "diagnostic": "Invariant SnapshotExact is violated",
+        "witness_states": 5,
+        "final_state": {
+          "applied": "{<<0, 0>>}",
+          "rows": "{<<0, 2>>, <<1, 2>>}",
+          "held": "{<<0, 2>>, <<1, 2>>}",
+          "current": "(0 :> 0 @@ 1 :> 2)",
+          "phase": "\"finished\"",
+          "cut": "{<<0, 0>>}"
+        },
+        "transcript_sha256": "18d931abe4b6d92a36708fbfdd5859dd969dcda9d1aec4299dbdaced1feb4a5f"
+      }
+    }
+  },
+  "native": {
+    "command": "just test-file t/qualification/ascent-lattice-program-test.ss",
+    "exit": 0,
+    "passing_cases": 12,
+    "final_marker": "OK",
+    "new_control": "settled keyed lattice projection replaces values and preserves false keys",
+    "seed": [
+      [
+        false,
+        0,
+        9
+      ],
+      [
+        true,
+        0,
+        8
+      ]
+    ],
+    "forward_updates": [
+      [
+        false,
+        0,
+        7
+      ],
+      [
+        false,
+        0,
+        2
+      ],
+      [
+        true,
+        0,
+        5
+      ],
+      [
+        false,
+        0,
+        4
+      ]
+    ],
+    "reverse_order_also_checked": true,
+    "expected_first": [
+      [
+        false,
+        0,
+        2
+      ],
+      [
+        true,
+        0,
+        5
+      ]
+    ],
+    "improved_append": [
+      false,
+      0,
+      1
+    ],
+    "ineffective_append": [
+      false,
+      0,
+      6
+    ],
+    "replacement": "Empty improvement source recomputes score and ordinary found from seed",
+    "held_results_unchanged": true,
+    "independent_truth": "Explicit per-key minima and exact two-row ordinary projection; superseded tuples cannot be present."
+  },
+  "full_formal": {
+    "command": "just check-formal",
+    "exit": 0,
+    "lean_jobs": 99,
+    "positive_configs": 26,
+    "negative_controls": 72,
+    "marker": "ALL-FORMAL-CHECK-OK"
+  },
+  "initial_checker_corrections": [
+    "Parenthesized IF expressions assigned in TLA actions to prevent following action conjuncts being parsed inside ELSE",
+    "Unfolded Lean predicates for the concrete decidability control and corrected tactic continuation indentation"
+  ],
+  "closure": "Conditional keyed update/staging/publication algebra, last-column codec and finite settled-projection protocol with actual native retained-session controls.",
+  "remaining": [
+    "Universal native hash/key/pending-event representation refinement",
+    "Lowered strict-stratum extraction and lattice projection cycle proof",
+    "Arbitrary caller join purity/laws and general recursive aggregates",
+    "Asynchronous custom-lattice execution and full paper application/cost evidence"
+  ],
+  "scope": {
+    "native_runtime_changes": 0,
+    "new_model_calls": 0,
+    "rust_runtime_integration": false,
+    "raw_logs_committed": false
+  }
+}

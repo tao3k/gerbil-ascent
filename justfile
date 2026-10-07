@@ -573,7 +573,7 @@ check-formal: prepare-tlc
     just check-actor-round-formal check-actor-pool-formal check-actor-credit-formal check-actor-session-formal check-transitive-components-formal check-provider-replay-formal check-provider-admission-formal &
     contracts=$!
     status=0
-    just check-ready-components-formal check-component-index-formal check-provider-frontier-formal check-provider-views-formal || status=$?
+    just check-ready-components-formal check-component-index-formal check-provider-frontier-formal check-provider-views-formal check-lattice-projection-formal || status=$?
     wait "$contracts" || status=$?
     [[ "$status" = 0 ]] || exit "$status"
     echo 'ALL-FORMAL-CHECK-OK'
@@ -1549,3 +1549,26 @@ check-provider-admission-formal:
       echo "COUNTEREXAMPLE-OK provider-admission-$mutation $invariant"
     done
     echo 'PROVIDER-ADMISSION-CHECK-OK'
+
+# Replacement-valued map collection, settled projection and held snapshots.
+check-lattice-projection-formal:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [[ -n "${TLC_BIN:-}" ]]; then tlc=("$TLC_BIN"); else tlc=(java -XX:+UseParallelGC -cp "${TLC_JAR:-.cache/ascent/tools/tla2tools-v1.7.4.jar}" tlc2.TLC); fi
+    temp=$(mktemp -d)
+    trap 'rm -rf "$temp"' EXIT
+    if [[ "${tlc[0]}" == java ]]; then tlc=(java "-Djava.io.tmpdir=$temp" "${tlc[@]:1}"); fi
+    "${tlc[@]}" -workers 1 -config packages/proofs/tla/LatticeProjection.cfg -metadir "$temp/good" packages/proofs/tla/LatticeProjection.tla
+    for mutation in overwrite prior false retain early borrow stale; do
+      case "$mutation" in
+        overwrite|prior|false) invariant=MapExact ;;
+        retain|early|stale) invariant=SnapshotExact ;;
+        borrow) invariant=HeldStable ;;
+      esac
+      sed -e "s/Mutation = \"none\"/Mutation = \"$mutation\"/" -e "s/INVARIANTS .*/INVARIANTS $invariant/" packages/proofs/tla/LatticeProjection.cfg > "$temp/$mutation.cfg"
+      code=0
+      "${tlc[@]}" -workers 1 -config "$temp/$mutation.cfg" -metadir "$temp/$mutation" packages/proofs/tla/LatticeProjection.tla > "$temp/$mutation.out" 2>&1 || code=$?
+      [[ "$code" = 12 ]] && grep -q "Invariant $invariant is violated" "$temp/$mutation.out"
+      echo "COUNTEREXAMPLE-OK lattice-projection-$mutation $invariant"
+    done
+    echo 'LATTICE-PROJECTION-CHECK-OK'

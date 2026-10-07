@@ -38,6 +38,43 @@
 
 (def ascent-lattice-program-test
   (test-suite "ASCENT lattice fixed point"
+    (poo-flow-test-case "settled keyed lattice projection replaces values and preserves false keys"
+      (for-each
+       (lambda (improvements)
+         (let* ((session
+                 (gerbil-ascent-open-session
+                  (ascent
+                   (lattice score ((group boolean?) (node integer?) (value integer?))
+                            '((#f 0 9) (#t 0 8)) min)
+                   (relation improve ((group boolean?) (node integer?) (value integer?)) improvements)
+                   (relation found ((group boolean?) (node integer?) (value integer?)) [])
+                   ((score group node value) <-- (improve group node value))
+                   ((found group node value) <-- (score group node value))
+                   (bounds 32 64 96))))
+                (first (gerbil-ascent-session-run session)))
+           (def (check-rows result wanted)
+             (check-equal? (.ref result 'finished) #t)
+             (for-each
+              (lambda (name)
+                (let (rows ((.ref result 'rows-of) name))
+                  (check-equal? (length rows) (length wanted))
+                  (for-each (lambda (row)
+                              (check-equal? (not (not (member row rows))) #t)) wanted)))
+              '(score found)))
+           (check-rows first '((#f 0 2) (#t 0 5)))
+           (gerbil-ascent-session-append-source! session 'improve '(#f 0 1))
+           (let (second (gerbil-ascent-session-run session))
+             (check-rows second '((#f 0 1) (#t 0 5)))
+             (gerbil-ascent-session-append-source! session 'improve '(#f 0 6))
+             (check-rows (gerbil-ascent-session-run session) '((#f 0 1) (#t 0 5)))
+             (gerbil-ascent-session-replace-source! session 'improve [])
+             (check-rows (gerbil-ascent-session-run session) '((#f 0 9) (#t 0 8)))
+             (check-rows second '((#f 0 1) (#t 0 5))))
+           (check-rows first '((#f 0 2) (#t 0 5)))
+           (displayln "LATTICE-SETTLED-PROJECTION-OK inputs=" improvements)
+           (force-output)))
+       (list '((#f 0 7) (#f 0 2) (#t 0 5) (#f 0 4))
+             '((#f 0 4) (#t 0 5) (#f 0 2) (#f 0 7)))))
     (poo-flow-test-case "recursive shortest paths replace weaker key values"
       (let (rows (shortest '((1 2 3) (1 3 1) (3 2 1)
                              (2 4 1) (3 4 5))))

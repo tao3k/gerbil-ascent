@@ -2197,3 +2197,19 @@ hash/key extraction. A complete lattice gives least-state existence; termination
 requires a separate parameterized finite-rank witness. See
 [[file:scheme-trrel-uf-design.org][the design]] and
 [[file:evidence/scheme-provider-views-20261007/abstract-provider-iteration.json][the iteration receipt]].
+
+* Replacement-valued lattice proof ownership (2026-10-07)
+
+LatticeProjection owns keyed update/fold/publication and last-column row encoding
+laws. Abstract map growth is distinct from inclusion of current tuple rows:
+min updates can remove the old materialized tuple. Monotone-gamma ProviderIteration
+therefore retains its admission scope rather than silently covering every lattice.
+
+TLA owns settled publication and held-snapshot ownership for one finite min-map
+transaction. Native tests own actual multi-field false/true keys, repeated same-key
+updates, strict ordinary projection, retained append/replacement and old results.
+Seven protocol faults distinguish the expected rejection conditions; raw checker
+errors are not counterexamples. General join purity/laws, hash/key extraction,
+strict stratum metadata refinement and asynchronous lattice execution retain
+separate obligations. See [[file:scheme-trrel-uf-design.org][the design]] and
+[[file:evidence/scheme-provider-views-20261007/keyed-lattice-projection.json][the projection receipt]].

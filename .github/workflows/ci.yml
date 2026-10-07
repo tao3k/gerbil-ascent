@@ -90,17 +90,17 @@ jobs:
         run: |
           case "$ORACLE_SHARD" in
             byods)
-              gerbil env env PATH="$PATH" cargo test --locked --manifest-path rust/ascent-oracle/Cargo.toml --test scheme_parity -- byods:: --nocapture --test-threads=1
+              gerbil env env PATH="$PATH" python3 python/src/ascent_test_support/blocking_stdio.py -- cargo test --locked --manifest-path rust/ascent-oracle/Cargo.toml --test scheme_parity -- byods:: --nocapture --test-threads=1
               ;;
             other)
-              gerbil env env PATH="$PATH" cargo test --locked --manifest-path rust/ascent-oracle/Cargo.toml --test scheme_parity -- --skip byods:: --nocapture
+              gerbil env env PATH="$PATH" python3 python/src/ascent_test_support/blocking_stdio.py -- cargo test --locked --manifest-path rust/ascent-oracle/Cargo.toml --test scheme_parity -- --skip byods:: --nocapture
               ;;
             byods-scale)
               # Compile first; the runtime deadline applies to the actual scale test.
-              gerbil env env PATH="$PATH" cargo test --release --locked --manifest-path rust/ascent-oracle/Cargo.toml --test scheme_parity --no-run --message-format=json > "$RUNNER_TEMP/ascent-scale-build.jsonl"
+              gerbil env env PATH="$PATH" python3 python/src/ascent_test_support/blocking_stdio.py -- cargo test --release --locked --manifest-path rust/ascent-oracle/Cargo.toml --test scheme_parity --no-run --message-format=json > "$RUNNER_TEMP/ascent-scale-build.jsonl"
               executable="$(jq -Rr 'fromjson? | select(.reason == "compiler-artifact" and .target.name == "scheme_parity" and .executable != null) | .executable' "$RUNNER_TEMP/ascent-scale-build.jsonl")"
               test -x "$executable"
-              gerbil env env PATH="$PATH" timeout 180s "$executable" --exact byods::trrel_uf_full_rust_scale_oracle --ignored --test-threads=1 --nocapture
+              gerbil env env PATH="$PATH" python3 python/src/ascent_test_support/blocking_stdio.py -- timeout 180s "$executable" --exact byods::trrel_uf_full_rust_scale_oracle --ignored --test-threads=1 --nocapture
               ;;
             *) exit 2 ;;
           esac

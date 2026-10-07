@@ -1205,7 +1205,7 @@ iteration theorem and does not extend that theorem to arbitrary map lattices.
 | Safe graph fast path | strict_preflight, skipped_edges_nonstrict, skipped_zero_valid | Actual global negation/aggregate/projection preflight in core/rule-semantics.ss |
 | Strict projection and rejection | projection_later, path_bound, strict_cycle_impossible, mutual_paths_equal | SCC membership/order extraction; typed native cycle diagnostics |
 | Minimum levels | relax_below_valid, propagated_below_valid, completed_propagation_minimal, component_max_below, normalization_below_valid | Native component maximum normalization and condensation sweep; completeness of the resulting constraints is an explicit premise |
-| Pending-key roster | PendingKeys.empty_covered, write_covered, replay_covered | Every effective write updates the pending table and records its key; ineffective joins perform neither action |
+| Pending-key roster | PendingKeys.empty_covered, write_covered, replay_covered | LatticeAdmission derives this contract for the typed pending-first join/skip branch; native hash and field-check extraction remain premises |
 | Final current row per key | materialization_exact, materialization_unique, repeated_key_final, write_untouched | Native visited table emits each key once using the final pending value; arbitrary hash equality and emitted list order remain premises |
 
 A completed propagation result is valid and below every valid labeling, hence
@@ -1306,3 +1306,70 @@ native strata module separately passed five Cases, including its independent
 =5c6057c= passed. This incremental qualification and its source hashes are
 recorded in the receipt; the earlier full 808-Case run remains identified by its
 own published code cut. Final-head whole CI is a separate pending gate.
+
+
+* Effective lattice admission and refused publication (2026-10-07)
+
+The previous PendingKeys model began after deciding whether to write.
+=LatticeAdmission= now models that decision: read pending first and committed
+second; compute the merged value; suppress an unchanged value; otherwise write
+the merged value and its key event. =admission_update_exact= proves the resulting
+overlay equals the full keyed update, including the suppressed branch.
+=collection_stage_exact= and =empty_collection_stage_exact= lift this to arbitrary
+finite histories, without a fixed round or generation bound. No assumption that
+every input produces a key event is needed.
+
+=admit_covered= and =collection_covered= derive pending-table/key-roster support
+from the actual typed branch. =publication_exact= and
+=collection_publication_exact= connect effective-key publication to the complete
+update fold. Repeated events observe the final table value. =pending_priority=
+and =committed_fallback= state the lookup contract explicitly. These equivalence
+laws work for any stable mathematical merge function; they do not certify a
+Scheme callback's purity or join laws. =collection_inflationary= separately
+requires =JoinLaws=, preserving the algebraic admission boundary.
+
+The pending resource cost is zero for an unchanged join and for an improvement
+to a key already in the pending table. A fresh effective key costs one slot.
+=cost_support_exact= connects this branch to roster support, not event-list
+length. A key can have several improvement events while consuming one pending
+slot within the current round. The runtime derived-work budget remains cumulative
+across publications; this is not a bound on live rows or physical memory.
+Native checks compare =derived-count + pending-count= with the derived limit and
+=source-materialized-count + derived-count + pending-count= with the output limit.
+
+The TLA model owns admission/refusal/publication, not the Lean update algebra.
+=Remaining= is the available resource parameter after committed/source work;
+configurations 0, 1 and 2 explore exhausted, single-key and full two-key capacity.
+An ineffective event can be consumed at zero remaining capacity. Refusal may
+leave private buffers changed, matching an exception after private staging;
+public rows and earlier held cuts must remain unchanged. No physical rollback
+of arbitrary user callbacks is assumed. Refused transactions cannot settle or
+publish in the model. Recovery ownership is checked separately by a native
+source replacement followed by comparison with a fresh solve.
+
+Three new fault controls discriminate different defects:
+
+| Fault | Required invariant | Discriminating behavior |
+| Skip resource admission | BudgetBound | Two changed keys enter a collecting transaction with capacity one |
+| Count events instead of fresh effective keys | RefusalSound | An event for an already staged key rejects despite actual pending cost one |
+| Publish private state on refusal | RefusalStable | A second changed key exceeds capacity, but private values replace public rows |
+
+These are injected faults in the specification, not newly discovered failures in
+the current Scheme runtime. Checker exceptions are not accepted counterexamples.
+The model retains the earlier nine faults and adds these three; independent
+held-snapshot and complete projection invariants remain in every positive gate.
+
+Native qualification adds two concrete discriminators. A three-input same-key
+min computation completes with one derived slot, in both selected input orders.
+A retained session stages two distinct improved keys against a one-slot derived
+budget and produces the exact budget error; its earlier result remains unchanged.
+Replacing the inputs with one key reconstructs successfully and matches a fresh
+solve for both source and lattice rows. This distinguishes rejection safety from
+claims of in-place callback rollback or automatic repair.
+
+See [[file:evidence/scheme-provider-views-20261007/effective-lattice-admission.json][the source-bound admission receipt]]
+for the seventeen Lean laws, thirteen examples, three resource configurations,
+actual fault states and native acceptance. Remaining representation obligations
+are Scheme hash/equality, field/callback validation, native emitted-list order
+and deduplication, SCC/vector extraction and asynchronous custom-lattice execution.
+Full BYODS application/time/memory replication is a separate acceptance track.

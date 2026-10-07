@@ -727,3 +727,24 @@ the stated typed compilation/functional roster components while preserving the
 separate join, hash/equality, native SCC and asynchronous execution obligations.
 See [[file:../../scheme-trrel-uf-design.org][the refinement design]] and
 [[file:../../evidence/scheme-provider-views-20261007/strict-dependencies-pending-keys.json][the source-bound receipt]].
+
+
+* Effective map-lattice injection and admission costs (2026-10-07)
+
+Section 5.6 pointwise map joins require an injection implementation as well as
+join algebra. LatticeAdmission connects pending-first lookup, effective-write
+suppression, key-roster support and final publication to the full update fold.
+This removes the typed effective-write decision premise from the previous
+PendingKeys component. It does not apply Section 3's monotone concretization
+result to replacement-valued tuple observations without its stated premises.
+
+The current-round pending cost counts fresh effective keys, not input or event
+occurrences; cumulative runtime work budgets remain separate from live map size.
+TLA admission/refusal states explore three resource configurations and detect
+bypass, false refusal and refused private-state publication. Native one-slot
+same-key and retained refusal/reconstruction controls connect the model to
+Scheme. These injected faults discriminate design violations; the current
+native implementation passed the controls. General callback/hash/SCC refinement
+and the paper's application/time/memory reproduction retain their own gates.
+See [[file:../../scheme-trrel-uf-design.org][the design]] and
+[[file:../../evidence/scheme-provider-views-20261007/effective-lattice-admission.json][the receipt]].

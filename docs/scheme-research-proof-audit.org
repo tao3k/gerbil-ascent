@@ -2235,3 +2235,28 @@ existing native lattice session cases. No additional weighted-graph TLA model
 repeats the Lean algebra. See
 [[file:evidence/scheme-provider-views-20261007/strict-dependencies-pending-keys.json][the receipt]]
 for source identities, fault witnesses and the acceptance boundary.
+
+
+* Effective-write extraction and budget defect discovery (2026-10-07)
+
+LatticeAdmission connects the branch before PendingKeys: pending-first lookup,
+merged value, unchanged skip and effective key write. Arbitrary finite replay
+and touched-key publication equal the full update fold. Seventeen laws retain
+mathematical merge/equality premises; growth uses the existing JoinLaws contract.
+Pending-slot cost follows fresh effective key support rather than event count.
+The runtime cumulative derived-work/output budgets are not allocator bounds.
+
+TLA explores exhausted, single-key and full two-key remaining capacity. Refused
+private staging cannot publish; earlier held cuts remain stable. The three new
+faults must fail BudgetBound, RefusalSound and RefusalStable with exit 12 and
+actual behavior states. A checker evaluation exception encountered during model
+construction was repaired and excluded from accepted defect evidence. These
+faults concern temporal admission/publication, while Lean owns static replay
+and support laws. No duplicate TLA proof of the Lean fold equations is added.
+
+Native tight-budget cases check repeated-key acceptance, exact typed refusal,
+held-result stability, and replacement/reconstruction against a fresh solve.
+They passed; no newly discovered native defect is claimed. The design and
+receipt distinguish this typed component closure from universal native hash,
+callback/SCC extraction and full paper application/cost replication. See
+[[file:evidence/scheme-provider-views-20261007/effective-lattice-admission.json][the receipt]].

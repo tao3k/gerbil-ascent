@@ -1564,14 +1564,24 @@ check-lattice-projection-formal:
     trap 'rm -rf "$temp"' EXIT
     if [[ "${tlc[0]}" == java ]]; then tlc=(java "-Djava.io.tmpdir=$temp" "${tlc[@]:1}"); fi
     "${tlc[@]}" -workers 1 -config packages/proofs/tla/LatticeProjection.cfg -metadir "$temp/good" packages/proofs/tla/LatticeProjection.tla
-    for mutation in overwrite prior false retain early borrow stale lost-key repeat-key; do
+    for capacity in 0 1; do
+      sed "s/Remaining = 2/Remaining = $capacity/" packages/proofs/tla/LatticeProjection.cfg > "$temp/capacity-$capacity.cfg"
+      "${tlc[@]}" -workers 1 -config "$temp/capacity-$capacity.cfg" -metadir "$temp/capacity-$capacity" packages/proofs/tla/LatticeProjection.tla
+    done
+    for mutation in overwrite prior false retain early borrow stale lost-key repeat-key budget-skip budget-events refusal-publish; do
       case "$mutation" in
         overwrite|prior|false) invariant=MapExact ;;
         retain|early|stale) invariant=SnapshotExact ;;
         borrow) invariant=HeldStable ;;
         lost-key|repeat-key) invariant=KeyCoverage ;;
+        budget-skip) invariant=BudgetBound ;;
+        budget-events) invariant=RefusalSound ;;
+        refusal-publish) invariant=RefusalStable ;;
       esac
       sed -e "s/Mutation = \"none\"/Mutation = \"$mutation\"/" -e "s/INVARIANTS .*/INVARIANTS $invariant/" packages/proofs/tla/LatticeProjection.cfg > "$temp/$mutation.cfg"
+      case "$mutation" in
+        budget-skip|budget-events|refusal-publish) sed -i.bak 's/Remaining = 2/Remaining = 1/' "$temp/$mutation.cfg" ;;
+      esac
       code=0
       "${tlc[@]}" -workers 1 -config "$temp/$mutation.cfg" -metadir "$temp/$mutation" packages/proofs/tla/LatticeProjection.tla > "$temp/$mutation.out" 2>&1 || code=$?
       [[ "$code" = 12 ]] && grep -q "Invariant $invariant is violated" "$temp/$mutation.out"

@@ -152,6 +152,54 @@
                                (gerbil-ascent-variable 'value))))))
            4 4 8))
          true)))
+    (poo-flow-test-case "repeated effective lattice updates consume one pending key slot"
+      (for-each
+       (lambda (inputs)
+         (let (result
+               (gerbil-ascent-evaluate-program
+                (gerbil-ascent-program
+                 (list (gerbil-ascent-lattice 'best 2 '((0 9)) min)
+                       (gerbil-ascent-relation 'improve 2 inputs))
+                 (list (gerbil-ascent-rule
+                        (list (gerbil-ascent-atom 'best
+                               (list (gerbil-ascent-variable 'key) (gerbil-ascent-variable 'value))))
+                        (list (gerbil-ascent-atom 'improve
+                               (list (gerbil-ascent-variable 'key) (gerbil-ascent-variable 'value))))))
+                 4 1 5)))
+           (check-equal? (.ref result 'finished) #t)
+           (check-equal? ((.ref result 'rows-of) 'best) '((0 2)))))
+       (list '((0 7) (0 2) (0 4)) '((0 4) (0 2) (0 7)))))
+    (poo-flow-test-case "pending lattice budget refusal preserves held results and permits reconstruction"
+      (def (program inputs)
+        (gerbil-ascent-program
+         (list (gerbil-ascent-lattice 'best 2 '((0 9) (1 9)) min)
+               (gerbil-ascent-relation 'improve 2 inputs))
+         (list (gerbil-ascent-rule
+                (list (gerbil-ascent-atom 'best
+                       (list (gerbil-ascent-variable 'key) (gerbil-ascent-variable 'value))))
+                (list (gerbil-ascent-atom 'improve
+                       (list (gerbil-ascent-variable 'key) (gerbil-ascent-variable 'value))))))
+         4 1 5))
+      (let* ((session (gerbil-ascent-open-session (program [])))
+             (held (gerbil-ascent-session-run session))
+             (held-rows (map (lambda (row) (map values row)) ((.ref held 'rows-of) 'best))))
+        (check-equal? (length held-rows) 2)
+        (for-each (lambda (row) (check-equal? (not (not (member row held-rows))) #t))
+                  '((0 9) (1 9)))
+        (gerbil-ascent-session-append-source! session 'improve '(0 1))
+        (gerbil-ascent-session-append-source! session 'improve '(1 2))
+        (check-exception (gerbil-ascent-session-run session)
+                         (lambda (failure)
+                           (equal? (error-message failure) "ASCENT derived fact budget exceeded")))
+        (check-equal? ((.ref held 'rows-of) 'best) held-rows)
+        (gerbil-ascent-session-replace-source! session 'improve '((0 1)))
+        (let* ((retry (gerbil-ascent-session-run session))
+               (fresh (gerbil-ascent-evaluate-program (program '((0 1))))))
+          (for-each (lambda (name)
+                      (check-equal? ((.ref retry 'rows-of) name) ((.ref fresh 'rows-of) name)))
+                    '(best improve))
+          (check-equal? (.ref retry 'finished) #t)
+          (check-equal? ((.ref held 'rows-of) 'best) held-rows))))
     (poo-flow-test-case "session joins direct lattice source values"
       (let (session
             (gerbil-ascent-open-session

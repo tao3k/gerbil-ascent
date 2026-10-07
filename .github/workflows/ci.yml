@@ -147,6 +147,16 @@ jobs:
             curl -fLsS "https://raw.githubusercontent.com/$repository/$revision/$directory/$relation.facts" -o "$dataset/$relation.facts"
           done < <(jq -r '.files[].relation' "$manifest")
           PYTHONPATH=python/src python3 -m ascent_test_support.paper_source "$dataset" "$manifest"
+      - name: Check independent Polonius reference controls
+        if: matrix.shard == 'byods-scale'
+        run: cargo test --locked --manifest-path rust/ascent-oracle/Cargo.toml --example polonius_data_truth
+      - name: Verify complete Polonius reference observations
+        if: matrix.shard == 'byods-scale'
+        run: |
+          cargo build --release --locked --manifest-path rust/ascent-oracle/Cargo.toml --example polonius_data_truth
+          timeout 900s rust/ascent-oracle/target/release/examples/polonius_data_truth .cache/ascent/paper-data/polonius-clap .cache/ascent/polonius-reference-complete datafrog-opt
+          jq -r '.full_reference.outputs[] | "\(.sha256)  .cache/ascent/polonius-reference-complete/\(.relation).tsv"' docs/evidence/scheme-application-admission-20261007/polonius-reference.json > .cache/ascent/polonius-output.sha256
+          sha256sum --check .cache/ascent/polonius-output.sha256
   formal:
     runs-on: ubuntu-latest
     timeout-minutes: 15

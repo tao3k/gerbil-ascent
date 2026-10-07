@@ -9,6 +9,7 @@ publish = false
 ascent = "=0.8.0"
 
 [dev-dependencies]
+polonius-engine = "=0.13.0"
 ascent-byods-rels = "=0.8.0"
 asp-rust = { git = "https://github.com/tao3k/asp-rust", rev = "2419414ee5379bad89506496e3eaab928df68daf", version = "0.1.2", default-features = false }
 

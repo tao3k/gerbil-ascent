@@ -736,3 +736,86 @@ package 10 remains open for matched end-to-end benefits. MR/MRR is deferred.
 Primary references: [[https://kmicinski.com/assets/byods.pdf][B23, sections 5.3 and 5.5--5.7]];
 [[https://github.com/s-arash/polonius/blob/7fe7cca808115828b1105c86003a768a6749383f/polonius-engine/src/facts.rs][pinned Polonius schema]];
 [[https://github.com/s-arash/polonius/blob/7fe7cca808115828b1105c86003a768a6749383f/polonius-engine/src/output/naive.rs][pinned reference naive rules]].
+
+* Complete Polonius reference observations and dense-path gate (2026-10-07)
+
+The independently buildable =polonius-engine= 0.13.0 crate is now frozen by
+Cargo.lock and archive SHA256, with upstream Git identity
+=741e6095fe50f468982d4d253e842eb7d12ed9d3=. Its =facts.rs=, initialization
+and liveness modules are byte-identical to the input fork's corresponding Git
+blobs. The oracle runs the complete public engine, including initialization,
+move errors, use/drop liveness, placeholder initialization and borrow checking;
+it does not substitute a subset closure fixture. =Naive= and =DatafrogOpt= are
+explicit selections. Intermediate relations must be interpreted according to
+the selected algorithm, rather than assumed identical across algorithms.
+
+The [[file:evidence/scheme-application-admission-20261007/polonius-reference.json][structured reference receipt]] binds all 18 input files, the runner, locked
+dependencies and executable. The complete =DatafrogOpt= invocation terminated
+with exit zero and exported all 14 public observation fields. Large computed
+relations include =path_maybe_uninitialized_on_exit= (291,826,811 rows),
+=subset= (2,512,445 rows), =origin_live_on_entry= (1,033,354 rows) and
+=known_contains= (19 rows). Borrow, move and illegal-subset errors are empty on
+this complete input. This reference output is not a Scheme correctness result.
+
+One upstream observation must not be used as logical truth:
+=Output.loan_invalidated_at= is not populated by this compute path. Its exported
+inspection field is empty even though the raw input contains 118,208 facts.
+The receipt distinguishes this inspection field from computed observations.
+Native comparison must use the actual input predicate and schema translation,
+not mistake an unpopulated carrier for certified absence. Positive invalidation
+and killed-loan controls independently exercise the reference algorithms.
+
+Canonical export retains fixed-size interned-ID tuples and compares borrowed
+source names. It writes field-preserving sorted rows without copying names into
+a tree node for every result. Four Rust tests cover actual file loading and
+point/loan order, killed-loan propagation, point isolation/non-diagonal cycle
+outputs, and name-order/duplicate export. Eight complete files from the earlier
+string-copy exporter are byte-identical to the final exporter. The failed
+partial file is not admitted as a completed observation.
+
+** Accuracy and resource boundaries
+
+All four 180-second observations failed with exit 124: naive and optimized runs
+alongside native preparation, the optimized run without native preparation,
+and the ID-export run under the same bound. These failures remain failures.
+The separate complete observation used a 900-second observation bound and
+finished in 245.29 seconds: 157.784 seconds for solve and 85.738 seconds for
+canonical export. Direct process measurement reports 12,124,520,448 bytes
+maximum RSS and 13,104,310,016 bytes peak footprint. This is one reference
+pipeline including dump, export and teardown; it is not a paired Scheme benefit,
+a paper timing reproduction, a physical-allocation result or a 180-second pass.
+No actor speedup follows from these measurements.
+
+CI independently replays the complete input and all output digests, with an
+explicit full-reference truth step. Its larger observation bound does not
+replace the failed 180-second observations. Partial exports cannot pass:
+the process must finish successfully and all fourteen frozen digests must match.
+The Scheme source refactor has also passed 86 native modules / 829 Cases;
+the Python byte/process framework passed 21 Cases and Rust all-target Clippy
+passed. GitHub head =9d182d5= passed all six qualification jobs; later commits
+must be requalified independently.
+
+** Coupled native implementation and proof plan
+
+The dominant full output is a dense path dataflow relation, not merely the
+2.5-million-row subset relation. A complete native application must therefore
+port initialization, liveness and borrow rules together with a representation
+that can admit that dense relation. The current explicit Hash/Set path has no
+admitted full Polonius resource result. A compact finite-domain Boolean relation
+with exact keyed enumeration and delta publication is a design candidate;
+it is not an implemented capability or a proved space bound.
+
+Lean must connect admitted domain ordinals, membership, cardinality, old/delta/
+total cuts and indexed column projections to the rule consequence operator.
+TLA+ must cover private domain/index construction, owner publication, foreign or
+stale roots and actor cancellation. The existing publication models may be
+reused where those transitions remain unchanged; copying their semantic laws
+into another protocol model adds no assurance. Native controls must compare
+complete public observations and all error sets, including point boundaries,
+cyclic origins, killed loans and field permutations.
+
+This closes the reference input/output baseline for the selected algorithm.
+The complete Scheme Polonius application, its representation refinement and
+matched resource benefits remain open. PageRank's lawful numeric contribution
+maps and LLVM's complete parsing/context-sensitive analysis remain subsequent
+application gates. MR/MRR and new paid model calls remain deferred.

@@ -205,7 +205,8 @@
             (set! layouts fresh) (set! planned-atoms #f))))
       (def (visit-parts atom environment use-delta? slot-terms consume)
         (let (captured (vector-ref (if use-delta? delta all) (vector-ref atom 0)))
-          (and (relation-view? captured) (gerbil-ascent-row-parts? captured)
+          (and (gerbil-ascent-admitted-row-parts? captured)
+            (gerbil-ascent-canonical-hash-index-provider? (vector-ref index-providers (vector-ref atom 0)))
             (begin
               ((if slot-terms gerbil-ascent-visit-admitted-view-parts! gerbil-ascent-visit-view-parts!) captured (vector-ref atom 2)
                 (if slot-terms

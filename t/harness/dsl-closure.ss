@@ -45,6 +45,7 @@
 ;;; native entry. The command transports stdin/rows; fixture semantics stay
 ;;; Scheme-owned and Rust still checks every original expected row.
 (import (only-in (rename-in :gerbil-ascent/t/qualification/ascent-byods-session-output (main byods-session-main)) byods-session-main))
+(import (only-in (rename-in :gerbil-ascent/t/qualification/ascent-steensgaard-output (main steensgaard-main)) steensgaard-main))
 (import (only-in (rename-in :gerbil-ascent/t/qualification/ascent-multi-source-session-output (main multi-source-session-main)) multi-source-session-main))
 (import (only-in (rename-in :gerbil-ascent/t/qualification/ascent-grouped-eqrel-session-output (main grouped-eqrel-session-main)) grouped-eqrel-session-main))
 (import (only-in (rename-in :gerbil-ascent/t/qualification/ascent-byods-lattice-session-output (main byods-lattice-session-main)) byods-lattice-session-main))
@@ -79,6 +80,7 @@
      (case (string->symbol name)
        ((byods-query) (byods-query-main))
        ((byods-session) (byods-session-main))
+       ((steensgaard) (steensgaard-main))
        ((multi-source-session) (multi-source-session-main))
        ((grouped-eqrel-session) (grouped-eqrel-session-main))
        ((byods-lattice-session) (byods-lattice-session-main))

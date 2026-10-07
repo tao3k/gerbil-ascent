@@ -68,6 +68,7 @@
     "program/source-cut"
     "program/actor-session"
     "program/interface"
+    "applications/steensgaard"
     "core/binary-program"
     "candidate/closure"
     "candidate/datum"

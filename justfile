@@ -1031,6 +1031,9 @@ multi-source-session-rows:
 byods-session-rows:
     @PYTHONPATH="{{ justfile_directory() }}/python/src" python3 -m ascent_test_support.supervision --separate-stderr -- timeout 90s .cache/ascent/native-library/dsl-closure {{ gerbil_test_runtime_options }} --oracle byods-session
 
+steensgaard-rows:
+    @just _oracle-native steensgaard
+
 grouped-eqrel-session-rows:
     @PYTHONPATH="{{ justfile_directory() }}/python/src" python3 -m ascent_test_support.supervision --separate-stderr -- timeout 90s .cache/ascent/native-library/dsl-closure {{ gerbil_test_runtime_options }} --oracle grouped-eqrel-session
 
@@ -1044,7 +1047,7 @@ oracle: build-dsl-closure
         export CC=/usr/bin/clang
         export RUSTFLAGS="${RUSTFLAGS:+$RUSTFLAGS }-C linker=/usr/bin/clang -C link-arg=-isysroot -C link-arg=$SDKROOT"
     fi
-    gerbil env env PATH="$PATH" cargo test --locked --manifest-path rust/ascent-oracle/Cargo.toml
+    gerbil env env PATH="$PATH" python3 python/src/ascent_test_support/blocking_stdio.py -- cargo test --locked --manifest-path rust/ascent-oracle/Cargo.toml
 
 timed-rows:
     @timeout 60s gerbil {{ gerbil_test_runtime_options }} t/qualification/ascent-timing-test.ss

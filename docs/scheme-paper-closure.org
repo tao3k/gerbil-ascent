@@ -476,3 +476,38 @@ native bucket construction/equality and optimized visitor extraction remain
 premises until refined, and full paper application/cost replication is not
 established by these routing laws. See
 [[file:evidence/scheme-provider-views-20261007/multi-column-routing.json][the receipt]].
+
+* Canonical admission and complete application rule progress (2026-10-07)
+
+The [[file:scheme-trrel-uf-design.org::*Canonical admission boundary and Steensgaard application (2026-10-07)][integrated follow-up]] closes a discovered native capability-dispatch defect:
+custom or nested mixed view parts cannot enter the canonical selected matcher
+solely because an outer private visitor record exists. It also adds maximum
+packed vertex/group controls and the complete Steensgaard allocation, assignment
+and load/store rule program, with explicit and implicit variants.
+
+The application's native retained/cancellation controls and Rust explicit,
+eqrel and independent graph comparisons connect application rule behavior to
+the library lifecycle. They do not qualify the full OpenJDK experiment or its
+linear-space argument. Current Scheme eqrel still emits explicit pairs into
+engine buffers; compressed equivalence total/delta publication and native
+ownership/recovery correspondence are the next concrete architecture gate.
+The [[file:evidence/scheme-application-admission-20261007/openjdk-source.json][pinned OpenJDK source manifest]] binds four original blobs, their SHA256s,
+47,069 TSV facts and arities. The complete Rust implicit application and an
+independent partition model both count 440,438,706 pairs. This admits source
+identity, shape and full-input aggregate cardinality agreement in the reference;
+it does not admit full Scheme solving or full tuple-by-tuple data comparison.
+
+The other oracle failure at 9cd4897 requires a launch-boundary repair and a
+fresh exact-head CI result. Restoring blocking inherited standard streams is
+qualified by actual Gerbil/Rust backpressure; the missing original CI panic
+text prevents attributing its exact historical syscall. Case-level truth and
+transport admission remain distinct. The theorem thread retains Lean/TLA
+ownership; universal native extraction and the other paper applications remain
+on the closure matrix.
+
+Local qualification for this slice admits 825 native Cases in 86 modules,
+67 other-oracle tests and 11 BYODS tests, with source-view and policy gates
+passing. The [[file:evidence/scheme-application-admission-20261007/receipt.json][source-bound receipt]] preserves actual paired costs and exclusions.
+The warmed complete application at 1,088 output pairs has median implicit /
+explicit CPU and serial allocation ratios of 0.081 and 0.144. These are local
+fixture results; worker allocation and full-data Scheme memory are not admitted.

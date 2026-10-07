@@ -23,6 +23,7 @@ mod positive_closure;
 mod product_session;
 mod scc_order;
 mod session_corpus;
+mod steensgaard;
 mod syntax;
 mod timeout;
 mod typed_rules;

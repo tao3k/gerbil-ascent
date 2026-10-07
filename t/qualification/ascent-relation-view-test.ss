@@ -6,6 +6,7 @@
         (only-in :clan/poo/object .ref .o)
         :gerbil-ascent/program/objects
         :gerbil-ascent/program/session
+        (only-in :gerbil-ascent/program/index gerbil-ascent-make-row-indexes row-indexes-visit-parts)
         (only-in :gerbil-ascent/program/evaluate gerbil-ascent-evaluate-program gerbil-ascent-make-engine)
         :gerbil-ascent/table/provider :gerbil-ascent/table/storage
         :gerbil-ascent/table/trrel-uf
@@ -49,6 +50,32 @@
       (* n 4) (* n n 2) output-limit)))
 (def ascent-relation-view-test
   (test-suite "Frozen relation representations through the engine"
+    (test-case "custom and nested mixed views cannot acquire canonical parts admission"
+      (let* ((custom (make-relation-view 'custom #f 0 'total 1 1
+                       (lambda (_columns _key consume) (consume '(1 2)))
+                       (lambda (row) (equal? row '(1 2))) #f
+                       (lambda (_columns _key consume) (consume [] 1 2))))
+             (builtin (gerbil-ascent-rectangle-view (list (make-rectangle [] '(3) '(4))) 1 2 #t))
+             (mixed (gerbil-ascent-view-union custom builtin))
+             (nested (gerbil-ascent-view-union mixed builtin))
+             (atom (vector 0 [] [] #f [])))
+        (for-each (lambda (view)
+          (check-equal? (gerbil-ascent-admitted-row-parts? view) #f)
+          (check-equal? (rejected (lambda () (selected-rows view [] [] 'admitted)))
+                        "ASCENT view lacks admitted parts")
+          (let* ((all (vector view))
+                 (owner (gerbil-ascent-make-row-indexes all all (vector 1) (vector 1)
+                          (vector 0) (vector 0) (vector gerbil-ascent-hash-index-provider)))
+                 (calls 0))
+            (check-equal? ((row-indexes-visit-parts owner) atom (vector) #f []
+                           (lambda (_prefix _left _right) (set! calls (+ calls 1)))) #f)
+            (check-equal? calls 0)))
+          (list custom mixed nested (gerbil-ascent-view-bind nested 'bound #f 1 'total)))
+        (check-equal? (selected-rows nested [] [] #t) '((1 2) (3 4) (3 4)))
+        (check-equal? (gerbil-ascent-admitted-row-parts?
+                       (gerbil-ascent-view-union builtin builtin)) #t)
+        (check-equal? (selected-rows (gerbil-ascent-view-union builtin builtin) [] [] 'admitted)
+                      '((3 4) (3 4)))))
     (test-case "custom three-argument parts remain usable through streams and unions"
       (let* ((custom (make-relation-view 'custom #f 0 'total 1 1
                        (lambda (_columns _key consume) (consume '(1 2)))

@@ -92,6 +92,24 @@
         (check-equal? (packed-journal large 3 0 #f) #f)
         (check-exception (packed-journal events 2 0 #f) true)
         (check-exception (packed-journal events 3 1 #t) true)))
+    (poo-flow-test-case "maximum packed vertex population preserves word boundaries and group isolation"
+      (let* ((pairs (map (lambda (i) (list (* 2 i) (+ 1 (* 2 i)))) (iota 256)))
+             (events (list (vector 'source pairs)))
+             (expected (journal-reference events 768 0 #f)))
+        (check-equal? (length expected) 768)
+        (check-equal? (packed-journal events 768 0 #f) expected)
+        ;; 512 distinct vertices exercise the highest packed diagonal bit.
+        ;; A 257th injection chooses bounded adjacency replay instead.
+        (check-equal? (packed-journal (cons (vector 'derived '((511 512))) events) 771 0 #f) #f)
+        (displayln "JOURNAL-MAX-VERTICES-CHECKED 512") (force-output)
+        (let* ((grouped (list (vector 'source
+                          (append (map (lambda (row) (cons #f row)) pairs)
+                                  (map (lambda (row) (cons #t row)) pairs)))))
+               (grouped-expected (journal-reference grouped 768 0 #f)))
+          (check-equal? (length grouped-expected) 1536)
+          (check-equal? (packed-journal grouped 768 0 #f) grouped-expected)
+          (check-exception (packed-journal grouped 2 0 #f) true)
+          (displayln "JOURNAL-MAX-GROUPS-CHECKED 2") (force-output))))
     (poo-flow-test-case "all graph prefixes preserve exact frontiers counts and frozen old views"
       (for-each (lambda (mask)
         (for-each (lambda (order)

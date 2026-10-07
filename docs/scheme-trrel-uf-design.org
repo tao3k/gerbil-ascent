@@ -1558,3 +1558,95 @@ and the optimized grouped visitor. Existing scan/indexed and row/parts controls
 exercise repeated/reordered/absent keys and equal-but-distinct stored members.
 No Scheme defect is inferred solely from an injected model fault. See
 [[file:evidence/scheme-provider-views-20261007/multi-column-routing.json][the source-bound receipt]].
+
+* Canonical admission boundary and Steensgaard application (2026-10-07)
+
+The next integrated slice follows the audit's ordered gates: oracle transport,
+native admission correspondence, maximum packed representation, actor lifecycle
+and complete application rules. It does not replace the whole-paper closure
+matrix or the theorem thread's ownership.
+
+** Process boundary and observed failure
+
+The 9cd4897 other oracle shard passed 58 tests and failed eight. Scheme, BYODS,
+scale and formal passed. Original Rust panic text is absent from that job. A
+controlled real Gerbil/Rust experiment reproduces incomplete logging when
+inherited O_NONBLOCK stderr fills; even the panic diagnostic is unavailable.
+The adapted arm writes every byte and completes. This establishes a concrete
+launch-boundary defect; the exact historical CI syscall is still unobserved.
+
+=blocking_stdio.py= restores blocking fd 0/1/2 before exec of unchanged argv.
+Parallelism, byte capture, UTF-8 admission, semantic assertions and deadlines
+remain the same. Real pipe controls exercise backpressure, binary stdout,
+argument preservation and exit 7; an unadapted arm must fail. See
+[[file:evidence/scheme-application-admission-20261007/transport.json][the transport receipt]].
+
+** Capability extraction before selected matching
+
+A native counterexample exposes a custom three-argument visitor entering the
+admitted canonical path and raising a part-visitors type error. Nested mixed
+unions can also retain a part-visitors record whose admitted field is false.
+Testing only the outer record shape is therefore insufficient.
+
+=gerbil-ascent-admitted-row-parts?= recognizes the actual callable admission.
+The extraction invariant is structural: built-in rectangles carry admission;
+custom visitors do not; a union carries it iff both children do; binding and
+ordered export preserve the captured capability. The private index owner
+requires this capability and the canonical index receiver before evaluating
+the key or invoking the consumer. Declined access returns false without a
+consumer call, preserving the generic full matcher for custom candidates.
+An explicit unsupported admitted call raises a typed diagnostic.
+
+The new native control checks custom, mixed, nested and rebound cuts, retained
+checked traversal, zero callbacks on decline and successful all-built-in union
+access. The red receipt fails at the actual native dispatch before the fix.
+These controls connect the native representation seam to the existing ordered
+lookup premise. They are not a universal extraction theorem for Gerbil hashes,
+foreign callbacks or compiled vectors.
+
+** Maximum packed population
+
+The boundary corpus now includes 256 disjoint injections with 512 distinct
+vertices, the highest packed diagonal bit, 768 concrete rows and exact legacy
+sequence correspondence. Two false/true groups each reach that bound and must
+remain isolated (1,536 rows). Injection 257 declines the matrix path, and tight
+budgets reject it independently. The matrix cap remains a physical choice, not
+a semantic graph-size limit.
+
+** Complete Steensgaard rules and current scale obligation
+
+[[file:../applications/steensgaard.ss][The application constructor]] returns the ordinary POO Program declarations;
+it owns no storage, session, configuration environment or compatibility layer.
+It includes allocation and assignment injection plus the full store/load/field
+join. Its explicit arm includes symmetry/reflexivity and transitivity rules.
+The rule source is pinned at
+[[https://github.com/s-arash/ascent/blob/03f4f792442ecaf9e4f178a6a1b5840eab526388/byods/ascent-byods-rels/examples/steensgaard/main.rs][the upstream Steensgaard application]].
+B23 Section 5.2 motivates this application; its paper timings are not Scheme
+measurements.
+
+Scheme's independent partition saturation and Rust's independent undirected
+graph saturation do not use the production compiler or equality Provider.
+Rust compares the complete implicit and explicit programs with 33 application
+inputs, including empty input, duplicate allocations, missing equivalence,
+field mismatch and a second load/store saturation wave. Native controls also
+cover false/true host values, append, withdrawal, held old results, explicit
+actor cancellation and retry. Worker-capacity comparisons do not assert that
+custom eqrel storage executes concurrently.
+
+Paired application calls include solve and full vpt export, with warmed programs
+and alternating order. The VM allocation counter is thread-local: cross-thread
+subtractions can be negative and are excluded; caller allocation is admitted
+only for serial arms. CPU/elapsed measurements retain their workload scope.
+
+The pinned OpenJDK files are alloc (737,392 bytes), assign (13,102,621 bytes),
+load (1,088,142 bytes), and store (88,661 bytes). The complete Rust implicit application and independent partition model both
+count 440,438,706 implied pairs, with a largest class of 20,956 members. This
+qualifies full-input cardinality agreement in the Rust reference, not full
+Scheme solving, tuple-by-tuple full-data correspondence or continuous peak memory. Inspection identifies a concrete
+architecture gap: current eqrel component state still emits expanded pairs into
+the engine's eager row buffers. B23's linear storage argument requires retaining
+implicit total/delta equivalence views, not merely fewer closure rules. The
+current complete rule program and finite speed measurements do not establish
+that memory bound. Compressed eqrel publication, source recovery and ordered
+consumer correspondence precede OpenJDK benefit claims; Polonius, LLVM and
+lattice PageRank remain later application gates in the same closure matrix.

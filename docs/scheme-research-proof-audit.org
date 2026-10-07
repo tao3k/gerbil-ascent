@@ -2318,3 +2318,23 @@ receipts. The integrated execution entry passed 67/67 other-shard cases and
 14/14 Python framework tests, including four backpressure controls. The repair
 is test-process transport, not a Scheme semantic rewrite. See
 [[file:evidence/scheme-application-admission-20261007/transport.json][the concurrent transport evidence]].
+
+* Canonical parts capability extraction and application correspondence (2026-10-07)
+
+Native dispatch must distinguish a checked custom visitor from an admitted
+exact-selector visitor, including nested unions. A source-bound native red
+control exposes the previous type failure; the repaired predicate extracts
+actual admission, unions compose both child capabilities, and bind/export
+retain the captured capability. The canonical index owner declines before key
+evaluation or consumer invocation. This supplies executable representation
+controls for the selected-matcher equality-elision premise. It does not prove
+universal native key equality or foreign callback laws.
+
+The complete Steensgaard program instantiates allocation/assignment injection
+and field-matched store/load consequences. Independent partition and graph
+saturation, Rust explicit/eqrel comparison, retained withdrawal and actor
+cancellation controls qualify this finite application correspondence. The
+current eager eqrel buffers retain a concrete B23 linear-storage gap; full
+OpenJDK solving and continuous peak memory remain separate obligations.
+Cross-thread VM allocation subtraction is invalid and is excluded from
+worker comparisons. See the [[file:scheme-trrel-uf-design.org][implementation design]] and its integrated receipt.

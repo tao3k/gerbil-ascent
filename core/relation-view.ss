@@ -7,7 +7,7 @@
         relation-view-identity relation-view-generation relation-view-revision relation-view-lane
         gerbil-ascent-view-with-export gerbil-ascent-view-bind gerbil-ascent-view-select gerbil-ascent-view-rows
         gerbil-ascent-explicit-view gerbil-ascent-lazy-explicit-view gerbil-ascent-view-union
-        gerbil-ascent-row-parts? gerbil-ascent-for-each-row-parts gerbil-ascent-visit-view-parts! gerbil-ascent-visit-admitted-view-parts!
+        gerbil-ascent-row-parts? gerbil-ascent-admitted-row-parts? gerbil-ascent-for-each-row-parts gerbil-ascent-visit-view-parts! gerbil-ascent-visit-admitted-view-parts!
         gerbil-ascent-for-each-row gerbil-ascent-any-row? gerbil-ascent-row-count
         gerbil-ascent-view-contains? make-rectangle gerbil-ascent-rectangle-view)
 (defstruct relation-view (identity generation revision lane count units visit contains export parts))
@@ -46,6 +46,12 @@
 (def (gerbil-ascent-row-parts? rows)
   (and (cond ((relation-view? rows) (relation-view-parts rows))
              ((row-stream? rows) (relation-view-parts (row-stream-view rows))) (else #f)) #t))
+;; Checked custom visitors do not establish exact canonical key selection.
+;; A mixed union retains that distinction through arbitrarily nested cuts.
+(def (gerbil-ascent-admitted-row-parts? view)
+  (and (relation-view? view)
+       (let (parts (relation-view-parts view))
+         (and (part-visitors? parts) (part-visitors-admitted parts) #t))))
 ;; : (-> PartVisitor RowSource Void)
 (def (gerbil-ascent-for-each-row-parts consume rows)
   (if (relation-view? rows) (gerbil-ascent-visit-view-parts! rows [] [] consume)
@@ -60,6 +66,8 @@
 ;; Only the canonical compiled index owner supplies admitted columns and keys.
 ;; : (-> BuiltinView AdmittedColumns AdmittedKey PartVisitor Void)
 (def (gerbil-ascent-visit-admitted-view-parts! view columns key consume)
+  (unless (gerbil-ascent-admitted-row-parts? view)
+    (error "ASCENT view lacks admitted parts"))
   ((part-visitors-admitted (relation-view-parts view)) columns key consume))
 ;; : (-> FrozenView Row Boolean)
 (def (gerbil-ascent-view-contains? view row)
@@ -108,7 +116,7 @@
            (lambda (columns key consume)
              (gerbil-ascent-visit-view-parts! left columns key consume)
              (gerbil-ascent-visit-view-parts! right columns key consume))
-           (and (part-visitors? (relation-view-parts left)) (part-visitors? (relation-view-parts right))
+           (and (gerbil-ascent-admitted-row-parts? left) (gerbil-ascent-admitted-row-parts? right)
              (lambda (columns key consume)
                (gerbil-ascent-visit-admitted-view-parts! left columns key consume)
                (gerbil-ascent-visit-admitted-view-parts! right columns key consume)))))))

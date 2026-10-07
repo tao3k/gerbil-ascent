@@ -162,7 +162,24 @@
   ;; lane only when its first indexed lookup crosses the size threshold.
   (let ((all-indexes #f) (delta-indexes #f)
         (all-atoms #f) (delta-atoms #f)
-        (layouts (make-vector (vector-length all) #f)) (planned-atoms #f))
+        (layouts (make-vector (vector-length all) #f)) (planned-atoms #f)
+        (ordered-all #f) (ordered-delta #f))
+      (def (ordered-cut captured index use-delta?)
+        (let* ((cache (if use-delta?
+                        (or ordered-delta (let (v (make-vector (vector-length all) #f))
+                                            (set! ordered-delta v) v))
+                        (or ordered-all (let (v (make-vector (vector-length all) #f))
+                                          (set! ordered-all v) v))))
+               (prior (vector-ref cache index)))
+          (if (and prior (eq? (car prior) captured)) (cdr prior)
+            ;; Public export is chronological; legacy evaluator roots are
+            ;; prepended lists, so internal callback traversal is its reverse.
+            ;; Bound delta exports already carry legacy pending-list order;
+            ;; total exports carry public chronological order.
+            (let (rows (if (eq? (relation-view-lane captured) 'delta)
+                         (gerbil-ascent-view-rows captured)
+                         (reverse (gerbil-ascent-view-rows captured))))
+              (vector-set! cache index (cons captured rows)) rows))))
       (def (plan-atoms! atoms)
         (when (or all-indexes delta-indexes) (error "cannot replan a live physical index"))
         ;; Small snapshots need no physical plan. An explicit curried receiver
@@ -186,10 +203,14 @@
                       (iota (vector-length all)))
             ;; Metadata publication follows successful complete planning.
             (set! layouts fresh) (set! planned-atoms #f))))
-      (def (indexed-rows atom environment use-delta? slot-terms)
+      (def (indexed-rows atom environment use-delta? slot-terms (ordered? #f))
         (let* ((index (vector-ref atom 0))
                (columns (vector-ref atom 2))
-               (rows (vector-ref (if use-delta? delta all) index)))
+               (captured (vector-ref (if use-delta? delta all) index))
+               ;; Observable callbacks and aggregators use the legacy list/index
+               ;; ordering. Pure plans retain the descriptor access path.
+               (rows (if (and ordered? (relation-view? captured))
+                       (ordered-cut captured index use-delta?) captured)))
           (if (relation-view? rows)
             (gerbil-ascent-view-select rows columns
               (if slot-terms

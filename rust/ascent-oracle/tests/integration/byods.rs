@@ -131,6 +131,7 @@ fn eight_node_byods_subsets_match_model_and_selected_scheme_snapshots() {
             expected_uf,
             "trrel_uf mask={mask}"
         );
+        eprintln!("ORACLE-BYODS-CUT-OK nodes=8 mask={mask}");
 
         if [0, 1, 0x0555, 0x0f0f, 0x0fff].contains(&mask) {
             let rows = edges

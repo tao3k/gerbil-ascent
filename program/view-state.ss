@@ -33,7 +33,10 @@
          (total (gerbil-ascent-view-export-cut
                    (gerbil-ascent-view-bind (gerbil-ascent-storage-freeze-view state)
                                             name generation revision 'total) events))
-         (change (gerbil-ascent-view-bind frontier name generation revision 'delta)))
+         (change (gerbil-ascent-view-with-export
+                   (gerbil-ascent-view-bind frontier name generation revision 'delta)
+                   (lambda () (reverse (export-events events (relation-view-count total)
+                                (- (relation-view-count total) (relation-view-count frontier)) #t))))))
     (vector-set! all index total)
     (vector-set! delta index change)
     (vector-set! all-size index (relation-view-count total))
@@ -47,18 +50,27 @@
   (make-view-event kind (map (lambda (row) (map values row)) rows)))
 (def (gerbil-ascent-view-export-cut view events)
   (gerbil-ascent-view-with-export view
-    (lambda ()
-      (let ((state (gerbil-ascent-trrel-uf-state)) (output []))
+    (lambda () (export-events events (relation-view-count view) 0))))
+;; Source frontiers stream directly into output. Only derived rounds need their
+;; legacy batch reversal. Delta cuts replay old injections without expanding
+;; their pairs, then export precisely the contiguous admitted suffix.
+(def (export-events events budget skip (delta? #f))
+      (let ((state (gerbil-ascent-trrel-uf-state)) (output []) (admitted 0))
         (for-each (lambda (event)
-          (let (batch [])
+          (let ((batch []) (derived? (and (not delta?) (eq? (view-event-kind event) 'derived))))
             (for-each (lambda (row)
-              (gerbil-ascent-for-each-row
-                (lambda (stored) (set! batch (cons stored batch)))
-                (gerbil-ascent-trrel-uf-insert! state row (relation-view-count view))))
+              (let* ((frontier (gerbil-ascent-trrel-uf-insert! state row budget))
+                     (next (+ admitted (relation-view-count frontier))))
+                (when (> next skip)
+                  (when (> skip admitted) (error "ASCENT ordered delta splits an injection frontier"))
+                  (gerbil-ascent-for-each-row
+                    (if derived?
+                      (lambda (stored) (set! batch (cons stored batch)))
+                      (lambda (stored) (set! output (cons stored output)))) frontier))
+                (set! admitted next)))
               (view-event-rows event))
             ;; The legacy round walks reversed pending rows then prepends them;
             ;; source/append instead prepend each arrival directly.
-            (for-each (lambda (row) (set! output (cons row output)))
-              (if (eq? (view-event-kind event) 'derived) batch (reverse batch)))))
+            (when derived? (for-each (lambda (row) (set! output (cons row output))) batch))))
           (reverse events))
-        (reverse output)))))
+        (reverse output)))

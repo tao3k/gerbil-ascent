@@ -5,7 +5,7 @@
 
 use std::{
     cmp::Ordering,
-    io::Write,
+    io::{Read, Write},
     path::PathBuf,
     process::{Command, Stdio},
 };
@@ -69,6 +69,28 @@ pub(super) fn scheme_output(recipe: &str, request: &str) -> String {
     let mut child = command
         .spawn()
         .expect("launch gerbil-ascent Scheme fixture");
+    eprintln!("ORACLE-FIXTURE-SPAWN recipe={recipe} pid={}", child.id());
+    // Preserve the exact fixture bytes while exposing real IO progress. The
+    // parent's wait still drains stderr; a separate stdout reader prevents
+    // pipe backpressure and avoids hiding long fixture runs behind capture.
+    let mut stdout = child.stdout.take().expect("Scheme fixture stdout");
+    let reader_recipe = recipe.to_owned();
+    let reader = std::thread::spawn(move || {
+        let mut bytes = Vec::new();
+        let mut chunk = [0u8; 8192];
+        loop {
+            let count = stdout.read(&mut chunk).expect("read Scheme fixture stdout");
+            if count == 0 {
+                break;
+            }
+            bytes.extend_from_slice(&chunk[..count]);
+            eprintln!(
+                "ORACLE-FIXTURE-READ recipe={reader_recipe} bytes={}",
+                bytes.len()
+            );
+        }
+        bytes
+    });
     child
         .stdin
         .take()
@@ -78,11 +100,17 @@ pub(super) fn scheme_output(recipe: &str, request: &str) -> String {
     let output = child
         .wait_with_output()
         .expect("collect Scheme fixture output");
+    let stdout = reader.join().expect("join Scheme fixture stdout reader");
+    eprintln!(
+        "ORACLE-FIXTURE-END recipe={recipe} status={} bytes={}",
+        output.status,
+        stdout.len()
+    );
     assert!(
         output.status.success(),
         "Scheme fixture failed:\nstdout:\n{}\nstderr:\n{}",
-        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&stdout),
         String::from_utf8_lossy(&output.stderr)
     );
-    String::from_utf8(output.stdout).expect("Scheme output is UTF-8")
+    String::from_utf8(stdout).expect("Scheme output is UTF-8")
 }

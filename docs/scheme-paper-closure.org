@@ -116,6 +116,14 @@ Three built-in closure Providers alone do not cover the entire paper.
 
 * Other papers and the proof chain
 
+The 2026-10-07 [[file:scheme-trrel-uf-design.org::*Runtime audit closure and paper-to-code bridge (2026-10-07)][runtime audit bridge]] connects compressed total/delta ownership,
+ordered callback compatibility, keyed routing and reader lifetime to actual
+Scheme owners and discriminating tests. It adds one grouped request consumer
+with repeated UF joins, SCC growth, replacement and held old cuts. The source
+loader has its own CI gate after an interpreter import failure escaped native
+qualification. This slice advances implementation correspondence; the complete
+paper applications and universal native refinements above remain open.
+
 The [[file:scheme-research-proof-audit.org][research/proof audit]] maps F16/S20 monotone types and finite height, H13
 binding, F20/L25 embedding, H18 deletion, B22 change maintenance and provenance.
 Its native refinement, arbitrary syntax/host value, general maintenance and

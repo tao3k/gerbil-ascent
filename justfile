@@ -17,6 +17,13 @@ build:
 check-policy:
     ASP_GERBIL_SCHEME_POLICY=1 GERBIL_BUILD_CORES="${GERBIL_BUILD_CORES:-$(getconf NPROCESSORS_ONLN)}" {{ test_runner }} run -- gerbil build
 
+# Runtime source loading is a separate gate from compiled native qualification.
+check-source-views:
+    {{ test_runner }} run -- just _check-source-views
+
+_check-source-views:
+    @GERBIL_LOADPATH="{{ justfile_directory() }}${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" gxi {{ gerbil_test_runtime_options }} t/qualification/ascent-source-view-output.ss
+
 test-file path:
     {{ test_runner }} test-file "{{ path }}"
 

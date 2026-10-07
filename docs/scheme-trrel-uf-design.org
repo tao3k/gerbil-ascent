@@ -463,9 +463,13 @@ source/append and derived-round orientation. That journal stores injected rows,
 not closure pairs or frontier rectangles. It is distinct from authoritative
 Session source recovery. Old results retain their own journal root. Tests check
 exact legacy public order for matched source, append and derived injections,
-and compare logical facts for actor and repeated-join execution. Internal keyed
-visitation can change operational emission order; no universal callback-trace
-refinement is established by these fixtures.
+and compare logical facts for actor and repeated-join execution. Pure canonical
+programs can change internal operational emission order. Programs containing
+callbacks, field predicates, custom receivers or lattice joins now use ordered
+total/delta expansion across every rule, including otherwise pure producers.
+Matched fixtures check callback/key-expression traces and first failures against
+the explicit evaluator. They establish bounded correspondence; a universal
+callback-trace refinement theorem remains open.
 
 Logical input/output/derived limits remain independent of descriptor counts.
 Budget rejection precedes graph mutation; later callback failures quarantine the
@@ -474,10 +478,14 @@ source replacement and failed admission. No timeout or generation ceiling is
 introduced.
 
 DAG reachability and exact frontier descriptors can remain quadratic. Bound
-coordinate selection filters captured blocks before creating rows, but currently
-scans rectangles; this is not an asymptotically optimal keyed UF index. Structural
+coordinate selection filters captured blocks before creating rows. Frozen totals
+now own coordinate routing buckets over member spines and descriptor references;
+lookups choose the smallest bucket and retain captured descriptor order. Delta
+frontiers still scan their descriptors. Member selection within a component is
+linear and multi-bucket results require ordering; this is not an asymptotically
+optimal keyed UF index. Structural
 observation reports total member cells plus rectangle descriptors, excluding
-closure/header/index/journal/engine costs. It is not a byte or peak-memory
+closure/header/routing/index/journal/engine costs. It is not a byte or peak-memory
 measurement. Derived injection journals can themselves be quadratic on dense
 programs; replay allocates a temporary UF owner and every exported pair, so full
 ordered export is a separate measured cost.
@@ -1057,3 +1065,60 @@ fault controls. The new transaction explored 1,651 generated and 858 distinct
 states; all seven mutations produced exit 12 with their named invariant. The
 native lattice suite passed 12 cases with final =OK=. Evidence contains source
 hashes and actual counterexample states, without committing execution logs.
+* Runtime audit closure and paper-to-code bridge (2026-10-07)
+
+The =9fd161f= GitHub run passed formal checks but failed Scheme performance and
+all three oracle shards at source loading: the =only-in= import of =take= in
+=core/relation-view.ss= expanded to an empty runtime import. Native compilation
+did not expose that interpreter error. Prefix membership now compares directly,
+and =just check-source-views= exercises the source loader, old frozen cuts and
+the callback evaluator independently of the native test library. Both Scheme
+and oracle jobs run this gate. Exact-head CI is a separate admission receipt.
+
+** Ordered consumers and cost repair
+
+The total journal exporter retains public legacy order. Internal evaluator roots
+are its reverse. Bound delta exporters instead reproduce legacy pending order:
+source and derived injections both prepend frontier occurrences. Replaying a
+delta reconstructs earlier injections without expanding their old pairs; the
+cut must fall at an injection boundary. Total export streams source frontiers
+directly, eliminating the temporary source batch and its extra list reversal.
+Derived batches retain their required orientation. Replay still allocates a UF
+owner and exported pairs; remaining regressions must remain in the new receipt.
+
+Ordered consumers own an explicit expansion cache per captured total/delta cut.
+This cache is allocated only for programs with observable callbacks, custom
+receivers, field checks or lattice joins. A changed cut replaces its cache entry.
+Pure canonical programs retain compressed access, including worker execution.
+Thus pair-retention avoidance applies to that pure path; callback compatibility
+has a separately documented expansion cost. Nested host values still require
+the existing stability contract.
+
+** One implementation and research chain
+
+[[https://kmicinski.com/assets/byods.pdf][B23 section 3.2 and Theorem 3.5]] require total/delta concretizations to cover
+the current relation and ensure newly implied facts traverse delta before total.
+This implementation uses exact positive Set difference, a stronger local
+instance of that history requirement. It does not generalize that contract to
+arbitrary lattice concretizations. The paper was reread for this integration.
+
+| Obligation | Native owner and discriminator | Existing formal correspondence | Remaining refinement obligation |
+|------------+--------------------------------+--------------------------------+--------------------------------|
+| Owned immutable members and exact pair count | trrel-uf freeze / old cuts after SCC merge; row and parts exports agree | ProviderRectangles count_exact, component_plan_separate, component_plan_nodup | Extract native member ownership, candidate root-pair completeness and decoding |
+| Every implied fact enters delta exactly once | trrel-uf insert / independent Floyd checks for insertion prefixes; retained ordered delta callbacks | DirectedFrontier uf_emitted_exact; ProviderRectangles component_plan_reach_uniform, uf_selected_exact, successive_union_exact | Relate actual candidate rectangles and root homogeneity to Lean parameters |
+| Key access is a complete ordered filter | relation-view routing / scan-versus-indexed keys, repeated and reordered columns, false group keys and equal-but-distinct host members | ProviderRectangles lookup_exact covers the abstract first coordinate | Prove generic routing bucket coverage, stored-value identity and parts binder correspondence |
+| Publication preserves old views and accepted sources on failure | view-state, evaluate, Session / prospective callback failure followed by recovery and successful retry | ProviderViews FrozenRead, AtomicPublication, LogicalBudget | Connect multi-relation staging and journal cuts to model steps |
+| Readers finish before the owner advances | actor-round / canceled run followed by successful retry and grouped worker controls | ReaderLifetime ReaderAlive, CreditBalance, ReaderCompletion under per-reader weak fairness | Native task/reader credit/drain correspondence and VM scheduling refinement |
+
+The new grouped request consumer combines bound source requests, two UF joins,
+partial SCC topology, append, SCC expansion, replacement and a held old result.
+An independent grouped Floyd closure checks every phase; worker controls run the
+same initial program. This is an executable integration slice for relation-backed
+queries. Full Steensgaard, Polonius, PageRank and LLVM experiments retain their
+separate obligations in =scheme-paper-closure.org=. This thread owns Scheme,
+consumer tests and correspondence documentation; the theorem thread owns the
+Lean/TLA implementations.
+
+The previous receipt remains a historical source cut. The follow-up receipt
+must bind all current Scheme sources, source/native/oracle gates, individual
+paired costs and exact-head CI without substituting earlier passes.

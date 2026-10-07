@@ -155,6 +155,8 @@
               (unless slot (error "unknown ASCENT relation" name))
               (- slot 1)))))
       (def indexed-rows (row-indexes-rows indexes))
+      (def (callback-rows atom environment use-delta? slot-terms)
+        (indexed-rows atom environment use-delta? slot-terms #t))
       (def (view-relation? index)
         (gerbil-ascent-view-relation? (vector-ref storage-providers index)
                                      (vector-ref index-providers index)))
@@ -189,8 +191,11 @@
                           gerbil-ascent-empty-view) (vector-ref view-journals index)))
             (vector-set! all index (gerbil-ascent-view-bind frozen (vector-ref names index)
                                     (cons view-generation source-count) 0 'total))
-            (vector-set! delta index (gerbil-ascent-view-bind frozen (vector-ref names index)
-                                      (cons view-generation source-count) 0 'delta))))) (iota count))
+            (vector-set! delta index
+              (gerbil-ascent-view-with-export
+                (gerbil-ascent-view-bind frozen (vector-ref names index)
+                  (cons view-generation source-count) 0 'delta)
+                (lambda () (reverse (gerbil-ascent-view-rows frozen)))))))) (iota count))
       ;; Source admission uses the prospective input and budgets. Reuse owns
       ;; completed-row admission into these same private engine buffers.
       ;; Neither phase can publish a failed prospective Session.
@@ -215,11 +220,18 @@
              (rule-ticks (and measure-rule-times?
                               (make-vector (length rules) 0)))
              (strata (vector-ref analysis 3))
+             (all-active (gerbil-ascent-activate-rules analysis))
+             ;; A later callback may observe rows injected by an earlier pure
+             ;; rule. Preserve ordered traversal across the entire program.
+             (ordered-execution?
+              (not (gerbil-ascent-actor-round-eligible?
+                     (apply append (vector->list all-active)) storage-providers
+                     index-providers lattice-joins field-checkers)))
              (active-by-stratum
               (if reuse
                 (gerbil-ascent-activate-selected-rules analysis
                  (native-reuse-affected reuse))
-                (gerbil-ascent-activate-rules analysis)))
+                all-active))
              (highest-stratum (- (vector-length active-by-stratum) 1))
              (lattice-feeds-relation?
               (and session?
@@ -405,7 +417,7 @@
                   (cond
                    ((eq? (vector-ref clause 0) 'atom)
                     (let* ((atom (vector-ref clause 1))
-                           (rows (indexed-rows atom environment
+                           (rows (callback-rows atom environment
                                                (= depth delta-at) #f)))
                       (gerbil-ascent-for-each-row
                        (lambda (row)
@@ -417,7 +429,7 @@
                        rows)))
                    ((eq? (vector-ref clause 0) 'negation)
                     (let* ((atom (vector-ref clause 1))
-                           (rows (indexed-rows atom environment #f #f)))
+                           (rows (callback-rows atom environment #f #f)))
                       (unless (gerbil-ascent-any-row?
                                (lambda (row)
                                  (gerbil-ascent-bind-row (vector-ref atom 3)
@@ -427,7 +439,7 @@
                                     environment consume))))
                    ((eq? (vector-ref clause 0) 'aggregate)
                     (let* ((atom (vector-ref clause 1))
-                           (rows (indexed-rows atom environment #f #f))
+                           (rows (callback-rows atom environment #f #f))
                            (variables (vector-ref clause 3))
                            (tuples []))
                       (gerbil-ascent-for-each-row
@@ -527,6 +539,7 @@
               (gerbil-ascent-run-positive-components! analysis schema all workers emit-row!
                                                        (or canceled? (lambda () #f)))
             (if (and (or (> workers 1) canceled?)
+                     (not ordered-execution?)
                      (gerbil-ascent-actor-round-eligible? active-rules storage-providers
                                                         index-providers lattice-joins field-checkers))
               (let ((frozen-all (vector-copy all)) (frozen-delta (vector-copy delta))
@@ -572,11 +585,12 @@
                      (prunable (vector-ref rule 4))
                      (positive-plan (vector-ref rule 5))
                      (frame (vector-ref rule 6)))
+                 (let (rows-access (if ordered-execution? callback-rows indexed-rows))
                  (if (null? positions)
                    (when (and (= round 1) first-run?)
                      (if positive-plan
                        (gerbil-ascent-run-positive-plan!
-                        positive-plan frame -1 indexed-rows emit-row!)
+                        positive-plan frame -1 rows-access emit-row!)
                        (visit-body body -1 0 []
                          (lambda (environment)
                            (gerbil-ascent-emit-heads! heads environment emit-row!)))))
@@ -587,7 +601,7 @@
                      ;; position without emitting the same join repeatedly.
                      (if positive-plan
                        (gerbil-ascent-run-positive-plan!
-                        positive-plan frame -1 indexed-rows emit-row!)
+                        positive-plan frame -1 rows-access emit-row!)
                        (visit-body body -1 0 []
                          (lambda (environment)
                            (gerbil-ascent-emit-heads! heads environment emit-row!))))
@@ -600,11 +614,11 @@
                                           (vector-ref prunable delta-at)) 0))
                           (if positive-plan
                             (gerbil-ascent-run-positive-plan!
-                             positive-plan frame delta-at indexed-rows emit-row!)
+                             positive-plan frame delta-at rows-access emit-row!)
                             (visit-body body delta-at 0 []
                               (lambda (environment)
                                 (gerbil-ascent-emit-heads! heads environment emit-row!))))))
-                      positions)))
+                      positions))))
                  (when started
                    (let (index (vector-ref rule 3))
                      (vector-set! rule-ticks index

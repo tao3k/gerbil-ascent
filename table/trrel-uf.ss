@@ -182,7 +182,7 @@
           (capture node)
           (hash-for-each (lambda (target _) (capture target)) (uf-node-reach node)))
           (uf-group-roots group)))) groups)
-    (gerbil-ascent-rectangle-view (reverse blocks) count units)))
+    (gerbil-ascent-rectangle-view (reverse blocks) count units #t)))
 
 ;; The proved Provider API and engine adapter share one frozen carrier/kernel.
 (def gerbil-ascent-trrel-uf-frontier-extension gerbil-ascent-trrel-uf-insert!)

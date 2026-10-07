@@ -1,0 +1,93 @@
+{
+  "version": 1,
+  "base_commit": "be6b9096e753722972fd14aad040ed5b2e6adb14",
+  "scope": "Public UF activation homogeneity and sealed finite admission fairness",
+  "paper": {
+    "url": "https://kmicinski.com/assets/byods.pdf",
+    "sections": [
+      "3 concretization",
+      "3.3 Theorem 3.5",
+      "4 read interface"
+    ],
+    "interpretation": "The host scheduler and ordered exports are additional implementation obligations, not paper theorems."
+  },
+  "sources": {
+    "packages/proofs/lean/ProviderRectangles.lean": "33401df7bebe39135af10657aa1aa3aabcfc3e4ec8041041c7887be2c6361ec7",
+    "packages/proofs/lean/Tests/ProviderRectanglesTests.lean": "b73f243585dc00ac1418c1a4975b077f1d3392100b76f5cbf6156d7c6df8006b",
+    "packages/proofs/tla/ReaderLifetime.tla": "d2e0773d1feac58b0175b63393abb4e0b775b4a036960989fe6515718072631a",
+    "packages/proofs/tla/ReaderRound.cfg": "d38c0c1fc62fbf107e3f20b5596250650db3f9270230dcdb45dc0d58da2c622f",
+    "justfile": "1989ed98705912da3a7c615677988544818181260654810744128c934a17f599",
+    "program/view-state.ss": "f4541aeefa1f111eae948e25a5408ffe3dec0d42c5c2168ac8d0e32c0a1daa92",
+    "program/actor-round.ss": "78a01abdefe58a068a72c30c680de53f6834cdc163ff0d585a02cb99db469b5f",
+    "t/qualification/ascent-relation-view-test.ss": "235d22ab5b1512dced910bac82fe41601641556e1109511d6072af9b7eb634ce"
+  },
+  "lean": {
+    "command": "just check-lean-proofs",
+    "exit_code": 0,
+    "jobs": 90,
+    "rectangle_laws": 27,
+    "examples": 16,
+    "new_laws": [
+      "component_active_iff",
+      "component_plan_uf_uniform",
+      "component_uf_selected_exact"
+    ],
+    "negative_controls": [
+      "inactive singleton is latent but not visible",
+      "unsupported mixed activation defeats whole-rectangle Uniform"
+    ],
+    "axioms": {
+      "component_active_iff": [],
+      "component_plan_uf_uniform": [
+        "propext",
+        "Quot.sound"
+      ],
+      "component_uf_selected_exact": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    "transcript_sha256": "cd6c0e252e0a180bb75803bbf555d97a55321c2476928f44cfc6cdece583e528"
+  },
+  "tla": {
+    "command": "ASCENT_TLC_GENERATION_CUTOFF=4 just check-provider-views-formal",
+    "exit_code": 0,
+    "sealed_round": {
+      "generated": 2146,
+      "distinct": 267,
+      "properties": [
+        "ReaderCompletion",
+        "RoundCompletion"
+      ],
+      "invariants": [
+        "ReaderAlive",
+        "AcceptedCurrent",
+        "CreditBalance"
+      ]
+    },
+    "shared_readers_distinct": 14175,
+    "single_reader_distinct": 315,
+    "publication_views_distinct": 55197,
+    "seeded_faults_detected": 12,
+    "new_negative_control": {
+      "mutation": "sealed-round-unfair",
+      "exit_code": 13,
+      "required_diagnostic": "Temporal properties were violated"
+    },
+    "generation_ceiling": false,
+    "transcript_sha256": "99c4d1350a3c7171c78187eeb8c95ccb04e4e5d895d4dd0b940dc6f0b8db9aa3"
+  },
+  "native_audit": {
+    "new_native_execution": false,
+    "existing_order_control": "ascent-relation-view-test.ss: ordered public UF export replays frozen source append and round journals",
+    "round_mapping": "Finite task identities, not reusable workers; admission/credit and callback termination remain separate."
+  },
+  "remaining": [
+    "Native candidate decoding and SCC ownership extraction",
+    "General deterministic journal replay and output ordering refinement",
+    "Native scheduler admission/credit correspondence and callback termination"
+  ],
+  "new_performance_claim": false,
+  "new_model_calls": 0
+}

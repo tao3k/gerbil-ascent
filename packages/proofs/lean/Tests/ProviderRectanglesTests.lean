@@ -75,4 +75,29 @@ example : count [⟨[0, 0], [1]⟩] = 2 ∧
 #print axioms successive_frontiers_disjoint
 #print axioms successive_union_exact
 #print axioms successive_union_nodup
+-- A latent reflexive singleton must not become a visible fact before activation.
+private def inactiveSingleton : DirectedFrontier.State Unit where
+  active := fun _ => False
+  reach := fun _ _ => True
+  refl := fun _ => trivial
+  trans := fun _ _ _ _ _ => trivial
+  supported := fun x y _ => Or.inl (Subsingleton.elim x y)
+
+example : inactiveSingleton.reach () () ∧
+    ¬ DirectedFrontier.ufVisible inactiveSingleton () () := by
+  simp [inactiveSingleton, DirectedFrontier.ufVisible]
+
+-- SCC equality without supported reach cannot justify activation homogeneity.
+-- Universal latent reach and a single root, but mixed active members, lose
+-- whole-rectangle homogeneity when the support invariant is omitted.
+example : ¬ Uniform (fun p : Bool × Bool => True ∧ p.1 = true ∧ p.2 = true)
+    [⟨[false, true], [true]⟩] := by
+  intro uniform
+  have impossible := uniform ⟨[false, true], [true]⟩ (by simp) (true, true) (by decide)
+    (false, true) (by decide) ⟨trivial, rfl, rfl⟩
+  exact Bool.noConfusion impossible.2.1
+
+#print axioms component_active_iff
+#print axioms component_plan_uf_uniform
+#print axioms component_uf_selected_exact
 end Ascent.ProviderRectanglesTests

@@ -585,3 +585,16 @@ ceiling or state constraint, and retains a 315-state one-reader control. Eleven
 seeded defects are caught across the view and reader models. This formal unit
 uses the engine migration at =9fd161f=; it adds no new Scheme behavior or cost
 claim and does not replace the migration's native/cost evidence.
+
+* Public concretization and finite admission (2026-10-07)
+
+The [[file:../../scheme-trrel-uf-design.org][UF design audit]] now derives public membership homogeneity from supported
+reach and SCC ownership, closing the activation premise left by latent-reach
+homogeneity. Three new Lean laws and two discriminators pass the complete build.
+A sealed finite task cohort also qualifies the reusable-reader starvation result:
+aggregate completion fairness suffices when completed tasks cannot be readmitted.
+TLA checks this separately from reusable-reader completion and rejects the
+sealed control without fairness. These are implementation obligations inferred
+from Section 3 concretization and host scheduling, not additions attributed to
+the paper's Theorem 3.5. Native extraction and ordered journal replay remain
+separately identified in the audit and receipt.

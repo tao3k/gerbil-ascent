@@ -1429,4 +1429,11 @@ check-provider-views-formal:
     sed -e 's/Readers = {r1, r2}/Readers = {r1}/' -e 's/Mutation = "none"/Mutation = "global"/' "$temp/live.cfg" > "$temp/single.cfg"
     "${tlc[@]}" -workers 1 -config "$temp/single.cfg" -metadir "$temp/single" packages/proofs/tla/ReaderLifetime.tla
     echo 'SINGLE-READER-GLOBAL-FAIRNESS-OK'
+    "${tlc[@]}" -workers 1 -config packages/proofs/tla/ReaderRound.cfg -metadir "$temp/round" packages/proofs/tla/ReaderLifetime.tla
+    sed 's/Mutation = "none"/Mutation = "unfair"/' packages/proofs/tla/ReaderRound.cfg > "$temp/round-unfair.cfg"
+    code=0
+    "${tlc[@]}" -workers 1 -config "$temp/round-unfair.cfg" -metadir "$temp/round-unfair" packages/proofs/tla/ReaderLifetime.tla > "$temp/round-unfair.out" 2>&1 || code=$?
+    [[ "$code" = 13 ]] && grep -q 'Temporal properties were violated' "$temp/round-unfair.out"
+    echo 'COUNTEREXAMPLE-OK sealed-round-unfair Completion exit=13'
+    echo 'SEALED-ROUND-GLOBAL-FAIRNESS-OK'
     echo 'PROVIDER-VIEWS-CHECK-OK'

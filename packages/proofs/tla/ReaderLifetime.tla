@@ -48,4 +48,15 @@ ReaderCompletion == \A r \in Readers : (r \in reading) ~> (r \notin reading)
 ReaderAlive == reading # {} => alive
 CreditBalance == credits = Cardinality(reading)
 AcceptedCurrent == \A r \in accepted : valid[r] /\ captured[r] = committed
+\* A sealed round admits its finite task set once; slots cannot be reborrowed.
+\* Aggregate completion fairness suffices here because every finish strictly
+\* decreases the pending set. Publication can invalidate tasks, not add them.
+RoundInit == /\ committed = {} /\ reading = Readers /\ canceled = {}
+             /\ alive = (Readers # {}) /\ credits = Cardinality(Readers)
+             /\ current = [r \in Readers |-> TRUE] /\ valid = current
+             /\ captured = [r \in Readers |-> {}] /\ accepted = {}
+RoundNext == Publish \/ (\E r \in Readers : Cancel(r) \/ Finish(r))
+RoundSpec == RoundInit /\ [][RoundNext]_vars /\
+             (IF Mutation = "unfair" THEN TRUE ELSE WF_vars(\E r \in Readers : Finish(r)))
+RoundCompletion == <> (reading = {})
 ====

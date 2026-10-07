@@ -227,6 +227,48 @@ theorem component_plan_reach_uniform (family : Components α C) (pairs : List (C
   exact (TransitiveComponents.quotient_exact family.owner reach trans same q.1 q.2).mp
     (uniform r member p hp q hq compressed)
 
+/-- Supported reach prevents an SCC from mixing active and inactive members.
+Latent reflexivity alone does not imply that an endpoint is active. -/
+theorem component_active_iff (state : DirectedFrontier.State α)
+    (family : Components α C)
+    (same : ∀ x y, family.owner x = family.owner y ↔ state.reach x y ∧ state.reach y x)
+    (x y : α) (owned : family.owner x = family.owner y) :
+    state.active x ↔ state.active y := by
+  rcases state.supported x y ((same x y).mp owned).1 with equal | active
+  · subst y; rfl
+  · exact ⟨fun _ => active.2, fun _ => active.1⟩
+
+/-- Homogeneity of the public UF relation includes endpoint activation, not
+only latent reach. The support invariant discharges this extra obligation. -/
+theorem component_plan_uf_uniform (state : DirectedFrontier.State α)
+    (family : Components α C) (pairs : List (C × C))
+    (same : ∀ x y, family.owner x = family.owner y ↔ state.reach x y ∧ state.reach y x) :
+    Uniform (fun p => DirectedFrontier.ufVisible state p.1 p.2)
+      (componentPlan family pairs) := by
+  intro r member p hp q hq old
+  obtain ⟨pair, _, equal⟩ := List.mem_map.mp member
+  subst r
+  have ownedP := component_pair_owned family pair p hp
+  have ownedQ := component_pair_owned family pair q hq
+  have owners := ownedP.trans ownedQ.symm
+  exact ⟨component_plan_reach_uniform family pairs state.reach state.trans same
+      _ (List.mem_map.mpr ⟨pair, by assumption, rfl⟩) p hp q hq old.1,
+    (component_active_iff state family same p.1 q.1 (congrArg Prod.fst owners)).mp old.2.1,
+    (component_active_iff state family same p.2 q.2 (congrArg Prod.snd owners)).mp old.2.2⟩
+
+/-- Specialize frontier selection to supported SCC plans. Completeness of
+native candidate decoding is still an explicit premise; Uniform is derived. -/
+theorem component_uf_selected_exact (state : DirectedFrontier.State α) (a b : α)
+    (family : Components α C) (pairs : List (C × C))
+    (same : ∀ x y, family.owner x = family.owner y ↔ state.reach x y ∧ state.reach y x)
+    (encoding : ∀ p, p ∈ expand (componentPlan family pairs) ↔
+      DirectedFrontier.ufCandidate state a b p.1 p.2) :
+    Exact (fun p => DirectedFrontier.ufVisible state p.1 p.2)
+      (fun p => DirectedFrontier.ufVisible (DirectedFrontier.extendState state a b) p.1 p.2)
+      (freshRectangles (fun p => DirectedFrontier.ufVisible state p.1 p.2)
+        (componentPlan family pairs)) := by
+  exact uf_selected_exact state a b _ encoding (component_plan_uf_uniform state family pairs same)
+
 /-- Disjointness across consecutive injection frontiers follows from their
 history, not from component ownership alone. This justifies additive union. -/
 theorem successive_frontiers_disjoint (old middle next : α × α → Prop)

@@ -1122,7 +1122,7 @@ consumer tests and correspondence documentation; the theorem thread owns the
 Lean/TLA implementations.
 
 The previous receipt remains a historical source cut. The runtime closure
-receipt binds all current Scheme sources, source/native/oracle gates and
+receipt binds the published =978b294= Scheme cut, source/native/oracle gates and
 individual paired costs. Exact published-head CI is checked separately;
 earlier passes do not substitute for this source cut.
 
@@ -1261,16 +1261,17 @@ remain proof-thread-owned; the runtime bridge retains their stated premises.
 
 ** Qualified runtime cut and remaining costs
 
-[[file:evidence/scheme-view-runtime-closure-20261007/receipt.json][The runtime closure receipt]] binds 551 Scheme sources with digest
-=6f1ddb16a8cf8af988c0e26697e269edd4171e189ef49a9bc12214a83e36c0ea=.
-The full native gate passed 85 modules and 807 Cases, with 85 final =OK= markers
+[[file:evidence/scheme-view-runtime-closure-20261007/receipt.json][The runtime closure receipt]] binds 551 Scheme sources at published =978b294= with digest
+=89527a08478920e4ceef362fe1e7ec0fda567e1ba004c9e7f9245c0c07541493=.
+The full native gate passed 85 modules and 808 Cases, with 85 final =OK= markers
 and exit zero. The independent relation-view module passed 19 Cases and emitted
 72 alternating paired measurements. Source loading, native artifact admission
 including stale-binding rejection, 11 BYODS differential tests, six supervision
 glue tests, Rust clippy and module policy passed. ProviderViews/reader/round
 and ProviderReplay retain their 12 and six mutation controls respectively;
-the selected model inputs are unchanged by the latest integration. The two
-new proof-thread native controls are included in the full 807-Case cut.
+the selected model inputs are unchanged by the latest integration. The three
+new proof-thread native controls, including the =0a48020= keyed lattice update
+and settled-projection Case, are included in the full 808-Case cut.
 
 The table reports median paired frozen/explicit ratios from the independently
 run native cost module, with 12 pairs per workload. The explicit reference uses
@@ -1279,12 +1280,12 @@ Git revision. Both construction and selected routing recapture are measured.
 
 | Workload | CPU ratio | elapsed ratio | allocated bytes ratio |
 |----------+-----------+---------------+-----------------------|
-| sparse DAG | 0.654 | 0.654 | 0.769 |
-| sparse cycle | 0.443 | 0.444 | 0.486 |
-| full DAG export | 1.387 | 1.390 | 1.532 |
-| full cycle export | 1.079 | 1.089 | 1.295 |
-| grouped query | 1.102 | 1.103 | 1.074 |
-| retained update, old result held | 0.347 | 0.348 | 0.455 |
+| sparse DAG | 0.665 | 0.665 | 0.769 |
+| sparse cycle | 0.443 | 0.442 | 0.486 |
+| full DAG export | 1.423 | 1.425 | 1.532 |
+| full cycle export | 1.074 | 1.075 | 1.295 |
+| grouped query | 1.097 | 1.106 | 1.074 |
+| retained update, old result held | 0.341 | 0.338 | 0.455 |
 
 The retained workload's sampled live-byte ratio is 0.884; this samples initial
 and updated cuts while old rows remain held, not continuous peak RSS. Full

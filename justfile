@@ -1564,11 +1564,12 @@ check-lattice-projection-formal:
     trap 'rm -rf "$temp"' EXIT
     if [[ "${tlc[0]}" == java ]]; then tlc=(java "-Djava.io.tmpdir=$temp" "${tlc[@]:1}"); fi
     "${tlc[@]}" -workers 1 -config packages/proofs/tla/LatticeProjection.cfg -metadir "$temp/good" packages/proofs/tla/LatticeProjection.tla
-    for mutation in overwrite prior false retain early borrow stale; do
+    for mutation in overwrite prior false retain early borrow stale lost-key repeat-key; do
       case "$mutation" in
         overwrite|prior|false) invariant=MapExact ;;
         retain|early|stale) invariant=SnapshotExact ;;
         borrow) invariant=HeldStable ;;
+        lost-key|repeat-key) invariant=KeyCoverage ;;
       esac
       sed -e "s/Mutation = \"none\"/Mutation = \"$mutation\"/" -e "s/INVARIANTS .*/INVARIANTS $invariant/" packages/proofs/tla/LatticeProjection.cfg > "$temp/$mutation.cfg"
       code=0

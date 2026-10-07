@@ -2210,6 +2210,28 @@ transaction. Native tests own actual multi-field false/true keys, repeated same-
 updates, strict ordinary projection, retained append/replacement and old results.
 Seven protocol faults distinguish the expected rejection conditions; raw checker
 errors are not counterexamples. General join purity/laws, hash/key extraction,
-strict stratum metadata refinement and asynchronous lattice execution retain
-separate obligations. See [[file:scheme-trrel-uf-design.org][the design]] and
+universal native vector/SCC/hash extraction and asynchronous lattice execution
+retain separate obligations. Typed strict-edge and functional pending-key
+contracts are refined in the following section. See [[file:scheme-trrel-uf-design.org][the design]] and
 [[file:evidence/scheme-provider-views-20261007/keyed-lattice-projection.json][the projection receipt]].
+
+
+* Weighted compilation and pending roster ownership (2026-10-07)
+
+StrictDependencies extracts exactly every reading-clause/head edge and proves
+that the native global false preflight implies valid all-zero levels. Strict
+cycles have no Nat labeling; lattice-to-ordinary reads require a later level.
+SCC normalization preserves lower bounds using mutual reachability, and a
+completed valid propagation is minimal. The completeness premise is visible;
+these laws are not a universal proof of native mutable Tarjan output.
+
+PendingKeys proves roster support equals pending-table domain after arbitrary
+effective writes, and that materialization observes the final value per key.
+Its representation contract separates logical membership from native visited
+hash-table list order and deduplication. TLA handles dirty-key publication and
+held snapshots, with two added faults for lost and repeated changed keys.
+Scheme independently enumerates admissible three-node labels and rechecks the
+existing native lattice session cases. No additional weighted-graph TLA model
+repeats the Lean algebra. See
+[[file:evidence/scheme-provider-views-20261007/strict-dependencies-pending-keys.json][the receipt]]
+for source identities, fault witnesses and the acceptance boundary.

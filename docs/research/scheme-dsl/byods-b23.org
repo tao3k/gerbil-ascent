@@ -707,3 +707,23 @@ planning is the native boundary for non-monotone tuple materialization; this
 round does not claim all arbitrary lattice programs satisfy monotone gamma.
 See [[file:../../scheme-trrel-uf-design.org][the design]] and
 [[file:../../evidence/scheme-provider-views-20261007/keyed-lattice-projection.json][the source-bound receipt]].
+
+
+* Weighted observation boundary and pending-key extraction (2026-10-07)
+
+Section 5.6's current-value map observations motivate the compiler's strict
+lattice-to-ordinary edge. StrictDependencies formalizes all lowered reads,
+fast-path safety, strict-cycle impossibility and projection ordering. SCC
+normalization and completed propagation preserve the lower bound against every
+valid labeling. Completion validity and native SCC/vector extraction remain
+premises rather than being hidden inside the theorem statement.
+
+PendingKeys connects effective pending writes to an exact key roster and final
+current-value materialization. Repeated key events do not select an earlier
+value. The dirty-key TLA publication model detects first-key loss and repeated
+improvement key loss; native Scheme tests independently enumerate 8,704 weighted
+kind configurations and exercise real retained lattice projection. This closes
+the stated typed compilation/functional roster components while preserving the
+separate join, hash/equality, native SCC and asynchronous execution obligations.
+See [[file:../../scheme-trrel-uf-design.org][the refinement design]] and
+[[file:../../evidence/scheme-provider-views-20261007/strict-dependencies-pending-keys.json][the source-bound receipt]].

@@ -111,7 +111,7 @@ Three built-in closure Providers alone do not cover the entire paper.
 | Delta visibility | Independent closure and split-producer discriminator; retained Rust eqrel omission difference | ProviderAdmission finite-body decomposition; ProviderIteration complete-join injection, arbitrary-round abstract history equivalence, least-state construction and ranked convergence; TLA accumulated-head overwrite control and native retained three-body sessions | Conditional abstract merged-snapshot core proved; native binder/gamma/head extraction, asynchronous custom-domain histories and arbitrary infinite-height execution convergence remain separate |
 | Duplicate input, budgets, failure atomicity, retained updates | Native preflight/retry, byods_session and timeout comparisons | Every step checks frontier uniqueness and completeness | Complete models/refinement of external Provider state interacting with timeout, source replacement and strata |
 | Index sharing (ind_share) | Engine/worker-owned curried physical chains; maximum matching over logical subset requirements; ordered adapters and batch invalidation | All 128 three-column requirement families compared with independent minimum chain partitions; exact rows/duplicates/reordered keys; serial and component actor solve truth; Lean prefix coverage and ordered extension; TLA alias/foreign-root controls | Universal native planner/trie refinement, full Polonius/LLVM datasets and peak-memory/application cost evidence remain required; the runtime tight-cover certificate and Lean minimum-partition theorem establish the mathematical optimality criterion; lazy ordered views also retain row-reference spines |
-| User-defined lattices and concurrent Providers | Finite serial lattice comparisons; actor eligibility restricted to pure Set and frozen built-in UF/hash paths | LatticeProjection keyed join staging, current-row replacement and last-column encoding; settled projection TLA with seven faults; native false/true multi-field keys and retained projection controls | Arbitrary callback join laws/purity, lowered strict-edge/hash extraction, general recursive aggregate semantics and asynchronous custom-lattice execution remain gates; monotone-gamma iteration does not cover replacement row observations automatically |
+| User-defined lattices and concurrent Providers | Finite serial lattice comparisons; actor eligibility restricted to pure Set and frozen built-in UF/hash paths | LatticeProjection keyed join staging, current-row replacement and last-column encoding; settled dirty-key projection TLA with nine faults; native false/true multi-field keys and retained projection controls | StrictDependencies weighted extraction and PendingKeys roster contracts are proved; arbitrary callback join laws/purity and universal native vector/SCC/hash extraction, general recursive aggregate semantics and asynchronous custom-lattice execution remain gates; monotone-gamma iteration does not cover replacement row observations automatically |
 | Paper applications and benefits | Closure examples and selected Rust package examples | Retained negative performance results | Complete Steensgaard, Polonius, PageRank and LLVM/index-sharing programs, reproducible datasets and cost/memory measurements await acceptance; full experimental replication has not been established |
 
 * Other papers and the proof chain
@@ -383,8 +383,28 @@ replacement and immutable earlier projections. Superseded tuple values must not
 remain in the ordinary relation.
 
 The projection model covers one finite transaction, not arbitrary convergence
-or asynchronous joins. User join laws/purity, hash/key equality, pending-key
-coverage and lowered strict-stratum extraction remain native refinement gates.
+or asynchronous joins. User join laws/purity and universal native hash/vector/SCC extraction remain
+refinement gates. StrictDependencies and PendingKeys close the stated typed
+weighted-edge and functional roster components below.
 This is distinct from ProviderIteration's monotone-gamma admission contract.
 See [[file:scheme-trrel-uf-design.org][the design]] and
 [[file:evidence/scheme-provider-views-20261007/keyed-lattice-projection.json][the projection receipt]].
+
+
+* Strict read and pending-key closure (2026-10-07)
+
+StrictDependencies adds fourteen laws connecting typed lowered rules to strict
+weighted reads, the zero-level fast path, projection ordering, impossibility of
+strict cycles, SCC equal levels, and propagation/normalization lower bounds.
+Minimum labeling is conditional on a completed valid result; native vector
+extraction and SCC completeness are explicit premises. Independent Scheme
+label enumeration checks 8,704 configurations rather than using the old planner
+as the truth source.
+
+PendingKeys adds seven laws for effective-write event coverage and final table
+materialization, with duplicate keys and false-key discriminators. The TLA
+transaction now publishes through touched keys; two new KeyCoverage faults
+bring its controls to nine. Native lattice retained-session controls remain
+separate from both universal Lean laws and bounded temporal publication checks.
+See [[file:scheme-trrel-uf-design.org][the ownership and premises]] and
+[[file:evidence/scheme-provider-views-20261007/strict-dependencies-pending-keys.json][the acceptance receipt]].

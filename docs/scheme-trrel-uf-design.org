@@ -1033,8 +1033,9 @@ same-key inputs to their joined injection. =publish_stage_exact= derives exact
 publication of the staged fold. =gamma_unique= and =old_key_removed= establish
 one current value and removal of superseded tuple observations. =encode_key=
 and =encode_value= connect last-column encoding to the native butlast/last
-convention. Pending event ordering, complete pending-key coverage, stable field
-equality and Scheme hash lookup still require native representation refinement.
+convention. PendingKeys now supplies the functional pending-table/event-roster coverage
+contract below. Native event order, visited-table deduplication, stable field
+equality and Scheme hash lookup retain representation premises.
 No shape check certifies a caller's arbitrary join procedure as a semilattice.
 
 The TLA model owns the transaction boundary rather than join algebra. It admits
@@ -1189,3 +1190,57 @@ The local replay gate retains the original TLC checker/model/bounds and reads
 its generated-state counter once per second; it emits a marker only when that
 counter increases. An unchanged counter provides no progress marker. The
 qualifier source is retained with the runtime evidence for reproducibility.
+
+
+* Strict dependency and pending-key refinement (2026-10-07)
+
+B23 Section 5.6 current-value materialization can replace an earlier tuple.
+The compiler must therefore classify a positive lattice-to-ordinary read as
+strict, even though an ordinary positive read has weight zero. This is our
+native observation boundary; it is not inferred from B23's monotone-gamma
+iteration theorem and does not extend that theorem to arbitrary map lattices.
+
+| Obligation | Universal Lean owner | Operational/native owner |
+| Complete lowered read edges | StrictDependencies.extraction_exact: every reading clause contributes an edge to every head; guard/generator/binding clauses contribute none | Lowered Scheme vectors, relation indices and kinds must match the typed extraction |
+| Safe graph fast path | strict_preflight, skipped_edges_nonstrict, skipped_zero_valid | Actual global negation/aggregate/projection preflight in core/rule-semantics.ss |
+| Strict projection and rejection | projection_later, path_bound, strict_cycle_impossible, mutual_paths_equal | SCC membership/order extraction; typed native cycle diagnostics |
+| Minimum levels | relax_below_valid, propagated_below_valid, completed_propagation_minimal, component_max_below, normalization_below_valid | Native component maximum normalization and condensation sweep; completeness of the resulting constraints is an explicit premise |
+| Pending-key roster | PendingKeys.empty_covered, write_covered, replay_covered | Every effective write updates the pending table and records its key; ineffective joins perform neither action |
+| Final current row per key | materialization_exact, materialization_unique, repeated_key_final, write_untouched | Native visited table emits each key once using the final pending value; arbitrary hash equality and emitted list order remain premises |
+
+A completed propagation result is valid and below every valid labeling, hence
+minimal. This theorem takes validity of the completed result as a premise:
+it does not assume or prove an arbitrary native Tarjan traversal correct.
+SCC maximum normalization separately preserves the same lower-bound invariant
+because every valid labeling is constant on mutually reachable nodes.
+
+The native test independently enumerates all 27 assignments in {0,1,2} for
+three nodes. It checks 8,704 graph/kind configurations: 512 positive graphs with
+all eight lattice-kind assignments, plus each present edge separately changed
+to negation and aggregation with ordinary kinds. The expected result is the
+coordinatewise minimum of all valid assignments, or rejection when none exist.
+This oracle constructs no SCCs and performs no relaxation. A feasible weighted
+three-node graph has a minimum in this population because strict edges cannot
+occur within an SCC and a simple condensation path has at most two edges.
+Additional cases discriminate strict incoming/outgoing edges around a positive
+SCC, multi-head projection with ignored non-reading clauses, duplicates and
+empty declarations. The frozen old implementation remains a separate historical
+comparison, not the source of this independent expected result.
+
+PendingKeys covers arbitrary effective-write histories, including duplicate
+key events. An event stores only its key: publication always reads the final
+table value, so an earlier event cannot resurrect an earlier value. Coverage
+is equality of roster support and table domain; it does not certify join purity,
+physical hash behavior or uniqueness of the mutable visited table's list output.
+The TLA min transaction now publishes through a dirty-key set, retains untouched
+rows, and checks KeyCoverage. Dropping a first changed key and forgetting a key
+on repeated improvement produce distinct typed counterexamples. TLA owns this
+publication protocol; Lean owns universal coverage and weighted graph laws.
+No duplicate TLA weighted-graph theorem model is introduced.
+
+Acceptance and source identities are recorded in
+[[file:evidence/scheme-provider-views-20261007/strict-dependencies-pending-keys.json][the refinement receipt]].
+The existing lattice native cases exercise repeated same-key writes, ineffective
+updates, multi-field false/true keys and unchanged earlier projections. These
+are finite implementation discriminators; universal native hash/vector/SCC
+extraction and asynchronous custom-lattice execution remain separate gates.

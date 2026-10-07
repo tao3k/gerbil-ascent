@@ -1390,7 +1390,7 @@ check-provider-frontier-formal:
     "${tlc[@]}" -workers 1 -config "$temp/seeded.cfg" -metadir "$temp/seeded" packages/proofs/tla/ProviderFrontier.tla
     sed 's/Mutation = "none"/Mutation = "overlap"/' packages/proofs/tla/ProviderFrontier.cfg > "$temp/overlap.cfg"
     "${tlc[@]}" -workers 1 -config "$temp/overlap.cfg" -metadir "$temp/overlap" packages/proofs/tla/ProviderFrontier.tla
-    for mutation in raw foreign omit early old initial; do
+    for mutation in raw foreign omit early old initial replace; do
       sed "s/Mutation = \"none\"/Mutation = \"$mutation\"/" packages/proofs/tla/ProviderFrontier.cfg > "$temp/$mutation.cfg"
       if [[ "$mutation" == initial ]]; then
         sed 's/InitialInputs = {}/InitialInputs <- SeededInputs/' "$temp/$mutation.cfg" > "$temp/initial-seeded.cfg"
@@ -1400,7 +1400,7 @@ check-provider-frontier-formal:
       "${tlc[@]}" -workers 1 -config "$temp/$mutation.cfg" -metadir "$temp/$mutation" packages/proofs/tla/ProviderFrontier.tla > "$temp/$mutation.out" 2>&1 || code=$?
       invariant=FrontierComplete
       if [[ "$mutation" == omit ]]; then invariant=DeliveredExact; fi
-      if [[ "$mutation" == early || "$mutation" == old || "$mutation" == initial ]]; then invariant=ConsumerSnapshot; fi
+      if [[ "$mutation" == early || "$mutation" == old || "$mutation" == initial || "$mutation" == replace ]]; then invariant=ConsumerSnapshot; fi
       [[ "$code" = 12 ]] && grep -q "Invariant $invariant is violated" "$temp/$mutation.out"
       echo "COUNTEREXAMPLE-OK provider-frontier-$mutation $invariant"
     done

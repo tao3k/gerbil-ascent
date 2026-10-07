@@ -668,3 +668,25 @@ traces require the additional receiver-order premise retained in the canonical
 bucket calculus. Native witness extraction, full abstract-lattice iteration and
 paper application/benefit qualification remain open. See [[file:../../scheme-trrel-uf-design.org][the UF design]]
 for proof ownership, implementation seams and admission evidence.
+
+* Abstract injection and iteration refinement (2026-10-07)
+
+ProviderIteration now lifts Section 3's concretization/delta conditions through
+abstract tuple injection and whole-program histories. CompleteJoin supplies
+arbitrary supremum laws; tuple-family injection monotonicity and union/join
+correspondence are derived. All-old head coverage follows from the preceding
+full step. Every natural-number semi-naive round equals its naive counterpart
+under sound, fresh-covering delta and monotone gamma, including overlapping
+delta. Non-pivot positions use the merged snapshot.
+
+Least-state existence is distinct from executable convergence: a complete
+abstract lattice yields a least fixed state above the seed; a bounded rank with
+strict progress yields finite convergence to it. No fixed generation limit is
+introduced. The concrete test domain compresses distinct facts into one Bool
+state and does not require gamma to preserve joins.
+
+ProviderFrontier's new overwrite control and retained Scheme sessions cover the
+accumulated-head publication seam. Native refinement of arbitrary caller
+Providers, asynchronous protocols and application replication remain separate.
+See [[file:../../scheme-trrel-uf-design.org][the implementation/proof design]] and
+[[file:../../evidence/scheme-provider-views-20261007/abstract-provider-iteration.json][the source-bound receipt]].

@@ -43,8 +43,8 @@ Inject(edge) == /\ phase = "idle" /\ edge \notin inputs
 Consume == /\ phase = "pending"
            /\ delivered' = IF Mutation = "omit" THEN delivered ELSE delivered \cup delta
            /\ total' = pending /\ delta' = {} /\ phase' = "idle"
-           /\ answers' = answers \cup Pivots(delta,
-                              IF Mutation = "old" THEN total ELSE pending)
+           /\ answers' = (IF Mutation = "replace" THEN {} ELSE answers) \cup
+                          Pivots(delta, IF Mutation = "old" THEN total ELSE pending)
            /\ UNCHANGED <<inputs, pending>>
 Next == (\E edge \in Nodes \X Nodes : Inject(edge)) \/ Consume
 Spec == Init /\ [][Next]_vars

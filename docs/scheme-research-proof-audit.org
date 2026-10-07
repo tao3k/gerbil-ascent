@@ -2176,3 +2176,24 @@ traces require the additional receiver-order premise retained in the canonical
 bucket calculus. Native witness extraction, full abstract-lattice iteration and
 paper application/benefit qualification remain open. See [[file:scheme-trrel-uf-design.org][the UF design]]
 for proof ownership, implementation seams and admission evidence.
+
+* Abstract Provider iteration proof ownership (2026-10-07)
+
+ProviderIteration adds complete-join tuple injection, whole-program positive
+round equivalence, least-state construction and ranked convergence. The proof
+works over an abstract database and does not require powerset representation,
+join-preserving gamma or disjoint delta. Semantic Domain/Program laws remain
+caller obligations; native procedure shape is not a proof of those laws.
+
+Lean owns abstract order, supremum, injection and rule/history equations. TLA
+owns the accumulated-head publication seam: overwriting retained answers with
+only fresh pivot output must fail ConsumerSnapshot. Scheme retained sessions
+exercise implied rows, empty frontiers, delayed producers, repeated three-body
+reads and immutable prior results for three built-in Providers.
+
+This closes the conditional merged-snapshot abstract iteration component, not
+arbitrary native callbacks, asynchronous lattice execution or universal native
+hash/key extraction. A complete lattice gives least-state existence; termination
+requires a separate parameterized finite-rank witness. See
+[[file:scheme-trrel-uf-design.org][the design]] and
+[[file:evidence/scheme-provider-views-20261007/abstract-provider-iteration.json][the iteration receipt]].

@@ -8,7 +8,8 @@
         (only-in :clan/poo/object .ref)
         (only-in :gerbil-ascent/program/interface
                  gerbil-ascent-relation gerbil-ascent-variable gerbil-ascent-atom
-                 gerbil-ascent-rule gerbil-ascent-program)
+                 gerbil-ascent-rule gerbil-ascent-program gerbil-ascent-open-session
+                 gerbil-ascent-session-run gerbil-ascent-session-append-source!)
         (only-in :gerbil-ascent/program/evaluate gerbil-ascent-evaluate-program)
         (only-in :gerbil-ascent/table/provider gerbil-ascent-hash-index-provider)
         (only-in :core/observability/testing-case poo-flow-test-case)
@@ -202,6 +203,36 @@
 
 (def ascent-byods-invariants-test
   (test-suite "ASCENT BYODS exhaustive three-node invariants"
+    (poo-flow-test-case "retained head injection survives an empty implied frontier"
+      (for-each
+       (lambda (kind provider)
+         (let* ((first '((0 1) (1 0)))
+                (next (append first '((1 2))))
+                (session (gerbil-ascent-open-session (three-body-program provider first [])))
+                (initial (gerbil-ascent-session-run session))
+                (initial-rows ((.ref initial 'rows-of) 'answer)))
+           (def (check-answer result edges)
+             (let ((wanted (three-body-rows (reference-rows kind edges)))
+                   (actual ((.ref result 'rows-of) 'answer)))
+               (check-equal? (.ref result 'finished) #t)
+               (check-equal? (length actual) (length wanted))
+               (for-each (lambda (row)
+                           (check-equal? (not (not (member row actual))) #t)) wanted)))
+           (check-answer initial first)
+           (gerbil-ascent-session-append-source! session 'second '(1 2))
+           (check-answer (gerbil-ascent-session-run session) next)
+           ;; This new source tuple is already implied by the custom domain.
+           ;; Its empty concrete frontier must not replace accumulated heads.
+           (gerbil-ascent-session-append-source! session 'second '(0 2))
+           (check-answer (gerbil-ascent-session-run session) (append next '((0 2))))
+           (check-answer (gerbil-ascent-session-run session) next)
+           (check-equal? ((.ref initial 'rows-of) 'answer) initial-rows)
+           (displayln "BYODS-RETAINED-INJECTION-OK provider=" kind)
+           (force-output)))
+       '(eqrel trrel trrel-uf)
+       (list gerbil-ascent-eqrel-storage-provider
+             gerbil-ascent-trrel-storage-provider
+             gerbil-ascent-trrel-uf-storage-provider)))
     (poo-flow-test-case "three repeated Provider atoms consume delayed frontiers exactly"
       (let (checked 0)
        (for-each

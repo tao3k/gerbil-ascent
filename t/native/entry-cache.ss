@@ -2,7 +2,7 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 ;;; One admitted executable per entry mode. Cache misses always rebuild; test results
-;;; are never cached. The lane lock in main.ss owns this receipt and binary.
+;;; are never cached. The lane lock in qualification.ss owns this receipt and binary.
 (import :std/encoding/json :std/misc/process
         (only-in :gerbil/runtime/system gerbil-home)
         (only-in "artifact-admission.ss" artifact-digest artifact-sources

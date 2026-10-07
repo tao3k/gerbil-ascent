@@ -1,7 +1,7 @@
 ;;; -*- Gerbil -*-
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
-(import :std/test :std/misc/process :std/encoding/json "../runner/artifact-admission"
+(import :std/test :std/misc/process :std/encoding/json "../native/artifact-admission"
         (only-in :std/crypto/digest sha256) (only-in :std/encoding/hex hex-encode))
 (export scheme-artifact-test)
 (def (put path text)
@@ -15,7 +15,7 @@
     (try
      (current-directory root)
      (run-process/batch '("git" "init" "-q"))
-     (run-process/batch '("mkdir" "-p" "t/runner" "python/src/ascent_test_support" ".cache/ascent/native-library"))
+     (run-process/batch '("mkdir" "-p" "t/native" "python/src/ascent_test_support" ".cache/ascent/native-library"))
      (for-each (lambda (name) (put name "fixture bytes\n"))
                '("fixture.ss" "justfile" "python/src/ascent_test_support/supervision.py" "python/pyproject.toml"))
      (put ".cache/ascent/native-library/dsl-closure" "fixture executable bytes")
@@ -40,7 +40,7 @@
             (call-with-output-file [path: "bytes" truncate: #t]
               (lambda (port) (write-subu8vector bytes 0 size port)))
             (check (artifact-digest "bytes") => (hex-encode (sha256 bytes)))))
-          '(0 8191 8192 8193 16385)))))
+          '(0 8191 8192 8193 16385 32767 32768 32769 65537)))))
     (test-case "completed build beyond 180 seconds is accepted"
       (with-artifact-fixture (lambda ()
         (stage) (artifact-main "finalize") (artifact-main "check")

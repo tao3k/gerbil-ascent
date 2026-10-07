@@ -9,7 +9,7 @@
 
 ;;; Imports and original Suite/callback bindings are frozen before execution.
 ;;; Each child selects exactly one registry entry; it never evaluates source.
-(def (prepare-native-tests! paths cache (single? #f))
+(def (prepare-native-tests! paths cache (single? #f) (admitted-inputs #f))
   (let* ((library (path-expand "lib" cache))
          (source (path-expand (if single? "single-test.ss" "test-pool.ss") cache))
          (binary (path-expand (if single? "single-test" "test-pool") cache))
@@ -40,7 +40,7 @@
      paths)
     (call-with-output-file [path: source truncate: #t]
       (lambda (out)
-        (display "package: gerbil-ascent/t/runner\nnamespace: gerbil-ascent/t/runner/native-registry\n" out)
+        (display "package: gerbil-ascent/t/native\nnamespace: gerbil-ascent/t/native/native-registry\n" out)
         (for-each (lambda (form) (write form out) (newline out))
          `((import :std/test/base
                    (only-in :gerbil-ascent/t/performance/native-library assert-native-library!)
@@ -71,7 +71,8 @@
                    (exit 42)))))))))
     ;; Reuse only this lane's last admitted entry. A different registry key,
     ;; changed source, compiled dependency, toolchain or binary is a miss.
-    (let* ((generated (artifact-digest source)) (inputs (entry-inputs library))
+    (let* ((generated (artifact-digest source))
+           (inputs (or admitted-inputs (entry-inputs library)))
            (receipt (string-append binary ".json")) (key (if single? (car paths) "")))
       (if (entry-current? receipt binary generated inputs key)
         (begin (displayln "NATIVE-ENTRY-CACHE-HIT") (force-output))
@@ -80,7 +81,7 @@
           (when (file-exists? receipt) (delete-file receipt))
           (when (file-exists? binary) (delete-file binary))
           (let (foundation (entry-inputs library #f))
-            (run-process ["gxi" "-:max-heap=1G,debug=q" "t/runner/compile-entry.ss"
+            (run-process ["gxi" "-:max-heap=1G,debug=q" "t/native/compile-entry.ss"
                           source library binary]
               stderr-redirection: #t
               coprocess: (lambda (process)

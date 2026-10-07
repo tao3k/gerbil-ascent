@@ -12,7 +12,7 @@ specification. ASCENT previously wrapped that native =main= with test-file
 selection, test inventories, compilation, lane locking and performance dispatch.
 That mixed build and test ownership and encouraged fixture-specific branches.
 
-=build.ss= now has 61 lines, down from 209: production module declarations,
+=build.ss= contains production module declarations,
 the ASP package specification, and native =defbuild-script=. Its exported
 production module list is shared data, with no test imports or dispatch.
 =std/source this-source-file= is imported explicitly because the native build
@@ -21,18 +21,17 @@ macro requires it; it previously arrived through the removed process imports.
 | Source | Responsibility |
 |--------+----------------|
 | =build.ss= | Production modules and native build specification |
-| =t/runner/main.ss= | Native test compilation, inventories, capacity and lane |
+| =t/native/qualification.ss= | Native test compilation, inventories, capacity and lane |
 | =t/qualification/*-test.ss= | Semantic Unit Test Suites and Cases |
 | =t/performance/*-test.ss= | Timing qualification Suites and Cases |
-| =t/runner/run-compiled-module.ss= | Native gxtest adapter and exit propagation |
 
-The existing Just commands route to the test entrypoint under =gerbil env=.
-Public build and policy recipes take the same test lane before invoking native
-=gerbil build=, preserving timing isolation without putting locks into the
-production build script. Test modules keep their original parallel/exclusive
-classification; =GERBIL_BUILD_CORES= continues to select native capacity.
-No scheduler implementation, compatibility dispatcher or coordinator tests
-are introduced. Test artifacts remain ignored cache files.
+Public build and policy recipes invoke =gerbil build= directly. Ordinary
+=just test= and =just test-file= use =gerbil test=; no alternate test dispatcher
+or executable preparation runs on that path. Explicit =test-native= and
+=test-native-suite= retain the compiled artifact gate and its lane lock.
+Parallel/exclusive classification applies to that native gate only.
+=GERBIL_BUILD_CORES= controls compilation capacity; =ASP_GERBIL_SCHEME_POLICY=1=
+enables policy checking. Test artifacts remain ignored cache files.
 
 Final local validation uses the pinned cache SDK with =GERBIL_BUILD_CORES=12=.
 Build passes; policy checks 42 production modules with zero findings/errors;

@@ -3,22 +3,19 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 ;;; Native artifact admission; never evaluates model data or DSL verdicts.
 (import :std/encoding/json :std/encoding/hex :std/crypto/digest
+        (only-in :std/io/file call-with-file-reader)
         :std/misc/process :std/misc/ports)
 (export artifact-main artifact-sources artifact-digest artifact-matching-sources? artifact-read-json)
 (def cache ".cache/ascent/native-library/")
 (def (file name) (string-append cache name))
 (def (clock) (time->seconds (current-time)))
 (def (artifact-digest path)
-  ;; Final verification must not allocate another full native executable in
-  ;; the compiler parent's heap. Hash bytes with a bounded reusable buffer.
-  (call-with-input-file path
-    (lambda (port)
-      (let ((digest (Digest::sha256)) (buffer (make-u8vector 8192)))
-        (let loop ()
-          (let (count (read-subu8vector buffer 0 (u8vector-length buffer) port))
-            (if (zero? count)
-              (hex-encode (digest-final! digest))
-              (begin (digest-update! digest buffer 0 count) (loop)))))))))
+  ;; Upstream compiled Reader IO streams directly from the file device. Avoid
+  ;; the Gambit port read loop in this source-loaded coordinator; hashing the
+  ;; library must not interpret a byte-copy loop or retain whole executables.
+  (call-with-file-reader path
+    (lambda (reader)
+      (hex-encode (digest-from-reader! (Digest::sha256) reader)))))
 (def (artifact-read-json path)
   (parameterize ((current-json-read-options (JSONReadOptions object-as-hash: #t)))
     (call-with-input-file path read-json)))

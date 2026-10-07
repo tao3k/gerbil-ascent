@@ -4,23 +4,25 @@
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 * Ownership
-=build.ss= declares production modules and the native ASP build specification.
-=t/runner/main.ss= owns test inventories, native test compilation and scheduling.
-It imports the production module list rather than duplicating it; =std/make=
-owns compilation and incremental dependency checks.
-=just= exposes the public commands. Scheme actors in =t/runner/actor-pool.ss=
-own module scheduling, output credits and draining; separate native processes
-execute modules. The Python package owns process supervision and byte binding.
-Scheme =std/test= owns semantic assertions and verdicts.
+=gerbil build= owns the production build and =gerbil test= owns ordinary
+Suite discovery, module loading and Case execution. =just build= and
+=just check-policy= invoke the production build directly; the latter enables
+=ASP_GERBIL_SCHEME_POLICY=1=. =just test= and =just test-file= invoke Gerbil's
+standard test command, with verdict checks in the recipe. The full ordinary
+suite invokes Gerbil once per module to release source expansion contexts; a
+single all-source process exhausted the unchanged 1 GiB heap during validation. They do not prepare
+an alternate library, fingerprint the toolchain or link a test executable.
 
-The real tests remain in =t/qualification/*-test.ss= and =t/performance/*-test.ss=.
-Native =gxtest= discovers exported Suites; =std/test= owns Case execution, setup,
-cleanup and assertions. The small =t/runner/run-compiled-module.ss= adapter checks the
-compiled library and propagates the native gxtest return value to the process.
-=t/runner/load-temporal-module.ss= retains visible temporal import boundaries.
+=t/native/= contains the separate compiled qualification machinery:
+=t/native/qualification.ss= prepares the library and immutable executable
+for =just test-native= and =just test-native-suite=. =std/make= owns compilation
+and currentness. Native actor scheduling applies only to this explicit gate.
+The Python package owns process supervision and model-provider IO; Scheme
+=std/test= owns assertions. =t/model/= contains the model study.
+There is no project-owned general test runner or forwarding gxtest adapter.
 
 * Compilation and isolation
-Just invokes =t/runner/main.ss= through =gerbil env gxi= so native Gerbil selects the
+Explicit native qualification invokes =t/native/qualification.ss= through =gerbil env gxi= so native Gerbil selects the
 project dependency environment before resolving build imports. An explicit
 =GERBIL_PATH= is retained. Bare =gxi= can miss dependencies installed by
 =gerbil deps --install= into the project's =.gerbil/= directory; this was the
@@ -32,12 +34,12 @@ Production and selected =*-test.ss= modules compile through the test entrypoint 
 The compiled library comes before the checkout in =GERBIL_LOADPATH=; otherwise
 source modules can be interpreted and invalidate performance comparisons.
 The table-expression paired fixture's baseline is compiled alongside production.
-=std/make= checks source dependencies before each invocation; no custom fingerprint
-cache duplicates its currentness logic.
+=std/make= checks source dependencies on preparation misses. Content receipts
+admit reuse of the native executable; they do not replace the production build graph.
 
 A native =std/os/flock= lease protects a complete package invocation. The parallel
-module pool finishes before exclusive modules start. Builds and performance
-commands use the same lease. Children call the private Just recipes without
+module pool finishes before exclusive modules start. Native qualification and
+performance commands use the same lease; production builds use Gerbil locks. Children call the private Just recipes without
 acquiring a nested lease. Independent invocations therefore cannot contaminate
 timed Cases. No standalone scheduler tests are added: validation runs ASCENT's
 actual modules and Cases.
@@ -46,11 +48,11 @@ actual modules and Cases.
 #+begin_src sh
 just build
 just check-policy
-just test                    # capacity from GERBIL_BUILD_CORES / native CPU count
-just test 12
-just test-serial
+just test                    # standard gerbil test discovery
+just test-native-suite 12     # explicit compiled qualification pool
+just test-native-serial
 just test-file t/qualification/ascent-rule-program-test.ss
-just test-parallel
+just test-native-parallel
 just performance-scenario ascent-table-expression
 just performance
 #+end_src
@@ -159,8 +161,7 @@ candidate/reasoning object lock and the subsequent six-Suite qualification.
 
 * Names and executable reuse
 
-The project-owned =t/runner/= directory names orchestration rather than the
-Gerbil =TestHarness= abstraction. =main.ss= dispatches commands,
+The project-owned =t/native/= directory contains compiled artifact qualification. =qualification.ss= prepares explicit compiled qualification,
 =native-registry.ss= freezes Suite bindings, =compile-entry.ss= compiles the
 entry, =artifact-admission.ss= binds source and executable identities, and
 =module-process.ss= validates module process receipts. Model-specific study
@@ -189,6 +190,38 @@ compiled library and requested registry key have passed content admission. It ca
 build artifacts only: every invocation still runs all Cases, setup and cleanup,
 with the existing deadlines, output supervision and final verdict checks.
 
+* Content admission IO and repeated scans
+
+The coordinator loads its own Scheme source. Its previous Gambit port read loop
+made content admission expensive even when no compiler ran: an initial probe using the default user package prefix inventoried
+11,375 inputs and took 26.13 seconds on the development host. Upstream compiled
+=call-with-file-reader= and =digest-from-reader!= reduced that inventory to
+13.84 seconds while retaining SHA256 over every byte and bounded buffers.
+
+A focused cache hit now carries the admitted input snapshot from library
+preparation into entry preparation under the same lane lock. Entry generation
+and module import do not compile library outputs. The entry source and binary
+are still checked against their receipt; source and executable identities are
+checked around actual execution. A library miss returns no reusable snapshot;
+compilation binds a fresh inventory of completed outputs. This eliminates the
+second full inventory on a hit without retaining input snapshots across commands
+or using file timestamps as content identity.
+
+=ASP_GERBIL_SCHEME_POLICY=1= enables policy checking. =GERBIL_BUILD_CORES=
+controls compilation parallelism. The measured environment inherited 12 build
+cores. Accepted project tests use the project dependency prefix; the initial
+default-prefix probe failed to resolve its ASP build dependency and is not an
+accepted test run. Policy checking is not the measured cache-scan bottleneck and its gate
+remains enabled in =check-policy=. The justfile command definitions apply the
+MRR environment boundary on macOS, clearing Nix compiler flags and SDK variables
+for builds, standard tests and explicit compiled qualification. No manual shell
+cleanup is required.
+
+Direct execution of the unchanged six-Case finite-flow native entry took
+0.20 seconds and ended in =OK=. This is execution time only, separate from
+preparation, content admission and linking. These focused measurements do not
+establish a stable whole-CI speedup or explain every earlier long invocation.
+
 * Focused repeated-run observations
 
 The unchanged six-Case finite-flow module took 103.81 seconds before reuse.
@@ -203,3 +236,39 @@ observations include a 315.36-second cold build and a 158.47-second repeat;
 those negative timing observations are retained in the structured receipt.
 Cold build, dependency fingerprint IO and full-pool preparation remain further
 optimization targets. No deadline, heap bound or semantic assertion was relaxed.
+
+* Standard command boundary qualification
+
+The ordinary finite-flow module passed all six Cases through =just test-file=
+in 24.80 seconds before the Just-owned environment cleanup and 10.56 seconds
+with that cleanup. Both invocations executed the million-row verification;
+neither launched library preparation or executable linking. These observations
+were collected on a shared host and are not a stable matched speedup claim.
+The artifact Suite passed seven Cases, including upstream Reader buffer
+boundaries; response projection passed 27 Cases without model API calls.
+The Python framework passed 21 tests. Ordinary setup, Case, cleanup and empty
+Suite controls all failed the recipe as required, including upstream errors
+that otherwise could leave a successful dispatcher exit status.
+
+A single all-source =gerbil test t/qualification= process exhausted the unchanged
+1 GiB heap after 25 successful Cases. The ordinary full-suite recipe therefore
+calls =gerbil test= separately for each discovered module. This uses the same
+upstream test API and per-module deadline without a project runtime dispatcher.
+The full isolated source inventory is not qualified by the focused results;
+CI retains the explicit compiled full-suite gate.
+
+The explicit native actor pool passed ten Cases and its missing, unknown and
+extra registry argument controls each returned exit 70. Setup, Case and cleanup
+controls returned exit 42; the native empty-Suite control returned exit 70.
+The first native rebuild failed with Nix SDK headers; removing only SDKROOT
+exposed partial compilation artifacts left by that failed build. Cleaning only
+the generated =t/native= and retired =t/runner= cache namespaces and using the
+Just-owned environment boundary produced the accepted native pool result.
+No production cache, source checkout, heap bound or test timeout was widened.
+
+The explicit one-Case native cache-admission module was compiled successfully
+and repeated in 12.82 seconds. The repeat emitted both library and entry cache
+hits, started no compiler process, executed its Case and ended in =OK=. Its
+admitted snapshot is reused only during the current lane-owned preparation.
+See [[file:evidence/scheme-test-entrypoints-20261007/receipt.json][the structured receipt]] for source identity, accepted controls, rejected
+attempts and measurement limits.

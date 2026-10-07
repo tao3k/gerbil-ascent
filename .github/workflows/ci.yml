@@ -33,13 +33,13 @@ jobs:
       - name: Build Scheme package
         run: ASP_GERBIL_SCHEME_POLICY=1 gerbil build
       - name: Qualify Scheme rules
-        run: just test
+        run: just test-native-suite
       - name: Qualify runtime source view loading
         run: just check-source-views
       - name: Qualify native actor pool lifecycle
         run: just check-actor-pool
       - name: Qualify native executable cache admission
-        run: just test-native t/runner/entry-cache-test.ss
+        run: just test-native t/native/entry-cache-test.ss
       - name: Qualify native single-module entry and failure controls
         run: just check-native-registry
       - name: Build native DSL closure entry

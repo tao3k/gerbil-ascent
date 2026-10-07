@@ -2,8 +2,8 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-;;; Test compilation and scheduling belong to t/. std/make owns native
-;;; currentness and gxtest owns Suites and Cases.
+;;; Explicit compiled qualification only. Ordinary tests use gerbil test.
+;;; std/make owns native currentness and std/test owns Suites and Cases.
 (import (only-in :gerbil/compiler compile-module compile-exe execute-pending-compile-jobs!)
         :gerbil/expander
         (only-in :std/make make)
@@ -114,12 +114,6 @@
   ;; One package invocation owns the lane; its module children do not relock.
   (let (lock (open-output-file/lock (path-expand "lane.lock" test-cache) 120))
     (try (thunk) (finally (device-close lock)))))
-(def quick-modules
-  '("t/qualification/ascent-finite-evidence-test.ss"
-    "t/qualification/ascent-positive-nonmembership-test.ss"
-    "t/qualification/ascent-positive-provenance-test.ss"
-    "t/qualification/ascent-reasoning-library-test.ss"
-    "t/qualification/ascent-stratified-proof-test.ss"))
 (def performance-modules
   '("t/performance/ascent-scenario-performance-test.ss"
     "t/performance/ascent-binary-program-performance-test.ss"
@@ -141,7 +135,7 @@
       (call-with-output-file [path: spec truncate: #t]
         (lambda (out) (write modules out) (newline out)))
       (run-process/batch
-       ["gxi" "-:max-heap=1G,debug=q" "t/runner/main.ss"
+       ["gxi" "-:max-heap=1G,debug=q" "t/native/qualification.ss"
         "compile-test-layer" spec library]))))
 
 (def (prepare-test-library! (tests []))
@@ -150,7 +144,7 @@
          (modules (append gerbil-ascent-library-modules
                           '("t/performance/native-library" "t/performance/ascent-ss-profile"
                             "t/scenarios/performance/ascent-table-expression/baseline"
-                            "t/runner/artifact-admission" "t/runner/entry-cache" "t/model/response-projection" "t/runner/actor-pool" "t/runner/module-process")
+                            "t/native/artifact-admission" "t/native/entry-cache" "t/model/response-projection" "t/native/actor-pool" "t/native/module-process")
                           (if (member "t/qualification/ascent-callback-plan-test.ss" tests)
                             '("t/performance/callback-plan/expression-reference") [])
                           (if (member "t/qualification/ascent-expression-plan-test.ss" tests)
@@ -282,9 +276,11 @@
       (string-append library ":" (current-directory) ":" (getenv "GERBIL_LOADPATH" "")))
     (let* ((source (path-expand "single-test.ss" test-cache))
            (binary (path-expand "single-test" test-cache))
+           (inputs (and (= (length tests) 1) (file-exists? source)
+                        (entry-inputs library)))
            (reusable? (and (= (length tests) 1) (file-exists? source)
              (entry-current? (string-append binary ".json") binary
-               (artifact-digest source) (entry-inputs library) (car tests)))))
+               (artifact-digest source) inputs (car tests)))))
       (if reusable?
         (displayln "NATIVE-LIBRARY-CACHE-HIT")
         (begin
@@ -302,8 +298,12 @@
           (for-each
            (lambda (module) (compile-test-layer! (list module) library))
            (filter (lambda (module) (not (member module modules))) (map path-strip-extension tests)))
-        )))
-    (force-output)))
+        ))
+      (force-output)
+      ;; This lane owns all library writers. Carry the admitted snapshot only
+      ;; across entry generation/imports, which cannot change compiled inputs.
+      ;; A compilation miss must inventory its completed outputs afresh.
+      (and reusable? inputs))))
 (def (pool-jobs value)
   (let (jobs (if (equal? value "auto") (initialize-native-build-core-capacity!) (string->number value)))
     (unless (and (integer? jobs) (> jobs 0)) (error "invalid test jobs" value))
@@ -350,16 +350,6 @@
                  (initialize-native-build-core-capacity!) (string->number value)))
        (unless (and (integer? jobs) (> jobs 0)) (error "invalid test jobs" value))
        (displayln (inexact->exact jobs))))
-    (["test-modules" "quick"] (for-each displayln quick-modules))
-    (["test-modules" lane]
-     (unless (member lane '("parallel" "exclusive")) (error "invalid test lane" lane))
-     (for-each
-      (lambda (name)
-        (let (path (string-append "t/qualification/" name))
-          (when (and (string-suffix? "-test.ss" name)
-                     (eq? (and (member path parallel-modules) #t) (equal? lane "parallel")))
-            (displayln path))))
-      (list-sort string<? (directory-files "t/qualification"))))
     (["run" "--" . command]
      (with-test-lane (lambda () (run-command command))))
     (["test" jobs lane]
@@ -372,10 +362,6 @@
                             (filter (lambda (path) (not (member path parallel-modules))) (qualification-files)) [])))))
     (["test-pool" jobs . paths]
      (with-test-lane (lambda () (run-native-pool! (pool-jobs jobs) paths []))))
-    (["test-quick"]
-     (with-test-lane
-      (lambda () (prepare-test-library! quick-modules)
-                 (run-command ["just" "_test-quick"]))))
     (["build-dsl-closure"]
      (with-test-lane
       (lambda ()
@@ -447,9 +433,9 @@
     (["test-file" path]
      (with-test-lane
       (lambda ()
-        (let (sources (artifact-sources))
-          (prepare-test-library! [path])
-          (prepare-native-tests! [path] test-cache #t)
+        (let* ((sources (artifact-sources))
+               (inputs (prepare-test-library! [path])))
+          (prepare-native-tests! [path] test-cache #t inputs)
           (unless (artifact-matching-sources? sources (artifact-sources))
             (error "source changed during native test compilation"))
           (let* ((binary (getenv "ASCENT_NATIVE_TEST_ENTRY"))

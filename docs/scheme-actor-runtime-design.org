@@ -7,9 +7,9 @@
 * Architecture decision
 
 Actor/thread scheduling belongs in the Scheme runtime architecture. Test
-preparation and source binding remain in =t/runner/main.ss=; immutable registry
-construction lives in =t/runner/native-registry.ss= and test admission, output
-credits, monitoring and draining live in =t/runner/actor-pool.ss=. The shell
+preparation and source binding remain in =t/native/qualification.ss=; immutable registry
+construction lives in =t/native/native-registry.ss= and test admission, output
+credits, monitoring and draining live in =t/native/actor-pool.ss=. The shell
 =xargs= pool and timer-only RUNNING output have been removed.
 
 The carrier implements the test boundary. The runtime separately implements
@@ -216,7 +216,7 @@ callback payloads remains a separate admission obligation.
 * Native positive Set solver rounds (2026-10-05)
 
 =program/actor-round.ss= now coordinates actual solver tasks, independently of
-=t/runner/actor-pool.ss=. =gerbil-ascent-evaluate-program= accepts =workers:=;
+=t/native/actor-pool.ss=. =gerbil-ascent-evaluate-program= accepts =workers:=;
 the default 1 retains serial evaluation. For >1, an entire active stratum must
 have compiled pure positive plans; all relations must use canonical Set storage
 and hash indexing, without lattice joins or field checker callbacks. Otherwise
@@ -673,7 +673,7 @@ Its finite generation constraint remains exploration-only.
 * Direct native child admission (2026-10-06)
 
 The actor coordinator now launches the frozen AOT registry directly through
-=t/runner/module-process.ss=. A child no longer re-enters =just _test-file=,
+=t/native/module-process.ss=. A child no longer re-enters =just _test-file=,
 starts a recipe shell or creates a =tee=/text-filter pipeline. Scheme owns
 the receipt: native module resolution, discovered Cases, the expected compiled
 module completion, harness completion, explicit =OK=, child exit status and

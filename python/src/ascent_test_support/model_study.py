@@ -100,7 +100,7 @@ def source_closure(imports, log):
 
 
 def probe(output):
-    subprocess.run(['gxi', str(ROOT/'t/runner/artifact-admission.ss'), 'check'], cwd=ROOT, check=True)
+    subprocess.run(['gxi', str(ROOT/'t/native/artifact-admission.ss'), 'check'], cwd=ROOT, check=True)
     output.mkdir(parents=True, exist_ok=False)
     text = native(HARNESS + RUNTIME + ['t/qualification/scheme-model-closure-test.ss'], output/'preflight.native.log')
     cases = [json.loads(line.removeprefix('STUDY-CASE ')) for line in text.splitlines() if line.startswith('STUDY-CASE ')]
@@ -204,7 +204,7 @@ def validate(preview, approved):
         plan['requestReadTimeoutSeconds']!=PROVIDER_IDLE_SECONDS or
         plan['requestWallDeadlineSeconds'] is not None):
         raise ValueError('frozen producer/budget contract changed')
-    subprocess.run(['gxi',str(ROOT/'t/runner/artifact-admission.ss'),'check'],cwd=ROOT,check=True)
+    subprocess.run(['gxi',str(ROOT/'t/native/artifact-admission.ss'),'check'],cwd=ROOT,check=True)
     if plan['sourceBinding']!=json.loads((ROOT/'.cache/ascent/native-library/dsl-closure.json').read_text()):
         raise ValueError('native artifact changed after preparation')
     for name, sha in plan['modules'].items():

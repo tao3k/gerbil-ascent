@@ -586,7 +586,7 @@ modules pass the Scheme policy scan with zero findings and zero errors.
 The batch is rebased over =8bc844c=; its incoming changes do not alter these
 production modules. The test harness registers the finite-mapping Suite and
 all three frozen reference modules for ordinary native execution and static
-linkage. Test registration remains in =t/runner/=.
+linkage. Test registration remains in =t/native/=.
 
 The static artifact is built and source-verified, then both registered Suites
 pass in AOT execution (7 finite-mapping Cases and 5 index-lifecycle Cases),

@@ -232,7 +232,7 @@ Final local qualification uses the pinned cache SDK and
 original SS performance scenarios. Every command exits 0. Module deadlines,
 Case budgets, fixture thresholds and original sample counts are unchanged.
 =build.ss= remains 61 lines; the new qualification module joins the reviewed
-parallel list in =t/runner/main.ss=. These local receipts do not establish
+parallel list in =t/native/qualification.ss=. These local receipts do not establish
 remote CI closure.
 
 * Feature: explicit SCC traversal state shared by both graph consumers

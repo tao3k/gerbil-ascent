@@ -9,8 +9,8 @@
 (def actor-pool-test
   (test-suite "Native actor test coordinator"
     (test-case "native receipt rejects missing verdicts, empty modules and swallowed errors"
-      (let* ((path "t/runner/native-registry-test.ss")
-             (module (path-expand "gerbil-ascent/t/runner/native-registry-test.ssi"
+      (let* ((path "t/native/native-registry-test.ss")
+             (module (path-expand "gerbil-ascent/t/native/native-registry-test.ssi"
                                   (getenv "ASCENT_TEST_LIBRARY")))
              (lines (list "NATIVE-MODULES-OK" (string-append "MODULE " module)
                           "CASE control" (string-append "MODULE-OK " module)
@@ -32,7 +32,7 @@
                     "MODULE-OK other-module"))
         (check-equal? (admitted? lines 42) #f)))
     (test-case "direct child preserves setup, Case, cleanup and empty Suite failures"
-      (let ((path "t/runner/native-registry-test.ss")
+      (let ((path "t/native/native-registry-test.ss")
             (previous (getenv "ASCENT_NATIVE_ENTRY_CONTROL" "")))
         (try
           (for-each

@@ -9,7 +9,8 @@
 (import :gerbil-ascent/core/relation-view)
 (export gerbil-ascent-publication-cache gerbil-ascent-publish-rows
         gerbil-ascent-snapshot-rows gerbil-ascent-snapshot-sizes
-        gerbil-ascent-result-observation gerbil-ascent-public-snapshot-rows)
+        gerbil-ascent-result-observation gerbil-ascent-public-snapshot-rows
+        gerbil-ascent-visit-snapshot!)
 
 ;; gerbil-ascent-publication-cache
 ;;   : (-> Nat PublicationCache)
@@ -116,3 +117,18 @@
    (and rule-ticks
         (map (lambda (ticks) (quotient (* ticks 1000000000) (jiffies-per-second)))
              (vector->list rule-ticks)))))
+
+;; Traverse one published cut with checked ordinal keys. Invocation-local row
+;; spines keep callback mutation separate from retained roots. Frozen Providers
+;; retain their indexed selection instead of forcing complete ordered export.
+;; : (-> RowSnapshot Natural Columns Key RowVisitor Void)
+(def (gerbil-ascent-visit-snapshot! snapshot width columns key consume)
+  (unless (and (list? columns) (list? key) (= (length columns) (length key))
+               (andmap (lambda (column)
+                         (and (exact-integer? column) (<= 0 column) (< column width))) columns))
+    (error "ASCENT result selection requires in-range columns and matching keys"))
+  (if (relation-view? snapshot)
+    (gerbil-ascent-for-each-row consume (gerbil-ascent-view-select snapshot columns key))
+    (for-each (lambda (row)
+      (when (andmap (lambda (column value) (equal? (list-ref row column) value)) columns key)
+        (consume (map identity row)))) (gerbil-ascent-snapshot-rows snapshot))))

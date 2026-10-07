@@ -152,3 +152,30 @@ full repository CI, incremental deletion, general higher-order typing or
 real model benefit. The source/ABI path adds no prompts or model calls.
 
 The [[file:scheme-design-framework.org][design framework matrix]] maps each guarantee to its owner, discriminator and remaining acceptance obligation.
+
+* Indexed traversal of a published result
+
+A result provides =visit-rows(name, columns, key, consume)= alongside =rows-of=.
+Columns are zero-based schema ordinals and must have one matching key value
+per ordinal. Unknown relations, negative/out-of-range ordinals and mismatched
+key lengths are rejected before traversal. An empty key visits the whole
+published relation; keyed frozen views retain their native selection routes.
+Enumeration order depends on the frozen representation. Ordered export uses
+=rows-of=.
+
+The callback receives an invocation-owned row spine. Traversal does not mutate
+or retain a cursor in the Provider, force ordered Cartesian export, or observe
+subsequent Session updates. Field values follow the existing immutable scalar
+contract. Explicit rows use checked filtering; indexed frozen views use their
+frozen read capability. Callback exceptions propagate to the caller without
+changing the published cut. A complete equivalence partition can therefore be
+observed by selecting one row key per as-yet-unseen active component, including
+its full member roster, instead of enumerating every implied pair.
+
+The mathematical obligation is complete member and active-roster equality, not
+aggregate cardinality equality. =component_squares_exact= constructs the square
+semantics of a component roster; =component_squares_partition_equal= proves that
+matching component lists determine all concrete pairs. Native member extraction
+remains checked by independent application comparisons. ProviderViews TLA+
+continues to own frozen reads, publication and reader lifetime; these pure
+partition laws belong to Lean.

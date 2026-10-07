@@ -117,6 +117,23 @@ jobs:
               ;;
             *) exit 2 ;;
           esac
+      - name: Qualify complete pinned Steensgaard partition
+        if: matrix.shard == 'byods-scale'
+        run: |
+          manifest=docs/evidence/scheme-application-admission-20261007/openjdk-source.json
+          dataset=.cache/ascent/paper-data/steensgaard
+          mkdir -p "$dataset"
+          repository="$(jq -r .repository "$manifest")"
+          revision="$(jq -r .revision "$manifest")"
+          directory="$(jq -r .source_directory "$manifest")"
+          while read -r relation; do
+            curl -fLsS "https://raw.githubusercontent.com/$repository/$revision/$directory/$relation.facts" -o "$dataset/$relation.facts"
+          done < <(jq -r '.files[].relation' "$manifest")
+          PYTHONPATH=python/src python3 -m ascent_test_support.paper_source "$dataset" "$manifest"
+          cargo test --locked --manifest-path rust/ascent-oracle/Cargo.toml --example steensgaard_data_truth
+          cargo build --release --locked --manifest-path rust/ascent-oracle/Cargo.toml --example steensgaard_data_truth
+          timeout 180s .cache/ascent/native-library/dsl-closure -:max-heap=2G,debug=q --oracle steensgaard "$dataset" .cache/ascent/steensgaard-partition.tsv
+          rust/ascent-oracle/target/release/examples/steensgaard_data_truth "$dataset" .cache/ascent/steensgaard-rust-partition.tsv .cache/ascent/steensgaard-partition.tsv
   formal:
     runs-on: ubuntu-latest
     timeout-minutes: 15

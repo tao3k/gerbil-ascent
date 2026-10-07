@@ -2,16 +2,23 @@
 // SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 //! Independent full-data partition oracle. Counts implied pairs without
 //! materializing them; it is not a Scheme runtime or a Scheme performance result.
-use ascent::ascent;
+use ascent::{ascent, internal::RelIndexRead};
 use ascent_byods_rels::eqrel;
-use std::{collections::HashMap, error::Error, fs, path::Path};
+use ascent_byods_rels::eqrel_ind::ToEqRelInd0;
+use std::{
+    collections::{BTreeMap, HashMap, HashSet},
+    error::Error,
+    fs,
+    path::Path,
+};
 
-fn rust_application_count(
+fn rust_application_partition(
     alloc: Vec<(usize, usize)>,
     assign: Vec<(usize, usize)>,
     load: Vec<(usize, usize, usize)>,
     store: Vec<(usize, usize, usize)>,
-) -> usize {
+    names: &[String],
+) -> (usize, BTreeMap<String, String>) {
     ascent! {
         relation alloc(usize, usize);
         relation assign(usize, usize);
@@ -31,7 +38,32 @@ fn rust_application_count(
         ..AscentProgram::default()
     };
     program.run();
-    program.__vpt_ind_common.count_exact()
+    let count = program.__vpt_ind_common.count_exact();
+    let reader = ToEqRelInd0::default();
+    let index = ascent::internal::ToRelIndex::to_rel_index(&reader, &program.__vpt_ind_common);
+    let mut seen = HashSet::new();
+    let mut partition = BTreeMap::new();
+    for id in 0..names.len() {
+        if seen.contains(&id) {
+            continue;
+        }
+        if let Some(rows) = index.index_get(&(id,)) {
+            let members: Vec<_> = rows.map(|(member,)| *member).collect();
+            if members.is_empty() {
+                continue;
+            }
+            let representative = members.iter().map(|&member| &names[member]).min().unwrap();
+            for member in members {
+                assert!(seen.insert(member), "overlapping Rust result components");
+                assert!(
+                    partition
+                        .insert(names[member].clone(), representative.clone())
+                        .is_none()
+                );
+            }
+        }
+    }
+    (count, partition)
 }
 
 #[derive(Default)]
@@ -78,6 +110,29 @@ impl Partition {
         let a = self.root(a);
         let b = self.root(b);
         a == b && self.active[a]
+    }
+    fn canonical(&mut self) -> BTreeMap<String, String> {
+        let entries: Vec<_> = self
+            .names
+            .iter()
+            .map(|(name, &id)| (name.clone(), id))
+            .collect();
+        let mut groups: HashMap<usize, Vec<String>> = HashMap::new();
+        for (name, id) in entries {
+            let root = self.root(id);
+            if self.active[root] {
+                groups.entry(root).or_default().push(name);
+            }
+        }
+        groups
+            .into_values()
+            .flat_map(|members| {
+                let representative = members.iter().min().unwrap().clone();
+                members
+                    .into_iter()
+                    .map(move |member| (member, representative.clone()))
+            })
+            .collect()
     }
     fn counts(&self) -> (usize, usize, u128) {
         let mut classes = 0;
@@ -189,7 +244,36 @@ fn main() -> Result<(), Box<dyn Error>> {
     }
     let (classes, largest, pairs) = partition.counts();
     println!("RUST-APPLICATION-START");
-    let rust_pairs = rust_application_count(alloc, assign, load, store);
+    let mut names = vec![String::new(); partition.names.len()];
+    for (name, &id) in &partition.names {
+        names[id] = name.clone();
+    }
+    let expected = partition.canonical();
+    let (rust_pairs, actual) = rust_application_partition(alloc, assign, load, store, &names);
+    assert_eq!(
+        actual, expected,
+        "complete Rust component partition differs from independent truth"
+    );
+    if let Some(path) = std::env::args().nth(2) {
+        let text: String = actual
+            .iter()
+            .map(|(member, representative)| format!("{representative}\t{member}\n"))
+            .collect();
+        fs::write(path, text)?;
+    }
+    if let Some(path) = std::env::args().nth(3) {
+        let mut scheme = BTreeMap::new();
+        for row in read_rows(Path::new(&path), 2)? {
+            if scheme.insert(row[1].clone(), row[0].clone()).is_some() {
+                return Err("duplicate member in Scheme component partition".into());
+            }
+        }
+        assert_eq!(
+            scheme, expected,
+            "complete Scheme partition differs from independent truth"
+        );
+        println!("SCHEME-PARTITION-EXACT members={}", scheme.len());
+    }
     assert_eq!(
         rust_pairs as u128, pairs,
         "full-data implicit application count differs from partition truth"
@@ -205,6 +289,27 @@ fn main() -> Result<(), Box<dyn Error>> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn equal_counts_do_not_admit_wrong_partition() {
+        let names: Vec<_> = ["a", "b", "c", "d"]
+            .into_iter()
+            .map(str::to_owned)
+            .collect();
+        let (count, actual) =
+            rust_application_partition(vec![(0, 1), (2, 3)], vec![], vec![], vec![], &names);
+        let (wrong_count, wrong) =
+            rust_application_partition(vec![(0, 2), (1, 3)], vec![], vec![], vec![], &names);
+        assert_eq!(count, wrong_count);
+        assert_eq!(actual.len(), wrong.len());
+        assert_ne!(actual, wrong);
+        let mut truth = Partition::default();
+        for name in &names {
+            truth.node(name);
+        }
+        truth.join(0, 1);
+        truth.join(2, 3);
+        assert_eq!(actual, truth.canonical());
+    }
     #[test]
     fn inactive_self_read_and_wrong_field_cannot_inject() {
         let mut p = Partition::default();

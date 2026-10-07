@@ -18,7 +18,7 @@
 
 ;;; Budget preflight must finish before merging components. A rejected source
 ;;; update must leave the retained session state reusable on the next call.
-;; : (-> EquivalenceComponents Rows Rows Row Nat Rows)
+;; : (-> EquivalenceComponents Row Nat FrozenFrontier)
 (def (gerbil-ascent-eqrel-insert! components row budget)
   (let* ((width (length row))
          (_ (unless (memq width '(2 3))

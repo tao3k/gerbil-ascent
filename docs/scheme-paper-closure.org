@@ -112,7 +112,7 @@ Three built-in closure Providers alone do not cover the entire paper.
 | Duplicate input, budgets, failure atomicity, retained updates | Native preflight/retry, byods_session and timeout comparisons | Every step checks frontier uniqueness and completeness | Complete models/refinement of external Provider state interacting with timeout, source replacement and strata |
 | Index sharing (ind_share) | Engine/worker-owned curried physical chains; maximum matching over logical subset requirements; ordered adapters and batch invalidation | All 128 three-column requirement families compared with independent minimum chain partitions; exact rows/duplicates/reordered keys; serial and component actor solve truth; Lean prefix coverage and ordered extension; TLA alias/foreign-root controls | Universal native planner/trie refinement, full Polonius/LLVM datasets and peak-memory/application cost evidence remain required; the runtime tight-cover certificate and Lean minimum-partition theorem establish the mathematical optimality criterion; lazy ordered views also retain row-reference spines |
 | User-defined lattices and concurrent Providers | Finite serial lattice comparisons; actor eligibility restricted to pure Set and frozen built-in UF/hash paths | LatticeProjection keyed join staging, current-row replacement and last-column encoding; effective lattice admission, pending-first join/skip and support cost laws; dirty-key projection/refusal TLA with twelve faults; native false/true multi-field keys and retained projection controls | StrictDependencies weighted extraction and LatticeAdmission effective-write/roster contracts are proved; arbitrary callback join laws/purity and universal native vector/SCC/hash extraction, general recursive aggregate semantics and asynchronous custom-lattice execution remain gates; monotone-gamma iteration does not cover replacement row observations automatically |
-| Paper applications and benefits | Closure examples and selected Rust package examples | Retained negative performance results | Complete Steensgaard, Polonius, PageRank and LLVM/index-sharing programs, reproducible datasets and cost/memory measurements await acceptance; full experimental replication has not been established |
+| Paper applications and benefits | Complete native Steensgaard allocation/assignment/load/store rules and pinned OpenJDK source; closure examples and selected Rust package examples | Full member partition admission is documented in the Steensgaard acceptance section below; retain cost scope and negative measurements | Polonius, PageRank and LLVM/index-sharing full applications, matched cost baselines and universal native refinement remain required; full experimental replication has not been established |
 
 * Other papers and the proof chain
 
@@ -522,9 +522,10 @@ and load/store rule program, with explicit and implicit variants.
 The application's native retained/cancellation controls and Rust explicit,
 eqrel and independent graph comparisons connect application rule behavior to
 the library lifecycle. They do not qualify the full OpenJDK experiment or its
-linear-space argument. Current Scheme eqrel still emits explicit pairs into
-engine buffers; compressed equivalence total/delta publication and native
-ownership/recovery correspondence are the next concrete architecture gate.
+linear-space argument. At the time of this receipt Scheme eqrel emitted
+explicit pairs into engine buffers. The subsequent compressed equivalence
+publication section supersedes that representation limitation; universal native
+ownership/recovery correspondence remains an explicit bridge obligation.
 The [[file:evidence/scheme-application-admission-20261007/openjdk-source.json][pinned OpenJDK source manifest]] binds four original blobs, their SHA256s,
 47,069 TSV facts and arities. The complete Rust implicit application and an
 independent partition model both count 440,438,706 pairs. This admits source
@@ -621,3 +622,54 @@ tests, zero failures. The existing opt-in =trrel_uf_full_rust_scale_oracle=
 (10,000 edges) remains ignored by the default command and is not admitted by
 this receipt. The compiler SDK setup failures are retained as rejected build
 attempts; no timeout, heap or semantic admission gate was widened.
+
+* Complete Steensgaard partition acceptance (2026-10-07)
+
+The full pinned OpenJDK input is now evaluated by the ordinary native Scheme
+Steensgaard Program: 47,069 facts in the four original blobs. The published
+result is observed through keyed =visit-rows= calls, one per unseen active
+component, without forcing =rows-of= over 440,438,706 implied pairs. The
+canonical member roster includes 51,022 members in 12,688 components; the
+largest component contains 20,956 members. Rust checks exact member-to-component
+identity against both its actual Ascent eqrel application and an independent
+partition saturation model. Missing/extra members and different merges with
+the same aggregate count fail admission. The Rust and Lean negative controls
+explicitly preserve the equal-count/different-partition discriminator.
+
+The frozen input produces zero additional effective load/store unions in the
+independent model. Full-input equality therefore complements the native small
+applications that exercise positive field-matched consequences, inactive
+self-reads, wrong fields, repeated rounds, retained withdrawal and cancellation;
+it does not replace those discriminating tests.
+
+=component_squares_exact= constructs the complete square semantics of the
+active component roster. =component_squares_partition_equal= proves that equal
+component member lists determine every concrete pair. Complete native roster
+extraction is verified by the application comparisons; these Lean laws do not
+claim a universal refinement of mutable Scheme hash/parent algorithms.
+ProviderViews TLA+ continues to check frozen reads, atomic publication, budget
+admission and reader lifetime. No duplicate Lean protocol state machine was
+introduced. The existing =byods-scale= GitHub job now runs this full-input
+source/partition admission in addition to the existing directed scale oracle.
+
+Resource admission separates solve CPU, wall intervals and directly measured
+process RSS/footprint. The VM counter exposed as =serial-allocation= in the
+qualification diagnostic is not a physical constructor-byte observer. Its
+raw differences include negative values in otherwise correct full runs. Both
+positive and negative values are retained as accounting diagnostics; physical
+allocation and allocation savings are unadmitted. Earlier small-fixture
+"allocation ratios" must be read as VM accounting ratios, not physical memory
+savings. The pinned Gambit source combines movable heap/stack occupancy and
+still storage with GC-maintained adjustment terms:
+[[https://github.com/gambit/gambit/blob/dcd677cd3e40860bdd27dfbdbf5e3ce46ab03813/lib/mem.c#L360][movable occupancy]] and
+[[https://github.com/gambit/gambit/blob/dcd677cd3e40860bdd27dfbdbf5e3ce46ab03813/lib/mem.c#L7509][the accounting counter]].
+This identifies a metric mismatch; the exact cause of each non-monotone native
+sample is not claimed as proven from that formula alone.
+
+This closes full Steensgaard input/partition correspondence. Full Polonius,
+PageRank and LLVM/index-sharing applications, matched end-to-end benefit
+baselines, physical allocation observation and universal native algorithm
+refinement remain acceptance obligations in the ten-item matrix. MR integration
+remains deferred. See the source-bound
+[[file:evidence/scheme-steensgaard-partition-20261007/receipt.json][acceptance receipt]] for executable identities,
+measurements, counterexamples and rejected observations.

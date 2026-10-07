@@ -20,7 +20,8 @@
                  gerbil-ascent-check-replacement-rows! gerbil-ascent-prepare-storage-batch)
         (only-in "result.ss" gerbil-ascent-publication-cache
                  gerbil-ascent-publish-rows gerbil-ascent-snapshot-rows gerbil-ascent-snapshot-sizes
-                 gerbil-ascent-result-observation gerbil-ascent-public-snapshot-rows)
+                 gerbil-ascent-result-observation gerbil-ascent-public-snapshot-rows
+                 gerbil-ascent-visit-snapshot!)
         (only-in "planning.ss" gerbil-ascent-prepare-program)
         (only-in :gerbil-ascent/core/positive-plan gerbil-ascent-run-positive-plan!
                  gerbil-ascent-emit-heads!)
@@ -760,6 +761,10 @@
                  (rule-time-nanoseconds (vector-ref observation 3))
                  (representation-observation (lambda () (map (lambda (row) (map values row)) representations)))
                  (relation-sizes (lambda () (map cons (vector->list names) (vector->list sizes))))
+                 (visit-rows (lambda (name columns key consume)
+                   (let (index (position-of name))
+                     (gerbil-ascent-visit-snapshot! (vector-ref snapshots index)
+                       (vector-ref arity index) columns key consume))))
                  (rows-of (lambda (name)
                             (gerbil-ascent-public-snapshot-rows
                              (vector-ref snapshots (position-of name)) session?)))))))

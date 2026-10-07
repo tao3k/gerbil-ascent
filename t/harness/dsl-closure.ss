@@ -87,6 +87,9 @@
        ((arity-repetition) (arity-repetition-main))
        (else (error "unknown native differential fixture" name)))
      (exit 0))
+    (["--oracle" "steensgaard" directory output-path]
+     (check-native-oracle!)
+     (steensgaard-main directory output-path) (exit 0))
     (["--study-compute" id] (model-closure-compute id) (exit 0))
     (["--study-project" path] (prediction-main path) (exit 0))
     (["--study-score" id path] (model-closure-score id path) (exit 0))

@@ -481,4 +481,32 @@ theorem equivalence_blocks_units (state : EquivalenceComponents.State α)
   unfold equivalenceBlocks
   split <;> split <;> split <;> simp
 
+/-- A frozen equivalence total is the square of each admitted component.
+Exact partition observations include member identity and the active roster;
+aggregate cardinality alone supplies neither of these obligations. -/
+theorem component_squares_exact (family : Components α C) (roots : List C)
+    (x y : α) :
+    (x, y) ∈ expand (componentPlan family (roots.map fun c => (c, c))) ↔
+      ∃ c, c ∈ roots ∧ x ∈ family.members c ∧ y ∈ family.members c := by
+  simp only [expand, componentPlan, List.map_map, List.mem_flatMap,
+    List.mem_map, rectangle_member]
+  constructor
+  · rintro ⟨block, ⟨c, hc, rfl⟩, hx, hy⟩
+    exact ⟨c, hc, hx, hy⟩
+  · rintro ⟨c, hc, hx, hy⟩
+    exact ⟨⟨family.members c, family.members c⟩, ⟨c, hc, rfl⟩, hx, hy⟩
+
+/-- Equal member lists for every active root determine the complete concrete
+relation, without enumerating the Cartesian products. Native extraction of
+those lists and exact roster agreement remain explicit bridge obligations. -/
+theorem component_squares_partition_equal (left right : Components α C)
+    (roots : List C) (same : ∀ c, c ∈ roots → left.members c = right.members c)
+    (x y : α) :
+    (x, y) ∈ expand (componentPlan left (roots.map fun c => (c, c))) ↔
+    (x, y) ∈ expand (componentPlan right (roots.map fun c => (c, c))) := by
+  rw [component_squares_exact, component_squares_exact]
+  constructor <;> rintro ⟨c, hc, hx, hy⟩
+  · exact ⟨c, hc, (same c hc) ▸ hx, (same c hc) ▸ hy⟩
+  · exact ⟨c, hc, (same c hc).symm ▸ hx, (same c hc).symm ▸ hy⟩
+
 end Ascent.ProviderRectangles

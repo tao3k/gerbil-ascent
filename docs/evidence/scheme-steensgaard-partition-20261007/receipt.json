@@ -1,0 +1,259 @@
+{
+  "format": "scheme-steensgaard-partition-acceptance",
+  "date": "2026-10-07",
+  "predecessor_commit": "618a2b161e4c8936d068fa1eed1b493e933df34f",
+  "repository": "https://github.com/tao3k/gerbil-ascent",
+  "pull_request": "https://github.com/tao3k/gerbil-ascent/pull/1",
+  "source_sha256": {
+    ".github/workflows/ci.yml": "39c4eb111664d0a0d90bc85ebff3e99dfa9fe2180d18ffb8c82fb8df3640bb6b",
+    "docs/research/scheme-dsl/byods-b23.org": "92a057cead71f73a5af87250a44b917fd4b57ac2e771143d5e5272e026634e20",
+    "docs/scheme-closure-contract.org": "449eb51227ebc79d72a07f1dda9b92d1efa301d56cd602d6d0bd9ba671ffc435",
+    "docs/scheme-paper-closure.org": "21e265d080d7bcb592bde56d4fc1c73293ab38ced3036660e58870326090b791",
+    "docs/scheme-research-proof-audit.org": "83dac213b6e3f4fac7218430999193e46ddc0241d6cb27cf0d2508e1b99abc81",
+    "packages/proofs/lean/ProviderRectangles.lean": "d685766b3b585f49bf748078531fb02469bc54e8f2e1cec88fb880b7caaa9476",
+    "packages/proofs/lean/Tests/ProviderRectanglesTests.lean": "d3de24d18b33022d444cf42c968e51ca94ace14cd0110e268a63acf9f85c0813",
+    "program/evaluate.ss": "b30213cf8ad9c41b7bddb36e5def9e87231ab1c7bb645c7f305505eeb35c8f4a",
+    "program/result.ss": "61461c85c2bdaf0565152259242aebb803188c6e76516b4d3776d38dd4ac3f4b",
+    "rust/ascent-oracle/examples/steensgaard_data_truth.rs": "b1e7f51db870a3f997c7ae8c621dbc216ca83b95b50ac2051232b9dedf635c56",
+    "t/harness/dsl-closure.ss": "4933a3cbc937d73d3b3b13020402a2ab07136aa3152f045442f23273224f2eec",
+    "t/qualification/ascent-steensgaard-output.ss": "a4e8f5af18b342b00d584e9b617185882d170d9b692876568ae0fec6cfcda760",
+    "t/qualification/ascent-steensgaard-test.ss": "a8bb711ac1d1efff8499324f81a35287b34ad33a756a5e1d0568f077e850c1cc",
+    "table/eqrel.ss": "cdf4904e17258d87273483a20f970297ba8930d56c002ee42aca22df584ee760"
+  },
+  "input_manifest": {
+    "path": "docs/evidence/scheme-application-admission-20261007/openjdk-source.json",
+    "sha256": "ecb7e2340666440fc91be83e6e1d0002f1fcfd4d481530f098f1f53caa403387",
+    "repository": "s-arash/ascent",
+    "revision": "03f4f792442ecaf9e4f178a6a1b5840eab526388",
+    "facts": 47069,
+    "identity_checks": [
+      "bytes",
+      "SHA256",
+      "Git blob SHA1",
+      "UTF8 TSV row count and arity"
+    ]
+  },
+  "partition": {
+    "verification": "complete canonical member-to-component equality, no aggregate-only admission",
+    "verifiers": [
+      "native Scheme published result indexed visitor",
+      "actual Rust Ascent eqrel application",
+      "independent Rust partition saturation"
+    ],
+    "active_members": 51022,
+    "active_components": 12688,
+    "largest_component": 20956,
+    "logical_pairs": 440438706,
+    "input_nodes": 53318,
+    "effective_load_store_unions": 0,
+    "samples_exact": 3,
+    "negative_controls": [
+      "equal pair count and equal active member count with different pairings are rejected",
+      "wrong field and inactive reflexive premises do not inject",
+      "duplicate component members are rejected"
+    ],
+    "positive_discriminators": "Existing six native inputs exercise field-matched consequences and repeated saturation; this full input has zero new load/store unions."
+  },
+  "architecture": {
+    "result_method": "visit-rows(name, columns, key, consume)",
+    "ownership": "published frozen cut, checked schema ordinals, invocation-owned row spines, no retained cursor",
+    "ordered_export": "rows-of remains the ordered export interface; visitor order is representation dependent",
+    "budget": "input fact count and input-node-square capacity are derived from admitted input, not a fixed generation bound",
+    "full_run": "ordinary Steensgaard Program admission, planning, evaluation and publication; no oracle hints, prompts or model calls"
+  },
+  "formal": {
+    "new_lean_theorems": [
+      "component_squares_exact",
+      "component_squares_partition_equal"
+    ],
+    "axioms": [
+      "propext",
+      "Quot.sound"
+    ],
+    "lean_build_jobs": 109,
+    "TLA_positive_models": 30,
+    "TLA_named_counterexamples": 87,
+    "protocol_owner": "existing ProviderViews FrozenRead, ReaderAlive, AtomicPublication, CurrentReply, LogicalBudget",
+    "scope": "constructed square semantics and member-list equality; universal native member extraction and hash/parent algorithm refinement remain premises",
+    "output_sha256": "844f4b96a13b0be1a0cab0451efef466835fbc54a5ad59cda74504c5bcc0cb84"
+  },
+  "resources": {
+    "scope": "workers=1; solve CPU covers native evaluate call. Whole process includes runtime admission of the artifact, input parsing, description construction, baseline GC, solve and partition export. Rust comparison is separate.",
+    "execution_context": "concurrent Rust oracle execution and native module compilation; no paired speedup admission",
+    "deadline_seconds": 180,
+    "heap_limit": "2G",
+    "samples": [
+      {
+        "sample": 0,
+        "native_binary_sha256": "ca5f10c0cdde7beb7a2a3779bf33222a69eeebed17cb4ffe5aa4a8fd748e052d",
+        "solve_cpu_seconds": 0.611344,
+        "solve_wall_seconds": 1.850038,
+        "solve_and_partition_wall_seconds": 3.102337,
+        "whole_process_wall_seconds": 4.64,
+        "whole_process_cpu_seconds": 1.49,
+        "maximum_RSS_bytes": 438812672,
+        "peak_footprint_bytes": 408273808,
+        "raw_accounting": {
+          "processor_before": 0.0,
+          "processor_after": 0.0,
+          "counter_before": 306342744.0,
+          "counter_after": -830661440.0,
+          "difference": -1137004184.0,
+          "stats7_before": 306342088.0,
+          "stats7_after_solve": -953173504.0,
+          "gc_before": 47.0,
+          "gc_after_solve": 48.0
+        },
+        "physical_allocation_admitted": false,
+        "partition_exact": true,
+        "native_output_sha256": "af606a2e3b25a4280a398c2f4a8c05442be2f2669811ded91c37b4c99316d7e7",
+        "comparison_output_sha256": "1c697601030bc92a9093533640a6491cc94b110cd0a9ff1af19a6415392f69e7"
+      },
+      {
+        "sample": 1,
+        "native_binary_sha256": "ca5f10c0cdde7beb7a2a3779bf33222a69eeebed17cb4ffe5aa4a8fd748e052d",
+        "solve_cpu_seconds": 0.679138,
+        "solve_wall_seconds": 2.054903,
+        "solve_and_partition_wall_seconds": 3.507654,
+        "whole_process_wall_seconds": 5.17,
+        "whole_process_cpu_seconds": 1.52,
+        "maximum_RSS_bytes": 438075392,
+        "peak_footprint_bytes": 407045008,
+        "raw_accounting": {
+          "processor_before": 0.0,
+          "processor_after": 0.0,
+          "counter_before": 306342744.0,
+          "counter_after": -830663232.0,
+          "difference": -1137005976.0,
+          "stats7_before": 306342088.0,
+          "stats7_after_solve": -953173504.0,
+          "gc_before": 47.0,
+          "gc_after_solve": 48.0
+        },
+        "physical_allocation_admitted": false,
+        "partition_exact": true,
+        "native_output_sha256": "480a26bc4f15a781766844a8f938dbf0c62b892da03d9287a5dcc88112cf4348",
+        "comparison_output_sha256": "1c697601030bc92a9093533640a6491cc94b110cd0a9ff1af19a6415392f69e7"
+      },
+      {
+        "sample": 2,
+        "native_binary_sha256": "ca5f10c0cdde7beb7a2a3779bf33222a69eeebed17cb4ffe5aa4a8fd748e052d",
+        "solve_cpu_seconds": 0.597262,
+        "solve_wall_seconds": 2.644637,
+        "solve_and_partition_wall_seconds": 3.47004,
+        "whole_process_wall_seconds": 4.62,
+        "whole_process_cpu_seconds": 1.39,
+        "maximum_RSS_bytes": 438222848,
+        "peak_footprint_bytes": 407159672,
+        "raw_accounting": {
+          "processor_before": 0.0,
+          "processor_after": 0.0,
+          "counter_before": 306342744.0,
+          "counter_after": -825877312.0,
+          "difference": -1132220056.0,
+          "stats7_before": 306342088.0,
+          "stats7_after_solve": -948389376.0,
+          "gc_before": 47.0,
+          "gc_after_solve": 48.0
+        },
+        "physical_allocation_admitted": false,
+        "partition_exact": true,
+        "native_output_sha256": "d27d69a71bfecb2e2539e0415da3dd3a58265d7c9603396a6c0abbd98686380e",
+        "comparison_output_sha256": "1c697601030bc92a9093533640a6491cc94b110cd0a9ff1af19a6415392f69e7"
+      }
+    ],
+    "median_solve_cpu_seconds": 0.611344,
+    "maximum_RSS_bytes": 438812672,
+    "maximum_footprint_bytes": 408273808,
+    "physical_allocation_admitted": false,
+    "net_speedup_admitted": false,
+    "benefit": "Full logical relation solving and exact component validation without materializing every implied pair.",
+    "platform": "Darwin aarch64; prepared Gerbil 2591dcd/Gambit dcd677c, patchset f5cedd8168cb365ba41289327601d9305738c9a0"
+  },
+  "accounting_correction": {
+    "physical_constructor_bytes": false,
+    "all_positive_and_negative_deltas": "diagnostic VM accounting only; positive differences do not admit physical allocation savings",
+    "pinned_gambit": "dcd677cd3e40860bdd27dfbdbf5e3ce46ab03813",
+    "counter_source": "https://github.com/gambit/gambit/blob/dcd677cd3e40860bdd27dfbdbf5e3ce46ab03813/lib/mem.c#L7509",
+    "movable_source": "https://github.com/gambit/gambit/blob/dcd677cd3e40860bdd27dfbdbf5e3ce46ab03813/lib/mem.c#L360",
+    "source_sha256": "317b5262efd7f3a9418328250c163a9cf3fb9a44fbd573b08fde6f4a3cce2882",
+    "source_formula": "GC-maintained adjustment plus movable heap/stack occupancy, still/deferred-still and occupied still words",
+    "causality_boundary": "This formula establishes the metric mismatch, not the exact cause of each non-monotone native observation.",
+    "historical_ratios": "Read as VM accounting ratios; no physical memory or constructor-byte savings admitted."
+  },
+  "rejected_observations": [
+    {
+      "kind": "negative unaligned counter",
+      "value": -1720359096,
+      "output_sha256": "7388e520e992173cf512966505602812bb22a8b5fb58f50fc57bc9a8297163b8"
+    },
+    {
+      "kind": "time wrapped timeout, footprint belongs to wrapper",
+      "sample_outputs_sha256": [
+        "13ff56e6bf8db8fb71d7c7c6f6ebb8e675d6fb66edd548f20ad44f099a23296d",
+        "e21da1253b8fe9199412d6b1aa028d9bc7342a3ec892349a9cdcb4680fcc140f",
+        "4c579316717bd76d7d6a449ae0cee419e2d63953e8afd2004f77540bcae0d343"
+      ],
+      "physical_allocation_admitted": false,
+      "footprint_admitted": false,
+      "partition_exact": true
+    },
+    {
+      "kind": "artifact invocation during staging rejected",
+      "scope": "missing admission metadata during rebuild; full application not invoked",
+      "metric_admitted": false
+    },
+    {
+      "kind": "sandbox denied process supervision ps",
+      "scope": "three framework tests failed before CPU supervision; same framework passed with read-only process permission"
+    }
+  ],
+  "gates": {
+    "rust_example_unit": {
+      "passed": 2,
+      "output_sha256": "10b74cabe9f8aff2a10bfd049866e0963763a31c0b8eff23019331531379e9b7"
+    },
+    "Rust_oracle": {
+      "passed_integration": 79,
+      "ignored": 1,
+      "ignored_test": "existing opt-in trrel_uf full scale; GitHub byods-scale retains its separate execution",
+      "passed_ASP_unit": 1,
+      "output_sha256": "13c2c75ea33420aca1a23089d69776363b3d0e616a070d74a634beddf2ff848d"
+    },
+    "clippy": {
+      "exit": 0,
+      "output_sha256": "8ea34b934eb575bd755459cd3b4f396ac918deba3d5f792bb768b6d14aac6fd0"
+    },
+    "python_transport_and_supervision": {
+      "passed": 18,
+      "output_sha256": "64c297fbd1b8570f87bc002485655f8a1797d8c2c20591169a3d3c1e8fd98a30"
+    },
+    "CI_yaml_and_new_step_bash_syntax": {
+      "exit": 0
+    },
+    "native_targeted_suite": {
+      "Cases": 4,
+      "exit": 0,
+      "output_sha256": "dee19a2b2823d0b596d888af71c3e70e8d72015685dfc56bb09820cb5f7b4ac5"
+    },
+    "native_all": {
+      "exit": 0,
+      "modules": 86,
+      "Cases": 829,
+      "required_markers": [
+        "CASE-OK",
+        "MODULE-OK",
+        "HARNESS-OK",
+        "OK"
+      ],
+      "output_sha256": "57aa789a4b9aa89f6d3221be74057945276635c5bc448b6c18e21de4ccfd7a60"
+    }
+  },
+  "GitHub_CI": "Full pinned input source and partition admission added to existing byods-scale shard; no raw execution logs uploaded.",
+  "remaining": [
+    "full Polonius, PageRank and LLVM/index-sharing applications",
+    "matched complete-application benefit baselines and physical constructor-byte observation",
+    "universal native DSL/provider/index/session/actor extraction and algorithm refinement",
+    "the other open obligations in the ten-item closure matrix; MR deferred"
+  ]
+}

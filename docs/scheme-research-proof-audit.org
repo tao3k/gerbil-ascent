@@ -2334,8 +2334,10 @@ The complete Steensgaard program instantiates allocation/assignment injection
 and field-matched store/load consequences. Independent partition and graph
 saturation, Rust explicit/eqrel comparison, retained withdrawal and actor
 cancellation controls qualify this finite application correspondence. The
-current eager eqrel buffers retain a concrete B23 linear-storage gap; full
-OpenJDK solving and continuous peak memory remain separate obligations.
+then-eager eqrel buffers retained a concrete B23 storage gap. The later
+compressed equivalence publication section supersedes that representation
+limitation. Full application and resource acceptance require their own
+source-bound evidence; universal native refinement remains separate.
 Cross-thread VM allocation subtraction is invalid and is excluded from
 worker comparisons. See the [[file:scheme-trrel-uf-design.org][implementation design]] and its integrated receipt.
 
@@ -2412,3 +2414,29 @@ Pinned Rust differential acceptance reports one unit test and 79 integration
 tests passing; the existing opt-in 10,000-edge =trrel_uf= reference remains
 ignored. The receipt keeps that qualification boundary and the rejected SDK
 build attempts. No model calls or MR integration were performed.
+
+* Steensgaard full-input correspondence and metric correction (2026-10-07)
+
+The paper application gate now includes the pinned 47,069-fact OpenJDK corpus
+and exact 51,022-member partition identity across native Scheme, the actual
+Rust Ascent eqrel program and independent partition saturation. The native
+published-result visitor retains keyed frozen routes and owns emitted row
+spines; small explicit/implicit and retained controls check selection and
+callback mutation isolation. The full dataset has no effective store/load
+unions, so the positive small applications remain necessary discriminators.
+
+Lean adds constructed component-square expansion and partition-equality laws,
+with two equal-count/different-partition controls under =Tests=. TLA+ retains
+publication/read/lifetime protocol ownership. Full-input execution is concrete
+native evidence; it does not discharge the universal native extraction premises
+of either proof family. The GitHub scale job repeats source verification and
+complete partition comparison for the submitted revision.
+
+The resource observer discovered non-monotone VM accounting differences on
+correct full results. CPU and direct process RSS/footprint are distinct from
+that counter. Neither its positive values nor historical small-fixture ratios
+admit physical allocation savings. A constructor-byte observer remains a
+separate resource gate. The current acceptance scope and negative measurements
+are recorded in
+[[file:scheme-paper-closure.org::*Complete Steensgaard partition acceptance (2026-10-07)][the closure section]] and
+[[file:evidence/scheme-steensgaard-partition-20261007/receipt.json][the receipt]].

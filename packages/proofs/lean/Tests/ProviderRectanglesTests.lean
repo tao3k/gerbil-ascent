@@ -179,6 +179,12 @@ example : count (equivalenceBlocks emptyEquivalence 0 0 [0] [0]) = 1 := by
 example : (0, 1) ∈ expand (equivalenceBlocks emptyEquivalence 0 1 [0] [1]) := by
   simp [equivalenceBlocks, emptyEquivalence, EquivalenceComponents.base, expand, rows]
 
+-- Same pair count, different equivalence partition: count-only admission fails.
+private def paired : List (Rectangle Nat) := [⟨[0, 1], [0, 1]⟩, ⟨[2, 3], [2, 3]⟩]
+private def crossed : List (Rectangle Nat) := [⟨[0, 2], [0, 2]⟩, ⟨[1, 3], [1, 3]⟩]
+example : count paired = count crossed := by decide
+example : (0, 1) ∈ expand paired ∧ (0, 1) ∉ expand crossed := by decide
+
 end Ascent.ProviderRectanglesTests
 
 #print axioms Ascent.ProviderRectangles.equivalence_blocks_exact
@@ -186,3 +192,6 @@ end Ascent.ProviderRectanglesTests
 #print axioms Ascent.ProviderRectangles.equivalence_blocks_units
 
 #print axioms Ascent.ProviderRectangles.equivalence_blocks_count
+
+#print axioms Ascent.ProviderRectangles.component_squares_exact
+#print axioms Ascent.ProviderRectangles.component_squares_partition_equal

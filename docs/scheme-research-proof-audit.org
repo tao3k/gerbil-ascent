@@ -2382,3 +2382,33 @@ every selected key and absent keys after every batch. Stored row identities,
 duplicate occurrences and a retained pre-update bucket are checked separately.
 These checks strengthen package 3; they do not close all ten packages or supply
 whole-application speed/memory evidence.
+
+* Canonical equivalence representation bridge (2026-10-07)
+
+The B23 equivalence representation audit identified an implementation gap:
+weighted components existed, but the canonical engine retained every implied
+pair. Native =eqrel= now constructs frozen component-square totals and exact
+cross-component frontiers, with logical budget preflight and ordered explicit
+journal export. Canonical receiver identity admits frozen actor reads; the
+coordinator retains exclusive component mutation and failure recovery.
+
+Lean adds =equivalence_blocks_exact=, =equivalence_blocks_count=,
+=equivalence_blocks_budget= and =equivalence_blocks_units= to =ProviderRectangles=. They derive the constructed
+frontier from explicit member extraction premises and the equivalence insertion
+law; the native hash/member extraction bridge remains qualified by executable
+truth tests. Lean tests remain under =Tests=. TLA+ reuses =ProviderViews= for
+publication, logical budgets, held readers, cancel/drain and stale replies.
+A finite TLC run is not a proof of arbitrary native histories or liveness.
+Full OpenJDK correctness/performance and the ten connected package gates remain
+separate from this representation implementation.
+
+The [[file:evidence/scheme-eqrel-views-20261007/receipt.json][source-bound receipt]] retains all small application pairs and the
+negative worker sample. Full native acceptance is 86 modules / 829 Cases;
+full formal acceptance is 109 Lean jobs / 30 positive models / 87 named
+counterexample controls. The million-pair count-only engine probe does not
+claim full pair export, peak memory or universal correctness from one input.
+
+Pinned Rust differential acceptance reports one unit test and 79 integration
+tests passing; the existing opt-in 10,000-edge =trrel_uf= reference remains
+ignored. The receipt keeps that qualification boundary and the rejected SDK
+build attempts. No model calls or MR integration were performed.

@@ -39,7 +39,7 @@
                  gerbil-ascent-binding-values
                  gerbil-ascent-call-with-bindings gerbil-ascent-extend-pattern)
         (only-in :gerbil-ascent/table/provider gerbil-ascent-canonical-hash-index-provider?)
-        (only-in :gerbil-ascent/table/storage
+        (only-in :gerbil-ascent/table/storage gerbil-ascent-storage-eqrel-state?
                  gerbil-ascent-storage-owned-states
                  gerbil-ascent-storage-check-state! gerbil-ascent-storage-admit-state!
                  gerbil-ascent-set-batch-admit!
@@ -633,7 +633,8 @@
                     (if (> (gerbil-ascent-row-count frontier) 0)
                       (begin
                              (vector-set! view-journals index
-                               (cons (gerbil-ascent-view-journal-event 'derived (reverse (vector-ref pending-injections index)))
+                               (cons (gerbil-ascent-view-journal-event 'derived (reverse (vector-ref pending-injections index))
+                                       (gerbil-ascent-storage-eqrel-state? (vector-ref storage-states index)))
                                      (vector-ref view-journals index)))
                              (commit-view! index frontier)
                              (set! derived-count (+ derived-count (gerbil-ascent-row-count frontier)))
@@ -858,7 +859,8 @@
                         (set! dirty? #t) (set! materialized-dirty? #t)
                         (set! source-materialized-count (+ source-materialized-count (gerbil-ascent-row-count frontier)))
                         (vector-set! view-journals index
-                          (cons (gerbil-ascent-view-journal-event 'source (list row)) (vector-ref view-journals index)))
+                          (cons (gerbil-ascent-view-journal-event 'source (list row)
+                                  (gerbil-ascent-storage-eqrel-state? (vector-ref storage-states index))) (vector-ref view-journals index)))
                         (commit-view! index (gerbil-ascent-add-frontier (vector-ref delta index) frontier)))))
                    (built-in-set? (append-set-source! index row))
                    (else

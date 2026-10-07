@@ -590,3 +590,34 @@ is retained separately in the receipt. Steensgaard has complete small-input
 fixtures and pinned 47,069-row OpenJDK source admission; full Scheme dataset
 solving and continuous peak-memory admission remain open. Final GitHub CI is
 still a separate commit-specific gate.
+
+** Connected equivalence representation implementation (2026-10-07)
+
+Work packages 2, 3, 6 and 9 now share a canonical =eqrel= component-view path:
+exact implicit frontiers, frozen totals, keyed rectangular reads and actor
+worker eligibility. The engine no longer retains the eager equivalence pair
+list on that canonical path. Ordered public export remains explicit and
+custom dispatch remains checked. The associated Lean construction laws and
+existing TLA+ publication controls have distinct responsibilities; native
+truth and full-suite qualification are recorded with source bindings.
+
+All ten package acceptance criteria remain active. In particular this
+representation change does not admit the full OpenJDK application or its
+performance and peak-memory claims. See the B23 research section and the
+compressed-equivalence evidence receipt for the exact tested boundary.
+
+The [[file:evidence/scheme-eqrel-views-20261007/receipt.json][compressed equivalence receipt]] records 86 native modules / 829 Cases,
+109 Lean jobs, 30 positive TLC models and 87 named negative controls. A
+supplementary compiled-engine probe reports 1,000,000 logical pairs with one
+total descriptor; a separate application probe agrees with independently
+listed truth at worker capacities 1, 2 and 4. These probes are not additional
+registered Cases. The twelve alternating small Steensgaard solve/export pairs
+have median paired implicit/explicit CPU ratio 0.0631 and serial allocation
+ratio 0.1792. The explicit-rule worker comparison retains its regression sample.
+Neither measurement establishes full-source or peak-memory benefits.
+
+Pinned Rust differential acceptance also passes: one unit test and 79 integration
+tests, zero failures. The existing opt-in =trrel_uf_full_rust_scale_oracle=
+(10,000 edges) remains ignored by the default command and is not admitted by
+this receipt. The compiler SDK setup failures are retained as rejected build
+attempts; no timeout, heap or semantic admission gate was widened.

@@ -161,4 +161,28 @@ example : Exact (fun p => DirectedFrontier.ufVisible emptyBool p.1 p.2)
 example : (expand (componentPlan boolFamily
     (rootFrontierPairs emptyBool boolFamily [false, true] false true))).Nodup := by
   exact root_plan_nodup emptyBool boolFamily [false, true] false true (by decide)
+
+private def emptyEquivalence : EquivalenceComponents.State Nat where
+  active := fun _ => False
+  rel := fun _ _ => False
+  supported := by simp
+  refl := by simp
+  symm := by simp
+  trans := by simp
+
+example : count (equivalenceBlocks emptyEquivalence 0 1 [0] [1]) = 4 := by
+  simp [equivalenceBlocks, emptyEquivalence, EquivalenceComponents.base, count]
+example : ¬ count (equivalenceBlocks emptyEquivalence 0 1 [0] [1]) ≤ 3 := by
+  simp [equivalenceBlocks, emptyEquivalence, EquivalenceComponents.base, count]
+example : count (equivalenceBlocks emptyEquivalence 0 0 [0] [0]) = 1 := by
+  simp [equivalenceBlocks, emptyEquivalence, EquivalenceComponents.base, count]
+example : (0, 1) ∈ expand (equivalenceBlocks emptyEquivalence 0 1 [0] [1]) := by
+  simp [equivalenceBlocks, emptyEquivalence, EquivalenceComponents.base, expand, rows]
+
 end Ascent.ProviderRectanglesTests
+
+#print axioms Ascent.ProviderRectangles.equivalence_blocks_exact
+#print axioms Ascent.ProviderRectangles.equivalence_blocks_budget
+#print axioms Ascent.ProviderRectangles.equivalence_blocks_units
+
+#print axioms Ascent.ProviderRectangles.equivalence_blocks_count

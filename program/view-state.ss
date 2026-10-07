@@ -6,9 +6,10 @@
 (import :gerbil-ascent/core/relation-view
         (only-in "view-replay.ss" gerbil-ascent-small-journal-export)
         (only-in :clan/poo/object .ref)
-        (only-in :gerbil-ascent/table/storage gerbil-ascent-canonical-uf-storage-provider?
+        (only-in :gerbil-ascent/table/storage gerbil-ascent-canonical-uf-storage-provider? gerbil-ascent-storage-eqrel-state?
                  gerbil-ascent-storage-view-extension! gerbil-ascent-storage-freeze-view)
         (only-in :gerbil-ascent/table/trrel-uf gerbil-ascent-trrel-uf-state gerbil-ascent-trrel-uf-insert!)
+        (only-in :gerbil-ascent/table/eqrel gerbil-ascent-eqrel-state gerbil-ascent-eqrel-insert!)
         (only-in :gerbil-ascent/table/provider gerbil-ascent-canonical-hash-index-provider?))
 (export gerbil-ascent-view-journal-event gerbil-ascent-view-export-cut
         gerbil-ascent-view-relation? gerbil-ascent-stage-view!
@@ -30,7 +31,8 @@
     (for-each (lambda (index)
       (when (eligible? index)
         (vector-set! journals index
-          (list (gerbil-ascent-view-journal-event 'source (.ref (list-ref relations index) 'rows))))
+          (list (gerbil-ascent-view-journal-event 'source (.ref (list-ref relations index) 'rows)
+            (gerbil-ascent-storage-eqrel-state? (vector-ref (view-routing-state-storage state) index)))))
         (let (frozen (gerbil-ascent-view-export-cut
                       (if (relation-view? (vector-ref all index)) (vector-ref all index)
                           gerbil-ascent-empty-view) (vector-ref journals index)))
@@ -97,10 +99,10 @@
     (vector-set! all-version index revision)
     (vector-set! delta-version index (+ 1 (vector-ref delta-version index)))))
 
-(defstruct view-event (kind rows))
+(defstruct view-event (kind rows eqrel?))
 ;; Injection spines are detached; source recovery uses its separate source log.
-(def (gerbil-ascent-view-journal-event kind rows)
-  (make-view-event kind (map (lambda (row) (map values row)) rows)))
+(def (gerbil-ascent-view-journal-event kind rows (eqrel? #f))
+  (make-view-event kind (map (lambda (row) (map values row)) rows) eqrel?))
 (def (gerbil-ascent-view-export-cut view events)
   (gerbil-ascent-view-with-export view
     (lambda () (export-events events (relation-view-count view) 0))))
@@ -108,21 +110,27 @@
 ;; legacy batch reversal. Delta cuts replay old injections without expanding
 ;; their pairs, then export precisely the contiguous admitted suffix.
 (def (export-events events budget skip (delta? #f))
-  (or (gerbil-ascent-small-journal-export events view-event-kind view-event-rows budget skip delta?)
+  (or (and (not (and (pair? events) (view-event-eqrel? (car events))))
+           (gerbil-ascent-small-journal-export events view-event-kind view-event-rows budget skip delta?))
       (replay-uf-events events budget skip delta?)))
 (def (replay-uf-events events budget skip delta?)
-      (let ((state (gerbil-ascent-trrel-uf-state)) (output []) (admitted 0))
+      (let* ((eqrel? (and (pair? events) (view-event-eqrel? (car events))))
+             (state (if eqrel? (gerbil-ascent-eqrel-state) (gerbil-ascent-trrel-uf-state)))
+             (insert! (if eqrel? gerbil-ascent-eqrel-insert! gerbil-ascent-trrel-uf-insert!))
+             (output []) (admitted 0))
         (for-each (lambda (event)
           (let ((batch []) (derived? (and (not delta?) (eq? (view-event-kind event) 'derived))))
             (for-each (lambda (row)
-              (let* ((frontier (gerbil-ascent-trrel-uf-insert! state row budget))
+              (let* ((frontier (insert! state row budget))
                      (next (+ admitted (relation-view-count frontier))))
                 (when (> next skip)
                   (when (> skip admitted) (error "ASCENT ordered delta splits an injection frontier"))
-                  (gerbil-ascent-for-each-row
-                    (if derived?
-                      (lambda (stored) (set! batch (cons stored batch)))
-                      (lambda (stored) (set! output (cons stored output)))) frontier))
+                  (let (consume
+                        (if derived?
+                          (lambda (stored) (set! batch (cons stored batch)))
+                          (lambda (stored) (set! output (cons stored output)))))
+                    (if eqrel? (for-each consume (gerbil-ascent-view-rows frontier))
+                        (gerbil-ascent-for-each-row consume frontier))))
                 (set! admitted next)))
               (view-event-rows event))
             ;; The legacy round walks reversed pending rows then prepends them;

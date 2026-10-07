@@ -116,8 +116,8 @@
                  (b (sample (if old-first? new old) 1)))
             (displayln "STEENSGAARD-COST pair=" pair " old=" (if old-first? a b)
                        " new=" (if old-first? b a)) (force-output))) (iota 12))
-        ;; Same explicit program at both capacities; this is not a claim that
-        ;; custom eqrel storage executes concurrently.
+        ;; Same explicit program at both capacities. Canonical equivalence views
+        ;; also admit frozen worker reads; the coordinator owns every merge.
         (for-each (lambda (pair)
           (let* ((serial-first? (even? pair))
                  (a (sample old (if serial-first? 1 2)))

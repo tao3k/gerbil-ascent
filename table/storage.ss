@@ -13,14 +13,14 @@
                  PooFlowNativeObjectContract.
                  poo-flow-predicate-contract)
         (only-in "eqrel.ss" gerbil-ascent-eqrel-state
-                 gerbil-ascent-eqrel-extension)
+                 gerbil-ascent-eqrel-extension gerbil-ascent-eqrel-insert! gerbil-ascent-eqrel-freeze)
         (only-in "trrel.ss" gerbil-ascent-trrel-state
                  gerbil-ascent-trrel-extension)
         (only-in "trrel-uf.ss" gerbil-ascent-trrel-uf-state
                  gerbil-ascent-trrel-uf-extension
                  gerbil-ascent-trrel-uf-insert! gerbil-ascent-trrel-uf-freeze))
 
-(export gerbil-ascent-canonical-uf-storage-provider?
+(export gerbil-ascent-storage-eqrel-state? gerbil-ascent-canonical-uf-storage-provider?
         gerbil-ascent-storage-view-extension! gerbil-ascent-storage-freeze-view
         GerbilAscentStorageProviderContract
         gerbil-ascent-set-storage-provider
@@ -169,12 +169,12 @@
 ;;; Stateful engine storage remains tentative until the evaluator commits the complete
 ;;; source batch or rule round. Private mutations cannot be rolled back in
 ;;; general; an interrupted owner requires source replay into a fresh engine.
-(defstruct storage-state-owner (value phase))
+(defstruct storage-state-owner (value phase provider))
 
 (def (gerbil-ascent-storage-engine-state provider)
   (let (state (gerbil-ascent-storage-make-state provider))
     (if (gerbil-ascent-canonical-set-storage-provider? provider) state
-      (make-storage-state-owner state 'ready))))
+      (make-storage-state-owner state 'ready provider))))
 
 (def (gerbil-ascent-storage-owned-states states)
   (filter storage-state-owner? (vector->list states)))
@@ -254,13 +254,22 @@
 (def +canonical-uf-storage-provider+ gerbil-ascent-trrel-uf-storage-provider)
 ;; : (-> StorageProvider Boolean)
 (def (gerbil-ascent-canonical-uf-storage-provider? provider)
-  (eq? provider +canonical-uf-storage-provider+))
+  (or (eq? provider +canonical-uf-storage-provider+)
+      (eq? provider (cadr +native-storage-providers+))))
 ;; : (-> StorageOwner Row Natural FrozenView)
 (def (gerbil-ascent-storage-view-extension! state row budget)
   (call-with-storage-state state
-    (lambda (raw) (gerbil-ascent-trrel-uf-insert! raw row budget))))
+    (lambda (raw)
+      ((if (gerbil-ascent-storage-eqrel-state? state)
+           gerbil-ascent-eqrel-insert! gerbil-ascent-trrel-uf-insert!) raw row budget))))
 ;; : (-> StorageOwner FrozenView)
 (def (gerbil-ascent-storage-freeze-view state (indexed? #t))
   (when (eq? (storage-state-owner-phase state) 'failed)
     (error "ASCENT storage state requires source replay"))
-  (gerbil-ascent-trrel-uf-freeze (storage-state-owner-value state) indexed?))
+  ((if (gerbil-ascent-storage-eqrel-state? state)
+       gerbil-ascent-eqrel-freeze gerbil-ascent-trrel-uf-freeze)
+   (storage-state-owner-value state) indexed?))
+
+(def (gerbil-ascent-storage-eqrel-state? state)
+  (and (storage-state-owner? state)
+       (eq? (storage-state-owner-provider state) (cadr +native-storage-providers+))))

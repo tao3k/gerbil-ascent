@@ -3,6 +3,7 @@
 import FiniteHeight
 import ProviderFrontier
 import DirectedFrontier
+import EquivalenceComponents
 
 /-! Compressed positive relation frontiers. These laws concern frozen member
 lists, not mutable Scheme parent pointers, protocol steps or arbitrary lattices. -/
@@ -399,5 +400,85 @@ theorem successive_union_nodup (old middle next : α × α → Prop)
   intro p hp q hq same
   subst q
   exact successive_frontiers_disjoint old middle next left right first second p hp hq
+
+/-- The actual equivalence insertion descriptor family: at most two fresh
+singleton diagonals and two opposite component rectangles. -/
+noncomputable def equivalenceBlocks (state : EquivalenceComponents.State α)
+    (a b : α) (left right : List α) : List (Rectangle α) := by
+  classical
+  exact (if state.active a then [] else [⟨[a], [a]⟩]) ++
+    (if state.active b ∨ b = a then [] else [⟨[b], [b]⟩]) ++
+    (if EquivalenceComponents.base state a b a b then []
+     else [⟨left, right⟩, ⟨right, left⟩])
+
+/-- Coverage is derived from the constructed family rather than assumed as an
+Exact frontier contract. Native member extraction remains an explicit bridge. -/
+theorem equivalence_blocks_exact (state : EquivalenceComponents.State α)
+    (a b : α) (left right : List α)
+    (leftExact : ∀ x, x ∈ left ↔ EquivalenceComponents.base state a b x a)
+    (rightExact : ∀ y, y ∈ right ↔ EquivalenceComponents.base state a b b y)
+    (x y : α) :
+    (x, y) ∈ expand (equivalenceBlocks state a b left right) ↔
+      EquivalenceComponents.insert state a b x y ∧ ¬ state.rel x y := by
+  classical
+  rw [← EquivalenceComponents.emitted_exact]
+  have flipLeft : EquivalenceComponents.base state a b y a ↔
+      EquivalenceComponents.base state a b a y := by
+    exact ⟨EquivalenceComponents.base_symm state a b y a,
+           EquivalenceComponents.base_symm state a b a y⟩
+  have flipRight : EquivalenceComponents.base state a b b x ↔
+      EquivalenceComponents.base state a b x b := by
+    exact ⟨EquivalenceComponents.base_symm state a b b x,
+           EquivalenceComponents.base_symm state a b x b⟩
+  have appendMember (u v : List (Rectangle α)) :
+      (x, y) ∈ expand (u ++ v) ↔ (x, y) ∈ expand u ∨ (x, y) ∈ expand v := by
+    simp [expand, List.flatMap_append]
+  have conditional (condition : Prop) (decision : Decidable condition)
+      (blocks : List (Rectangle α)) :
+      (x, y) ∈ expand (@ite (List (Rectangle α)) condition decision [] blocks) ↔
+        ¬ condition ∧ (x, y) ∈ expand blocks := by
+    by_cases h : condition <;> simp [h, expand]
+  unfold equivalenceBlocks
+  rw [appendMember, appendMember, conditional, conditional, conditional]
+  simp only [expand, List.flatMap_cons, List.flatMap_nil, List.append_nil,
+    List.mem_append, rectangle_member, List.mem_singleton, not_or,
+    leftExact, rightExact, flipLeft, flipRight, EquivalenceComponents.emitted,
+    EquivalenceComponents.cross]
+  simp only [and_comm, and_assoc, or_assoc]
+
+/-- Logical preflight, independent of descriptor storage units. -/
+noncomputable def equivalenceNeeded (state : EquivalenceComponents.State α)
+    (a b : α) (left right : List α) : Nat := by
+  classical
+  exact (if state.active a then 0 else 1) +
+    (if state.active b ∨ b = a then 0 else 1) +
+    (if EquivalenceComponents.base state a b a b then 0
+     else 2 * (left.length * right.length))
+
+/-- The constructed descriptor count is exactly the native preflight formula:
+fresh diagonals plus both products, with no cross term for a joined class. -/
+theorem equivalence_blocks_count (state : EquivalenceComponents.State α)
+    (a b : α) (left right : List α) :
+    count (equivalenceBlocks state a b left right) =
+      equivalenceNeeded state a b left right := by
+  classical
+  unfold equivalenceBlocks equivalenceNeeded
+  split <;> split <;> split <;>
+    simp [count, Nat.mul_comm, Nat.mul_two] <;> omega
+
+/-- Logical admission uses the full expansion count even though descriptor
+storage has a constant bound. This is not a count of representation units. -/
+theorem equivalence_blocks_budget (state : EquivalenceComponents.State α)
+    (a b : α) (left right : List α) (budget : Nat) :
+    count (equivalenceBlocks state a b left right) ≤ budget ↔
+      (expand (equivalenceBlocks state a b left right)).length ≤ budget :=
+  budget_exact _ budget
+
+theorem equivalence_blocks_units (state : EquivalenceComponents.State α)
+    (a b : α) (left right : List α) :
+    (equivalenceBlocks state a b left right).length ≤ 4 := by
+  classical
+  unfold equivalenceBlocks
+  split <;> split <;> split <;> simp
 
 end Ascent.ProviderRectangles

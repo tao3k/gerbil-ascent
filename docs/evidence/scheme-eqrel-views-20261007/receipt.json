@@ -1,0 +1,514 @@
+{
+  "scope": "Canonical equivalence component views, exact finite native truth, conditional construction proofs and existing protocol models. All ten connected package gates remain open.",
+  "base_head": "c58b1577329a3877269af38c6ed10d8622bd4752",
+  "source_sha256": {
+    "table/eqrel.ss": "33086048c07b8d1dbaec58b590e61f9e54e7222cf2439f31b6941fb4981f5bfe",
+    "table/storage.ss": "144f769c32b440935e7b46c30faf35ad3a02056a90ba8212e61ca9355546f804",
+    "core/relation-view.ss": "3198c2828899e3c2969e41974fe319928d5adc59b4a5af56c7845117dd686343",
+    "program/view-state.ss": "3ccb9136ce44d3525dacd6b02f760e9c91f7eb58f51ef42b265b897439884b6f",
+    "program/view-replay.ss": "ff0e554d642a38301557c5787269f5571d59880676f4154a00f390a180f6050e",
+    "program/evaluate.ss": "d6500da49945da2d717c5794c28c21aee329dd60f65396f62318ec46f18fa33f",
+    "program/initialization.ss": "271a048edc41a5c629ced2f0b5dd3eacb2dbd32195a6b9b90016d65257fe6dae",
+    "program/actor-round.ss": "78a01abdefe58a068a72c30c680de53f6834cdc163ff0d585a02cb99db469b5f",
+    "program/index.ss": "378f27917b5468d7a709a90f307cde6ec005f25805a5e91ac0d5bf034bcb6a45",
+    "program/result.ss": "f2d9e885f4e40de4a6d6b926ba7e2e68bb1a7a3d801d5d4dc1f7874750260946",
+    "program/session.ss": "91546d4eb34292efb9f21207b5e08ad122fc47f01dbbb9a0a78fb8103aea1de3",
+    "program/reuse.ss": "1262e74be8805d13f7603f7782b6172080f219e78d4e2b3ab425973656702e0a",
+    "applications/steensgaard.ss": "a67153316e7b42c9b032c9da3566b06666b489764d8056e3d1cdf5dd6dee0e1d",
+    "t/qualification/ascent-provider-views-test.ss": "ff349e8fa105ddc54082fddde46177725b3207e86afcf1f32d5f266df3620dd7",
+    "t/qualification/ascent-steensgaard-test.ss": "c612cf487f65e55e18758b8aee544dd90ed862b5c38d0af582c5ee67dd3d9d1a",
+    "t/qualification/ascent-byods-invariants-test.ss": "ae51c9002434e094085917d27b7883c8550c584fd8f9a6e5e1a36541801f6f37",
+    "t/qualification/ascent-eqrel-program-test.ss": "f7a4c4cf1d9608aa323c16431379cba2bb1897505404ab62501eb1b9809312f4",
+    "packages/proofs/lean/ProviderRectangles.lean": "590f0f864f1305b522ee599cf25612195b0b57ba7b679d1e60699d51a99c5d4b",
+    "packages/proofs/lean/EquivalenceComponents.lean": "55a9e6a815d9768d93a1cc7aa822b08344e82ba8ea0ce11fb1f2006a13053186",
+    "packages/proofs/lean/Tests/ProviderRectanglesTests.lean": "0f47e635aadb344afc7bf4d08fb0ebf6c243989f0139873a21f5ef20f3a20643",
+    "packages/proofs/tla/ProviderViews.tla": "7edda6b7c03ebfe4b3eb5da6f5a2d4466298fd01de5088e7fe003778a45f6c73",
+    "packages/proofs/tla/ProviderViews.cfg": "868daab697df6288ffd88c4d5624aef881a789a252dab1384eaf642bb3fadf64",
+    "justfile": "6071ce68c57dfe0c21d6e51823e20f60db12645cb6214def6e96c19e50a9b804",
+    "t/harness/run.ss": "3fc89e8ec3feef10fc1e819af56a26c4f71c142e343e650c17685b684bfb62fd",
+    "t/harness/native-entry.ss": "0da981b6265fb747341229fc6d87fc1bb3cbb304263b8c83df675bf4f6fde610",
+    "t/harness/native-compile.ss": "b9767e3aefeb1e1f8e2cf440d6f40ba43f51d051dd5be350c7ab434aa3965848"
+  },
+  "implementation": {
+    "frontier": "fresh singleton diagonals plus both disjoint component cross rectangles",
+    "total": "one square rectangle per component",
+    "budget": "logical diagonal and cross-product facts, not descriptor units",
+    "export": "explicit materialization with original symmetric interleaving and journal round order",
+    "engine": "canonical eqrel plus canonical hash index only; derived/custom receivers remain checked",
+    "ownership": "frozen worker reads, coordinator mutation, failed engine source replay",
+    "width_and_group": "both included in private member key; frozen views have schema-fixed width"
+  },
+  "native": {
+    "command": "just test 4",
+    "exit_code": 0,
+    "modules": 86,
+    "cases": 829,
+    "new_cases": 3,
+    "graph_subset_masks": 512,
+    "orders_per_mask": 2,
+    "large_component_nodes": 1000,
+    "large_component_logical_pairs": 1000000,
+    "total_descriptors": 1,
+    "budget_refusal_retry": true,
+    "held_cuts": true,
+    "group_false_and_other": true,
+    "ordered_exports": true,
+    "log_sha256": "c63117520f83c8a3b56d6b60abdf675a678a07c3797d1ba2fc586485db06ce6b"
+  },
+  "formal": {
+    "command": "just check-formal",
+    "exit_code": 0,
+    "lean_jobs": 109,
+    "positive_tlc_models": 30,
+    "named_counterexample_controls": 87,
+    "new_theorems": [
+      "equivalence_blocks_exact",
+      "equivalence_blocks_count",
+      "equivalence_blocks_budget",
+      "equivalence_blocks_units"
+    ],
+    "new_lean_examples": 4,
+    "axioms": [
+      "propext",
+      "Classical.choice",
+      "Quot.sound"
+    ],
+    "new_custom_axioms": false,
+    "native_member_extraction_premise_remains": true,
+    "tla_protocol": "ProviderViews plus existing complete formal suite; no duplicate protocol proof",
+    "log_sha256": "bca9127d063427613a24a19a76695c0916c6aa6dbb3645c4eac745dd4c4e3cfc"
+  },
+  "supplementary_compiled_library_probes": {
+    "registered_cases": false,
+    "engine": {
+      "exit_code": 0,
+      "nodes": 1000,
+      "logical_pairs": 1000000,
+      "total_descriptors": 1,
+      "explicit_export_called": false,
+      "driver_source": "(import :clan/poo/object :gerbil-ascent/program/objects\n        :gerbil-ascent/program/evaluate\n        :gerbil-ascent/table/storage :gerbil-ascent/table/provider)\n(displayln \"EQREL-ENGINE-START nodes=1000\") (force-output)\n(let* ((rows (map (lambda (i) (list 0 i)) (iota 1000)))\n       (program (gerbil-ascent-program\n                   (list (gerbil-ascent-relation 'eq 2 rows\n                           gerbil-ascent-hash-index-provider\n                           gerbil-ascent-eqrel-storage-provider))\n                   [] 2000 2000000 2000000))\n       (result (gerbil-ascent-evaluate-program program))\n       (sizes ((.ref result 'relation-sizes)))\n       (representation ((.ref result 'representation-observation))))\n  (unless (and (.ref result 'finished) (equal? sizes '((eq . 1000000)))\n               (equal? representation '((eq rectangles 1000000 1))))\n    (error \"equivalence engine representation mismatch\" sizes representation))\n  (displayln \"EQREL-ENGINE-OK logical-pairs=1000000 total-descriptors=1\")\n  (force-output))\n",
+      "log_sha256": "fc29771f45531b603bd81646b92ef1586f6699c3acef7cd858276a0d724dd733"
+    },
+    "actors": {
+      "exit_code": 0,
+      "workers": [
+        1,
+        2,
+        4
+      ],
+      "expected_pairs": 13,
+      "total_descriptors": 2,
+      "driver_source": "(import :clan/poo/object\n        :gerbil-ascent/applications/steensgaard\n        :gerbil-ascent/program/evaluate)\n(let ((program (gerbil-ascent-steensgaard-program\n                 '((0 1)) '((1 2)) '((3 2 7)) '((0 7 4))))\n      (expected '((0 0) (0 1) (0 2) (1 0) (1 1) (1 2)\n                  (2 0) (2 1) (2 2) (3 3) (4 4) (3 4) (4 3))))\n  (for-each\n    (lambda (workers)\n      (displayln \"EQREL-ACTOR-START workers=\" workers) (force-output)\n      (let* ((result (gerbil-ascent-evaluate-program program workers: workers))\n             (rows ((.ref result 'rows-of) 'vpt)))\n        (unless (and (.ref result 'finished) (= (length rows) 13)\n                     (andmap (lambda (row) (member row rows)) expected))\n          (error \"equivalence actor truth mismatch\" workers))\n        (displayln \"EQREL-ACTOR-OK workers=\" workers \" pairs=\" (length rows)\n                   \" representation=\" ((.ref result 'representation-observation)))\n        (force-output))) '(1 2 4)))\n",
+      "log_sha256": "7c6613ac3d53671d577d636b166434b18a9f2e80fc7d9073c4707050d424856b"
+    }
+  },
+  "cost_fixture": {
+    "scope": "Small warmed Steensgaard solve plus first complete export, 1088 pairs per arm, alternating order; four-process suite context. Explicit rules versus current implicit provider, not previous implicit implementation. No full OpenJDK, peak-memory or universal speed claim.",
+    "vector_fields": [
+      "cpu_microseconds",
+      "wall_microseconds",
+      "serial_allocated_bytes",
+      "output_pairs"
+    ],
+    "samples": [
+      {
+        "pair": 0,
+        "explicit": [
+          9987.999999999996,
+          10074.0,
+          6869952.0,
+          1088.0
+        ],
+        "implicit": [
+          614.0000000001145,
+          612.0,
+          1243456.0,
+          1088.0
+        ],
+        "implicit_over_explicit": [
+          0.061473768522238154,
+          0.06075044669446099,
+          0.18099922677771257
+        ]
+      },
+      {
+        "pair": 1,
+        "explicit": [
+          10089.999999999933,
+          16195.0,
+          6869824.0,
+          1088.0
+        ],
+        "implicit": [
+          604.9999999999667,
+          604.0,
+          1243456.0,
+          1088.0
+        ],
+        "implicit_over_explicit": [
+          0.059960356788897,
+          0.03729546156221056,
+          0.18100259919322534
+        ]
+      },
+      {
+        "pair": 2,
+        "explicit": [
+          14031.000000000016,
+          27288.0,
+          6819792.0,
+          1088.0
+        ],
+        "implicit": [
+          649.0000000000107,
+          644.0,
+          1243456.0,
+          1088.0
+        ],
+        "implicit_over_explicit": [
+          0.04625472168769225,
+          0.02360011726766344,
+          0.18233048749873895
+        ]
+      },
+      {
+        "pair": 3,
+        "explicit": [
+          10237.000000000051,
+          44911.0,
+          6810544.0,
+          1088.0
+        ],
+        "implicit": [
+          631.0000000000482,
+          628.0,
+          1243456.0,
+          1088.0
+        ],
+        "implicit_over_explicit": [
+          0.06163915209534483,
+          0.013983211240008016,
+          0.1825780730584811
+        ]
+      },
+      {
+        "pair": 4,
+        "explicit": [
+          9944.000000000064,
+          9942.0,
+          6810928.0,
+          1088.0
+        ],
+        "implicit": [
+          717.9999999999964,
+          865.0,
+          1243456.0,
+          1088.0
+        ],
+        "implicit_over_explicit": [
+          0.0722043443282373,
+          0.08700462683564675,
+          0.182567779309956
+        ]
+      },
+      {
+        "pair": 5,
+        "explicit": [
+          10709.00000000008,
+          11671.0,
+          6977312.0,
+          1088.0
+        ],
+        "implicit": [
+          616.0000000000609,
+          614.0,
+          1243456.0,
+          1088.0
+        ],
+        "implicit_over_explicit": [
+          0.057521710710622495,
+          0.05260903093136835,
+          0.17821418907453185
+        ]
+      },
+      {
+        "pair": 6,
+        "explicit": [
+          10785.99999999985,
+          13358.0,
+          6983456.0,
+          1088.0
+        ],
+        "implicit": [
+          657.0000000000186,
+          655.0,
+          1243456.0,
+          1088.0
+        ],
+        "implicit_over_explicit": [
+          0.060912293714076374,
+          0.049034286569845785,
+          0.17805739736886722
+        ]
+      },
+      {
+        "pair": 7,
+        "explicit": [
+          8464.999999999945,
+          8488.0,
+          6977312.0,
+          1088.0
+        ],
+        "implicit": [
+          1697.9999999999773,
+          1783.0,
+          1248192.0,
+          1088.0
+        ],
+        "implicit_over_explicit": [
+          0.20059066745422188,
+          0.2100612629594722,
+          0.17889296049825493
+        ]
+      },
+      {
+        "pair": 8,
+        "explicit": [
+          11423.999999999989,
+          17161.0,
+          6983456.0,
+          1088.0
+        ],
+        "implicit": [
+          737.0000000000987,
+          737.0,
+          1243456.0,
+          1088.0
+        ],
+        "implicit_over_explicit": [
+          0.06451330532213755,
+          0.04294621525552124,
+          0.17805739736886722
+        ]
+      },
+      {
+        "pair": 9,
+        "explicit": [
+          8672.000000000013,
+          8868.0,
+          6977312.0,
+          1088.0
+        ],
+        "implicit": [
+          700.0000000000339,
+          695.0,
+          1243456.0,
+          1088.0
+        ],
+        "implicit_over_explicit": [
+          0.08071955719557575,
+          0.07837167343256653,
+          0.17821418907453185
+        ]
+      },
+      {
+        "pair": 10,
+        "explicit": [
+          8147.999999999933,
+          8145.0,
+          6977312.0,
+          1088.0
+        ],
+        "implicit": [
+          638.9999999999452,
+          638.0,
+          1250432.0,
+          1088.0
+        ],
+        "implicit_over_explicit": [
+          0.07842415316641513,
+          0.07833026396562308,
+          0.1792140010365023
+        ]
+      },
+      {
+        "pair": 11,
+        "explicit": [
+          8978.99999999996,
+          9593.0,
+          6983840.0,
+          1088.0
+        ],
+        "implicit": [
+          618.0000000000074,
+          617.0,
+          1251712.0,
+          1088.0
+        ],
+        "implicit_over_explicit": [
+          0.06882726361510304,
+          0.06431773167934952,
+          0.17922976471396826
+        ]
+      }
+    ],
+    "median_paired_cpu_ratio": 0.06307622870874119,
+    "median_paired_wall_ratio": 0.05667973881291467,
+    "median_paired_serial_allocation_ratio": 0.17922188287523527,
+    "explicit_worker_samples": [
+      {
+        "pair": 0,
+        "serial": [
+          8160.999999999974,
+          8158.0,
+          6977312.0,
+          1088.0
+        ],
+        "parallel": [
+          7319.999999999993,
+          7317.0,
+          null,
+          1088.0
+        ],
+        "parallel_over_serial_cpu": 0.8969489033206735
+      },
+      {
+        "pair": 1,
+        "serial": [
+          8316.999999999907,
+          8364.0,
+          6984352.0,
+          1088.0
+        ],
+        "parallel": [
+          8458.999999999995,
+          8661.0,
+          null,
+          1088.0
+        ],
+        "parallel_over_serial_cpu": 1.0170734639894299
+      },
+      {
+        "pair": 2,
+        "serial": [
+          8512.99999999977,
+          8541.0,
+          6983776.0,
+          1088.0
+        ],
+        "parallel": [
+          7388.999999999868,
+          7423.0,
+          null,
+          1088.0
+        ],
+        "parallel_over_serial_cpu": 0.8679666392576139
+      },
+      {
+        "pair": 3,
+        "serial": [
+          8273.999999999893,
+          8281.0,
+          6984096.0,
+          1088.0
+        ],
+        "parallel": [
+          7697.000000000065,
+          7871.0,
+          null,
+          1088.0
+        ],
+        "parallel_over_serial_cpu": 0.930263475948775
+      },
+      {
+        "pair": 4,
+        "serial": [
+          8701.999999999987,
+          8984.0,
+          6982752.0,
+          1088.0
+        ],
+        "parallel": [
+          8339.000000000096,
+          9074.0,
+          null,
+          1088.0
+        ],
+        "parallel_over_serial_cpu": 0.9582854516203296
+      },
+      {
+        "pair": 5,
+        "serial": [
+          8148.000000000044,
+          8167.0,
+          6984128.0,
+          1088.0
+        ],
+        "parallel": [
+          7522.999999999946,
+          7707.0,
+          null,
+          1088.0
+        ],
+        "parallel_over_serial_cpu": 0.9232940598919865
+      }
+    ],
+    "parallel_allocation_admitted": false,
+    "retain_all_samples_including_regressions": true
+  },
+  "rejected_attempts": [
+    {
+      "phase": "proof development",
+      "reason": "Incomplete construction proof rewrites; fixed and final complete suite passed. No timeout or recursion limit increased."
+    },
+    {
+      "phase": "supplementary actor CLI expression",
+      "exit_code": 70,
+      "reason": "Incomplete Scheme expression in diagnostic command; corrected source-file probe passed. Not a runtime semantic defect."
+    },
+    {
+      "phase": "native oracle entry build",
+      "exit_code": 70,
+      "reason": "Inherited Nix DEVELOPER_DIR selected incompatible Apple SDK headers; FILE type compilation error. No Rust test began."
+    },
+    {
+      "phase": "bundled interpreter binding",
+      "exit_code": 70,
+      "reason": "Calling bundled gxi directly without GERBIL_HOME and GAMBOPT core-library mappings could not resolve :gerbil/core; corrected bindings."
+    },
+    {
+      "phase": "native oracle static link",
+      "exit_code": 70,
+      "reason": "Bundled compiler binding alone did not clear inherited Nix DEVELOPER_DIR; same SDK header error. Final attempt explicitly clears it."
+    }
+  ],
+  "rust_oracle": {
+    "command": "just oracle",
+    "exit_code": 0,
+    "unit_passed": 1,
+    "integration_passed": 79,
+    "failed": 0,
+    "ignored": 1,
+    "ignored_test": "byods::trrel_uf_full_rust_scale_oracle",
+    "ignored_reason": "existing opt-in pinned Ascent trrel-uf 10,000-edge slow full-scale gate",
+    "ignored_case_admitted": false,
+    "log_sha256": "0bfd3bc0103bf1857f2829534a87542e730aa66b16582d71e817c02c5b479ffa",
+    "toolchain": "bundled Gerbil compiler/core mappings; inherited Nix SDK and DEVELOPER_DIR removed"
+  },
+  "research_gates": {
+    "full_openjdk_scheme_output": "not admitted",
+    "full_application_peak_memory": "not admitted",
+    "arbitrary_native_refinement": "not proved",
+    "all_ten_connected_packages": "open",
+    "model_calls": 0,
+    "mr_integration": "deferred"
+  },
+  "raw_logs_uploaded": false,
+  "native_artifacts_sha256": {
+    ".cache/ascent/native-library/test-pool": "fab80d27b92234422b171b06092c8ceacc5e8002873166db37760d60f86ed276",
+    ".cache/ascent/native-library/test-pool.ss": "1ab130a9446e89a90ac078a12737590c6e96e07a9890d44d53c14e05da10203a",
+    ".cache/ascent/native-library/dsl-closure": "549face5fc1d21f930225a52ba6604d74bc5e36410a3efb99acd165c44e8f63e",
+    ".cache/ascent/native-library/dsl-closure.json": "936b02c09f829ab18f031e573734c4ab886aa222e639f98f434e829c4cb165c7",
+    ".cache/ascent/native-library/dsl-closure-sources.json": "2fe1c2dcaf0c66414dd89c71d421eec8aa36f6a28796edbbf3e5b9b24e9db2a6"
+  }
+}

@@ -952,7 +952,7 @@
     "python/src/ascent_test_support/blocking_stdio.py": "0024de7310792f0230ad981be7698c6b9b8429bec531a6cbac167daec5ab16f1",
     "justfile": "05c1eb6b97a67a713dc145d26c9f964ca8464b4857477c68cfc35e5fbb084beb",
     "python/src/ascent_test_support/paper_source.py": "0be05a0a95839c58bddf554df08ad6526de9a5f165c5fe72c0399c32f1431628",
-    "python/tests/test_paper_source.py": "a8da9e067a01d3871ef86186a0324503eeffbfa4fd424d7bda4ddb91a910fdba"
+    "python/tests/test_paper_source.py": "20bdfc9d4512babc09590c740c465e04c7f8ca83a9eb057efc2fd3f24aec1c49"
   },
   "integration": {
     "gate_status_raw": "GATE-START dsl\nGATE-END dsl exit=0\nGATE-START source\nGATE-END source exit=0\nGATE-START other\nGATE-END other exit=0\nGATE-START byods\nGATE-END byods exit=0\nGATE-START clippy\nGATE-END clippy exit=0\nGATE-START data-unit\nGATE-END data-unit exit=0\nNEXT-FINAL-GATES-OK\n",
@@ -1010,6 +1010,12 @@
         "sha256": "d6d6db9bce1130042a1b214df0137a692378c277d1d7afec09addeb52c36d7b3",
         "exit": 0,
         "raw": "test_blob_identity_is_independently_checked (test_paper_source.PaperSource.test_blob_identity_is_independently_checked) ... ok\ntest_exact_bytes (test_paper_source.PaperSource.test_exact_bytes) ... ok\ntest_same_length_substitution_is_rejected (test_paper_source.PaperSource.test_same_length_substitution_is_rejected) ... ok\ntest_shape_mismatch_is_rejected (test_paper_source.PaperSource.test_shape_mismatch_is_rejected) ... ok\n\n----------------------------------------------------------------------\nRan 4 tests in 0.002s\n\nOK\n"
+      },
+      "paper-source-isolated": {
+        "exit": 0,
+        "sha256": "d6d6db9bce1130042a1b214df0137a692378c277d1d7afec09addeb52c36d7b3",
+        "raw": "test_blob_identity_is_independently_checked (test_paper_source.PaperSource.test_blob_identity_is_independently_checked) ... ok\ntest_exact_bytes (test_paper_source.PaperSource.test_exact_bytes) ... ok\ntest_same_length_substitution_is_rejected (test_paper_source.PaperSource.test_same_length_substitution_is_rejected) ... ok\ntest_shape_mismatch_is_rejected (test_paper_source.PaperSource.test_shape_mismatch_is_rejected) ... ok\n\n----------------------------------------------------------------------\nRan 4 tests in 0.002s\n\nOK\n",
+        "environment": "PYTHONPATH unset; independent unittest discovery"
       }
     },
     "native_admission": {

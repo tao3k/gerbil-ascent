@@ -5,9 +5,11 @@ import contextlib
 import hashlib
 import io
 from pathlib import Path
+import sys
 import tempfile
 import unittest
 
+sys.path.insert(0, str(Path(__file__).parents[1] / "src"))
 from ascent_test_support.paper_source import verify
 
 

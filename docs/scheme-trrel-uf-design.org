@@ -1650,3 +1650,60 @@ current complete rule program and finite speed measurements do not establish
 that memory bound. Compressed eqrel publication, source recovery and ordered
 consumer correspondence precede OpenJDK benefit claims; Polonius, LLVM and
 lattice PageRank remain later application gates in the same closure matrix.
+
+** Reproduce full-input source and reference truth
+
+Download the four =*.facts= files from the manifest's =source_directory= at
+its immutable =revision= into a local ignored directory. Then verify the
+identity and shape before invoking the Rust complete application and independent
+partition model:
+
+#+begin_src sh
+set -e
+PYTHONPATH=python/src python3 -m ascent_test_support.paper_source \
+  .cache/ascent/paper-data/steensgaard \
+  docs/evidence/scheme-application-admission-20261007/openjdk-source.json
+PYTHONPATH=python/src python3 -m ascent_test_support.supervision \
+  --startup-seconds 5 --idle-seconds 5 -- \
+  rust/ascent-oracle/target/debug/examples/steensgaard_data_truth \
+  .cache/ascent/paper-data/steensgaard
+#+end_src
+
+Build that executable with =cargo build --locked --manifest-path
+rust/ascent-oracle/Cargo.toml --example steensgaard_data_truth= in the project
+Rust toolchain. Source admission rejects changed bytes even at unchanged file
+length, checks the Git blob independently of SHA256, and rejects wrong row
+counts or arities. Rust owns the partition and application semantic assertions;
+Python only verifies the file envelope. The complete native OpenJDK Scheme
+experiment still requires compressed eqrel total/delta publication.
+
+** Compressed eqrel implementation contract
+
+The next implementation must retain equivalence semantics, rather than treating
+an injection as directed transitive reachability. Each frozen total represents
+one disjoint square per active component; its count is the sum of squared
+component sizes. An insertion frontier consists of newly active diagonal facts
+and the two cross-component rectangles, and its count must equal the old
+extension's preflight =needed=. Duplicate injections emit zero facts.
+
+Admission remains before mutation. A failed budget or field callback retires
+only the staged owner, and replay reconstructs it from the source log. Published
+member segments and selection indexes must not reference a mutable component
+record; append, withdrawal/replay, cancellation and retry must preserve held
+old cuts. Native selected-coordinate routing must return stored representatives
+for equal-but-distinct keys, preserve false/true members, and isolate groups.
+
+The current =program/view-state.ss= export journal is UF-specific. Eqrel needs
+its own ordered source/derived replay so legacy total and delta order remain
+exact. A new view carrier alone does not close the eager engine-buffer gap:
+initialization, frontier staging, count budgets, routing and publication must
+all select it through the canonical eqrel Provider identity. Custom Providers
+retain their existing checked contract.
+
+Admission requires per-injection truth and exact ordered output against the
+existing eager eqrel implementation, multi-producer delta joins, rejected
+updates with recovery, and old-cut retention through Session withdrawal and
+actor cancellation. The full OpenJDK run then compares the 440,438,706 count
+without forcing a full export; peak-memory and end-to-end costs are measured
+separately from the count observation. This contract is design, not a claim
+that the compressed eqrel route is implemented.

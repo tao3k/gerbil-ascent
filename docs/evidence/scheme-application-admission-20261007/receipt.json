@@ -939,12 +939,84 @@
       "pairs": 440438706
     }
   },
-  "concurrent_upstream": "c30f057 adds routing proofs and panic-receipt diagnostics. Integration and updated-source admission still required.",
+  "concurrent_upstream": {
+    "integrated": "c30f057fd7963703f9234105303caa612ee470f6",
+    "implementation_commit": "637e695473d5a4501f88b1314ab473d5774c0d63",
+    "scheme_sources_changed": false,
+    "source_binding_change": "justfile adds formal routing recipe; native artifact rebuilt and rebound"
+  },
   "owner_source_sha256": {
     "applications/steensgaard.ss": "a67153316e7b42c9b032c9da3566b06666b489764d8056e3d1cdf5dd6dee0e1d",
     "rust/ascent-oracle/examples/steensgaard_data_truth.rs": "5d8deb940317801bebd8d6c4f26ac0c07db89289508368a771564139a8ecbc83",
     "rust/ascent-oracle/tests/integration/steensgaard.rs": "7561b286f0e0eedc6d29eca98004c007bd4f6fa0295d8629aa801796b7e41801",
     "python/src/ascent_test_support/blocking_stdio.py": "0024de7310792f0230ad981be7698c6b9b8429bec531a6cbac167daec5ab16f1",
-    "justfile": "ebff3b1b5187d60485f2d7b3187cd09ac1fd9273af5f1bd0d36a71d8a2c7809d"
+    "justfile": "05c1eb6b97a67a713dc145d26c9f964ca8464b4857477c68cfc35e5fbb084beb",
+    "python/src/ascent_test_support/paper_source.py": "0be05a0a95839c58bddf554df08ad6526de9a5f165c5fe72c0399c32f1431628",
+    "python/tests/test_paper_source.py": "a8da9e067a01d3871ef86186a0324503eeffbfa4fd424d7bda4ddb91a910fdba"
+  },
+  "integration": {
+    "gate_status_raw": "GATE-START dsl\nGATE-END dsl exit=0\nGATE-START source\nGATE-END source exit=0\nGATE-START other\nGATE-END other exit=0\nGATE-START byods\nGATE-END byods exit=0\nGATE-START clippy\nGATE-END clippy exit=0\nGATE-START data-unit\nGATE-END data-unit exit=0\nNEXT-FINAL-GATES-OK\n",
+    "gates": {
+      "dsl": {
+        "sha256": "e352fc7dd73179fdfd86102e41d05162888983bc34dbe9f2ae633382dce0569d",
+        "exit": 0,
+        "results": []
+      },
+      "source": {
+        "sha256": "e42db1613495a5a21110480f3fd72bc754ca406ecf15c6548f0ff7bab64f5275",
+        "exit": 0,
+        "results": []
+      },
+      "other": {
+        "sha256": "40547b3cd0865028af2b7403b09e22e2ca713a23799ffbe791374c97c138f064",
+        "exit": 0,
+        "results": [
+          "test result: ok. 68 passed; 0 failed; 0 ignored; 0 measured; 12 filtered out; finished in 139.82s"
+        ]
+      },
+      "byods": {
+        "sha256": "3c5ae55906e63282804a6038c88ab924c28ce4c164f424f96ad4c8f661c60970",
+        "exit": 0,
+        "results": [
+          "test result: ok. 11 passed; 0 failed; 1 ignored; 0 measured; 68 filtered out; finished in 15.13s"
+        ]
+      },
+      "clippy": {
+        "sha256": "e309c22527415b1c0a4923528c4469f486be23d7d758ef4b1074ac999a335eab",
+        "exit": 0,
+        "results": []
+      },
+      "data-unit": {
+        "sha256": "0d496e18dce102f4c868957767b7aeb61a4d3141e5f0b893a279bc8a21e90530",
+        "exit": 0,
+        "results": [
+          "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s"
+        ]
+      },
+      "python": {
+        "sha256": "48300d84f6c07e38a5b75e631c31cd1534d5bb5c21f0f8bd5469646045f0e29a",
+        "exit": 0,
+        "results": [
+          "Ran 18 tests in 9.217s",
+          "OK"
+        ]
+      },
+      "paper-source": {
+        "sha256": "3de7bad64bb0d0ead99e86db3ad2e1ea7aee9eebd606af146c5001882b9ecc8e",
+        "exit": 0,
+        "raw": "PAPER-SOURCE-OK name=alloc rows=4261\nPAPER-SOURCE-OK name=assign rows=39607\nPAPER-SOURCE-OK name=load rows=2692\nPAPER-SOURCE-OK name=store rows=509\nPAPER-SOURCE-COMPLETE rows=47069\n"
+      },
+      "paper-source-tests": {
+        "sha256": "d6d6db9bce1130042a1b214df0137a692378c277d1d7afec09addeb52c36d7b3",
+        "exit": 0,
+        "raw": "test_blob_identity_is_independently_checked (test_paper_source.PaperSource.test_blob_identity_is_independently_checked) ... ok\ntest_exact_bytes (test_paper_source.PaperSource.test_exact_bytes) ... ok\ntest_same_length_substitution_is_rejected (test_paper_source.PaperSource.test_same_length_substitution_is_rejected) ... ok\ntest_shape_mismatch_is_rejected (test_paper_source.PaperSource.test_shape_mismatch_is_rejected) ... ok\n\n----------------------------------------------------------------------\nRan 4 tests in 0.002s\n\nOK\n"
+      }
+    },
+    "native_admission": {
+      "sha256": "f2d071bb048639ab025d02f4c4a8adbd629e1b558afbd126cc66a6d18478a126",
+      "raw": "VALID-NATIVE-ORACLE elapsed= 0.1796331250006915 rows-bytes= 166\nSTALE-NATIVE-ORACLE-REJECTED exit= 1\nNATIVE-ORACLE-ADMISSION-OK\n"
+    },
+    "artifact_manifest_sha256": "7ecca83ba434bee53390fb68632ade8eecf837126e4bf18f36e5495c4d14eefd",
+    "artifact_binding": "c8a44791fad05407e97d17df5af31e88aab8189e5f9dd9809a511b481c0bb390"
   }
 }

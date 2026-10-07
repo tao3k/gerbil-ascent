@@ -511,3 +511,10 @@ passing. The [[file:evidence/scheme-application-admission-20261007/receipt.json]
 The warmed complete application at 1,088 output pairs has median implicit /
 explicit CPU and serial allocation ratios of 0.081 and 0.144. These are local
 fixture results; worker allocation and full-data Scheme memory are not admitted.
+
+Integration onto =c30f057= preserves all 555 Scheme source hashes and both
+threads' research sections. The native artifact was rebuilt for the changed
+=justfile= source binding. Updated local gates admit 68 other-oracle tests,
+11 BYODS tests, Clippy, the full-data Rust model unit test and 18 Python support
+tests. Valid/stale artifact controls respectively succeed and reject before
+result output. Remote final-revision CI remains separate from these receipts.

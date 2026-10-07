@@ -35,7 +35,7 @@
       "sha256": "bcc6f3c1d8c31b5e4229b3a78912aafdf778fb747d8c1fb4c210ea43493ad68c"
     }
   ],
-  "scope": "source identity and TSV shape only; no full-data solve admitted",
+  "scope": "pinned source identity and TSV shape; full Rust aggregate truth recorded below, no full Scheme solve admitted",
   "rust_partition_and_implicit_count": {
     "nodes": 53318,
     "active_classes": 12688,
@@ -47,5 +47,6 @@
     "example": "rust/ascent-oracle/examples/steensgaard_data_truth.rs",
     "source_sha256": "5d8deb940317801bebd8d6c4f26ac0c07db89289508368a771564139a8ecbc83",
     "scope": "full input source and aggregate cardinality agreement; no full Scheme solve or Scheme memory result"
-  }
+  },
+  "source_directory": "byods/ascent-byods-rels/examples/steensgaard/openjdk_javalang_steensgaard"
 }

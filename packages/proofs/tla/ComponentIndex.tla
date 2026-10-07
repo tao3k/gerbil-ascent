@@ -3,13 +3,14 @@
 \* SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 \* Finite private shared-root extension/install exploration, not native hashes.
 EXTENDS Integers, Sequences
-CONSTANTS Owners, Mutation, Inputs
-VARIABLES rows, cache, version, cacheVersion, stage, published, remaining, held, heldTruth
-vars == <<rows, cache, version, cacheVersion, stage, published, remaining, held, heldTruth>>
+CONSTANTS Owners, Mutation, Inputs, DeclaredColumns
+VARIABLES rows, cache, version, cacheVersion, stage, published, remaining, held, heldTruth, cacheColumns, heldColumns, heldColumnsTruth
+vars == <<rows, cache, version, cacheVersion, stage, published, remaining, held, heldTruth, cacheColumns, heldColumns, heldColumnsTruth>>
 \* Configurations supply finite input data, never a runtime generation bound.
 \* TLC config uses operator substitution for sequence-valued constants.
 \* Protocol actions depend only on Inputs, never on this selected fixture.
 TwoBatchInputs == <<<<3, 2>>, <<4, 3>>>>
+TwoColumnLayout == <<0, 1>>
 Batch(o) == Head(remaining[o])
 Reverse(xs) == [i \in 1..Len(xs) |-> xs[Len(xs) - i + 1]]
 Init == /\ rows = [o \in Owners |-> <<0, 1>>]
@@ -18,6 +19,8 @@ Init == /\ rows = [o \in Owners |-> <<0, 1>>]
         /\ stage = [o \in Owners |-> 0]
         /\ remaining = [o \in Owners |-> Inputs]
         /\ held = rows /\ heldTruth = rows
+        /\ cacheColumns = [o \in Owners |-> DeclaredColumns]
+        /\ heldColumns = cacheColumns /\ heldColumnsTruth = cacheColumns
 Extend(o) == /\ stage[o] = 0 /\ Len(remaining[o]) > 0
              /\ cache' = IF Mutation = "foreign" THEN
                    [p \in Owners |-> (IF p = o THEN cache[p] ELSE Batch(o) \o cache[p])]
@@ -25,9 +28,11 @@ Extend(o) == /\ stage[o] = 0 /\ Len(remaining[o]) > 0
                    (IF Mutation = "order" THEN Reverse(Batch(o))
                     ELSE IF Mutation = "alias" THEN Batch(o) \o Batch(o)
                     ELSE Batch(o)) \o (IF Mutation = "reset" /\ version[o] > 0 THEN <<>> ELSE @)]
+             /\ cacheColumns' = [cacheColumns EXCEPT ![o] =
+                   IF Mutation = "columns" THEN Reverse(DeclaredColumns) ELSE DeclaredColumns]
              /\ cacheVersion' = [cacheVersion EXCEPT ![o] = version[o] + 1]
              /\ stage' = [stage EXCEPT ![o] = 1]
-             /\ UNCHANGED <<rows, version, published, remaining, held, heldTruth>>
+             /\ UNCHANGED <<rows, version, published, remaining, held, heldTruth, heldColumns, heldColumnsTruth>>
 Install(o) == /\ Len(remaining[o]) > 0
               /\ (stage[o] = 1 \/ (stage[o] = 0 /\ Mutation = "early"))
               /\ rows' = [rows EXCEPT ![o] = Batch(o) \o @]
@@ -36,7 +41,9 @@ Install(o) == /\ Len(remaining[o]) > 0
               /\ stage' = [stage EXCEPT ![o] = IF Len(remaining[o]) = 1 THEN 2 ELSE 0]
               /\ remaining' = [remaining EXCEPT ![o] = Tail(@)]
               /\ held' = IF Mutation = "held" THEN [held EXCEPT ![o] = cache[o]] ELSE held
-              /\ UNCHANGED <<cache, cacheVersion, heldTruth>>
+              /\ heldColumns' = IF Mutation = "held-columns" THEN
+                   [heldColumns EXCEPT ![o] = Reverse(DeclaredColumns)] ELSE heldColumns
+              /\ UNCHANGED <<cache, cacheVersion, heldTruth, cacheColumns, heldColumnsTruth>>
 \* Logical aliases resolve to one root; extending once per alias is rejected.
 \* Foreign-owner extension is rejected before that owner installs any rows.
 \* Failed provider mutation is unreadable until rebuilding from committed rows.
@@ -45,18 +52,21 @@ FailExtend(o) == /\ stage[o] = 0 /\ Len(remaining[o]) > 0
                  /\ cacheVersion' = [cacheVersion EXCEPT ![o] =
                        IF Mutation = "failed" THEN version[o] ELSE -1]
                  /\ stage' = [stage EXCEPT ![o] = 3]
-                 /\ UNCHANGED <<rows, version, published, remaining, held, heldTruth>>
+                 /\ UNCHANGED <<rows, version, published, remaining, held, heldTruth, cacheColumns, heldColumns, heldColumnsTruth>>
 Rebuild(o) == /\ stage[o] = 3
               /\ cache' = [cache EXCEPT ![o] = rows[o]]
+              /\ cacheColumns' = [cacheColumns EXCEPT ![o] =
+                    IF Mutation = "rebuild-columns" THEN Reverse(DeclaredColumns) ELSE DeclaredColumns]
               /\ cacheVersion' = [cacheVersion EXCEPT ![o] = version[o]]
               /\ stage' = [stage EXCEPT ![o] = 0]
-              /\ UNCHANGED <<rows, version, published, remaining, held, heldTruth>>
+              /\ UNCHANGED <<rows, version, published, remaining, held, heldTruth, heldColumns, heldColumnsTruth>>
 Next == \E o \in Owners : Extend(o) \/ Install(o) \/ FailExtend(o) \/ Rebuild(o)
 Spec == Init /\ [][Next]_vars
 Consistent == \A o \in Owners : stage[o] # 1 =>
-                (cacheVersion[o] = version[o] => cache[o] = rows[o])
+                (cacheVersion[o] = version[o] =>
+                   cache[o] = rows[o] /\ cacheColumns[o] = DeclaredColumns)
                 /\ (stage[o] = 2 => cacheVersion[o] = version[o])
                 /\ published[o] = rows[o]
-HeldStable == held = heldTruth
+HeldStable == held = heldTruth /\ heldColumns = heldColumnsTruth
 PrivateExtension == \A o \in Owners : stage[o] = 1 => published[o] = rows[o]
 ====

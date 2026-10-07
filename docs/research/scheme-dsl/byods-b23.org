@@ -858,3 +858,20 @@ physical allocation claims, including reinterpretation of historical positive
 ratios as memory savings. See
 [[file:../../scheme-paper-closure.org::*Complete Steensgaard partition acceptance (2026-10-07)][the current closure section]] and
 [[file:../../evidence/scheme-steensgaard-partition-20261007/receipt.json][the acceptance evidence]].
+
+* Section 4 column projection and layout ownership (2026-10-08)
+
+The read interface on printed page 264:11 requires every logical index to
+represent the same relation. Our Scheme index key projection now shares the
+ordered cursor with batch construction. Lean derives its direct-column
+meaning, fallback dispatch, constructed bucket order, finite batch history and
+admitted bounds. TLA+ checks declared column metadata across private extension,
+installation, failed-extension rebuild and frozen old readers. Its three new
+layout faults must produce the named consistency/lifetime counterexamples.
+
+Native direct-column truth also checks changing caller-owned headers between
+helper calls and malicious callback header mutation. Declared engine layouts
+and mutable low-level helper inputs have different ownership contracts; the
+protocol model covers the former. The [[file:../../scheme-research-proof-audit.org::*B23 constructed column projection and index layout lifetime (2026-10-08)][implementation/proof correspondence]] and
+[[file:../../evidence/scheme-column-projection-20261008/receipt.json][source-bound acceptance]] retain native hash equality, curried visitors and
+complete application benefit as further obligations.

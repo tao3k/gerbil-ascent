@@ -1372,12 +1372,12 @@ check-component-index-formal:
     # must not truncate/delete each other's module files.
     if [[ "${tlc[0]}" == java ]]; then tlc=(java "-Djava.io.tmpdir=$temp" "${tlc[@]:1}"); fi
     "${tlc[@]}" -workers 1 -config packages/proofs/tla/ComponentIndex.cfg -metadir "$temp/correct" packages/proofs/tla/ComponentIndex.tla
-    for mutation in order early failed alias foreign reset held; do
+    for mutation in order early failed alias foreign reset held columns held-columns rebuild-columns; do
       sed "s/Mutation = \"none\"/Mutation = \"$mutation\"/" packages/proofs/tla/ComponentIndex.cfg > "$temp/$mutation.cfg"
       code=0
       "${tlc[@]}" -workers 1 -config "$temp/$mutation.cfg" -metadir "$temp/$mutation" packages/proofs/tla/ComponentIndex.tla > "$temp/$mutation.out" 2>&1 || code=$?
       invariant=Consistent
-      if [[ "$mutation" = held ]]; then invariant=HeldStable; fi
+      if [[ "$mutation" = held || "$mutation" = held-columns ]]; then invariant=HeldStable; fi
       [[ "$code" = 12 ]] && grep -q "Invariant $invariant is violated" "$temp/$mutation.out"
       echo "COUNTEREXAMPLE-OK component-index-$mutation $invariant"
     done

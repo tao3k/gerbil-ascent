@@ -210,4 +210,116 @@ theorem replay_read_all_count [DecidableEq Row] (keyOf : Row → Key)
   rw [constructed]
   exact complete_read_all_count keyOf _ keys unique covered row
 end Construction
+
+/-! Concrete column projection for table/funs.ss. The cursor moves past each
+selected value; its next gap is relative to that successor, not to the prior
+column. Optional values expose bounds without assuming a successful native read.
+Hash equality and extraction of native field values remain separate contracts. -/
+section ColumnProjection
+variable {Field : Type}
+
+def orderedFrom : Nat → List Nat → Prop
+  | _, [] => True
+  | position, column :: rest => position ≤ column ∧ orderedFrom (column + 1) rest
+
+def compileSteps : Nat → List Nat → List Nat
+  | _, [] => []
+  | position, column :: rest => (column - position) :: compileSteps (column + 1) rest
+
+def recoverColumns : Nat → List Nat → List Nat
+  | _, [] => []
+  | position, gap :: rest => (position + gap) :: recoverColumns (position + gap + 1) rest
+
+def columnKey (row : List Field) (columns : List Nat) : List (Option Field) :=
+  columns.map fun column => (row.drop column).head?
+
+def cursorKey : List Field → List Nat → List (Option Field)
+  | _, [] => []
+  | row, gap :: rest => (row.drop gap).head? :: cursorKey ((row.drop gap).drop 1) rest
+
+theorem compiled_columns_exact (position : Nat) (columns : List Nat)
+    (ordered : orderedFrom position columns) :
+    recoverColumns position (compileSteps position columns) = columns := by
+  induction columns generalizing position with
+  | nil => rfl
+  | cons column rest ih =>
+      have lowerBound := ordered.1
+      have atColumn : position + (column - position) = column := by omega
+      simp only [compileSteps, recoverColumns, atColumn]
+      exact congrArg (List.cons column) (ih (column + 1) ordered.2)
+
+theorem cursor_columns_exact (row : List Field) (position : Nat) (steps : List Nat) :
+    cursorKey (row.drop position) steps = columnKey row (recoverColumns position steps) := by
+  induction steps generalizing position with
+  | nil => rfl
+  | cons gap rest ih =>
+      simpa only [cursorKey, columnKey, recoverColumns, List.map_cons, List.drop_drop]
+        using congrArg (List.cons ((row.drop (position + gap)).head?))
+          (ih (position + gap + 1))
+
+theorem stepped_projection_exact (row : List Field) (columns : List Nat)
+    (ordered : orderedFrom 0 columns) :
+    cursorKey row (compileSteps 0 columns) = columnKey row columns := by
+  have cursor := cursor_columns_exact row 0 (compileSteps 0 columns)
+  simpa only [List.drop_zero, compiled_columns_exact 0 columns ordered] using cursor
+
+-- Construction derives routing equality from the actual projection compiler;
+-- no supplied keyOf equality or candidate coverage is required.
+theorem stepped_build_exact [DecidableEq Field] (rows : List (List Field))
+    (columns : List Nat) (ordered : orderedFrom 0 columns) (key : List (Option Field)) :
+    buildBuckets (fun row => cursorKey row (compileSteps 0 columns)) rows key =
+      keyScan (fun row => columnKey row columns) key rows := by
+  have projection : (fun row : List Field => cursorKey row (compileSteps 0 columns)) =
+      (fun row : List Field => columnKey row columns) := by
+    funext row
+    exact stepped_projection_exact row columns ordered
+  rw [projection, build_buckets_exact]
+
+theorem stepped_history_exact [DecidableEq Field] (rows : List (List Field))
+    (history : List (List (List Field))) (columns : List Nat)
+    (ordered : orderedFrom 0 columns) (key : List (Option Field)) :
+    replayBuckets (fun row => cursorKey row (compileSteps 0 columns)) history
+      (buildBuckets (fun row => cursorKey row (compileSteps 0 columns)) rows) key =
+      keyScan (fun row => columnKey row columns) key (replayRows history rows) := by
+  rw [replay_buckets_exact _ history _ rows (build_buckets_exact _ rows)]
+  have projection : (fun row : List Field => cursorKey row (compileSteps 0 columns)) =
+      (fun row : List Field => columnKey row columns) := by
+    funext row
+    exact stepped_projection_exact row columns ordered
+  rw [projection]
+
+def orderedCheck : Nat → List Nat → Bool
+  | _, [] => true
+  | position, column :: rest => decide (position ≤ column) && orderedCheck (column + 1) rest
+
+theorem ordered_check_iff (position : Nat) (columns : List Nat) :
+    orderedCheck position columns = true ↔ orderedFrom position columns := by
+  induction columns generalizing position with
+  | nil => simp [orderedCheck, orderedFrom]
+  | cons column rest ih => simp [orderedCheck, orderedFrom, ih]
+
+def dispatchedKey (row : List Field) (columns : List Nat) : List (Option Field) :=
+  if orderedCheck 0 columns then cursorKey row (compileSteps 0 columns)
+  else columnKey row columns
+
+theorem dispatched_projection_exact (row : List Field) (columns : List Nat) :
+    dispatchedKey row columns = columnKey row columns := by
+  unfold dispatchedKey
+  split
+  · rename_i admitted
+    exact stepped_projection_exact row columns ((ordered_check_iff 0 columns).mp admitted)
+  · rfl
+
+theorem column_key_missing_iff (row : List Field) (columns : List Nat) :
+    none ∈ columnKey row columns ↔ ∃ column ∈ columns, row.length ≤ column := by
+  simp [columnKey, List.mem_map]
+
+theorem admitted_projection_present (row : List Field) (columns : List Nat)
+    (bounds : ∀ column ∈ columns, column < row.length) :
+    none ∉ dispatchedKey row columns := by
+  rw [dispatched_projection_exact]
+  intro missing
+  obtain ⟨column, selected, outside⟩ := (column_key_missing_iff row columns).mp missing
+  exact Nat.not_le_of_gt (bounds column selected) outside
+end ColumnProjection
 end Ascent.ProviderRouting

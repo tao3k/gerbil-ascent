@@ -46,3 +46,31 @@ example : (enumerateBuckets (buildBuckets Prod.snd [(10,7),(12,9)])
 #print axioms build_read_all_count
 #print axioms complete_read_all_count
 #print axioms replay_read_all_count
+
+-- Forward gaps use the successor cursor; fallback preserves arbitrary layouts.
+example : compileSteps 0 [0, 3, 7] = [0, 2, 3] := by decide
+example : recoverColumns 0 [0, 2, 3] = [0, 3, 7] := by decide
+-- Treating the preceding column, rather than its successor, as the cursor is wrong.
+example : recoverColumns 0 [0, 3, 4] ≠ [0, 3, 7] := by decide
+example : orderedCheck 0 [0, 2, 2] = false := by decide
+example : orderedCheck 0 [3, 0] = false := by decide
+example : dispatchedKey [false, true, false] [0, 1, 2] =
+    [some false, some true, some false] := by decide
+example : dispatchedKey [10, 11, 12] [2, 0, 2] =
+    [some 12, some 10, some 12] := by decide
+example : dispatchedKey ([] : List Nat) [] = [] := by decide
+example : dispatchedKey [10, 11] [0, 7] = [some 10, none] := by decide
+example : replayBuckets (fun row : List Nat => cursorKey row (compileSteps 0 [0, 2]))
+    [[[1, 8, 3], [1, 9, 3]], [], [[1, 7, 3]]]
+    (buildBuckets (fun row : List Nat => cursorKey row (compileSteps 0 [0, 2]))
+      [[1, 8, 3], [2, 8, 3]]) [some 1, some 3] =
+    [[1, 7, 3], [1, 9, 3], [1, 8, 3], [1, 8, 3]] := by decide
+#print axioms compiled_columns_exact
+#print axioms cursor_columns_exact
+#print axioms stepped_projection_exact
+#print axioms stepped_build_exact
+#print axioms stepped_history_exact
+#print axioms ordered_check_iff
+#print axioms dispatched_projection_exact
+#print axioms column_key_missing_iff
+#print axioms admitted_projection_present

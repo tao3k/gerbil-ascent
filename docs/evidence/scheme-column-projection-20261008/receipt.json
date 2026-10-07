@@ -1,0 +1,170 @@
+{
+  "format": "scheme-column-projection-acceptance",
+  "date": "2026-10-08",
+  "repository": "https://github.com/tao3k/gerbil-ascent",
+  "pull_request": "https://github.com/tao3k/gerbil-ascent/pull/1",
+  "predecessor_commit": "51c98ca5cc4fd6ff78097479c31c96f71dbce0ea",
+  "paper": {
+    "source": "https://kmicinski.com/assets/byods.pdf",
+    "section": "4",
+    "printed_page": "264:11",
+    "obligation": "keyed reads and ReadAll agree on relation concretization"
+  },
+  "implementation": {
+    "owner": "table/funs.ss",
+    "change": "public projection shares ordered batch cursor; current caller columns determine fresh gaps; repeated and reordered columns retain direct selection",
+    "admitted_columns": "bounded natural column indices",
+    "field_identity": "borrowed values, fresh key spine"
+  },
+  "lean": {
+    "command": "just check-lean-proofs",
+    "exit_code": 0,
+    "build_jobs": 113,
+    "new_laws": [
+      "compiled_columns_exact",
+      "cursor_columns_exact",
+      "stepped_projection_exact",
+      "stepped_build_exact",
+      "stepped_history_exact",
+      "ordered_check_iff",
+      "dispatched_projection_exact",
+      "column_key_missing_iff",
+      "admitted_projection_present"
+    ],
+    "new_law_axioms": [
+      "propext",
+      "Quot.sound"
+    ],
+    "tests": "Tests/ProviderRoutingTests.lean",
+    "negative_controls": [
+      "successor-cursor off-by-one",
+      "duplicate columns require fallback",
+      "reversed columns require fallback",
+      "out-of-bounds yields missing optional field"
+    ],
+    "scope": "arbitrary finite lists and batch histories; admitted bounds imply present fields; no supplied keyOf equality or constructed bucket-coverage premise",
+    "warnings": "existing unrelated linter and deprecation advisories remain; no warning in the changed ProviderRouting roots"
+  },
+  "component_index": {
+    "command": "just check-component-index-formal",
+    "exit_code": 0,
+    "positive": {
+      "states_generated": 113,
+      "distinct_states": 49,
+      "depth": 9
+    },
+    "invariants": [
+      "Consistent",
+      "PrivateExtension",
+      "HeldStable"
+    ],
+    "negative_controls": {
+      "order": "Consistent",
+      "early": "Consistent",
+      "failed": "Consistent",
+      "alias": "Consistent",
+      "foreign": "Consistent",
+      "reset": "Consistent",
+      "held": "HeldStable",
+      "columns": "Consistent",
+      "held-columns": "HeldStable",
+      "rebuild-columns": "Consistent"
+    },
+    "required_negative_exit": 12,
+    "scope": "two owners, two configured input batches, fixed declared root layout and captured initial old reader; no runtime generation or arity bound"
+  },
+  "scheme": {
+    "ordinary": [
+      {
+        "command": "just test-file t/qualification/ascent-index-build-test.ss",
+        "cases": 9,
+        "exit_code": 0,
+        "final_marker": "OK",
+        "elapsed_seconds": 27
+      },
+      {
+        "command": "just test-file t/qualification/ascent-index-entry-test.ss",
+        "cases": 25,
+        "exit_code": 0,
+        "final_marker": "OK",
+        "elapsed_seconds": 26
+      },
+      {
+        "command": "just test-file t/qualification/ascent-index-program-test.ss",
+        "cases": 9,
+        "exit_code": 0,
+        "final_marker": "OK",
+        "elapsed_seconds": 24
+      }
+    ],
+    "independent_truth": "direct list-ref projection; 256 retained histories; frozen baseline construction and complete compiled self joins",
+    "discriminators": [
+      "96 shared vector fields",
+      "ordered, repeated, reversed, full and empty column layouts",
+      "caller header changes toggle ordered and fallback paths",
+      "Boolean false and true are actual values",
+      "provider callback mutates its isolated column/key headers",
+      "retained shared indexes and actor Session append/replacement"
+    ],
+    "policy": {
+      "command": "just check-policy",
+      "exit_code": 0,
+      "environment": "ASP_GERBIL_SCHEME_POLICY=1",
+      "advisory_warnings_retained": true
+    },
+    "build": {
+      "command": "just build",
+      "exit_code": 0
+    },
+    "native": {
+      "command": "just test-native t/qualification/ascent-index-build-test.ss",
+      "cases": 9,
+      "exit_code": 0,
+      "final_marker": "OK",
+      "module_marker": "NATIVE-MODULES-OK",
+      "elapsed_test_seconds": 1,
+      "parent_source_and_artifact_admission": "passed",
+      "compilation": "85 production modules, 92 support/reference modules and the focused Suite admitted before linked entry execution",
+      "timing_scope": "1 second is the test execution segment; compilation and parent admission are excluded"
+    }
+  },
+  "ci_boundary": {
+    "previous_head": "51c98ca5cc4fd6ff78097479c31c96f71dbce0ea",
+    "previous_head_checks": "all six SUCCESS, queried before delivery",
+    "current_source": "source_sha256 identifies this acceptance snapshot; previous-head CI does not qualify this new source"
+  },
+  "remaining": [
+    "native lawful hash/value equality and primitive refinement",
+    "curried trie, ordinal and rectangle visitor representation correspondence",
+    "arbitrary callback semantic laws",
+    "complete remaining paper applications and whole-application benefit"
+  ],
+  "claims": {
+    "stepped_projection_algebra": "proved with construction/history correspondence",
+    "whole_paper_replication": false,
+    "measured_speedup": false,
+    "physical_memory_reduction": false,
+    "paid_model_calls": 0,
+    "mr_integration": "deferred",
+    "timing_scope": "test command elapsed times under concurrent validation; not performance samples"
+  },
+  "source_sha256": {
+    "table/funs.ss": "f3f164a592a572a025b8ee91ea7211e8d69a864a2912cd9315336249f6a1bb09",
+    "t/qualification/ascent-index-build-test.ss": "e4297d8c5c05003e1f9dc2e990501c7ebe47c821d871ead9327a3552fa3b631a",
+    "packages/proofs/lean/ProviderRouting.lean": "94975809b0e85822393c33312462c7b6f6318abd8269b1f6a5ff17e60d2cb6ac",
+    "packages/proofs/lean/Tests/ProviderRoutingTests.lean": "019c6ed016eaef3e610e30d3dba508e27e404aae5b0dbbdec617ea81b96824f1",
+    "packages/proofs/tla/ComponentIndex.tla": "b615f26e66a88fc3ada3db6a4d693544380245d94b2425cb0b05703b3fdd8472",
+    "packages/proofs/tla/ComponentIndex.cfg": "a7cec4786003a8f7cda7e895231ca9287e55d2635e2ae6f8fcb885adadc6feac",
+    "justfile": "674403320fe85c860523fe115ccf0be028f884109dd864216142b50e182746c6",
+    "docs/scheme-paper-closure.org": "58d7463a3be02d21097968258cba22722717b6db4c9c18e1febb45ae0e0014bb",
+    "docs/scheme-research-proof-audit.org": "fe6e0e7327fcee34a4aa94de4ceeedc7e4b1fe86b5bfda2c24638c91b4d3e18f",
+    "docs/research/scheme-dsl/byods-b23.org": "bf1fc89cf6be51303f8fe9d38d3e28544e82bfbba7d117d0e46ddef2696efa12"
+  },
+  "formal": {
+    "command": "just check-formal",
+    "exit_code": 0,
+    "final_marker": "ALL-FORMAL-CHECK-OK",
+    "negative_controls": 90,
+    "execution": "existing two independent Justfile lanes; unchanged exploration and failure expectations"
+  }
+}

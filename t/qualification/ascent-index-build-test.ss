@@ -5,11 +5,43 @@
         (only-in :clan/poo/object .o)
         (only-in :gerbil-ascent/table/provider gerbil-ascent-hash-index-provider)
         :gerbil-ascent/table/access
-        (only-in :gerbil-ascent/table/funs gerbil-ascent-index-build gerbil-ascent-index-extend!)
+        (only-in :gerbil-ascent/table/funs gerbil-ascent-index-build gerbil-ascent-index-extend!
+                 gerbil-ascent-index-key)
         :gerbil-ascent/t/performance/index-build/fixture)
 (export ascent-index-build-test)
 (def ascent-index-build-test
   (test-suite "Owned physical index construction"
+    (test-case "public cursor projection agrees with independent columns and preserves field identities"
+      (let* ((fields (map (lambda (n) (vector n)) (iota 96)))
+             (columns-family (list [] '(0) '(95) '(0 1 2 3) '(1 31 63 95)
+                                   '(0 8 32 64 95) (iota 96) '(95 0 95) '(2 2) '(0 0 1))))
+        (for-each
+         (lambda (columns)
+           (let ((expected (map (lambda (column) (list-ref fields column)) columns))
+                 (actual (gerbil-ascent-index-key fields columns)))
+             (check-equal? actual expected)
+             (for-each (lambda (a b) (check-equal? (eq? a b) #t)) actual expected)))
+         columns-family)
+        ;; Gaps must be regenerated after both ordered and unordered changes.
+        (let (columns (list 0 8 95))
+          (for-each (lambda (column)
+                      (set-car! (cdr columns) column)
+                      (check-equal? (gerbil-ascent-index-key fields columns)
+                        (map (lambda (c) (list-ref fields c)) columns))) '(31 0 63 8)))
+        (check-equal? (gerbil-ascent-index-key '(#f #t #f) '(0 1 2)) '(#f #t #f))))
+    (test-case "custom callbacks cannot overwrite declared or held column and key headers"
+      (let* ((columns (list 0)) (held (map values columns)) (key (list 1))
+             (source '((1 value)))
+             (provider (.o (:: @ gerbil-ascent-hash-index-provider)
+                         (.build-index (lambda (_rows header) (set-car! header 99) 'opaque))
+                         (.extend-index! (lambda (index _rows header) (set-car! header 88) index))
+                         (.lookup-index (lambda (_index header) (set-car! header 'mutated) source)))))
+        (let (index (gerbil-ascent-physical-index-build provider source columns))
+          (gerbil-ascent-physical-index-extend! provider index source columns)
+          (check-equal? (gerbil-ascent-physical-index-rows provider index key) source)
+          (check-equal? columns '(0))
+          (check-equal? held '(0))
+          (check-equal? key '(1)))))
     (test-case "every logical index agrees through exhaustive retained batch histories"
       ;; Reference projection is direct list-ref, independent of stepped-key.
       ;; Distinct row objects with equal fields exercise value hashing.

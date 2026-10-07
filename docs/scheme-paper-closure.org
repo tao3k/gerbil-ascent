@@ -92,7 +92,7 @@ implementation correspondence.
 | SCC, semi-naive evaluation, strata, least fixed point | planning, component-plan/worker, evaluate; recursive and composition comparisons | RuleGraphClosure, RecursiveLowering, FiniteHeight | Full refinement of compiled adjacency, actual delta selection and execution steps to the consequence operator; general host termination cannot be assumed |
 | Negation and aggregation | program/strata, aggregation; finite interaction corpus | StratifiedNegation, PositiveNonmembership | Actual stratified read graph, aggregate row encoding and completed-stratum correspondence |
 | Lattices and downstream ordinary relations | table/storage, evaluate; finite min/union/product/LCM corpus | Abstract finite-height and monotonicity statements | User join laws and correspondence of partial orders, domains and native values; ordinary Set delta theorems do not cover arbitrary lattices |
-| Indexes / physical plans | table/provider, program/index; hash/alist/composite and scale comparisons | AtomicBinding indexed_atom_iff; ComponentIndex sequential extension | Native bucket/key encoding refinement, user lookup completeness, further scale and cost evidence |
+| Indexes / physical plans | table/provider, program/index; hash/alist/composite and scale comparisons | AtomicBinding indexed_atom_iff; ProviderRouting constructed buckets and cursor projection; ComponentIndex row/layout lifetime | Native hash/value equality and curried visitor refinement, user lookup completeness, further scale and cost evidence |
 | Timeout, resume, repeated run, source replacement | Session, source log, reuse; retained state and deletion corpus | SourceUpdateFrame dependency-frame/counting algebra; SessionTransaction / NativeSessionPublication temporal protocols | Completed solving remains a proof premise; native trace refinement and external Provider rollback scope |
 | Module / fragment / macro embedding | Gerbil syntax and include fixtures | DescriptorScope / local lowering correspondence | Broader macro capture and diagnostics; Scheme APIs corresponding to remaining Rust attributes |
 | Actor concurrency extension | Pure positive canonical Set SCCs support ready/credit/drain; the original serial-only description is obsolete | TLA: ActorRound / ReadyComponents / ActorRoundCredits / ActorSession; Lean: checkpoint/index algebra | Custom Provider and lattice concurrency, partitioning one large SCC, actual multicore benefits, native mailbox/mutex refinement |
@@ -1039,3 +1039,22 @@ Full =clap-rs= native application truth, automatic compressed downstream
 relation admission, lattice actor execution and paired application benefits
 remain independent qualification gates. No model calls or MR integration are
 part of this change.
+
+* Constructed column projection acceptance (2026-10-08)
+
+Package 3 now connects native forward column gaps to direct selection and
+constructed ordered buckets over arbitrary finite histories. The public key
+function shares the ordered batch cursor and recomputes gaps for caller-owned
+columns. Repeated/reordered columns retain direct selection. Nine Lean laws
+cover the ordered algorithm, dispatcher and bounds; TLA+ owns declared-layout
+publication and old-reader lifetime, with three discriminating layout faults.
+Independent native truth checks 96-field projections, value identities,
+mutable helper inputs, callback header isolation, 256 retained histories and
+compiled self joins. See [[file:scheme-research-proof-audit.org::*B23 constructed column projection and index layout lifetime (2026-10-08)][the proof/implementation bridge]] and
+[[file:evidence/scheme-column-projection-20261008/receipt.json][the acceptance receipt]].
+
+This closes the stepped-projection algebra obligation recorded on 2026-10-07.
+Package 3 still requires universal native hash/value and curried trie/ordinal/
+rectangle visitor correspondence. No whole-application speedup or physical
+memory reduction is inferred. All ten packages retain their acceptance gates;
+full paper replication and MR/MRR integration are not closed by this slice.

@@ -2440,3 +2440,54 @@ separate resource gate. The current acceptance scope and negative measurements
 are recorded in
 [[file:scheme-paper-closure.org::*Complete Steensgaard partition acceptance (2026-10-07)][the closure section]] and
 [[file:evidence/scheme-steensgaard-partition-20261007/receipt.json][the receipt]].
+
+* B23 constructed column projection and index layout lifetime (2026-10-08)
+
+B23 section 4, printed page 264:11, requires keyed reads and ReadAll to agree
+on a relation's concretization. The [[https://kmicinski.com/assets/byods.pdf][primary paper]] motivates the obligation;
+the cursor algorithm below is our Scheme implementation choice. It does not
+come from a new paper claim or establish all of section 4.
+
+=table/funs.ss= now uses the existing forward cursor for public index keys as
+well as ordered batch construction. Strictly increasing natural column indices
+compile into gaps; after selecting a field, the next cursor begins immediately
+after it. Repeated or reordered columns use direct selection. Gaps are computed
+from the current caller-owned columns on each invocation. Caching them across
+calls would be incorrect when that header changes. Field values retain identity.
+
+=ProviderRouting= supplies nine additional laws. =compiled_columns_exact=
+recovers arbitrary ordered columns from the generated gaps;
+=cursor_columns_exact= derives the forward traversal from list-drop composition;
+=stepped_projection_exact= connects both. =stepped_build_exact= and
+=stepped_history_exact= derive exact ordered buckets for arbitrary finite batch
+histories using the actual projection, without an assumed =keyOf= equality or
+bucket-coverage premise. =ordered_check_iff= and =dispatched_projection_exact=
+cover the repeated/reordered fallback. =column_key_missing_iff= and
+=admitted_projection_present= state the bounds obligation explicitly. The
+optional-field model distinguishes absence from a stored Boolean false. These
+are mathematical list algorithms; native lawful hash/value equality and Gerbil
+primitive behavior remain representation contracts.
+
+=ComponentIndex= now carries each cache root's declared column header and an
+independent frozen old-reader header. Correct extension and rebuild preserve
+the layout; publication must not change a held header. Three new mutations
+reverse columns during extension, overwrite a held header, or rebuild with the
+wrong columns. The first and third violate =Consistent=; the second violates
+=HeldStable=. TLC explores protocol interleavings, not cursor arithmetic.
+The two-column, two-batch fixture limits exploration data, not runtime
+arity or generation. This fixed-layout contract applies to declared engine
+index roots. Raw helpers still accept caller-mutated columns between calls;
+that behavior is separately tested, not claimed to preserve one root's layout.
+
+Native qualification uses direct =list-ref= truth, shared vector identities,
+96-field rows, ordered/repeated/reversed/full/empty layouts, mutable caller
+headers and Boolean fields. Callback tests mutate the received column/key
+headers and require the caller's headers to remain intact. The existing 256
+retained-history corpus and compiled self-join controls remain independent.
+Lean examples and negative controls stay under =Tests/ProviderRoutingTests.lean=.
+
+See the [[file:evidence/scheme-column-projection-20261008/receipt.json][source-bound receipt]] and the updated closure matrix. This discharges the
+previously named stepped-projection algebra gap. Universal native hash/trie,
+ordinal and rectangle-visitor refinement, full paper applications, and matched
+whole-application benefit remain separate obligations. No measured speedup,
+physical-memory reduction or complete paper replication is claimed.

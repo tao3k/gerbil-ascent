@@ -12,10 +12,6 @@
 (def (gerbil-ascent-index-row-snapshot rows)
   (map (lambda (row) (map values row)) rows))
 
-;; : (-> Row (List ColumnIndex) Key)
-(def (gerbil-ascent-index-key row columns)
-  (map (lambda (column) (list-ref row column)) columns))
-
 ;; : (-> (List Row) (List ColumnIndex) Index)
 (def (gerbil-ascent-index-build rows columns)
   (let (index (make-hash-table))
@@ -69,6 +65,15 @@
     []
     (let (selected (list-tail row (car steps)))
       (cons (car selected) (stepped-key (cdr selected) (cdr steps))))))
+
+;; Public projection and batch construction share the same ordered cursor.
+;; Recompute gaps for this call: columns remain caller-owned and may change.
+;; Repeated/reordered columns retain direct selection and field identities.
+;; : (-> Row (List ColumnIndex) Key)
+(def (gerbil-ascent-index-key row columns)
+  (if (increasing-columns? columns)
+    (stepped-key row (column-steps columns))
+    (map (lambda (column) (list-ref row column)) columns)))
 
 ;; : (-> Index (List Row) (List ColumnIndex) Index)
 (def (gerbil-ascent-index-extend! index new-rows columns)

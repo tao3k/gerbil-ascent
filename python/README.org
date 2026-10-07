@@ -1,14 +1,14 @@
 #+TITLE: ASCENT test support
 
 This Python package owns provider HTTP/SSE byte IO, frozen request receipts,
-and process supervision. It does not parse Scheme model predictions, determine
+and process supervision for those IO studies. It does not parse Scheme model predictions, determine
 DSL correctness, publish native artifacts, or implement a semantic oracle.
 
 Scheme owns artifact admission in =t/native/artifact-admission.ss= and inert prediction
 projection in =t/model/response-projection.ss=. Native Cases cover staged compilation
 failure, owner/source/binary changes, prediction ambiguity, size and nesting
-bounds, and rejection of executable expressions. Those Cases run in the AOT
-DSL harness. Python tests cover only process activity and request byte context.
+bounds, and rejection of executable expressions. Those Cases run in native Scheme qualification.
+The Justfile and Scheme test/build/oracle paths do not invoke this package. Python tests cover only process activity and request byte context.
 
 From the repository root, use the captured environment:
 

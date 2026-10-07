@@ -103,9 +103,9 @@ installed ASCENT. Native execution uses std/test's TestModule/TestHarness,
 Case implementations and verdicts; it introduces no second evaluator or oracle.
 The executable's source and artifact hashes are checked before each run;
 source changes during compilation or after binding invalidate qualification.
-Python only hashes bytes and supervises output, not Case or DSL semantics.
-Runtime is heap-fenced, serial, with a five-second genuine-output watchdog and
-the existing 120-second module cap per Suite in separate serial processes. Compilation is a separate bounded phase. Ordinary individual
+Scheme hashes bytes and admits the executable. Just launches it directly.
+Runtime is heap-fenced with the existing 120-second module cap per Suite in
+separate serial processes. Compilation follows std/make completion and exit status. Ordinary individual
 modules remain available through =just test-file=. Require MODULE-OK, HARNESS-OK and final OK with no error/overflow
 markers. Record exact source head/hashes, dependency environment and raw logs.
 Existing receipts do not qualify new edits or the primary checkout's dirty

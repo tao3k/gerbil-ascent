@@ -15,9 +15,9 @@
     (try
      (current-directory root)
      (run-process/batch '("git" "init" "-q"))
-     (run-process/batch '("mkdir" "-p" "t/native" "python/src/ascent_test_support" ".cache/ascent/native-library"))
+     (run-process/batch '("mkdir" "-p" "t/native" ".cache/ascent/native-library"))
      (for-each (lambda (name) (put name "fixture bytes\n"))
-               '("fixture.ss" "justfile" "python/src/ascent_test_support/supervision.py" "python/pyproject.toml"))
+               '("fixture.ss" "justfile"))
      (put ".cache/ascent/native-library/dsl-closure" "fixture executable bytes")
      (setenv "ASCENT_DSL_BUILD_TOKEN" "test-owner")
      (setenv "ASCENT_DSL_BUILD_STARTED" (number->string (- (time->seconds (current-time)) 181)))

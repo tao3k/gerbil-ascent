@@ -17,7 +17,8 @@ an alternate library, fingerprint the toolchain or link a test executable.
 =t/native/qualification.ss= prepares the library and immutable executable
 for =just test-native= and =just test-native-suite=. =std/make= owns compilation
 and currentness. Native actor scheduling applies only to this explicit gate.
-The Python package owns process supervision and model-provider IO; Scheme
+Just invokes Scheme processes directly, with module deadlines and verdict checks.
+The Python package is separate model-provider and paper-data IO; Scheme
 =std/test= owns assertions. =t/model/= contains the model study.
 There is no project-owned general test runner or forwarding gxtest adapter.
 
@@ -292,3 +293,45 @@ the explicit compiled full-suite inventory. It requires native admission and
 checks the actual compiled production module. Both append and replacement
 measurements allocated 101,888 bytes for both batch sizes in the focused native
 qualification. Neither the production implementation nor the bound changed.
+
+* Direct Just and Scheme execution
+
+The Scheme build, native tests, oracle row recipes and Rust differential gate
+no longer launch Python. Native children use =std/misc/process= directly.
+Just retains the unchanged 120-second test and 90-second row deadlines,
+1 GiB runtime heap and mandatory Case/module/final verdict checks. Native
+source, dependency and executable identity checks remain Scheme-owned.
+The former five-second Python output watchdog and CPU watcher are removed;
+a quiet process is not treated as dead before its existing runtime deadline.
+Build completion is determined by =std/make= and compiler exit status, followed
+by source/owner/binary admission. No synthetic progress messages are introduced.
+Historical watchdog receipts above describe their original execution policy.
+
+Cargo starts directly from the recipe shell on blocking standard streams.
+A separate =gerbil env gxi= query selects =GERBIL_PATH= without making Cargo a
+Gambit child. The unused Python blocking-stdio adapter and its adapter-only
+tests are removed. Model-provider and paper-data IO remain separate consumers.
+
+The component-index, actor-credit and union-find matched measurement Cases
+now live in =t/performance/= and remain mandatory in the compiled full suite.
+Their independent truths, fifty timing pairs and ten allocation pairs are
+unchanged. Ordinary =gerbil test= modules retain semantic assertions without
+running native allocation contracts or benchmark sampling loops through the
+source interpreter. The first three moved modules passed four native Cases. Steensgaard retains
+twelve representation pairs and six worker pairs in a fourth measurement module.
+
+The dependency-prefix query isolates all three standard descriptors. Otherwise
+Gambit can change the shell's shared pipe flags even when stdout is captured.
+The standalone Cargo recipe also uses fresh pipes after its Gerbil build
+prerequisite. This preserves blocking Rust logging without a language adapter.
+
+Acceptance of the direct command boundary covered 89 ordinary modules, seven
+artifact controls, ten native actor-pool Cases and all native lifecycle/argument
+failure controls. The native DSL gate passed 203 Cases across fifteen modules.
+The direct Cargo oracle passed 79 differential/IO tests with one existing ignored
+scale test, plus its separate ASP gate. No model API calls were made. The moved
+Steensgaard Case passed all twelve representation and six worker pairs under
+its original budget. These focused receipts do not replace exact-head CI.
+
+See [[file:evidence/direct-test-commands-20261007/receipt.json][the direct command acceptance receipt]] for module Case counts,
+failure controls, retired dependencies and evidence limits.

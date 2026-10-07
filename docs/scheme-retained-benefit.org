@@ -6,18 +6,12 @@ Does checked dependency reuse reduce native work and elapsed time relative to
 a fresh solve of the identical prospective input? Run =just build-dsl-closure=
 then =just check-retained-benefit=. The native entry uses the same compiler,
 dependency prefix, DSL and evaluator for both paths. Scheme verifies source
-and binary hashes and admits the artifact. The Python IO package supervises
-genuine process activity; it decides no semantic truth.
-The unchanged bounds are 1G heap, 5 seconds without actual output and 120
-seconds for the complete measurement process. Compilation and parent artifact
-finalization no longer have a 180-second total deadline, following the user's
-explicit build policy correction. The build supervisor observes actual command
-output and CPU-time advances in its own process group; 60 seconds with neither
-signal fails the build. CPU activity is evidence of execution, not proof of
-semantic progress or successful compilation. Compilation must still exit 0,
-and source/owner/binary binding must pass before artifact publication. Runtime
-Cases retain the five-second output and 120-second module bounds. Historical
-deadline failures below remain failures under their original policy.
+and binary hashes and admits the artifact. Just launches the native process
+directly with a 1 GiB heap and the existing 120-second runtime deadline.
+Compilation uses std/make completion and exit status, then source/owner/binary
+binding before artifact publication. The Python output/CPU supervisor has been
+removed from these recipes. Historical deadline failures below remain failures
+under their original policy.
 
 * Workloads and independent truth
 

@@ -98,7 +98,6 @@ check-native-registry:
     export ASCENT_TEST_LIBRARY="{{ justfile_directory() }}/.cache/ascent/native-library/lib"
     export ASCENT_PERFORMANCE_MODULES="{{ justfile_directory() }}/.cache/ascent/native-library/modules.sexp"
     export ASCENT_NATIVE_TEST_ENTRY="{{ justfile_directory() }}/.cache/ascent/native-library/single-test"
-    export PYTHONPATH="{{ justfile_directory() }}/python/src${PYTHONPATH:+:$PYTHONPATH}"
     output_file="$(mktemp "{{ justfile_directory() }}/.cache/ascent/tmp/native-control.XXXXXX")"
     trap 'rm -f "$output_file"' EXIT
     for control in setup case cleanup empty; do
@@ -107,7 +106,7 @@ check-native-registry:
         if [[ "$control" == case ]]; then marker='ERROR CASE'; fi
         if [[ "$control" == empty ]]; then expected=1; marker='FAIL no discovered Cases'; fi
         status=0
-        ASCENT_NATIVE_ENTRY_CONTROL="$control" python3 -m ascent_test_support.supervision --startup-seconds 5 --idle-seconds 5 -- just _test-file t/native/native-registry-test.ss > "$output_file" 2>&1 || status=$?
+        ASCENT_NATIVE_ENTRY_CONTROL="$control" just _test-file t/native/native-registry-test.ss > "$output_file" 2>&1 || status=$?
         if [[ "$status" != "$expected" ]] || ! grep -F "$marker" "$output_file" >/dev/null; then cat "$output_file"; exit 1; fi
         printf 'NATIVE-ENTRY-CONTROL-OK %s exit=%s\n' "$control" "$status"
     done
@@ -125,7 +124,6 @@ check-actor-pool:
     #!/usr/bin/env bash
     set -euo pipefail
     {{ native_qualification }} test-pool 2 t/native/native-registry-test.ss t/native/actor-pool-test.ss
-    export PYTHONPATH="{{ justfile_directory() }}/python/src${PYTHONPATH:+:$PYTHONPATH}"
     output=$(mktemp)
     trap 'rm -f "$output"' EXIT
     for control in missing unknown extra; do
@@ -134,7 +132,7 @@ check-actor-pool:
       if [[ "$control" == unknown ]]; then set -- t/native/not-in-registry.ss; marker='unknown native test registry key'; fi
       if [[ "$control" == extra ]]; then set -- t/native/native-registry-test.ss other; fi
       code=0
-      python3 -m ascent_test_support.supervision --startup-seconds 5 --idle-seconds 5 -- .cache/ascent/native-library/test-pool {{ gerbil_test_runtime_options }} "$@" > "$output" 2>&1 || code=$?
+      timeout 120s .cache/ascent/native-library/test-pool {{ gerbil_test_runtime_options }} "$@" > "$output" 2>&1 || code=$?
       [[ "$code" == 70 ]] && grep -F "$marker" "$output" >/dev/null
       if grep -E '^(HARNESS|MODULE|CASE) ' "$output" >/dev/null; then cat "$output"; exit 1; fi
       echo "NATIVE-REGISTRY-CONTROL-OK $control exit=$code"
@@ -897,7 +895,7 @@ byods-lattice-rows:
     @timeout 90s {{ gerbil_command }} {{ gerbil_test_runtime_options }} t/qualification/ascent-byods-lattice-output.ss
 
 byods-lattice-session-rows:
-    @PYTHONPATH="{{ justfile_directory() }}/python/src" python3 -m ascent_test_support.supervision --separate-stderr -- timeout 90s .cache/ascent/native-library/dsl-closure {{ gerbil_test_runtime_options }} --oracle byods-lattice-session
+    @timeout 90s .cache/ascent/native-library/dsl-closure {{ gerbil_test_runtime_options }} --oracle byods-lattice-session
 
 byods-lattice-scale-rows:
     @timeout 90s {{ gerbil_command }} {{ gerbil_test_runtime_options }} t/qualification/ascent-byods-lattice-scale-output.ss
@@ -966,7 +964,7 @@ index-lattice-rows-alist:
     @timeout 60s {{ gerbil_command }} {{ gerbil_test_runtime_options }} t/qualification/ascent-index-program-output.ss lattice alist
 
 _oracle-native name *flags:
-    @PYTHONPATH="{{ justfile_directory() }}/python/src" python3 -m ascent_test_support.supervision --separate-stderr --startup-seconds 5 --idle-seconds 5 -- timeout 90s .cache/ascent/native-library/dsl-closure {{ gerbil_test_runtime_options }} --oracle {{ name }} {{ flags }}
+    @timeout 90s .cache/ascent/native-library/dsl-closure {{ gerbil_test_runtime_options }} --oracle {{ name }} {{ flags }}
 
 eqrel-rows:
     @just _oracle-native eqrel-program
@@ -1005,7 +1003,7 @@ scc-order-rows:
     @timeout 90s {{ gerbil_command }} {{ gerbil_test_runtime_options }} t/qualification/ascent-scc-order-output.ss
 
 arity-repetition-rows:
-    @PYTHONPATH="{{ justfile_directory() }}/python/src" python3 -m ascent_test_support.supervision --separate-stderr -- timeout 90s .cache/ascent/native-library/dsl-closure {{ gerbil_test_runtime_options }} --oracle arity-repetition
+    @timeout 90s .cache/ascent/native-library/dsl-closure {{ gerbil_test_runtime_options }} --oracle arity-repetition
 
 clause-composition-rows:
     @timeout 90s {{ gerbil_command }} {{ gerbil_test_runtime_options }} t/qualification/ascent-clause-composition-output.ss
@@ -1038,16 +1036,16 @@ divisibility-lattice-rows:
     @timeout 90s {{ gerbil_command }} {{ gerbil_test_runtime_options }} t/qualification/ascent-divisibility-lattice-output.ss
 
 multi-source-session-rows:
-    @PYTHONPATH="{{ justfile_directory() }}/python/src" python3 -m ascent_test_support.supervision --separate-stderr -- timeout 90s .cache/ascent/native-library/dsl-closure {{ gerbil_test_runtime_options }} --oracle multi-source-session
+    @timeout 90s .cache/ascent/native-library/dsl-closure {{ gerbil_test_runtime_options }} --oracle multi-source-session
 
 byods-session-rows:
-    @PYTHONPATH="{{ justfile_directory() }}/python/src" python3 -m ascent_test_support.supervision --separate-stderr -- timeout 90s .cache/ascent/native-library/dsl-closure {{ gerbil_test_runtime_options }} --oracle byods-session
+    @timeout 90s .cache/ascent/native-library/dsl-closure {{ gerbil_test_runtime_options }} --oracle byods-session
 
 steensgaard-rows:
     @just _oracle-native steensgaard
 
 grouped-eqrel-session-rows:
-    @PYTHONPATH="{{ justfile_directory() }}/python/src" python3 -m ascent_test_support.supervision --separate-stderr -- timeout 90s .cache/ascent/native-library/dsl-closure {{ gerbil_test_runtime_options }} --oracle grouped-eqrel-session
+    @timeout 90s .cache/ascent/native-library/dsl-closure {{ gerbil_test_runtime_options }} --oracle grouped-eqrel-session
 
 oracle: build-dsl-closure
     #!/usr/bin/env bash
@@ -1059,7 +1057,10 @@ oracle: build-dsl-closure
         export CC=/usr/bin/clang
         export RUSTFLAGS="${RUSTFLAGS:+$RUSTFLAGS }-C linker=/usr/bin/clang -C link-arg=-isysroot -C link-arg=$SDKROOT"
     fi
-    gerbil env env PATH="$PATH" python3 python/src/ascent_test_support/blocking_stdio.py -- cargo test --locked --manifest-path rust/ascent-oracle/Cargo.toml
+    # Resolve package identity without passing Cargo through Gambit process ports.
+    export GERBIL_PATH="${GERBIL_PATH:-$({{ gxi_command }} -e '(display (getenv "GERBIL_PATH"))' </dev/null 2> >(cat >&2))}"
+    # Fresh pipes preserve blocking Cargo stdio after the Gerbil build prerequisite.
+    cargo test --locked --manifest-path rust/ascent-oracle/Cargo.toml </dev/null 2>&1 | cat
 
 timed-rows:
     @timeout 60s {{ gerbil_command }} {{ gerbil_test_runtime_options }} t/qualification/ascent-timing-test.ss
@@ -1283,16 +1284,17 @@ build-dsl-closure:
         export PATH="$GERBIL_PATH/bin:$PATH"
         compiler=({{ gxi_command }})
     fi
-    PYTHONPATH="{{ justfile_directory() }}/python/src" python3 -m ascent_test_support.supervision --cpu-progress --startup-seconds 60 --idle-seconds 60 -- bash -e -c '"$@" {{ gerbil_test_runtime_options }} t/native/qualification.ss build-dsl-closure; {{ gxi_command }} t/native/artifact-admission.ss finalize' build-dsl-closure "${compiler[@]}"
+    "${compiler[@]}" {{ gerbil_test_runtime_options }} t/native/qualification.ss build-dsl-closure
+    {{ gxi_command }} t/native/artifact-admission.ss finalize
 
 # Counterbalanced measurements with independent Scheme truth; no speed threshold.
 check-retained-benefit:
     #!/usr/bin/env bash
     set -euo pipefail
     {{ gxi_command }} t/native/artifact-admission.ss check
-    PYTHONPATH="{{ justfile_directory() }}/python/src" python3 -m ascent_test_support.supervision -- timeout 120s .cache/ascent/native-library/dsl-closure {{ gerbil_test_runtime_options }} --retained-benefit
+    timeout 120s .cache/ascent/native-library/dsl-closure {{ gerbil_test_runtime_options }} --retained-benefit
 
-# Run the known Suites through std/test in serial AOT processes with strict progress.
+# Run the known Suites through std/test in serial AOT processes with verdict checks.
 check-dsl-closure:
     #!/usr/bin/env bash
     set -euo pipefail
@@ -1302,7 +1304,7 @@ check-dsl-closure:
     output_file="$(mktemp .cache/ascent/tmp/dsl.XXXXXX)"
     trap 'rm -f "$output_file"' EXIT
     for module in scheme-closure-contract scheme-artifact scheme-provenance-graph scheme-higher-order ascent-index-lifecycle scheme-finite-mapping scheme-session-deletion ascent-timeout scheme-stratified-provenance scheme-model-closure scheme-operator scheme-library-contract scheme-operator-retained ascent-finite-evidence ascent-positive-nonmembership; do
-        PYTHONPATH="{{ justfile_directory() }}/python/src" python3 -m ascent_test_support.supervision -- timeout "${ASCENT_GXTEST_TIMEOUT:-120s}" .cache/ascent/native-library/dsl-closure {{ gerbil_test_runtime_options }} "t/qualification/$module-test.ss" 2>&1 | tee -a "$output_file"
+        timeout "${ASCENT_GXTEST_TIMEOUT:-120s}" .cache/ascent/native-library/dsl-closure {{ gerbil_test_runtime_options }} "t/qualification/$module-test.ss" 2>&1 | tee -a "$output_file"
     done
     if grep -E 'ERROR (CHECK|CASE|HARNESS|MODULE)|Heap overflow|Stack overflow' "$output_file" >/dev/null; then exit 1; fi
     awk -f tools/assert-test-cases.awk "$output_file"

@@ -126,7 +126,11 @@
         (list-sort string<?
                    (filter (lambda (name) (string-suffix? "-test.ss" name))
                            (directory-files "t/qualification"))))
-   '("t/performance/ascent-source-cut-allocation-test.ss")))
+   '("t/performance/ascent-source-cut-allocation-test.ss"
+     "t/performance/ascent-component-index-performance-test.ss"
+     "t/performance/ascent-actor-credit-performance-test.ss"
+     "t/performance/ascent-trrel-uf-performance-test.ss"
+     "t/performance/ascent-steensgaard-performance-test.ss")))
 
 ;; Each compiler process owns one dependency layer. Expander contexts and
 ;; optimization trees must not accumulate across production, references and
@@ -167,7 +171,8 @@
                             '("t/performance/temporal-projection/reference") [])
                           (if (member "t/qualification/ascent-uf-commit-test.ss" tests)
                             '("t/performance/uf-commit/reference") [])
-                          (if (member "t/qualification/ascent-trrel-uf-test.ss" tests)
+                          (if (or (member "t/qualification/ascent-trrel-uf-test.ss" tests)
+                                  (member "t/performance/ascent-trrel-uf-performance-test.ss" tests))
                             '("t/performance/trrel-uf/reference" "t/performance/trrel-uf/root-scan-reference") [])
                           ;; Compile the complete independent reference graph
                           ;; for both ordinary module tests and AOT linkage.
@@ -191,13 +196,16 @@
                           (if (member "t/qualification/scheme-bounded-datum-test.ss" tests)
                             '("t/performance/bounded-datum/reference")
                             [])
-                          (if (member "t/qualification/ascent-actor-credit-test.ss" tests)
+                          (if (or (member "t/qualification/ascent-actor-credit-test.ss" tests)
+                                  (member "t/performance/ascent-actor-credit-performance-test.ss" tests))
                             '("t/performance/actor-credit/reference"
                               "t/performance/actor-credit/coordinator-reference"
                               "t/performance/actor-credit/fixture")
                             [])
                           (if (or (member "t/qualification/ascent-component-index-test.ss" tests)
-                                  (member "t/qualification/ascent-actor-credit-test.ss" tests))
+                                  (member "t/performance/ascent-component-index-performance-test.ss" tests)
+                                  (member "t/qualification/ascent-actor-credit-test.ss" tests)
+                                  (member "t/performance/ascent-actor-credit-performance-test.ss" tests))
                             '("t/performance/component-index/reference"
                               "t/performance/component-index/coordinator-reference"
                               "t/performance/component-index/fixture")
@@ -242,7 +250,8 @@
                               "t/performance/storage-batch/fixture")
                             [])
                           (if (or (member "t/qualification/ascent-index-entry-test.ss" tests)
-                                  (member "t/qualification/ascent-component-index-test.ss" tests))
+                                  (member "t/qualification/ascent-component-index-test.ss" tests)
+                                  (member "t/performance/ascent-component-index-performance-test.ss" tests))
                             '("t/performance/index-entry/reference"
                               "t/performance/index-entry/reference-evaluate"
                               "t/performance/index-entry/fixture")
@@ -326,7 +335,6 @@
            (generated (artifact-digest source)))
       (unless (artifact-matching-sources? sources (artifact-sources))
         (error "source changed during native pool compilation"))
-      (setenv "PYTHONPATH" (string-append (path-expand "python/src") ":" (getenv "PYTHONPATH" "")))
       (displayln "[ascent-test] PLAN parallel=" (length parallel) " exclusive=" (length exclusive) " jobs=" jobs)
       (force-output)
       (set! command-exit-status (run-actor-pool! parallel jobs run-test-child))
@@ -445,10 +453,7 @@
           (let* ((binary (getenv "ASCENT_NATIVE_TEST_ENTRY"))
                  (digest (artifact-digest binary))
                  (generated (artifact-digest (path-expand "single-test.ss" test-cache))))
-            (setenv "PYTHONPATH" (string-append (path-expand "python/src") ":" (getenv "PYTHONPATH" "")))
-            (run-command ["python3" "-m" "ascent_test_support.supervision"
-                          "--startup-seconds" "5" "--idle-seconds" "5"
-                          "--" "just" "_test-file" path])
+            (run-command ["just" "_test-file" path])
             (unless (and (equal? digest (artifact-digest binary))
                          (equal? generated (artifact-digest (path-expand "single-test.ss" test-cache)))
                          (artifact-matching-sources? sources (artifact-sources)))

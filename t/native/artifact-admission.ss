@@ -29,7 +29,7 @@
          (result (make-hash-table)))
     (for-each (lambda (path)
                 (unless (string=? path "") (hash-put! result path (artifact-digest path))))
-              (append paths '("justfile" "python/src/ascent_test_support/supervision.py" "python/pyproject.toml")))
+              (append paths '("justfile")))
     result))
 (def (artifact-matching-sources? left right)
   (and (= (hash-length left) (hash-length right))

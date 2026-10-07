@@ -40,9 +40,7 @@
 (def (run-test-child path emit)
   (let ((status 70) (receipt (make-native-receipt path)))
     (emit (string-append "[ascent-test] START " path))
-    (run-process ["python3" "-m" "ascent_test_support.supervision"
-                  "--startup-seconds" "5" "--idle-seconds" "5"
-                  "--" "timeout" (getenv "ASCENT_GXTEST_TIMEOUT" "120s")
+    (run-process ["timeout" (getenv "ASCENT_GXTEST_TIMEOUT" "120s")
                   (getenv "ASCENT_NATIVE_TEST_ENTRY") "-:max-heap=1G,debug=q" path]
       stderr-redirection: #t
       check-status: (lambda (raw settings)

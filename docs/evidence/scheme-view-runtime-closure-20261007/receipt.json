@@ -1284,5 +1284,38 @@
   "githubGate": {
     "pr": "https://github.com/tao3k/gerbil-ascent/pull/1",
     "status": "Query exact published commit and checks separately after push."
+  },
+  "subsequentIntegration": {
+    "revision": "5c6057c5ea485f5f56278b37a82a9d9b4da1d733",
+    "schemeSourceCount": 551,
+    "schemeSourceDigest": "b19701081e458bc3ac40491d48b11dbb11332b67c27578bd431eca9c1d6d53ec",
+    "productionSchemeChanges": [],
+    "changedSources": {
+      "t/qualification/ascent-strata-test.ss": {
+        "qualifiedSha256": "b05f1e25f2e3dba255fa512380edd4d7ba1fbce7c6e3da7bf501fe777865a6a8",
+        "integratedSha256": "b391c1c66f465efbef59e1bbac85bc6300d98f8d8b489ae55b785aeb50d6afa5"
+      }
+    },
+    "nativeChangedSuite": {
+      "module": "t/qualification/ascent-strata-test.ss",
+      "exitCode": 0,
+      "cases": 5,
+      "explicitOK": 1,
+      "runtimeProgressSeconds": 5,
+      "transcript": {
+        "path": "/private/tmp/ascent-view-runtime-strata-latest.log",
+        "sha256": "0c054a1b54f57655b206e77990df9b7b7c5d6678f7becca7f5d35da256b45b59"
+      }
+    },
+    "proofThreadReceipt": {
+      "path": "docs/evidence/scheme-provider-views-20261007/strict-dependencies-pending-keys.json",
+      "sha256": "5e0c9523ef9ebdf4dc6c6723a3c144045df4f6dd90636f3fa0101e81ebbdefa3"
+    },
+    "qualificationBoundary": "Full 85-module/808-case receipt remains bound to published 978b294. All production Scheme and other test sources are byte-identical at 5c6057c; the changed strata Suite is separately qualified. Final published-head whole CI is queried separately.",
+    "formalCI": {
+      "head": "5c6057c5ea485f5f56278b37a82a9d9b4da1d733",
+      "status": "COMPLETED",
+      "conclusion": "SUCCESS"
+    }
   }
 }

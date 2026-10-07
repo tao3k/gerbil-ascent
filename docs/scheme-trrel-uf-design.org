@@ -1244,6 +1244,8 @@ The existing lattice native cases exercise repeated same-key writes, ineffective
 updates, multi-field false/true keys and unchanged earlier projections. These
 are finite implementation discriminators; universal native hash/vector/SCC
 extraction and asynchronous custom-lattice execution remain separate gates.
+* Qualified runtime implementation (2026-10-07)
+
 ** Source-cut and routing ownership
 
 Module policy rejected the first evaluator at 1028 effective lines. Initial
@@ -1295,3 +1297,12 @@ No general speedup or full paper-application replication is admitted. Native
 routing/binder extraction, VM scheduling correspondence and full application
 experiments remain the separate research gates listed above. Exact published
 revision CI is checked after publication and is separate from this local receipt.
+
+The subsequent =5c6057c= strict-dependency/pending-key integration changes only
+=ascent-strata-test.ss= among Scheme sources; production modules and the other
+550 sources are byte-identical to the qualified =978b294= cut. The updated
+native strata module separately passed five Cases, including its independent
+8,704 graph/kind assignment oracle, with final =OK= and exit zero. Formal CI at
+=5c6057c= passed. This incremental qualification and its source hashes are
+recorded in the receipt; the earlier full 808-Case run remains identified by its
+own published code cut. Final-head whole CI is a separate pending gate.

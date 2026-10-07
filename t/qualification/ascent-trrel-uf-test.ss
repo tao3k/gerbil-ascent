@@ -4,7 +4,8 @@
 (import :gerbil/runtime/gambit
         (only-in :std/test check-equal? test-case test-suite)
         (only-in :gerbil-ascent/table/trrel-uf gerbil-ascent-trrel-uf-state gerbil-ascent-trrel-uf-extension
-                 gerbil-ascent-trrel-uf-freeze gerbil-ascent-trrel-uf-observation)
+                 gerbil-ascent-trrel-uf-freeze gerbil-ascent-trrel-uf-observation
+                 gerbil-ascent-trrel-uf-validate)
         (only-in :gerbil-ascent/core/relation-view gerbil-ascent-view-rows)
         (rename-in (only-in :gerbil-ascent/t/performance/trrel-uf/reference
                            gerbil-ascent-trrel-state gerbil-ascent-trrel-uf-extension)
@@ -14,6 +15,7 @@
           (gerbil-ascent-trrel-uf-state scan-state)
           (gerbil-ascent-trrel-uf-extension scan-extend)))
 (export ascent-trrel-uf-test)
+(def (canonical rows) (list-sort string<? (map object->string rows)))
 (def (run old? cycle? n)
   (let ((state ((if old? old-state gerbil-ascent-trrel-uf-state))) (rows []))
     (for-each (lambda (i)
@@ -54,12 +56,14 @@
                 (observation (gerbil-ascent-trrel-uf-observation state)))
             (with-catch (lambda (_) (void))
               (lambda () (gerbil-ascent-trrel-uf-extension state [] [] edge 0)))
-            (check-equal? (gerbil-ascent-view-rows (gerbil-ascent-trrel-uf-freeze state))
-                          (gerbil-ascent-view-rows cut))
-            (check-equal? (gerbil-ascent-trrel-uf-observation state) observation))
+            (check-equal? (canonical (gerbil-ascent-view-rows (gerbil-ascent-trrel-uf-freeze state)))
+                          (canonical (gerbil-ascent-view-rows cut)))
+            (check-equal? (gerbil-ascent-trrel-uf-observation state) observation)
+            (check-equal? (gerbil-ascent-trrel-uf-validate state) #t))
           (let ((new (gerbil-ascent-trrel-uf-extension state new-rows [] edge 4096))
                 (old (scan-extend before old-rows [] edge 4096)))
             (check-equal? new old)
+            (check-equal? (gerbil-ascent-trrel-uf-validate state) #t)
             (set! new-rows (append new new-rows))
             (set! old-rows (append old old-rows)))
           (when held (check-equal? (gerbil-ascent-view-rows held) held-rows))

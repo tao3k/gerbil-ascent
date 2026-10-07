@@ -1172,3 +1172,20 @@ The first four-process full native run stopped at the existing opaque
 after both receipt-status and independent closure assertions succeed. This
 retains the same 64 masks and five-second deadline; the rejected run is excluded
 from the final acceptance receipt.
+
+The latest =e406584= provider audit is retained. The private reverse maps and
+root ordinals now enter its explicit validator as well: root-list order,
+complete inverse edges, no stale predecessor keys and absorbed-map release
+are checked after successful and rejected admission in the large-root control.
+This validator remains outside insertion and query hot paths. Rejection checks
+compare logical snapshot content and physical counts; independently captured
+hash traversal order is not a mutation contract. Ordered frontiers, journal
+replay and held-cut traversal retain their exact sequence controls.
+
+Grouped decoding and journal correspondence now include
+=ProviderEncoding.root_plan_encoded_exact=, =scopes_disjoint= and
+=orient_member/count/nodup=, plus the six =ProviderReplay= mutation controls.
+The local replay gate retains the original TLC checker/model/bounds and reads
+its generated-state counter once per second; it emits a marker only when that
+counter increases. An unchanged counter provides no progress marker. The
+qualifier source is retained with the runtime evidence for reproducibility.

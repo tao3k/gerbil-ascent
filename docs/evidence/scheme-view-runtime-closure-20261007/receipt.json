@@ -1,0 +1,1277 @@
+{
+  "schema": "ascent.view-runtime-audit-closure",
+  "version": 1,
+  "rebasedOnto": "43ee40d28dbba69a67eb097dff3017133f2d9434",
+  "baseCommit": "b72b63596f92e39098adac24f4478dab33717236",
+  "scope": "Local SCC inverse adjacency with frozen-kernel ordered control, native row transport admission, ordered callback compatibility, frozen total coordinate routing, streaming source export, source-loader gate and grouped retained consumer slice. Scheme integration; theorem code owned by the proof thread.",
+  "schemeSourceCount": 551,
+  "schemeSourceDigest": "6f1ddb16a8cf8af988c0e26697e269edd4171e189ef49a9bc12214a83e36c0ea",
+  "schemeDigestFormat": "Sorted tracked and nonignored untracked .ss paths; UTF-8 path + NUL + content SHA256 + newline",
+  "sourceHashes": {
+    "core/relation-view.ss": "b338bed459339f7a611a17725676e4d2518d0023630a2becc6a4071e17ddbed0",
+    "core/positive-plan.ss": "4ccf295de2b4ae45a4aef052b5d16012d409ed0cd7091a0bd121b56d456f685b",
+    "program/evaluate.ss": "503bf331950a9dbfbf857a65ad38c2246616a67f2fd66b8f81a88f61aee617dd",
+    "program/initialization.ss": "271a048edc41a5c629ced2f0b5dd3eacb2dbd32195a6b9b90016d65257fe6dae",
+    "table/storage.ss": "99b7952003395ccd46f4827d7691d3e01fad2dab10e877d9694b2a121a37f6bf",
+    "program/index.ss": "f4f096ca6cf24c5994389cbde99402fed0a6d335a351a0b8b2229fda130d20bb",
+    "program/view-state.ss": "b671c51ecdad35ba09eaff8fc7c22d022716c247b0abe851b4816ecf5b2bb6ec",
+    "table/trrel-uf.ss": "cda2d59df70d2c262403def1c8b76e6ccc1141f7ed57a3e441cdad8f79662337",
+    "t/qualification/ascent-relation-view-test.ss": "b541503093a0b130115082926cb33c7e42ea701f54e84d17aae6d037adc54038",
+    "t/qualification/ascent-source-view-output.ss": "69fecf01b40ecf733892de0a718d01d8bb83dc9963992a3889c46da15a64824f",
+    "t/harness/dsl-closure.ss": "d9ec5b2c1d197351a6ef4613cff3bac646aab6e8f0d01617b5feedef26e695a0",
+    "t/harness/run.ss": "38502ab3ba2bd7bf0cedc1613036fcb0df0511411871396560f8e7c91d83660d",
+    "justfile": "4c6d55dc814b32f2801663f781493186a83b232a63857bac1303042b666ca8cb",
+    ".github/workflows/ci.yml": "a90f70c1f12ab73c1b648ceac117dda0b12677382ac722e38117476698786f7e",
+    "rust/ascent-oracle/tests/integration/common.rs": "c983d3e7cf9f28ac70374ee92fc72b550fe3a39c57304498fc3401eefbdc48b4",
+    "rust/ascent-oracle/tests/integration/byods.rs": "3ed8c3f550d5d132ecdff39a18894a4ab2e45a868201d72c66ae576672447a85",
+    "t/performance/index-entry/reference-evaluate.ss": "5c379f7b26f9ef3d986f0da0ae758f9cb1c578329e8e884702c39acd444dbc6f",
+    "python/src/ascent_test_support/supervision.py": "90e20ff2f834161ec4c8bcc9db4bbe289afdcf91e490adc6c246fe1ba85871dd",
+    "python/tests/test_supervision.py": "ebbbf6ab1e39b60979b99c681b8c6637e918d03e2026e8a8f0fd5da3335fdf3b",
+    "t/qualification/ascent-trrel-uf-test.ss": "34533b7e15ca5f9304396993f438bac746753115e36d3304afb29c5f8e2d805e",
+    "t/qualification/ascent-reasoning-library-test.ss": "598151d64a84f4c665691bcb4007882b8b4c2c7a714025d351b3d5ffbde7d1c4",
+    "t/qualification/ascent-provider-views-test.ss": "9733feb0ae0409969277b2dd54484d5a1abf92142a6d684d63f411ebe229b2b1",
+    "t/performance/trrel-uf/root-scan-reference.ss": "132b73881280cef7f1c51ee597bb5e9e0585642a70864145109277f7d59295a3"
+  },
+  "proofArtifacts": {
+    "packages/proofs/lean/ProviderRectangles.lean": "809a0f0a181bb90a8b1151e6293547bc5c3bbf7ca0392b169a8467c95e63e3c6",
+    "packages/proofs/lean/Tests/ProviderRectanglesTests.lean": "2872d2b018d35844e2092af191b396b678efede13eb9dc3f9fb88d452569c568",
+    "packages/proofs/tla/ReaderLifetime.tla": "d2e0773d1feac58b0175b63393abb4e0b775b4a036960989fe6515718072631a",
+    "packages/proofs/tla/ReaderLifetime.cfg": "1b7efa722f700222dedbac3e6c160e8a4786dea6008dc94e787eb5d996b4d007",
+    "packages/proofs/tla/ReaderRound.cfg": "d38c0c1fc62fbf107e3f20b5596250650db3f9270230dcdb45dc0d58da2c622f",
+    "packages/proofs/lean/DirectedFrontier.lean": "4ef91c9808fc823d33259d6191d28afe6c8d5588348b4390854a8f5cc92561c9",
+    "packages/proofs/lean/ProviderEncoding.lean": "a416c5324930ae494648a08244814243991c4a17d0159b85367ee5f227299a0c",
+    "packages/proofs/lean/TransitiveComponents.lean": "c7b26c6e2d7798c29e1212d658d7b7ce53dc05196c2ccb772382075f8816a8b9",
+    "packages/proofs/tla/ProviderReplay.tla": "0b6531df38b69d5759a2301054c09e9a5265902badc3894590c9b982f5e68736",
+    "packages/proofs/tla/ProviderReplay.cfg": "95e684a5413472fbde2c324f0bfb30153de6ce9ba1b02543e6c3830ed05bfb62",
+    "packages/proofs/tla/ProviderViews.tla": "7edda6b7c03ebfe4b3eb5da6f5a2d4466298fd01de5088e7fe003778a45f6c73"
+  },
+  "fullNative": {
+    "exitCode": 0,
+    "cases": 807,
+    "caseOK": 807,
+    "modules": 85,
+    "harnessOK": 85,
+    "nativeModulesOK": 85,
+    "explicitOK": 85,
+    "transcript": {
+      "sha256": "7a4c9bcfba0d7706d37ff0d89cd10b5e2ff414b1920f16ef80a6b968fd6d4743",
+      "path": "/private/tmp/ascent-view-runtime-full.log"
+    }
+  },
+  "sourceGate": {
+    "exitCode": 0,
+    "transcript": {
+      "sha256": "e42db1613495a5a21110480f3fd72bc754ca406ecf15c6548f0ff7bab64f5275",
+      "path": "/private/tmp/ascent-view-runtime-source.log"
+    }
+  },
+  "byodsDifferential": {
+    "exitCode": 0,
+    "passed": 11,
+    "ignoredSeparateScaleGate": 1,
+    "runtimeProgressSeconds": 5,
+    "transcript": {
+      "sha256": "5bb2e49ee24b19e2f2c4331d60805e73577d1c19505c075efa99c5ef9102f898",
+      "path": "/private/tmp/ascent-view-runtime-byods.log"
+    }
+  },
+  "nativeArtifactAdmission": {
+    "artifactSha256": "b9d223824cc28d47a41ae302c3eaa96c40644c01b10f943ed47414cd0e077e24",
+    "bindingSha256": "dc312f252a2307eaa3658b6609564f2e396e6b5797ce0e56847de73c81062335",
+    "exitCode": 0,
+    "transcript": {
+      "sha256": "b2167971292f73b7241be65d32e5bf5b5c492fb4b77c51c3c5632e0cb9addf53",
+      "path": "/private/tmp/ascent-view-runtime-admission.log"
+    }
+  },
+  "providerViewsFormal": {
+    "exitCode": 0,
+    "negativeControls": 12,
+    "transcript": {
+      "sha256": "7603c3c3265899462ac2a68bb155a454715b51e7aabb49f141108c69402d2fd7",
+      "path": "/private/tmp/ascent-view-runtime-formal.log"
+    }
+  },
+  "providerReplayFormal": {
+    "progressSource": {
+      "path": "docs/evidence/scheme-view-runtime-closure-20261007/TlcProgress.java",
+      "sha256": "3fa2ab634aa57ca3dc75b40884681618334230af55f791df31aa5a8da0cc9a2a"
+    },
+    "exitCode": 0,
+    "negativeControls": 6,
+    "runtimeProgressSeconds": 5,
+    "progressAdmission": "Only increasing generated-state counts from the original TLC checker; no unchanged-counter heartbeat",
+    "transcript": {
+      "sha256": "e4df64cfcc4dfa6cc8ab99387f14a218a37a7ced1f947616bbf08114f009d5f9",
+      "path": "/private/tmp/ascent-view-runtime-replay-formal.log"
+    }
+  },
+  "rustClippy": {
+    "exitCode": 0,
+    "transcript": {
+      "sha256": "e9c3d6ee5958d8d242471095afd032dc1b38026e76bc03168eb2569e0120c86d",
+      "path": "/private/tmp/ascent-view-runtime-clippy.log"
+    }
+  },
+  "transportGlue": {
+    "exitCode": 0,
+    "tests": 6,
+    "transcript": {
+      "sha256": "e2c481144f5aacd33fb2d001dce009849730d1cf59ea7690f02a6f66d6323a51",
+      "path": "/private/tmp/ascent-view-runtime-supervision.log"
+    }
+  },
+  "policy": {
+    "exitCode": 0,
+    "findings": 21,
+    "errors": 0,
+    "transcript": {
+      "sha256": "007e1d541a99dbf07f21ecdcd87baf679240b31e9db43c74ce0b79f387b38a57",
+      "path": "/private/tmp/ascent-view-runtime-policy.log"
+    }
+  },
+  "matchedCosts": {
+    "exitCode": 0,
+    "cases": 19,
+    "pairs": 72,
+    "transcript": {
+      "sha256": "890f6cc5625db7cf282e64759851921b2505ffc07674032f783c59b603f91d97",
+      "path": "/private/tmp/ascent-view-runtime-cost.log"
+    },
+    "fresh": {
+      "dagSparse": {
+        "samples": [
+          {
+            "pair": 0,
+            "explicit": [
+              8662.000000000004,
+              8677.0,
+              10313408.0
+            ],
+            "frozen": [
+              5748.000000000003,
+              5766.0,
+              8112504.0
+            ]
+          },
+          {
+            "pair": 1,
+            "explicit": [
+              7508.999999999988,
+              7516.0,
+              10630816.0
+            ],
+            "frozen": [
+              5468.000000000001,
+              5475.0,
+              8112504.0
+            ]
+          },
+          {
+            "pair": 2,
+            "explicit": [
+              7713.999999999998,
+              7727.0,
+              10630816.0
+            ],
+            "frozen": [
+              5316.999999999988,
+              5314.0,
+              8113208.0
+            ]
+          },
+          {
+            "pair": 3,
+            "explicit": [
+              7503.00000000001,
+              7509.0,
+              10627040.0
+            ],
+            "frozen": [
+              5445.0000000000055,
+              5456.0,
+              8113208.0
+            ]
+          },
+          {
+            "pair": 4,
+            "explicit": [
+              7730.999999999988,
+              7777.0,
+              10628000.0
+            ],
+            "frozen": [
+              4949.999999999982,
+              4948.0,
+              8154904.0
+            ]
+          },
+          {
+            "pair": 5,
+            "explicit": [
+              8604.0,
+              8615.0,
+              10586016.0
+            ],
+            "frozen": [
+              5228.00000000001,
+              5243.0,
+              8155736.0
+            ]
+          },
+          {
+            "pair": 6,
+            "explicit": [
+              8050.000000000002,
+              8059.0,
+              9520768.0
+            ],
+            "frozen": [
+              5265.999999999993,
+              5266.0,
+              8113664.0
+            ]
+          },
+          {
+            "pair": 7,
+            "explicit": [
+              8097.9999999999945,
+              8093.0,
+              9521408.0
+            ],
+            "frozen": [
+              5197.99999999998,
+              5197.0,
+              8113664.0
+            ]
+          },
+          {
+            "pair": 8,
+            "explicit": [
+              8373.999999999993,
+              8395.0,
+              9519808.0
+            ],
+            "frozen": [
+              5477.999999999983,
+              5475.0,
+              8114624.0
+            ]
+          },
+          {
+            "pair": 9,
+            "explicit": [
+              8199.000000000013,
+              8214.0,
+              10611792.0
+            ],
+            "frozen": [
+              5338.999999999983,
+              5370.0,
+              8114624.0
+            ]
+          },
+          {
+            "pair": 10,
+            "explicit": [
+              8701.999999999987,
+              8709.0,
+              10310272.0
+            ],
+            "frozen": [
+              5417.0000000000055,
+              5418.0,
+              8111288.0
+            ]
+          },
+          {
+            "pair": 11,
+            "explicit": [
+              7414.000000000032,
+              7434.0,
+              10626528.0
+            ],
+            "frozen": [
+              5593.999999999933,
+              5592.0,
+              8111288.0
+            ]
+          }
+        ],
+        "median": {
+          "cpuMicroseconds": {
+            "explicit": 8073.999999999998,
+            "frozen": 5377.9999999999945,
+            "medianPairedRatio": 0.6541645762467962
+          },
+          "elapsedMicroseconds": {
+            "explicit": 8076.0,
+            "frozen": 5394.0,
+            "medianPairedRatio": 0.6535964083728376
+          },
+          "allocatedBytes": {
+            "explicit": 10598904.0,
+            "frozen": 8113436.0,
+            "medianPairedRatio": 0.768864581366934
+          }
+        }
+      },
+      "dagFullExport": {
+        "samples": [
+          {
+            "pair": 0,
+            "explicit": [
+              7977.000000000012,
+              8016.0,
+              10626528.0
+            ],
+            "frozen": [
+              10051.000000000033,
+              10072.0,
+              16282360.0
+            ]
+          },
+          {
+            "pair": 1,
+            "explicit": [
+              7955.999999999963,
+              7981.0,
+              10626784.0
+            ],
+            "frozen": [
+              10263.99999999994,
+              10284.0,
+              16281528.0
+            ]
+          },
+          {
+            "pair": 2,
+            "explicit": [
+              8582.99999999995,
+              8598.0,
+              9521920.0
+            ],
+            "frozen": [
+              11162.000000000005,
+              11177.0,
+              16235928.0
+            ]
+          },
+          {
+            "pair": 3,
+            "explicit": [
+              7908.000000000026,
+              7934.0,
+              10628000.0
+            ],
+            "frozen": [
+              10365.999999999985,
+              10374.0,
+              16278072.0
+            ]
+          },
+          {
+            "pair": 4,
+            "explicit": [
+              7407.99999999997,
+              7414.0,
+              10628000.0
+            ],
+            "frozen": [
+              10325.00000000003,
+              10369.0,
+              16276216.0
+            ]
+          },
+          {
+            "pair": 5,
+            "explicit": [
+              7209.000000000021,
+              7216.0,
+              10627040.0
+            ],
+            "frozen": [
+              10490.999999999973,
+              10508.0,
+              16275576.0
+            ]
+          },
+          {
+            "pair": 6,
+            "explicit": [
+              7427.000000000017,
+              7433.0,
+              10627040.0
+            ],
+            "frozen": [
+              10247.000000000005,
+              10263.0,
+              16271464.0
+            ]
+          },
+          {
+            "pair": 7,
+            "explicit": [
+              7163.00000000003,
+              7170.0,
+              10631584.0
+            ],
+            "frozen": [
+              10176.99999999999,
+              10193.0,
+              16274152.0
+            ]
+          },
+          {
+            "pair": 8,
+            "explicit": [
+              7676.000000000016,
+              7695.0,
+              10631584.0
+            ],
+            "frozen": [
+              11485.000000000024,
+              11487.0,
+              16231096.0
+            ]
+          },
+          {
+            "pair": 9,
+            "explicit": [
+              7507.999999999959,
+              7523.0,
+              10625888.0
+            ],
+            "frozen": [
+              10130.000000000027,
+              10135.0,
+              16281968.0
+            ]
+          },
+          {
+            "pair": 10,
+            "explicit": [
+              7539.999999999991,
+              7547.0,
+              10625056.0
+            ],
+            "frozen": [
+              10831.000000000035,
+              10866.0,
+              16283760.0
+            ]
+          },
+          {
+            "pair": 11,
+            "explicit": [
+              7404.000000000077,
+              7407.0,
+              10625888.0
+            ],
+            "frozen": [
+              10546.999999999973,
+              10579.0,
+              16279728.0
+            ]
+          }
+        ],
+        "median": {
+          "cpuMicroseconds": {
+            "explicit": 7523.9999999999745,
+            "frozen": 10345.500000000007,
+            "medianPairedRatio": 1.3867296018903685
+          },
+          "elapsedMicroseconds": {
+            "explicit": 7535.0,
+            "frozen": 10371.5,
+            "medianPairedRatio": 1.3896524172727496
+          },
+          "allocatedBytes": {
+            "explicit": 10626912.0,
+            "frozen": 16277144.0,
+            "medianPairedRatio": 1.531851512817128
+          }
+        }
+      },
+      "cycleSparse": {
+        "samples": [
+          {
+            "pair": 0,
+            "explicit": [
+              12138.000000000093,
+              12150.0,
+              16694064.0
+            ],
+            "frozen": [
+              5541.000000000129,
+              5541.0,
+              8112728.0
+            ]
+          },
+          {
+            "pair": 1,
+            "explicit": [
+              12452.999999999936,
+              12458.0,
+              16694960.0
+            ],
+            "frozen": [
+              5359.000000000114,
+              5380.0,
+              8112728.0
+            ]
+          },
+          {
+            "pair": 2,
+            "explicit": [
+              12102.000000000056,
+              12109.0,
+              16694960.0
+            ],
+            "frozen": [
+              5532.999999999899,
+              5543.0,
+              8112088.0
+            ]
+          },
+          {
+            "pair": 3,
+            "explicit": [
+              11993.000000000031,
+              12008.0,
+              16692976.0
+            ],
+            "frozen": [
+              5249.000000000059,
+              5248.0,
+              8112088.0
+            ]
+          },
+          {
+            "pair": 4,
+            "explicit": [
+              12386.999999999925,
+              12383.0,
+              16693808.0
+            ],
+            "frozen": [
+              5288.999999999988,
+              5293.0,
+              8111192.0
+            ]
+          },
+          {
+            "pair": 5,
+            "explicit": [
+              12074.00000000003,
+              12092.0,
+              16694064.0
+            ],
+            "frozen": [
+              5517.999999999912,
+              5537.0,
+              8110552.0
+            ]
+          },
+          {
+            "pair": 6,
+            "explicit": [
+              12217.99999999995,
+              12228.0,
+              16694064.0
+            ],
+            "frozen": [
+              5221.000000000031,
+              5219.0,
+              8112032.0
+            ]
+          },
+          {
+            "pair": 7,
+            "explicit": [
+              12407.999999999975,
+              12406.0,
+              16694448.0
+            ],
+            "frozen": [
+              5571.99999999991,
+              5587.0,
+              8112032.0
+            ]
+          },
+          {
+            "pair": 8,
+            "explicit": [
+              12546.999999999864,
+              12577.0,
+              16695600.0
+            ],
+            "frozen": [
+              5479.000000000012,
+              5485.0,
+              8114792.0
+            ]
+          },
+          {
+            "pair": 9,
+            "explicit": [
+              11779.999999999902,
+              11787.0,
+              16694960.0
+            ],
+            "frozen": [
+              5491.999999999942,
+              5492.0,
+              8114792.0
+            ]
+          },
+          {
+            "pair": 10,
+            "explicit": [
+              12227.000000000098,
+              12235.0,
+              16696560.0
+            ],
+            "frozen": [
+              5601.000000000078,
+              5609.0,
+              8117552.0
+            ]
+          },
+          {
+            "pair": 11,
+            "explicit": [
+              12411.999999999978,
+              12434.0,
+              16695920.0
+            ],
+            "frozen": [
+              5113.999999999952,
+              5113.0,
+              8117552.0
+            ]
+          }
+        ],
+        "median": {
+          "cpuMicroseconds": {
+            "explicit": 12222.500000000025,
+            "frozen": 5485.499999999976,
+            "medianPairedRatio": 0.44336854729840935
+          },
+          "elapsedMicroseconds": {
+            "explicit": 12231.5,
+            "frozen": 5488.5,
+            "medianPairedRatio": 0.4436942892496947
+          },
+          "allocatedBytes": {
+            "explicit": 16694704.0,
+            "frozen": 8112408.0,
+            "medianPairedRatio": 0.48594845812751575
+          }
+        }
+      },
+      "cycleFullExport": {
+        "samples": [
+          {
+            "pair": 0,
+            "explicit": [
+              12537.999999999938,
+              12552.0,
+              16695920.0
+            ],
+            "frozen": [
+              13127.0,
+              13146.0,
+              21630736.0
+            ]
+          },
+          {
+            "pair": 1,
+            "explicit": [
+              12142.000000000096,
+              12140.0,
+              16695920.0
+            ],
+            "frozen": [
+              13027.000000000011,
+              13040.0,
+              21630736.0
+            ]
+          },
+          {
+            "pair": 2,
+            "explicit": [
+              13715.99999999995,
+              13888.0,
+              16696560.0
+            ],
+            "frozen": [
+              13247.00000000001,
+              13305.0,
+              21632072.0
+            ]
+          },
+          {
+            "pair": 3,
+            "explicit": [
+              11862.000000000151,
+              11861.0,
+              16694448.0
+            ],
+            "frozen": [
+              13741.999999999922,
+              13754.0,
+              21629192.0
+            ]
+          },
+          {
+            "pair": 4,
+            "explicit": [
+              11893.000000000042,
+              11890.0,
+              16695280.0
+            ],
+            "frozen": [
+              13125.99999999997,
+              13124.0,
+              21627144.0
+            ]
+          },
+          {
+            "pair": 5,
+            "explicit": [
+              11956.999999999995,
+              11963.0,
+              16695792.0
+            ],
+            "frozen": [
+              13345.999999999969,
+              13360.0,
+              21627784.0
+            ]
+          },
+          {
+            "pair": 6,
+            "explicit": [
+              12789.999999999967,
+              13089.0,
+              16695792.0
+            ],
+            "frozen": [
+              12981.00000000002,
+              12988.0,
+              21627976.0
+            ]
+          },
+          {
+            "pair": 7,
+            "explicit": [
+              12007.0000000001,
+              12006.0,
+              16695792.0
+            ],
+            "frozen": [
+              18326.000000000175,
+              19565.0,
+              21627976.0
+            ]
+          },
+          {
+            "pair": 8,
+            "explicit": [
+              24723.999999999967,
+              96899.0,
+              16695792.0
+            ],
+            "frozen": [
+              13902.000000000082,
+              20744.0,
+              21622440.0
+            ]
+          },
+          {
+            "pair": 9,
+            "explicit": [
+              12714.000000000115,
+              12720.0,
+              16695792.0
+            ],
+            "frozen": [
+              13806.999999999902,
+              14357.0,
+              21622440.0
+            ]
+          },
+          {
+            "pair": 10,
+            "explicit": [
+              12321.00000000025,
+              12343.0,
+              16695792.0
+            ],
+            "frozen": [
+              12984.000000000107,
+              12979.0,
+              21620200.0
+            ]
+          },
+          {
+            "pair": 11,
+            "explicit": [
+              12780.000000000013,
+              12803.0,
+              16696880.0
+            ],
+            "frozen": [
+              17644.000000000215,
+              17732.0,
+              21620584.0
+            ]
+          }
+        ],
+        "median": {
+          "cpuMicroseconds": {
+            "explicit": 12429.500000000095,
+            "frozen": 13296.499999999989,
+            "medianPairedRatio": 1.07942786097302
+          },
+          "elapsedMicroseconds": {
+            "explicit": 12447.5,
+            "frozen": 13332.5,
+            "medianPairedRatio": 1.0889598918144496
+          },
+          "allocatedBytes": {
+            "explicit": 16695792.0,
+            "frozen": 21627880.0,
+            "medianPairedRatio": 1.2954097429819709
+          }
+        }
+      }
+    },
+    "grouped": {
+      "samples": [
+        {
+          "pair": 0,
+          "explicit": [
+            2410.999999999941,
+            2426.0,
+            2166656.0
+          ],
+          "frozen": [
+            2642.000000000033,
+            2649.0,
+            2326448.0
+          ]
+        },
+        {
+          "pair": 1,
+          "explicit": [
+            2367.000000000008,
+            2364.0,
+            2166656.0
+          ],
+          "frozen": [
+            2617.999999999787,
+            2624.0,
+            2326448.0
+          ]
+        },
+        {
+          "pair": 2,
+          "explicit": [
+            2390.000000000114,
+            2397.0,
+            2166656.0
+          ],
+          "frozen": [
+            2599.000000000018,
+            2596.0,
+            2326448.0
+          ]
+        },
+        {
+          "pair": 3,
+          "explicit": [
+            2280.9999999999773,
+            2281.0,
+            2166656.0
+          ],
+          "frozen": [
+            2680.000000000016,
+            2679.0,
+            2327088.0
+          ]
+        },
+        {
+          "pair": 4,
+          "explicit": [
+            2453.0000000000387,
+            2471.0,
+            2166656.0
+          ],
+          "frozen": [
+            2596.0000000000427,
+            2595.0,
+            2326448.0
+          ]
+        },
+        {
+          "pair": 5,
+          "explicit": [
+            2375.000000000238,
+            2375.0,
+            2166656.0
+          ],
+          "frozen": [
+            2617.0000000003133,
+            2621.0,
+            2326448.0
+          ]
+        },
+        {
+          "pair": 6,
+          "explicit": [
+            2389.999999999892,
+            2389.0,
+            2166656.0
+          ],
+          "frozen": [
+            2716.9999999998586,
+            2732.0,
+            2326448.0
+          ]
+        },
+        {
+          "pair": 7,
+          "explicit": [
+            2342.999999999984,
+            2342.0,
+            2166656.0
+          ],
+          "frozen": [
+            2663.9999999999995,
+            2675.0,
+            2326448.0
+          ]
+        },
+        {
+          "pair": 8,
+          "explicit": [
+            2370.999999999901,
+            2368.0,
+            2166656.0
+          ],
+          "frozen": [
+            2619.000000000149,
+            2627.0,
+            2326448.0
+          ]
+        },
+        {
+          "pair": 9,
+          "explicit": [
+            2401.0000000000973,
+            2399.0,
+            2166656.0
+          ],
+          "frozen": [
+            2483.000000000013,
+            2483.0,
+            2326448.0
+          ]
+        },
+        {
+          "pair": 10,
+          "explicit": [
+            2364.9999999999504,
+            2375.0,
+            2166656.0
+          ],
+          "frozen": [
+            2605.9999999998863,
+            2609.0,
+            2326464.0
+          ]
+        },
+        {
+          "pair": 11,
+          "explicit": [
+            2360.0000000001396,
+            2357.0,
+            2166656.0
+          ],
+          "frozen": [
+            2599.000000000018,
+            2598.0,
+            2326464.0
+          ]
+        }
+      ],
+      "median": {
+        "cpuMicroseconds": {
+          "explicit": 2373.000000000069,
+          "frozen": 2617.50000000005,
+          "medianPairedRatio": 1.1018987426282392
+        },
+        "elapsedMicroseconds": {
+          "explicit": 2375.0,
+          "frozen": 2622.5,
+          "medianPairedRatio": 1.102913784248487
+        },
+        "allocatedBytes": {
+          "explicit": 2166656.0,
+          "frozen": 2326448.0,
+          "medianPairedRatio": 1.0737505169256218
+        }
+      }
+    },
+    "retained": {
+      "samples": [
+        {
+          "pair": 0,
+          "explicit": [
+            1527.9999999999739,
+            1524.0,
+            2191360.0,
+            6718024.0
+          ],
+          "frozen": [
+            546.9999999998531,
+            543.0,
+            996400.0,
+            5936312.0
+          ]
+        },
+        {
+          "pair": 1,
+          "explicit": [
+            1609.9999999998893,
+            1613.0,
+            2191360.0,
+            6722808.0
+          ],
+          "frozen": [
+            600.000000000156,
+            592.0,
+            996400.0,
+            5937592.0
+          ]
+        },
+        {
+          "pair": 2,
+          "explicit": [
+            1550.9999999998581,
+            1548.0,
+            2191360.0,
+            6724088.0
+          ],
+          "frozen": [
+            531.9999999997549,
+            527.0,
+            996400.0,
+            5942376.0
+          ]
+        },
+        {
+          "pair": 3,
+          "explicit": [
+            1560.9999999997015,
+            1566.0,
+            2191360.0,
+            6728888.0
+          ],
+          "frozen": [
+            524.9999999996646,
+            520.0,
+            996400.0,
+            5943672.0
+          ]
+        },
+        {
+          "pair": 4,
+          "explicit": [
+            1584.9999999999475,
+            1588.0,
+            2191360.0,
+            6730168.0
+          ],
+          "frozen": [
+            546.0000000001576,
+            541.0,
+            996400.0,
+            5948456.0
+          ]
+        },
+        {
+          "pair": 5,
+          "explicit": [
+            1527.000000000056,
+            1523.0,
+            2191360.0,
+            6734952.0
+          ],
+          "frozen": [
+            528.000000000084,
+            532.0,
+            996400.0,
+            5949736.0
+          ]
+        },
+        {
+          "pair": 6,
+          "explicit": [
+            1496.9999999998595,
+            1501.0,
+            2191360.0,
+            6736232.0
+          ],
+          "frozen": [
+            538.9999999998452,
+            535.0,
+            996400.0,
+            5954520.0
+          ]
+        },
+        {
+          "pair": 7,
+          "explicit": [
+            1508.9999999999827,
+            1504.0,
+            2191360.0,
+            6741016.0
+          ],
+          "frozen": [
+            524.000000000191,
+            520.0,
+            996400.0,
+            5955816.0
+          ]
+        },
+        {
+          "pair": 8,
+          "explicit": [
+            1474.999999999893,
+            1473.0,
+            2191360.0,
+            6742312.0
+          ],
+          "frozen": [
+            522.9999999996071,
+            520.0,
+            996400.0,
+            5960600.0
+          ]
+        },
+        {
+          "pair": 9,
+          "explicit": [
+            1518.0000000005746,
+            1515.0,
+            2191360.0,
+            6747096.0
+          ],
+          "frozen": [
+            534.9999999999521,
+            531.0,
+            996400.0,
+            5961880.0
+          ]
+        },
+        {
+          "pair": 10,
+          "explicit": [
+            1557.9999999997262,
+            1555.0,
+            2191360.0,
+            6748376.0
+          ],
+          "frozen": [
+            518.0000000000184,
+            515.0,
+            996400.0,
+            5966664.0
+          ]
+        },
+        {
+          "pair": 11,
+          "explicit": [
+            1546.0000000000473,
+            1543.0,
+            2191360.0,
+            6753160.0
+          ],
+          "frozen": [
+            488.99999999973966,
+            485.0,
+            996400.0,
+            5967960.0
+          ]
+        }
+      ],
+      "median": {
+        "cpuMicroseconds": {
+          "explicit": 1537.0000000000105,
+          "frozen": 529.9999999999195,
+          "medianPairedRatio": 0.3465129328808634
+        },
+        "elapsedMicroseconds": {
+          "explicit": 1533.5,
+          "frozen": 529.0,
+          "medianPairedRatio": 0.34752762604601783
+        },
+        "allocatedBytes": {
+          "explicit": 2191360.0,
+          "frozen": 996400.0,
+          "medianPairedRatio": 0.4546948014018692
+        },
+        "sampledPeakLiveBytes": {
+          "explicit": 6735592.0,
+          "frozen": 5952128.0,
+          "medianPairedRatio": 0.8836840501909927
+        }
+      }
+    },
+    "baseline": "Explicit reference evaluator with current shared helpers and current UF kernel; not a complete historical Git head.",
+    "boundaries": [
+      "Only these warmed alternating workloads are admitted. Plan-selected routing construction and recapture are included in engine costs.",
+      "Callback programs retain an ordered explicit cache per lane/cut; pure canonical programs retain compressed access.",
+      "Total member/descriptor units exclude routing, index, journal and VM bytes.",
+      "Live samples include initial and updated cuts while the old result and rows stay held; they are not continuous peak RSS.",
+      "Historical negative costs remain in scheme-relation-views-20261007; current regressions remain in this receipt.",
+      "Application fixture is a grouped reachability request slice, not full paper application replication."
+    ]
+  },
+  "developmentControls": {
+    "eagerRoutingNegativeCut": {
+      "schemeSourceDigest": "e1f1d3222c9871e26679c95c06c559357409272e7867313adb4e9df46da89b58",
+      "passedCases": 800,
+      "dagSparseMedianAllocatedBytes": {
+        "explicit": 7797968,
+        "frozen": 8267568
+      },
+      "scope": "Shared full-suite cost samples triggered plan-selected routing; not admitted isolated performance."
+    },
+    "excluded": [
+      "Module policy rejected the evaluator at 1028 effective lines; source-cut initialization and routing were extracted into the existing view-state owner, then policy and affected runtime gates rerun.",
+      "Native preparation runs before the final source freeze; compiler rejected source changes.",
+      "Interpreter cost samples used only to diagnose semantic failures; not admitted as native performance.",
+      "Original callback/field traces and derived delta orientation failed discriminator tests before repair.",
+      "Unwatched initial BYODS exit-zero run is not evidence of the five-second progress gate.",
+      "Five-second parallel and serial source-fixture runtime runs failed; no timeout widening.",
+      "Native admission rejection initially polluted stdout; explicit stderr failure handling repaired it.",
+      "Merged supervisor stderr initially polluted row protocols; separated stream tests and unchanged Rust assertions discriminate the repair.",
+      "Four-process native full run stalled at the opaque 64-graph reasoning Case; emit only completed, asserted eight-graph counts.",
+      "Whole-root UF scans stalled the 10,000-edge fixture; large-group inverse adjacency and a frozen-kernel ordered control repair that path.",
+      "Interrupted single-entry preparation left an unowned stale single-test__exe_.o.lock; removed only that ignored lock after stopping the compiler; independent native cost rerun passed.",
+      "Initial Rust linker lacked iconv; qualification uses Xcode SDK and system clang.",
+      "Interpreted provider audit cold startup exceeded five seconds; only the independent native audit is admitted.",
+      "ProviderReplay default TLC reporting interval exceeded five seconds; qualification uses increasing generated-state counters from the unchanged TLC checker with identical model/bounds.",
+      "Initial TLC sandbox denied local RMI listener; unsandboxed local gate required."
+    ]
+  },
+  "formalBoundary": "Abstract Lean/TLA claims retain their explicit premises; no extracted native routing/binder/VM refinement or universal callback theorem is claimed.",
+  "githubGate": {
+    "pr": "https://github.com/tao3k/gerbil-ascent/pull/1",
+    "status": "Query exact published commit and checks separately after push."
+  }
+}

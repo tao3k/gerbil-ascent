@@ -1244,3 +1244,53 @@ The existing lattice native cases exercise repeated same-key writes, ineffective
 updates, multi-field false/true keys and unchanged earlier projections. These
 are finite implementation discriminators; universal native hash/vector/SCC
 extraction and asynchronous custom-lattice execution remain separate gates.
+** Source-cut and routing ownership
+
+Module policy rejected the first evaluator at 1028 effective lines. Initial
+source journals, immutable total/delta cuts and validated-plan routing now
+belong to =program/view-state.ss=. A private =view-routing-state= record carries
+only the owning engine's buffers, generation, journals and routing decisions.
+Source admission still finishes before initialization and plan inspection;
+recapture preserves relation identity, generation, revision and cardinality.
+The existing ordered callback, error, retained consumer and provider audit
+controls qualify the extracted path. The policy limit is unchanged.
+
+The =43ee40d= research revision is integrated. Its ProviderAdmission and
+ProviderIteration laws and native retained-injection/custom-packet controls
+remain proof-thread-owned; the runtime bridge retains their stated premises.
+
+** Qualified runtime cut and remaining costs
+
+[[file:evidence/scheme-view-runtime-closure-20261007/receipt.json][The runtime closure receipt]] binds 551 Scheme sources with digest
+=6f1ddb16a8cf8af988c0e26697e269edd4171e189ef49a9bc12214a83e36c0ea=.
+The full native gate passed 85 modules and 807 Cases, with 85 final =OK= markers
+and exit zero. The independent relation-view module passed 19 Cases and emitted
+72 alternating paired measurements. Source loading, native artifact admission
+including stale-binding rejection, 11 BYODS differential tests, six supervision
+glue tests, Rust clippy and module policy passed. ProviderViews/reader/round
+and ProviderReplay retain their 12 and six mutation controls respectively;
+the selected model inputs are unchanged by the latest integration. The two
+new proof-thread native controls are included in the full 807-Case cut.
+
+The table reports median paired frozen/explicit ratios from the independently
+run native cost module, with 12 pairs per workload. The explicit reference uses
+current shared helpers and the current UF kernel, rather than an entire older
+Git revision. Both construction and selected routing recapture are measured.
+
+| Workload | CPU ratio | elapsed ratio | allocated bytes ratio |
+|----------+-----------+---------------+-----------------------|
+| sparse DAG | 0.654 | 0.654 | 0.769 |
+| sparse cycle | 0.443 | 0.444 | 0.486 |
+| full DAG export | 1.387 | 1.390 | 1.532 |
+| full cycle export | 1.079 | 1.089 | 1.295 |
+| grouped query | 1.102 | 1.103 | 1.074 |
+| retained update, old result held | 0.347 | 0.348 | 0.455 |
+
+The retained workload's sampled live-byte ratio is 0.884; this samples initial
+and updated cuts while old rows remain held, not continuous peak RSS. Full
+export still replays UF injections and allocates the concrete output family;
+its remaining regressions and the grouped routing overhead are open cost work.
+No general speedup or full paper-application replication is admitted. Native
+routing/binder extraction, VM scheduling correspondence and full application
+experiments remain the separate research gates listed above. Exact published
+revision CI is checked after publication and is separate from this local receipt.

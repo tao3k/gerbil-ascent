@@ -9,7 +9,7 @@ gerbil_environment := if os() == "macos" {
     "env -u CC -u CFLAGS -u CPPFLAGS -u LDFLAGS -u CPATH -u C_INCLUDE_PATH -u CPLUS_INCLUDE_PATH -u LIBRARY_PATH -u NIX_CFLAGS_COMPILE -u NIX_LDFLAGS -u DEVELOPER_DIR -u SDKROOT"
 } else { "env" }
 gerbil_command := gerbil_environment + " gerbil"
-gxi_command := gerbil_environment + " gxi"
+gxi_command := gerbil_command + " env gxi"
 
 gerbil_test_runtime_options := "-:max-heap=1G,debug=q"
 native_qualification := 'GERBIL_LOADPATH="' + justfile_directory() + '${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" ' + gerbil_command + ' env gxi -:max-heap=1G,debug=q t/native/qualification.ss'

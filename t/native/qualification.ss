@@ -119,10 +119,14 @@
     "t/performance/ascent-binary-program-performance-test.ss"
     "t/performance/ascent-shortest-candidates-performance-test.ss"))
 (def (qualification-files)
-  (map (lambda (name) (string-append "t/qualification/" name))
-       (list-sort string<?
-                  (filter (lambda (name) (string-suffix? "-test.ss" name))
-                          (directory-files "t/qualification")))))
+  ;; Allocation contracts require compiled production code. Source semantic
+  ;; Suites remain in t/qualification; this native-only Case retains its bound.
+  (append
+   (map (lambda (name) (string-append "t/qualification/" name))
+        (list-sort string<?
+                   (filter (lambda (name) (string-suffix? "-test.ss" name))
+                           (directory-files "t/qualification"))))
+   '("t/performance/ascent-source-cut-allocation-test.ss")))
 
 ;; Each compiler process owns one dependency layer. Expander contexts and
 ;; optimization trees must not accumulate across production, references and

@@ -34,35 +34,25 @@
       (thread-yield!) (loop (+ attempts 1)))))
 (def ascent-actor-session-test
   (test-suite "Session actor generation and completed publication"
-    (test-case "source budget refusal precedes row copying and preserves validation order"
+    (test-case "source budget refusal preserves validation order and source rows"
       (let* ((positions (make-hash-table-eq)) (arities '#(2 1)))
         (hash-put! positions 'edge 1) (hash-put! positions 'other 2)
         (let* ((cut (gerbil-ascent-make-source-cut positions arities
                      '((edge (0 1)) (other (7)))))
                (small (list (cons 'edge (make-list 10000 '(2 3)))))
-               (large (list (cons 'edge (make-list 20000 '(2 3)))))
-               (counter (make-f64vector 2 0.0)))
-          (def (refusal-bytes batch append?)
-            (##gc)
-            (##get-bytes-allocated! counter 0)
-            (let (failure
-                  (diagnostic (lambda ()
-                    (gerbil-ascent-source-cut-update cut positions arities batch append? 2))))
-              (##get-bytes-allocated! counter 1)
-              (check-equal? (if (string-contains failure "input fact budget exceeded") #t #f) #t)
-              (check-equal? (gerbil-ascent-source-cut-rows cut 0) '((0 1)))
-              (check-equal? (gerbil-ascent-source-cut-rows cut 1) '((7)))
-              (- (f64vector-ref counter 1) (f64vector-ref counter 0))))
-          ;; Warm exception formatting before comparing native allocation.
-          (refusal-bytes small #f)
+               (large (list (cons 'edge (make-list 20000 '(2 3))))))
           (for-each
            (lambda (append?)
-             (let ((a (refusal-bytes small append?)) (b (refusal-bytes large append?)))
-               ;; A doubled rejected row batch must not allocate row spines.
-               ;; This fixture allows formatting noise, not per-row copies.
-               (check-equal? (< b (+ a 4096)) #t)
-               (displayln "SOURCE-CUT-REFUSAL append=" append? " small-bytes=" a " large-bytes=" b)
-               (force-output))) '(#f #t))
+             (for-each
+              (lambda (batch)
+                (check-equal?
+                 (if (string-contains
+                      (diagnostic (lambda ()
+                        (gerbil-ascent-source-cut-update cut positions arities batch append? 2)))
+                      "input fact budget exceeded") #t #f) #t)
+                (check-equal? (gerbil-ascent-source-cut-rows cut 0) '((0 1)))
+                (check-equal? (gerbil-ascent-source-cut-rows cut 1) '((7))))
+              (list small large))) '(#f #t))
           (check-equal?
            (if (string-contains
                 (diagnostic (lambda ()

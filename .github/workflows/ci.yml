@@ -20,7 +20,7 @@ jobs:
       - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential ca-certificates git jq just libssl-dev openssl pkg-config zlib1g-dev
+          sudo apt-get install -y build-essential ca-certificates git jq just ripgrep libssl-dev openssl pkg-config zlib1g-dev
           just --version
       - name: Install immutable Gerbil v0.19 release
         run: bash tools/ci/install-gerbil-v19-release.sh "$GERBIL_RELEASE_ROOT"
@@ -32,6 +32,8 @@ jobs:
           gerbil env gerbil interactive -e '(begin (import :asp-gerbil-scheme/building-api :asp-gerbil-scheme/benchmark-api) (displayln "ascent-dependencies-ready"))'
       - name: Build Scheme package
         run: ASP_GERBIL_SCHEME_POLICY=1 gerbil build
+      - name: Qualify standard Gerbil source entrypoint
+        run: just test-file t/qualification/ascent-actor-session-test.ss
       - name: Qualify Scheme rules
         run: just test-native-suite
       - name: Qualify runtime source view loading
@@ -67,7 +69,7 @@ jobs:
       - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential ca-certificates git jq just libssl-dev openssl pkg-config zlib1g-dev
+          sudo apt-get install -y build-essential ca-certificates git jq just ripgrep libssl-dev openssl pkg-config zlib1g-dev
           just --version
       - name: Install immutable Gerbil v0.19 release
         run: bash tools/ci/install-gerbil-v19-release.sh "$GERBIL_RELEASE_ROOT"

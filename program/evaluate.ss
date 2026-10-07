@@ -7,7 +7,8 @@
 (import :gerbil-ascent/core/relation-view
         (only-in "view-state.ss" gerbil-ascent-view-relation? gerbil-ascent-stage-view!
                  gerbil-ascent-view-journal-event gerbil-ascent-view-export-cut
-                 gerbil-ascent-commit-view! gerbil-ascent-empty-view gerbil-ascent-add-frontier)
+                 gerbil-ascent-commit-view! gerbil-ascent-empty-view gerbil-ascent-add-frontier
+                 make-view-routing-state gerbil-ascent-initialize-view-cuts! gerbil-ascent-route-view-sources!)
         (only-in "positive-components.ss" gerbil-ascent-run-positive-components! gerbil-ascent-component-mode?)
         (only-in "actor-round.ss" gerbil-ascent-run-actor-round! gerbil-ascent-actor-round-eligible?)
         (only-in "source-log.ss" gerbil-ascent-source-log-rows)
@@ -42,7 +43,6 @@
                  gerbil-ascent-storage-owned-states
                  gerbil-ascent-storage-check-state! gerbil-ascent-storage-admit-state!
                  gerbil-ascent-set-batch-admit!
-                 gerbil-ascent-storage-freeze-view
                  gerbil-ascent-canonical-set-storage-provider?)
         (only-in :clan/poo/support/base until))
 
@@ -186,19 +186,10 @@
        (lambda (inputs materialized)
          (set! source-count inputs)
          (set! source-materialized-count materialized)))
-      (for-each (lambda (index)
-        (when (view-relation? index)
-          (vector-set! view-journals index
-            (list (gerbil-ascent-view-journal-event 'source (.ref (list-ref relations index) 'rows))))
-          (let (frozen (gerbil-ascent-view-export-cut (if (relation-view? (vector-ref all index)) (vector-ref all index)
-                          gerbil-ascent-empty-view) (vector-ref view-journals index)))
-            (vector-set! all index (gerbil-ascent-view-bind frozen (vector-ref names index)
-                                    (cons view-generation source-count) 0 'total))
-            (vector-set! delta index
-              (gerbil-ascent-view-with-export
-                (gerbil-ascent-view-bind frozen (vector-ref names index)
-                  (cons view-generation source-count) 0 'delta)
-                (lambda () (reverse (gerbil-ascent-view-rows frozen)))))))) (iota count))
+      (def view-state
+        (make-view-routing-state storage-states all delta all-version names
+          (cons view-generation source-count) view-journals view-routing))
+      (gerbil-ascent-initialize-view-cuts! relations view-relation? view-state)
       ;; Source admission uses the prospective input and budgets. Reuse owns
       ;; completed-row admission into these same private engine buffers.
       ;; Neither phase can publish a failed prospective Session.
@@ -232,31 +223,7 @@
                      index-providers lattice-joins field-checkers)))
              (_routed-sources
               (unless ordered-execution?
-                ;; Fixed literal keys need one filter, while bound variables
-                ;; can request many keys. Admission precedes this plan inspection.
-                (for-each (lambda (rule)
-                  (for-each (lambda (clause)
-                    (when (eq? (vector-ref clause 0) 'atom)
-                      (let* ((atom (vector-ref clause 1)) (index (vector-ref atom 0)))
-                        (when (and (view-relation? index)
-                                   (ormap (lambda (column)
-                                     (not (eq? (car (list-ref (vector-ref atom 1) column)) 'literal)))
-                                     (vector-ref atom 2)))
-                          (vector-set! view-routing index #t))))) (vector-ref rule 1))) rule-plans)
-                (for-each (lambda (index)
-                  (when (vector-ref view-routing index)
-                    (let (total (gerbil-ascent-view-export-cut
-                                  (gerbil-ascent-view-bind
-                                    (gerbil-ascent-storage-freeze-view (vector-ref storage-states index) #t)
-                                    (vector-ref names index) (cons view-generation source-count)
-                                    (vector-ref all-version index) 'total)
-                                  (vector-ref view-journals index)))
-                      (vector-set! all index total)
-                      (vector-set! delta index
-                        (gerbil-ascent-view-with-export
-                          (gerbil-ascent-view-bind total (vector-ref names index)
-                            (cons view-generation source-count) (vector-ref all-version index) 'delta)
-                          (lambda () (reverse (gerbil-ascent-view-rows total)))))))) (iota count))))
+                (gerbil-ascent-route-view-sources! rule-plans view-relation? view-state)))
              (active-by-stratum
               (if reuse
                 (gerbil-ascent-activate-selected-rules analysis

@@ -4,14 +4,66 @@
 ;;; Publication over one relation owner's staged representation. The frozen
 ;;; total/delta and their counts move together; no concrete UF membership map.
 (import :gerbil-ascent/core/relation-view
+        (only-in :clan/poo/object .ref)
         (only-in :gerbil-ascent/table/storage gerbil-ascent-canonical-uf-storage-provider?
                  gerbil-ascent-storage-view-extension! gerbil-ascent-storage-freeze-view)
         (only-in :gerbil-ascent/table/trrel-uf gerbil-ascent-trrel-uf-state gerbil-ascent-trrel-uf-insert!)
         (only-in :gerbil-ascent/table/provider gerbil-ascent-canonical-hash-index-provider?))
 (export gerbil-ascent-view-journal-event gerbil-ascent-view-export-cut
         gerbil-ascent-view-relation? gerbil-ascent-stage-view!
-        gerbil-ascent-commit-view! gerbil-ascent-empty-view gerbil-ascent-add-frontier)
+        gerbil-ascent-commit-view! gerbil-ascent-empty-view gerbil-ascent-add-frontier
+        make-view-routing-state gerbil-ascent-initialize-view-cuts! gerbil-ascent-route-view-sources!)
 (def gerbil-ascent-empty-view (gerbil-ascent-explicit-view [] 0))
+
+;; Evaluation-local buffers are shared only with their engine. Frozen cuts and
+;; their source generation retain no mutable routing state after publication.
+(defstruct view-routing-state (storage all delta versions names generation journals routing))
+(def (initial-delta view name generation revision)
+  (gerbil-ascent-view-with-export
+    (gerbil-ascent-view-bind view name generation revision 'delta)
+    (lambda () (reverse (gerbil-ascent-view-rows view)))))
+(def (gerbil-ascent-initialize-view-cuts! relations eligible? state)
+  (let ((all (view-routing-state-all state)) (delta (view-routing-state-delta state))
+        (names (view-routing-state-names state)) (generation (view-routing-state-generation state))
+        (journals (view-routing-state-journals state)))
+    (for-each (lambda (index)
+      (when (eligible? index)
+        (vector-set! journals index
+          (list (gerbil-ascent-view-journal-event 'source (.ref (list-ref relations index) 'rows))))
+        (let (frozen (gerbil-ascent-view-export-cut
+                      (if (relation-view? (vector-ref all index)) (vector-ref all index)
+                          gerbil-ascent-empty-view) (vector-ref journals index)))
+          (vector-set! all index
+            (gerbil-ascent-view-bind frozen (vector-ref names index) generation 0 'total))
+          (vector-set! delta index (initial-delta frozen (vector-ref names index) generation 0)))))
+      (iota (vector-length all)))))
+(def (gerbil-ascent-route-view-sources! rule-plans eligible? state)
+  (let ((all (view-routing-state-all state)) (delta (view-routing-state-delta state))
+        (names (view-routing-state-names state)) (generation (view-routing-state-generation state))
+        (journals (view-routing-state-journals state)) (routing (view-routing-state-routing state))
+        (storage (view-routing-state-storage state)) (versions (view-routing-state-versions state)))
+    ;; Fixed literal keys need one filter; bound variables can request many
+    ;; keys. The caller admits sources and validates plans before inspection.
+    (for-each (lambda (rule)
+      (for-each (lambda (clause)
+        (when (eq? (vector-ref clause 0) 'atom)
+          (let* ((atom (vector-ref clause 1)) (index (vector-ref atom 0)))
+            (when (and (eligible? index)
+                       (ormap (lambda (column)
+                         (not (eq? (car (list-ref (vector-ref atom 1) column)) 'literal)))
+                         (vector-ref atom 2)))
+              (vector-set! routing index #t))))) (vector-ref rule 1))) rule-plans)
+    (for-each (lambda (index)
+      (when (vector-ref routing index)
+        (let (total (gerbil-ascent-view-export-cut
+                      (gerbil-ascent-view-bind
+                        (gerbil-ascent-storage-freeze-view (vector-ref storage index) #t)
+                        (vector-ref names index) generation (vector-ref versions index) 'total)
+                      (vector-ref journals index)))
+          (vector-set! all index total)
+          (vector-set! delta index
+            (initial-delta total (vector-ref names index) generation (vector-ref versions index))))))
+      (iota (vector-length all)))))
 ;; : (-> StorageProvider IndexProvider Boolean)
 (def (gerbil-ascent-view-relation? storage index)
   (and (gerbil-ascent-canonical-uf-storage-provider? storage)

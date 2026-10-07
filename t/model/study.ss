@@ -14,9 +14,9 @@
         (only-in :gerbil-ascent/t/qualification/ascent-finite-evidence-test ascent-finite-evidence-test)
         (only-in :gerbil-ascent/t/qualification/ascent-positive-nonmembership-test ascent-positive-nonmembership-test))
 (export main)
-(import (only-in :gerbil-ascent/t/harness/artifact artifact-main))
+(import (only-in :gerbil-ascent/t/runner/artifact-admission artifact-main))
 (import (only-in :gerbil-ascent/t/qualification/scheme-artifact-test scheme-artifact-test))
-(import (only-in :gerbil-ascent/t/harness/prediction prediction-main))
+(import (only-in :gerbil-ascent/t/model/response-projection prediction-main))
 (import (only-in :gerbil-ascent/t/qualification/ascent-timeout-test ascent-timeout-test))
 
 (import (only-in :gerbil-ascent/t/qualification/scheme-provenance-graph-test

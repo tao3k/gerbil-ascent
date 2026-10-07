@@ -11,7 +11,7 @@
         (only-in :clan/poo/object .ref)
         (only-in :std/list/list find take)
         (only-in :std/test/base TestCase test-case-add!))
-(import (only-in "../harness/prediction" read-prediction project-prediction))
+(import (only-in "../model/response-projection" read-prediction project-prediction))
 (export scheme-model-closure-test model-closure-compute model-closure-score)
 (defsyntax (study-case stx)
   (syntax-case stx ()

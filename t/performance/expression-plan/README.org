@@ -122,13 +122,13 @@ three-field projector. The real actor callback-rejection Case passes.
 
 The preceding GitHub run =37420839719= failed with heap overflow while compiling
 the generated combined entry, before Case execution. Native entry compilation
-now runs in =t/harness/native-compile.ss= in a fresh Scheme process with the same
+now runs in =t/runner/compile-entry.ss= in a fresh Scheme process with the same
 =-:max-heap=1G,debug=q= bound. Library-make expander/optimizer contexts remain in
 the parent. Child output is forwarded, compiler errors propagate, and both child
 and parent check the generated source digest. The old executable is removed
 before compilation and the pending compiler/link jobs are drained before use.
 
-The complete =t/harness/run.ss test 2 all= command passed all 82 modules and 708
+The complete =t/runner/main.ss test 2 all= command passed all 82 modules and 708
 Cases with process exit 0 and explicit =MODULE-OK=, =HARNESS-OK= and final =OK=
 for every module. This used two parallel module processes and the existing
 exclusive lane. It confirms the complete generated entry can compile and run

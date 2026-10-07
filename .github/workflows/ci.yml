@@ -38,8 +38,10 @@ jobs:
         run: just check-source-views
       - name: Qualify native actor pool lifecycle
         run: just check-actor-pool
+      - name: Qualify native executable cache admission
+        run: just test-native t/runner/entry-cache-test.ss
       - name: Qualify native single-module entry and failure controls
-        run: just check-native-entry
+        run: just check-native-registry
       - name: Build native DSL closure entry
         run: just build-dsl-closure
       - name: Qualify native DSL closure

@@ -8,10 +8,11 @@
         :gerbil/expander
         (only-in :std/make make)
         :std/misc/process :std/os/flock :std/os/device
-        (only-in "native-entry.ss" prepare-native-tests!)
+        (only-in "native-registry.ss" prepare-native-tests!)
+        (only-in "entry-cache.ss" entry-inputs entry-current?)
         (only-in "actor-pool.ss" run-actor-pool!)
-        (only-in "native-child.ss" run-test-child)
-        (only-in "artifact.ss" artifact-main artifact-sources artifact-matching-sources? artifact-digest)
+        (only-in "module-process.ss" run-test-child)
+        (only-in "artifact-admission.ss" artifact-main artifact-sources artifact-matching-sources? artifact-digest)
         (only-in "../../build.ss" gerbil-ascent-library-modules)
         (only-in :asp-gerbil-scheme/src/build-api/core-capacity
                  initialize-native-build-core-capacity!))
@@ -140,7 +141,7 @@
       (call-with-output-file [path: spec truncate: #t]
         (lambda (out) (write modules out) (newline out)))
       (run-process/batch
-       ["gxi" "-:max-heap=1G,debug=q" "t/harness/run.ss"
+       ["gxi" "-:max-heap=1G,debug=q" "t/runner/main.ss"
         "compile-test-layer" spec library]))))
 
 (def (prepare-test-library! (tests []))
@@ -149,7 +150,7 @@
          (modules (append gerbil-ascent-library-modules
                           '("t/performance/native-library" "t/performance/ascent-ss-profile"
                             "t/scenarios/performance/ascent-table-expression/baseline"
-                            "t/harness/artifact" "t/harness/prediction" "t/harness/actor-pool" "t/harness/native-child")
+                            "t/runner/artifact-admission" "t/runner/entry-cache" "t/model/response-projection" "t/runner/actor-pool" "t/runner/module-process")
                           (if (member "t/qualification/ascent-callback-plan-test.ss" tests)
                             '("t/performance/callback-plan/expression-reference") [])
                           (if (member "t/qualification/ascent-expression-plan-test.ss" tests)
@@ -271,25 +272,38 @@
       (set! modules (append modules (filter (lambda (module) (not (member module modules))) support))))
     (call-with-output-file [path: module-file truncate: #t]
       (lambda (out) (write modules out) (newline out)))
-    ;; The complete paired reference closure is compiled before Suite consumers.
-    ;; Fresh processes release each layer's compiler state under the same heap
-    ;; contract. They share immutable compiled outputs, not expander caches.
-    (compile-test-layer! gerbil-ascent-library-modules library)
-    (compile-test-layer!
-     (filter (lambda (module) (not (member module gerbil-ascent-library-modules))) modules)
-     library)
-    ;; A Suite is the consumer ownership boundary. Linux qualification showed
-    ;; that accumulating all Suite expansion contexts still exhausts the same
-    ;; 1 GiB heap after production/support succeeded. Release those contexts
-    ;; per Suite; do not reduce coverage or increase the heap contract.
-    (for-each
-     (lambda (module) (compile-test-layer! (list module) library))
-     (filter (lambda (module) (not (member module modules))) (map path-strip-extension tests)))
-    (force-output)
+    ;; A content-admitted entry also binds its compiled library. An unchanged
+    ;; focused request needs no fresh std/make compiler processes. Full pools
+    ;; retain their existing per-Suite isolation on preparation.
+    (add-load-path! library)
     (setenv "ASCENT_TEST_LIBRARY" library)
     (setenv "ASCENT_PERFORMANCE_MODULES" module-file)
     (setenv "GERBIL_LOADPATH"
-            (string-append library ":" (current-directory) ":" (getenv "GERBIL_LOADPATH" "")))))
+      (string-append library ":" (current-directory) ":" (getenv "GERBIL_LOADPATH" "")))
+    (let* ((source (path-expand "single-test.ss" test-cache))
+           (binary (path-expand "single-test" test-cache))
+           (reusable? (and (= (length tests) 1) (file-exists? source)
+             (entry-current? (string-append binary ".json") binary
+               (artifact-digest source) (entry-inputs library) (car tests)))))
+      (if reusable?
+        (displayln "NATIVE-LIBRARY-CACHE-HIT")
+        (begin
+          ;; The complete paired reference closure is compiled before Suite consumers.
+          ;; Fresh processes release each layer's compiler state under the same heap
+          ;; contract. They share immutable compiled outputs, not expander caches.
+          (compile-test-layer! gerbil-ascent-library-modules library)
+          (compile-test-layer!
+           (filter (lambda (module) (not (member module gerbil-ascent-library-modules))) modules)
+           library)
+          ;; A Suite is the consumer ownership boundary. Linux qualification showed
+          ;; that accumulating all Suite expansion contexts still exhausts the same
+          ;; 1 GiB heap after production/support succeeded. Release those contexts
+          ;; per Suite; do not reduce coverage or increase the heap contract.
+          (for-each
+           (lambda (module) (compile-test-layer! (list module) library))
+           (filter (lambda (module) (not (member module modules))) (map path-strip-extension tests)))
+        )))
+    (force-output)))
 (def (pool-jobs value)
   (let (jobs (if (equal? value "auto") (initialize-native-build-core-capacity!) (string->number value)))
     (unless (and (integer? jobs) (> jobs 0)) (error "invalid test jobs" value))
@@ -396,7 +410,7 @@
            "tools/model-source-closure.ss"))
         ;; Output-dir precedence binds the executable to this current Library,
         ;; even when GERBIL_PATH also contains an older installed ASCENT.
-        (let ((source "t/harness/dsl-closure.ss")
+        (let ((source "t/model/study.ss")
               (options [output-dir: (path-expand "lib" test-cache)
                         output-file: (path-expand "dsl-closure" test-cache)
                         parallel: #t verbose: #t invoke-gsc: #t static: #t]))

@@ -5,23 +5,22 @@
 
 * Ownership
 =build.ss= declares production modules and the native ASP build specification.
-=t/harness/run.ss= owns test inventories, native test compilation and scheduling.
+=t/runner/main.ss= owns test inventories, native test compilation and scheduling.
 It imports the production module list rather than duplicating it; =std/make=
 owns compilation and incremental dependency checks.
-=just= exposes the existing commands and starts separate module processes with
-=xargs -P=. There is no separate test framework in =tools/= and no Python runner
-on the general build/test/performance entrypoints. The focused DSL AOT gate
-uses Python only for byte binding and process progress supervision, as
-described below.
+=just= exposes the public commands. Scheme actors in =t/runner/actor-pool.ss=
+own module scheduling, output credits and draining; separate native processes
+execute modules. The Python package owns process supervision and byte binding.
+Scheme =std/test= owns semantic assertions and verdicts.
 
 The real tests remain in =t/qualification/*-test.ss= and =t/performance/*-test.ss=.
 Native =gxtest= discovers exported Suites; =std/test= owns Case execution, setup,
-cleanup and assertions. The small =t/harness/gxtest.ss= adapter checks the
+cleanup and assertions. The small =t/runner/run-compiled-module.ss= adapter checks the
 compiled library and propagates the native gxtest return value to the process.
-The temporal harness retains its visible import boundaries.
+=t/runner/load-temporal-module.ss= retains visible temporal import boundaries.
 
 * Compilation and isolation
-Just invokes =t/harness/run.ss= through =gerbil env gxi= so native Gerbil selects the
+Just invokes =t/runner/main.ss= through =gerbil env gxi= so native Gerbil selects the
 project dependency environment before resolving build imports. An explicit
 =GERBIL_PATH= is retained. Bare =gxi= can miss dependencies installed by
 =gerbil deps --install= into the project's =.gerbil/= directory; this was the
@@ -125,7 +124,7 @@ measurement boundaries. All generated artifacts and logs stay in =.cache/=.
 * DSL closure discriminator
 
 =just build-dsl-closure= reuses std/make's current production Library and
-compiles the seven known exported Suites into =t/harness/dsl-closure.ss='s
+compiles the seven known exported Suites into =t/model/study.ss='s
 AOT entry. It uses std/test directly, including its standard Case verdicts,
 MODULE-OK/HARNESS-OK markers and failure propagation. This is a fixed semantic
 qualification entry, not a replacement for general gxtest discovery or the
@@ -157,3 +156,50 @@ before compilation so a no-op or failed build cannot bind an older binary.
 The 180-second build, five-second genuine-test-output watchdog and 120-second
 module bounds remain unchanged. The recovery receipt records a real abandoned
 candidate/reasoning object lock and the subsequent six-Suite qualification.
+
+* Names and executable reuse
+
+The project-owned =t/runner/= directory names orchestration rather than the
+Gerbil =TestHarness= abstraction. =main.ss= dispatches commands,
+=native-registry.ss= freezes Suite bindings, =compile-entry.ss= compiles the
+entry, =artifact-admission.ss= binds source and executable identities, and
+=module-process.ss= validates module process receipts. Model-specific study
+and inert response projection belong in =t/model/=, separately from running
+ordinary tests. Gerbil's actual =TestHarness= type and =HARNESS-OK= protocol
+marker retain their upstream names. Historical JSON evidence retains the
+paths and hashes at its recorded commit.
+
+=entry-cache.ss= admits reuse of the last executable for each entry mode
+(single module or module pool), under the repository lane lock. Generated entry
+content, repository source digests, compiled library inputs, selected build
+environment, compiler executable identities and executable bytes must match.
+The generated entry's own compiled files are excluded from dependency inputs;
+they are covered by its source digest and final executable digest. A missing,
+malformed or mismatching receipt forces a rebuild. Failed compilation removes
+prior admission before rebuilding; a fresh receipt is published atomically
+only after successful compilation and unchanged source, interface and toolchain
+checks. Native object and optimizer files are compiler outputs on a miss: the
+completed object digests are bound after compilation, then checked on reuse.
+The existing lane lock serializes preparation and execution.
+
+This cache retains one executable per entry mode, rather than an unbounded
+collection of per-module binaries. Switching the selected module remains a miss. An unchanged focused request
+also bypasses the three fresh library-check compiler processes after the
+compiled library and requested registry key have passed content admission. It caches
+build artifacts only: every invocation still runs all Cases, setup and cleanup,
+with the existing deadlines, output supervision and final verdict checks.
+
+* Focused repeated-run observations
+
+The unchanged six-Case finite-flow module took 103.81 seconds before reuse.
+The final implementation took 169.47 seconds for its first build, followed by
+29.36 and 40.76 seconds for two complete repeated invocations. Both repeats
+started zero library-check compiler processes and zero entry compiler/link
+processes; all six Cases still ran, including every million-row pair check.
+The test module and production semantic sources are byte-identical to the
+baseline. These are one baseline and two warm samples on a shared host, not
+stable whole-suite or CI performance qualification. Earlier development
+observations include a 315.36-second cold build and a 158.47-second repeat;
+those negative timing observations are retained in the structured receipt.
+Cold build, dependency fingerprint IO and full-pool preparation remain further
+optimization targets. No deadline, heap bound or semantic assertion was relaxed.

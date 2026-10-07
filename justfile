@@ -4,7 +4,7 @@
 set shell := ["bash", "-euo", "pipefail", "-c"]
 
 gerbil_test_runtime_options := "-:max-heap=1G,debug=q"
-test_runner := 'GERBIL_LOADPATH="' + justfile_directory() + '${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" gerbil env gxi -:max-heap=1G,debug=q t/harness/run.ss'
+test_runner := 'GERBIL_LOADPATH="' + justfile_directory() + '${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" gerbil env gxi -:max-heap=1G,debug=q t/runner/main.ss'
 tlc_release_url := "https://github.com/tlaplus/tlaplus/releases/download/v1.7.4/tla2tools.jar"
 tlc_sha256 := "936a262061c914694dfd669a543be24573c45d5aa0ff20a8b96b23d01e050e88"
 
@@ -27,7 +27,7 @@ _check-source-views:
 test-file path:
     {{ test_runner }} test-file "{{ path }}"
 
-# Native gxtest owns module execution; t/harness/run.ss owns the lane.
+# Native gxtest owns module execution; t/runner/main.ss owns the lane.
 _test-file path:
     #!/usr/bin/env bash
     set -euo pipefail
@@ -44,7 +44,7 @@ _test-file path:
         compiled="$ASCENT_TEST_LIBRARY/gerbil-ascent/${test_module%.ss}.ssi"
         test -f "$compiled"
         test_module="$compiled"
-        runner=(gxi {{ gerbil_test_runtime_options }} t/harness/gxtest.ss)
+        runner=(gxi {{ gerbil_test_runtime_options }} t/runner/run-compiled-module.ss)
         if [[ -n "${ASCENT_NATIVE_TEST_ENTRY:-}" ]]; then
             test -x "$ASCENT_NATIVE_TEST_ENTRY"
             runner=("$ASCENT_NATIVE_TEST_ENTRY" {{ gerbil_test_runtime_options }})
@@ -79,10 +79,10 @@ test-native path:
     {{ test_runner }} test-file "{{ path }}"
 
 # Positive native lifecycle plus independently injected failure controls.
-check-native-entry:
+check-native-registry:
     #!/usr/bin/env bash
     set -euo pipefail
-    just test-native t/harness/native-entry-test.ss
+    just test-native t/runner/native-registry-test.ss
     export ASCENT_TEST_LIBRARY="{{ justfile_directory() }}/.cache/ascent/native-library/lib"
     export ASCENT_PERFORMANCE_MODULES="{{ justfile_directory() }}/.cache/ascent/native-library/modules.sexp"
     export ASCENT_NATIVE_TEST_ENTRY="{{ justfile_directory() }}/.cache/ascent/native-library/single-test"
@@ -95,7 +95,7 @@ check-native-entry:
         if [[ "$control" == case ]]; then marker='ERROR CASE'; fi
         if [[ "$control" == empty ]]; then expected=1; marker='FAIL no discovered Cases'; fi
         status=0
-        ASCENT_NATIVE_ENTRY_CONTROL="$control" python3 -m ascent_test_support.supervision --startup-seconds 5 --idle-seconds 5 -- just _test-file t/harness/native-entry-test.ss > "$output_file" 2>&1 || status=$?
+        ASCENT_NATIVE_ENTRY_CONTROL="$control" python3 -m ascent_test_support.supervision --startup-seconds 5 --idle-seconds 5 -- just _test-file t/runner/native-registry-test.ss > "$output_file" 2>&1 || status=$?
         if [[ "$status" != "$expected" ]] || ! grep -F "$marker" "$output_file" >/dev/null; then cat "$output_file"; exit 1; fi
         printf 'NATIVE-ENTRY-CONTROL-OK %s exit=%s\n' "$control" "$status"
     done
@@ -112,17 +112,17 @@ _test-suite jobs lane:
 check-actor-pool:
     #!/usr/bin/env bash
     set -euo pipefail
-    {{ test_runner }} test-pool 2 t/harness/native-entry-test.ss t/harness/actor-pool-test.ss
+    {{ test_runner }} test-pool 2 t/runner/native-registry-test.ss t/runner/actor-pool-test.ss
     export PYTHONPATH="{{ justfile_directory() }}/python/src${PYTHONPATH:+:$PYTHONPATH}"
     output=$(mktemp)
     trap 'rm -f "$output"' EXIT
     for control in missing unknown extra; do
-      args=()
+      set --
       marker='native pool requires one registry key'
-      if [[ "$control" == unknown ]]; then args=(t/harness/not-in-registry.ss); marker='unknown native test registry key'; fi
-      if [[ "$control" == extra ]]; then args=(t/harness/native-entry-test.ss other); fi
+      if [[ "$control" == unknown ]]; then set -- t/runner/not-in-registry.ss; marker='unknown native test registry key'; fi
+      if [[ "$control" == extra ]]; then set -- t/runner/native-registry-test.ss other; fi
       code=0
-      python3 -m ascent_test_support.supervision --startup-seconds 5 --idle-seconds 5 -- .cache/ascent/native-library/test-pool {{ gerbil_test_runtime_options }} "${args[@]}" > "$output" 2>&1 || code=$?
+      python3 -m ascent_test_support.supervision --startup-seconds 5 --idle-seconds 5 -- .cache/ascent/native-library/test-pool {{ gerbil_test_runtime_options }} "$@" > "$output" 2>&1 || code=$?
       [[ "$code" == 70 ]] && grep -F "$marker" "$output" >/dev/null
       if grep -E '^(HARNESS|MODULE|CASE) ' "$output" >/dev/null; then cat "$output"; exit 1; fi
       echo "NATIVE-REGISTRY-CONTROL-OK $control exit=$code"
@@ -523,7 +523,7 @@ test-quick:
 _test-quick:
     #!/usr/bin/env bash
     set -euo pipefail
-    gxi {{ gerbil_test_runtime_options }} t/harness/run.ss test-modules quick | while IFS= read -r path; do just _test-file "$path"; done
+    gxi {{ gerbil_test_runtime_options }} t/runner/main.ss test-modules quick | while IFS= read -r path; do just _test-file "$path"; done
 
 small-graph-benchmark:
     {{ test_runner }} run -- just _small-graph-benchmark
@@ -1263,7 +1263,7 @@ _test-temporal:
     trap 'rm -f "$log"' EXIT
     test_module="${ASCENT_TEST_LIBRARY:+$ASCENT_TEST_LIBRARY/gerbil-ascent/}t/qualification/ascent-temporal-lens-test${ASCENT_TEST_LIBRARY:+.ssi}"
     if [[ -z "${ASCENT_TEST_LIBRARY:-}" ]]; then test_module="$test_module.ss"; fi
-    ASCENT_TEMPORAL_TEST_MODULE="$test_module" GERBIL_LOADPATH="${ASCENT_TEST_LIBRARY:+$ASCENT_TEST_LIBRARY:}{{ justfile_directory() }}${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" timeout 120s gxi {{ gerbil_test_runtime_options }} t/harness/temporal-test.ss 2>&1 | tee "$log"
+    ASCENT_TEMPORAL_TEST_MODULE="$test_module" GERBIL_LOADPATH="${ASCENT_TEST_LIBRARY:+$ASCENT_TEST_LIBRARY:}{{ justfile_directory() }}${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" timeout 120s gxi {{ gerbil_test_runtime_options }} t/runner/load-temporal-module.ss 2>&1 | tee "$log"
     if grep -E 'ERROR (CHECK|CASE|HARNESS|MODULE)|Heap overflow|Stack overflow' "$log" >/dev/null; then exit 1; fi
     awk -f "{{ justfile_directory() }}/tools/assert-test-cases.awk" "$log"
     grep -Fx "MODULE-OK $test_module" "$log" >/dev/null
@@ -1287,20 +1287,20 @@ build-dsl-closure:
         export PATH="$GERBIL_PATH/bin:$PATH"
         compiler=(gxi)
     fi
-    PYTHONPATH="{{ justfile_directory() }}/python/src" python3 -m ascent_test_support.supervision --cpu-progress --startup-seconds 60 --idle-seconds 60 -- bash -e -c '"$@" {{ gerbil_test_runtime_options }} t/harness/run.ss build-dsl-closure; gxi t/harness/artifact.ss finalize' build-dsl-closure "${compiler[@]}"
+    PYTHONPATH="{{ justfile_directory() }}/python/src" python3 -m ascent_test_support.supervision --cpu-progress --startup-seconds 60 --idle-seconds 60 -- bash -e -c '"$@" {{ gerbil_test_runtime_options }} t/runner/main.ss build-dsl-closure; gxi t/runner/artifact-admission.ss finalize' build-dsl-closure "${compiler[@]}"
 
 # Counterbalanced measurements with independent Scheme truth; no speed threshold.
 check-retained-benefit:
     #!/usr/bin/env bash
     set -euo pipefail
-    gxi t/harness/artifact.ss check
+    gxi t/runner/artifact-admission.ss check
     PYTHONPATH="{{ justfile_directory() }}/python/src" python3 -m ascent_test_support.supervision -- timeout 120s .cache/ascent/native-library/dsl-closure {{ gerbil_test_runtime_options }} --retained-benefit
 
 # Run the known Suites through std/test in serial AOT processes with strict progress.
 check-dsl-closure:
     #!/usr/bin/env bash
     set -euo pipefail
-    gxi t/harness/artifact.ss check
+    gxi t/runner/artifact-admission.ss check
     test -x .cache/ascent/native-library/dsl-closure
     mkdir -p .cache/ascent/tmp
     output_file="$(mktemp .cache/ascent/tmp/dsl.XXXXXX)"

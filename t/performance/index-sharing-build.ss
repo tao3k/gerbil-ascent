@@ -2,7 +2,7 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 (import :gerbil/expander :gerbil/compiler :std/make
-        (only-in :gerbil-ascent/t/harness/artifact artifact-sources artifact-matching-sources?))
+        (only-in :gerbil-ascent/t/runner/artifact-admission artifact-sources artifact-matching-sources?))
 (export main)
 (def (main library binary)
   (let (sources (artifact-sources))

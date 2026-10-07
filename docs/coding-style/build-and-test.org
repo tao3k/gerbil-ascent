@@ -21,10 +21,10 @@ macro requires it; it previously arrived through the removed process imports.
 | Source | Responsibility |
 |--------+----------------|
 | =build.ss= | Production modules and native build specification |
-| =t/harness/run.ss= | Native test compilation, inventories, capacity and lane |
+| =t/runner/main.ss= | Native test compilation, inventories, capacity and lane |
 | =t/qualification/*-test.ss= | Semantic Unit Test Suites and Cases |
 | =t/performance/*-test.ss= | Timing qualification Suites and Cases |
-| =t/harness/gxtest.ss= | Native gxtest adapter and exit propagation |
+| =t/runner/run-compiled-module.ss= | Native gxtest adapter and exit propagation |
 
 The existing Just commands route to the test entrypoint under =gerbil env=.
 Public build and policy recipes take the same test lane before invoking native

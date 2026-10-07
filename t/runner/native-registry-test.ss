@@ -2,7 +2,7 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 (import :std/test (only-in :std/test/base TestSuite))
-(export native-entry-test test-setup! test-cleanup!)
+(export native-registry-test test-setup! test-cleanup!)
 
 ;;; Counterexample controls qualify the test adapter, not production semantics.
 (def state 'initial)
@@ -16,7 +16,7 @@
   (set! state 'initial)
   (displayln "NATIVE-ENTRY-CLEANUP-OK") (force-output)
   (when (control? "cleanup") (error "native entry cleanup control")))
-(def native-entry-test
+(def native-registry-test
   (if (control? "empty")
     (TestSuite "Native entry lifecycle" void)
     (test-suite "Native entry lifecycle"

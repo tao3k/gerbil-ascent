@@ -3,7 +3,8 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 (import (only-in :std/misc/process run-process)
         :gerbil/expander
-        (only-in "artifact.ss" artifact-digest))
+        (only-in "artifact-admission.ss" artifact-digest artifact-matching-sources?)
+        (only-in "entry-cache.ss" entry-inputs entry-current? bind-entry!))
 (export prepare-native-tests!)
 
 ;;; Imports and original Suite/callback bindings are frozen before execution.
@@ -39,7 +40,7 @@
      paths)
     (call-with-output-file [path: source truncate: #t]
       (lambda (out)
-        (display "package: gerbil-ascent/t/harness\nnamespace: gerbil-ascent/t/harness/native-entry\n" out)
+        (display "package: gerbil-ascent/t/runner\nnamespace: gerbil-ascent/t/runner/native-registry\n" out)
         (for-each (lambda (form) (write form out) (newline out))
          `((import :std/test/base
                    (only-in :gerbil-ascent/t/performance/native-library assert-native-library!)
@@ -68,20 +69,29 @@
                  (if (test-result-ok? result)
                    (begin (displayln "OK") (force-output) (exit 0))
                    (exit 42)))))))))
-    (when (file-exists? binary) (delete-file binary))
-    ;; Preserve the existing runtime heap bound. Library compilation and entry
-    ;; compilation must not retain one another's expander/optimizer contexts.
-    (let (generated (artifact-digest source))
-      (run-process ["gxi" "-:max-heap=1G,debug=q" "t/harness/native-compile.ss"
-                    source library binary]
-        stderr-redirection: #t
-        coprocess: (lambda (process)
-                     (let loop ()
-                       (let (line (read-line process))
-                         (unless (eof-object? line)
-                           (displayln line) (force-output) (loop))))))
-      (unless (equal? generated (artifact-digest source))
-        (error "generated native test entry changed during compilation")))
+    ;; Reuse only this lane's last admitted entry. A different registry key,
+    ;; changed source, compiled dependency, toolchain or binary is a miss.
+    (let* ((generated (artifact-digest source)) (inputs (entry-inputs library))
+           (receipt (string-append binary ".json")) (key (if single? (car paths) "")))
+      (if (entry-current? receipt binary generated inputs key)
+        (begin (displayln "NATIVE-ENTRY-CACHE-HIT") (force-output))
+        (begin
+          (displayln "NATIVE-ENTRY-CACHE-MISS") (force-output)
+          (when (file-exists? receipt) (delete-file receipt))
+          (when (file-exists? binary) (delete-file binary))
+          (let (foundation (entry-inputs library #f))
+            (run-process ["gxi" "-:max-heap=1G,debug=q" "t/runner/compile-entry.ss"
+                          source library binary]
+              stderr-redirection: #t
+              coprocess: (lambda (process)
+                (let loop ()
+                  (let (line (read-line process))
+                    (unless (eof-object? line)
+                      (displayln line) (force-output) (loop))))))
+            (unless (and (equal? generated (artifact-digest source))
+                         (artifact-matching-sources? foundation (entry-inputs library #f)))
+              (error "native test inputs changed during compilation"))
+            (bind-entry! receipt binary generated (entry-inputs library) key)))))
     (setenv "ASCENT_NATIVE_TEST_ENTRY" binary)
     (if single? (setenv "ASCENT_NATIVE_TEST_REGISTRY" "") (setenv "ASCENT_NATIVE_TEST_REGISTRY" "1"))
     source))

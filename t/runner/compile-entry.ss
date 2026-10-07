@@ -6,7 +6,7 @@
 ;;; Library-make analysis cannot survive across this process boundary.
 (import (only-in :gerbil/compiler compile-module compile-exe execute-pending-compile-jobs!)
         (only-in :gerbil/runtime/loader add-load-path!)
-        (only-in "artifact.ss" artifact-digest))
+        (only-in "artifact-admission.ss" artifact-digest))
 (export main)
 
 ;; : (-> Path LibraryPath BinaryPath Void)

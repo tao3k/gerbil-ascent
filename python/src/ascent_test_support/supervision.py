@@ -46,6 +46,8 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--idle-seconds", type=float, default=5)
     parser.add_argument("--startup-seconds", type=float, default=5)
+    parser.add_argument("--separate-stderr", action="store_true",
+                        help="preserve stdout row protocols while supervising both streams")
     parser.add_argument("--cpu-progress", action="store_true",
                         help="build only: count measured process-group CPU advances as activity")
     parser.add_argument("command", nargs=argparse.REMAINDER)
@@ -57,13 +59,15 @@ def main() -> int:
     child = subprocess.Popen(
         command,
         stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
+        stderr=subprocess.PIPE if args.separate_stderr else subprocess.STDOUT,
         start_new_session=True,
         bufsize=0,
     )
     assert child.stdout is not None
     selector = selectors.DefaultSelector()
-    selector.register(child.stdout, selectors.EVENT_READ)
+    selector.register(child.stdout, selectors.EVENT_READ, sys.stdout.buffer)
+    if child.stderr is not None:
+        selector.register(child.stderr, selectors.EVENT_READ, sys.stderr.buffer)
     last_output = time.monotonic()
     saw_output = False
     cpu = {}
@@ -84,14 +88,15 @@ def main() -> int:
                     print(f"[build-activity] cpu-advance={advance:.3f}s "
                           f"processes={len(cpu)}", file=sys.stderr, flush=True)
             if ready:
-                chunk = os.read(child.stdout.fileno(), 65536)
-                if chunk:
-                    sys.stdout.buffer.write(chunk)
-                    sys.stdout.buffer.flush()
-                    last_output = time.monotonic()
-                    saw_output = True
-                else:
-                    selector.unregister(child.stdout)
+                for key, _events in ready:
+                    chunk = os.read(key.fd, 65536)
+                    if chunk:
+                        key.data.write(chunk)
+                        key.data.flush()
+                        last_output = time.monotonic()
+                        saw_output = True
+                    else:
+                        selector.unregister(key.fileobj)
             elif child.poll() is None and time.monotonic() - last_output > (
                 args.idle_seconds if saw_output else args.startup_seconds
             ):
@@ -110,6 +115,8 @@ def main() -> int:
         stop_group(child)
         selector.close()
         child.stdout.close()
+        if child.stderr is not None:
+            child.stderr.close()
 
 
 if __name__ == "__main__":

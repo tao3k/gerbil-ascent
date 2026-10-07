@@ -885,8 +885,7 @@ byods-lattice-rows:
     @timeout 90s gerbil {{ gerbil_test_runtime_options }} t/qualification/ascent-byods-lattice-output.ss
 
 byods-lattice-session-rows:
-    @gxi t/harness/artifact.ss check >/dev/null
-    @PYTHONPATH="{{ justfile_directory() }}/python/src" python3 -m ascent_test_support.supervision -- timeout 90s .cache/ascent/native-library/dsl-closure {{ gerbil_test_runtime_options }} --oracle byods-lattice-session
+    @PYTHONPATH="{{ justfile_directory() }}/python/src" python3 -m ascent_test_support.supervision --separate-stderr -- timeout 90s .cache/ascent/native-library/dsl-closure {{ gerbil_test_runtime_options }} --oracle byods-lattice-session
 
 byods-lattice-scale-rows:
     @timeout 90s gerbil {{ gerbil_test_runtime_options }} t/qualification/ascent-byods-lattice-scale-output.ss
@@ -954,29 +953,32 @@ index-lattice-rows:
 index-lattice-rows-alist:
     @timeout 60s gerbil {{ gerbil_test_runtime_options }} t/qualification/ascent-index-program-output.ss lattice alist
 
+_oracle-native name *flags:
+    @PYTHONPATH="{{ justfile_directory() }}/python/src" python3 -m ascent_test_support.supervision --separate-stderr --startup-seconds 5 --idle-seconds 5 -- timeout 90s .cache/ascent/native-library/dsl-closure {{ gerbil_test_runtime_options }} --oracle {{ name }} {{ flags }}
+
 eqrel-rows:
-    @timeout 60s gerbil {{ gerbil_test_runtime_options }} t/qualification/ascent-eqrel-program-output.ss
+    @just _oracle-native eqrel-program
 
 eqrel-scale-rows:
-    @timeout 90s gerbil {{ gerbil_test_runtime_options }} t/qualification/ascent-eqrel-program-output.ss scale
+    @just _oracle-native eqrel-program scale
 
 eqrel-default-rows:
-    @timeout 60s gerbil {{ gerbil_test_runtime_options }} t/qualification/ascent-eqrel-program-output.ss default
+    @just _oracle-native eqrel-program default
 
 trrel-rows:
-    @timeout 60s gerbil {{ gerbil_test_runtime_options }} t/qualification/ascent-eqrel-program-output.ss trrel
+    @just _oracle-native eqrel-program trrel
 
 trrel-scale-rows:
-    @timeout 90s gerbil {{ gerbil_test_runtime_options }} t/qualification/ascent-eqrel-program-output.ss trrel scale
+    @just _oracle-native eqrel-program trrel scale
 
 trrel-uf-rows:
-    @timeout 60s gerbil {{ gerbil_test_runtime_options }} t/qualification/ascent-eqrel-program-output.ss trrel-uf
+    @just _oracle-native eqrel-program trrel-uf
 
 trrel-uf-scale-rows:
-    @timeout 90s gerbil {{ gerbil_test_runtime_options }} t/qualification/ascent-eqrel-program-output.ss trrel-uf scale
+    @just _oracle-native eqrel-program trrel-uf scale
 
 byods-query-rows:
-    @timeout 60s gerbil {{ gerbil_test_runtime_options }} t/qualification/ascent-byods-query-output.ss
+    @just _oracle-native byods-query
 
 typed-rows:
     @timeout 60s gerbil {{ gerbil_test_runtime_options }} t/qualification/ascent-typed-program-output.ss
@@ -991,8 +993,7 @@ scc-order-rows:
     @timeout 90s gerbil {{ gerbil_test_runtime_options }} t/qualification/ascent-scc-order-output.ss
 
 arity-repetition-rows:
-    @gxi t/harness/artifact.ss check >/dev/null
-    @PYTHONPATH="{{ justfile_directory() }}/python/src" python3 -m ascent_test_support.supervision -- timeout 90s .cache/ascent/native-library/dsl-closure {{ gerbil_test_runtime_options }} --oracle arity-repetition
+    @PYTHONPATH="{{ justfile_directory() }}/python/src" python3 -m ascent_test_support.supervision --separate-stderr -- timeout 90s .cache/ascent/native-library/dsl-closure {{ gerbil_test_runtime_options }} --oracle arity-repetition
 
 clause-composition-rows:
     @timeout 90s gerbil {{ gerbil_test_runtime_options }} t/qualification/ascent-clause-composition-output.ss
@@ -1025,18 +1026,15 @@ divisibility-lattice-rows:
     @timeout 90s gerbil {{ gerbil_test_runtime_options }} t/qualification/ascent-divisibility-lattice-output.ss
 
 multi-source-session-rows:
-    @gxi t/harness/artifact.ss check >/dev/null
-    @PYTHONPATH="{{ justfile_directory() }}/python/src" python3 -m ascent_test_support.supervision -- timeout 90s .cache/ascent/native-library/dsl-closure {{ gerbil_test_runtime_options }} --oracle multi-source-session
+    @PYTHONPATH="{{ justfile_directory() }}/python/src" python3 -m ascent_test_support.supervision --separate-stderr -- timeout 90s .cache/ascent/native-library/dsl-closure {{ gerbil_test_runtime_options }} --oracle multi-source-session
 
 byods-session-rows:
-    @gxi t/harness/artifact.ss check >/dev/null
-    @PYTHONPATH="{{ justfile_directory() }}/python/src" python3 -m ascent_test_support.supervision -- timeout 90s .cache/ascent/native-library/dsl-closure {{ gerbil_test_runtime_options }} --oracle byods-session
+    @PYTHONPATH="{{ justfile_directory() }}/python/src" python3 -m ascent_test_support.supervision --separate-stderr -- timeout 90s .cache/ascent/native-library/dsl-closure {{ gerbil_test_runtime_options }} --oracle byods-session
 
 grouped-eqrel-session-rows:
-    @gxi t/harness/artifact.ss check >/dev/null
-    @PYTHONPATH="{{ justfile_directory() }}/python/src" python3 -m ascent_test_support.supervision -- timeout 90s .cache/ascent/native-library/dsl-closure {{ gerbil_test_runtime_options }} --oracle grouped-eqrel-session
+    @PYTHONPATH="{{ justfile_directory() }}/python/src" python3 -m ascent_test_support.supervision --separate-stderr -- timeout 90s .cache/ascent/native-library/dsl-closure {{ gerbil_test_runtime_options }} --oracle grouped-eqrel-session
 
-oracle:
+oracle: build-dsl-closure
     #!/usr/bin/env bash
     set -euo pipefail
     export PATH="${CARGO_HOME:-$HOME/.cargo}/bin:$PATH"

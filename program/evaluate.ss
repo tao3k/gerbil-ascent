@@ -42,6 +42,7 @@
                  gerbil-ascent-storage-owned-states
                  gerbil-ascent-storage-check-state! gerbil-ascent-storage-admit-state!
                  gerbil-ascent-set-batch-admit!
+                 gerbil-ascent-storage-freeze-view
                  gerbil-ascent-canonical-set-storage-provider?)
         (only-in :clan/poo/support/base until))
 
@@ -140,6 +141,7 @@
            (lattice-rows (make-vector count #f))
            (view-generation (gensym 'ascent-source))
            (view-journals (make-vector count []))
+           (view-routing (make-vector count #f))
            (source-count 0)
            (source-materialized-count 0)
            (derived-count 0)
@@ -163,7 +165,8 @@
       (def (commit-view! index frontier)
         (gerbil-ascent-commit-view! index (vector-ref storage-states index) frontier
           all delta all-size delta-size all-version delta-version
-          (vector-ref names index) (cons view-generation source-count) (vector-ref view-journals index)))
+          (vector-ref names index) (cons view-generation source-count)
+          (vector-ref view-journals index) (vector-ref view-routing index)))
       ;; Cache revocation alone cannot undo membership or rows already admitted
       ;; by this engine. A failed index publication requires source reconstruction.
       (def advance-all-indexes!
@@ -227,6 +230,33 @@
               (not (gerbil-ascent-actor-round-eligible?
                      (apply append (vector->list all-active)) storage-providers
                      index-providers lattice-joins field-checkers)))
+             (_routed-sources
+              (unless ordered-execution?
+                ;; Fixed literal keys need one filter, while bound variables
+                ;; can request many keys. Admission precedes this plan inspection.
+                (for-each (lambda (rule)
+                  (for-each (lambda (clause)
+                    (when (eq? (vector-ref clause 0) 'atom)
+                      (let* ((atom (vector-ref clause 1)) (index (vector-ref atom 0)))
+                        (when (and (view-relation? index)
+                                   (ormap (lambda (column)
+                                     (not (eq? (car (list-ref (vector-ref atom 1) column)) 'literal)))
+                                     (vector-ref atom 2)))
+                          (vector-set! view-routing index #t))))) (vector-ref rule 1))) rule-plans)
+                (for-each (lambda (index)
+                  (when (vector-ref view-routing index)
+                    (let (total (gerbil-ascent-view-export-cut
+                                  (gerbil-ascent-view-bind
+                                    (gerbil-ascent-storage-freeze-view (vector-ref storage-states index) #t)
+                                    (vector-ref names index) (cons view-generation source-count)
+                                    (vector-ref all-version index) 'total)
+                                  (vector-ref view-journals index)))
+                      (vector-set! all index total)
+                      (vector-set! delta index
+                        (gerbil-ascent-view-with-export
+                          (gerbil-ascent-view-bind total (vector-ref names index)
+                            (cons view-generation source-count) (vector-ref all-version index) 'delta)
+                          (lambda () (reverse (gerbil-ascent-view-rows total)))))))) (iota count))))
              (active-by-stratum
               (if reuse
                 (gerbil-ascent-activate-selected-rules analysis

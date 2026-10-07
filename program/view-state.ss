@@ -28,10 +28,10 @@
     frontier))
 ;; : (-> Natural StorageOwner FrozenDelta RowBuffers RowBuffers SizeBuffers SizeBuffers Versions Versions Symbol SourceGeneration Void)
 (def (gerbil-ascent-commit-view! index state frontier all delta all-size delta-size
-                                    all-version delta-version name generation events)
+                                    all-version delta-version name generation events (indexed? #f))
   (let* ((revision (+ 1 (vector-ref all-version index)))
          (total (gerbil-ascent-view-export-cut
-                   (gerbil-ascent-view-bind (gerbil-ascent-storage-freeze-view state)
+                   (gerbil-ascent-view-bind (gerbil-ascent-storage-freeze-view state indexed?)
                                             name generation revision 'total) events))
          (change (gerbil-ascent-view-with-export
                    (gerbil-ascent-view-bind frontier name generation revision 'delta)

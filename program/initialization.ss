@@ -153,7 +153,9 @@
            rows)
           (when (and (gerbil-ascent-canonical-uf-storage-provider? (vector-ref storage-providers index))
                      (gerbil-ascent-canonical-hash-index-provider? (vector-ref (vector-ref schema 5) index)))
-            (vector-set! all index (gerbil-ascent-storage-freeze-view (vector-ref storage-states index))))
+            ;; Query planning follows source admission to preserve diagnostics.
+            ;; Build only a frozen carrier here; routing is selected afterwards.
+            (vector-set! all index (gerbil-ascent-storage-freeze-view (vector-ref storage-states index) #f)))
           (when (eq? kind 'lattice)
             (let ((keyed (vector-ref lattice-rows index))
                   (visited (make-hash-table))

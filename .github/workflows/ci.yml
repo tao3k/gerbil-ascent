@@ -84,14 +84,13 @@ jobs:
         run: |
           cargo clippy --locked --manifest-path rust/ascent-oracle/Cargo.toml --all-targets -- -D warnings
           cargo test --locked --manifest-path rust/ascent-oracle/Cargo.toml --test asp_rust_gate
-      - name: Build native retained and arity differential entry
-        if: matrix.shard == 'other'
+      - name: Build native retained, arity and BYODS differential entry
         run: just build-dsl-closure
       - name: Compare with Rust Ascent
         run: |
           case "$ORACLE_SHARD" in
             byods)
-              gerbil env env PATH="$PATH" cargo test --locked --manifest-path rust/ascent-oracle/Cargo.toml --test scheme_parity -- byods:: --nocapture
+              gerbil env env PATH="$PATH" cargo test --locked --manifest-path rust/ascent-oracle/Cargo.toml --test scheme_parity -- byods:: --nocapture --test-threads=1
               ;;
             other)
               gerbil env env PATH="$PATH" cargo test --locked --manifest-path rust/ascent-oracle/Cargo.toml --test scheme_parity -- --skip byods:: --nocapture

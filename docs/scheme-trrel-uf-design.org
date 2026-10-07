@@ -479,8 +479,9 @@ introduced.
 
 DAG reachability and exact frontier descriptors can remain quadratic. Bound
 coordinate selection filters captured blocks before creating rows. Frozen totals
-now own coordinate routing buckets over member spines and descriptor references;
-lookups choose the smallest bucket and retain captured descriptor order. Delta
+own coordinate routing buckets when bound variables can request multiple keys;
+buckets retain member spines and descriptor references.
+Indexed lookups choose the smallest bucket and retain captured descriptor order. Delta
 frontiers still scan their descriptors. Member selection within a component is
 linear and multi-bucket results require ordering; this is not an asymptotically
 optimal keyed UF index. Structural
@@ -1122,3 +1123,45 @@ Lean/TLA implementations.
 The previous receipt remains a historical source cut. The follow-up receipt
 must bind all current Scheme sources, source/native/oracle gates, individual
 paired costs and exact-head CI without substituting earlier passes.
+
+** Plan-selected routing and native differential entry
+
+The first eager-routing native cut passed 800 Cases but raised sparse DAG
+allocation above the explicit path. The engine now admits sources with an
+unindexed frozen carrier, inspects the already validated atom plans afterwards,
+and activates total routing for bound variable keys. Fixed literal keys retain
+filtering without routing construction. Routed source totals are recaptured
+with unchanged identity, revision and logical cardinality; future publications
+use the same per-relation decision. Callback programs retain ordered expansion.
+Source diagnostics still precede rule planning. Construction and recapture costs
+remain inside the matched whole-engine measurement.
+
+Five-second runtime controls rejected both parallel and serial interpreter
+startup for the old differential recipe. EQREL/TRREL/UF and grouped-query
+fixtures now enter the existing native DSL closure with the same stdin and row
+protocol. The native entry runs the existing artifact admission checker before
+reading fixture input; its verification marker goes to stderr so row stdout
+remains unchanged. Admission checks the current source/recipe hashes before
+execution. Every oracle shard builds that closure; =just oracle= owns its build
+prerequisite. The independent =check-source-views= gate continues to exercise
+source loading. Rust preserves exact stdout bytes while reporting actual reads
+and completed eight-node cuts; CI uses =--nocapture= and serial BYODS execution.
+Oracle recipes supervise stdout and stderr separately: diagnostics count as
+actual output without entering the row protocol. Six transport glue tests cover
+binary bytes, stderr progress, stalled children, CPU build progress and failure
+propagation. No synthetic heartbeat or
+runtime timeout widening qualifies this path.
+
+** Local SCC adjacency for the scale progress gate
+
+The five-second runtime gate exposed whole-root scanning in every UF insertion
+on the 10,000-edge disconnected-component fixture. Groups retain the legacy
+scan through 64 roots; after successful preflight a larger group installs a
+private inverse reach map. Predecessor/successor candidates then come from local
+closure maps and are ordered by stable root creation ordinals, matching the
+legacy prepended scan. SCC merges rebuild inverse maps from canonical surviving
+reach keys. Failed admission does not activate routing or mutate graph state.
+The new ordered-frontier Case compares every insertion with the frozen
+=c131042= UF kernel across activation, partial SCC unions, external bridges,
+grouped keys and zero-budget rejection; held frozen cuts remain stable. This
+is an implementation discriminator, not a new extracted adjacency theorem.

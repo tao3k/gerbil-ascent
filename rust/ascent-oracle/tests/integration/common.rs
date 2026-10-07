@@ -71,8 +71,8 @@ pub(super) fn scheme_output(recipe: &str, request: &str) -> String {
         .expect("launch gerbil-ascent Scheme fixture");
     eprintln!("ORACLE-FIXTURE-SPAWN recipe={recipe} pid={}", child.id());
     // Preserve the exact fixture bytes while exposing real IO progress. The
-    // parent's wait still drains stderr; a separate stdout reader prevents
-    // pipe backpressure and avoids hiding long fixture runs behind capture.
+    // readers drain both streams independently, preventing pipe backpressure
+    // and exposing real admission diagnostics without changing row bytes.
     let mut stdout = child.stdout.take().expect("Scheme fixture stdout");
     let reader_recipe = recipe.to_owned();
     let reader = std::thread::spawn(move || {
@@ -91,6 +91,24 @@ pub(super) fn scheme_output(recipe: &str, request: &str) -> String {
         }
         bytes
     });
+    let mut stderr = child.stderr.take().expect("Scheme fixture stderr");
+    let stderr_recipe = recipe.to_owned();
+    let stderr_reader = std::thread::spawn(move || {
+        let mut bytes = Vec::new();
+        let mut chunk = [0u8; 8192];
+        loop {
+            let count = stderr.read(&mut chunk).expect("read Scheme fixture stderr");
+            if count == 0 {
+                break;
+            }
+            bytes.extend_from_slice(&chunk[..count]);
+            eprintln!(
+                "ORACLE-FIXTURE-STDERR recipe={stderr_recipe} bytes={}",
+                bytes.len()
+            );
+        }
+        bytes
+    });
     child
         .stdin
         .take()
@@ -101,6 +119,9 @@ pub(super) fn scheme_output(recipe: &str, request: &str) -> String {
         .wait_with_output()
         .expect("collect Scheme fixture output");
     let stdout = reader.join().expect("join Scheme fixture stdout reader");
+    let stderr = stderr_reader
+        .join()
+        .expect("join Scheme fixture stderr reader");
     eprintln!(
         "ORACLE-FIXTURE-END recipe={recipe} status={} bytes={}",
         output.status,
@@ -110,7 +131,7 @@ pub(super) fn scheme_output(recipe: &str, request: &str) -> String {
         output.status.success(),
         "Scheme fixture failed:\nstdout:\n{}\nstderr:\n{}",
         String::from_utf8_lossy(&stdout),
-        String::from_utf8_lossy(&output.stderr)
+        String::from_utf8_lossy(&stderr)
     );
     String::from_utf8(stdout).expect("Scheme output is UTF-8")
 }

@@ -14,6 +14,7 @@
         (only-in :gerbil-ascent/t/qualification/ascent-finite-evidence-test ascent-finite-evidence-test)
         (only-in :gerbil-ascent/t/qualification/ascent-positive-nonmembership-test ascent-positive-nonmembership-test))
 (export main)
+(import (only-in :gerbil-ascent/t/harness/artifact artifact-main))
 (import (only-in :gerbil-ascent/t/qualification/scheme-artifact-test scheme-artifact-test))
 (import (only-in :gerbil-ascent/t/harness/prediction prediction-main))
 (import (only-in :gerbil-ascent/t/qualification/ascent-timeout-test ascent-timeout-test))
@@ -48,15 +49,35 @@
 (import (only-in (rename-in :gerbil-ascent/t/qualification/ascent-grouped-eqrel-session-output (main grouped-eqrel-session-main)) grouped-eqrel-session-main))
 (import (only-in (rename-in :gerbil-ascent/t/qualification/ascent-byods-lattice-session-output (main byods-lattice-session-main)) byods-lattice-session-main))
 (import (only-in (rename-in :gerbil-ascent/t/qualification/ascent-arity-repetition-output (main arity-repetition-main)) arity-repetition-main))
+(import (only-in (rename-in :gerbil-ascent/t/qualification/ascent-eqrel-program-output
+                           (main eqrel-program-main)) eqrel-program-main))
+(import (only-in (rename-in :gerbil-ascent/t/qualification/ascent-byods-query-output
+                           (main byods-query-main)) byods-query-main))
 (import (only-in (rename-in :gerbil-ascent/tools/model-source-closure
                            (main source-closure-main)) source-closure-main))
 
+(def (check-native-oracle!)
+  ;; Keep row stdout unchanged while reporting actual artifact admission.
+  (parameterize ((current-output-port (current-error-port)))
+    (with-catch
+     (lambda (failure)
+       (displayln "DSL-ARTIFACT-REJECTED " failure)
+       (force-output)
+       (exit 1))
+     (lambda () (artifact-main "check")))))
+
 (def (main . args)
   (match args
+    (["--oracle" "eqrel-program" . flags]
+     (check-native-oracle!)
+     (apply eqrel-program-main flags)
+     (exit 0))
     (["--retained-benefit"] (session-benefit-main) (exit 0))
     (["--source-closure" . roots] (apply source-closure-main roots) (exit 0))
     (["--oracle" name]
+     (check-native-oracle!)
      (case (string->symbol name)
+       ((byods-query) (byods-query-main))
        ((byods-session) (byods-session-main))
        ((multi-source-session) (multi-source-session-main))
        ((grouped-eqrel-session) (grouped-eqrel-session-main))

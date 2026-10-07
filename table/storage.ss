@@ -260,7 +260,7 @@
   (call-with-storage-state state
     (lambda (raw) (gerbil-ascent-trrel-uf-insert! raw row budget))))
 ;; : (-> StorageOwner FrozenView)
-(def (gerbil-ascent-storage-freeze-view state)
+(def (gerbil-ascent-storage-freeze-view state (indexed? #t))
   (when (eq? (storage-state-owner-phase state) 'failed)
     (error "ASCENT storage state requires source replay"))
-  (gerbil-ascent-trrel-uf-freeze (storage-state-owner-value state)))
+  (gerbil-ascent-trrel-uf-freeze (storage-state-owner-value state) indexed?))

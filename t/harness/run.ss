@@ -166,7 +166,7 @@
                           (if (member "t/qualification/ascent-uf-commit-test.ss" tests)
                             '("t/performance/uf-commit/reference") [])
                           (if (member "t/qualification/ascent-trrel-uf-test.ss" tests)
-                            '("t/performance/trrel-uf/reference") [])
+                            '("t/performance/trrel-uf/reference" "t/performance/trrel-uf/root-scan-reference") [])
                           ;; Compile the complete independent reference graph
                           ;; for both ordinary module tests and AOT linkage.
                           (if (member "t/qualification/ascent-index-entry-test.ss" tests)
@@ -388,6 +388,8 @@
            "t/qualification/ascent-grouped-eqrel-session-output.ss"
            "t/qualification/ascent-byods-lattice-session-output.ss"
            "t/qualification/ascent-arity-repetition-output.ss"
+           "t/qualification/ascent-eqrel-program-output.ss"
+           "t/qualification/ascent-byods-query-output.ss"
            "tools/model-source-closure.ss"))
         ;; Output-dir precedence binds the executable to this current Library,
         ;; even when GERBIL_PATH also contains an older installed ASCENT.

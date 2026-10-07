@@ -6,11 +6,12 @@
 ;;; every publication owns its vector. Promises close only persistent row roots;
 ;;; unchanged roots share a promise without retaining membership or index state.
 ;;; Slot zero carries the invocation deadline and is never captured by results.
-(import :gerbil-ascent/core/relation-view)
+(import :gerbil-ascent/core/relation-view
+        (only-in :clan/poo/object .o))
 (export gerbil-ascent-publication-cache gerbil-ascent-publish-rows
         gerbil-ascent-snapshot-rows gerbil-ascent-snapshot-sizes
         gerbil-ascent-result-observation gerbil-ascent-public-snapshot-rows
-        gerbil-ascent-visit-snapshot!)
+        gerbil-ascent-visit-snapshot! gerbil-ascent-make-published-result)
 
 ;; gerbil-ascent-publication-cache
 ;;   : (-> Nat PublicationCache)
@@ -132,3 +133,28 @@
     (for-each (lambda (row)
       (when (andmap (lambda (column value) (equal? (list-ref row column) value)) columns key)
         (consume (map identity row)))) (gerbil-ascent-snapshot-rows snapshot))))
+
+;; Result accessors close over one published cut, never an engine's mutable
+;; relation buffers. Name resolution and immutable scalar contracts are supplied
+;; by admission; callback row spines are copied by the snapshot visitor.
+;; : (-> Names Arities SnapshotVector Sizes Representations Observation
+;;        NameResolver Boolean Boolean EvaluationResult)
+(def (gerbil-ascent-make-published-result names arity snapshots sizes
+                                         representations observation position-of
+                                         complete? session?)
+  (.o (relation-names (vector->list names))
+      (finished complete?)
+      (evaluation-path (vector-ref observation 0))
+      (reused-relations (vector-ref observation 1))
+      (active-rule-count (vector-ref observation 2))
+      (rule-time-nanoseconds (vector-ref observation 3))
+      (representation-observation
+       (lambda () (map (lambda (row) (map values row)) representations)))
+      (relation-sizes (lambda () (map cons (vector->list names) (vector->list sizes))))
+      (visit-rows (lambda (name columns key consume)
+        (let (index (position-of name))
+          (gerbil-ascent-visit-snapshot! (vector-ref snapshots index)
+            (vector-ref arity index) columns key consume))))
+      (rows-of (lambda (name)
+        (gerbil-ascent-public-snapshot-rows
+         (vector-ref snapshots (position-of name)) session?)))))

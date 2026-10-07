@@ -31,6 +31,36 @@ class PaperSource(unittest.TestCase):
     def test_exact_bytes(self):
         self.assertEqual(self.check_source(), 1)
 
+    def test_manifest_defined_relation(self):
+        (self.directory / "subset_base.facts").write_bytes(self.data)
+        self.manifest["files"][0]["relation"] = "subset_base"
+        self.assertEqual(self.check_source(), 1)
+
+    def test_path_and_duplicate_rejection(self):
+        source = self.manifest["files"][0]
+        for name in ("../alloc", "/tmp/alloc", "alloc.facts", "", "a/b"):
+            with self.subTest(name=name):
+                source["relation"] = name
+                with self.assertRaisesRegex(ValueError, "identifier"):
+                    self.check_source()
+        source["relation"] = "alloc"
+        self.manifest["files"].append(dict(source))
+        with self.assertRaisesRegex(ValueError, "duplicate"):
+            self.check_source()
+
+    def test_invalid_dimensions_and_empty_manifest(self):
+        source = self.manifest["files"][0]
+        for field, value in (("arity", 0), ("arity", True), ("rows", -1), ("bytes", 1.0)):
+            with self.subTest(field=field, value=value):
+                old = source[field]
+                source[field] = value
+                with self.assertRaisesRegex(ValueError, "invalid paper source"):
+                    self.check_source()
+                source[field] = old
+        self.manifest["files"] = []
+        with self.assertRaisesRegex(ValueError, "contain files"):
+            self.check_source()
+
     def test_same_length_substitution_is_rejected(self):
         (self.directory / "alloc.facts").write_bytes(b"LEFT\tright\n")
         with self.assertRaisesRegex(ValueError, "identity mismatch"):

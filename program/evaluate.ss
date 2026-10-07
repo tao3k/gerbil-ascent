@@ -20,8 +20,7 @@
                  gerbil-ascent-check-replacement-rows! gerbil-ascent-prepare-storage-batch)
         (only-in "result.ss" gerbil-ascent-publication-cache
                  gerbil-ascent-publish-rows gerbil-ascent-snapshot-rows gerbil-ascent-snapshot-sizes
-                 gerbil-ascent-result-observation gerbil-ascent-public-snapshot-rows
-                 gerbil-ascent-visit-snapshot!)
+                 gerbil-ascent-result-observation gerbil-ascent-make-published-result)
         (only-in "planning.ss" gerbil-ascent-prepare-program)
         (only-in :gerbil-ascent/core/positive-plan gerbil-ascent-run-positive-plan!
                  gerbil-ascent-emit-heads!)
@@ -753,21 +752,8 @@
                  (gerbil-ascent-result-observation
                   (and reuse (native-reuse-affected reuse)) names active-by-stratum rule-ticks)))
            (set! last-result
-             (.o (relation-names (vector->list names))
-                 (finished complete?)
-                 (evaluation-path (vector-ref observation 0))
-                 (reused-relations (vector-ref observation 1))
-                 (active-rule-count (vector-ref observation 2))
-                 (rule-time-nanoseconds (vector-ref observation 3))
-                 (representation-observation (lambda () (map (lambda (row) (map values row)) representations)))
-                 (relation-sizes (lambda () (map cons (vector->list names) (vector->list sizes))))
-                 (visit-rows (lambda (name columns key consume)
-                   (let (index (position-of name))
-                     (gerbil-ascent-visit-snapshot! (vector-ref snapshots index)
-                       (vector-ref arity index) columns key consume))))
-                 (rows-of (lambda (name)
-                            (gerbil-ascent-public-snapshot-rows
-                             (vector-ref snapshots (position-of name)) session?)))))))
+             (gerbil-ascent-make-published-result names arity snapshots sizes
+               representations observation position-of complete? session?))))
          (when (and reuse complete?)
            (set! active-by-stratum #f)
            (set! reuse #f))

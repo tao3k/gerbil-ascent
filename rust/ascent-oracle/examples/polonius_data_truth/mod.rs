@@ -401,5 +401,5 @@ mod tests {
 }
 
 #[cfg(test)]
-#[path = "polonius_data_truth/controls.rs"]
+#[path = "controls.rs"]
 mod control_tests;

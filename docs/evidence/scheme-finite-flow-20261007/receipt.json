@@ -1,0 +1,132 @@
+{
+  "schema": "ascent.finite-flow-qualification",
+  "parent_commit": "4511c2bcbe3da87907fe5312207bc29a4a7230f7",
+  "sources": [
+    {
+      "path": "core/finite-flow.ss",
+      "sha256": "65a1d6254eab25310fc4eba279963686d496e8b414282fb5e5cf577204ceacc2"
+    },
+    {
+      "path": "applications/polonius-paths.ss",
+      "sha256": "2e4ba7e804e875a66491540046f54fe48c00590938c3803101b36f1c074031c3"
+    },
+    {
+      "path": "t/qualification/ascent-finite-flow-test.ss",
+      "sha256": "4682b21fad72be34593353c32d7852b143d3f1ebd3f7af29c8904cc940e79aed"
+    },
+    {
+      "path": "t/qualification/fixtures/polonius/controls.sexp",
+      "sha256": "d9fcabe17ea5606738f84f99c614ec97343f16a494b513e651f51a482ef266b1"
+    },
+    {
+      "path": "packages/proofs/lean/FiniteFlowPacking.lean",
+      "sha256": "fae6941897a6838b5228ac90e6ea0e96e83a2261a58002b3a7b1df8c8dea6092"
+    },
+    {
+      "path": "packages/proofs/lean/Tests/FiniteFlowPackingTests.lean",
+      "sha256": "ced42c7f4af69a9c584150d7930a7f9f1aed5e541e0786b1b5da187fe3791def"
+    },
+    {
+      "path": "rust/ascent-oracle/examples/polonius_data_truth/mod.rs",
+      "sha256": "392f2bfd8069e169dbe469d308ae27cfd9fce986519f9210d4f34530178e419b"
+    },
+    {
+      "path": "rust/ascent-oracle/Cargo.toml",
+      "sha256": "06c7e17937453eaae5e832c95740a5f34e364acd12ddb7f1fcf7f5152bcb1237"
+    }
+  ],
+  "kernel": {
+    "logical_rule": "seed(x,p); flow(x,q) <- flow(x,p), edge(p,q), not blocked(x,q)",
+    "packing": "one optional fact bitmap per point, 8 fact ordinals per byte",
+    "generation_bound": null,
+    "transposed_index": false,
+    "uf_or_builtin_parts_privilege": false,
+    "mutation_owner": "one detached invocation; no builder escapes in the published view"
+  },
+  "native": {
+    "command": "just test-file t/qualification/ascent-finite-flow-test.ss",
+    "cases": 6,
+    "exit_code": 0,
+    "final_marker": "OK",
+    "exhaustive_cfg_seed_blocker_combinations": 256,
+    "complete_polonius_reference_fixtures": 10,
+    "computed_exit_relations_per_fixture": 2,
+    "dense": {
+      "facts": 512,
+      "points": 2048,
+      "logical_rows": 1048576,
+      "rows_enumerated_and_checked": 1048576,
+      "bitmap_payload_bytes": 131072,
+      "full_process_memory_bytes": null,
+      "physical_allocation_bytes": null,
+      "paired_speedup": null
+    },
+    "failure_controls": [
+      "duplicate domain values",
+      "out-of-domain rows and CFG edges",
+      "malformed rows",
+      "exact fact budget refusal",
+      "cancellation then clean retry",
+      "conflicting repeated keys",
+      "cyclic child elaboration"
+    ]
+  },
+  "lean": {
+    "command": "just check-lean-proofs",
+    "exit_code": 0,
+    "build_jobs": 113,
+    "theorems": [
+      "address_injective",
+      "bit_in_byte",
+      "fresh_bit",
+      "fresh_disjoint",
+      "merged_difference_exact",
+      "target_blocker_removes_fresh",
+      "payload_bound"
+    ],
+    "custom_axioms": [],
+    "sorry": false,
+    "standard_axioms_used": [
+      "propext",
+      "Classical.choice",
+      "Quot.sound"
+    ],
+    "native_queue_or_u8vector_extraction_proved": false
+  },
+  "rust_ci_repair": {
+    "run_url": "https://github.com/tao3k/gerbil-ascent/actions/runs/37613484037",
+    "failed_head": "4511c2bcbe3da87907fe5312207bc29a4a7230f7",
+    "job": "oracle (other)",
+    "rule": "RUST-MOD-R011",
+    "cause": "Sibling polonius_data_truth.rs and polonius_data_truth/ share the owner name.",
+    "repair": "Move owner interface to polonius_data_truth/mod.rs and declare the Cargo example path.",
+    "asp_gate_tests": 1,
+    "reference_tests": 5,
+    "all_target_clippy": "passed"
+  },
+  "proof_and_protocol_scope": {
+    "tla": "Existing actor/Session publication protocols remain unchanged. No new protocol model was copied for this private compute call. Future Program domain/delta recovery admission needs its own transition correspondence.",
+    "payload_bound_exclusions": [
+      "domain values and maps",
+      "CFG adjacency",
+      "root vectors",
+      "pending and fresh buffers",
+      "queue",
+      "collector"
+    ],
+    "reference_algorithm": "polonius-engine 0.13.0 Naive",
+    "historical_receipts": "Prior runner paths/hashes are historical commit bindings, not current-tree file paths."
+  },
+  "acceptance": {
+    "packed_kernel": true,
+    "compact_polonius_path_phase": true,
+    "small_input_exact_sets": true,
+    "dense_million_row_exact_enumeration": true,
+    "automatic_program_or_session_provider_admission": false,
+    "full_clap_native_application": false,
+    "paired_full_application_benefit": false,
+    "whole_byods_paper_implemented": false,
+    "mr_integration": false,
+    "new_llm_calls": 0
+  }
+}

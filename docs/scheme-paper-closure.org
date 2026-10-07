@@ -899,3 +899,82 @@ speedup, memory improvement or whole-BYODS closure is claimed. The next coupled
 implementation gate is that representation and its proofs, followed by the
 complete source-bound application comparison. PageRank and LLVM remain on the
 same application plan; MR/MRR integration remains deferred.
+
+* Packed finite CFG propagation for Polonius paths (2026-10-07)
+
+=core/finite-flow.ss= implements the seed/CFG/target-blocker relation characterized
+by =PoloniusInitialization.flow_iff_seed_path=. It admits unique fixed fact and
+point domains from actual source values, encodes each fact ordinal into a byte
+and bit, and stores one optional fact bitmap per point. Duplicate seeds are
+idempotent. A seed at a blocked point remains present; only incoming propagation
+is blocked. No generation or work-depth bound defines its semantics.
+
+The queue carries pending bits, not the whole accumulated relation. An edge
+computes =incoming & ~stored & ~blocked=, charges exactly the fresh logical
+facts, merges those bits into the target's total and pending roots, and queues
+the target once. Total and pending byte vectors never alias. Queue membership
+coalesces updates until their point is processed; cyclic CFGs terminate when
+there are no fresh bits. The caller's fact budget is resource admission, not
+an approximation of the fixed point. Cancellation or admission failure returns
+no published view and all invocation-private state becomes unreachable.
+
+Published views retain immutable point roots and invocation-local traversal.
+Both field orders, repeated/contradictory keys, unknown values and false-valued
+keys are checked. Selection preserves domain value identities and emits fresh
+row spines; the parts visitor avoids constructing row tuples. Point-keyed
+selection inspects the fact domain of that point; fact-keyed selection inspects
+that fact bit at each point. There is no separately built transpose index or
+constant-time claim for the latter. Domains and nested field equality must stay
+stable for the view's lifetime, as with existing frozen representations.
+
+=applications/polonius-paths.ss= elaborates descendant paths for assignment and
+move seeds, then invokes the packed kernel for both initialized and uninitialized
+exit relations. Descendant traversal handles cycles with a visited set; captured
+closures are shared between the two seed elaborations. Domain admission uses
+hash membership and first occurrence order, avoiding quadratic list deduplication
+on the full CFG. The existing complete Program remains the owner of liveness,
+move-error, placeholder and borrow rules. This phase API is not automatic
+representation admission into that Program or Session.
+
+** Semantic and representation checks
+
+The native qualification exhausts all 256 combinations of two-node CFG edges,
+seed facts and target blockers against an independent explicit closure. Further
+controls cover byte boundaries, partial-byte padding, false values, duplicate
+seeds, conflicting repeated keys, malformed/out-of-domain inputs, exact budget
+refusal, cancellation and clean retry. Both compact Polonius exit relations
+are compared with all ten independent complete-rule fixtures from the previous
+section, including conflicting seeds, child direction and isolated points.
+
+A 512-fact, 2,048-point chain produces 1,048,576 logical pairs with 131,072
+retained bitmap payload bytes. This is a payload accounting result, not a
+measurement of total process memory, physical allocation or a matched speedup.
+Domain values/maps, CFG adjacency, root vectors, pending/fresh buffers, queue
+storage and collector behavior are excluded from that payload number.
+
+** Proof ownership and next integration gate
+
+=FiniteFlowPacking.lean= proves address injectivity and in-byte bounds, bit-level
+fresh-delta semantics, disjointness from old facts, exact merged-minus-old delta,
+target-blocker suppression, and the retained payload upper bound. Its tests and
+axiom inspection live under =packages/proofs/lean/Tests=. Standard Lean logical
+axioms used by imported BitVec lemmas are recorded; no custom axioms or =sorry=
+are introduced. These mathematical byte laws do not establish extraction of
+Gambit u8vector operations or completeness of the native queue implementation.
+
+The kernel introduces no actor publication protocol: one call owns all mutable
+state and returns only its completed frozen view. Existing actor/Session TLA+
+models remain their protocol owners. The current UF view recovery journal is
+UF-specific; granting this bitmap view UF identity would be incorrect. The next
+integration must admit fixed domains, exact total/delta cuts and recovery without
+retaining one injection row per dense fact, and extend protocol checks only for
+new ownership/publication transitions. Complete source-bound =clap-rs= comparison
+and paired whole-application resource measurements remain separate gates.
+
+The exact =4511c2b= GitHub run found =RUST-MOD-R011=: the Polonius reference
+example had both =polonius_data_truth.rs= and a same-named child directory.
+The owner interface now lives at =examples/polonius_data_truth/mod.rs= with an
+explicit Cargo example path; the executable/CLI name is unchanged. The strict
+ASP Rust gate, five reference tests and all-target Clippy checks pass after the
+layout repair. Earlier source-bound receipts retain their historical paths and
+hashes at their recorded commits rather than being rewritten as new executions.

@@ -11,6 +11,7 @@
 (def gerbil-ascent-library-modules
   '("core/binary-relation"
     "core/relation-view"
+    "core/finite-flow"
     "table/expression"
     "table/funs"
     "table/eqrel"
@@ -70,6 +71,7 @@
     "program/interface"
     "applications/steensgaard"
     "applications/polonius"
+    "applications/polonius-paths"
     "core/binary-program"
     "candidate/closure"
     "candidate/datum"

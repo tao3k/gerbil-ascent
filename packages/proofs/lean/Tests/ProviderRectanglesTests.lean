@@ -100,4 +100,65 @@ example : ¬ Uniform (fun p : Bool × Bool => True ∧ p.1 = true ∧ p.2 = true
 #print axioms component_active_iff
 #print axioms component_plan_uf_uniform
 #print axioms component_uf_selected_exact
+-- Disjoint owned members can still omit a node assigned to that root.
+private def omittedMembers : Components Bool Unit where
+  members := fun _ => [false]
+  owner := fun _ => ()
+  owns := fun _ _ _ => rfl
+  unique := fun _ => by decide
+
+example : (omittedMembers.owner true, omittedMembers.owner false) ∈ [((), ())] ∧
+    (true, false) ∉ expand (componentPlan omittedMembers [((), ())]) := by decide
+
+-- Root enumeration must include the newly activated singleton.
+private def singletonFamily : Components Unit Unit where
+  members := fun _ => [()]
+  owner := fun _ => ()
+  owns := fun _ _ _ => rfl
+  unique := fun _ => by decide
+
+example : DirectedFrontier.ufEmitted inactiveSingleton () () () () ∧
+    expand (componentPlan singletonFamily
+      (rootFrontierPairs inactiveSingleton singletonFamily [] () ())) = [] := by
+  constructor
+  · simp [DirectedFrontier.ufEmitted, DirectedFrontier.ufCandidate,
+      DirectedFrontier.cross, DirectedFrontier.ufVisible, inactiveSingleton]
+  · simp [rootFrontierPairs, rows, componentPlan, expand]
+
+-- Even a repeated input on an existing cycle has no missing frontier.
+example : ¬ UFRootFrontier (DirectedFrontier.extendState inactiveSingleton () ())
+    singletonFamily () () ((), ()) := by
+  simp [UFRootFrontier, TransitiveComponents.compressed, singletonFamily,
+    DirectedFrontier.extendState, DirectedFrontier.activeAfter,
+    TransitiveComponents.insertEdge, inactiveSingleton]
+
+#print axioms component_plan_member_iff
+#print axioms inactive_component_singleton
+#print axioms root_frontier_exact
+#print axioms root_plan_exact
+#print axioms root_plan_nodup
+private def boolFamily : Components Bool Bool where
+  members := fun c => [c]
+  owner := id
+  owns := by intro c x h; simpa using h
+  unique := fun _ => by simp
+
+private def emptyBool : DirectedFrontier.State Bool where
+  active := fun _ => False
+  reach := Eq
+  refl := Eq.refl
+  trans := fun _ _ _ => Eq.trans
+  supported := fun _ _ h => Or.inl h
+
+example : Exact (fun p => DirectedFrontier.ufVisible emptyBool p.1 p.2)
+    (fun p => DirectedFrontier.ufVisible (DirectedFrontier.extendState emptyBool false true) p.1 p.2)
+    (componentPlan boolFamily (rootFrontierPairs emptyBool boolFamily [false, true] false true)) := by
+  apply root_plan_exact
+  · intro x; simp [boolFamily]
+  · intro x; cases x <;> simp [boolFamily]
+  · intro x y; simp [boolFamily, emptyBool, eq_comm]
+
+example : (expand (componentPlan boolFamily
+    (rootFrontierPairs emptyBool boolFamily [false, true] false true))).Nodup := by
+  exact root_plan_nodup emptyBool boolFamily [false, true] false true (by decide)
 end Ascent.ProviderRectanglesTests

@@ -598,3 +598,15 @@ sealed control without fairness. These are implementation obligations inferred
 from Section 3 concretization and host scheduling, not additions attributed to
 the paper's Theorem 3.5. Native extraction and ordered journal replay remain
 separately identified in the audit and receipt.
+
+* Constructed frontier coverage (2026-10-07)
+
+The [[file:../../scheme-trrel-uf-design.org][UF audit]] found that the earlier SCC TLA model generated delta from the
+independent expected closure itself, leaving frontier implementation faults
+unobservable. The model now constructs delta from old root reach and activation
+diagonals, then checks it against independent input closure. Raw emission,
+missing diagonals and old-row emission each violate the publication assertion.
+Lean derives this frontier shape and finite root/member plan completeness;
+there is no assumed exact-candidate encoding in =root_plan_exact=. This advances
+Section 3.3's delta obligation without claiming native parent-map extraction,
+complete BYODS application replication or a new cost benefit.

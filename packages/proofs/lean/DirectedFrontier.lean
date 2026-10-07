@@ -84,6 +84,33 @@ theorem uf_emitted_exact (state : State N) (a b x y : N) :
     · exact False.elim (fresh old)
     · exact ⟨candidate, fresh⟩
 
+/-- Native UF emits missing predecessor/successor rectangles plus newly
+activated endpoint diagonals. Latent self reach is not a visible old row. -/
+theorem uf_emitted_decomposition (state : State N) (a b x y : N) :
+    ufEmitted state a b x y ↔
+      (cross state a b x y ∧ ¬ state.reach x y) ∨
+      (x = a ∧ y = a ∧ ¬ state.active a) ∨
+      (x = b ∧ y = b ∧ ¬ state.active b) := by
+  classical
+  constructor
+  · rintro ⟨candidate, fresh⟩
+    rcases candidate with crossed | ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩
+    · by_cases prior : state.reach x y
+      · rcases state.supported x y prior with equal | active
+        · subst y
+          have inactive : ¬ state.active x := fun active => fresh ⟨prior, active, active⟩
+          rcases state.supported x a crossed.1 with equal | active
+          · subst x; exact Or.inr (Or.inl ⟨rfl, rfl, inactive⟩)
+          · exact False.elim (inactive active.1)
+        · exact False.elim (fresh ⟨prior, active⟩)
+      · exact Or.inl ⟨crossed, prior⟩
+    · exact Or.inr (Or.inl ⟨rfl, rfl, fun active => fresh ⟨state.refl _, active, active⟩⟩)
+    · exact Or.inr (Or.inr ⟨rfl, rfl, fun active => fresh ⟨state.refl _, active, active⟩⟩)
+  · rintro (⟨crossed, missing⟩ | ⟨rfl, rfl, inactive⟩ | ⟨rfl, rfl, inactive⟩)
+    · exact ⟨Or.inl crossed, fun visible => missing visible.1⟩
+    · exact ⟨Or.inr (Or.inl ⟨rfl, rfl⟩), fun visible => inactive visible.2.1⟩
+    · exact ⟨Or.inr (Or.inr ⟨rfl, rfl⟩), fun visible => inactive visible.2.1⟩
+
 def selfAfter (self : N → Prop) (a b x : N) : Prop :=
   self x ∨ (x = a ∧ a = b)
 

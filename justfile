@@ -1390,10 +1390,11 @@ check-transitive-components-formal:
     temp=$(mktemp -d)
     trap 'rm -rf "$temp"' EXIT
     "${tlc[@]}" -workers 1 -config packages/proofs/tla/TransitiveComponents.cfg -metadir "$temp/good" packages/proofs/tla/TransitiveComponents.tla
-    for mutation in split stale reject; do
+    for mutation in split stale reject raw diagonal old; do
       invariant=SCCExact
       if [[ "$mutation" == stale ]]; then invariant=ReachExact; fi
       if [[ "$mutation" == reject ]]; then invariant=RefusalAtomic; fi
+      if [[ "$mutation" == raw || "$mutation" == diagonal || "$mutation" == old ]]; then invariant=DeltaExact; fi
       sed -e "s/Mutation = \"none\"/Mutation = \"$mutation\"/" -e "s/INVARIANTS .*/INVARIANTS $invariant/" packages/proofs/tla/TransitiveComponents.cfg > "$temp/$mutation.cfg"
       code=0
       "${tlc[@]}" -workers 1 -config "$temp/$mutation.cfg" -metadir "$temp/$mutation" packages/proofs/tla/TransitiveComponents.tla > "$temp/$mutation.out" 2>&1 || code=$?

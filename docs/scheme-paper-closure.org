@@ -284,3 +284,14 @@ finite native per-insertion checks. TLA+ retains temporal responsibilities.
 B23 sections 5.3-5.4 supply the representation motivation; their performance
 results are not attributed to the Scheme implementation. Native actor
 completion/trace and general representation correspondence remain open.
+
+* UF root frontier proof progress (2026-10-07)
+
+The [[file:scheme-trrel-uf-design.org][UF design]] now derives finite root-plan completeness from SCC equivalence,
+root coverage and complete member lists. Candidate/frontier encoding is a
+conclusion for that abstract construction. The SCC TLA publication model now
+constructs emitted delta rather than assigning its oracle value, and admits
+new endpoint activation explicitly. Three frontier mutations discriminate the
+previous model's missing coverage. Native optimized remapping and grouped
+encoding still require implementation correspondence; complete B23 replication
+and its application experiments remain governed by the matrix above.

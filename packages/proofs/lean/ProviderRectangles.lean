@@ -269,6 +269,94 @@ theorem component_uf_selected_exact (state : DirectedFrontier.State α) (a b : �
         (componentPlan family pairs)) := by
   exact uf_selected_exact state a b _ encoding (component_plan_uf_uniform state family pairs same)
 
+/-- Ownership alone excludes overlap but not omission. Complete captured
+member lists also contain every node assigned to a root. -/
+theorem component_plan_member_iff (family : Components α C) (pairs : List (C × C))
+    (complete : ∀ x, x ∈ family.members (family.owner x)) (p : α × α) :
+    p ∈ expand (componentPlan family pairs) ↔ (family.owner p.1, family.owner p.2) ∈ pairs := by
+  constructor
+  · intro present
+    obtain ⟨r, member, row⟩ := List.mem_flatMap.mp present
+    obtain ⟨pair, known, equal⟩ := List.mem_map.mp member
+    subst r
+    exact (component_pair_owned family pair p row).symm ▸ known
+  · intro known
+    apply List.mem_flatMap.mpr
+    refine ⟨⟨family.members (family.owner p.1), family.members (family.owner p.2)⟩,
+      List.mem_map.mpr ⟨(family.owner p.1, family.owner p.2), known, rfl⟩, ?_⟩
+    exact (rectangle_member _ p.1 p.2).mpr ⟨complete _, complete _⟩
+
+theorem inactive_component_singleton (state : DirectedFrontier.State α)
+    (family : Components α C)
+    (same : ∀ x y, family.owner x = family.owner y ↔ state.reach x y ∧ state.reach y x)
+    (a x : α) (inactive : ¬ state.active a) (owned : family.owner x = family.owner a) :
+    x = a := by
+  rcases state.supported x a ((same x a).mp owned).1 with equal | active
+  · exact equal
+  · exact False.elim (inactive active.2)
+
+def UFRootFrontier (state : DirectedFrontier.State α) (family : Components α C)
+    (a b : α) (pair : C × C) : Prop :=
+  (TransitiveComponents.compressed family.owner state.reach pair.1 (family.owner a) ∧
+   TransitiveComponents.compressed family.owner state.reach (family.owner b) pair.2 ∧
+   ¬ TransitiveComponents.compressed family.owner state.reach pair.1 pair.2) ∨
+  (pair.1 = family.owner a ∧ pair.2 = family.owner a ∧ ¬ state.active a) ∨
+  (pair.1 = family.owner b ∧ pair.2 = family.owner b ∧ ¬ state.active b)
+
+theorem root_frontier_exact (state : DirectedFrontier.State α)
+    (family : Components α C) (a b x y : α)
+    (same : ∀ x y, family.owner x = family.owner y ↔ state.reach x y ∧ state.reach y x) :
+    UFRootFrontier state family a b (family.owner x, family.owner y) ↔
+      DirectedFrontier.ufEmitted state a b x y := by
+  rw [DirectedFrontier.uf_emitted_decomposition]
+  unfold UFRootFrontier
+  rw [TransitiveComponents.quotient_exact _ _ state.trans same x a,
+      TransitiveComponents.quotient_exact _ _ state.trans same b y,
+      TransitiveComponents.quotient_exact _ _ state.trans same x y]
+  constructor
+  · rintro (⟨xa, by', missing⟩ | ⟨xa, ya, inactive⟩ | ⟨xb, yb, inactive⟩)
+    · exact Or.inl ⟨⟨xa, by'⟩, missing⟩
+    · exact Or.inr (Or.inl ⟨inactive_component_singleton state family same a x inactive xa,
+        inactive_component_singleton state family same a y inactive ya, inactive⟩)
+    · exact Or.inr (Or.inr ⟨inactive_component_singleton state family same b x inactive xb,
+        inactive_component_singleton state family same b y inactive yb, inactive⟩)
+  · rintro (⟨⟨xa, by'⟩, missing⟩ | ⟨rfl, rfl, inactive⟩ | ⟨rfl, rfl, inactive⟩)
+    · exact Or.inl ⟨xa, by', missing⟩
+    · exact Or.inr (Or.inl ⟨rfl, rfl, inactive⟩)
+    · exact Or.inr (Or.inr ⟨rfl, rfl, inactive⟩)
+
+noncomputable def rootFrontierPairs (state : DirectedFrontier.State α)
+    (family : Components α C) (roots : List C) (a b : α) : List (C × C) := by
+  classical
+  exact (rows ⟨roots, roots⟩).filter fun pair => decide (UFRootFrontier state family a b pair)
+
+/-- Candidate completeness follows from finite root/member coverage and the
+root predicate, rather than an assumed exact emitted-frontier encoding. -/
+theorem root_plan_exact (state : DirectedFrontier.State α) (family : Components α C)
+    (roots : List C) (a b : α)
+    (complete : ∀ x, x ∈ family.members (family.owner x))
+    (covered : ∀ x, family.owner x ∈ roots)
+    (same : ∀ x y, family.owner x = family.owner y ↔ state.reach x y ∧ state.reach y x) :
+    Exact (fun p => DirectedFrontier.ufVisible state p.1 p.2)
+      (fun p => DirectedFrontier.ufVisible (DirectedFrontier.extendState state a b) p.1 p.2)
+      (componentPlan family (rootFrontierPairs state family roots a b)) := by
+  classical
+  intro p
+  rw [← expansion_member, component_plan_member_iff family _ complete p]
+  simp only [rootFrontierPairs, List.mem_filter, decide_eq_true_eq]
+  have present : (family.owner p.1, family.owner p.2) ∈ rows ⟨roots, roots⟩ :=
+    (rectangle_member _ _ _).mpr ⟨covered _, covered _⟩
+  rw [root_frontier_exact state family a b p.1 p.2 same]
+  exact ⟨fun h => (DirectedFrontier.uf_emitted_exact state a b p.1 p.2).mp h.2,
+    fun h => ⟨present, (DirectedFrontier.uf_emitted_exact state a b p.1 p.2).mpr h⟩⟩
+
+theorem root_plan_nodup (state : DirectedFrontier.State α) (family : Components α C)
+    (roots : List C) (a b : α) (unique : roots.Nodup) :
+    (expand (componentPlan family (rootFrontierPairs state family roots a b))).Nodup := by
+  classical
+  apply component_plan_nodup
+  exact List.Pairwise.filter _ (rectangle_nodup ⟨roots, roots⟩ unique unique)
+
 /-- Disjointness across consecutive injection frontiers follows from their
 history, not from component ownership alone. This justifies additive union. -/
 theorem successive_frontiers_disjoint (old middle next : α × α → Prop)

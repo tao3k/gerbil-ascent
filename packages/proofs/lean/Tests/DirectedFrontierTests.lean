@@ -43,6 +43,7 @@ example : extendGroup (fun _ : Bool => empty) true 0 1 false = empty := by
 #print axioms cross_supported
 #print axioms uf_partition
 #print axioms uf_emitted_exact
+#print axioms uf_emitted_decomposition
 #print axioms strict_partition
 #print axioms strict_emitted_exact
 #print axioms uf_self_exact

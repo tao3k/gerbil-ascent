@@ -53,4 +53,43 @@ theorem quotient_exact (root : N → C) (reach : N → N → Prop)
   · intro xy
     exact ⟨x, y, rfl, rfl, xy⟩
 
+/-! The following laws apply to the complete *post-insertion* root closure.
+They justify retaining the winner's reach table and deleting absorbed keys.
+They do not assume that an arbitrary incomplete adjacency table is safe. -/
+theorem predecessor_representative (reach : N → N → Prop)
+    (trans : ∀ x y z, reach x y → reach y z → reach x z)
+    (c w x : N) (cw : reach c w) (wc : reach w c) :
+    reach x c ↔ reach x w :=
+  ⟨fun xc => trans x c w xc cw, fun xw => trans x w c xw wc⟩
+
+theorem successor_representative (reach : N → N → Prop)
+    (trans : ∀ x y z, reach x y → reach y z → reach x z)
+    (c w y : N) (cw : reach c w) (wc : reach w c) :
+    reach c y ↔ reach w y :=
+  ⟨fun cy => trans w c y wc cy, fun wy => trans c w y cw wy⟩
+
+-- The conditional native cleanup cannot miss an incoming absorbed key.
+theorem absorbed_key_cleanup (reach : N → N → Prop)
+    (trans : ∀ x y z, reach x y → reach y z → reach x z)
+    (cycle : N → Prop) (w x c : N)
+    (toWinner : ∀ r, cycle r → reach r w)
+    (cc : cycle c) (xc : reach x c) : reach x w :=
+  trans x c w xc (toWinner c cc)
+
+-- Every outgoing arc of an absorbed root is already in the winner's closure.
+theorem winner_inherits_successors (reach : N → N → Prop)
+    (trans : ∀ x y z, reach x y → reach y z → reach x z)
+    (cycle : N → Prop) (w c y : N)
+    (fromWinner : ∀ r, cycle r → reach w r)
+    (cc : cycle c) (cy : reach c y) : reach w y :=
+  trans w c y (fromWinner c cc) cy
+
+-- A losing component has at most the winner's size. A parent-link step
+-- therefore places each losing member in a component at least twice as large.
+-- Applying this to actual parent depth additionally requires forest/ownership
+-- preservation, covered as operational invariants by the TLA model.
+theorem largest_merge_doubles (loser winner rest : Nat)
+    (largest : loser ≤ winner) : 2 * loser ≤ loser + winner + rest := by
+  omega
+
 end Ascent.TransitiveComponents

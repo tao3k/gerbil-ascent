@@ -7,7 +7,8 @@
                  gerbil-ascent-trrel-uf-state gerbil-ascent-trrel-uf-extension
                  gerbil-ascent-trrel-uf-frontier-extension gerbil-ascent-trrel-uf-snapshot
                  gerbil-ascent-trrel-uf-view-count gerbil-ascent-trrel-uf-view-for-each
-                 gerbil-ascent-trrel-uf-view-lookup gerbil-ascent-trrel-uf-observation))
+                 gerbil-ascent-trrel-uf-view-lookup gerbil-ascent-trrel-uf-observation
+                 gerbil-ascent-trrel-uf-validate))
 (export ascent-provider-views-test)
 
 (def edges '((0 0) (0 1) (0 2) (1 0) (1 1) (1 2) (2 0) (2 1) (2 2)))
@@ -59,9 +60,11 @@
                 (when (pair? expected)
                   (check-exception
                     (gerbil-ascent-trrel-uf-frontier-extension state edge (- (length expected) 1)) true)
-                  (check-equal? (gerbil-ascent-trrel-uf-observation state) physical-before))
+                  (check-equal? (gerbil-ascent-trrel-uf-observation state) physical-before)
+                  (check-equal? (gerbil-ascent-trrel-uf-validate state) #t))
                 (let* ((frontier (gerbil-ascent-trrel-uf-frontier-extension state edge (length expected)))
                        (total (gerbil-ascent-trrel-uf-snapshot state)))
+                  (check-equal? (gerbil-ascent-trrel-uf-validate state) #t)
                   (check-rows (export-view frontier) expected)
                   (check-equal? (gerbil-ascent-trrel-uf-view-count frontier) (length expected))
                   (check-rows (export-view total) next)
@@ -76,6 +79,18 @@
           (list (selected mask) (reverse (selected mask))))
         (when (= (modulo (+ mask 1) 64) 0)
           (displayln "PROVIDER-VIEWS-CHECKED graphs=" (+ mask 1)) (force-output))) (iota 512)))
+    (poo-flow-test-case "balanced largest-component merges retain valid parent chains and external arcs"
+      (let (state (gerbil-ascent-trrel-uf-state))
+        ;; Four pairs, two size-four SCCs, then size eight: losing roots retain
+        ;; multi-level parent chains. External predecessor/successor keys survive.
+        (for-each (lambda (edge)
+          (gerbil-ascent-trrel-uf-frontier-extension state edge 200)
+          (check-equal? (gerbil-ascent-trrel-uf-validate state) #t))
+          '((8 0) (7 9) (0 1) (1 0) (2 3) (3 2) (4 5) (5 4) (6 7) (7 6)
+            (1 2) (3 0) (5 6) (7 4) (3 4) (7 0)))
+        (check-equal? (gerbil-ascent-trrel-uf-observation state) '#(10 3 3))
+        (check-equal? (gerbil-ascent-trrel-uf-view-count
+                      (gerbil-ascent-trrel-uf-snapshot state)) 83)))
     (poo-flow-test-case "held frontier survives later SCC merges and exported row mutation"
       (let* ((state (gerbil-ascent-trrel-uf-state))
              (frontier (gerbil-ascent-trrel-uf-frontier-extension state '(0 1) 3))

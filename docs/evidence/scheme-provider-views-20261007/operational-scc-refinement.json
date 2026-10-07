@@ -1,0 +1,144 @@
+{
+  "version": 1,
+  "date": "2026-10-07",
+  "base_commit": "8d47e47f9349b0bf2b0b1b674acfdd1adcd986ec",
+  "paper": {
+    "url": "https://kmicinski.com/assets/byods.pdf",
+    "section": "5.4",
+    "pdf_page": 15,
+    "obligation": "SCC parent unification preserves connections to current component identities"
+  },
+  "source_sha256": {
+    "table/trrel-uf.ss": "e8a1644af080c34f002110c38d98fea8bcd39f1998fec5b227bbdcc2a72166a2",
+    "t/qualification/ascent-provider-views-test.ss": "6c5a6e4bd8a599b788af74f2cbf1cc104dacc393fe8bee71da7b997e42fe3318",
+    "packages/proofs/lean/TransitiveComponents.lean": "c7b26c6e2d7798c29e1212d658d7b7ce53dc05196c2ccb772382075f8816a8b9",
+    "packages/proofs/lean/Tests/TransitiveComponentsTests.lean": "092005ac6d7e97b211de40db5baa5f68fa852779457a665ca2f45e94461219ac",
+    "packages/proofs/lean/lakefile.lean": "7aef4c855531dffce9138617875b813c47fa97678b7fa34d1b9e7a6a966a47df",
+    "packages/proofs/tla/TransitiveComponents.tla": "23300b85c6f60dbec887a93647edc44f452f94ab77b484d841cc5e620b2c9b0b",
+    "packages/proofs/tla/TransitiveComponents.cfg": "aeb5edebd44f550795ffc28f373ce8199a8a055765838d2be3f3a3d8da48dc61",
+    "justfile": "e0f989e22e9f43573bd3f15baacaa0a89aeef397bc55116962ebfcf6c0e9aead"
+  },
+  "lean": {
+    "command": "just check-lean-proofs (included in just check-formal)",
+    "jobs": 91,
+    "new_laws": [
+      "predecessor_representative",
+      "successor_representative",
+      "absorbed_key_cleanup",
+      "winner_inherits_successors",
+      "largest_merge_doubles"
+    ],
+    "axioms": {
+      "four_reach_laws": [],
+      "largest_merge_doubles": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    "negative_controls": [
+      "Incomplete root adjacency loses a predecessor reach fact under absorbed-key deletion",
+      "Choosing a smaller winner does not guarantee losing-component size doubling"
+    ],
+    "test_owner": "packages/proofs/lean/Tests/TransitiveComponentsTests.lean"
+  },
+  "tla": {
+    "command": "just check-transitive-components-formal",
+    "nodes": [
+      1,
+      2,
+      3
+    ],
+    "generated_states": 170455,
+    "distinct_states": 41149,
+    "exit_code": 0,
+    "new_fields": [
+      "link",
+      "members",
+      "size"
+    ],
+    "representation": "maximum stored size winner; root-only parent linking; member union and additive sizes; survivor reach tables with conditional absorbed-key deletion",
+    "invariants": [
+      "ReachExact",
+      "SCCExact",
+      "ParentRoots",
+      "PrivateArcs",
+      "RefusalAtomic",
+      "ActiveExact",
+      "DeltaExact",
+      "ParentChains",
+      "MemberPartition",
+      "SizeExact"
+    ],
+    "new_faults": {
+      "chain": {
+        "invariant": "ParentChains",
+        "expected_exit": 12
+      },
+      "members": {
+        "invariant": "MemberPartition",
+        "expected_exit": 12
+      },
+      "size": {
+        "invariant": "SizeExact",
+        "expected_exit": 12
+      },
+      "adjacency": {
+        "invariant": "PrivateArcs",
+        "expected_exit": 12
+      }
+    },
+    "all_scc_faults": 10
+  },
+  "full_formal": {
+    "command": "just check-formal",
+    "exit_code": 0,
+    "positive_models": 23,
+    "counterexample_controls": 52,
+    "marker": "ALL-FORMAL-CHECK-OK",
+    "concurrent_lanes": 2,
+    "tlc_module_extraction": "isolated per JVM leaf gate"
+  },
+  "native": {
+    "command": "just test-file t/qualification/ascent-provider-views-test.ss",
+    "exit_code": 0,
+    "module_ok": 1,
+    "case_ok": 6,
+    "final_ok": true,
+    "graphs": 512,
+    "orders": [
+      "forward",
+      "reverse"
+    ],
+    "audit_points": [
+      "every accepted graph prefix",
+      "every rejected graph preflight",
+      "every balanced SCC merge step"
+    ],
+    "balanced_merge": {
+      "nodes": 10,
+      "final_components": 3,
+      "final_arcs": 3,
+      "final_visible_rows": 83
+    },
+    "audited_storage": [
+      "acyclic parent traversal",
+      "unique root inventory",
+      "complete member coverage",
+      "member ownership and uniqueness",
+      "stored sizes",
+      "empty absorbed storage",
+      "canonical reach keys",
+      "transitive root closure"
+    ],
+    "hot_path_audit": false
+  },
+  "boundaries": [
+    "Three-node exploration is finite and cannot explore arbitrary native parent depths or all representative tie orders",
+    "Model inactive nodes are latent singletons; native allocation is lazy",
+    "Member sets abstract list ordering; native audits check uniqueness",
+    "Backing array release and all-roots-collapse shortcut are checked extensionally, not as allocator steps",
+    "No universal mutable-Scheme refinement theorem or complete logarithmic parent-depth theorem",
+    "Grouped prefix decoding and ordered journal replay remain separate correspondence obligations",
+    "No new speedup or paid LLM result is claimed"
+  ]
+}

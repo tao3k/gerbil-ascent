@@ -295,3 +295,14 @@ new endpoint activation explicitly. Three frontier mutations discriminate the
 previous model's missing coverage. Native optimized remapping and grouped
 encoding still require implementation correspondence; complete B23 replication
 and its application experiments remain governed by the matrix above.
+
+* Operational SCC refinement (2026-10-07)
+
+The UF design now connects BYODS SCC compression to maximum-size representative
+selection, retained parent chains, member migration, additive sizes and optimized
+absorbed-key deletion. Lean derives the complete-closure conditions for safe key
+cleanup; TLA explores the operational updates and four additional seeded defects;
+native Scheme audits actual storage after graph-prefix acceptance/refusal and a
+balanced ten-node merge sequence. This strengthens representation evidence, not
+a universal mutable-memory proof or a new performance claim. See
+[[file:scheme-trrel-uf-design.org][the UF design]] and its operational receipt for scope and remaining obligations.

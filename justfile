@@ -1417,11 +1417,15 @@ check-transitive-components-formal:
     # must not truncate/delete each other's module files.
     if [[ "${tlc[0]}" == java ]]; then tlc=(java "-Djava.io.tmpdir=$temp" "${tlc[@]:1}"); fi
     "${tlc[@]}" -workers 1 -config packages/proofs/tla/TransitiveComponents.cfg -metadir "$temp/good" packages/proofs/tla/TransitiveComponents.tla
-    for mutation in split stale reject raw diagonal old; do
+    for mutation in split stale reject raw diagonal old chain members size adjacency; do
       invariant=SCCExact
       if [[ "$mutation" == stale ]]; then invariant=ReachExact; fi
       if [[ "$mutation" == reject ]]; then invariant=RefusalAtomic; fi
       if [[ "$mutation" == raw || "$mutation" == diagonal || "$mutation" == old ]]; then invariant=DeltaExact; fi
+      if [[ "$mutation" == chain ]]; then invariant=ParentChains; fi
+      if [[ "$mutation" == members ]]; then invariant=MemberPartition; fi
+      if [[ "$mutation" == size ]]; then invariant=SizeExact; fi
+      if [[ "$mutation" == adjacency ]]; then invariant=PrivateArcs; fi
       sed -e "s/Mutation = \"none\"/Mutation = \"$mutation\"/" -e "s/INVARIANTS .*/INVARIANTS $invariant/" packages/proofs/tla/TransitiveComponents.cfg > "$temp/$mutation.cfg"
       code=0
       "${tlc[@]}" -workers 1 -config "$temp/$mutation.cfg" -metadir "$temp/$mutation" packages/proofs/tla/TransitiveComponents.tla > "$temp/$mutation.out" 2>&1 || code=$?

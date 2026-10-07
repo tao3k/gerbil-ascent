@@ -12,7 +12,7 @@
         (only-in :gerbil-ascent/table/storage gerbil-ascent-storage-engine-state
                  gerbil-ascent-storage-admit-state!
                  gerbil-ascent-canonical-set-storage-provider?
-                 gerbil-ascent-canonical-uf-storage-provider?
+                 gerbil-ascent-canonical-view-storage-provider?
                  gerbil-ascent-storage-view-extension! gerbil-ascent-storage-freeze-view)
         (only-in :gerbil-ascent/table/provider gerbil-ascent-canonical-hash-index-provider?))
 (export make-initial-source-state gerbil-ascent-initialize-sources!)
@@ -112,7 +112,7 @@
                ;; Initial duplicates remain rows; the exact built-in Set
                ;; extension only wraps this row in a temporary list.
                (cond
-                ((and (gerbil-ascent-canonical-uf-storage-provider? (vector-ref storage-providers index))
+                ((and (gerbil-ascent-canonical-view-storage-provider? (vector-ref storage-providers index))
                       (gerbil-ascent-canonical-hash-index-provider? (vector-ref (vector-ref schema 5) index)))
                  (let (frontier (gerbil-ascent-storage-view-extension!
                                  (vector-ref storage-states index) row
@@ -151,7 +151,7 @@
                    (gerbil-ascent-storage-admit-state!
                     (vector-ref storage-states index)))))))
            rows)
-          (when (and (gerbil-ascent-canonical-uf-storage-provider? (vector-ref storage-providers index))
+          (when (and (gerbil-ascent-canonical-view-storage-provider? (vector-ref storage-providers index))
                      (gerbil-ascent-canonical-hash-index-provider? (vector-ref (vector-ref schema 5) index)))
             ;; Query planning follows source admission to preserve diagnostics.
             ;; Build only a frozen carrier here; routing is selected afterwards.

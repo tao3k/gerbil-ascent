@@ -3,7 +3,7 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 (import (only-in :gerbil-ascent/core/positive-plan gerbil-ascent-pure-positive-plan?)
         (only-in :gerbil-ascent/table/storage gerbil-ascent-canonical-set-storage-provider?
-                 gerbil-ascent-canonical-uf-storage-provider?)
+                 gerbil-ascent-canonical-view-storage-provider?)
         (only-in :gerbil-ascent/table/provider gerbil-ascent-canonical-hash-index-provider?))
 (export gerbil-ascent-run-actor-round! gerbil-ascent-actor-round-eligible?)
 
@@ -25,7 +25,7 @@
 (def (gerbil-ascent-actor-round-eligible? rules storages indexes joins fields)
   (and (andmap (lambda (rule) (gerbil-ascent-pure-positive-plan? (vector-ref rule 5))) rules)
        (andmap (lambda (provider) (or (gerbil-ascent-canonical-set-storage-provider? provider)
-                                    (gerbil-ascent-canonical-uf-storage-provider? provider)))
+                                    (gerbil-ascent-canonical-view-storage-provider? provider)))
                (vector->list storages))
        (andmap gerbil-ascent-canonical-hash-index-provider? (vector->list indexes))
        (andmap not (vector->list joins))

@@ -1117,6 +1117,11 @@ multi-source-session-rows:
 byods-session-rows:
     @timeout 90s .cache/ascent/native-library/dsl-closure {{ gerbil_test_runtime_options }} --oracle byods-session
 
+# Verify the immutable paper input envelope before the native complete count.
+steensgaard-data directory='.cache/ascent/paper-data/steensgaard':
+    @PYTHONPATH="{{ justfile_directory() }}/python/src" python3 -m ascent_test_support.paper_source "{{ directory }}" docs/evidence/scheme-application-admission-20261007/openjdk-source.json
+    @just _oracle-native steensgaard-data "{{ directory }}" 440438706
+
 steensgaard-rows:
     @just _oracle-native steensgaard
 

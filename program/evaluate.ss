@@ -5,7 +5,7 @@
 ;;; Generic stratified semi-naive evaluator. Mutable row buffers belong to one
 ;;; session; public declarations and returned snapshots are POO values.
 (import :gerbil-ascent/core/relation-view
-        (only-in "view-state.ss" gerbil-ascent-view-relation? gerbil-ascent-stage-view!
+        (only-in "view-state.ss" gerbil-ascent-view-relation? gerbil-ascent-stage-view! gerbil-ascent-frontier-count
                  gerbil-ascent-view-journal-event gerbil-ascent-view-export-cut
                  gerbil-ascent-commit-view! gerbil-ascent-empty-view gerbil-ascent-add-frontier
                  make-view-routing-state gerbil-ascent-initialize-view-cuts! gerbil-ascent-route-view-sources!)
@@ -357,9 +357,9 @@
                   (let (frontier (gerbil-ascent-stage-view! (vector-ref storage-states index) row
                                   (- output-limit (+ source-materialized-count derived-count pending-count))
                                   (vector-ref field-checkers index)))
-                    (when (> (gerbil-ascent-row-count frontier) 0)
+                    (when (> (gerbil-ascent-frontier-count frontier) 0)
                       (vector-set! pending-injections index (cons (map values row) (vector-ref pending-injections index))))
-                    (set! pending-count (+ pending-count (gerbil-ascent-row-count frontier)))
+                    (set! pending-count (+ pending-count (gerbil-ascent-frontier-count frontier)))
                     (vector-set! pending index (gerbil-ascent-add-frontier (vector-ref pending index) frontier))))
                  ((vector-ref lattice-joins index)
                   (let* ((key (gerbil-ascent-lattice-key row))
@@ -630,14 +630,14 @@
               (when (< index count)
                 (if (view-relation? index)
                   (let (frontier (vector-ref pending index))
-                    (if (> (gerbil-ascent-row-count frontier) 0)
+                    (if (> (gerbil-ascent-frontier-count frontier) 0)
                       (begin
                              (vector-set! view-journals index
                                (cons (gerbil-ascent-view-journal-event 'derived (reverse (vector-ref pending-injections index))
                                        (gerbil-ascent-storage-eqrel-state? (vector-ref storage-states index)))
                                      (vector-ref view-journals index)))
                              (commit-view! index frontier)
-                             (set! derived-count (+ derived-count (gerbil-ascent-row-count frontier)))
+                             (set! derived-count (+ derived-count (gerbil-ascent-frontier-count frontier)))
                              (set! active? #t))
                       (begin
                              (let (total (vector-ref all index))
@@ -846,9 +846,9 @@
                                     (- output-limit (+ source-materialized-count derived-count))
                                     (vector-ref field-checkers index)))
                       (set! source-count (+ source-count 1))
-                      (when (> (gerbil-ascent-row-count frontier) 0)
+                      (when (> (gerbil-ascent-frontier-count frontier) 0)
                         (set! dirty? #t) (set! materialized-dirty? #t)
-                        (set! source-materialized-count (+ source-materialized-count (gerbil-ascent-row-count frontier)))
+                        (set! source-materialized-count (+ source-materialized-count (gerbil-ascent-frontier-count frontier)))
                         (vector-set! view-journals index
                           (cons (gerbil-ascent-view-journal-event 'source (list row)
                                   (gerbil-ascent-storage-eqrel-state? (vector-ref storage-states index))) (vector-ref view-journals index)))

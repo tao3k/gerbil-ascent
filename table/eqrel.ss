@@ -1,126 +1,116 @@
 ;;; -*- Gerbil -*-
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
-
-;;; Evaluation-local equivalence components. The provider owns this private
-;;; state; the evaluator creates one instance per declared relation and run.
+;;; Evaluation-local weighted components; published cuts borrow immutable member
+;;; spines, never mutable component records or the owner's membership table.
 (import :gerbil-ascent/core/relation-view)
 (export gerbil-ascent-eqrel-state gerbil-ascent-eqrel-extension
-        gerbil-ascent-eqrel-insert! gerbil-ascent-eqrel-freeze)
-
-;;; A shared component object has explicit member and cached-size fields.
-;;; Every member's private index entry points to the same component identity.
+        gerbil-ascent-eqrel-state? gerbil-ascent-eqrel-insert!
+        gerbil-ascent-eqrel-freeze gerbil-ascent-eqrel-publish! gerbil-ascent-eqrel-observation)
 (defstruct eqrel-component (members size))
-
-;; : (-> EquivalenceComponents)
+(defstruct eqrel-cut (count view))
+(defstruct eqrel-state (components count published origin))
+(def gerbil-ascent-eqrel-state? eqrel-state?)
+(def (empty-cut)
+  (make-eqrel-cut 0 (gerbil-ascent-explicit-view [] 0)))
 (def (gerbil-ascent-eqrel-state)
-  (make-hash-table))
+  (let (empty (empty-cut)) (make-eqrel-state (make-hash-table) 0 empty empty)))
 
-;;; Budget preflight must finish before merging components. A rejected source
-;;; update must leave the retained session state reusable on the next call.
-;; : (-> EquivalenceComponents Row Nat FrozenFrontier)
-(def (gerbil-ascent-eqrel-insert! components row budget)
-  (let* ((width (length row))
+(def (member-key width group node) (list width group node))
+;;; Frontier order matches the eager algorithm: fresh diagonals, then each
+;;; left/right cross pair followed immediately by its symmetric counterpart.
+(def (injection-view prefix diagonals lefts rights count)
+  (def (visit columns key consume)
+    (unless (and (list? columns) (list? key) (= (length columns) (length key))
+                 (andmap (lambda (n) (and (exact-integer? n) (>= n 0)
+                                          (< n (+ 2 (length prefix))))) columns))
+      (error "invalid ASCENT eqrel view key"))
+    (def (emit a b)
+      (let (row (append prefix (list a b)))
+        (when (or (null? columns) (andmap (lambda (n v) (equal? (list-ref row n) v)) columns key))
+          (consume row))))
+    (for-each (lambda (node) (emit node node)) diagonals)
+    (for-each (lambda (a) (for-each (lambda (b) (emit a b) (emit b a)) rights)) lefts))
+  (make-relation-view #f #f 0 'delta count
+    (+ (length diagonals) (length lefts) (length rights)) visit
+    (lambda (row)
+      (let (found? #f)
+        (visit (iota (length row)) row (lambda (_) (set! found? #t))) found?)) #f #f))
+
+;;; Preflight counts before changing the owner. Member spines are replaced with
+;;; append, not destructively modified, so frontiers and old cuts remain stable.
+(def (gerbil-ascent-eqrel-insert! state row budget)
+  (let* ((components (eqrel-state-components state)) (width (length row))
          (_ (unless (memq width '(2 3))
               (error "ASCENT eqrel requires two or three columns" row)))
          (group (if (= width 3) (car row) #f))
+         (prefix (if (= width 3) (list group) []))
          (pair (if (= width 3) (cdr row) row))
-         (left (car pair))
-         (right (cadr pair))
-         (same-node? (equal? left right))
-         (left-key (list width group left))
-         (right-key (if same-node? left-key (list width group right)))
-         (left-known (hash-get components left-key))
-         (right-known (if same-node? left-known
-                         (hash-get components right-key)))
-         (added []) (needed 0) (blocks []) (cross-left []) (cross-right []))
-    (def (emit! from to)
-      (set! added
-        (cons (if (= width 3)
-                (list group from to)
-                (list from to))
-              added)))
-    (def (new-component! node key)
-      (let (fresh (make-eqrel-component (list node) 1))
-        (hash-put! components key fresh)
-        (set! blocks (cons (make-rectangle (if (= width 3) (list group) [])
-                                          (list node) (list node)) blocks))
-        (emit! node node)
-        fresh))
-    ;; Count the reflexive facts and cross product before touching components.
-    ;; A rejected session append must leave the provider usable for a retry.
-    (let* ((new-nodes (+ (if left-known 0 1)
-                         (if (or right-known same-node?) 0 1)))
-           (left-size (if left-known (eqrel-component-size left-known) 1))
-           (right-size (if right-known (eqrel-component-size right-known) 1))
-           (count (+ new-nodes
-                      (if (or (and left-known right-known
-                                   (eq? left-known right-known))
-                              same-node?)
-                        0
-                        (* 2 left-size right-size)))))
-      (set! needed count)
-      (when (> needed budget)
-        (error "ASCENT eqrel output fact budget exceeded")))
-    ;; Preflight and commit use the same resolved components. No callbacks
-    ;; intervene, so successful admission needs no second hash lookup. An
-    ;; already connected edge has no component or row mutation to perform.
-    (unless (and left-known (eq? left-known right-known))
-      (let* ((left-component
-              (or left-known (new-component! left left-key)))
-             (right-component
-              (if same-node? left-component
-                  (or right-known (new-component! right right-key)))))
-        (unless (eq? left-component right-component)
-          ;; Capture immutable member spines before the weighted merge. Two
-          ;; rectangles represent the complete symmetric frontier without pairs.
-          (set! cross-left (eqrel-component-members left-component))
-          (set! cross-right (eqrel-component-members right-component))
-          (let (prefix (if (= width 3) (list group) []))
-            (set! blocks (cons (make-rectangle prefix cross-right cross-left)
-                              (cons (make-rectangle prefix cross-left cross-right) blocks))))
-          (let* ((large (if (>= (eqrel-component-size left-component)
-                                (eqrel-component-size right-component))
-                          left-component right-component))
-                 (small (if (eq? large left-component)
-                          right-component left-component))
-                 (members (eqrel-component-members small)))
-            (for-each
-             (lambda (node)
-               (hash-put! components (list width group node) large))
-             members)
-            (eqrel-component-members-set! large
-              (append members (eqrel-component-members large)))
-            (eqrel-component-size-set! large
-              (+ (eqrel-component-size large)
-                 (eqrel-component-size small)))))))
-    (let ((diagonals (reverse added)) (lefts cross-left) (rights cross-right)
-          (prefix (if (= width 3) (list group) [])))
-      (gerbil-ascent-view-with-export
-        (gerbil-ascent-rectangle-view (reverse blocks) needed (length blocks))
-        (lambda ()
-          ;; Public ordered export preserves the original interleaved directions.
-          ;; This invocation owns its pair spine; the captured cut owns none.
-          (let (rows (reverse diagonals))
-            (for-each (lambda (from)
-              (for-each (lambda (to)
-                (set! rows (cons (append prefix (list from to)) rows))
-                (set! rows (cons (append prefix (list to from)) rows))) rights)) lefts)
-            (reverse rows)))))))
+         (left (car pair)) (right (cadr pair)) (same-node? (equal? left right))
+         (left-key (member-key width group left))
+         (right-key (if same-node? left-key (member-key width group right)))
+         (a (hash-get components left-key))
+         (b (if same-node? a (hash-get components right-key)))
+         (left-size (if a (eqrel-component-size a) 1))
+         (right-size (if b (eqrel-component-size b) 1))
+         (merge? (not (or same-node? (and a b (eq? a b)))))
+         (diagonals (append (if a [] (list left))
+                           (if (or b same-node?) [] (list right))))
+         (needed (+ (length diagonals) (if merge? (* 2 left-size right-size) 0))))
+    (when (> needed budget) (error "ASCENT eqrel output fact budget exceeded"))
+    (unless a (set! a (make-eqrel-component (list left) 1)) (hash-put! components left-key a))
+    (unless b
+      (set! b (if same-node? a (make-eqrel-component (list right) 1)))
+      (hash-put! components right-key b))
+    (let ((lefts (if merge? (eqrel-component-members a) []))
+          (rights (if merge? (eqrel-component-members b) [])))
+      (when merge?
+        (let* ((large (if (>= left-size right-size) a b))
+               (small (if (eq? large a) b a)) (members (eqrel-component-members small)))
+          (for-each (lambda (node) (hash-put! components (member-key width group node) large)) members)
+          (eqrel-component-members-set! large (append members (eqrel-component-members large)))
+          (eqrel-component-size-set! large (+ left-size right-size))))
+      (eqrel-state-count-set! state (+ (eqrel-state-count state) needed))
+      (injection-view prefix diagonals lefts rights needed))))
 
-;; Checked public storage dispatch still returns an explicit owned batch.
-;; Canonical engine dispatch consumes the same frontier without expanding it.
-(def (gerbil-ascent-eqrel-extension components _all _pending row budget)
-  (gerbil-ascent-view-rows (gerbil-ascent-eqrel-insert! components row budget)))
+;; The public eager extension retains its row protocol for noncanonical indexes
+;; and custom Provider compositions. Canonical engine routes consume views.
+(def (gerbil-ascent-eqrel-extension state _all _pending row budget)
+  (gerbil-ascent-view-rows (gerbil-ascent-eqrel-insert! state row budget)))
 
-(def (gerbil-ascent-eqrel-freeze components (indexed? #t))
-  (let ((seen (make-hash-table-eq)) (blocks []) (count 0))
+(def (capture state indexed?)
+  (let ((seen (make-hash-table-eq)) (blocks [])
+        (nodes (hash-length (eqrel-state-components state))))
     (hash-for-each (lambda (key component)
       (unless (hash-get seen component)
         (hash-put! seen component #t)
-        (let ((members (eqrel-component-members component))
-              (size (eqrel-component-size component)))
-          (set! blocks (cons (make-rectangle
-            (if (= (car key) 3) (list (cadr key)) []) members members) blocks))
-          (set! count (+ count (* size size)))))) components)
-    (gerbil-ascent-rectangle-view (reverse blocks) count (length blocks) indexed?)))
+        (let (spine (eqrel-component-members component))
+          (set! blocks (cons (make-rectangle (if (= (car key) 3) (list (cadr key)) []) spine spine) blocks)))))
+      (eqrel-state-components state))
+    (make-eqrel-cut (eqrel-state-count state)
+      (gerbil-ascent-rectangle-view blocks (eqrel-state-count state) (* 2 nodes) indexed?))))
+
+(def (gerbil-ascent-eqrel-freeze state (indexed? #t))
+  (let (cut (capture state indexed?))
+    (eqrel-state-published-set! state cut)
+    (eqrel-cut-view cut)))
+
+;;; Collapse the staged union to total-minus-origin. Both lookup carriers are
+;;; frozen and linear in active members. Consecutive source appends retain the
+;;; earlier delta origin; a fresh derived round uses the previous total cut.
+(def (gerbil-ascent-eqrel-publish! state count (indexed? #t))
+  (let* ((published (eqrel-state-published state))
+         (origin (if (= count (- (eqrel-state-count state) (eqrel-cut-count published)))
+                   published (eqrel-state-origin state)))
+         (next (capture state indexed?)) (total (eqrel-cut-view next)))
+    (unless (= count (- (eqrel-cut-count next) (eqrel-cut-count origin)))
+      (error "ASCENT eqrel delta origin mismatch"))
+    (let (delta (if (= (eqrel-cut-count origin) 0) total
+                   (gerbil-ascent-view-difference total (eqrel-cut-view origin) count)))
+      (eqrel-state-origin-set! state origin)
+      (eqrel-state-published-set! state next)
+      (values total delta))))
+
+;; Observe private active members and concrete cardinality without tuple expansion.
+(def (gerbil-ascent-eqrel-observation state)
+  (list (hash-length (eqrel-state-components state)) (eqrel-state-count state)))

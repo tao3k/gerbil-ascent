@@ -57,6 +57,8 @@
 (import (only-in (rename-in :gerbil-ascent/tools/model-source-closure
                            (main source-closure-main)) source-closure-main))
 
+(import (only-in (rename-in :gerbil-ascent/t/qualification/ascent-steensgaard-data (main steensgaard-data-main)) steensgaard-data-main))
+
 (def (check-native-oracle!)
   ;; Keep row stdout unchanged while reporting actual artifact admission.
   (parameterize ((current-output-port (current-error-port)))
@@ -69,6 +71,10 @@
 
 (def (main . args)
   (match args
+    (["--oracle" "steensgaard-data" directory expected]
+     (check-native-oracle!)
+     (steensgaard-data-main directory expected)
+     (exit 0))
     (["--oracle" "eqrel-program" . flags]
      (check-native-oracle!)
      (apply eqrel-program-main flags)

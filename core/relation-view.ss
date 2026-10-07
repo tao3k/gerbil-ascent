@@ -6,7 +6,7 @@
 (export relation-view? make-relation-view relation-view-count relation-view-units
         relation-view-identity relation-view-generation relation-view-revision relation-view-lane
         gerbil-ascent-view-with-export gerbil-ascent-view-bind gerbil-ascent-view-select gerbil-ascent-view-rows
-        gerbil-ascent-explicit-view gerbil-ascent-lazy-explicit-view gerbil-ascent-view-union
+        gerbil-ascent-explicit-view gerbil-ascent-lazy-explicit-view gerbil-ascent-view-union gerbil-ascent-view-difference
         gerbil-ascent-row-parts? gerbil-ascent-admitted-row-parts? gerbil-ascent-for-each-row-parts gerbil-ascent-visit-view-parts! gerbil-ascent-visit-admitted-view-parts!
         gerbil-ascent-for-each-row gerbil-ascent-any-row? gerbil-ascent-row-count
         gerbil-ascent-view-contains? make-rectangle gerbil-ascent-rectangle-view)
@@ -120,6 +120,32 @@
              (lambda (columns key consume)
                (gerbil-ascent-visit-admitted-view-parts! left columns key consume)
                (gerbil-ascent-visit-admitted-view-parts! right columns key consume)))))))
+;; Monotone cuts with row parts; caller establishes older is a subset of newer.
+;; : (-> FrozenView FrozenView Natural FrozenView)
+(def (gerbil-ascent-view-difference newer older count)
+  (unless (and (exact-integer? count) (>= count 0)
+               (gerbil-ascent-row-parts? newer) (gerbil-ascent-row-parts? older)
+               (= count (- (relation-view-count newer) (relation-view-count older))))
+    (error "ASCENT view difference requires coherent part cuts"))
+  (let ((admitted? (and (gerbil-ascent-admitted-row-parts? newer)
+                         (gerbil-ascent-admitted-row-parts? older))))
+      (def (parts columns key consume admitted?)
+        ((if admitted? gerbil-ascent-visit-admitted-view-parts! gerbil-ascent-visit-view-parts!)
+          newer columns key
+          (lambda (prefix left right)
+            (let ((found? #f) (row (append prefix (list left right))))
+              ((if admitted? gerbil-ascent-visit-admitted-view-parts! gerbil-ascent-visit-view-parts!)
+                older (case (length row) ((2) '(0 1)) ((3) '(0 1 2)) (else (iota (length row)))) row (lambda (_prefix _left _right) (set! found? #t)))
+              (unless found? (consume prefix left right))))))
+      (make-relation-view #f #f 0 'delta count
+        (+ (relation-view-units newer) (relation-view-units older))
+        (lambda (columns key consume)
+          (parts columns key (lambda (prefix left right) (consume (append prefix (list left right)))) #f))
+        (lambda (row) (and (gerbil-ascent-view-contains? newer row)
+                          (not (gerbil-ascent-view-contains? older row)))) #f
+        (make-part-visitors
+          (lambda (columns key consume) (parts columns key consume #f))
+          (and admitted? (lambda (columns key consume) (parts columns key consume #t)))))))
 ;; : (-> Value Natural Columns Key Boolean)
 (def (matches-coordinate? value coordinate columns key)
   (andmap (lambda (column selected) (or (not (= column coordinate)) (equal? value selected))) columns key))

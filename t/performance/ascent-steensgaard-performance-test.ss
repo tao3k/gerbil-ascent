@@ -16,6 +16,10 @@
 
 ;; Independent partition saturation. It does not use Scheme clauses, UF,
 ;; the production equality Provider, or the explicit Datalog closure rules.
+(def (check-vpt-rows result expected actual)
+  (check-equal? (.ref result 'finished) #t)
+  (check-equal? (length actual) (length expected))
+  (for-each (lambda (row) (check-equal? (and (member row actual) #t) #t)) expected))
 (def (check-vpt result expected)
   (let (actual ((.ref result 'rows-of) 'vpt))
     (check-equal? (.ref result 'finished) #t)
@@ -60,7 +64,7 @@
                    (rows ((.ref result 'rows-of) 'vpt))
                    (elapsed (- (current-jiffy) start)) (after (##process-statistics)))
               (##get-bytes-allocated! counter 1)
-              (check-vpt result expected)
+              (check-vpt-rows result expected rows)
               (vector (* 1000000 (- (+ (f64vector-ref after 0) (f64vector-ref after 1))
                                     (+ (f64vector-ref before 0) (f64vector-ref before 1))))
                       (* 1000000 (/ elapsed (jiffies-per-second)))
@@ -72,7 +76,7 @@
           (let* ((old-first? (even? pair))
                  (a (sample (if old-first? old new) 1))
                  (b (sample (if old-first? new old) 1)))
-            (displayln "STEENSGAARD-COST pair=" pair " old=" (if old-first? a b)
+            (displayln "STEENSGAARD-COST pair=" pair " exports=1 old=" (if old-first? a b)
                        " new=" (if old-first? b a)) (force-output))) (iota 12))
         ;; Same explicit program at both capacities. Canonical equivalence views
         ;; also admit frozen worker reads; the coordinator owns every merge.

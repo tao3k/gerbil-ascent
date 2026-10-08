@@ -2,10 +2,9 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(import (only-in :std/test check-equal? test-suite)
+(import (only-in :std/test check-equal? test-suite test-case)
         (only-in :clan/poo/object .o .cc .ref)
         (only-in :clan/poo/mop element?)
-        (only-in :core/observability/testing-case poo-flow-test-case)
         (only-in :gerbil-ascent/program/types
                  GerbilAscentAtomContract GerbilAscentGuardContract
                  GerbilAscentRuleContract GerbilAscentProgramContract)
@@ -25,7 +24,7 @@
 
 (def ascent-contract-union-test
   (test-suite "ASCENT native union classification"
-    (poo-flow-test-case "six clause prototypes retain full responsibility checks"
+    (test-case "six clause prototypes retain full responsibility checks"
       (let* ((x (gerbil-ascent-variable 'x))
              (atom (gerbil-ascent-atom 'input (list x)))
              (guard (gerbil-ascent-guard [] (lambda () #t)))
@@ -56,7 +55,7 @@
            (same-admission ascent-reference-rule-contract GerbilAscentRuleContract
                            (.cc rule 'body (list clause)) #f))
          rejected)))
-    (poo-flow-test-case "overlapping prototypes retain ordered fallback admission"
+    (test-case "overlapping prototypes retain ordered fallback admission"
       (let* ((atom-proto (.ref GerbilAscentAtomContract 'proto))
              (guard-proto (.ref GerbilAscentGuardContract 'proto))
              (clause (.o (:: @ [atom-proto guard-proto])
@@ -69,7 +68,7 @@
         (check-equal? (element? GerbilAscentGuardContract clause) #t)
         (same-admission ascent-reference-rule-contract GerbilAscentRuleContract
                         (.cc rule 'body (list clause)) #t)))
-    (poo-flow-test-case "relation and lattice union rejects malformed responsibilities"
+    (test-case "relation and lattice union rejects malformed responsibilities"
       (let* ((relation (gerbil-ascent-relation 'input 1 '((1))))
              (lattice (gerbil-ascent-lattice 'best 2 '((1 2)) max))
              (program (gerbil-ascent-program [] [] 16 16 64)))

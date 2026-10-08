@@ -1,8 +1,7 @@
 ;;; -*- Gerbil -*-
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
-(import (only-in :std/test test-suite check-equal?)
-        (only-in :core/observability/testing-case poo-flow-test-case)
+(import (only-in :std/test test-suite check-equal? test-case)
         (only-in :clan/poo/object .o .mix .ref .call)
         (only-in :clan/poo/trie UIntTrieSet)
         (only-in :gerbil-ascent/table/expression
@@ -36,7 +35,7 @@
     matrix))
 (def ascent-materialization-test
   (test-suite "Complete persistent relation materialization"
-    (poo-flow-test-case "all 512 graphs match independent composition closure and shortest distance"
+    (test-case "all 512 graphs match independent composition closure and shortest distance"
       (for-each
        (lambda (mask)
          (let* ((edges (filter (lambda (pair) (not (zero? (bitwise-and mask (arithmetic-shift 1 pair))))) (iota 9)))
@@ -65,7 +64,7 @@
             (lambda (slot) (check-equal? (.ref new slot) (.ref old slot)))
             '(two-hop-pairs at-most-two-hop-pairs closure-pairs shortest-distance-pairs))))
        (iota 512)))
-    (poo-flow-test-case "demanded snapshots remain independent after source withdrawal and replacement"
+    (test-case "demanded snapshots remain independent after source withdrawal and replacement"
       (for-each
        (lambda (radix)
          (let* ((edges (list (+ radix 2) (+ (* radix 2) 3) (+ radix 4) (+ (* radix 4) 3)))
@@ -80,7 +79,7 @@
            (check-equal? (.ref initial 'closure-pairs) before)
            (check-equal? (.ref initial 'at-most-two-hop-pairs) before)))
        '(8 513)))
-    (poo-flow-test-case "public neighbor overrides retain ordered callback traces and external composition"
+    (test-case "public neighbor overrides retain ordered callback traces and external composition"
       (let* ((source (.call UIntTrieSet .<-list '(0 1 2 5 6)))
              (left (.call UIntTrieSet .<-list '(2 3)))
              (calls [])
@@ -98,7 +97,7 @@
           (set! calls [])
           (check-equal? (run gerbil-ascent-table-expression-prototype) old)
           (check-equal? calls old-calls))))
-    (poo-flow-test-case "high fanout retains complete dense closure and sparse ordered source visitation"
+    (test-case "high fanout retains complete dense closure and sparse ordered source visitation"
       (let* ((radix 16)
              (edges (filter (lambda (pair) (not (= (quotient pair radix) (modulo pair radix)))) (iota 256)))
              (source (.call UIntTrieSet .<-list edges))
@@ -113,7 +112,7 @@
              (new (expression gerbil-ascent-table-expression-prototype source 513)))
         (check-equal? (.ref new 'closure-pairs) (iota 512 1))
         (check-equal? (.ref new 'at-most-two-hop-pairs) (.ref old 'at-most-two-hop-pairs))))
-    (poo-flow-test-case "ordered relation words preserve boundaries membership and exact closure budgets"
+    (test-case "ordered relation words preserve boundaries membership and exact closure budgets"
       (for-each
        (lambda (radix)
          (let* ((limit (* radix radix))
@@ -142,7 +141,7 @@
                        (gerbil-ascent-relation-closure-bounded source radix (- (length closure) 1))))
             "ASCENT derived pair budget exceeded")))
        '(5 16 17 31 32 33 511 512 513)))
-    (poo-flow-test-case "bounded closure retains exact failures across empty dense and sparse snapshots"
+    (test-case "bounded closure retains exact failures across empty dense and sparse snapshots"
       (for-each
        (lambda (radix)
          (for-each

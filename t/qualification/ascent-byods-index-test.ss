@@ -2,14 +2,13 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(import (only-in :std/test check-equal? test-suite)
+(import (only-in :std/test check-equal? test-suite test-case)
         (only-in :clan/poo/object .ref .o)
         (only-in :gerbil-ascent/program/objects
                  gerbil-ascent-program gerbil-ascent-relation gerbil-ascent-rule
                  gerbil-ascent-atom gerbil-ascent-literal gerbil-ascent-variable
                  gerbil-ascent-pattern gerbil-ascent-guard
                  gerbil-ascent-negation gerbil-ascent-wildcard)
-        (only-in :core/observability/testing-case poo-flow-test-case)
         (only-in :gerbil-ascent/t/qualification/ascent-index-program-fixture
                  ascent-index-alist-provider)
         (only-in :gerbil-ascent/table/interface
@@ -127,7 +126,7 @@
 
 (def ascent-byods-index-test
   (test-suite "ASCENT BYODS storage and custom index composition"
-    (poo-flow-test-case "Session recovery preserves facts after a mutating custom lookup failure"
+    (test-case "Session recovery preserves facts after a mutating custom lookup failure"
       (for-each
        (lambda (mode)
          (let* ((corrupt? #t)
@@ -161,7 +160,7 @@
              (for-each (lambda (n) (check-equal? (not (not (member (list n) result))) #t))
                        (iota 32)))))
        '(raise omitted)))
-    (poo-flow-test-case "failed custom build cannot corrupt committed source row spines"
+    (test-case "failed custom build cannot corrupt committed source row spines"
       (let* ((corrupt? #t)
              (provider
               (.o (:: @ gerbil-ascent-hash-index-provider)
@@ -191,7 +190,7 @@
           (check-equal? (length result) 32)
           (for-each (lambda (n) (check-equal? (not (not (member (list n) result))) #t))
                     (iota 32)))))
-    (poo-flow-test-case "mutated lookup key cannot certify false absence in negation"
+    (test-case "mutated lookup key cannot certify false absence in negation"
       (let* ((corrupt? #t)
              (provider (.o (:: @ gerbil-ascent-hash-index-provider)
                            (.lookup-index
@@ -216,7 +215,7 @@
          "ASCENT index provider omitted matching rows")
         (set! corrupt? #f)
         (check-equal? (rows (gerbil-ascent-session-run session)) [])))
-    (poo-flow-test-case "aggregate cannot consume duplicated or incomplete custom candidates"
+    (test-case "aggregate cannot consume duplicated or incomplete custom candidates"
       (let* ((override #f)
              (source (map (lambda (n) (list (modulo n 2) n)) (iota 32)))
              (provider (.o (:: @ gerbil-ascent-hash-index-provider)
@@ -243,11 +242,11 @@
          (with-catch (lambda (e) (error-message e))
            (lambda () (gerbil-ascent-evaluate-program program) 'accepted))
          "ASCENT index provider returned duplicate row")))
-    (poo-flow-test-case "compiled lookup rejects malformed tuples before callbacks"
+    (test-case "compiled lookup rejects malformed tuples before callbacks"
       (check-provider-row-boundary #f))
-    (poo-flow-test-case "general pattern lookup rejects malformed tuples before callbacks"
+    (test-case "general pattern lookup rejects malformed tuples before callbacks"
       (check-provider-row-boundary #t))
-    (poo-flow-test-case "grouped eqrel lookup uses custom composite index"
+    (test-case "grouped eqrel lookup uses custom composite index"
       (let* ((built-columns [])
              (provider
               (ascent-index-alist-provider
@@ -267,7 +266,7 @@
            (check-equal? (not (not (member row hash-rows))) #t)
            (check-equal? (not (not (member row custom-rows))) #t))
          expected)))
-    (poo-flow-test-case "custom BYODS index survives append and replacement"
+    (test-case "custom BYODS index survives append and replacement"
       (let* ((built-columns [])
              (provider
               (ascent-index-alist-provider

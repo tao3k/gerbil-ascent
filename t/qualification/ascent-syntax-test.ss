@@ -2,12 +2,11 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(import (only-in :std/test check-equal? check-exception test-suite)
+(import (only-in :std/test check-equal? check-exception test-suite test-case)
         (only-in :clan/poo/object .o .ref)
         (only-in :gerbil/runtime/gambit
                  call-with-output-string display-exception
                  with-exception-catcher)
-        (only-in :core/observability/testing-case poo-flow-test-case)
         (only-in :gerbil-ascent/t/qualification/ascent-syntax-fixture
                  ascent-syntax-evaluate ascent-expression-evaluate
                  ascent-index-expression-evaluate
@@ -41,7 +40,7 @@
 
 (def ascent-syntax-test
   (test-suite "ASCENT Scheme source syntax"
-    (poo-flow-test-case "lexical literals and multiple fact heads"
+    (test-case "lexical literals and multiple fact heads"
       (let* ((result (ascent-syntax-evaluate [] 7))
              (rows-of (.ref result 'rows-of)))
         (check-equal? (rows-of 'seed) '((7)))
@@ -53,13 +52,13 @@
         (check-equal? (rows-of 'tripled) '((21)))
         (check-equal? (rows-of 'even-packed) '((2)))
         (check-equal? (length (rows-of 'cross)) 6)))
-    (poo-flow-test-case "program default storage reaches local macro relations"
+    (test-case "program default storage reaches local macro relations"
       (let (rows ((.ref (ascent-default-storage-macro-evaluate)
                         'rows-of) 'component))
         (check-equal? (length rows) 9)
         (check-equal? (not (not (member '(1 3) rows))) #t)
         (check-equal? (not (not (member '(3 1) rows))) #t)))
-    (poo-flow-test-case "nested disjunction composes finite rule bodies"
+    (test-case "nested disjunction composes finite rule bodies"
       (let* ((result (ascent-syntax-evaluate '((1 2) (2 3) (1 4)) 7))
              (rows-of (.ref result 'rows-of))
              (chosen (rows-of 'chosen))
@@ -72,7 +71,7 @@
          '((1) (2) (7)))
         (check-equal? (not (not (member '(2 8) cross))) #t)
         (check-equal? (not (not (member '(7 7) cross))) #t)))
-    (poo-flow-test-case "head expressions require bound inputs"
+    (test-case "head expressions require bound inputs"
       (check-exception
        (gerbil-ascent-evaluate-program
         (ascent
@@ -80,7 +79,7 @@
          (fact (invalid (expr (missing) missing)))
          (bounds 4 4 8)))
        true))
-    (poo-flow-test-case "body expression compares after an atom binding"
+    (test-case "body expression compares after an atom binding"
       (let (term (gerbil-ascent-expression '(x) (lambda (x) (+ x 1))))
         (check-equal?
          (gerbil-ascent-bind-row
@@ -94,7 +93,7 @@
                 (cons 'expression (.ref term 'value)))
          '(1 3) [])
          #f)))
-    (poo-flow-test-case "body expression reads a prior column in one atom"
+    (test-case "body expression reads a prior column in one atom"
       (let* ((result
               (ascent-expression-evaluate
                '((1 2) (2 3) (3 5) (8 9))))
@@ -105,7 +104,7 @@
         (check-equal? (not (not (member '(8) rows))) #t)
         (check-equal? ((.ref result 'rows-of) 'anchored-target)
                       '((9)))))
-    (poo-flow-test-case "bound body expression uses the Provider index"
+    (test-case "bound body expression uses the Provider index"
       (let* ((builds [])
              (provider
               (ascent-index-alist-provider
@@ -119,7 +118,7 @@
              (result (ascent-index-expression-evaluate edges provider)))
         (check-equal? ((.ref result 'rows-of) 'anchored-target) '((9)))
         (check-equal? (not (not (member '(0) builds))) #t)))
-    (poo-flow-test-case "inline pattern binds later columns in one atom"
+    (test-case "inline pattern binds later columns in one atom"
       (let* ((result
               (gerbil-ascent-evaluate-program
                (ascent
@@ -133,7 +132,7 @@
                 (bounds 8 8 16))))
              (rows ((.ref result 'rows-of) 'matched)))
         (check-equal? rows '((4)))))
-    (poo-flow-test-case "inline pattern rejects duplicate bindings"
+    (test-case "inline pattern rejects duplicate bindings"
       (check-exception
        (gerbil-ascent-evaluate-program
         (ascent
@@ -142,7 +141,7 @@
          ((out x) <-- (item x) (item (pat (x) x)))
          (bounds 4 4 8)))
        true))
-    (poo-flow-test-case "inline pattern cannot bind in rule head"
+    (test-case "inline pattern cannot bind in rule head"
       (check-exception
        (gerbil-ascent-evaluate-program
         (ascent
@@ -150,7 +149,7 @@
          (fact (out (pat (x) x)))
          (bounds 4 4 8)))
        true))
-    (poo-flow-test-case "each wildcard ignores one column independently"
+    (test-case "each wildcard ignores one column independently"
       (let* ((result
               (gerbil-ascent-evaluate-program
                (ascent
@@ -166,7 +165,7 @@
          (fact (out _))
          (bounds 4 4 8)))
        true))
-    (poo-flow-test-case "let and for destructure native Gerbil values"
+    (test-case "let and for destructure native Gerbil values"
       (let* ((result (ascent-pattern-clauses-evaluate '((1 2) (3 4))))
              (rows-of (.ref result 'rows-of)))
         (check-equal? (length (rows-of 'let-pair)) 2)
@@ -174,7 +173,7 @@
         (check-equal? (not (not (member '(3 5) (rows-of 'let-pair)))) #t)
         (check-equal? (length (rows-of 'for-pair)) 4)
         (check-equal? (not (not (member '(2 1) (rows-of 'for-pair)))) #t)))
-    (poo-flow-test-case "typed relation checks source and derived fields"
+    (test-case "typed relation checks source and derived fields"
       (check-equal?
        ((.ref
          (gerbil-ascent-evaluate-program
@@ -206,7 +205,7 @@
          ((output (lit "bad")) <-- (input x))
          (bounds 4 4 8)))
        true))
-    (poo-flow-test-case "typed session update rejects before mutation"
+    (test-case "typed session update rejects before mutation"
       (let* ((session
               (gerbil-ascent-open-session
                (ascent
@@ -223,7 +222,7 @@
         (check-equal?
          ((.ref (gerbil-ascent-session-run session) 'rows-of) 'output)
          '((1) (2)))))
-    (poo-flow-test-case "imported Scheme fragment closes recursive path"
+    (test-case "imported Scheme fragment closes recursive path"
       (let (rows ((.ref
                    (ascent-included-fragment-evaluate
                     '((1 2) (2 3) (3 1)))
@@ -231,7 +230,7 @@
                   'closure))
         (check-equal? (length rows) 9)
         (check-equal? (not (not (member '(1 1) rows))) #t)))
-    (poo-flow-test-case "POO fragment refinement changes included source"
+    (test-case "POO fragment refinement changes included source"
       (let* ((base (ascent-reach-fragment '((1 2))))
              (relation-values (.ref base 'relations))
              (edge (car relation-values))
@@ -245,7 +244,7 @@
                (ascent (include refined) (bounds 8 16 24)))))
         (check-equal? ((.ref result 'rows-of) 'closure)
                       '((1 2) (2 3) (1 3)))))
-    (poo-flow-test-case "included relation identity rejects duplicates"
+    (test-case "included relation identity rejects duplicates"
       (let (source-fragment (ascent-reach-fragment '((1 2))))
         (check-exception
          (gerbil-ascent-evaluate-program
@@ -254,26 +253,26 @@
            (relation edge (from to))
            (bounds 8 16 24)))
          true)))
-    (poo-flow-test-case "Gerbil macro generates a reusable POO fragment"
+    (test-case "Gerbil macro generates a reusable POO fragment"
       (check-equal?
        ((.ref (ascent-generated-fragment-evaluate) 'rows-of)
         'macro-seed)
        '((9))))
-    (poo-flow-test-case "inline hygienic macro expands fragments in declaration order"
+    (test-case "inline hygienic macro expands fragments in declaration order"
       (let (rows ((.ref (ascent-inline-macro-evaluate) 'rows-of)
                   'macro-seed))
         (check-equal? (length rows) 3)
         (check-equal? (not (not (member '(9) rows))) #t)
         (check-equal? (not (not (member '(10) rows))) #t)
         (check-equal? (not (not (member '(11) rows))) #t)))
-    (poo-flow-test-case "inline macro emits a relation and rule as one fragment"
+    (test-case "inline macro emits a relation and rule as one fragment"
       (let (rows ((.ref (ascent-inline-rule-macro-evaluate
                          '((1 2) (2 3) (1 2))) 'rows-of)
                   'copied))
         (check-equal? (length rows) 2)
         (check-equal? (not (not (member '(1 2) rows))) #t)
         (check-equal? (not (not (member '(2 3) rows))) #t)))
-    (poo-flow-test-case "typed macro ident parameter rejects a literal"
+    (test-case "typed macro ident parameter rejects a literal"
       (let (message
             (ascent-syntax-error-message
              '(begin
@@ -289,7 +288,7 @@
                          message
                          "ASCENT macro ident argument must be an identifier"))))
          #t)))
-    (poo-flow-test-case "typed macro rejects an unsupported parameter kind"
+    (test-case "typed macro rejects an unsupported parameter kind"
       (let (message
             (ascent-syntax-error-message
              '(begin
@@ -305,7 +304,7 @@
                          message
                          "ASCENT macro parameter kind must be expr or ident"))))
          #t)))
-    (poo-flow-test-case "included fragment expression is validated once"
+    (test-case "included fragment expression is validated once"
       (let ((calls 0)
             (result #f))
         (set! result
@@ -320,7 +319,7 @@
             (bounds 4 4 8))))
         (check-equal? calls 1)
         (check-equal? ((.ref result 'rows-of) 'seed) '((9)))))
-    (poo-flow-test-case "included value must satisfy the POO fragment contract"
+    (test-case "included value must satisfy the POO fragment contract"
       (check-exception
        (ascent (include #f) (bounds 4 4 8))
        true))))

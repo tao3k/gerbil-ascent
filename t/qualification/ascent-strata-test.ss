@@ -2,8 +2,7 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(import (only-in :std/test check-equal? test-suite)
-        (only-in :core/observability/testing-case poo-flow-test-case)
+(import (only-in :std/test check-equal? test-suite test-case)
         (only-in :gerbil-ascent/core/rule-semantics gerbil-ascent-rule-strata)
         (only-in :gerbil-ascent/t/qualification/ascent-strata-fixture
                  ascent-reference-rule-strata ascent-strata-rule-plans))
@@ -68,7 +67,7 @@
 
 (def ascent-strata-test
   (test-suite "ASCENT SCC stratification"
-    (poo-flow-test-case "strict incoming edges lift every member of a positive SCC"
+    (test-case "strict incoming edges lift every member of a positive SCC"
       (check-equal?
        (gerbil-ascent-rule-strata
         (ascent-strata-rule-plans
@@ -78,7 +77,7 @@
                (vector 3 2 'aggregate)))
         4 '#(relation relation relation relation))
        '#(0 1 1 2)))
-    (poo-flow-test-case "all three-node graphs preserve minimum strata and cycle diagnostics"
+    (test-case "all three-node graphs preserve minimum strata and cycle diagnostics"
       (for-each
        (lambda (mask)
          (let (edges (graph-edges mask))
@@ -105,7 +104,7 @@
            (check-strata edges '#(relation lattice relation))
            (check-strata edges '#(lattice relation lattice))))
        (iota 512)))
-    (poo-flow-test-case "enumerated labels independently validate strict edges and SCC minima"
+    (test-case "enumerated labels independently validate strict edges and SCC minima"
       (for-each
        (lambda (mask)
          (let (edges (graph-edges mask))
@@ -127,7 +126,7 @@
          (when (zero? (modulo (+ mask 1) 64))
            (displayln "[strata-oracle] completed graphs=" (+ mask 1))))
        (iota 512)))
-    (poo-flow-test-case "multi-head projection ignores non-reading clauses"
+    (test-case "multi-head projection ignores non-reading clauses"
       (check-equal?
        (gerbil-ascent-rule-strata
         (list (vector (list (vector 1 []) (vector 2 []))
@@ -135,7 +134,7 @@
                             (vector 'guard #f) (vector 'generator #f) (vector 'binding #f))))
         3 '#(lattice relation relation))
        '#(0 1 1)))
-    (poo-flow-test-case "empty declarations and duplicate edges retain their strata"
+    (test-case "empty declarations and duplicate edges retain their strata"
       (check-equal? (gerbil-ascent-rule-strata [] 0 '#()) '#())
       (check-strata
        (list (vector 1 0 'negation) (vector 1 0 'negation)

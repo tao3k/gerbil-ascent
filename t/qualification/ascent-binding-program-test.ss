@@ -2,9 +2,8 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(import (only-in :std/test check-equal? test-suite)
+(import (only-in :std/test check-equal? test-suite test-case)
         (only-in :clan/poo/object .ref)
-        (only-in :core/observability/testing-case poo-flow-test-case)
         (only-in :gerbil-ascent/program/evaluate gerbil-ascent-evaluate-program)
         (only-in :gerbil-ascent/t/qualification/ascent-binding-reference-evaluate
                  ascent-reference-evaluate-program)
@@ -17,7 +16,7 @@
 ;;; budget; passing this comparison does not qualify that timing boundary.
 (def ascent-binding-program-test
   (test-suite "ASCENT prepared binding across mixed rule clauses"
-    (poo-flow-test-case "all mixed-program relations match raw binding and goldens"
+    (test-case "all mixed-program relations match raw binding and goldens"
       (let* ((source '((1 2 "a") (2 3 "b") (3 3 "c") (1 2 "a")))
              (program (ascent-rule-fixture-program source))
              (old (ascent-reference-evaluate-program program))

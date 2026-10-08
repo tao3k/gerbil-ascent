@@ -2,8 +2,7 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(import (only-in :std/test check-equal? test-suite)
-        (only-in :core/observability/testing-case poo-flow-test-case)
+(import (only-in :std/test check-equal? test-suite test-case)
         (only-in :clan/poo/object .ref)
         (only-in :gerbil-ascent/program/interface
                  gerbil-ascent-open-session
@@ -31,7 +30,7 @@
 
 (def ascent-timing-test
   (test-suite "ASCENT per-rule timing option"
-    (poo-flow-test-case "timed result and retained snapshots"
+    (test-case "timed result and retained snapshots"
       (let* ((session (gerbil-ascent-open-session
                        (timed-program '((1)))
                        measure-rule-times?: #t))

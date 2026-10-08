@@ -1,8 +1,7 @@
 ;;; -*- Gerbil -*-
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
-(import (only-in :std/test test-suite check-equal? check-exception)
-        (only-in :core/observability/testing-case poo-flow-test-case)
+(import (only-in :std/test test-suite check-equal? check-exception test-case)
         (only-in :clan/poo/object .ref)
         :gerbil-ascent/applications/finite-flow-program
         :gerbil-ascent/core/finite-flow :gerbil-ascent/core/relation-view
@@ -25,7 +24,7 @@
     (for-each (lambda (row) (check-equal? (and (member row rows) #t) #t)) truth)))
 (def ascent-finite-flow-program-test
   (test-suite "Packed keyed lattice Program and Session publication"
-    (poo-flow-test-case "256 CFG seed blocker combinations match the independent packed worklist"
+    (test-case "256 CFG seed blocker combinations match the independent packed worklist"
       (let ((pairs '((a 0) (a 1))) (edges '((0 0) (0 1) (1 0) (1 1))))
         (def (subset xs mask)
           (filter-map (lambda (x i) (and (not (= 0 (bitwise-and mask (arithmetic-shift 1 i)))) x))
@@ -40,7 +39,7 @@
                 (check-view (view result '(a) '(0 1))
                   (gerbil-ascent-finite-flow '(a) '(0 1) ss es bs 2)))) (iota 4))) (iota 4))
           (displayln "PACKED-PROGRAM-VERIFIED edge-mask=" e " controls=16") (force-output)) (iota 16))))
-    (poo-flow-test-case "blocker append withdrawal and replacement retain old cuts and recover invalid admission"
+    (test-case "blocker append withdrawal and replacement retain old cuts and recover invalid admission"
       (let* ((p (program 2 '(0 1 2) '((0 3)) '((0 1) (1 2)) []))
              (session (gerbil-ascent-open-session p))
              (held (gerbil-ascent-session-run session)) (held-view (view held '(a b) '(0 1 2))))
@@ -60,7 +59,7 @@
           '((b 2)))
         (check-equal? (relation-view-count held-view) 6)
         (check-equal? (length ((.ref held 'rows-of) 'flow_state)) 3)))
-    (poo-flow-test-case "bignum masks false domain values cancellation and clean retry"
+    (test-case "bignum masks false domain values cancellation and clean retry"
       (let* ((facts (cons #f (iota 64))) (mask (- (arithmetic-shift 1 65) 1))
              (p (program 65 '(#f #t) (list (list #f mask)) '((#f #t)) (list (list #t 1))))
              (checks 0))
@@ -76,7 +75,7 @@
             (check-equal? rows '((63 #t))))
           (gerbil-ascent-for-each-row (lambda (row) (set-car! row 'mutated)) cut)
           (check-equal? (gerbil-ascent-view-contains? cut '(63 #t)) #t))))
-    (poo-flow-test-case "million logical facts publish from only 2048 lattice rows"
+    (test-case "million logical facts publish from only 2048 lattice rows"
       (let* ((facts (iota 512)) (points (iota 2048))
              (mask (- (arithmetic-shift 1 512) 1))
              (result (gerbil-ascent-evaluate-program
@@ -97,7 +96,7 @@
             (when (= (modulo (+ p 1) 256) 0)
               (displayln "PACKED-PROGRAM-ROWS points=" (+ p 1) " rows=" (* 512 (+ p 1)))
               (force-output)))) points)))
-    (poo-flow-test-case "gamma publication rejects excess bits duplicate points and logical budget overflow"
+    (test-case "gamma publication rejects excess bits duplicate points and logical budget overflow"
       (check-exception (gerbil-ascent-freeze-finite-masks '(a) '(0) '((0 2)) 2) true)
       (check-exception (gerbil-ascent-freeze-finite-masks '(a) '(0) '((0 1) (0 1)) 2) true)
       (check-exception (gerbil-ascent-freeze-finite-masks '(a b) '(0) '((0 3)) 1) true)

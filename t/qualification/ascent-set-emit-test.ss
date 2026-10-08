@@ -1,6 +1,5 @@
 ;;; Built-in Set output admission preserves checks, Providers and engine behavior.
-(import (only-in :std/test test-suite check-equal? check-exception)
-        (only-in :core/observability/testing-case poo-flow-test-case)
+(import (only-in :std/test test-suite check-equal? check-exception test-case)
         (only-in :clan/poo/object .ref .o)
         (only-in :gerbil-ascent/program/interface
                  gerbil-ascent-relation gerbil-ascent-variable
@@ -55,7 +54,7 @@
 
 (def ascent-set-emit-test
   (test-suite "built-in Set output admission"
-    (poo-flow-test-case "built-in Set retains two field checks per emission including duplicates"
+    (test-case "built-in Set retains two field checks per emission including duplicates"
       (let* ((calls [])
              (x (gerbil-ascent-variable 'x))
              (p (gerbil-ascent-program
@@ -78,7 +77,7 @@
           (check-equal? (rows old 'out) (rows new 'out))
           (check-equal? calls old-calls)
           (check-equal? calls '(2 2 1 1 2 2 1 1 1 1)))))
-    (poo-flow-test-case "duplicate emissions retain derived and output budget boundaries"
+    (test-case "duplicate emissions retain derived and output budget boundaries"
       (for-each
        (lambda (limits)
          (let* ((x (gerbil-ascent-variable 'x))
@@ -104,7 +103,7 @@
                       '((2) (1)))
         (check-equal? (rows (gerbil-ascent-evaluate-program p) 'out)
                       '((2) (1)))))
-    (poo-flow-test-case "custom storage expansion preserves callback observations and sizes"
+    (test-case "custom storage expansion preserves callback observations and sizes"
       (let* ((calls [])
              (storage (.o (:: @ gerbil-ascent-set-storage-provider)
                         (.extend-rows
@@ -130,7 +129,7 @@
           (check-equal? calls old-calls)
           (check-equal? (length (rows new 'reach)) 34)
           (check-equal? (not (not (member '(1016) (rows new 'reach)))) #t))))
-    (poo-flow-test-case "three-atom empty frontiers preserve exact fixed points"
+    (test-case "three-atom empty frontiers preserve exact fixed points"
       (for-each
        (lambda (width)
          (for-each
@@ -146,7 +145,7 @@
                               (map list (iota (+ width 1)))))))
           '(() ((0)) ((0) (1) (2) (3)))))
        '(0 1 8 32 64)))
-    (poo-flow-test-case "indexed prefix callbacks remain observable before an empty third atom"
+    (test-case "indexed prefix callbacks remain observable before an empty third atom"
       (let* ((calls 0)
              (lookup (.ref gerbil-ascent-hash-index-provider '.lookup-index))
              (provider (.o (:: @ gerbil-ascent-hash-index-provider)
@@ -161,7 +160,7 @@
           (same old new)
           (check-equal? calls old-calls)
           (check-equal? (> calls 65) #t))))
-    (poo-flow-test-case "recursive chains retain exact row order and sizes"
+    (test-case "recursive chains retain exact row order and sizes"
       (for-each
        (lambda (width)
          (let* ((p (program (chain width) '((0) (0))))
@@ -170,7 +169,7 @@
            (same old new)
            (check-equal? (rows new 'reach) (cons '(0) (map list (iota (+ width 1)))))))
        '(0 1 2 8 32 128)))
-    (poo-flow-test-case "all two-node graphs retain independent reachability goldens"
+    (test-case "all two-node graphs retain independent reachability goldens"
       (for-each
        (lambda (mask)
          (let (edges (filter-map
@@ -187,7 +186,7 @@
                               (if (member (list root other) edges) 2 1))))
             '(0 1))))
        (iota 16)))
-    (poo-flow-test-case "session appends and replacements keep committed sizes"
+    (test-case "session appends and replacements keep committed sizes"
       (let* ((p (program '((0 1)) '((0))))
              (old (ascent-set-emit-reference-make-engine p #t))
              (new (gerbil-ascent-make-engine p #t)))
@@ -201,7 +200,7 @@
         ((.ref old '.replace-source!) 'edge '((0 4)))
         ((.ref new '.replace-source!) 'edge '((0 4)))
         (same ((.ref old '.run)) ((.ref new '.run)))))
-    (poo-flow-test-case "custom index Provider callbacks retain their exact count"
+    (test-case "custom index Provider callbacks retain their exact count"
       (let* ((calls 0) (builds 0)
              (lookup (.ref gerbil-ascent-hash-index-provider '.lookup-index))
              (build (.ref gerbil-ascent-hash-index-provider '.build-index))
@@ -222,7 +221,7 @@
           (check-equal? builds old-builds)
           (check-equal? calls 65)
           (check-equal? builds 1))))
-    (poo-flow-test-case "guard and generator prefix callback counts are unchanged"
+    (test-case "guard and generator prefix callback counts are unchanged"
       (for-each
        (lambda (kind)
          (let* ((calls 0)
@@ -249,7 +248,7 @@
              (check-equal? calls old-calls)
              (check-equal? (> calls 0) #t))))
        '(guard generator)))
-    (poo-flow-test-case "lattice replacement keeps key cardinality and strongest rows"
+    (test-case "lattice replacement keeps key cardinality and strongest rows"
       (let* ((x (gerbil-ascent-variable 'x)) (y (gerbil-ascent-variable 'y))
              (d (gerbil-ascent-variable 'd))
              (p (gerbil-ascent-program
@@ -267,7 +266,7 @@
         (check-equal? (rows old 'best) (rows new 'best))
         (check-equal? (list-sort (lambda (a b) (< (car a) (car b))) (rows new 'best))
                       '((0 0) (1 1) (2 1)))))
-    (poo-flow-test-case "timeout resumption preserves the final fixed point"
+    (test-case "timeout resumption preserves the final fixed point"
       (let* ((p (program (chain 64) '((0))))
              (old (ascent-set-emit-reference-make-engine p #t))
              (new (gerbil-ascent-make-engine p #t)))

@@ -37,11 +37,11 @@ check-source-views:
 _check-source-views:
     @GERBIL_LOADPATH="{{ justfile_directory() }}${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" {{ gxi_command }} {{ gerbil_test_runtime_options }} t/qualification/ascent-source-view-output.ss
 
-test-file path:
-    just _test-file "{{ path }}"
+test-file path heap='2G':
+    just _test-file "{{ path }}" "{{ heap }}"
 
 # Gerbil owns ordinary discovery and Case execution; this recipe checks its verdict.
-_test-file path:
+_test-file path heap='2G':
     #!/usr/bin/env bash
     set -euo pipefail
     test -e "{{ path }}"
@@ -50,7 +50,7 @@ _test-file path:
     trap 'rm -f "$output_file"' EXIT
     started=$SECONDS
     printf '[ascent-test] START %s\n' "{{ path }}"
-    export GERBIL_LOADPATH="${ASCENT_TEST_LIBRARY:+$ASCENT_TEST_LIBRARY:}{{ justfile_directory() }}${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}"
+    export GERBIL_LOADPATH="${ASCENT_TEST_LIBRARY:+$ASCENT_TEST_LIBRARY:}${GERBIL_LOADPATH:+$GERBIL_LOADPATH:}{{ justfile_directory() }}"
     test_module="{{ path }}"
     if [[ -n "${ASCENT_TEST_LIBRARY:-}" ]]; then
         compiled="$ASCENT_TEST_LIBRARY/gerbil-ascent/${test_module%.ss}.ssi"
@@ -63,7 +63,7 @@ _test-file path:
             if [[ -n "${ASCENT_NATIVE_TEST_REGISTRY:-}" ]]; then runner+=("{{ path }}"); fi
         fi
     else
-        runner=({{ gerbil_command }} {{ gerbil_test_runtime_options }} test)
+        runner=({{ gerbil_command }} -:max-heap={{ heap }},debug=q test)
     fi
     if [[ -n "${ASCENT_NATIVE_TEST_ENTRY:-}" ]]; then
         timeout "${ASCENT_GXTEST_TIMEOUT:-120s}" "${runner[@]}" 2>&1 | tee "$output_file"
@@ -83,12 +83,8 @@ test-native-parallel jobs='auto':
     {{ native_qualification }} test "{{ jobs }}" parallel
 
 # Ordinary test discovery and execution belong to Gerbil.
-test jobs='auto':
-    #!/usr/bin/env bash
-    set -euo pipefail
-    # Retain each module's 1 GiB expansion isolation while overlapping workers.
-    workers="$({{ native_qualification }} test-jobs "{{ jobs }}")"
-    printf '%s\0' t/qualification/*-test.ss | xargs -0 -n 1 -P "$workers" just test-file
+test heap='2G':
+    just test-file t/qualification "{{ heap }}"
 
 # Explicit compiled qualification retains byte binding and module process isolation.
 test-native-suite jobs='auto':

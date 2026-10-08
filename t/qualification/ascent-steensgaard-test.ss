@@ -2,8 +2,7 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 (import :gerbil/runtime/gambit
-        (only-in :std/test test-suite check-equal? check-exception)
-        (only-in :core/observability/testing-case poo-flow-test-case)
+        (only-in :std/test test-suite check-equal? check-exception test-case)
         (only-in :clan/poo/object .ref)
         :gerbil-ascent/applications/steensgaard
         (only-in :gerbil-ascent/program/evaluate gerbil-ascent-evaluate-program)
@@ -61,7 +60,7 @@
     (for-each (lambda (row) (check-equal? (and (member row actual) #t) #t)) expected)))
 (def ascent-steensgaard-test
   (test-suite "Steensgaard complete rule program and retained source lifecycle"
-    (poo-flow-test-case "load store field and active equivalence premises discriminate saturation"
+    (test-case "load store field and active equivalence premises discriminate saturation"
       (for-each (lambda (inputs)
         (let (expected (apply steensgaard-truth inputs))
           (for-each (lambda (explicit?)
@@ -77,7 +76,7 @@
           (((#f #t)) () ((left #t field)) ((#f field right)))))
       (check-equal? (and (member '(4 3) (steensgaard-truth '((0 1)) '((1 2)) '((3 2 8)) '((0 8 4)))) #t) #t)
       (check-equal? (member '(4 3) (steensgaard-truth '((0 1)) '((1 2)) '((3 2 9)) '((0 8 4)))) #f))
-    (poo-flow-test-case "source append and withdrawal reconstruct closure while holding the old result"
+    (test-case "source append and withdrawal reconstruct closure while holding the old result"
       (let* ((alloc '((0 1))) (assign '((1 2))) (load '((3 2 8))) (store '((0 8 4)))
              (session (gerbil-ascent-open-session
                        (gerbil-ascent-steensgaard-program alloc assign load store)))
@@ -89,7 +88,7 @@
         (gerbil-ascent-session-replace-source! session 'assign [])
         (check-vpt (gerbil-ascent-session-run session) (steensgaard-truth alloc [] load store))
         (check-equal? ((.ref held 'rows-of) 'vpt) old)))
-    (poo-flow-test-case "explicit actor cancellation drains before the same application retries"
+    (test-case "explicit actor cancellation drains before the same application retries"
       (let* ((checks 0) (inputs '(((0 1)) ((1 2)) ((3 2 8)) ((0 8 4))))
              (program (apply gerbil-ascent-steensgaard-program (append inputs '(#t)))))
         (check-exception (gerbil-ascent-evaluate-program program workers: 2

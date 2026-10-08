@@ -2,9 +2,8 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(import (only-in :std/test check-equal? test-suite)
+(import (only-in :std/test check-equal? test-suite test-case)
         (only-in :std/list/list append-map)
-        (only-in :core/observability/testing-case poo-flow-test-case)
         (only-in :gerbil-ascent/core/rule-semantics gerbil-ascent-bind-row)
         (only-in :gerbil-ascent/t/qualification/ascent-binding-reference-fixture
                  ascent-reference-bind-row ascent-binding-atom-plan))
@@ -63,7 +62,7 @@
 
 (def ascent-binding-test
   (test-suite "ASCENT checked row binding specialization"
-    (poo-flow-test-case "wide scopes preserve fresh names, repeats and index eligibility"
+    (test-case "wide scopes preserve fresh names, repeats and index eligibility"
       (for-each
        (lambda (width)
          (let* ((names (map (lambda (_) (gensym 'scope)) (iota width)))
@@ -90,7 +89,7 @@
              (check-equal? (vector-ref (ascent-binding-atom-plan terms names) 2)
                            (iota (+ width 3))))))
        '(31 32 33 128)))
-    (poo-flow-test-case "wide expression diagnostics retain priority over pattern collisions"
+    (test-case "wide expression diagnostics retain priority over pattern collisions"
       (let* ((calls 0)
              (names (map (lambda (_) (gensym 'diagnostic)) (iota 32)))
              (pattern (cons 'pattern (vector '(x) (lambda (_) '(0)))))
@@ -109,7 +108,7 @@
             (ascent-binding-atom-plan
              (cons pattern (map (cut cons 'variable <>) names)) '(x))))
          '(error "ASCENT pattern variable already bound"))))
-    (poo-flow-test-case "wide pattern outputs keep duplicate detection and output order"
+    (test-case "wide pattern outputs keep duplicate detection and output order"
       (let* ((names (map (lambda (_) (gensym 'pattern)) (iota 64)))
              (values (iota 64))
              (term (cons 'pattern (vector names (lambda (_) values)))))
@@ -122,34 +121,34 @@
                      (vector (append names (list (car names))) (lambda (_) []))))
              [])))
          '(error "ASCENT pattern variable already bound"))))
-    (poo-flow-test-case "nullary terms retain existing environments"
+    (test-case "nullary terms retain existing environments"
       (finite-bindings 0))
-    (poo-flow-test-case "all unary terms preserve bindings and rejection"
+    (test-case "all unary terms preserve bindings and rejection"
       (finite-bindings 1))
-    (poo-flow-test-case "all binary terms preserve binding order and repeats"
+    (test-case "all binary terms preserve binding order and repeats"
       (finite-bindings 2))
-    (poo-flow-test-case "all ternary terms preserve binding order and repeats"
+    (test-case "all ternary terms preserve binding order and repeats"
       (finite-bindings 3))
-    (poo-flow-test-case "all four-column terms preserve binding order and repeats"
+    (test-case "all four-column terms preserve binding order and repeats"
       (finite-bindings 4))
-    (poo-flow-test-case "pattern outputs stay bound for later variable comparisons"
+    (test-case "pattern outputs stay bound for later variable comparisons"
       (check-binding
        (list (cons 'pattern (vector '(x) (lambda (value) (list value))))
              (cons 'variable 'x) (cons 'variable 'y))
        '((0 0 1) (0 1 1) (1 1 0)) []))
-    (poo-flow-test-case "row-local expression inputs retain evaluation order"
+    (test-case "row-local expression inputs retain evaluation order"
       (check-binding
        (list (cons 'variable 'x)
              (cons 'expression (vector '(x) (lambda (x) (+ x 1))))
              (cons 'variable 'y) (cons 'variable 'y))
        '((2 3 0 0) (2 4 0 0) (2 3 0 1)) []))
-    (poo-flow-test-case "external bindings still reject mismatches"
+    (test-case "external bindings still reject mismatches"
       (check-binding
        (list (cons 'variable 'x)
              (cons 'expression (vector '(x) (lambda (x) (+ x 1))))
              (cons 'variable 'y))
        '((2 3 0) (1 2 0)) '((x . 2))))
-    (poo-flow-test-case "false values are bindings rather than missing names"
+    (test-case "false values are bindings rather than missing names"
       (check-binding
        '((variable . x) (variable . x) (variable . y) (variable . y))
        '((#f #f #t #t) (#f #t #t #t)) [])
@@ -158,14 +157,14 @@
              (cons 'variable 'x)
              (cons 'expression (vector '(x) not)))
        '((0 #f #t) (0 #t #t)) []))
-    (poo-flow-test-case "failed and malformed patterns preserve outcomes"
+    (test-case "failed and malformed patterns preserve outcomes"
       (for-each
        (lambda (matcher)
          (check-binding
           (list (cons 'pattern (vector '(x) matcher)) (cons 'variable 'y))
           '((0 1)) []))
        (list (lambda (_) #f) (lambda (_) 0) (lambda (_) '(0 1)))))
-    (poo-flow-test-case "admission still rejects duplicate pattern bindings"
+    (test-case "admission still rejects duplicate pattern bindings"
       (check-equal?
        (outcome
         (lambda ()

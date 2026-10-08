@@ -1,9 +1,8 @@
 ;;; -*- Gerbil -*-
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
-(import (only-in :std/test test-suite check-equal? check-exception)
+(import (only-in :std/test test-suite check-equal? check-exception test-case)
         (only-in :std/list/list append-map)
-        (only-in :core/observability/testing-case poo-flow-test-case)
         (only-in :clan/poo/object .o .ref)
         (only-in :gerbil-ascent/program/interface
                  gerbil-ascent-program gerbil-ascent-relation gerbil-ascent-variable
@@ -135,7 +134,7 @@
 
 (def ascent-positive-plan-test
   (test-suite "Complete positive rule slot plans"
-    (poo-flow-test-case "heterogeneous equality preserves repeated bindings and dirty-frame reuse"
+    (test-case "heterogeneous equality preserves repeated bindings and dirty-frame reuse"
       ;; Equal separately allocated containers distinguish structural equality
       ;; from identity; false remains a value and never an absent binding.
       (let* ((values (list #f #t 0 -7 1/3 'value (string-copy "value")
@@ -174,7 +173,7 @@
                                   (list value))) copies)
         (check-equal? (vector-ref frame 2) 'stale)
         (check-equal? (vector-ref frame 3) 'stale)))
-    (poo-flow-test-case "exact parts matching preserves duplicate and projected output heads"
+    (test-case "exact parts matching preserves duplicate and projected output heads"
       (let* ((head (vector 2 '((variable . g) (variable . x) (variable . y))))
              (other (vector 3 '((variable . y) (variable . x))))
              (first (vector 0 '((variable . g) (variable . x)) []))
@@ -204,7 +203,7 @@
                 (if projected? '((3 a 1) (3 c 2))
                   '((2 #f 1 a) (3 a 1) (2 #f 1 a) (2 #t 2 c) (3 c 2) (2 #t 2 c)))))) '(#f #t)))
           '(direct selected overselected))))
-    (poo-flow-test-case "synchronous parts preserve candidate checkpoints and declined access"
+    (test-case "synchronous parts preserve candidate checkpoints and declined access"
       (let* ((head (vector 2 '((variable . x) (variable . x))))
              (atom (vector 0 '((variable . x) (variable . x)) []))
              (plan (gerbil-ascent-compile-positive-plan (list head) (list (vector 'atom atom))))
@@ -231,7 +230,7 @@
             (check-equal? (reverse outputs) '((#f #f) (1 1)))
             (check-equal? (reverse trace) '(candidate (#f #f) candidate candidate (1 1)))))
           '(#f #t))))
-    (poo-flow-test-case "stored atom keys and heads preserve admitted action representation"
+    (test-case "stored atom keys and heads preserve admitted action representation"
       (for-each
        (lambda (columns)
          (let* ((first (vector 0 '((variable . x)) []))
@@ -281,7 +280,7 @@
       (check-equal? (gerbil-ascent-compile-positive-plan
                      (list (vector 1 '((variable . absent))))
                      (list (vector 'atom (vector 0 '((variable . x)) [])))) #f))
-    (poo-flow-test-case "finite frame extent rejects before reads and preserves unused dirty slots"
+    (test-case "finite frame extent rejects before reads and preserves unused dirty slots"
       (let* ((head (vector 2 '((variable . x) (variable . y))))
              (atom (vector 0 '((variable . x) (variable . y)) []))
              (plan (gerbil-ascent-compile-positive-plan (list head) (list (vector 'atom atom))))
@@ -301,7 +300,7 @@
             (lambda (_ row) (set! outputs (cons row outputs))))
           (check-equal? (reverse outputs) '((#f 1) (1 #f)))
           (check-equal? frame (vector 1 #f 'untouched)))))
-    (poo-flow-test-case "delta ordinals reject before callbacks and preserve full ordered emissions"
+    (test-case "delta ordinals reject before callbacks and preserve full ordered emissions"
       (let* ((terms '((variable . x)))
              (heads (list (vector 2 terms) (vector 3 terms) (vector 2 terms)))
              (callbacks 0) (reads []) (emissions []) (checkpoints 0)
@@ -363,7 +362,7 @@
               (lambda args (error "unexpected lookup"))
               (lambda (_ row) (set! facts (cons row facts))))
             (check-equal? facts '(()))))))
-    (poo-flow-test-case "compiled keys require the prior bound prefix before current row matching"
+    (test-case "compiled keys require the prior bound prefix before current row matching"
       (let* ((x '(variable . x)) (y '(variable . y))
              (head (vector 1 (list x))) (calls 0)
              (expression (cons 'expression
@@ -397,7 +396,7 @@
           (check-equal? (gerbil-ascent-index-key [] [] frame keys) '(#f 0 #f #f))
           (check-equal? calls 1)
           (check-equal? frame (vector #f 'dirty)))))
-    (poo-flow-test-case "dirty slot frames preserve ordered bindings across the finite term corpus"
+    (test-case "dirty slot frames preserve ordered bindings across the finite term corpus"
       (let* ((palette '(#f 0 1))
              (terms '((variable . a) (variable . b) (literal . #f)
                       (literal . 0) (wildcard . #f)))
@@ -437,7 +436,7 @@
                    (displayln "SLOT-READ-CHECKED " checked " terms=" patterns)
                    (force-output))) terms)) terms)) terms)
         (check-equal? checked 125)))
-    (poo-flow-test-case "nested branch returns preserve dirty-frame traversal order"
+    (test-case "nested branch returns preserve dirty-frame traversal order"
       (let* ((palette '(#f 0 1))
              (quadruples
               (append-map (lambda (x)
@@ -477,7 +476,7 @@
                   (displayln "SLOT-NESTED-CHECKED stale=" stale " pass=" pass " emitted=" (length emitted))
                   (force-output))) '(first dirty-repeat))))
          '(#f 0 1 stale-slot))))
-    (poo-flow-test-case "physical bucket selection and occurrence delta pivots refine the whole traversal"
+    (test-case "physical bucket selection and occurrence delta pivots refine the whole traversal"
       (let* ((palette '(#f 0 1 2))
              (quadruples
               (append-map (lambda (x)
@@ -559,7 +558,7 @@
                   (check-equal? (equal? (indexed-slot-stream plan (make-vector (vector-ref plan 2) 'stale)
                                         1 all dropped gerbil-ascent-hash-index-provider positions) expected) #f))))
             '(#f #t))) '(() (1) (1 3) (3 1) (1 1)))))
-    (poo-flow-test-case "persistent indexed delta rounds agree with full scans and stable reachability"
+    (test-case "persistent indexed delta rounds agree with full scans and stable reachability"
       (let* ((vertices (append (iota 12) (map (lambda (n) (+ n 20)) (iota 6))))
              (edges (append (map (lambda (n) (list n (+ n 1))) (iota 11))
                             (append-map (lambda (x) (map (lambda (y) (list x y)) (map (lambda (n) (+ n 20)) (iota 6))))
@@ -638,7 +637,7 @@
         (set! pending [])
         (for-each (lambda (pivot) (gerbil-ascent-run-positive-plan! recursive recursive-frame pivot access admit)) '(0 1 2))
         (check-equal? pending [])))
-    (poo-flow-test-case "failed partial writes require the next fresh overwrite"
+    (test-case "failed partial writes require the next fresh overwrite"
       (let* ((patterns '((variable . b) (variable . a) (variable . b)))
              (heads (list (vector 2 '((variable . a) (variable . b)))))
              (plan (gerbil-ascent-compile-positive-plan heads
@@ -664,7 +663,7 @@
         ;; Faulted lowering reads the rejected row's old slot rather than
         ;; initializing it. The independent ordinary binder still succeeds.
         (check-equal? (slot-stream fault (vector 0 7) first-rows second-rows) [])))
-    (poo-flow-test-case "analysis builds stay reentrant and failure leaves cached versions usable"
+    (test-case "analysis builds stay reentrant and failure leaves cached versions usable"
       (let* ((program (path-program '((0 1))))
              (relations (.ref program 'relations))
              (rules (.ref program 'rules)))
@@ -688,7 +687,7 @@
           (check-equal?
            (eq? outer (gerbil-ascent-program-analysis program relations rules
                         (lambda () (error "failed build must not replace old entry")))) #t))))
-    (poo-flow-test-case "schema failures preserve warm entries and new declaration identities rebuild"
+    (test-case "schema failures preserve warm entries and new declaration identities rebuild"
       (let* ((program (path-program '((0 1))))
              (relations (.ref program 'relations))
              (schema (gerbil-ascent-program-schema program relations)))
@@ -701,7 +700,7 @@
           (check-equal? (vector-ref fresh 1) (vector-ref schema 1))
           (check-equal? (eq? replacement (vector-ref fresh 0)) #t)
           (check-equal? (eq? fresh (gerbil-ascent-program-schema program replacement)) #t))))
-    (poo-flow-test-case "analysis shares immutable activations while every engine owns its frames"
+    (test-case "analysis shares immutable activations while every engine owns its frames"
       (let* ((program (path-program '((0 1) (1 2))))
              (first (gerbil-ascent-make-engine program #t))
              (analysis (.ref first '.analysis))
@@ -718,7 +717,7 @@
         (vector-set! (vector-ref a 6) 0 'private)
         (check-equal? (vector-ref (vector-ref b 6) 0) #f)
         (check-equal? (rows ((.ref first '.run)) 'path) (rows ((.ref second '.run)) 'path))))
-    (poo-flow-test-case "partial heads share lowered atoms and preserve duplicates with fresh frames"
+    (test-case "partial heads share lowered atoms and preserve duplicates with fresh frames"
       (let* ((x (v 'x))
              (program
               (gerbil-ascent-program
@@ -747,7 +746,7 @@
         (check-equal? emissions '((1 7) (1 7) (1 9)))
         (check-equal? (vector-ref (gerbil-ascent-update-active-plans active '#(#f #f #f)) 0) [])
         (check-equal? (eq? full (car (vector-ref (gerbil-ascent-update-active-plans active '#(#f #t #t)) 0))) #t)))
-    (poo-flow-test-case "positional slot selection preserves all key orders and action identity"
+    (test-case "positional slot selection preserves all key orders and action identity"
       (for-each
        (lambda (width)
          (let* ((terms (map (lambda (_) (cons 'variable (gensym 'slot))) (iota width)))
@@ -773,7 +772,7 @@
                   (filter even? (iota width)) (iota width)
                   (reverse (iota width)) (append (iota width) (iota width))))))
        '(7 8 9 32 127 128 129 512 1024)))
-    (poo-flow-test-case "wide slot keys preserve literals repeats wildcards and unsupported callbacks"
+    (test-case "wide slot keys preserve literals repeats wildcards and unsupported callbacks"
       (let* ((terms (map (lambda (n)
                           (case (modulo n 3)
                             ((0) '(variable . x))
@@ -801,7 +800,7 @@
         (check-equal?
          (gerbil-ascent-compile-positive-plan heads
            (list (vector 'atom (vector 0 '((expression . #f)) '(0))))) #f)))
-    (poo-flow-test-case "wide composite joins preserve provider keys and output rows"
+    (test-case "wide composite joins preserve provider keys and output rows"
       (for-each
        (lambda (width)
          (let* ((variables (map (lambda (_) (v (gensym 'join))) (iota width)))
@@ -829,7 +828,7 @@
              (check-equal? (rows new 'out) (rows old 'out))
              (check-equal? (rows new 'out) (list (reverse row))))))
        '(7 8 9 64 127 128 129)))
-    (poo-flow-test-case "all 512 directed three-node graphs match independent reachability"
+    (test-case "all 512 directed three-node graphs match independent reachability"
       (let (pairs (apply append (map (lambda (x) (map (lambda (y) (list x y)) '(0 1 2))) '(0 1 2))))
         (for-each
          (lambda (bits)
@@ -858,7 +857,7 @@
                (displayln "POSITIVE-GRAPHS-CHECKED " (+ bits 1) "/512")
                (force-output))))
          (iota 512))))
-    (poo-flow-test-case "ground binder witnesses preserve shared reads and duplicate multiple heads"
+    (test-case "ground binder witnesses preserve shared reads and duplicate multiple heads"
       (let* ((x (v 'x)) (y (v 'y))
              (result
               (compare
@@ -874,7 +873,7 @@
                '(out flag))))
         (check-equal? (rows result 'out) '((1 7)))
         (check-equal? (rows result 'flag) '(()))))
-    (poo-flow-test-case "failed candidates and repeated variables never expose stale slots"
+    (test-case "failed candidates and repeated variables never expose stale slots"
       (let ((x (v 'x)) (y (v 'y)))
         (let (result (compare
                       (gerbil-ascent-program
@@ -884,7 +883,7 @@
                                                 (list (a 'input x x (gerbil-ascent-literal 1))))) 32 32 64)
                       '(out)))
           (check-equal? (rows result 'out) '((3) (#f))))))
-    (poo-flow-test-case "wildcards zero-arity atoms and literal heads preserve ordered outputs"
+    (test-case "wildcards zero-arity atoms and literal heads preserve ordered outputs"
       (let ((x (v 'x)) (w (gerbil-ascent-wildcard)))
         (let (result (compare
                       (gerbil-ascent-program
@@ -895,7 +894,7 @@
                                                 (list (a 'flag) (a 'input x w)))) 32 32 64)
                       '(out)))
           (check-equal? (rows result 'out) '((tag 2) (tag 1))))))
-    (poo-flow-test-case "indexed fanout and multiple heads retain exact key and callback order"
+    (test-case "indexed fanout and multiple heads retain exact key and callback order"
       (let* ((x (v 'x)) (y (v 'y)) (calls [])
              (provider (.o (:: @ gerbil-ascent-hash-index-provider)
                            (.lookup-index (lambda (table key)
@@ -914,7 +913,7 @@
           (check-equal? calls old-calls)
           (check-equal? (rows new 'out) (rows old 'out))
           (check-equal? (rows new 'copy) (rows old 'copy)))))
-    (poo-flow-test-case "custom output expansion observes the same candidates and pending snapshots"
+    (test-case "custom output expansion observes the same candidates and pending snapshots"
       (let* ((x (v 'x)) (calls [])
              (storage (.o (:: @ gerbil-ascent-set-storage-provider)
                           (.extend-rows (lambda (_state all pending row budget)
@@ -929,7 +928,7 @@
         (let (new (gerbil-ascent-evaluate-program p))
           (check-equal? (rows new 'out) (rows old 'out))
           (check-equal? calls old-calls))))
-    (poo-flow-test-case "retained appends replacements and zero-timeout runs preserve snapshots"
+    (test-case "retained appends replacements and zero-timeout runs preserve snapshots"
       (let* ((p (path-program '((0 1) (1 2))))
              (old (ascent-positive-plan-reference-make-engine p #t))
              (new (gerbil-ascent-make-engine p #t))
@@ -940,7 +939,7 @@
         (check-equal? (rows old-first 'path) (rows new-first 'path))
         (for-each (lambda (engine) ((.ref engine '.replace-source!) 'edge '((2 1)))) (list old new))
         (check-equal? (rows ((.ref new '.run)) 'path) (rows ((.ref old '.run)) 'path))))
-    (poo-flow-test-case "wide rules read numeric slots without a fixed variable limit"
+    (test-case "wide rules read numeric slots without a fixed variable limit"
       (let* ((variables (map (lambda (n) (v (string->symbol (string-append "v" (number->string n))))) (iota 40)))
              (source (iota 40))
              (p (gerbil-ascent-program
@@ -950,7 +949,7 @@
                         (list (gerbil-ascent-atom 'out (reverse variables)))
                         (list (gerbil-ascent-atom 'input variables)))) 16 16 32)))
         (check-equal? (rows (compare p '(out)) 'out) (list (reverse source)))))
-    (poo-flow-test-case "compiled emission preserves derived and output budget errors"
+    (test-case "compiled emission preserves derived and output budget errors"
       (def (outcome solve p)
         (with-catch (lambda (failure) (error-message failure)) (lambda () (solve p) 'success)))
       (for-each
@@ -966,12 +965,12 @@
            (check-equal? (outcome gerbil-ascent-evaluate-program p) (caddr limits))))
        '((1 64 "ASCENT derived fact budget exceeded")
          (64 3 "ASCENT output fact budget exceeded"))))
-    (poo-flow-test-case "cached plans never share frames across concurrent engines"
+    (test-case "cached plans never share frames across concurrent engines"
       (let* ((p (path-program '((0 1) (1 2) (2 0))))
              (expected (rows (ascent-positive-plan-reference-evaluate-program p) 'path))
              (workers (map (lambda (_) (spawn (lambda () (rows (gerbil-ascent-evaluate-program p) 'path)))) (iota 8))))
         (for-each (lambda (worker) (check-equal? (thread-join! worker) expected)) workers)))
-    (poo-flow-test-case "unsupported callback clauses preserve callback traces"
+    (test-case "unsupported callback clauses preserve callback traces"
       (let* ((x (v 'x)) (calls [])
              (p (gerbil-ascent-program
                  (list (gerbil-ascent-relation 'input 1 '((1) (2)))

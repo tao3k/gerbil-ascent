@@ -1,8 +1,7 @@
 ;;; -*- Gerbil -*-
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
-(import (only-in :std/test test-suite check-equal? check-exception)
-        (only-in :core/observability/testing-case poo-flow-test-case)
+(import (only-in :std/test test-suite check-equal? check-exception test-case)
         (only-in :clan/poo/object .o .ref)
         (only-in :gerbil-ascent/table/funs gerbil-ascent-index-build gerbil-ascent-index-extend!)
         (only-in :gerbil-ascent/table/access gerbil-ascent-physical-index-build
@@ -66,7 +65,7 @@
 
 (def ascent-index-lifecycle-test
   (test-suite "Complete index lifecycle"
-    (poo-flow-test-case "empty index owner rejects consumers but admits source advancement"
+    (test-case "empty index owner rejects consumers but admits source advancement"
       (let (owner (gerbil-ascent-make-row-indexes
                    (vector []) (vector []) (vector 0) (vector 0)
                    (vector 0) (vector 0) (vector #f) #f))
@@ -81,7 +80,7 @@
          ((row-indexes-plan-atoms! owner) '(unexpected))
          (lambda (failure) (equal? (error-message failure)
                           "ASCENT empty index owner has lookup requirements")))))
-    (poo-flow-test-case "ordinary atom binding agrees with exhaustive simultaneous assignments"
+    (test-case "ordinary atom binding agrees with exhaustive simultaneous assignments"
       (let* ((choices (list (cons 'variable 'x) (cons 'variable 'y)
                             (cons 'literal 0) (cons 'literal #f) (cons 'wildcard #f)))
              (inputs (map (lambda (values)
@@ -113,7 +112,7 @@
                (binding-products '(0 #f) width)))
             (binding-products choices width))) '(0 1 2 3))
         (check-equal? decisions 9999)))
-    (poo-flow-test-case "known-column buckets retain all simultaneous atom solutions"
+    (test-case "known-column buckets retain all simultaneous atom solutions"
       (let* ((choices (list (cons 'variable 'x) (cons 'variable 'y)
                             (cons 'literal 0) (cons 'literal #f) (cons 'wildcard #f)))
              (input (list (cons 'x 0)))
@@ -140,7 +139,7 @@
              (check-equal? (list-sort (lambda (a b) (string<? (object->string a) (object->string b))) actual)
                            (list-sort (lambda (a b) (string<? (object->string a) (object->string b))) expected))))
          (binding-products choices 3))))
-    (poo-flow-test-case "physical single-column keys preserve equality and incremental bucket order"
+    (test-case "physical single-column keys preserve equality and incremental bucket order"
       (let* ((source (list (list #f 0) (list '() 1) (list "same" 2)
                            (list (string-copy "same") 3) (list '(a b) 4)))
              (batch (list (list (string-copy "same") 5) (list #f 6)))
@@ -161,7 +160,7 @@
                (check-equal? (gerbil-ascent-physical-index-rows
                               provider physical (map (lambda (_) 'absent) columns)) []))))
          '((0) (1) (0 1) (1 0) (0 0) ()))))
-    (poo-flow-test-case "all ordered subsets and arbitrary columns preserve keys and bucket order"
+    (test-case "all ordered subsets and arbitrary columns preserve keys and bucket order"
       (let (source (map (lambda (n) (map (lambda (c) (modulo (+ n c) 3)) (iota 8))) (iota 40)))
         (for-each
          (lambda (columns)
@@ -179,7 +178,7 @@
                         (filter (lambda (c) (not (zero? (bitwise-and bits (arithmetic-shift 1 c))))) (iota 8)))
                       (iota 256))
                  '((7 0 4) (2 2 0) (7 7) ())))))
-    (poo-flow-test-case "default index crosses threshold and extends without changing retained snapshots"
+    (test-case "default index crosses threshold and extends without changing retained snapshots"
       (let* ((p (indexed-program 31 gerbil-ascent-hash-index-provider))
              (old (ascent-index-reference-make-engine p #t))
              (new (gerbil-ascent-make-engine p #t))
@@ -193,7 +192,7 @@
         (check-equal? (length (rows first-new)) 31)
         (for-each (lambda (engine) ((.ref engine '.replace-source!) 'right '((0 99)))) (list old new))
         (check-equal? (rows ((.ref new '.run))) (rows ((.ref old '.run))))))
-    (poo-flow-test-case "custom build extend lookup traces and superset candidates remain identical"
+    (test-case "custom build extend lookup traces and superset candidates remain identical"
       (let* ((trace [])
              (provider (.o (:: @ gerbil-ascent-hash-index-provider)
                            (.build-index (lambda (rs cs) (set! trace (cons (list 'build rs cs) trace)) rs))
@@ -211,7 +210,7 @@
           (set! trace [])
           (check-equal? (run gerbil-ascent-make-engine) old)
           (check-equal? trace old-trace))))
-    (poo-flow-test-case "custom improper lookup rows retain the exact error boundary"
+    (test-case "custom improper lookup rows retain the exact error boundary"
       (let* ((provider (.o (:: @ gerbil-ascent-hash-index-provider)
                            (.lookup-index (lambda (_index _key) (cons '(0 1) 'bad)))))
              (p (indexed-program 40 provider)))

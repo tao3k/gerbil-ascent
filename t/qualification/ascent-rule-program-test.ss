@@ -2,15 +2,12 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(import (only-in :std/test check-equal? check-exception test-suite)
+(import (only-in :std/test check-equal? check-exception test-suite test-case)
         (only-in :clan/poo/object .o .ref)
         (only-in :gerbil-ascent/program/analysis gerbil-ascent-program-schema)
         (only-in :gerbil-ascent/program/planning gerbil-ascent-prepare-program)
         (only-in :gerbil-ascent/table/storage gerbil-ascent-set-storage-provider)
         (only-in :gerbil-ascent/table/provider gerbil-ascent-hash-index-provider)
-        (only-in :core/observability/testing-case
-                 poo-flow-default-testing-case-profile
-                 poo-flow-test-case/with)
         (only-in :gerbil-ascent/t/qualification/ascent-rule-program-fixture
                  ascent-rule-fixture-evaluate)
         (only-in :gerbil-ascent/t/qualification/ascent-typed-program-fixture
@@ -35,21 +32,6 @@
 (def (a name . terms) (gerbil-ascent-atom name terms))
 (def (r head . body) (gerbil-ascent-rule (list head) body))
 
-;;; ASCENT contributes only its Case budget to Core's native profile.
-(def +positive-case-profile+
-  (.o (:: @ poo-flow-default-testing-case-profile)
-      (identity 'ascent/positive-case)
-      (live-growth-limit-bytes 16777216)
-      (collect-before-sample? #t)
-      (max-duration-milliseconds 2000)))
-
-;;; This case constructs and evaluates two separately admitted POO programs.
-;;; Keep its memory policy while allowing the second contract admission.
-(def +two-snapshot-case-profile+
-  (.o (:: @ +positive-case-profile+)
-      (identity 'ascent/two-snapshot-case)
-      (max-duration-milliseconds 5000)))
-
 (def (evaluate edges (derived-limit 32))
   (ascent-rule-fixture-evaluate edges derived-limit))
 
@@ -58,8 +40,7 @@
 
 (def ascent-rule-program-test
   (test-suite "ASCENT positive relations with arbitrary columns"
-    (poo-flow-test-case/with +positive-case-profile+
-      "declaration compilation never invokes storage or rule callbacks"
+    (test-case "declaration compilation never invokes storage or rule callbacks"
       (let* ((states 0) (extensions 0) (guards 0)
              (storage
               (.o (:: @ gerbil-ascent-set-storage-provider)
@@ -86,8 +67,7 @@
         (check-equal? states 1)
         (check-equal? (> extensions 0) #t)
         (check-equal? (> guards 0) #t)))
-    (poo-flow-test-case/with +positive-case-profile+
-      "heads split across strata retain duplicates and source rule order"
+    (test-case "heads split across strata retain duplicates and source rule order"
       (let* ((x (v 'x))
              (program
               (gerbil-ascent-program
@@ -121,8 +101,7 @@
         (let (result (gerbil-ascent-evaluate-program program))
           (check-equal? (rows result 'early) '((7)))
           (check-equal? (rows result 'late) '((7))))))
-    (poo-flow-test-case/with +positive-case-profile+
-      "mixed ternary inputs derive four-column, unary and recursive rows"
+    (test-case "mixed ternary inputs derive four-column, unary and recursive rows"
       (let* ((source '((1 2 "a") (2 3 "b") (3 3 "c") (1 2 "a")))
              (result (evaluate source))
              (labelled (rows result 'labelled))
@@ -149,15 +128,13 @@
         (check-equal? (length (rows result 'safe-reach)) 3)
         (check-equal? (length reach) 4)
         (check-equal? (length (rows result 'node)) 3)))
-    (poo-flow-test-case/with +two-snapshot-case-profile+
-      "source withdrawal recomputes without changing earlier result"
+    (test-case "source withdrawal recomputes without changing earlier result"
       (let* ((first (evaluate '((1 2 "a") (2 3 "b") (3 3 "c"))))
              (withdrawn (evaluate '((1 2 "a") (3 3 "c")))))
         (check-equal? (length (rows first 'reach)) 4)
         (check-equal? (length (rows withdrawn 'reach)) 2)
         (check-equal? (length (rows first 'reach)) 4)))
-    (poo-flow-test-case/with +two-snapshot-case-profile+
-      "positive session retains rows across source additions"
+    (test-case "positive session retains rows across source additions"
       (let* ((program
               (gerbil-ascent-program
                (list (gerbil-ascent-relation 'edge 2 '((1 2)))
@@ -184,8 +161,7 @@
                                      'reach)) 9)
           (check-equal? (length (rows second 'reach)) 3)
           (check-equal? (rows first 'reach) '((1 2))))))
-    (poo-flow-test-case/with +positive-case-profile+
-      "ten thousand positive appends retain order and recover state"
+    (test-case "ten thousand positive appends retain order and recover state"
       (let* ((size 10000)
              (expected (map list (iota size)))
              (program
@@ -211,8 +187,7 @@
                         '((42)))
           (check-equal? (rows second 'item) expected)
           (check-equal? (rows first 'item) []))))
-    (poo-flow-test-case/with +positive-case-profile+
-      "staged Set rows share one global output budget"
+    (test-case "staged Set rows share one global output budget"
       (let* ((program
               (gerbil-ascent-program
                (list (gerbil-ascent-relation 'left 1 [])
@@ -235,8 +210,7 @@
            true)
           (check-equal? (eq? first (gerbil-ascent-session-run session))
                         #t))))
-    (poo-flow-test-case/with +positive-case-profile+
-      "batched Set duplicates retain first source order"
+    (test-case "batched Set duplicates retain first source order"
       (let* ((program
               (gerbil-ascent-program
                (list (gerbil-ascent-relation 'item 1 []))
@@ -252,8 +226,7 @@
           (gerbil-ascent-session-append-source! session 'item '(2))
           (check-equal? (eq? first (gerbil-ascent-session-run session))
                         #t))))
-    (poo-flow-test-case/with +positive-case-profile+
-      "session recomputes negation after source updates"
+    (test-case "session recomputes negation after source updates"
       (let* ((program
               (gerbil-ascent-program
                (list (gerbil-ascent-relation 'candidate 1 '((1)))
@@ -285,8 +258,7 @@
              2)
             (check-equal? (rows first 'allowed) '((1)))
             (check-equal? (rows second 'allowed) [])))))
-    (poo-flow-test-case/with +positive-case-profile+
-      "nonpositive recomputation rejects over-budget source atomically"
+    (test-case "nonpositive recomputation rejects over-budget source atomically"
       (let* ((program
               (gerbil-ascent-program
                (list (gerbil-ascent-relation 'candidate 1 '((1)))
@@ -311,15 +283,13 @@
          ((.ref (gerbil-ascent-session-run session) 'rows-of) 'allowed)
          [])
         (check-equal? (rows first 'allowed) '((1)))))
-    (poo-flow-test-case/with +positive-case-profile+
-      "empty rule set preserves sources and returns"
+    (test-case "empty rule set preserves sources and returns"
       (let (result
             (gerbil-ascent-evaluate-program
              (gerbil-ascent-program
               (list (gerbil-ascent-relation 'r 1 '((1)))) [] 2 2 2)))
         (check-equal? (rows result 'r) '((1)))))
-    (poo-flow-test-case/with +two-snapshot-case-profile+
-      "POO rule refinement receives its own immutable analysis"
+    (test-case "POO rule refinement receives its own immutable analysis"
       (let* ((base
               (gerbil-ascent-program
                (list (gerbil-ascent-relation 'edge 1 '((1)))
@@ -337,8 +307,7 @@
         (check-equal? (not (not (member '(2) (rows second 'reach)))) #t)
         (check-equal? (rows (gerbil-ascent-evaluate-program base) 'reach)
                       '((1)))))
-    (poo-flow-test-case/with +positive-case-profile+
-      "zero-column fact gates typed boolean and string rows"
+    (test-case "zero-column fact gates typed boolean and string rows"
       (check-equal?
        (rows (ascent-typed-program-evaluate
               #f '((#t "alpha"))) 'selected)
@@ -348,8 +317,7 @@
               #t '((#t "alpha") (#f "beta") (#f "beta")))
              'selected)
        '((#t "alpha") (#f "beta"))))
-    (poo-flow-test-case/with +positive-case-profile+
-      "arity, unsafe heads, and derived budgets reject"
+    (test-case "arity, unsafe heads, and derived budgets reject"
       (check-exception
        (gerbil-ascent-relation 'broken 2 '((1))) true)
       (check-exception (gerbil-ascent-atom 'out '(raw-term)) true)

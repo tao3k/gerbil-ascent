@@ -1,8 +1,7 @@
 ;;; -*- Gerbil -*-
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
-(import (only-in :std/test test-suite check-equal?)
-        (only-in :core/observability/testing-case poo-flow-test-case)
+(import (only-in :std/test test-suite check-equal? test-case)
         (only-in :clan/poo/object .ref)
         (only-in :gerbil-ascent/program/interface gerbil-ascent-relation gerbil-ascent-program
                  gerbil-ascent-variable gerbil-ascent-atom gerbil-ascent-rule)
@@ -18,7 +17,7 @@
   (check-equal? ((.ref new 'relation-sizes)) ((.ref old 'relation-sizes))))
 (def ascent-result-publication-test
   (test-suite "Persistent result publication"
-    (poo-flow-test-case "private ordered rows persist while public reads are owned"
+    (test-case "private ordered rows persist while public reads are owned"
       (let* ((source (map list (iota 64)))
              (p (gerbil-ascent-program
                  (list (gerbil-ascent-relation 'static 1 source)
@@ -42,7 +41,7 @@
                     (check-equal? (rowsof result 'static) source))
                   (reverse history) (iota 17))
         (check-equal? (rowsof first-new 'changing) (rowsof first-old 'changing))))
-    (poo-flow-test-case "clean reruns duplicate appends and source replacement preserve publication metadata"
+    (test-case "clean reruns duplicate appends and source replacement preserve publication metadata"
       (let* ((p (gerbil-ascent-program (list (gerbil-ascent-relation 'item 1 '((1) (1)))) [] 64 64 128))
              (old (ascent-result-reference-make-engine p #t))
              (new (gerbil-ascent-make-engine p #t))
@@ -58,7 +57,7 @@
           (compare right left)
           (check-equal? (rowsof right 'item) '((2) (3)))
           (check-equal? (rowsof first 'item) '((1) (1))))))
-    (poo-flow-test-case "engines sharing analysis keep publication caches independent"
+    (test-case "engines sharing analysis keep publication caches independent"
       (let* ((p (gerbil-ascent-program (list (gerbil-ascent-relation 'item 1 '((0)))) [] 32 32 64))
              (left (gerbil-ascent-make-engine p #t))
              (right (gerbil-ascent-make-engine
@@ -69,7 +68,7 @@
         (check-equal? (rowsof ((.ref left '.run)) 'item) '((0) (1)))
         (check-equal? (rowsof ((.ref right '.run)) 'item) '((0)))
         (check-equal? (rowsof first 'item) '((0)))))
-    (poo-flow-test-case "unknown relation errors and rule timing metadata remain exact"
+    (test-case "unknown relation errors and rule timing metadata remain exact"
       (let* ((p (gerbil-ascent-program (list (gerbil-ascent-relation 'item 1 '((0)))) [] 32 32 64))
              (old ((.ref (ascent-result-reference-make-engine p #t #f #f #t) '.run)))
              (new ((.ref (gerbil-ascent-make-engine p #t #f #f #t) '.run))))
@@ -79,7 +78,7 @@
                       (lambda () (rowsof result 'absent))))
         (check-equal? (unknown new) (unknown old))
         (check-equal? (unknown new) "unknown ASCENT relation")))
-    (poo-flow-test-case "late reads of partial snapshots remain stable after resuming to completion"
+    (test-case "late reads of partial snapshots remain stable after resuming to completion"
       (let* ((x (gerbil-ascent-variable 'x)) (y (gerbil-ascent-variable 'y))
              (p (gerbil-ascent-program
                  (list (gerbil-ascent-relation 'edge 2

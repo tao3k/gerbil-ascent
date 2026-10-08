@@ -2,8 +2,7 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 (import (only-in :gerbil-ascent/program/view-replay gerbil-ascent-small-journal-export)
-        (only-in :std/test check-equal? check-exception test-suite)
-        (only-in :core/observability/testing-case poo-flow-test-case)
+        (only-in :std/test check-equal? check-exception test-suite test-case)
         (only-in :gerbil-ascent/core/relation-view gerbil-ascent-view-rows
                  relation-view-count relation-view-units gerbil-ascent-view-select
                  gerbil-ascent-for-each-row)
@@ -73,7 +72,7 @@
 
 (def ascent-provider-views-test
   (test-suite "frozen BYODS Provider views"
-    (poo-flow-test-case "packed ordered replay matches all three-node graph histories"
+    (test-case "packed ordered replay matches all three-node graph histories"
       (let (edges (apply append (map (lambda (a) (map (lambda (b) (list a b)) (iota 3))) (iota 3))))
         (for-each (lambda (mask)
           (let* ((input (filter values (map (lambda (edge bit) (and (not (zero? (bitwise-and mask (arithmetic-shift 1 bit)))) edge))
@@ -88,7 +87,7 @@
             (check-equal? (packed-journal old 128 0 #f) (journal-reference old 128 0 #f)))
           (when (zero? (modulo (+ mask 1) 32))
             (displayln "JOURNAL-GRAPHS-CHECKED " (+ mask 1) "/512") (force-output))) (iota 512))))
-    (poo-flow-test-case "packed replay budget boundary and bounded matrix fallback"
+    (test-case "packed replay budget boundary and bounded matrix fallback"
       (let* ((events (list (vector 'source '((0 1)))))
              (limit (list (vector 'source (map (lambda (_) '(0 1)) (iota 256)))))
              (large (list (vector 'source (map (lambda (_) '(0 1)) (iota 257))))))
@@ -96,7 +95,7 @@
         (check-equal? (packed-journal large 3 0 #f) #f)
         (check-exception (packed-journal events 2 0 #f) true)
         (check-exception (packed-journal events 3 1 #t) true)))
-    (poo-flow-test-case "maximum packed vertex population preserves word boundaries and group isolation"
+    (test-case "maximum packed vertex population preserves word boundaries and group isolation"
       (let* ((pairs (map (lambda (i) (list (* 2 i) (+ 1 (* 2 i)))) (iota 256)))
              (events (list (vector 'source pairs)))
              (expected (journal-reference events 768 0 #f)))
@@ -114,7 +113,7 @@
           (check-equal? (packed-journal grouped 768 0 #f) grouped-expected)
           (check-exception (packed-journal grouped 2 0 #f) true)
           (displayln "JOURNAL-MAX-GROUPS-CHECKED 2") (force-output))))
-    (poo-flow-test-case "compressed equivalence prefixes match independent symmetric Floyd truth"
+    (test-case "compressed equivalence prefixes match independent symmetric Floyd truth"
       (for-each (lambda (mask)
         (for-each (lambda (order)
           (let ((state (gerbil-ascent-eqrel-state)) (inputs []) (old []))
@@ -140,7 +139,7 @@
           (list (selected mask) (reverse (selected mask))))
         (when (= (modulo mask 64) 0)
           (displayln "EQREL-COMPRESSED-GRAPHS " mask) (force-output))) (iota 512)))
-    (poo-flow-test-case "grouped equivalence cuts and ordered source journals remain isolated"
+    (test-case "grouped equivalence cuts and ordered source journals remain isolated"
       (let* ((state (gerbil-ascent-eqrel-state))
              (a '((#f 0 1) (#f 1 2))) (b '((other 0 1)))
              (events (list (gerbil-ascent-view-journal-event 'source b #t)
@@ -159,7 +158,7 @@
               (other 0 0) (other 1 1) (other 0 1) (other 1 0)))
           ;; Width is part of the private namespace even when group is #f.
           (check-equal? (relation-view-count (gerbil-ascent-eqrel-insert! state '(0 1) 4)) 4))))
-    (poo-flow-test-case "large equivalence cut stores one rectangle and routes both axes"
+    (test-case "large equivalence cut stores one rectangle and routes both axes"
       (let ((state (gerbil-ascent-eqrel-state)) (n 1000))
         (for-each (lambda (i)
           (let (frontier (gerbil-ascent-eqrel-insert! state (list 0 i) (+ (* 2 i) 1)))
@@ -177,7 +176,7 @@
           (gerbil-ascent-eqrel-insert! state (list 0 n) (+ (* 2 n) 1))
           (check-equal? (relation-view-count held) (* n n))
           (check-equal? (relation-view-count (gerbil-ascent-eqrel-freeze state)) (* (+ n 1) (+ n 1))))))
-    (poo-flow-test-case "all graph prefixes preserve exact frontiers counts and frozen old views"
+    (test-case "all graph prefixes preserve exact frontiers counts and frozen old views"
       (for-each (lambda (mask)
         (for-each (lambda (order)
           (let ((state (gerbil-ascent-trrel-uf-state)) (inputs []) (old []))
@@ -208,7 +207,7 @@
           (list (selected mask) (reverse (selected mask))))
         (when (= (modulo (+ mask 1) 64) 0)
           (displayln "PROVIDER-VIEWS-CHECKED graphs=" (+ mask 1)) (force-output))) (iota 512)))
-    (poo-flow-test-case "balanced largest-component merges retain valid parent chains and external arcs"
+    (test-case "balanced largest-component merges retain valid parent chains and external arcs"
       (let (state (gerbil-ascent-trrel-uf-state))
         ;; Four pairs, two size-four SCCs, then size eight: losing roots retain
         ;; multi-level parent chains. External predecessor/successor keys survive.
@@ -220,7 +219,7 @@
         (check-equal? (gerbil-ascent-trrel-uf-observation state) '#(10 3 3))
         (check-equal? (gerbil-ascent-trrel-uf-view-count
                       (gerbil-ascent-trrel-uf-snapshot state)) 83)))
-    (poo-flow-test-case "held frontier survives later SCC merges and exported row mutation"
+    (test-case "held frontier survives later SCC merges and exported row mutation"
       (let* ((state (gerbil-ascent-trrel-uf-state))
              (frontier (gerbil-ascent-trrel-uf-frontier-extension state '(0 1) 3))
              (old (gerbil-ascent-trrel-uf-snapshot state))
@@ -234,7 +233,7 @@
         (check-rows (export-view frontier) expected)
         (check-equal? (gerbil-ascent-trrel-uf-view-count
                        (gerbil-ascent-trrel-uf-snapshot state)) 9)))
-    (poo-flow-test-case "group keys and keyed reads retain exact concrete rows"
+    (test-case "group keys and keyed reads retain exact concrete rows"
       (let (state (gerbil-ascent-trrel-uf-state))
         (gerbil-ascent-trrel-uf-frontier-extension state '(#f 0 1) 3)
         (let (old (gerbil-ascent-trrel-uf-snapshot state))
@@ -247,7 +246,7 @@
             (check-equal? (gerbil-ascent-trrel-uf-view-lookup old '(0) '(#t)) [])
             (check-exception (gerbil-ascent-trrel-uf-view-lookup total '(3) '(0)) true)
             (check-exception (gerbil-ascent-trrel-uf-view-lookup total '(0 1) '(#t)) true)))))
-    (poo-flow-test-case "ungrouped false and true scopes remain distinct across cycle and refusal"
+    (test-case "ungrouped false and true scopes remain distinct across cycle and refusal"
       (let (state (gerbil-ascent-trrel-uf-state))
         (for-each (lambda (row)
           (gerbil-ascent-trrel-uf-frontier-extension state row 3))
@@ -266,7 +265,7 @@
           (check-rows (export-view (gerbil-ascent-trrel-uf-snapshot state))
             '((0 0) (1 1) (0 1) (#f 0 0) (#f 1 1) (#f 0 1) (#f 1 0)
               (#t 0 0) (#t 1 1) (#t 0 1))))))
-    (poo-flow-test-case "newest-first journal preserves source derived order and captured cut"
+    (test-case "newest-first journal preserves source derived order and captured cut"
       (let* ((state (gerbil-ascent-trrel-uf-state)) (input (list (list 0 1)))
              (source (gerbil-ascent-view-journal-event 'source input)))
         ;; Event construction detaches caller-owned row spines.
@@ -288,7 +287,7 @@
             (let (rows (gerbil-ascent-view-rows old)) (set-car! (car rows) 88))
             (check-equal? (gerbil-ascent-view-rows old) expected)
             (check-equal? (gerbil-ascent-trrel-uf-view-count latest) 9)))))
-    (poo-flow-test-case "derived journal reverses a complete multi-injection batch"
+    (test-case "derived journal reverses a complete multi-injection batch"
       (let (state (gerbil-ascent-trrel-uf-state))
         (for-each (lambda (row) (gerbil-ascent-trrel-uf-frontier-extension state row 10))
                   '((0 1) (1 2) (2 3)))
@@ -299,7 +298,7 @@
           (check-equal? (gerbil-ascent-view-rows cut)
             '((0 0) (1 1) (0 1) (2 3) (0 3) (1 3) (3 3) (0 2) (1 2) (2 2)))
           (check-equal? (gerbil-ascent-trrel-uf-view-count cut) 10))))
-    (poo-flow-test-case "compressed cycle total remains queryable without a tuple cache"
+    (test-case "compressed cycle total remains queryable without a tuple cache"
       (let (state (gerbil-ascent-trrel-uf-state))
         (for-each (lambda (n)
           (gerbil-ascent-trrel-uf-frontier-extension state (list n (modulo (+ n 1) 64)) 4096)) (iota 64))
@@ -310,7 +309,7 @@
           (gerbil-ascent-trrel-uf-view-for-each view (lambda (_) (set! visited (+ visited 1))))
           (check-equal? visited 4096)
           (check-equal? (gerbil-ascent-trrel-uf-observation state) '#(64 1 0)))))
-    (poo-flow-test-case "list adapter preserves public extension row order"
+    (test-case "list adapter preserves public extension row order"
       (let (state (gerbil-ascent-trrel-uf-state))
         (check-equal? (gerbil-ascent-trrel-uf-extension state [] [] '(0 1) 3)
           '((0 0) (1 1) (0 1)))

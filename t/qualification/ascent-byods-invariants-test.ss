@@ -2,7 +2,7 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(import (only-in :std/test check-equal? check-exception test-suite)
+(import (only-in :std/test check-equal? check-exception test-suite test-case)
         (only-in :std/hash/misc hash-ensure-modify!)
         (only-in :gerbil-ascent/table/trrel-uf gerbil-ascent-trrel-uf-observation)
         (only-in :clan/poo/object .ref)
@@ -12,7 +12,6 @@
                  gerbil-ascent-session-run gerbil-ascent-session-append-source!)
         (only-in :gerbil-ascent/program/evaluate gerbil-ascent-evaluate-program)
         (only-in :gerbil-ascent/table/provider gerbil-ascent-hash-index-provider)
-        (only-in :core/observability/testing-case poo-flow-test-case)
         (only-in :gerbil-ascent/t/qualification/ascent-byods-query-fixture
                  ascent-byods-query-evaluate)
         (only-in :gerbil-ascent/table/interface
@@ -203,7 +202,7 @@
 
 (def ascent-byods-invariants-test
   (test-suite "ASCENT BYODS exhaustive three-node invariants"
-    (poo-flow-test-case "retained head injection survives an empty implied frontier"
+    (test-case "retained head injection survives an empty implied frontier"
       (for-each
        (lambda (kind provider)
          (let* ((first '((0 1) (1 0)))
@@ -233,7 +232,7 @@
        (list gerbil-ascent-eqrel-storage-provider
              gerbil-ascent-trrel-storage-provider
              gerbil-ascent-trrel-uf-storage-provider)))
-    (poo-flow-test-case "three repeated Provider atoms consume delayed frontiers exactly"
+    (test-case "three repeated Provider atoms consume delayed frontiers exactly"
       (let (checked 0)
        (for-each
        (lambda (edges)
@@ -263,7 +262,7 @@
               (force-output)))
           (subsets edges)))
        (subsets '((0 1) (1 2) (2 0))))))
-    (poo-flow-test-case "union-find false nodes and false groups have distinct identities"
+    (test-case "union-find false nodes and false groups have distinct identities"
       (let ((state (gerbil-ascent-storage-make-state gerbil-ascent-trrel-uf-storage-provider)))
         (def (extend edge budget)
           (gerbil-ascent-storage-extend gerbil-ascent-trrel-uf-storage-provider state [] [] edge budget))
@@ -272,7 +271,7 @@
         (check-equal? (extend '(#f #t #f) 1) '((#f #t #f)))
         (check-equal? (extend '(#t #f) 1) '((#t #f)))
         (check-equal? (gerbil-ascent-trrel-uf-observation state) '#(4 2 0))))
-    (poo-flow-test-case "union-find compresses a cycle without retaining concrete pairs"
+    (test-case "union-find compresses a cycle without retaining concrete pairs"
       (let ((state (gerbil-ascent-storage-make-state gerbil-ascent-trrel-uf-storage-provider)) (rows []))
         (for-each (lambda (n)
           (set! rows (append (gerbil-ascent-storage-extend gerbil-ascent-trrel-uf-storage-provider
@@ -283,7 +282,7 @@
           (check-equal? (gerbil-ascent-storage-extend gerbil-ascent-trrel-uf-storage-provider
                           state rows [] (list n (modulo (+ n 1) 64)) 0) [])) (iota 64))
         (check-equal? (gerbil-ascent-trrel-uf-observation state) '#(64 1 0))))
-    (poo-flow-test-case "union-find budget refusal preserves SCC state and exact retry frontier"
+    (test-case "union-find budget refusal preserves SCC state and exact retry frontier"
       (let ((state (gerbil-ascent-storage-make-state gerbil-ascent-trrel-uf-storage-provider)) (rows []))
         (def (extend edge budget)
           (gerbil-ascent-storage-extend gerbil-ascent-trrel-uf-storage-provider state rows [] edge budget))
@@ -302,7 +301,7 @@
         (set! rows (append (extend '(3 0) 4) rows))
         (check-equal? (length rows) 13)
         (check-equal? (gerbil-ascent-trrel-uf-observation state) '#(4 2 1))))
-    (poo-flow-test-case "each provider frontier equals the independent new concrete facts"
+    (test-case "each provider frontier equals the independent new concrete facts"
       (let (checked 0)
         (for-each
          (lambda (edges)
@@ -322,7 +321,7 @@
              (displayln "PROGRESS independent BYODS frontier graphs " checked "/512")
              (force-output)))
          (subsets +possible-edges+))))
-    (poo-flow-test-case "directed frontier bridge merges non-singleton SCCs and preserves explicit loops"
+    (test-case "directed frontier bridge merges non-singleton SCCs and preserves explicit loops"
       (for-each
        (lambda (kind provider)
          (check-frontier-trace kind provider
@@ -331,7 +330,7 @@
            '((3 2) (2 3) (1 0) (0 1) (2 1) (0 3) (3 3)) "alpha"))
        '(trrel trrel-uf)
        (list gerbil-ascent-trrel-storage-provider gerbil-ascent-trrel-uf-storage-provider)))
-    (poo-flow-test-case "eqrel preflight preserves state and deterministic emission order"
+    (test-case "eqrel preflight preserves state and deterministic emission order"
       (let (state (gerbil-ascent-storage-make-state
                    gerbil-ascent-eqrel-storage-provider))
         (def (extend row budget)
@@ -355,7 +354,7 @@
         (check-equal? (extend (list (list 4) (list 4)) 1)
                       '(((4) (4))))
         (check-equal? (extend (list (list 4) (list 4)) 0) [])))
-    (poo-flow-test-case "all directed edge subsets preserve closure and insertion order independence"
+    (test-case "all directed edge subsets preserve closure and insertion order independence"
       (for-each
        (lambda (edges)
          (for-each
@@ -370,7 +369,7 @@
                 gerbil-ascent-trrel-storage-provider
                 gerbil-ascent-trrel-uf-storage-provider)))
        (subsets +possible-edges+)))
-    (poo-flow-test-case "four-node sparse subsets preserve larger merges"
+    (test-case "four-node sparse subsets preserve larger merges"
       (for-each
        (lambda (edges)
          (for-each
@@ -385,7 +384,7 @@
                 gerbil-ascent-trrel-storage-provider
                 gerbil-ascent-trrel-uf-storage-provider)))
        (subsets +four-node-edges+)))
-    (poo-flow-test-case "eight-node cycles and bridges preserve closure"
+    (test-case "eight-node cycles and bridges preserve closure"
       (for-each
        (lambda (mask)
          (let (edges (eight-node-subset mask))
@@ -403,7 +402,7 @@
        (append (map (lambda (sample) (modulo (* sample 263) 4096))
                     (iota 256))
                '(1 1365 3855 4095))))
-    (poo-flow-test-case "four-node edges close across every two-producer partition"
+    (test-case "four-node edges close across every two-producer partition"
       (let* ((edges +four-node-edges+)
              (wanted (map (lambda (node) (list "alpha" node)) '(0 1 2 3)))
              (expected
@@ -429,7 +428,7 @@
                    rows)))
               '(eq-match tr-match uf-match) expected)))
          (subsets edges))))
-    (poo-flow-test-case "eight-node producer partitions retain complete joins"
+    (test-case "eight-node producer partitions retain complete joins"
       (let* ((edges +eight-node-edges+)
              (wanted '(("alpha" 0)))
              (expected
@@ -464,7 +463,7 @@
          (append (map (lambda (sample) (modulo (* sample 263) 4096))
                       (iota 256))
                  '(1 1365 3855 4095)))))
-    (poo-flow-test-case "grouped storage isolates two interleaved edge sets"
+    (test-case "grouped storage isolates two interleaved edge sets"
       (let (beta '((0 1) (1 2) (2 0)))
         (for-each
          (lambda (alpha)

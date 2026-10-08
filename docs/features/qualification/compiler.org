@@ -5,6 +5,83 @@
 Feature owner: [[file:../index.org][feature index]]. This page retains the original
 source dates and qualification boundaries. Current evidence is commit-specific.
 
+* Ordinary directory tests and memory policy (2026-10-08)
+
+Ordinary qualification Cases use upstream =std/test= directly. Thirty-seven
+Suite source files previously wrapped semantic checks in POO Flow's testing
+Case policy. Its default =heap-limit-bytes= is 1 GiB and measures the entire
+process heap, including every module imported by directory discovery. Merely
+setting Gambit's heap cap to 2 GiB therefore leaves a contradictory Case
+policy. The unaligned 2 GiB probe produced =PooFlowDebugMemoryAnomaly= errors
+and did not finish within its 120-second bound.
+
+Two ordinary Suite profiles also enabled =collect-before-sample?= while
+inheriting a 10-millisecond sampling interval. The watchdog calls =##gc= before
+such samples. A directory process retaining all expanded modules makes these
+whole-heap collections materially different from a focused module test.
+The separate 1 GiB =gxi= GC diagnostic observed approximately 716 MiB live and
+repeated collections of approximately 190--230 milliseconds; that diagnostic
+is not a matched timing estimate for the stock =gerbil test= entry.
+
+The generic policy wrappers and local semantic Case profiles have been removed.
+Case descriptions, bodies, fixtures and assertions remain intact. The dedicated
+observability Suite still verifies policy rejection and bounded execution.
+Ordinary Cases no longer claim those removed per-Case heap or duration quotas;
+the process heap cap, command deadline, failed-Case detection and final verdict
+checks remain. Runtime resource rejection is tested explicitly rather than
+injected into unrelated application code by a Case sampler.
+
+=just test [heap]= now invokes the standard Gerbil directory entry once.
+=just test-file <path> [heap]= retains focused execution. The heap parameter
+controls the source-test process; native entry and compiler qualification keep
+their separate existing limits. No additional test runner or supervisor is used.
+
+The source recipe also honors the caller's existing dependency load-path order
+before appending the checkout. A resolver probe confirmed that source-first
+ordering selects =program/evaluate.ss=, while the prepared-library-first order
+selects =gerbil-ascent/program/evaluate.ssi=. CI prepares the content-bound
+native library before supplying that path. Explicit Suite file paths continue
+to exercise Suite source. Supplying an arbitrary stale library is not source
+qualification; the prepared dependency snapshot remains part of the evidence.
+
+Three relation-view cost Cases have moved intact from the semantic Suite to
+=t/performance/ascent-relation-view-performance-test.ss=. Their 12 matched
+pairs, explicit GC boundaries, allocation/live sampling and truth checks are
+preserved. Shared construction and row-order helpers now reside in the existing
+qualification fixture namespace. Complete native qualification includes the new
+performance module and prepares its common fixture/reference dependencies before
+consumer compilation. Its roster is now 95 modules and 852 Cases; the ordinary
+source directory contains 89 modules and 843 Cases. This separation changes the
+ordinary workload and cannot support a same-workload percentage speedup claim.
+
+The source-first experiments after removing the generic policy wrappers still
+failed to finish within 120 seconds at 2 GiB or 180 seconds at 3 GiB, despite
+reporting no policy errors. Correcting load-path order alone also failed to
+finish the benchmark-bearing directory within 120 seconds. Capacity, dependency
+loading and benchmark placement are separate issues; none of these failed
+experiments is counted as a qualification pass.
+
+With prepared dependencies first, the complete standard directory invocation
+passed all 89 modules and 843 Cases in one process at 2 GiB: exit 0,
+=HARNESS-OK=, final =OK=, 106.61 seconds (102.86 user, 2.37 system). The original
+120-second deadline remained unchanged. Dedicated memory/duration rejection
+Cases were included. This is a prepared-dependency correctness receipt, not a
+cold-build result or proof of optimal memory capacity.
+
+Complete native qualification also passed all 95 modules and 852 Cases. The
+formal command was =just test-native-suite= with its unchanged =auto= default.
+ASP's existing capacity projection selected 12, matching the current host CPU
+count and configured capacity. The real lifecycle trace reached 12 active
+workers, completed all 95 modules and drained to zero active workers. Exit was
+0, with no failed Cases. This prepared-library/entry-cache run took 89.23 seconds
+(127.97 user, 8.00 system). The preceding fixed-four-worker preparation run was
+an experimental control, not the formal capacity selection or a hard limit.
+These different preparation workloads do not establish a concurrency speedup.
+
+The earlier process-pool measurements below are historical observations from
+the preceding revision. They do not describe the current ordinary recipe and
+must not be combined with compiler-source changes as a Gambit speedup claim.
+
 * Complete test preparation and bounded execution (2026-10-08)
 
 The installed Gerbil =gxtest= implementation and
@@ -15,8 +92,8 @@ serially. A directory-wide source probe under the unchanged 1 GiB heap failed
 with heap overflow after 20.89 seconds; it also reported a failed Check before
 the overflow. This probe is rejected, not a qualification pass.
 
-The ordinary recipe now accepts a worker capacity, uses the existing native
-capacity projection for =auto=, and overlaps standard =gerbil test= module
+The preceding ordinary recipe accepted a worker capacity, used the existing native
+capacity projection for =auto=, and overlapped standard =gerbil test= module
 invocations through =xargs=. Module expansion remains isolated; each invocation
 retains its own Case/output/exit gates and the original 120-second deadline.
 The full source inventory passed: 89 modules, 846 Cases, exit 0, 113.93 seconds
@@ -52,7 +129,7 @@ CI must qualify the submitted complete source snapshot independently.
 
 The frozen compiler comparison in gerbil-bazel retains responsibility for the
 Darwin C/object regeneration hypothesis. Its baseline must not incorporate
-these uncommitted scheduling changes or attribute their benefit to Gambit.
+these ASCENT orchestration changes or attribute their benefit to Gambit.
 
 * Test preparation and CLI startup (2026-10-08)
 

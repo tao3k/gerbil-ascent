@@ -130,7 +130,8 @@
      "t/performance/ascent-component-index-performance-test.ss"
      "t/performance/ascent-actor-credit-performance-test.ss"
      "t/performance/ascent-trrel-uf-performance-test.ss"
-     "t/performance/ascent-steensgaard-performance-test.ss")))
+     "t/performance/ascent-steensgaard-performance-test.ss"
+     "t/performance/ascent-relation-view-performance-test.ss")))
 
 ;; Each compiler process owns one dependency layer. Expander contexts and
 ;; optimization trees must not accumulate across production, references and
@@ -164,6 +165,9 @@
                           '("t/performance/native-library" "t/performance/ascent-ss-profile"
                             "t/scenarios/performance/ascent-table-expression/baseline"
                             "t/native/artifact-admission" "t/native/entry-cache" "t/model/response-projection" "t/native/actor-pool" "t/native/module-process")
+                          (if (or (member "t/qualification/ascent-relation-view-test.ss" tests)
+                                  (member "t/performance/ascent-relation-view-performance-test.ss" tests))
+                            '("t/qualification/ascent-relation-view-fixture") [])
                           (if (member "t/qualification/ascent-callback-plan-test.ss" tests)
                             '("t/performance/callback-plan/expression-reference") [])
                           (if (member "t/qualification/ascent-expression-plan-test.ss" tests)
@@ -260,9 +264,11 @@
                               "t/performance/storage-batch/reference-evaluate"
                               "t/performance/storage-batch/fixture")
                             [])
-                          (if (or (member "t/qualification/ascent-index-entry-test.ss" tests)
+                          (if (or (member "t/qualification/ascent-relation-view-test.ss" tests)
+                                  (member "t/qualification/ascent-index-entry-test.ss" tests)
                                   (member "t/qualification/ascent-component-index-test.ss" tests)
-                                  (member "t/performance/ascent-component-index-performance-test.ss" tests))
+                                  (member "t/performance/ascent-component-index-performance-test.ss" tests)
+                                  (member "t/performance/ascent-relation-view-performance-test.ss" tests))
                             '("t/performance/index-entry/reference"
                               "t/performance/index-entry/reference-evaluate"
                               "t/performance/index-entry/fixture")

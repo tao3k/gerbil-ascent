@@ -2,14 +2,13 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(import (only-in :std/test check-equal? check-exception test-suite)
+(import (only-in :std/test check-equal? check-exception test-suite test-case)
         (only-in :std/list/list append-map delete-duplicates/hash)
         (only-in :clan/poo/object .ref)
         (only-in :std/error exception->string)
         (only-in :gerbil-ascent/program/scheme-checked
                  relational-compute relational-where relational-operator-literal)
         (only-in :clan/poo/mop element?)
-        (only-in :core/observability/testing-case poo-flow-test-case)
         (only-in :gerbil-ascent/program/types
                  GerbilAscentFragmentContract)
         (only-in :gerbil-ascent/program/objects
@@ -224,7 +223,7 @@
 
 (def scheme-relational-test
   (test-suite "Scheme relational finite positive gate"
-    (poo-flow-test-case "checked calls preserve all literal and variable argument shapes"
+    (test-case "checked calls preserve all literal and variable argument shapes"
       (let ((two (relational-operator-literal 2))
             (three (relational-operator-literal 3)))
         (for-each
@@ -254,7 +253,7 @@
                      (list (relational-operator-literal value))) 'compute))
             value))
          '(#f #t tag #\a 0 -2))))
-    (poo-flow-test-case "checked constant calls retain deferred numeric validation"
+    (test-case "checked constant calls retain deferred numeric validation"
       (let* ((bad (relational-operator-literal 'bad))
              (one (relational-operator-literal 1))
              (sum (.ref (relational-compute 'out '+ (list bad one)) 'compute))
@@ -265,7 +264,7 @@
                                (list (relational-operator-literal 2))) 'predicate)) #t)
         (check-exception
          ((.ref (relational-where 'even? '(x)) 'predicate) #f) true)))
-    (poo-flow-test-case "two fragment instances retain private identities"
+    (test-case "two fragment instances retain private identities"
       (let* ((source-a (source-fragment '((1 2) (2 3))))
              (source-b (source-fragment '((7 8))))
              (edge-a (relational-export source-a 'edge))
@@ -300,13 +299,13 @@
             (check-exception (relational-export reach-a 'missing) true)
             (check-exception
              (relational-query result source-a 'reach) true))))
-    (poo-flow-test-case "assembled program rejects duplicate instance"
+    (test-case "assembled program rejects duplicate instance"
       (let (source (source-fragment '((1 2))))
         (check-exception
          (relational-admit
           (relational-compose (list source source) 8 8 16))
          true)))
-    (poo-flow-test-case "fragment export names are unique and instance scoped"
+    (test-case "fragment export names are unique and instance scoped"
       (let* ((first (source-fragment '((1 2))))
              (second (source-fragment '((3 4)))))
         (check-equal? (eq? (relational-export first 'edge)
@@ -319,16 +318,16 @@
           (private)
           (export (same edge) (same edge)))
          true)))
-    (poo-flow-test-case "fragment constructor freezes supplied export list"
+    (test-case "fragment constructor freezes supplied export list"
       (let* ((entry (cons 'answer 'original))
              (exports (list entry))
              (fragment (gerbil-ascent-fragment [] [] exports)))
         (set-cdr! entry 'changed)
         (check-equal? (relational-export fragment 'answer) 'original)))
-    (poo-flow-test-case "source handles must name local declarations"
+    (test-case "source handles must name local declarations"
       (check-exception
        (gerbil-ascent-fragment [] [] [] (list 'missing)) true))
-    (poo-flow-test-case "admission and query isolate source and result rows"
+    (test-case "admission and query isolate source and result rows"
       (let* ((row (list 1 2))
              (source (source-fragment (list row)))
              (admission
@@ -344,7 +343,7 @@
           (check-equal? (relational-query
                          (relational-solve admission) source 'edge)
                         '((1 2))))))
-    (poo-flow-test-case "admission copies rows from a mutable Core declaration"
+    (test-case "admission copies rows from a mutable Core declaration"
       (let* ((row (list 1 2))
              (program
               (gerbil-ascent-program
@@ -355,7 +354,7 @@
         (check-equal?
          (relational-query-name (relational-solve admission) 'edge)
          '((1 2)))))
-    (poo-flow-test-case "session replaces exported sources with snapshots"
+    (test-case "session replaces exported sources with snapshots"
       (let* ((source (source-fragment '((1 2) (2 3))))
              (reach (reach-fragment (relational-export source 'edge)))
              (session
@@ -382,7 +381,7 @@
            (relational-query (relational-session-run session)
                              reach 'reach)
            '((7 8))))))
-    (poo-flow-test-case "session append isolates caller row and rejects non-scalars"
+    (test-case "session append isolates caller row and rejects non-scalars"
       (let* ((source (source-fragment '((1 2))))
              (reach (reach-fragment (relational-export source 'edge)))
              (session
@@ -399,7 +398,7 @@
         (check-exception
          (relational-session-append-source!
           session source 'edge '(2 "mutable")) true)))
-    (poo-flow-test-case "session restores last completed solve on budget failure"
+    (test-case "session restores last completed solve on budget failure"
       (let* ((source (source-fragment '((1 2))))
              (foreign (source-fragment '((9 10))))
              (reach (reach-fragment (relational-export source 'edge)))
@@ -418,7 +417,7 @@
         (check-equal? (relational-query
                        (relational-session-run session) reach 'reach)
                       '((1 2)))))
-    (poo-flow-test-case "named program session replaces declared input"
+    (test-case "named program session replaces declared input"
       (let* ((session
               (relational-open-program-session
                (direct-reach-program '((1 2) (2 3)))))
@@ -442,7 +441,7 @@
            (relational-program-query
             (relational-program-session-run session) 'path)
            '((4 5))))))
-    (poo-flow-test-case "named transaction updates recursion and negation"
+    (test-case "named transaction updates recursion and negation"
       (let* ((session
               (relational-open-program-session
                (direct-filter-program '((1 2) (2 3)) '((1 3)))))
@@ -472,7 +471,7 @@
           (check-equal? (relational-program-query third 'allowed) '())
           (check-equal?
            (relational-program-query second 'allowed) '((3 4))))))
-    (poo-flow-test-case "named program evaluates a source expression once"
+    (test-case "named program evaluates a source expression once"
       (let ((calls 0)
             (program #f))
         (set! program
@@ -488,7 +487,7 @@
           'path)
          '((1 2)))
         (check-equal? calls 1)))
-    (poo-flow-test-case "admission rejects opaque host callbacks"
+    (test-case "admission rejects opaque host callbacks"
       (let* ((source (source-fragment '((1 2))))
              (edge (relational-export source 'edge))
              (callback-rule
@@ -503,7 +502,7 @@
          (relational-admit
          (relational-compose (list source fragment) 8 8 16))
          true)))
-    (poo-flow-test-case "admission rebuilds a claimed checked operator"
+    (test-case "admission rebuilds a claimed checked operator"
       (let* ((called #f)
              (source (source-fragment '((1 2) (2 3))))
              (output (selected-fragment))
@@ -529,12 +528,12 @@
         (check-equal? called #f)
         (check-equal? (relational-query solution output 'selected)
                       '((2 3)))))
-    (poo-flow-test-case "whole-program admission rejects an absent import"
+    (test-case "whole-program admission rejects an absent import"
       (let (reach (reach-fragment (gensym 'missing-edge)))
         (check-exception
          (relational-admit (relational-compose (list reach) 8 8 16))
          true)))
-    (poo-flow-test-case "solve fails when closure exceeds its fact budget"
+    (test-case "solve fails when closure exceeds its fact budget"
       (let* ((source (source-fragment '((1 2) (2 3))))
              (reach (reach-fragment (relational-export source 'edge)))
              (admission
@@ -542,7 +541,7 @@
                (relational-compose (list source reach) 8 1 16))))
         (check-exception (relational-solve admission) true)
         (check-exception (relational-solve admission) true)))
-    (poo-flow-test-case "checked where and compute match finite Scheme model"
+    (test-case "checked where and compute match finite Scheme model"
       (let* ((input
               (append-map
                (lambda (left)
@@ -579,7 +578,7 @@
                                  expected-sum) #t)
         (check-equal? (same-set? (rows direct 'copied-left)
                                  expected-copied) #t)))
-    (poo-flow-test-case "literal scalar clauses bind at native construction"
+    (test-case "literal scalar clauses bind at native construction"
       (let* ((input
               (append-map
                (lambda (left)
@@ -636,7 +635,7 @@
                           next-shifted) #t))))
         (check-exception
          (literal-scalar-program '((1 2)) '(not-a-scalar)) true)))
-    (poo-flow-test-case "constant guard and captured symbol stay stable"
+    (test-case "constant guard and captured symbol stay stable"
       (let* ((tag 'accepted)
              (lower 0)
              (program
@@ -656,7 +655,7 @@
           (relational-query-name
            (relational-solve (relational-admit program)) 'labeled)
           '((1 accepted) (2 accepted))) #t)))
-    (poo-flow-test-case "checked operator modes reject invalid uses"
+    (test-case "checked operator modes reject invalid uses"
       (check-exception
        (relational-fragment
         (import)
@@ -680,14 +679,14 @@
               (relational-admit
                (relational-compose (list source scalar) 8 8 16))))
         (check-exception (relational-solve admission) true)))
-    (poo-flow-test-case "recursive compute budget fails without a result"
+    (test-case "recursive compute budget fails without a result"
       (let* ((fragment (unbounded-count-fragment))
              (admission
               (relational-admit
                (relational-compose (list fragment) 1 8 16))))
         (check-exception (relational-solve admission) true)
         (check-exception (relational-solve admission) true)))
-    (poo-flow-test-case "recursive closure equals independent graph model"
+    (test-case "recursive closure equals independent graph model"
       (for-each
        (lambda (edges)
          (let ((actual (rows (evaluate edges) 'path))
@@ -696,7 +695,7 @@
        '(() ((1 2)) ((1 2) (2 3) (3 1))
          ((1 2) (1 2) (2 3) (4 5))
          ((1 1) (1 2) (2 2)))))
-    (poo-flow-test-case "all 64 simple directed graphs on three nodes"
+    (test-case "all 64 simple directed graphs on three nodes"
       (let ((graphs
              (foldl
               (lambda (edge sets)
@@ -727,14 +726,14 @@
                (displayln "NATIVE-CLOSURE-PROGRESS " checked)
                (force-output))))
          graphs)))
-    (poo-flow-test-case "new source snapshot does not mutate old result"
+    (test-case "new source snapshot does not mutate old result"
       (let* ((before (evaluate '((1 2) (2 3))))
              (after (evaluate '((1 2)))))
         (check-equal? (same-set? (rows before 'path)
                                  '((1 2) (2 3) (1 3))) #t)
         (check-equal? (same-set? (rows after 'path) '((1 2))) #t)
         (check-equal? (length (rows before 'path)) 3)))
-    (poo-flow-test-case "repeated variables and scalar literals"
+    (test-case "repeated variables and scalar literals"
       (let* ((result
               (gerbil-ascent-evaluate-program
                (relational-program
@@ -747,7 +746,7 @@
         (check-equal? (rows result 'loop) '((1)))
         (check-equal? (same-set? (rows result 'from-one)
                                  '((1) (2))) #t)))
-    (poo-flow-test-case "source replacement retains scalar contract"
+    (test-case "source replacement retains scalar contract"
       (let (session
             (gerbil-ascent-open-session
              (relational-program
@@ -757,7 +756,7 @@
          (gerbil-ascent-session-replace-source!
           session 'edge '((1 "mutable")))
          true)))
-    (poo-flow-test-case "unsafe head, invalid source and budget fail"
+    (test-case "unsafe head, invalid source and budget fail"
       (check-exception
        (gerbil-ascent-evaluate-program
         (relational-program

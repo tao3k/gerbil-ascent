@@ -1,8 +1,7 @@
 ;;; -*- Gerbil -*-
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
-(import (only-in :std/test test-suite check-equal? check-exception)
-        (only-in :core/observability/testing-case poo-flow-test-case)
+(import (only-in :std/test test-suite check-equal? check-exception test-case)
         :gerbil-ascent/core/finite-flow :gerbil-ascent/core/relation-view
         :gerbil-ascent/applications/polonius-paths)
 (export ascent-finite-flow-test)
@@ -36,7 +35,7 @@
     '(() (0) (1) (1 0) (0 1) (0 0) (1 1))))
 (def ascent-finite-flow-test
   (test-suite "Packed finite CFG propagation and immutable exact relation views"
-    (poo-flow-test-case "exhaustive two-node CFG blocker and seed combinations match independent closure"
+    (test-case "exhaustive two-node CFG blocker and seed combinations match independent closure"
       (let ((pairs '((a 0) (a 1))) (edges '((0 0) (0 1) (1 0) (1 1))))
         (def (subset xs mask)
           (filter-map (lambda (x i) (and (not (= 0 (bitwise-and mask (arithmetic-shift 1 i)))) x))
@@ -48,7 +47,7 @@
                     (bs (subset pairs block-mask)))
                 (check-view (gerbil-ascent-finite-flow '(a) '(0 1) ss es bs 2) (truth ss es bs))))
               (iota 4))) (iota 4))) (iota 16))))
-    (poo-flow-test-case "byte boundaries false values padding and conflicting repeated keys preserve exact selection"
+    (test-case "byte boundaries false values padding and conflicting repeated keys preserve exact selection"
       (let* ((facts (cons #f (iota 16))) (points '(#f #t))
              (seeds (map (lambda (x) (list x #f)) facts))
              (edges '((#f #t) (#t #f))) (blocks '((7 #t) (8 #t) (15 #t)))
@@ -63,7 +62,7 @@
         (gerbil-ascent-for-each-row (lambda (row) (set-car! row 'mutated)) view)
         (check-view view expected)
         (check-equal? (gerbil-ascent-admitted-row-parts? view) #f)))
-    (poo-flow-test-case "dense million-fact relation is represented by bitmap payload without tuple retention"
+    (test-case "dense million-fact relation is represented by bitmap payload without tuple retention"
       (let* ((facts (iota 512)) (points (iota 2048))
              (edges (map (lambda (p) (list p (+ p 1))) (iota 2047)))
              (seeds (map (lambda (x) (list x 0)) facts))
@@ -83,14 +82,14 @@
             (when (= (modulo (+ point 1) 256) 0)
               (displayln "FINITE-FLOW-VERIFIED points=" (+ point 1) " rows=" (* 512 (+ point 1)))
               (force-output)))) points)))
-    (poo-flow-test-case "compact Polonius exit relations match every independent full-rule control"
+    (test-case "compact Polonius exit relations match every independent full-rule control"
       (let (controls (call-with-input-file "t/qualification/fixtures/polonius/controls.sexp" read))
         (for-each (lambda (control)
           (let-values (((initialized uninitialized)
                         (gerbil-ascent-polonius-path-flows (cadr control) 1000)))
             (check-view initialized (cdr (assq 'path_maybe_initialized_on_exit (caddr control))))
             (check-view uninitialized (cdr (assq 'path_maybe_uninitialized_on_exit (caddr control)))))) controls)))
-    (poo-flow-test-case "cyclic child elaboration terminates and preserves independent assignment seeds"
+    (test-case "cyclic child elaboration terminates and preserves independent assignment seeds"
       (let (inputs '((child_path (a b) (b a)) (cfg_edge (0 1))
                      (path_assigned_at_base (a 0)) (path_moved_at_base)
                      (path_accessed_at_base) (path_is_var)))
@@ -98,7 +97,7 @@
           (check-view initialized '((a 0) (b 0) (a 1) (b 1)))
           (check-view uninitialized []))
         (check-exception (gerbil-ascent-polonius-path-flows inputs 3) true)))
-    (poo-flow-test-case "domain shape budget and cancellation failures publish no result and do not contaminate retry"
+    (test-case "domain shape budget and cancellation failures publish no result and do not contaminate retry"
       (check-exception (gerbil-ascent-finite-flow '(a a) '(0) [] [] [] 0) true)
       (check-exception (gerbil-ascent-finite-flow '(a) '(0) '((outside 0)) [] [] 1) true)
       (check-exception (gerbil-ascent-finite-flow '(a) '(0) '((a)) [] [] 1) true)

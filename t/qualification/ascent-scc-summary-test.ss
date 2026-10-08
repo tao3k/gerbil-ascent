@@ -2,8 +2,7 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(import (only-in :std/test check-equal? test-suite)
-        (only-in :core/observability/testing-case poo-flow-test-case)
+(import (only-in :std/test check-equal? test-suite test-case)
         (only-in :clan/poo/object .ref)
         (only-in :gerbil-ascent/core/dependency-graph gerbil-ascent-graph-components)
         (only-in :gerbil-ascent/t/qualification/ascent-graph-fixture
@@ -35,7 +34,7 @@
 
 (def ascent-scc-summary-test
   (test-suite "ASCENT rule dependency SCC summary"
-    (poo-flow-test-case "explicit DFS preserves exact SCC order for all three-node graphs"
+    (test-case "explicit DFS preserves exact SCC order for all three-node graphs"
       (for-each
        (lambda (mask)
          (let (graph (make-vector 3 []))
@@ -55,7 +54,7 @@
                   (vector-map reverse graph)
                   (vector-map (lambda (edges) (append edges edges)) graph)))))
        (iota 512)))
-    (poo-flow-test-case "deep chains and cycles retain edges and source order"
+    (test-case "deep chains and cycles retain edges and source order"
       (let* ((count 20000)
              (vertices (iota count))
              (chain (list->vector
@@ -69,7 +68,7 @@
         (vector-set! chain (- count 1) '(0))
         (check-equal? (gerbil-ascent-graph-components chain) (list vertices))
         (check-equal? (vector-ref chain (- count 1)) '(0))))
-    (poo-flow-test-case "recursive pair and acyclic rules have distinct SCCs"
+    (test-case "recursive pair and acyclic rules have distinct SCCs"
       (let (components (sccs))
         (check-equal? (length components) 3)
         (check-equal?

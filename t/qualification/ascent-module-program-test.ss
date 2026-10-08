@@ -2,10 +2,8 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(import (only-in :std/test check-equal? test-suite)
+(import (only-in :std/test check-equal? test-suite test-case)
         (only-in :clan/poo/object .o .mix .ref)
-        (only-in :core/observability/testing-case
-                 poo-flow-test-case)
         (only-in :gerbil-ascent/t/qualification/ascent-module-source
                  ascent-origin-reach-program)
         (only-in :gerbil-ascent/program/interface
@@ -15,7 +13,7 @@
 
 (def ascent-module-program-test
   (test-suite "ASCENT Gerbil module and lexical scope"
-    (poo-flow-test-case "reused module captures each caller origin"
+    (test-case "reused module captures each caller origin"
       (let* ((edges '((1 2) (2 3) (3 4) (2 5)))
              (first
               ((.ref (gerbil-ascent-evaluate-program
@@ -30,7 +28,7 @@
         (check-equal? (not (not (member '(1 5) first))) #t)
         (check-equal? (not (not (member '(2 5) second))) #t)
         (check-equal? (member '(1 2) second) #f)))
-    (poo-flow-test-case "POO slot refinement creates a second input snapshot"
+    (test-case "POO slot refinement creates a second input snapshot"
       (let* ((base (ascent-origin-reach-program '((1 2)) 1))
              (relation-values (.ref base 'relations))
              (edge (car relation-values))
@@ -48,7 +46,7 @@
         (check-equal? first '((1 2)))
         (check-equal? (length second) 2)
         (check-equal? (not (not (member '(1 3) second))) #t)))
-    (poo-flow-test-case "C4 combines independent ASCENT declaration refinements"
+    (test-case "C4 combines independent ASCENT declaration refinements"
       (let* ((base (ascent-origin-reach-program '((1 2)) 1))
              (relation-values (.ref base 'relations))
              (edge (car relation-values))

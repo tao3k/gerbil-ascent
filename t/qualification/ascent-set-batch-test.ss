@@ -1,6 +1,5 @@
 (import (only-in :std/list/list append-map)
-        (only-in :std/test test-suite check-equal?)
-        (only-in :core/observability/testing-case poo-flow-test-case)
+        (only-in :std/test test-suite check-equal? test-case)
         (only-in :gerbil-ascent/table/storage gerbil-ascent-set-batch-admit!)
         (only-in :gerbil-ascent/t/qualification/ascent-set-batch-reference
                  ascent-set-batch-reference-admit!))
@@ -51,7 +50,7 @@
 
 (def ascent-set-batch-test
   (test-suite "source-order Set batch admission"
-    (poo-flow-test-case "retained Set membership exposes every new frontier and no old occurrence"
+    (test-case "retained Set membership exposes every new frontier and no old occurrence"
       (let ((comparisons 0)
             (initials '(() ((0)) ((1)) ((2)) ((0) (1)) ((0) (2)) ((1) (2)) ((0) (1) (2)))))
         (def (check-retained log initial share?)
@@ -89,7 +88,7 @@
         (check-equal? comparisons 640)
         (check-retained '((#f) () (#f) (#t)) '((#t)) #t)
         (check-retained '((#f) () (#f) (#t)) '((#t)) #f)))
-    (poo-flow-test-case "finite logs and staged prefixes preserve independent goldens and row identity"
+    (test-case "finite logs and staged prefixes preserve independent goldens and row identity"
       (let (comparisons 0)
         (for-each
          (lambda (width)
@@ -109,16 +108,16 @@
             (logs width)))
          (iota 5))
         (check-equal? comparisons 3282)))
-    (poo-flow-test-case "nullary and heterogeneous rows preserve membership"
+    (test-case "nullary and heterogeneous rows preserve membership"
       (verify '(() () ()) 3 #t [])
       (verify '((1 "a") (2 #t) (1 "a")) 3 #t [])
       (verify '((1 "a") (2 #t) (1 "a")) 2 #t []))
-    (poo-flow-test-case "large duplicate batches preserve first occurrence identity"
+    (test-case "large duplicate batches preserve first occurrence identity"
       (let (log (reverse (map (lambda (n) (list (modulo n 16))) (iota 10000))))
         (verify log 10000 #t [])
         (verify log 10000 #f '((0)))
         (verify log 9999 #t [])))
-    (poo-flow-test-case "unique full logs retain the original spine"
+    (test-case "unique full logs retain the original spine"
       ;; iota supplies independent unique keys. Repeated linear membership in
       ;; gold would perform quadratic work solely to rediscover that property.
       (let (log (reverse (map list (iota 10000))))

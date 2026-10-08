@@ -1,8 +1,7 @@
 ;;; -*- Gerbil -*-
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
-(import (only-in :std/test test-suite check-equal?)
-        (only-in :core/observability/testing-case poo-flow-test-case)
+(import (only-in :std/test test-suite check-equal? test-case)
         (only-in :clan/poo/object .o .ref)
         (only-in :gerbil-ascent/program/interface
                  gerbil-ascent-program gerbil-ascent-relation gerbil-ascent-variable
@@ -36,7 +35,7 @@
 
 (def ascent-workspace-test
   (test-suite "Complete fixed-point workspace lifetime"
-    (poo-flow-test-case "retained timeout append replacement cycles preserve old snapshots"
+    (test-case "retained timeout append replacement cycles preserve old snapshots"
       (let* ((p (chain []))
              (old (ascent-workspace-reference-make-engine p #t))
              (new (gerbil-ascent-make-engine p #t))
@@ -65,7 +64,7 @@
              (check-equal? (rows old-first 'reach) '((0)))
              (check-equal? (rows new-first 'reach) '((0)))))
          (iota 16))))
-    (poo-flow-test-case "custom storage retains exact all and pending row spines across rounds"
+    (test-case "custom storage retains exact all and pending row spines across rounds"
       (let* ((calls [])
              (storage (.o (:: @ gerbil-ascent-set-storage-provider)
                           (.extend-rows
@@ -80,7 +79,7 @@
           (check-equal? calls old-calls)
           (check-equal? (rows new 'reach) (map list (iota 65)))
           (check-equal? (rows new 'copy) (rows old 'copy)))))
-    (poo-flow-test-case "generic callback rules reuse rounds with exact invocation order"
+    (test-case "generic callback rules reuse rounds with exact invocation order"
       (for-each
        (lambda (width)
          (let* ((calls [])

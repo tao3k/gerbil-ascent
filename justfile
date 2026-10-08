@@ -1377,24 +1377,58 @@ check-ready-components-formal:
     done
     echo 'READY-COMPONENTS-CHECK-OK'
 
-check-component-index-formal:
+# Quint authors the protocol; the TLC backend exhausts the finite fixture.
+prepare-quint:
     #!/usr/bin/env bash
     set -euo pipefail
-    if [[ -n "${TLC_BIN:-}" ]]; then tlc=("$TLC_BIN"); else tlc=(java -XX:+UseParallelGC -cp "${TLC_JAR:-.cache/ascent/tools/tla2tools-v1.7.4.jar}" tlc2.TLC); fi
+    tool=.cache/ascent/tools/quint
+    mkdir -p "$tool"
+    if [[ ! -x "$tool/node_modules/.bin/quint" ]] || ! cmp -s packages/proofs/quint/package-lock.json "$tool/package-lock.json"; then
+      cp packages/proofs/quint/package.json packages/proofs/quint/package-lock.json "$tool/"
+      npm ci --prefix "$tool" --ignore-scripts --no-audit --no-fund
+    fi
+    [[ "$("$tool/node_modules/.bin/quint" --version)" = 0.33.0 ]]
+
+check-component-index-formal: prepare-quint
+    #!/usr/bin/env bash
+    set -euo pipefail
+    quint=.cache/ascent/tools/quint/node_modules/.bin/quint
+    export QUINT_HOME="$PWD/.cache/ascent/tools/quint-backends"
+    export OUT_DIR="$PWD/.cache/ascent/quint-output"
     temp=$(mktemp -d)
-    trap 'rm -rf "$temp"' EXIT
-    # TLC extracts standard modules under java.io.tmpdir; concurrent JVMs
-    # must not truncate/delete each other's module files.
-    if [[ "${tlc[0]}" == java ]]; then tlc=(java "-Djava.io.tmpdir=$temp" "${tlc[@]:1}"); fi
-    "${tlc[@]}" -workers 1 -config packages/proofs/tla/ComponentIndex.cfg -metadir "$temp/correct" packages/proofs/tla/ComponentIndex.tla
+    server_pid=
+    cleanup() {
+      if [[ -n "$server_pid" ]]; then kill "$server_pid" 2>/dev/null || true; wait "$server_pid" 2>/dev/null || true; fi
+      rm -rf "$temp"
+    }
+    trap cleanup EXIT
+    printf '%s\n' '{"workers":1,"maxHeap":"-Xmx1G","stackSize":"-Xss32m"}' > "$temp/tlc.json"
+    "$quint" typecheck packages/proofs/quint/ComponentIndex.qnt
+    "$quint" verify packages/proofs/quint/ComponentIndex.qnt --main ComponentIndexFixture --backend tlc --apalache-version 0.62.1 --invariant safety --tlc-config "$temp/tlc.json" --verbosity 3
+    # Reuse one owned compiler service across controls, rather than starting a JVM
+    # per mutation. The correct run above also prepares the pinned backend.
+    port=$((20000 + $$ % 30000))
+    java -Xmx1G -Xss32m -XX:+UseParallelGC "-Djava.io.tmpdir=$temp" -jar "$QUINT_HOME/apalache-dist-0.62.1/apalache/lib/apalache.jar" server "--port=$port" > "$temp/server.out" 2>&1 &
+    server_pid=$!
+    ready=0
+    for ((attempt=0; attempt<30; attempt++)); do
+      if grep -q "server is running on port $port" "$temp/server.out"; then ready=1; break; fi
+      kill -0 "$server_pid" 2>/dev/null || break
+      sleep 1
+    done
+    if [[ "$ready" != 1 ]]; then cat "$temp/server.out" >&2; exit 1; fi
     for mutation in order early failed alias foreign reset held columns held-columns rebuild-columns extend-view failed-view rebuild-view; do
-      sed "s/Mutation = \"none\"/Mutation = \"$mutation\"/" packages/proofs/tla/ComponentIndex.cfg > "$temp/$mutation.cfg"
-      code=0
-      "${tlc[@]}" -workers 1 -config "$temp/$mutation.cfg" -metadir "$temp/$mutation" packages/proofs/tla/ComponentIndex.tla > "$temp/$mutation.out" 2>&1 || code=$?
+      sed "s/Mutation = \"none\"/Mutation = \"$mutation\"/" packages/proofs/quint/ComponentIndex.qnt > "$temp/ComponentIndex.qnt"
       invariant=Consistent
       if [[ "$mutation" = held || "$mutation" = held-columns ]]; then invariant=HeldStable; fi
       if [[ "$mutation" = extend-view || "$mutation" = failed-view || "$mutation" = rebuild-view ]]; then invariant=ViewConsistent; fi
-      [[ "$code" = 12 ]] && grep -q "Invariant $invariant is violated" "$temp/$mutation.out"
+      code=0
+      "$quint" verify "$temp/ComponentIndex.qnt" --server-endpoint "localhost:$port" --main ComponentIndexFixture --backend tlc --apalache-version 0.62.1 --invariant "$invariant" --tlc-config "$temp/tlc.json" --verbosity 3 > "$temp/$mutation.out" 2>&1 || code=$?
+      if [[ "$code" != 1 ]] || ! grep -q 'Invariant q_inv is violated' "$temp/$mutation.out" || ! grep -q 'found a counterexample' "$temp/$mutation.out"; then
+        cat "$temp/$mutation.out" >&2
+        echo "Expected Quint invariant counterexample: $mutation $invariant (exit $code)" >&2
+        exit 1
+      fi
       echo "COUNTEREXAMPLE-OK component-index-$mutation $invariant"
     done
     echo 'COMPONENT-INDEX-CHECK-OK'

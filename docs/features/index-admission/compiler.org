@@ -15,7 +15,7 @@ successful extension receives the prospective version. Equivalent atom
 identities share this revoked entry, while all/delta caches remain separate.
 Successful incremental extension retains its existing ordered bucket behavior.
 
-=ComponentIndex.tla= checks failed mutation, revocation, rebuild and retry in
+=ComponentIndex.qnt= checks failed mutation, revocation, rebuild and retry in
 addition to extension/install publication. Its fault control keeps an old valid
 version on a poisoned lookup and must violate =Consistent=. Native qualification
 reproduces that fault using the frozen prior implementation, then verifies the

@@ -65,7 +65,9 @@ ranked them by the question each can test in this implementation. Recent
 model papers lead the inference section; older PL work remains central where
 it supplies a precise language, fixed-point or incremental-evaluation law.
 The [reasoning-language and formal agenda](docs/research/agent-inference/reasoning-language-formal-agenda.org)
-connects ASCENT, MRR, Lean and TLA+ without treating their boundaries as proved integration.
+connects ASCENT, MRR and Lean without treating their boundaries as proved integration.
+The [protocol verification contract](docs/features/qualification/quint.org) adopts
+Quint authoring alongside Lean and records the remaining TLA source migration.
 The [pinned Wikidata fixture](docs/research/agent-inference/wikidata-scope-wd26.org)
 starts the executor check for branch-scoped exclusion over a finite real-KG extract.
 

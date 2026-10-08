@@ -367,3 +367,35 @@ and routing are unchanged in this slice. TLA+ retains lifecycle ownership;
 the unchanged =ComponentIndex= model is qualified separately, without adding
 positional or trie algebra to its state machine. See the
 [[file:qualification.org::*Trie construction qualification][feature qualification]]. No new performance samples are claimed.
+
+* B23 materialized per-node inventories (2026-10-08)
+
+=CurriedDictionary.lean= derives distinct child keys from the actual source
+rows at each path. Every node may enumerate these keys in a different order;
+only a permutation of that node's constructed keys is required. Eight laws
+prove unique/covered inventories, erasure to the functional trie, occurrence
+counts, collection/prefix permutations and exact ordinal-restored prefix order.
+This removes the earlier construction model's common global key inventory.
+
+The tests under =Tests/CurriedDictionaryTests.lean= use independently reordered
+siblings, duplicate-valued occurrences, absent/overlong prefixes and empty then
+nonempty numbered history. Duplicating or omitting a child inventory fails the
+occurrence specification. Native qualification separately checks heterogeneous
+Scheme keys and row identity. The laws cover arbitrary natural depths and
+source lists; native hash get/put/equality, enumeration and sort correspondence
+remain primitive implementation obligations.
+
+* Quint lifecycle authoring (2026-10-08)
+
+The shared-root lifecycle is authored in
+[[file:../../../packages/proofs/quint/ComponentIndex.qnt][ComponentIndex.qnt]]. It checks publication, private extension, failed mutation,
+rebuild, held readers and cached views. Lean owns dictionary construction and
+lookup algebra; Quint owns interleavings and protocol transitions. Neither is
+presented as a proof of the other's implementation correspondence.
+
+The four invariants and thirteen mutations are preserved. The finite input
+fixture is supplied by a module instance; no generation cap is imposed on the
+library. =just check-component-index-formal= performs Quint type/effect checking
+and exhaustive TLC exploration through Quint's verification backend. Generated
+TLA is a temporary checker representation, not an authored repository model.
+See the [[file:../qualification/quint.org][protocol migration contract]] for the remaining feature owners.

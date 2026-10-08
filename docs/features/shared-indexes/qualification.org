@@ -68,3 +68,49 @@ The source commit and GitHub checks must be read from the associated PR;
 these command results do not substitute for final-commit CI. Native per-node
 hash extraction, sort primitive correspondence and application benefits remain
 separate gates. The TLA+ model retains lifecycle ownership and was unchanged.
+
+* Materialized dictionary qualification
+
+The 2026-10-08 continuation derives per-node inventories from source rows and
+permits different visitation orders at different paths. Eight new laws and
+positive/negative examples were admitted by the full Lean build.
+
+| Command | Result |
+|---------+--------|
+| lake build CurriedDictionary Tests.CurriedDictionaryTests | Eight laws and examples passed; exit 0 |
+| just check-lean-proofs | Full package passed; 115 jobs; exit 0 |
+| just test-file t/qualification/ascent-index-entry-test.ss | 29 cases; OK; exit 0; 41 seconds |
+| just test-native t/qualification/ascent-index-entry-test.ss | 29 cases; NATIVE-MODULES-OK and OK; parent exit 0; 9 seconds execution |
+
+Native compilation admitted 85 production, 91 support and one test module.
+The new fixture covers all prefixes of a three-column physical layout over
+49 rows with boolean, numeric, symbol, string, list and vector fields. It checks
+ordered occurrence identities, warm reuse, separately allocated duplicate
+values, incremental extension and stable held prefix results. A first source
+fixture referenced an unavailable =append-map=; that run was rejected, the
+fixture was corrected to existing list primitives, and both gates reran.
+Execution time excludes compilation/linking; no performance gain is claimed.
+
+* Quint lifecycle migration qualification
+
+=just check-component-index-formal= passed the typed Quint source and exhausted
+673 generated states, 196 distinct states and depth 11, matching the previous
+fixture. All four original safety predicates are checked together. Each of the
+thirteen mutation controls separately produced the requested invariant violation
+and expected Quint exit status. Parse/type, backend and service failures do not
+satisfy the negative-control gate. The original authored TLA/CFG pair is removed.
+
+The owner-record state factors the earlier fourteen owner-indexed functions:
+selecting a record field at an owner recovers each original function entry.
+Each of the five actions preserves the corresponding guard and field update;
+record spread preserves every unchanged field. This structural correspondence,
+matching graph counts and preserved defect controls provide migration evidence;
+counts alone are not a general equivalence theorem.
+
+The final command exited 0 in 115 seconds with an already installed tool cache.
+It includes typechecking, transcompilation, exhaustive exploration and all
+thirteen controls, and excludes dependency installation/download. One owned
+compiler service is reused across the controls and stopped by the recipe trap.
+Java 21 or newer is required by the pinned backend; CI installs Java 21.
+This is protocol qualification, not an ASCENT runtime benchmark. The other
+seventeen authored models remain visible in the feature migration inventory.

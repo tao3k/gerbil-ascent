@@ -63,3 +63,12 @@ tests add sparse layouts at depths one through five with all prefixes, row
 identity and held readers. See [[file:proofs.org::*B23 constructed curried trie and prefix occurrences (2026-10-08)][the construction bridge]] and
 [[file:qualification.org::*Trie construction qualification][feature qualification]]. Per-node native hash extraction, primitive
 correspondence and complete application benefits remain distinct obligations.
+
+* Per-node dictionaries and lifecycle verification
+
+The section 5.5 nested-dictionary representation is now modeled by constructed
+inventories at each path, with independent sibling enumeration orders, rather
+than a common global key list. [[file:proofs.org::*B23 materialized per-node inventories (2026-10-08)][Lean establishes occurrence-preserving lookup]];
+native Scheme checks its concrete observable result. Quint explores shared-root
+publication and failure recovery. The paper's representation argument is not
+promoted to a measured memory or application-speed claim without matched data.

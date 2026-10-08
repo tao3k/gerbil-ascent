@@ -176,15 +176,18 @@ jobs:
             echo 'Execution logs and log license sidecars must not be committed.' >&2
             exit 1
           fi
-      - name: Install fixed Lean toolchain
+      - name: Install Lean and protocol verification tools
         run: |
           sudo apt-get update
-          sudo apt-get install -y elan just
+          sudo apt-get install -y elan just nodejs npm openjdk-21-jre-headless
           elan toolchain install leanprover/lean4:v4.34.0
-      - name: Check Lean contracts, TLA publication and counterexamples
+      - name: Check Lean contracts, Quint/TLA protocols and counterexamples
         env:
           ASCENT_TLC_GENERATION_CUTOFF: '4'
-        run: just check-formal
+        run: |
+          export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
+          export PATH="$JAVA_HOME/bin:$PATH"
+          just check-formal
       - name: Qualify Python byte IO and process supervision
         run: python3 -m unittest discover -s python/tests -v
   native-and-oracle:

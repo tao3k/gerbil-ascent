@@ -29,7 +29,7 @@ cross-feature scope and ordering in the [[file:../scheme-paper-closure.org][clos
 | Provider Iteration | [[file:provider-iteration/acceptance.org][acceptance]] / [[file:provider-iteration/byods.org][byods]] / [[file:provider-iteration/design.org][design]] / [[file:provider-iteration/proofs.org][proofs]] |
 | Provider Rectangles | [[file:provider-rectangles/design.org][design]] |
 | Provider Views | [[file:provider-views/acceptance.org][acceptance]] / [[file:provider-views/byods.org][byods]] / [[file:provider-views/design.org][design]] / [[file:provider-views/proofs.org][proofs]] |
-| Qualification | [[file:qualification/acceptance.org][acceptance]] / [[file:qualification/byods.org][byods]] / [[file:qualification/compiler.org][compiler]] / [[file:qualification/design.org][design]] / [[file:qualification/proofs.org][proofs]] |
+| Qualification | [[file:qualification/acceptance.org][acceptance]] / [[file:qualification/byods.org][byods]] / [[file:qualification/compiler.org][compiler]] / [[file:qualification/design.org][design]] / [[file:qualification/proofs.org][proofs]] / [[file:qualification/quint.org][Quint]] |
 | Representation | [[file:representation/acceptance.org][acceptance]] / [[file:representation/byods.org][byods]] / [[file:representation/compiler.org][compiler]] / [[file:representation/proofs.org][proofs]] |
 | Shared Indexes | [[file:shared-indexes/acceptance.org][acceptance]] / [[file:shared-indexes/byods.org][byods]] / [[file:shared-indexes/compiler.org][compiler]] / [[file:shared-indexes/proofs.org][proofs]] / [[file:shared-indexes/qualification.org][qualification]] |
 | Source Lifecycle | [[file:source-lifecycle/byods.org][byods]] / [[file:source-lifecycle/compiler.org][compiler]] / [[file:source-lifecycle/proofs.org][proofs]] |

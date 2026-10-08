@@ -563,7 +563,7 @@ cache/version installation, which is a separate qualification boundary.
 
 =RoundAdmission.lean= proves ordered bucket extension equals rebuilding over
 =batch ++ old=, including the reverse-traversal law, for an arbitrary Boolean
-key predicate. =ComponentIndex.tla= explores two independent private owners and
+key predicate. =ComponentIndex.qnt= explores two independent private owners and
 an extension/install pair, rejecting wrong bucket order and premature install.
 The two owners and fixed batch are exploration fixtures, not runtime bounds.
 Native pointer aliasing, hash key encoding and VM mutation are not refined by

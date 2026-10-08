@@ -134,3 +134,14 @@ Native extraction of per-node child inventories and coherent hash operations
 remains explicit. Tests retain missing/duplicate inventory controls and native
 sparse layouts at depths one through five; these fixture depths are not runtime
 limits. TLA+ continues to own cache and publication lifecycle separately.
+
+* Per-node dictionary and protocol acceptance (2026-10-08)
+
+The constructed per-node inventory obligation now has eight Lean laws and
+native heterogeneous-key conformance in the existing index-entry Suite.
+The exact law, primitive correspondence and measured command boundaries are
+recorded in [[file:proofs.org::*B23 materialized per-node inventories (2026-10-08)][the construction bridge]] and [[file:qualification.org::*Materialized dictionary qualification][qualification]].
+Shared-root lifecycle authoring has moved to Quint, with the same invariants
+and defect controls. The [[file:../qualification/quint.org][migration inventory]] distinguishes this completed model
+from the remaining protocol sources. This does not close arbitrary native hash
+implementation correspondence or establish a whole-application speedup.

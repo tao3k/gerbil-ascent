@@ -20,7 +20,7 @@ to one engine/worker and one all/delta lane. Logical aliases extend one root
 once, and a failed partial extension revokes that root's readable version until
 rebuilding from committed rows. Native exhaustive small matching, direct row
 projection, expression-order and actor Session controls exercise these paths.
-=ComponentIndex.tla= owns publication, failed-version recovery, alias-double
+=ComponentIndex.qnt= owns publication, failed-version recovery, alias-double
 extension and foreign-owner interference; it does not repeat lookup algebra.
 The [[file:../../evidence/scheme-index-sharing-20261006/receipt.json][receipt]] binds both collections to source and retains rejected cost outcomes.
 These results do not imply a universal native matching/trie extraction theorem

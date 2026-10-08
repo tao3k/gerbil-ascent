@@ -1,0 +1,63 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+#+TITLE: Qualification: Quint and Lean responsibilities
+
+* Authoring decision
+
+Protocol specifications migrate from handwritten TLA+ to typed Quint modules.
+Lean continues to prove semantic and algebraic statements over arbitrary data.
+Quint covers transitions, ownership, publication, resource accounting and
+adversarial interleavings. Scheme tests establish observable correspondence to
+native code. A modern authoring language improves specification maintenance;
+it does not, by itself, strengthen the underlying theorem or implementation.
+
+The [[https://quint.sh/docs/model-checkers][official checker documentation]] distinguishes exhaustive finite TLC exploration
+from Apalache's bounded symbolic checks. The normal acceptance gate uses
+=quint verify --backend tlc=. Random =quint run= samples are diagnostic and do
+not discharge the exhaustive gate. Temporal/fairness properties must survive
+migration explicitly; preservation of safety alone is insufficient for models
+that currently check temporal properties.
+
+Quint 0.33.0 and its transitive dependencies are pinned in the package manifest
+and lockfile under =packages/proofs/quint=. These JSON files are consumed by
+=npm ci= to reproduce the tool, rather than duplicating benchmark receipts.
+Installation stays in the ignored tool cache. The transcompiler/backend is
+Apalache 0.62.1. Generated checker files and execution logs are not committed.
+The existing Justfile remains the verification entry point.
+
+* Feature migration inventory
+
+| Feature | Protocol modules | Authoring status |
+|---------+------------------+------------------|
+| Shared indexes | ComponentIndex | Quint; four invariants, thirteen defect controls |
+| Provider admission | ProviderAdmission | TLA source awaiting migration |
+| Provider frontiers | ProviderFrontier, TransitiveComponents | TLA sources awaiting migration |
+| Provider replay | ProviderReplay | TLA source awaiting migration |
+| Provider views and routing | ProviderViews, ProviderRouting | TLA sources awaiting migration |
+| Lattice projection | LatticeProjection | TLA source awaiting migration |
+| Component scheduling | ReadyComponents, ActorRound | TLA sources awaiting migration |
+| Actor capacity and lifecycle | ActorTestPool, ActorRoundCredits, ActorSession | TLA sources awaiting migration |
+| Oracle transport | OracleTransport | TLA source awaiting migration |
+| Session publication | NativeSessionPublication, PositiveNonmembershipSession, ReaderLifetime, SessionTransaction | TLA sources awaiting migration |
+
+This is an inventory of eighteen original modules, not a claim that all have
+already been converted. Remaining handwritten specifications keep their active
+acceptance gates until an equivalent Quint module qualifies, then are removed.
+New protocol work is authored in Quint.
+
+* Migration acceptance
+
+For each feature, preserve constants, initial states, transitions, stuttering,
+fairness/temporal properties, invariants and every expected defect control.
+Finite fixture limits belong to qualification configuration and must not become
+production generation limits. Compare reachable graph counts when the state
+representation is bijective. Otherwise document the refinement relation and
+which traces/properties it preserves; matching counts alone is insufficient.
+
+Reject parse, type/effect, backend, startup and resource failures. A negative
+control passes only when the requested property produces an actual invariant
+counterexample, with its expected exit status and typed checker diagnostic.
+A timeout or arbitrary nonzero exit is not a successful defect discovery.
+Lean tests remain under =Tests/=; no duplicated protocol theorem is introduced
+solely to inflate coverage. Preserve dated historical TLA results as historical
+results. Final-commit GitHub checks remain a separate delivery gate.

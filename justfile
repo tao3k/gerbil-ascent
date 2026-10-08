@@ -57,9 +57,9 @@ _test-file path heap='2G':
         compiled="$ASCENT_TEST_LIBRARY/gerbil-ascent/${test_module%.ss}.ssi"
         test -f "$compiled"
         test_module="$compiled"
-        runner=({{ gerbil_command }} {{ gerbil_test_runtime_options }} test)
+        runner=({{ gxi_command }} {{ gerbil_test_runtime_options }} :gerbil/tools/gxtest)
     else
-        runner=({{ gerbil_command }} -:max-heap={{ heap }},debug=q test)
+        runner=({{ gxi_command }} -:max-heap={{ heap }},debug=q :gerbil/tools/gxtest)
     fi
     timeout "${ASCENT_GXTEST_TIMEOUT:-120s}" "${runner[@]}" -v 5 "$test_module" 2>&1 | tee "$output_file"
     if grep -E 'ERROR (CHECK|CASE|HARNESS|MODULE)|Heap overflow|Stack overflow' "$output_file" >/dev/null; then exit 1; fi
@@ -71,7 +71,7 @@ _test-file path heap='2G':
 
 # Ordinary test discovery and execution belong to Gerbil.
 test heap='2G':
-    just test-file t/qualification "{{ heap }}"
+    ASCENT_GXTEST_TIMEOUT="${ASCENT_GXTEST_TIMEOUT:-180s}" just test-file t/qualification "{{ heap }}"
 
 # One compiler invocation; upstream make owns threads, ordering and currentness.
 prepare-test-library:

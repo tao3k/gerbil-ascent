@@ -71,6 +71,22 @@ The dated sections below retain earlier experiments. References to
 =test-native=, =test-native-suite=, process pools, registry or entry cache describe
 retired revisions and are not current execution instructions.
 
+The later Ubuntu source-directory run completed 80 Suites without a Case error
+before the inherited 120-second single-Suite limit expired. This is a rejected
+run. A 3 GiB complete-directory control passed in 100.63 seconds, providing no
+speed gain over the earlier 2 GiB receipt. Increasing heap size was therefore
+not selected as the fix. The full directory command now uses the explicitly
+approved 180-second aggregate bound; focused file tests retain 120 seconds.
+The heap remains 2 GiB and all Cases and verdict checks remain intact.
+
+The source command directly invokes =gxi :gerbil/tools/gxtest=, the upstream
+module entry, with no new runner file. An independent AOT =gxtest= probe exposed
+an evaluator/bootstrap defect: without an explicit installation root it rejected
+source import syntax; with the root selected it reported =__eval-import= as
+unbound. The direct Gxi focused source probe passed all eight artifact Cases. The final\nfull-directory recipe passed 89 Suites and 844 Cases in 103.94 seconds\n(90.84 user, 2.55 system); false-assertion and empty-Suite controls both rejected.
+These failures were sent to the authorized SDK workstream as real source-input
+controls. They are not accepted test results or compiler speed gains.
+
 * Ordinary directory tests and memory policy (2026-10-08)
 
 Ordinary qualification Cases use upstream =std/test= directly. Thirty-seven

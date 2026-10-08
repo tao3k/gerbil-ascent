@@ -265,4 +265,7 @@
           ;; binding. Compiler exceptions propagate; no partial binary qualifies.
           (execute-pending-compile-jobs!)
           (artifact-main "bind")))))
-    (else (error "invalid test library build mode" args))))
+    (else (error "invalid test library build mode" args)))
+  ;; Compilation and artifact binding have completed and the lane is closed.
+  ;; Compiler imports may initialize idle library threads; this CLI is finite.
+  (exit 0))

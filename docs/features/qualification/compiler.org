@@ -20,7 +20,7 @@ prerequisite is shared: invoking compiled semantics and performance contracts
 together prepares once. Normal compiler subprocesses belong to upstream Gerbil;
 this build entry neither launches test workers nor supervises test commands.
 
-The semantic roster contains 89 Suites and 844 Cases. Seven performance Suites
+Before the parallel eqrel rebase, the semantic roster contained 89 Suites and 844 Cases. Seven performance Suites
 retain 10 Cases, including the original lifecycle benchmark moved unchanged to
 its performance namespace. Native compiled semantics and performance contracts
 both passed with a 2 GiB heap and the original 120-second deadline. Standard
@@ -86,6 +86,27 @@ source import syntax; with the root selected it reported =__eval-import= as
 unbound. The direct Gxi focused source probe passed all eight artifact Cases. The final\nfull-directory recipe passed 89 Suites and 844 Cases in 103.94 seconds\n(90.84 user, 2.55 system); false-assertion and empty-Suite controls both rejected.
 These failures were sent to the authorized SDK workstream as real source-input
 controls. They are not accepted test results or compiler speed gains.
+
+The subsequent rebase preserves the parallel eqrel publication and Steensgaard
+integration commits through =02051e5=. Automatic discovery now admits 90 semantic
+Suites and 849 Cases plus seven performance Suites and 10 Cases, all passing.
+The complete Gxi directory recipe passed 90 Suites and 849 Cases in 130.36 seconds
+(94.56 user, 2.74 system). These are correctness receipts; contention and changed
+production code preclude a matched performance claim against earlier receipts.
+
+The finite library/DSL build CLI exits explicitly only after upstream make's
+pending compiler barrier, source checks, artifact binding where applicable, and
+lane closure. The prior import diagnostic completed every interface import but
+did not terminate within its bound. No successful artifact is inferred from a
+stalled invocation; build exceptions continue to bypass the success exit.
+
+The post-rebase SS scenario invocation is rejected: table-expression semantic
+checks passed, but candidate p95 was 5.96 ms against the unchanged 2 ms bound.
+The 1,000-sample baseline phase took 51.23 seconds. Concurrent host observations
+showed load averages 42.69/51.59/43.76 and a Rust compiler using about five cores.
+This receipt neither proves a production regression nor establishes performance
+closure. The fixed budget remains unchanged; the independent Ubuntu run must
+qualify the submitted source. Earlier 17-Case passes belong to earlier snapshots.
 
 * Ordinary directory tests and memory policy (2026-10-08)
 

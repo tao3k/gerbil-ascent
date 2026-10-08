@@ -411,3 +411,55 @@ report only =propext=; the existing completed-frame theorem retains its
 standard-only axiom report. The earlier solver-route files and imports have
 been removed because they did not migrate the existing consumer.
 
+
+* Canonical package artifacts and preparation ownership
+
+Production modules, compiled test Suites, reference modules and AOT objects
+now use the standard active package library, =$GERBIL_PATH/lib=. The default
+workspace prefix is =.gerbil=. A caller selecting another prefix selects the
+same library for every Just recipe and the native builder; it does not create
+a second production output tree. =.cache/ascent/native-library= retains only
+qualification metadata, its advisory lock and executable entries.
+
+The package build and native preparation both delegate dependency freshness to
+upstream =std/make=. The production module roster remains in native preparation
+so standalone qualification rebuilds changed production code. In a CI run,
+=check-policy= builds that roster first, and qualification must reuse it. CI
+rejects a subsequent production compile message rather than treating repeated
+compilation as acceptable preparation. Test bodies, source inventories and
+publication checks retain their existing ownership.
+
+CI invokes compiled semantics, allocation contracts, shared-index measurements
+and SS scenarios in one Just invocation. Their common =prepare-test-library=
+dependency runs once. DSL executable construction remains a separate source
+freeze and binding boundary. Compiler measurements report inventory-before,
+upstream make and inventory-after separately; overlapping compiler jobs are
+not summed into a fabricated wall-clock breakdown.
+
+Application cache restoration precedes package construction, so restored
+artifacts cannot overwrite a library already built from this checkout. Cache
+keys bind source and toolchain content; upstream make still checks freshness.
+Cross-checkout timestamp-driven rebuilds remain a distinct upstream cache
+problem and are not claimed to be eliminated by unifying output ownership.
+
+AOT benchmark builders no longer invoke =compile-module= after upstream
+=make= has compiled the same entry. They link those admitted module objects
+with =compile-exe= and retain the compiler completion barrier and source-change
+rejection. Native preparation also reports the number of production interfaces
+rewritten during its make call, derived from the declared production roster.
+
+The first canonical-prefix compiled qualification rejected the Homebrew
+=gerbil test= dispatcher: no Case output appeared before the unchanged
+120-second timeout (exit 124). The compiler had already completed with
+=production-rebuilt=0. Compiled and SS purpose groups now use the same standard
+=gxi :gerbil/tools/gxtest= entry as source discovery; this does not introduce
+a project runner or change the test roster. Dispatcher diagnosis remains
+separate from artifact reuse and compiler completion.
+
+Direct Gxi on the same host subsequently reached 58 Cases and two complete
+Suites before the unchanged 120-second limit rejected the run. A process
+sample during startup placed all 890 samples in Gambit dynamic loading through
+=dlopen -> dyld mapSegments -> fcntl=. This is concrete OS loader evidence,
+not proof of a dispatcher-only defect or a compiler deadlock. Neither rejected
+run qualifies the complete test roster. Ubuntu CI is the independent acceptance
+gate; no deadline was widened and no warm retry is promoted to a cold speedup.

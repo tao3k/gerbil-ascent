@@ -74,11 +74,11 @@ native tests:
 #+begin_src sh
 GERBIL_PATH="$PWD/.cache/ascent/sdk" GERBIL_LOADPATH="$PWD" \
   gerbil env gxi -:max-heap=1G,debug=q t/performance/index-sharing-build.ss \
-  "$PWD/.cache/ascent/native-library/lib" "$PWD/.cache/ascent/index-sharing/benchmark"
+  "$PWD/.gerbil/lib" "$PWD/.cache/ascent/index-sharing/benchmark"
 
 for scenario in wide sparse small scalar empty; do
   .cache/ascent/index-sharing/benchmark -:max-heap=1G,debug=q "$scenario" \
-    "$PWD/.cache/ascent/native-library/lib" ".cache/ascent/index-sharing/$scenario.sexp"
+    "$PWD/.gerbil/lib" ".cache/ascent/index-sharing/$scenario.sexp"
 done
 #+end_src
 

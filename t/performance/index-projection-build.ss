@@ -12,6 +12,6 @@
           srcdir: (current-directory) libdir: library build-deps: (path-expand ".cache/ascent/native-library/build-deps"))
     (let ((source "t/performance/index-projection-benchmark.ss")
           (options [output-dir: library output-file: binary parallel: #t verbose: #t invoke-gsc: #t static: #t]))
-      (compile-module source [invoke-gsc: #f options ...])
+      ;; make already compiled this module; link its admitted objects directly.
       (compile-exe source options) (execute-pending-compile-jobs!))
     (unless (artifact-matching-sources? sources (artifact-sources)) (error "projection sources changed during compilation"))))

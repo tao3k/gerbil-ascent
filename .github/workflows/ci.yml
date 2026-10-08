@@ -42,7 +42,10 @@ jobs:
       - name: Restore declared dependency build
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
-          path: .gerbil
+          path: |
+            .gerbil
+            !.gerbil/lib/gerbil-ascent
+            !.gerbil/lib/static/gerbil-ascent__*
           key: gerbil-dependencies-${{ runner.os }}-${{ runner.arch }}-${{ steps.capacity.outputs.toolchain }}-${{ hashFiles('gerbil.pkg', 'tools/ci/install-gerbil-v19-release.sh') }}
       - name: Remove restored application outputs
         run: |
@@ -55,17 +58,27 @@ jobs:
           gerbil pkg dir --add git.cons.io/mighty-gerbils/gerbil-directory
           gerbil deps --install
           gerbil env gerbil interactive -e '(begin (import :asp-gerbil-scheme/building-api :asp-gerbil-scheme/benchmark-api) (displayln "ascent-dependencies-ready"))'
-      - name: Build Scheme package
-        run: just check-policy
       - name: Restore content-bound native artifacts
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
-          path: .cache/ascent/native-library
+          path: |
+            .cache/ascent/native-library
+            .gerbil/lib/gerbil-ascent
+            .gerbil/lib/static/gerbil-ascent__*
           key: ascent-native-${{ runner.os }}-${{ runner.arch }}-${{ github.job }}-${{ matrix.shard }}-${{ steps.capacity.outputs.toolchain }}-${{ hashFiles('**/*.ss', '!manifest.ss', '!.gerbil/**', '!.ci/**', '!.cache/**', 'justfile', 'gerbil.pkg', '.github/workflows/ci.yml') }}
+      - name: Build Scheme package
+        run: just check-policy
       - name: Qualify semantics and performance with one GxTest per purpose
-        run: just test-compiled test-performance-contracts
+        run: |
+          set -o pipefail
+          just test-compiled test-performance-contracts performance-index-sharing performance 2>&1 | tee /tmp/ascent-native-qualification.out
+          grep -Fx 'BUILD-TEST-LIBRARY production-rebuilt=0' /tmp/ascent-native-qualification.out
+          if grep -E '^\.\.\. compile (core|table|program|candidate|interface|temporal|applications)/' /tmp/ascent-native-qualification.out; then
+            echo 'Production modules were compiled again after the package build.' >&2
+            exit 1
+          fi
       - name: Qualify complete standard Gerbil source tests
-        run: GERBIL_LOADPATH="$PWD/.cache/ascent/native-library/lib${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" just test
+        run: GERBIL_LOADPATH="$PWD/.gerbil/lib${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" just test
       - name: Qualify runtime source view loading
         run: just check-source-views
       - name: Build native DSL closure entry
@@ -74,12 +87,8 @@ jobs:
         run: just check-dsl-closure
       - name: Measure native retained replacement against fresh evaluation
         run: just check-retained-benefit
-      - name: Qualify native shared-index lifecycle against frozen reference
-        run: just performance-index-sharing
       - name: Qualify actual native compiler source closure
         run: just check-model-source-closure
-      - name: Qualify ASCENT SS scenarios
-        run: just performance
   oracle:
     runs-on: ubuntu-latest
     timeout-minutes: 120
@@ -117,7 +126,10 @@ jobs:
       - name: Restore declared dependency build
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
-          path: .gerbil
+          path: |
+            .gerbil
+            !.gerbil/lib/gerbil-ascent
+            !.gerbil/lib/static/gerbil-ascent__*
           key: gerbil-dependencies-${{ runner.os }}-${{ runner.arch }}-${{ steps.capacity.outputs.toolchain }}-${{ hashFiles('gerbil.pkg', 'tools/ci/install-gerbil-v19-release.sh') }}
       - name: Remove restored application outputs
         run: |
@@ -130,13 +142,16 @@ jobs:
           gerbil pkg dir --add git.cons.io/mighty-gerbils/gerbil-directory
           gerbil deps --install
           gerbil env gerbil interactive -e '(begin (import :asp-gerbil-scheme/building-api :asp-gerbil-scheme/benchmark-api) (displayln "ascent-dependencies-ready"))'
-      - name: Build Scheme package
-        run: just build
       - name: Restore content-bound native artifacts
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
-          path: .cache/ascent/native-library
+          path: |
+            .cache/ascent/native-library
+            .gerbil/lib/gerbil-ascent
+            .gerbil/lib/static/gerbil-ascent__*
           key: ascent-native-${{ runner.os }}-${{ runner.arch }}-${{ github.job }}-${{ matrix.shard }}-${{ steps.capacity.outputs.toolchain }}-${{ hashFiles('**/*.ss', '!manifest.ss', '!.gerbil/**', '!.ci/**', '!.cache/**', 'justfile', 'gerbil.pkg', '.github/workflows/ci.yml') }}
+      - name: Build Scheme package
+        run: just build
       - name: Qualify runtime source view loading
         run: just check-source-views
       - name: Enforce Rust warnings and ASP policy

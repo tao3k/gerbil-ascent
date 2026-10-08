@@ -9,6 +9,7 @@
         (only-in "../t/native/artifact-admission.ss" artifact-main artifact-sources artifact-matching-sources? artifact-directory!)
         (only-in "../build.ss" gerbil-ascent-library-modules)
         (only-in :asp-gerbil-scheme/src/build-api/core-capacity initialize-native-build-core-capacity!))
+(def package-library (path-expand "lib" (gerbil-path)))
 (def test-cache (path-expand ".cache/ascent/native-library"))
 (def (with-test-lane thunk)
   (artifact-directory! test-cache)
@@ -34,8 +35,16 @@
      "t/performance/ascent-relation-view-performance-test.ss"
      "t/performance/scheme-library-lifecycle-performance-test.ss")))
 
+(def (build-elapsed started)
+  (exact->inexact (/ (- (current-jiffy) started) (jiffies-per-second))))
+
+(def (production-output-time module)
+  (let (path (path-expand (string-append "gerbil-ascent/" module ".ssi") package-library))
+    (and (file-exists? path)
+         (time->seconds (file-info-last-modification-time (file-info path))))))
+
 (def (prepare-test-library! (tests []))
-  (let* ((library (path-expand "lib" test-cache))
+  (let* ((library package-library)
          (module-file (path-expand "modules.sexp" test-cache))
          (modules (append gerbil-ascent-library-modules
                           '("t/performance/native-library" "t/performance/ascent-ss-profile"
@@ -181,16 +190,27 @@
     (let* ((consumers (map path-strip-extension tests))
            (all (append modules (filter (lambda (module) (not (member module modules))) consumers)))
            (started (current-jiffy))
-           (sources (artifact-sources)))
+           (sources (artifact-sources))
+           (production-before (map production-output-time gerbil-ascent-library-modules)))
       (displayln "BUILD-TEST-LIBRARY modules=" (length all)
                  " cores=" (initialize-native-build-core-capacity!))
       (force-output)
+      (displayln "BUILD-TEST-LIBRARY-PHASE inventory-before wall-seconds="
+                 (build-elapsed started))
       ;; Upstream make owns dependency order, compiler threads and currentness.
       ;; The complete original Suite roster compiles in one gxi process.
-      (make all srcdir: (current-directory) libdir: library
-            build-deps: (path-expand "build-deps" test-cache))
-      (unless (artifact-matching-sources? sources (artifact-sources))
-        (error "source changed during test library compilation"))
+      (let (phase (current-jiffy))
+        (make all srcdir: (current-directory) libdir: library
+              build-deps: (path-expand "build-deps" test-cache))
+        (displayln "BUILD-TEST-LIBRARY-PHASE make wall-seconds=" (build-elapsed phase)))
+      (let (phase (current-jiffy))
+        (unless (artifact-matching-sources? sources (artifact-sources))
+          (error "source changed during test library compilation"))
+        (displayln "BUILD-TEST-LIBRARY-PHASE inventory-after wall-seconds=" (build-elapsed phase)))
+      (displayln "BUILD-TEST-LIBRARY production-rebuilt="
+                 (length (filter (lambda (same?) (not same?))
+                                 (map equal? production-before
+                                      (map production-output-time gerbil-ascent-library-modules)))))
       (displayln "BUILD-TEST-LIBRARY-OK wall-seconds="
                  (exact->inexact (/ (- (current-jiffy) started) (jiffies-per-second))))
       (force-output))))
@@ -232,18 +252,19 @@
         ;; Output-dir precedence binds the executable to this current Library,
         ;; even when GERBIL_PATH also contains an older installed ASCENT.
         (let ((source "t/model/study.ss")
-              (options [output-dir: (path-expand "lib" test-cache)
+              (options [output-dir: package-library
                         output-file: (path-expand "dsl-closure" test-cache)
                         parallel: #t verbose: #t invoke-gsc: #t static: #t]))
           ;; This lane owns the static cache. timeout terminates the previous
           ;; build process group, but gxc's existence-based object locks can
           ;; survive SIGTERM. Recover only this lane's object locks, never
           ;; dependency-prefix locks or the advisory lane lock.
-          (let (static-dir (path-expand "lib/static" test-cache))
+          (let (static-dir (path-expand "static" package-library))
             (when (file-exists? static-dir)
               (for-each
                (lambda (name)
-                 (when (string-suffix? ".o.lock" name)
+                 (when (and (string-prefix? "gerbil-ascent__" name)
+                            (string-suffix? ".o.lock" name))
                    (displayln "RECOVER-OBJECT-LOCK " name)
                    (delete-file (path-expand name static-dir))))
                (directory-files static-dir))))

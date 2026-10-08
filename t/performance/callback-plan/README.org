@@ -78,12 +78,12 @@ Use the installed project SDK; no Gerbil source rebuild is required.
 #+begin_src sh
 GERBIL_PATH="$PWD/.cache/ascent/sdk" GERBIL_LOADPATH="$PWD" \
   gerbil env gxi -:max-heap=1G,debug=q t/performance/callback-plan-build.ss \
-  "$PWD/.cache/ascent/native-library/lib" "$PWD/.cache/ascent/callback-plan/benchmark"
+  "$PWD/.gerbil/lib" "$PWD/.cache/ascent/callback-plan/benchmark"
 
 result=0
 for scenario in call-three call-four call-general guarded-three guarded-four guard-wide guard-small; do
   .cache/ascent/callback-plan/benchmark -:max-heap=1G,debug=q "$scenario" \
-    "$PWD/.cache/ascent/native-library/lib" ".cache/ascent/callback-plan/$scenario.sexp" || result=1
+    "$PWD/.gerbil/lib" ".cache/ascent/callback-plan/$scenario.sexp" || result=1
 done
 exit "$result"
 #+end_src

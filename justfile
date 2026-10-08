@@ -950,7 +950,7 @@ _performance:
 
 check-model-source-closure:
     {{ gxi_command }} t/native/artifact-admission.ss check
-    timeout 120s .cache/ascent/native-library/dsl-closure {{ gerbil_test_runtime_options }} --source-closure
+    {{ test_library_environment }} timeout 120s .cache/ascent/native-library/dsl-closure {{ gerbil_test_runtime_options }} --source-closure
 
 ascent-pairs:
     @timeout 90s {{ gerbil_command }} {{ gerbil_test_runtime_options }} t/qualification/ascent-binary-program-pairs.ss

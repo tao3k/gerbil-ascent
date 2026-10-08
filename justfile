@@ -18,7 +18,7 @@ gerbil_package_prefix := '${GERBIL_PATH:-' + justfile_directory() + '/.gerbil}'
 gxi_command := gerbil_environment + ' GERBIL_PATH="' + gerbil_package_prefix + '" PATH="' + gerbil_package_prefix + '/bin:$PATH" gxi'
 
 gerbil_test_runtime_options := "-:max-heap=1G,debug=q"
-test_library_environment := 'ASCENT_TEST_LIBRARY="' + justfile_directory() + '/.cache/ascent/native-library/lib" ASCENT_PERFORMANCE_MODULES="' + justfile_directory() + '/.cache/ascent/native-library/modules.sexp" GERBIL_LOADPATH="' + justfile_directory() + '/.cache/ascent/native-library/lib:' + justfile_directory() + '${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" '
+test_library_environment := 'GERBIL_PATH="' + gerbil_package_prefix + '" ASCENT_TEST_LIBRARY="' + justfile_directory() + '/.cache/ascent/native-library/lib" ASCENT_PERFORMANCE_MODULES="' + justfile_directory() + '/.cache/ascent/native-library/modules.sexp" GERBIL_LOADPATH="' + justfile_directory() + '/.cache/ascent/native-library/lib:' + justfile_directory() + '${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" '
 quint_backend_sha256 := "880c0b2b72354816f12e9a9755829f2907071e9a181ffea1937954c23d54739d"
 
 default:
@@ -50,6 +50,7 @@ _test-file path heap='2G':
     trap 'rm -f "$output_file"' EXIT
     started=$SECONDS
     printf '[ascent-test] START %s\n' "{{ path }}"
+    export GERBIL_PATH="{{ gerbil_package_prefix }}"
     export GERBIL_LOADPATH="${ASCENT_TEST_LIBRARY:+$ASCENT_TEST_LIBRARY:}${GERBIL_LOADPATH:+$GERBIL_LOADPATH:}{{ justfile_directory() }}"
     test_module="{{ path }}"
     if [[ -n "${ASCENT_TEST_LIBRARY:-}" ]]; then

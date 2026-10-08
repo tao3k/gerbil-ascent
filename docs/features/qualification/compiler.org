@@ -5,6 +5,55 @@
 Feature owner: [[file:../index.org][feature index]]. This page retains the original
 source dates and qualification boundaries. Current evidence is commit-specific.
 
+* Complete test preparation and bounded execution (2026-10-08)
+
+The installed Gerbil =gxtest= implementation and
+[[https://cons.io/reference/dev/test.html][official testing documentation]] support one invocation over files or a
+directory. They do not require one operating-system process per source module.
+The previous =just test= recipe nevertheless launched 89 module invocations
+serially. A directory-wide source probe under the unchanged 1 GiB heap failed
+with heap overflow after 20.89 seconds; it also reported a failed Check before
+the overflow. This probe is rejected, not a qualification pass.
+
+The ordinary recipe now accepts a worker capacity, uses the existing native
+capacity projection for =auto=, and overlaps standard =gerbil test= module
+invocations through =xargs=. Module expansion remains isolated; each invocation
+retains its own Case/output/exit gates and the original 120-second deadline.
+The full source inventory passed: 89 modules, 846 Cases, exit 0, 113.93 seconds
+with four workers. This is an observed complete run, not a matched claim of a
+specific speedup over the user's ten-minute report. CI runs this complete source
+inventory after native preparation supplies its compiled reference dependencies.
+
+Native preparation previously allowed its executable-backed library cache hit
+only for one requested module. It now also admits complete pools, binding the
+ordered entire roster in the existing receipt key. Reordering, adding, removing
+or replacing requested modules rejects admission. Each entry mode retains its
+last admitted executable; switching rosters deliberately misses rather than
+providing an artifact store for every prior roster. An empty roster raises a typed
+Error. Source, compiled dependency, environment, toolchain, generated entry and
+binary content checks remain in force. Test verdicts are never cached.
+
+On a preparation miss, production and reference dependency layers finish before
+Suite consumers start. Existing actors schedule bounded independent compiler
+processes. Each child has a private =mktemp= specification removed on success or
+failure, a 1 GiB heap and one compiler core; this avoids shared-specification
+races and nested core oversubscription. Failed consumers stop pending admission
+and active workers drain through the existing actor lifecycle.
+
+The complete native inventory comprises 89 qualification and five performance
+modules. Its first qualification passed all 94 modules and 852 Cases in 411.62
+seconds. Compiler lifecycle output verified 94 consumer completions, a maximum
+of four active consumers and zero consumers left active. The identical repeat
+passed all 94 modules and 852 Cases in 67.18 seconds, reporting both library and
+entry cache hits with zero compilation/link invocations. Cold and hot runs are
+different workloads; these numbers do not establish a cold-build speedup.
+Subsequent recipe changes intentionally invalidate the old content-bound entry;
+CI must qualify the submitted complete source snapshot independently.
+
+The frozen compiler comparison in gerbil-bazel retains responsibility for the
+Darwin C/object regeneration hypothesis. Its baseline must not incorporate
+these uncommitted scheduling changes or attribute their benefit to Gambit.
+
 * Test preparation and CLI startup (2026-10-08)
 
 A warm =just test-native t/qualification/ascent-positive-plan-test.ss= run

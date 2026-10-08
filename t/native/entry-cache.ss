@@ -7,7 +7,11 @@
         (only-in :gerbil/runtime/system gerbil-home)
         (only-in "artifact-admission.ss" artifact-digest artifact-sources
           artifact-read-json artifact-matching-sources?))
-(export entry-inputs entry-current? bind-entry!)
+(export entry-inputs entry-current? bind-entry! entry-request-key)
+;; The ordered complete roster binds pool admission as well as single entries.
+(def (entry-request-key paths)
+  (when (null? paths) (error "empty native entry roster"))
+  (if (null? (cdr paths)) (car paths) (json->string paths)))
 (def (generated? path)
   (or (string-contains path "__single-test.") (string-contains path "/single-test.")
       (string-contains path "__test-pool.") (string-contains path "/test-pool.")

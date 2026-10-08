@@ -1,12 +1,27 @@
 ;;; -*- Gerbil -*-
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
-(import :std/test :std/misc/process "entry-cache.ss")
+(import :std/test :std/misc/process (only-in :std/error Error?) "entry-cache.ss")
 (export entry-cache-test)
 (def (put path text)
   (call-with-output-file [path: path truncate: #t] (lambda (out) (display text out))))
 (def entry-cache-test
   (test-suite "Native executable content admission"
+    (test-case "pool admission binds the ordered complete roster"
+      (let* ((root (path-expand (string-append ".cache/ascent/tmp/roster-" (number->string (current-jiffy)))))
+             (binary (path-expand "binary" root)) (receipt (path-expand "receipt.json" root))
+             (inputs (hash ("source" "A"))) (paths '("one.ss" "two.ss")))
+        (run-process/batch ["mkdir" "-p" root])
+        (try
+          (put binary "binary")
+          (bind-entry! receipt binary "generated" inputs (entry-request-key paths))
+          (check-equal? (entry-current? receipt binary "generated" inputs (entry-request-key paths)) #t)
+          (for-each (lambda (changed)
+            (check-equal? (entry-current? receipt binary "generated" inputs (entry-request-key changed)) #f))
+            '( ("two.ss" "one.ss") ("one.ss") ("one.ss" "two.ss" "three.ss") ("one.ss" "other.ss")))
+          (check-equal? (entry-request-key '("one.ss")) "one.ss")
+          (check-exception (entry-request-key '()) Error?)
+          (finally (run-process/batch ["rm" "-rf" root])))))
     (test-case "changed binary inputs generated entry and malformed receipt cannot hit"
       (let* ((root (path-expand (string-append ".cache/ascent/tmp/cache-" (number->string (current-jiffy)))))
              (binary (path-expand "binary" root)) (receipt (path-expand "receipt.json" root))

@@ -36,6 +36,8 @@ jobs:
         run: just test-file t/qualification/ascent-actor-session-test.ss
       - name: Qualify Scheme rules
         run: just test-native-suite
+      - name: Qualify complete standard Gerbil source tests
+        run: GERBIL_LOADPATH="$PWD/.cache/ascent/native-library/lib${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" just test
       - name: Qualify runtime source view loading
         run: just check-source-views
       - name: Qualify native actor pool lifecycle

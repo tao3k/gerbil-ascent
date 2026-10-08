@@ -83,9 +83,12 @@ test-native-parallel jobs='auto':
     {{ native_qualification }} test "{{ jobs }}" parallel
 
 # Ordinary test discovery and execution belong to Gerbil.
-test:
-    # Each standard Gerbil invocation releases its source expansion context.
-    for path in t/qualification/*-test.ss; do just test-file "$path"; done
+test jobs='auto':
+    #!/usr/bin/env bash
+    set -euo pipefail
+    # Retain each module's 1 GiB expansion isolation while overlapping workers.
+    workers="$({{ native_qualification }} test-jobs "{{ jobs }}")"
+    printf '%s\0' t/qualification/*-test.ss | xargs -0 -n 1 -P "$workers" just test-file
 
 # Explicit compiled qualification retains byte binding and module process isolation.
 test-native-suite jobs='auto':

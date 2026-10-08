@@ -4,7 +4,7 @@
 (import (only-in :std/misc/process run-process)
         :gerbil/expander
         (only-in "artifact-admission.ss" artifact-digest artifact-matching-sources?)
-        (only-in "entry-cache.ss" entry-inputs entry-current? bind-entry!))
+        (only-in "entry-cache.ss" entry-inputs entry-current? bind-entry! entry-request-key))
 (export prepare-native-tests!)
 
 ;;; Imports and original Suite/callback bindings are frozen before execution.
@@ -73,7 +73,7 @@
     ;; changed source, compiled dependency, toolchain or binary is a miss.
     (let* ((generated (artifact-digest source))
            (inputs (or admitted-inputs (entry-inputs library)))
-           (receipt (string-append binary ".json")) (key (if single? (car paths) "")))
+           (receipt (string-append binary ".json")) (key (entry-request-key paths)))
       (if (entry-current? receipt binary generated inputs key)
         (begin (displayln "NATIVE-ENTRY-CACHE-HIT") (force-output))
         (begin

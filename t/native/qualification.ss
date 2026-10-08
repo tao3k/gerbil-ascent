@@ -9,7 +9,7 @@
         (only-in :std/make make)
         :std/misc/process :std/os/flock :std/os/device
         (only-in "native-registry.ss" prepare-native-tests!)
-        (only-in "entry-cache.ss" entry-inputs entry-current?)
+        (only-in "entry-cache.ss" entry-inputs entry-current? entry-request-key)
         (only-in "actor-pool.ss" run-actor-pool!)
         (only-in "module-process.ss" run-test-child)
         (only-in "artifact-admission.ss" artifact-main artifact-sources artifact-matching-sources? artifact-digest)
@@ -137,16 +137,27 @@
 ;; all Suites in the coordinator's heap. std/make still owns dependency order,
 ;; currentness and parallel work inside each layer; coverage is unchanged.
 ;; : (-> ModulePaths LibraryPath Void)
-(def (compile-test-layer! modules library)
+(def (compile-test-layer! modules library (emit #f))
   (unless (null? modules)
-    (let (spec (path-expand "compile-layer.sexp" test-cache))
-      (call-with-output-file [path: spec truncate: #t]
-        (lambda (out) (write modules out) (newline out)))
-      (run-process/batch
-       ["gxi" "-:max-heap=1G,debug=q" "t/native/qualification.ss"
-        "compile-test-layer" spec library]))))
+    ;; Each child owns an immutable specification, including concurrent Suites.
+    (let (spec (car (string-split (run-process ["mktemp" (path-expand "compile-layer.XXXXXX" test-cache)]) #\newline)))
+      (try
+        (call-with-output-file [path: spec truncate: #t]
+          (lambda (out) (write modules out) (newline out)))
+        (let (command
+               (append (if emit ["env" "GERBIL_BUILD_CORES=1"] [])
+                 ["gxi" "-:max-heap=1G,debug=q" "t/native/qualification.ss"
+                  "compile-test-layer" spec library]))
+          (if emit
+            (run-process command stderr-redirection: #t
+              coprocess: (lambda (process)
+                (let loop ()
+                  (let (line (read-line process))
+                    (unless (eof-object? line) (emit line) (loop))))))
+            (run-process/batch command)))
+        (finally (delete-file spec))))))
 
-(def (prepare-test-library! (tests []))
+(def (prepare-test-library! (tests []) (jobs 1))
   (let* ((library (path-expand "lib" test-cache))
          (module-file (path-expand "modules.sexp" test-cache))
          (modules (append gerbil-ascent-library-modules
@@ -279,21 +290,21 @@
       (set! modules (append modules (filter (lambda (module) (not (member module modules))) support))))
     (call-with-output-file [path: module-file truncate: #t]
       (lambda (out) (write modules out) (newline out)))
-    ;; A content-admitted entry also binds its compiled library. An unchanged
-    ;; focused request needs no fresh std/make compiler processes. Full pools
-    ;; retain their existing per-Suite isolation on preparation.
+    ;; A content-admitted entry binds the compiled library and ordered roster.
+    ;; Unchanged single requests and complete pools need no compiler processes.
     (add-load-path! library)
     (setenv "ASCENT_TEST_LIBRARY" library)
     (setenv "ASCENT_PERFORMANCE_MODULES" module-file)
     (setenv "GERBIL_LOADPATH"
       (string-append library ":" (current-directory) ":" (getenv "GERBIL_LOADPATH" "")))
-    (let* ((source (path-expand "single-test.ss" test-cache))
-           (binary (path-expand "single-test" test-cache))
-           (inputs (and (= (length tests) 1) (file-exists? source)
+    (let* ((single? (= (length tests) 1))
+           (source (path-expand (if single? "single-test.ss" "test-pool.ss") test-cache))
+           (binary (path-expand (if single? "single-test" "test-pool") test-cache))
+           (inputs (and (pair? tests) (file-exists? source)
                         (entry-inputs library)))
-           (reusable? (and (= (length tests) 1) (file-exists? source)
+           (reusable? (and (pair? tests) (file-exists? source)
              (entry-current? (string-append binary ".json") binary
-               (artifact-digest source) inputs (car tests)))))
+               (artifact-digest source) inputs (entry-request-key tests)))))
       (if reusable?
         (displayln "NATIVE-LIBRARY-CACHE-HIT")
         (begin
@@ -304,13 +315,22 @@
           (compile-test-layer!
            (filter (lambda (module) (not (member module gerbil-ascent-library-modules))) modules)
            library)
-          ;; A Suite is the consumer ownership boundary. Linux qualification showed
-          ;; that accumulating all Suite expansion contexts still exhausts the same
-          ;; 1 GiB heap after production/support succeeded. Release those contexts
-          ;; per Suite; do not reduce coverage or increase the heap contract.
-          (for-each
-           (lambda (module) (compile-test-layer! (list module) library))
-           (filter (lambda (module) (not (member module modules))) (map path-strip-extension tests)))
+          ;; Preserve per-Suite expansion isolation, but overlap independent
+          ;; consumers after their complete production/reference closure exists.
+          ;; One compiler core per worker avoids nested CPU oversubscription.
+          (let* ((consumers (filter (lambda (module) (not (member module modules)))
+                              (map path-strip-extension tests)))
+                 (status (run-actor-pool! consumers jobs
+                           (lambda (module emit)
+                             (try
+                               (emit (string-append "COMPILE-SUITE-START " module))
+                               (compile-test-layer! [module] library emit)
+                               (emit (string-append "COMPILE-SUITE-OK " module))
+                               0
+                               (catch (failure)
+                                 (emit (string-append "COMPILE-SUITE-FAIL " module " " (object->string failure)))
+                                 70))))))
+            (unless (zero? status) (error "native Suite compilation failed" status)))
         ))
       (force-output)
       ;; This lane owns all library writers. Carry the admitted snapshot only
@@ -328,8 +348,8 @@
     (when (null? paths) (error "empty native test pool"))
     (unless (= (length paths) (length (foldl (lambda (path seen) (if (member path seen) seen (cons path seen))) [] paths)))
       (error "duplicate native test pool key"))
-    (prepare-test-library! paths)
-    (let* ((source (prepare-native-tests! paths test-cache))
+    (let* ((inputs (prepare-test-library! paths jobs))
+           (source (prepare-native-tests! paths test-cache #f inputs))
            (binary (getenv "ASCENT_NATIVE_TEST_ENTRY"))
            (digest (artifact-digest binary))
            (generated (artifact-digest source)))
@@ -353,6 +373,7 @@
        (unless (and (list? modules) (andmap string? modules))
          (error "invalid native compilation layer" spec))
        (add-load-path! library)
+       (initialize-native-build-core-capacity!)
        (make modules srcdir: (current-directory) libdir: library
              build-deps: (path-expand "build-deps" test-cache))
        (displayln "COMPILE-LAYER-OK modules=" (length modules))

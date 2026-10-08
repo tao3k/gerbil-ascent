@@ -1,0 +1,62 @@
+{
+  "date": "2026-10-08",
+  "base_commit": "de79986f6a277ec0ad5c511aea432cf223e9adc7",
+  "paper": {"url": "https://kmicinski.com/assets/byods.pdf", "section": "5.5", "printed_pages": "264:16-17"},
+  "scope": "Constructed logical-to-physical prefix key adaptation and native malformed-request regression",
+  "production_algorithm_changed": false,
+  "source_sha256": {
+    "table/index-sharing.ss": "bfccc2a1755304c7bb8a9c60e651fc08dddb290b05ce810309f7e41534431eaf",
+    "packages/proofs/lean/IndexedPositiveTraversal.lean": "f2269cbe002896c46580fb3129d8bae9af96dd2289155717bc63e1018e24cfc4",
+    "packages/proofs/lean/Tests/IndexedPositiveTraversalTests.lean": "0e2efe86aeac9454943ce262ddcd3f4b19c81672b9679cb78a74f1696f92a9d7",
+    "t/qualification/ascent-index-entry-test.ss": "769ba59ec1940bf2b5e749d3c4630aef70ac238867790fc82aadf38d405c33da",
+    "packages/proofs/tla/ComponentIndex.tla": "754529df7a166d7231bd3b7fd891b7748078051ceb149b36cb0523fbf913ab3c",
+    "packages/proofs/tla/ComponentIndex.cfg": "95ee544c9925066d940d041dcf8f2696e163d217d4695e8c3069697fd13d3765"
+  },
+  "lean": {
+    "command": "just check-lean-proofs",
+    "exit_code": 0,
+    "jobs": 113,
+    "new_laws": ["key_value_mapped", "key_value_absent", "key_value_pair", "adapt_key_overlong", "adapt_key_mapped", "adapted_prefix_exact"],
+    "namespace": "Ascent.IndexedPositiveTraversal.SharedIndex",
+    "axioms": ["propext", "Quot.sound"],
+    "tests_directory": "packages/proofs/lean/Tests",
+    "controls": ["false is present", "absent column", "reversed logical key", "empty prefix", "overlong prefix", "duplicate uncovered columns", "missing positional value", "wrong physical order"]
+  },
+  "scheme": {
+    "command": "just test-file t/qualification/ascent-index-entry-test.ss",
+    "exit_code": 0,
+    "cases": 27,
+    "seconds": 32,
+    "final_marker": "OK",
+    "new_control": "Six malformed requests are rejected before publication, after publication and after extension; valid cached and held row spines survive"
+  },
+  "native_scheme": {
+    "command": "just test-native t/qualification/ascent-index-entry-test.ss",
+    "exit_code": 0,
+    "cases": 27,
+    "execution_seconds": 5,
+    "compiled_layers": [85, 91, 1],
+    "markers": ["NATIVE-MODULES-OK", "OK"],
+    "timing_boundary": "Execution excludes source admission, compiler cache preparation, compilation and linking"
+  },
+  "tla": {
+    "command": "just check-component-index-formal",
+    "exit_code": 0,
+    "generated_states": 673,
+    "distinct_states": 196,
+    "depth": 11,
+    "expected_counterexamples": 13,
+    "final_marker": "COMPONENT-INDEX-CHECK-OK",
+    "model_changed": false,
+    "role": "Cache admission, private extension, failed mutation, rebuild and held-reader stability",
+    "initial_environment_failure": "Sandbox disallowed internal RMI socket; unchanged command succeeded with required execution permission"
+  },
+  "remaining_contracts": [
+    "Logical key comparison theorem assumes prefix coverage and fields supplied by the declared function; arbitrary distinct positional lookup has a separate pair-membership law",
+    "Native exceptions are modeled as absence; exception types and messages are not proved",
+    "Native hash/trie extraction and primitive equality/sort implementation correspondence",
+    "Rectangle visitor refinement and complete paper application benefits"
+  ],
+  "performance": "No new performance samples; production algorithm unchanged",
+  "github": {"pull_request": "https://github.com/tao3k/gerbil-ascent/pull/1", "ci_boundary": "New-commit CI must be verified separately from these command receipts"}
+}

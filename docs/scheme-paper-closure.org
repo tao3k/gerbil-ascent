@@ -1077,7 +1077,14 @@ across 64 retained histories, independent direct-column truth, frozen reference,
 cache identity and held spines. The [[file:scheme-research-proof-audit.org::*B23 curried collection, ordinal restoration and cached views (2026-10-08)][implementation/proof bridge]] and
 [[file:evidence/scheme-curried-collection-20261008/receipt.json][acceptance receipt]] record the exact source and evidence boundaries.
 
-Native trie/hash extraction, arbitrary curried adapter construction, rectangle
+Constructed logical key search and physical-prefix adaptation now have six
+executable Lean laws in =IndexedPositiveTraversal.SharedIndex=. The
+[[file:scheme-research-proof-audit.org::*B23 constructed logical key adaptation (2026-10-08)][adapter bridge]] derives the physical comparison from the supplied logical
+field function and prefix coverage; distinct-column positional lookup also
+admits arbitrary values. Native malformed-key tests protect cold, warm and
+extended views. TLA+ retains exclusive ownership of the lifecycle protocol.
+
+Native trie/hash extraction, complete native adapter extraction, rectangle
 visitor correspondence and complete paper application benefits retain their
 gates. The existing benchmark compares a cumulative lifecycle against its older
 frozen reference; it does not attribute all observed gains to this change.

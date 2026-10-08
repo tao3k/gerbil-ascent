@@ -887,5 +887,18 @@ cached views through private extension, failure and rebuild, retaining the
 held-reader invariant. Native qualification enumerates all six three-column
 permutations and every prefix depth over 64 source histories with direct-column
 truth and frozen-reference comparisons. See [[file:../../scheme-research-proof-audit.org::*B23 curried collection, ordinal restoration and cached views (2026-10-08)][the proof/implementation bridge]] and
-[[file:../../evidence/scheme-curried-collection-20261008/receipt.json][the source-bound receipt]]. Full native hash/trie refinement, arbitrary adapter
+[[file:../../evidence/scheme-curried-collection-20261008/receipt.json][the source-bound receipt]]. Full native hash/trie refinement, complete native adapter
 extraction and complete application benefit remain separate acceptance gates.
+
+* Section 5.5 constructed logical keys (2026-10-08)
+
+The native logical-to-physical key search now has executable Lean definitions
+and six laws. Covered logical fields construct the physical prefix key;
+comparison of that key implements the original logical constraints. Distinct
+columns admit arbitrary positional values, including false fields. Missing
+columns and overlong requests have explicit rejection laws. Native malformed
+requests are checked across cold, warm and extended views without changing
+published results. See [[file:../../scheme-research-proof-audit.org::*B23 constructed logical key adaptation (2026-10-08)][the adapter bridge]] and
+[[file:../../evidence/scheme-key-adaptation-20261008/receipt.json][the source-bound receipt]]. The TLA+ lifecycle model remains separate from
+positional algebra. Complete native extraction and paper-scale application
+benefits are not established by these laws.

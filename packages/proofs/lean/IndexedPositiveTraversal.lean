@@ -502,7 +502,100 @@ theorem indexed_pivot_output_sound (body : List (Atom Value)) (pivot : Nat)
 logical column set covers exactly one physical prefix. Native matching/planning
 and trie ordinal collection are separate executable obligations. -/
 namespace SharedIndex
-variable {V : Type} [DecidableEq V]
+variable {V : Type}
+
+/-- The native adapter searches columns and values together. Absence is
+separate from every field value, including Scheme's false value. -/
+def keyValue (column : Nat) : List Nat → List V → Option V
+  | head :: columns, value :: values =>
+      if column = head then some value else keyValue column columns values
+  | _, _ => none
+
+/-- Mirror the physical-prefix recursion rather than silently truncating an
+overlong request with `take`. Native failure is represented by `none`. -/
+def adaptKey : List Nat → Nat → List Nat → List V → Option (List V)
+  | _, 0, _, _ => some []
+  | [], _ + 1, _, _ => none
+  | column :: physical, count + 1, logical, values => do
+      let value ← keyValue column logical values
+      let tail ← adaptKey physical count logical values
+      pure (value :: tail)
+
+theorem key_value_mapped (column : Nat) (logical : List Nat) (wanted : Nat → V)
+    (member : column ∈ logical) :
+    keyValue column logical (logical.map wanted) = some (wanted column) := by
+  induction logical with
+  | nil => simp at member
+  | cons head tail ih =>
+    by_cases same : column = head
+    · subst column; simp [keyValue]
+    · have inside : column ∈ tail := (List.mem_cons.mp member).resolve_left same
+      simpa [keyValue, same] using ih inside
+
+theorem key_value_absent (column : Nat) (logical : List Nat) (values : List V)
+    (absent : column ∉ logical) : keyValue column logical values = none := by
+  induction logical generalizing values with
+  | nil => cases values <;> rfl
+  | cons head tail ih =>
+    cases values with
+    | nil => rfl
+    | cons value values =>
+      have different : column ≠ head := fun same => absent (by simp [same])
+      have missing : column ∉ tail := fun member => absent (List.mem_cons_of_mem _ member)
+      simpa [keyValue, different] using ih values missing
+
+/-- Distinct logical columns admit arbitrary positional values, without
+requiring them to have been manufactured by a field function. -/
+theorem key_value_pair (column : Nat) (value : V) (logical : List Nat)
+    (values : List V) (unique : logical.Nodup)
+    (paired : (column, value) ∈ logical.zip values) :
+    keyValue column logical values = some value := by
+  induction logical generalizing values with
+  | nil => simp at paired
+  | cons head tail ih =>
+    cases values with
+    | nil => simp at paired
+    | cons first rest =>
+      rcases List.mem_cons.mp paired with same | inside
+      · cases same; simp [keyValue]
+      · have distinct := List.nodup_cons.mp unique
+        have different : column ≠ head := by
+          intro same
+          exact distinct.1 (same ▸ (List.of_mem_zip inside).1)
+        simpa [keyValue, different] using ih rest distinct.2 inside
+
+theorem adapt_key_overlong (physical logical : List Nat) (values : List V)
+    (count : Nat) (overlong : physical.length < count) :
+    adaptKey physical count logical values = none := by
+  induction physical generalizing count with
+  | nil => cases count <;> simp_all [adaptKey]
+  | cons head tail ih =>
+    cases count with
+    | zero => simp at overlong
+    | succ count =>
+      have shorter : tail.length < count := by simpa using overlong
+      simp [adaptKey, ih count shorter]
+
+theorem adapt_key_mapped (physical logical : List Nat) (count : Nat)
+    (wanted : Nat → V) (bounded : count ≤ physical.length)
+    (covered : ∀ column ∈ physical.take count, column ∈ logical) :
+    adaptKey physical count logical (logical.map wanted) =
+      some ((physical.take count).map wanted) := by
+  induction count generalizing physical with
+  | zero => simp [adaptKey]
+  | succ count ih =>
+    cases physical with
+    | nil => simp at bounded
+    | cons head tail =>
+      have headMember : head ∈ logical := covered head (by simp)
+      have tailCovered : ∀ column ∈ tail.take count, column ∈ logical := by
+        intro column member
+        exact covered column (by simp [member])
+      have tailBounded : count ≤ tail.length := by simpa using bounded
+      simp [adaptKey, key_value_mapped head logical wanted headMember,
+        ih tail tailBounded tailCovered]
+
+variable [DecidableEq V]
 
 def Matches (columns : List Nat) (row : List V) (wanted : Nat → Option V) : Prop :=
   ∀ column ∈ columns, row[column]? = wanted column
@@ -535,6 +628,22 @@ theorem prefix_lookup (logical permutation : List Nat) (depth : Nat)
   congr 1
   funext row
   simp only [matches_coverage logical _ coverage row wanted]
+
+/-- The constructed positional adapter supplies exactly the key whose physical
+comparison implements the logical constraints. This does not assume an adapter
+oracle, a key permutation, or a precomputed physical key. -/
+theorem adapted_prefix_exact (logical physical : List Nat) (depth : Nat)
+    (bounded : depth ≤ physical.length)
+    (coverage : ∀ column, column ∈ logical ↔ column ∈ physical.take depth)
+    (wanted : Nat → V) (row : List V) :
+    ∃ values, adaptKey physical depth logical (logical.map wanted) = some values ∧
+      ((physical.take depth).map (fun column => row[column]?) = values.map some ↔
+        Matches logical row (fun column => some (wanted column))) := by
+  refine ⟨(physical.take depth).map wanted, ?_, ?_⟩
+  · exact adapt_key_mapped physical logical depth wanted bounded
+      (fun column member => (coverage column).mpr member)
+  · rw [List.map_map, List.map_eq_map_iff]
+    exact (matches_coverage logical _ coverage row _).symm
 
 /-- Incremental native admission prepends the reversed insertion batch. The
 same logical view distributes over the two ordered spines without deduplication. -/

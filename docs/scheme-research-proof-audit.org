@@ -2565,3 +2565,36 @@ truth, CPU/allocation counters and predeclared gates remain unchanged. Physical
 memory and whole-application speedup require separate measurements.
 GitHub's Scheme job repeats this native lifecycle gate through that Justfile
 entry; no Python supervisor or additional test entry layer is introduced.
+
+* B23 constructed logical key adaptation (2026-10-08)
+
+Section 5.5 of the [[https://kmicinski.com/assets/byods.pdf][primary paper]] separates a logical index from its nested
+physical dictionary. =SharedIndex.keyValue= now mirrors the native =value-of=
+recursion through parallel column/value lists; =adaptKey= mirrors =adapt=
+through a requested physical prefix. Missing fields and overlong requests yield
+=none= in the model and raise in Scheme. =some false= remains a valid field.
+This failure abstraction does not equate exception messages or types.
+
+Six laws connect these executable definitions to the existing filter semantics:
+=key_value_mapped= and =key_value_absent= establish successful and absent
+searches; =key_value_pair= derives first-match lookup for arbitrary positional
+values under distinct logical columns; =adapt_key_overlong= rejects requests
+beyond physical depth; =adapt_key_mapped= constructs the physical key from a
+covered logical key; =adapted_prefix_exact= derives physical key comparison
+equivalence to the logical row constraints. No physical key oracle or adapter
+permutation is a premise. Prefix coverage and the supplied field function
+remain explicit; this does not extract native hash/trie state.
+
+Examples and wrong-order, missing-value, duplicate-column and overlong controls
+remain in =Tests/IndexedPositiveTraversalTests.lean=. The native suite additionally
+checks six malformed requests before cache publication, after publication and
+after extension, and preserves valid cached spines and held old readers.
+It retains the independent direct-filter and frozen-reference corpus.
+
+The ordinary Justfile commands qualify this bridge. Lean owns positional
+semantics; the unchanged TLA+ =ComponentIndex= owns extension, failure, rebuilding,
+view admission and held-reader stability. Repeating its existing 13 fault
+controls provides lifecycle regression evidence without duplicating the key
+algebra in TLA+. The [[file:evidence/scheme-key-adaptation-20261008/receipt.json][acceptance receipt]] records results and source identity.
+Native trie extraction, primitive hash/equality/sort implementation contracts,
+rectangle visitors and complete paper applications remain separate gates.

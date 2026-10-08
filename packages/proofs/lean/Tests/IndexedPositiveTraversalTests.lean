@@ -172,4 +172,30 @@ example : SharedIndex.MatchingCertificate.Matching
     (SharedIndex.MatchingCertificate.partitionEdges [[0, 1, 2], [3]]) := by
   apply SharedIndex.MatchingCertificate.partition_matching
   decide
+-- A false field is a successful lookup, not an absent column. Physical order
+-- differs from logical order; overlong and uncovered requests are rejected.
+example : SharedIndex.keyValue 0 [2, 0, 1] [true, false, true] = some false := by decide
+example : SharedIndex.keyValue 3 [2, 0, 1] [true, false, true] = none := by decide
+example : SharedIndex.adaptKey [1, 0, 2] 2 [0, 1] [false, true] =
+    some [true, false] := by decide
+example : SharedIndex.adaptKey [1, 0, 2] 0 [] ([] : List Bool) = some [] := by decide
+example : SharedIndex.adaptKey [1, 0] 3 [0, 1, 2] [false, true, false] = none := by decide
+example : SharedIndex.adaptKey [1, 0] 2 [0, 0] [false, true] = none := by decide
+example : SharedIndex.adaptKey [1, 0] 2 [0, 1] [false] = none := by decide
+example : SharedIndex.adaptKey [1, 0] 2 [0, 1] [false, true] ≠
+    some [false, true] := by decide
+example : ∃ values,
+    SharedIndex.adaptKey [1, 0, 2] 2 [0, 1] ([0, 1].map (fun c => c == 1)) = some values ∧
+    (([1, 0, 2].take 2).map (fun c => [false, true, false][c]?) = values.map some ↔
+      SharedIndex.Matches [0, 1] [false, true, false] (fun c => some (c == 1))) := by
+  apply SharedIndex.adapted_prefix_exact
+  · decide
+  · intro column; simp only [List.take_succ_cons, List.take_zero, List.mem_cons,
+      List.not_mem_nil, or_false]; exact or_comm
+#print axioms SharedIndex.key_value_mapped
+#print axioms SharedIndex.key_value_absent
+#print axioms SharedIndex.key_value_pair
+#print axioms SharedIndex.adapt_key_overlong
+#print axioms SharedIndex.adapt_key_mapped
+#print axioms SharedIndex.adapted_prefix_exact
 end Ascent.IndexedPositiveTraversalTests

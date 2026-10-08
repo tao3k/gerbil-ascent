@@ -1,0 +1,280 @@
+{
+  "format": "scheme-curried-collection-acceptance",
+  "date": "2026-10-08",
+  "repository": "https://github.com/tao3k/gerbil-ascent",
+  "pull_request": "https://github.com/tao3k/gerbil-ascent/pull/1",
+  "predecessor_commit": "8880875aff0cf50e5d369115e7f6e091b7d7254b",
+  "paper": {
+    "source": "https://kmicinski.com/assets/byods.pdf",
+    "section": "5.5",
+    "printed_pages": "264:16-17",
+    "obligation": "nested physical dictionaries and adapters serve logical prefixes"
+  },
+  "implementation": {
+    "owner": "table/index-sharing.ss",
+    "change": "thread one tail through recursive hash collection; copy leaf bucket spines once instead of appending already collected subtrees at ancestors",
+    "retained_behavior": [
+      "descending ordinal restoration",
+      "row occurrence multiplicity and identity",
+      "warm cached spine identity",
+      "nonempty batch invalidates views",
+      "empty batch preserves views",
+      "held public readers survive extension"
+    ]
+  },
+  "lean": {
+    "command": "just check-lean-proofs",
+    "exit_code": 0,
+    "build_jobs": 113,
+    "new_laws": [
+      "collect_tail_exact",
+      "leaf_copies_exact",
+      "collection_copies_le",
+      "numbered_values_exact",
+      "numbered_lower_bound",
+      "numbered_strict_order",
+      "numbered_upper_bound",
+      "extended_ordinal_order",
+      "extended_ordinal_bound",
+      "numbered_history_order",
+      "numbered_history_values",
+      "strict_ordinal_unique",
+      "native_strict_sort_exact",
+      "restored_occurrences_exact",
+      "constructed_ordinal_restore",
+      "constructed_history_restore",
+      "constructed_prefix_restore"
+    ],
+    "new_law_axioms": [
+      "propext",
+      "Classical.choice",
+      "Quot.sound"
+    ],
+    "tests": "Tests/ProviderRoutingTests.lean",
+    "negative_controls": [
+      "omitted duplicate occurrence",
+      "ascending labels give wrong retained order",
+      "duplicate labels violate strict-order admission"
+    ],
+    "scope": "arbitrary finite branch descriptions, tails, source lists and batch histories; arbitrary row predicates; coverage of actual record occurrences is required",
+    "sort_boundary": "Lean mergeSort uses a total descending comparator; the native strict-sort primitive has a separately stated permutation/order contract with the same unique result",
+    "copy_work_boundary": "binary nested traversal model, list-spine copy counts; no physical allocation bytes inferred",
+    "warnings": "existing unrelated advisories remain; changed ProviderRouting roots have no warnings"
+  },
+  "component_index": {
+    "command": "just check-component-index-formal",
+    "exit_code": 0,
+    "positive": {
+      "states_generated": 673,
+      "distinct_states": 196,
+      "depth": 11
+    },
+    "invariants": [
+      "Consistent",
+      "PrivateExtension",
+      "HeldStable",
+      "ViewConsistent"
+    ],
+    "new_negative_controls": {
+      "extend-view": "ViewConsistent",
+      "failed-view": "ViewConsistent",
+      "rebuild-view": "ViewConsistent"
+    },
+    "total_negative_controls": 13,
+    "required_negative_exit": 12,
+    "scope": "two owners, two input batches and cold all-row prefix cache; reusable cache admission is distinct from held-reader lifetime"
+  },
+  "formal": {
+    "command": "just check-formal",
+    "exit_code": 0,
+    "negative_controls": 93,
+    "final_marker": "ALL-FORMAL-CHECK-OK",
+    "execution": "existing two independent Justfile lanes; no exploration bound or failure expectation relaxed"
+  },
+  "scheme": {
+    "ordinary": {
+      "command": "just test-file t/qualification/ascent-index-entry-test.ss",
+      "cases": 26,
+      "exit_code": 0,
+      "final_marker": "OK",
+      "elapsed_seconds": 33
+    },
+    "native": {
+      "command": "just test-native t/qualification/ascent-index-entry-test.ss",
+      "cases": 26,
+      "exit_code": 0,
+      "module_marker": "NATIVE-MODULES-OK",
+      "final_marker": "OK",
+      "elapsed_test_seconds": 5,
+      "parent_source_and_artifact_admission": "passed",
+      "compilation": "85 production modules, 91 support/reference modules and focused Suite admitted before linked entry execution"
+    },
+    "new_corpus": {
+      "source_subsets": 64,
+      "physical_permutations": 6,
+      "prefix_depths": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "logical_orders": [
+        "physical prefix",
+        "reversed prefix"
+      ],
+      "queries": "eight Boolean rows and missing-key sentinel",
+      "batches": "empty, two distinct duplicate-valued rows, then the two remaining Boolean rows",
+      "checks": [
+        "direct list-ref filter truth",
+        "frozen reference equality",
+        "row object identity",
+        "warm spine identity",
+        "empty batch identity",
+        "held old results"
+      ]
+    },
+    "retained_controls": [
+      "128 independent minimum chain requirement families",
+      "custom failures and alias revocation",
+      "curried failure rebuild",
+      "actor Session append and replacement",
+      "independent complete engine solve"
+    ],
+    "policy": {
+      "command": "just check-policy",
+      "environment": "ASP_GERBIL_SCHEME_POLICY=1",
+      "exit_code": 0,
+      "advisory_warnings_retained": true
+    },
+    "source_views": {
+      "command": "just check-source-views",
+      "exit_code": 0,
+      "controls": [
+        "frozen-cuts",
+        "callback-engine"
+      ]
+    }
+  },
+  "delivery": {
+    "justfile_entry": "performance-index-sharing",
+    "ci_entry": "Scheme job repeats the same Justfile lifecycle gate",
+    "python_supervision_added": false,
+    "execution_logs_committed": false
+  },
+  "prior_attempt": {
+    "command": "just performance-index-sharing",
+    "exit_code": 70,
+    "phase": "before sampling",
+    "cause": "existing native cache lease held by native qualification; flock deadline exceeded",
+    "resolution": "run after native qualification releases lease; timeout unchanged"
+  },
+  "ci_boundary": {
+    "previous_head": "8880875aff0cf50e5d369115e7f6e091b7d7254b",
+    "previous_head_checks": "all six SUCCESS, queried before work",
+    "current_source": "source_sha256 binds this acceptance; previous-head CI does not qualify new changes"
+  },
+  "remaining": [
+    "universal native hash/trie enumeration extraction",
+    "arbitrary logical adapter construction refinement",
+    "Gambit primitive sort/equality implementation correspondence",
+    "rectangle visitor refinement",
+    "complete remaining paper applications and whole-application benefits"
+  ],
+  "claims": {
+    "constructed_ordinal_history_and_prefix_restore": "proved under occurrence enumeration contract",
+    "whole_paper_replication": false,
+    "physical_memory_reduction": false,
+    "isolated_collector_speedup": false,
+    "paid_model_calls": 0,
+    "mr_integration": "deferred",
+    "test_timing_scope": "execution segments only; compilation and parent admission excluded from native 5 seconds"
+  },
+  "source_sha256": {
+    ".github/workflows/ci.yml": "552400202de40ee0aefaacb554e2791b9f157960a7a0fb3a40d53049662a50f4",
+    "justfile": "ea6f3f22fcff51fc480efbbf486332edfbcac63bfad46766ca419e0d349f047b",
+    "table/index-sharing.ss": "bfccc2a1755304c7bb8a9c60e651fc08dddb290b05ce810309f7e41534431eaf",
+    "packages/proofs/lean/ProviderRouting.lean": "867e97f80d110f2a6301693c10a934d98b7a366fa78e79ed9c48ab61d369b9da",
+    "packages/proofs/lean/Tests/ProviderRoutingTests.lean": "05eceee600af982ec7904879994e7364ae2036057abce983b63ab7436acbbc65",
+    "packages/proofs/tla/ComponentIndex.tla": "754529df7a166d7231bd3b7fd891b7748078051ceb149b36cb0523fbf913ab3c",
+    "packages/proofs/tla/ComponentIndex.cfg": "95ee544c9925066d940d041dcf8f2696e163d217d4695e8c3069697fd13d3765",
+    "t/qualification/ascent-index-entry-test.ss": "416c6933d1caeabc9606bbf42471c90f92011761361f43e568af7f29ba48a808",
+    "t/performance/index-sharing/README.org": "c5d56520ec4e605d37614cf380d32f58cdd0e399b16093b3fb5ef5cb29fb7489",
+    "t/performance/index-sharing/reference.ss": "a84672835ec42129857f8faef031b859cc112c442d218f8bf31bff7e31dd1944",
+    "t/performance/index-sharing/benchmark.ss": "9ccd7fd872fc4cd4218639ca7baa2a993c7c3deafbd86557de435604f28092f4",
+    "t/performance/index-sharing-benchmark.ss": "328d13c3c2a188c90e1a4d101e2cade0231e3d4b9eb7cdd3954a90ad888b6b3e",
+    "t/performance/index-sharing-build.ss": "be1db3f063bc0cdbc27a2b94b0bdbfb25fc17f0ee585fa86ee2522a956efc41d",
+    "docs/scheme-paper-closure.org": "d0dc559b9c2f58ed908ccc6a401105c9565ee06197a9e637bb0f262dd72519ac",
+    "docs/scheme-research-proof-audit.org": "97bf9389c7983b59c7bf588b1cf0535993b4bacb0cf2fcf6b0e04da2d05b2e39",
+    "docs/research/scheme-dsl/byods-b23.org": "1278d51054449b96ad5c505c1df87b7a2a4d5af2e4e7248d0bb8208bdbf8393d"
+  },
+  "pair_receipt_sha256": {
+    "docs/evidence/scheme-curried-collection-20261008/wide.sexp": "187d8336c98715ef4f6f39f95efb1615b8b0df16fce2299f3a6304f5f45c30d2",
+    "docs/evidence/scheme-curried-collection-20261008/sparse.sexp": "fed10c0716051fc93ac3130f0acd249812861e9b250c0d5d9a9ad39bfad0fce8",
+    "docs/evidence/scheme-curried-collection-20261008/small.sexp": "347bd61903c4e35c78d4dfc95dfbc3f8715050f72b62cfb9cffc45a1bb5c12e6",
+    "docs/evidence/scheme-curried-collection-20261008/scalar.sexp": "ac2bc3c73fb65a509fd2ca7b51e629556aca8f08a4583295ad38136183ba8df8",
+    "docs/evidence/scheme-curried-collection-20261008/empty.sexp": "b29eddb74bbfa88ede30de6e4b44adcde305d17836a6dd51ed333e42b11b5beb"
+  },
+  "performance": {
+    "command": "just performance-index-sharing",
+    "exit_code": 0,
+    "baseline_commit": "4fe11743929170e177ab8e7b6388e00d21595e72",
+    "reference_sha256": "a84672835ec42129857f8faef031b859cc112c442d218f8bf31bff7e31dd1944",
+    "reference_identity": "byte-identical SHA256 to baseline table/index-sharing.ss, checked against Git object",
+    "fixture_sha256": "9ccd7fd872fc4cd4218639ca7baa2a993c7c3deafbd86557de435604f28092f4",
+    "pairs_per_scenario": 50,
+    "total_pairs": 250,
+    "ordering": "alternating old/new; GC before each arm; exact direct-projection truth after each pair",
+    "gates": "original fixture CPU ratio, CPU wins, bounded allocation overhead and ASP sample admission unchanged",
+    "scenarios": [
+      {
+        "name": "wide",
+        "passed": true,
+        "old_cpu_us": 12653,
+        "new_cpu_us": 2545,
+        "old_vm_allocation_indicator": 5277456,
+        "new_vm_allocation_indicator": 4508064,
+        "cpu_wins": 50
+      },
+      {
+        "name": "sparse",
+        "passed": true,
+        "old_cpu_us": 6686,
+        "new_cpu_us": 1253,
+        "old_vm_allocation_indicator": 2008672,
+        "new_vm_allocation_indicator": 1987616,
+        "cpu_wins": 50
+      },
+      {
+        "name": "small",
+        "passed": true,
+        "old_cpu_us": 36.5,
+        "new_cpu_us": 34.75,
+        "old_vm_allocation_indicator": 81168,
+        "new_vm_allocation_indicator": 81872,
+        "cpu_wins": 38
+      },
+      {
+        "name": "scalar",
+        "passed": true,
+        "old_cpu_us": 12.625,
+        "new_cpu_us": 12.125,
+        "old_vm_allocation_indicator": 18608,
+        "new_vm_allocation_indicator": 18960,
+        "cpu_wins": 49
+      },
+      {
+        "name": "empty",
+        "passed": true,
+        "old_cpu_us": 0.34375,
+        "new_cpu_us": 0.34375,
+        "old_vm_allocation_indicator": 1984,
+        "new_vm_allocation_indicator": 2000,
+        "cpu_wins": 24
+      }
+    ],
+    "scope": "fresh shared-index build, extension and prefix/full reads; frozen reference predates earlier column projection changes, so observed CPU reductions are cumulative",
+    "counter_boundary": "native process CPU and VM allocation indicators; no physical-memory, peak-RSS or whole-application gain inferred",
+    "negative_results": "small/scalar/empty allocation indicators increase; all pairs and original gates retained",
+    "isolated_collector_speedup": false
+  }
+}

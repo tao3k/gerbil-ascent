@@ -74,3 +74,48 @@ example : replayBuckets (fun row : List Nat => cursorKey row (compileSteps 0 [0,
 #print axioms dispatched_projection_exact
 #print axioms column_key_missing_iff
 #print axioms admitted_projection_present
+
+-- Repeated field values retain distinct insertion occurrences and ordinals.
+def occurrenceTree : RecordTree Nat :=
+  .fork (.leaf [(2, 7)]) (.fork (.leaf [(1, 9)]) (.leaf [(3, 7)]))
+example : collectRecords occurrenceTree [(0, 99)] =
+    [(3, 7), (1, 9), (2, 7), (0, 99)] := by decide
+example : leafCopies occurrenceTree = 3 := by decide
+example : subtreeCopies occurrenceTree = 8 := by decide
+example : (restoreRecords [(2, 7), (1, 9), (3, 7)]).map Prod.snd = [7, 7, 9] := by
+  have ordered : ([(3, 7), (2, 7), (1, 9)] : List (Nat × Nat)).Pairwise
+      (fun a b => b.1 < a.1) := by decide
+  have perm : ([(2, 7), (1, 9), (3, 7)] : List (Nat × Nat)).Perm [(3, 7), (2, 7), (1, 9)] := by decide
+  rw [restored_occurrences_exact _ _ ordered perm]
+  rfl
+example : (restoreRecords [(2, 7), (1, 9)]).map Prod.snd ≠ [7, 7, 9] := by
+  intro equal
+  have lengths := congrArg List.length equal
+  simp [restoreRecords] at lengths
+-- Ascending ordinals reverse the retained order, even though membership agrees.
+example : ([(1, 9), (2, 7), (3, 7)] : List (Nat × Nat)).map Prod.snd ≠ [7, 7, 9] := by decide
+-- Duplicate ordinal labels destroy the strict-order admission contract.
+example : ¬ ([(1, 7), (1, 9)] : List (Nat × Nat)).Pairwise
+    (fun a b => b.1 < a.1) := by decide
+example : (replayNumbered 3 [(2, 7), (1, 9)] [[7, 7], [], [8]]).2 =
+    [(5, 8), (4, 7), (3, 7), (2, 7), (1, 9)] := by decide
+#print axioms collect_tail_exact
+#print axioms leaf_copies_exact
+#print axioms collection_copies_le
+#print axioms numbered_values_exact
+#print axioms numbered_lower_bound
+#print axioms numbered_upper_bound
+#print axioms numbered_strict_order
+#print axioms extended_ordinal_order
+#print axioms extended_ordinal_bound
+#print axioms numbered_history_order
+#print axioms numbered_history_values
+#print axioms strict_ordinal_unique
+#print axioms native_strict_sort_exact
+#print axioms restored_occurrences_exact
+#print axioms constructed_ordinal_restore
+#print axioms constructed_history_restore
+example : (restoreRecords [(2, 7), (3, 7)]).map Prod.snd = [7, 7] := by
+  exact constructed_prefix_restore [7, 7, 9] [] (fun n : Nat => n == 7)
+    [(2, 7), (3, 7)] (by decide)
+#print axioms constructed_prefix_restore

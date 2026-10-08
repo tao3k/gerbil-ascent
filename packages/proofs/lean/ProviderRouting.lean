@@ -322,4 +322,226 @@ theorem admitted_projection_present (row : List Field) (columns : List Nat)
   obtain ⟨column, selected, outside⟩ := (column_key_missing_iff row columns).mp missing
   exact Nat.not_le_of_gt (bounds column selected) outside
 end ColumnProjection
+
+/-! Shared-index leaf enumeration and ordinal restoration. Branches describe a
+finite hash traversal, whose leaf completeness is a native representation
+contract. Algebra does not assume any particular hash visitation order. -/
+section OrdinalCollection
+variable {RecordRow : Type}
+
+inductive RecordTree (R : Type) where
+  | leaf (records : List (Nat × R))
+  | fork (left right : RecordTree R)
+
+def flattenRecords : RecordTree RecordRow → List (Nat × RecordRow)
+  | .leaf records => records
+  | .fork left right => flattenRecords right ++ flattenRecords left
+
+def collectRecords : RecordTree RecordRow → List (Nat × RecordRow) → List (Nat × RecordRow)
+  | .leaf records, tail => records ++ tail
+  | .fork left right, tail => collectRecords right (collectRecords left tail)
+
+theorem collect_tail_exact (tree : RecordTree RecordRow) (tail : List (Nat × RecordRow)) :
+    collectRecords tree tail = flattenRecords tree ++ tail := by
+  induction tree generalizing tail with
+  | leaf records => rfl
+  | fork left right ihl ihr => simp [collectRecords, flattenRecords, ihl, ihr, List.append_assoc]
+
+def leafCopies : RecordTree RecordRow → Nat
+  | .leaf records => records.length
+  | .fork left right => leafCopies left + leafCopies right
+
+def subtreeCopies : RecordTree RecordRow → Nat
+  | .leaf records => records.length
+  | .fork left right => subtreeCopies left + subtreeCopies right +
+      (flattenRecords left).length + (flattenRecords right).length
+
+theorem leaf_copies_exact (tree : RecordTree RecordRow) :
+    leafCopies tree = (flattenRecords tree).length := by
+  induction tree with
+  | leaf records => rfl
+  | fork left right ihl ihr => simp [leafCopies, flattenRecords, ihl, ihr, Nat.add_comm]
+
+theorem collection_copies_le (tree : RecordTree RecordRow) :
+    leafCopies tree ≤ subtreeCopies tree := by
+  induction tree with
+  | leaf records => exact Nat.le_refl _
+  | fork left right ihl ihr => simp only [leafCopies, subtreeCopies]; omega
+
+def numberRows (next : Nat) : List RecordRow → List (Nat × RecordRow)
+  | [] => []
+  | row :: rest => (next, row) :: numberRows (next + 1) rest
+
+theorem numbered_values_exact (next : Nat) (rows : List RecordRow) :
+    (numberRows next rows).map Prod.snd = rows := by
+  induction rows generalizing next with
+  | nil => rfl
+  | cons row rest ih => simp [numberRows, ih]
+
+theorem numbered_lower_bound (next : Nat) (rows : List RecordRow)
+    (record : Nat × RecordRow) (member : record ∈ numberRows next rows) :
+    next ≤ record.1 := by
+  induction rows generalizing next with
+  | nil => simp [numberRows] at member
+  | cons row rest ih =>
+      simp only [numberRows, List.mem_cons] at member
+      rcases member with equal | member
+      · subst record; exact Nat.le_refl _
+      · have bound := ih (next + 1) member; omega
+
+theorem numbered_strict_order (next : Nat) (rows : List RecordRow) :
+    (numberRows next rows).Pairwise (fun a b => a.1 < b.1) := by
+  induction rows generalizing next with
+  | nil => simp [numberRows]
+  | cons row rest ih =>
+      simp only [numberRows, List.pairwise_cons]
+      exact ⟨fun record member => by
+        have bound := numbered_lower_bound (next + 1) rest record member
+        exact Nat.lt_of_lt_of_le (Nat.lt_succ_self next) bound, ih (next + 1)⟩
+
+theorem numbered_upper_bound (next : Nat) (rows : List RecordRow)
+    (record : Nat × RecordRow) (member : record ∈ numberRows next rows) :
+    record.1 < next + rows.length := by
+  induction rows generalizing next with
+  | nil => simp [numberRows] at member
+  | cons row rest ih =>
+      simp only [numberRows, List.mem_cons] at member
+      rcases member with equal | member
+      · subst record; simp only [List.length_cons]; omega
+      · have bound := ih (next + 1) member
+        simp only [List.length_cons]; omega
+
+def extendNumbered (next : Nat) (prior : List (Nat × RecordRow)) (batch : List RecordRow) :=
+  (numberRows next batch).reverse ++ prior
+
+theorem extended_ordinal_order (next : Nat) (prior : List (Nat × RecordRow))
+    (batch : List RecordRow) (ordered : prior.Pairwise (fun a b => b.1 < a.1))
+    (bounded : ∀ record ∈ prior, record.1 < next) :
+    (extendNumbered next prior batch).Pairwise (fun a b => b.1 < a.1) := by
+  apply List.pairwise_append.mpr
+  refine ⟨List.pairwise_reverse.mpr (numbered_strict_order next batch), ordered, ?_⟩
+  intro a am b bm
+  have lower := numbered_lower_bound next batch a (List.mem_reverse.mp am)
+  have upper := bounded b bm
+  omega
+
+theorem extended_ordinal_bound (next : Nat) (prior : List (Nat × RecordRow))
+    (batch : List RecordRow) (bounded : ∀ record ∈ prior, record.1 < next) :
+    ∀ record ∈ extendNumbered next prior batch, record.1 < next + batch.length := by
+  intro record member
+  rcases List.mem_append.mp member with fresh | previous
+  · exact numbered_upper_bound next batch record (List.mem_reverse.mp fresh)
+  · have bound := bounded record previous; omega
+
+def replayNumbered (next : Nat) (prior : List (Nat × RecordRow)) :
+    List (List RecordRow) → Nat × List (Nat × RecordRow)
+  | [] => (next, prior)
+  | batch :: rest => replayNumbered (next + batch.length) (extendNumbered next prior batch) rest
+
+theorem numbered_history_order (history : List (List RecordRow)) (next : Nat)
+    (prior : List (Nat × RecordRow)) (ordered : prior.Pairwise (fun a b => b.1 < a.1))
+    (bounded : ∀ record ∈ prior, record.1 < next) :
+    (replayNumbered next prior history).2.Pairwise (fun a b => b.1 < a.1) ∧
+      ∀ record ∈ (replayNumbered next prior history).2,
+        record.1 < (replayNumbered next prior history).1 := by
+  induction history generalizing next prior with
+  | nil => exact ⟨ordered, bounded⟩
+  | cons batch rest ih =>
+      exact ih _ _ (extended_ordinal_order next prior batch ordered bounded)
+        (extended_ordinal_bound next prior batch bounded)
+
+theorem numbered_history_values (history : List (List RecordRow)) (next : Nat)
+    (prior : List (Nat × RecordRow)) :
+    (replayNumbered next prior history).2.map Prod.snd = replayRows history (prior.map Prod.snd) := by
+  induction history generalizing next prior with
+  | nil => rfl
+  | cons batch rest ih =>
+      simpa only [replayNumbered, replayRows, extendNumbered, List.map_append,
+        List.map_reverse, numbered_values_exact] using ih (next + batch.length) (extendNumbered next prior batch)
+
+theorem strict_ordinal_unique (records : List (Nat × RecordRow))
+    (ordered : records.Pairwise (fun a b => b.1 < a.1))
+    (a b : Nat × RecordRow) (am : a ∈ records) (bm : b ∈ records)
+    (same : a.1 = b.1) : a = b := by
+  induction records with
+  | nil => simp at am
+  | cons head tail ih =>
+      rcases List.mem_cons.mp am with equalA | inA
+      · rcases List.mem_cons.mp bm with equalB | inB
+        · exact equalA.trans equalB.symm
+        · have strict := (List.pairwise_cons.mp ordered).1 b inB
+          have ordinal := congrArg Prod.fst equalA
+          omega
+      · rcases List.mem_cons.mp bm with equalB | inB
+        · have strict := (List.pairwise_cons.mp ordered).1 a inA
+          have ordinal := congrArg Prod.fst equalB
+          omega
+        · exact ih (List.pairwise_cons.mp ordered).2 inA inB
+
+def restoreRecords (records : List (Nat × RecordRow)) : List (Nat × RecordRow) :=
+  records.mergeSort fun a b => decide (b.1 ≤ a.1)
+
+-- The native sort uses strict >. Its primitive permutation/order contract
+-- has the same unique result as the total comparator used by Lean mergeSort.
+theorem native_strict_sort_exact (canonical output : List (Nat × RecordRow))
+    (ordered : canonical.Pairwise (fun a b => b.1 < a.1))
+    (sorted : output.Pairwise (fun a b => b.1 < a.1))
+    (permutation : output.Perm canonical) : output = canonical := by
+  exact List.Perm.eq_of_pairwise (fun _ _ _ _ ab ba => by omega) sorted ordered permutation
+
+theorem restored_occurrences_exact (canonical gathered : List (Nat × RecordRow))
+    (ordered : canonical.Pairwise (fun a b => b.1 < a.1))
+    (enumerated : gathered.Perm canonical) : restoreRecords gathered = canonical := by
+  have permutation := (List.mergeSort_perm gathered (fun a b => decide (b.1 ≤ a.1))).trans enumerated
+  apply List.Perm.eq_of_pairwise (le := fun a b : Nat × RecordRow => b.1 ≤ a.1) ?_ ?_ ?_ permutation
+  · intro a b am bm ab ba
+    exact strict_ordinal_unique canonical ordered a b (permutation.subset am) bm (by omega)
+  · have sorted := List.pairwise_mergeSort
+      (le := fun a b : Nat × RecordRow => decide (b.1 ≤ a.1))
+      (fun a b c ab bc => by simp only [decide_eq_true_eq] at *; omega)
+      (fun a b => by simp only [Bool.or_eq_true, decide_eq_true_eq]; omega) gathered
+    exact sorted.imp (fun h => by simpa using h)
+  · exact ordered.imp (fun h => Nat.le_of_lt h)
+
+theorem constructed_ordinal_restore (rows : List RecordRow) (next : Nat)
+    (gathered : List (Nat × RecordRow))
+    (enumerated : gathered.Perm (numberRows next rows.reverse).reverse) :
+    (restoreRecords gathered).map Prod.snd = rows := by
+  have ordered : (numberRows next rows.reverse).reverse.Pairwise (fun a b => b.1 < a.1) :=
+    List.pairwise_reverse.mpr (numbered_strict_order next rows.reverse)
+  rw [restored_occurrences_exact _ _ ordered enumerated, List.map_reverse,
+    numbered_values_exact, List.reverse_reverse]
+
+theorem constructed_history_restore (source : List RecordRow) (history : List (List RecordRow))
+    (gathered : List (Nat × RecordRow))
+    (enumerated : gathered.Perm
+      (replayNumbered (source.length + 1) (numberRows 1 source.reverse).reverse history).2) :
+    (restoreRecords gathered).map Prod.snd = replayRows history source := by
+  have ordered := List.pairwise_reverse.mpr (numbered_strict_order 1 source.reverse)
+  have bounded : ∀ record ∈ (numberRows 1 source.reverse).reverse, record.1 < source.length + 1 := by
+    intro record member
+    have bound := numbered_upper_bound 1 source.reverse record (List.mem_reverse.mp member)
+    simpa only [List.length_reverse, Nat.add_comm] using bound
+  have invariant := numbered_history_order history (source.length + 1) _ ordered bounded
+  rw [restored_occurrences_exact _ _ invariant.1 enumerated, numbered_history_values,
+    List.map_reverse, numbered_values_exact, List.reverse_reverse]
+
+theorem constructed_prefix_restore (source : List RecordRow) (history : List (List RecordRow))
+    (selected : RecordRow → Bool) (gathered : List (Nat × RecordRow))
+    (enumerated : gathered.Perm
+      ((replayNumbered (source.length + 1) (numberRows 1 source.reverse).reverse history).2.filter
+        (fun record => selected record.2))) :
+    (restoreRecords gathered).map Prod.snd = (replayRows history source).filter selected := by
+  have ordered := List.pairwise_reverse.mpr (numbered_strict_order 1 source.reverse)
+  have bounded : ∀ record ∈ (numberRows 1 source.reverse).reverse, record.1 < source.length + 1 := by
+    intro record member
+    have bound := numbered_upper_bound 1 source.reverse record (List.mem_reverse.mp member)
+    simpa only [List.length_reverse, Nat.add_comm] using bound
+  have invariant := numbered_history_order history (source.length + 1) _ ordered bounded
+  rw [restored_occurrences_exact _ _ (invariant.1.filter _) enumerated]
+  have values := numbered_history_values history (source.length + 1) (numberRows 1 source.reverse).reverse
+  simp only [List.map_reverse, numbered_values_exact, List.reverse_reverse] at values
+  rw [← values, List.filter_map]
+  rfl
+end OrdinalCollection
 end Ascent.ProviderRouting

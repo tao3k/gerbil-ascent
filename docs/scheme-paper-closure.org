@@ -1058,3 +1058,26 @@ Package 3 still requires universal native hash/value and curried trie/ordinal/
 rectangle visitor correspondence. No whole-application speedup or physical
 memory reduction is inferred. All ten packages retain their acceptance gates;
 full paper replication and MR/MRR integration are not closed by this slice.
+
+* Curried collector and ordinal restoration acceptance (2026-10-08)
+
+Package 3 now connects finite trie record enumeration to ordered occurrence
+restoration. The native collector threads a tail across children and avoids
+ancestor copies of collected subtrees. Lean derives collector equality and
+list-copy accounting, constructs fresh insertion labels, proves order/bounds
+through arbitrary finite batch histories, and restores exact values from any
+permutation of those occurrences. Duplicate row values retain distinct labels.
+Native strict sorting is connected through its explicit primitive contract;
+no Gambit sorting or hash-table implementation proof is inferred.
+
+TLA+ adds query cache admission independently of old held readers. Extension,
+failed mutation and wrong rebuild views have their own =ViewConsistent= fault
+controls. Native tests cover six physical permutations and every prefix depth
+across 64 retained histories, independent direct-column truth, frozen reference,
+cache identity and held spines. The [[file:scheme-research-proof-audit.org::*B23 curried collection, ordinal restoration and cached views (2026-10-08)][implementation/proof bridge]] and
+[[file:evidence/scheme-curried-collection-20261008/receipt.json][acceptance receipt]] record the exact source and evidence boundaries.
+
+Native trie/hash extraction, arbitrary curried adapter construction, rectangle
+visitor correspondence and complete paper application benefits retain their
+gates. The existing benchmark compares a cumulative lifecycle against its older
+frozen reference; it does not attribute all observed gains to this change.

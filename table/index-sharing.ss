@@ -238,13 +238,15 @@
     (def (adapt remaining count)
       (if (= count 0) []
         (cons (value-of (car remaining) columns key) (adapt (cdr remaining) (- count 1)))))
-    (def (collect node remaining)
-      (let (records [])
-        (hash-for-each
-         (lambda (_ child)
-           (set! records (append (if (null? (cdr remaining)) child
-                                    (collect child (cdr remaining))) records))) node)
-        records))
+    ;; Thread one result tail through every branch. Only leaf bucket spines
+    ;; are copied; ancestors never append an already collected subtree again.
+    ;; Hash traversal order remains private: unique ordinals restore row order.
+    ;; : (-> TrieNode RemainingColumns Occurrences Occurrences)
+    (def (collect node remaining tail)
+      (hash-fold
+       (lambda (_ child records)
+         (if (null? (cdr remaining)) (append child records)
+           (collect child (cdr remaining) records))) tail node))
     (let* ((physical-key (if (already-ordered? columns physical) key
                             (adapt physical (length columns))))
            (cached (hash-get (shared-index-views index) physical-key)))
@@ -252,7 +254,7 @@
         (let (rows
               (let lookup ((node (shared-index-root index)) (remaining physical) (key physical-key))
                 (if (null? key)
-                  (map cdr (list-sort (lambda (a b) (> (car a) (car b))) (collect node remaining)))
+                  (map cdr (list-sort (lambda (a b) (> (car a) (car b))) (collect node remaining [])))
                   (let (child (hash-get node (car key)))
                     (if (not child) []
                       (if (null? (cdr remaining)) (map cdr child)

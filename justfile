@@ -422,6 +422,21 @@ _performance-storage-batch:
         timeout 90s {{ gxi_command }} {{ gerbil_test_runtime_options }} -e '(add-load-path! (path-expand ".cache/ascent/native-library/lib"))' :gerbil-ascent/t/performance/storage-batch-benchmark "$scenario" "$library" ".cache/ascent/storage-batch/$scenario.sexp"
     done
 
+# Paired native curried index build, extension and prefix/full reads.
+performance-index-sharing:
+    {{ native_qualification }} run -- just _performance-index-sharing
+
+_performance-index-sharing:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    library="{{ justfile_directory() }}/.cache/ascent/native-library/lib"
+    directory="{{ justfile_directory() }}/.cache/ascent/index-sharing"
+    mkdir -p "$directory"
+    {{ gxi_command }} {{ gerbil_test_runtime_options }} :gerbil-ascent/t/performance/index-sharing-build "$library" "$directory/benchmark"
+    for scenario in wide sparse small scalar empty; do
+        timeout 90s "$directory/benchmark" {{ gerbil_test_runtime_options }} "$scenario" "$library" "$directory/$scenario.sexp"
+    done
+
 # Paired native engine-owned physical index entries and complete indexed solves.
 performance-index-entry:
     {{ native_qualification }} run -- just _performance-index-entry
@@ -1372,12 +1387,13 @@ check-component-index-formal:
     # must not truncate/delete each other's module files.
     if [[ "${tlc[0]}" == java ]]; then tlc=(java "-Djava.io.tmpdir=$temp" "${tlc[@]:1}"); fi
     "${tlc[@]}" -workers 1 -config packages/proofs/tla/ComponentIndex.cfg -metadir "$temp/correct" packages/proofs/tla/ComponentIndex.tla
-    for mutation in order early failed alias foreign reset held columns held-columns rebuild-columns; do
+    for mutation in order early failed alias foreign reset held columns held-columns rebuild-columns extend-view failed-view rebuild-view; do
       sed "s/Mutation = \"none\"/Mutation = \"$mutation\"/" packages/proofs/tla/ComponentIndex.cfg > "$temp/$mutation.cfg"
       code=0
       "${tlc[@]}" -workers 1 -config "$temp/$mutation.cfg" -metadir "$temp/$mutation" packages/proofs/tla/ComponentIndex.tla > "$temp/$mutation.out" 2>&1 || code=$?
       invariant=Consistent
       if [[ "$mutation" = held || "$mutation" = held-columns ]]; then invariant=HeldStable; fi
+      if [[ "$mutation" = extend-view || "$mutation" = failed-view || "$mutation" = rebuild-view ]]; then invariant=ViewConsistent; fi
       [[ "$code" = 12 ]] && grep -q "Invariant $invariant is violated" "$temp/$mutation.out"
       echo "COUNTEREXAMPLE-OK component-index-$mutation $invariant"
     done

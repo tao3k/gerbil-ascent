@@ -875,3 +875,17 @@ and mutable low-level helper inputs have different ownership contracts; the
 protocol model covers the former. The [[file:../../scheme-research-proof-audit.org::*B23 constructed column projection and index layout lifetime (2026-10-08)][implementation/proof correspondence]] and
 [[file:../../evidence/scheme-column-projection-20261008/receipt.json][source-bound acceptance]] retain native hash equality, curried visitors and
 complete application benefit as further obligations.
+
+* Section 5.5 curried collection and cached views (2026-10-08)
+
+The Scheme shared-index collector now carries a result tail through nested
+children, copying last-level bucket spines once. Ordinal restoration preserves
+source order and duplicate occurrences independently of hash traversal order.
+Lean derives fresh label bounds, order through finite histories and exact
+restoration from occurrence permutations. TLA+ separately checks reusable
+cached views through private extension, failure and rebuild, retaining the
+held-reader invariant. Native qualification enumerates all six three-column
+permutations and every prefix depth over 64 source histories with direct-column
+truth and frozen-reference comparisons. See [[file:../../scheme-research-proof-audit.org::*B23 curried collection, ordinal restoration and cached views (2026-10-08)][the proof/implementation bridge]] and
+[[file:../../evidence/scheme-curried-collection-20261008/receipt.json][the source-bound receipt]]. Full native hash/trie refinement, arbitrary adapter
+extraction and complete application benefit remain separate acceptance gates.

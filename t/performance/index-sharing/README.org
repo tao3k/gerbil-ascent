@@ -106,3 +106,36 @@ integrated index-entry module passes all 19 Cases with process exit zero. The
 production source from =defstruct shared-index= through the complete projection
 and query implementations is byte-identical to the measured version. The
 certificate affects chain-cover planning, outside the timed lifecycle.
+
+* Collector and ordinal qualification (2026-10-08)
+
+The production collector now carries a result tail through nested hash children.
+Each last-level record spine is appended once; ancestors do not copy a collected
+subtree again. Lean proves this transformation and exact ordinal restoration for
+finite batch histories and matching row predicates. Native tests independently
+cover six physical permutations, every prefix depth, repeated fields and rows,
+cold/warm caching, empty extension and held old results. TLA+ checks cache reuse
+admission through extension, failed mutation and rebuild.
+
+=just performance-index-sharing= invokes the existing Scheme build/benchmark
+owners directly and is repeated by GitHub's Scheme job. All five original
+scenarios and their gates are retained, with 50 alternating pairs each. The
+frozen reference remains =4fe11743929170e177ab8e7b6388e00d21595e72=; results
+include earlier column projection changes and do not isolate the collector.
+
+| Scenario | CPU us old / current | VM allocation indicator old / current | CPU wins / 50 | Gate |
+|----------+----------------------+--------------------------------------+---------------+------|
+| wide | 12653 / 2545 | 5277456 / 4508064 | 50 | pass |
+| sparse | 6686 / 1253 | 2008672 / 1987616 | 50 | pass |
+| small | 36.5 / 34.75 | 81168 / 81872 | 38 | pass |
+| scalar | 12.625 / 12.125 | 18608 / 18960 | 49 | pass |
+| empty | 0.34375 / 0.34375 | 1984 / 2000 | 24 | pass |
+
+Wide/sparse lifecycle CPU is approximately 79.9%/81.3% lower than that frozen
+reference in these measurements. Small/scalar/empty allocation indicators
+increase and are retained. These counters do not establish physical memory
+savings, peak RSS or complete application speedup. The earlier measurement
+table above remains historical. See
+[[file:../../../docs/evidence/scheme-curried-collection-20261008/receipt.json][the source-bound receipt]] for the current source, all numerical pair records and
+the initial cache-lease refusal before sampling. Running the shared-cache
+benchmark after native qualification passed without changing the lock deadline.

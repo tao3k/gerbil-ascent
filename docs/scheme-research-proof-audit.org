@@ -2491,3 +2491,77 @@ previously named stepped-projection algebra gap. Universal native hash/trie,
 ordinal and rectangle-visitor refinement, full paper applications, and matched
 whole-application benefit remain separate obligations. No measured speedup,
 physical-memory reduction or complete paper replication is claimed.
+
+* B23 curried collection, ordinal restoration and cached views (2026-10-08)
+
+B23 section 5.5, printed pages 264:16--17, uses nested dictionaries and adapters
+so one physical chain serves multiple logical indexes. The
+[[https://kmicinski.com/assets/byods.pdf][primary paper]] motivates shared lookup; Scheme additionally preserves ordered
+row occurrences, including duplicates. The earlier =SharedIndex.prefix_lookup=
+filter theorem did not derive the order obtained from actual trie enumeration.
+
+=table/index-sharing.ss= now threads one tail through recursive collection.
+=hash-fold= visits a node's children; leaf bucket spines append directly to the
+shared tail. Ancestors never append an already collected child subtree again.
+Rows and ordinal records remain borrowed. Sorting and =map cdr= still create the
+ordered public result. Cache hits keep the same public spine; nonempty extension
+invalidates cached aliases, while empty extension preserves them.
+
+=ProviderRouting.collect_tail_exact= proves the accumulator transformation for
+arbitrary finite binary branch descriptions and arbitrary tails. Leaves describe
+last-level record enumeration; branches describe nested child traversals.
+=leaf_copies_exact= counts one copied spine cell per enumerated record in this
+model. =collection_copies_le= compares that count with repeated subtree appends.
+This is explicit list-copy work, not physical allocation bytes or universal
+native complexity. General hash traversal and its branch extraction remain
+representation contracts. The native helper supports arbitrary branching.
+
+=numberRows= models fresh increasing insertion ordinals. Lower/upper bounds,
+strict order and =strict_ordinal_unique= derive unique labels without requiring
+unique row values. Extension preserves order and the next-label bound;
+=numbered_history_order= and =numbered_history_values= carry both through
+arbitrary finite histories, including empty batches. =constructed_history_restore=
+then restores the exact =replayRows= sequence from any permutation of the
+constructed records. Coverage is stated for actual record occurrences, not just
+set membership. Omitting a duplicate occurrence is rejected.
+=constructed_prefix_restore= composes restoration with an arbitrary row
+predicate, preserving exact filtered order and multiplicity across those same
+histories. This connects prefix selection to the occurrence restoration law;
+extraction of the native trie leaves satisfying that predicate remains explicit.
+
+The executable Lean reference uses mergeSort with a total descending comparator.
+=restored_occurrences_exact= derives the unique result. Native Scheme uses
+strict greater-than comparison: =native_strict_sort_exact= proves the same unique result
+under its primitive permutation/strict-order contract. The Lean theorem does
+not verify Gambit's sorting implementation. Native direct-column truth and
+frozen reference comparisons independently qualify that correspondence.
+All examples and fault controls remain under =Tests/ProviderRoutingTests.lean=.
+
+TLA+ =ComponentIndex.ReadView= adds cold all-row prefix caching. =viewValid=
+means the cache may be reused, not that a previously returned reader is still
+alive. =ViewConsistent= requires a reusable view to equal the committed root
+and forbids reuse during private extension or failed mutation. =HeldStable=
+continues to protect old returned readers independently. Correct extension and
+failure revoke reuse; rebuild starts with an invalid cache. Three mutations
+retain reuse during extension, retain reuse after failure, or populate a rebuilt
+view from the damaged pre-rebuild cache. Each must violate =ViewConsistent=.
+This finite protocol models the all-row prefix and two owners, not every key or
+unbounded callback liveness. Ordinal algebra remains exclusively in Lean.
+
+The native corpus now enumerates 64 source subsets, all six three-column
+physical permutations, prefix depths zero through three, original/reversed
+logical keys, absent keys, Boolean fields, duplicate insertions, cold/warm cache
+identity, empty batches and held old results. Each query must agree with direct
+=list-ref= filtering and the existing frozen implementation, retaining each row
+object. Earlier native failure, shared alias and actor Session controls remain.
+See [[file:evidence/scheme-curried-collection-20261008/receipt.json][the source-bound acceptance receipt]].
+
+The existing five-scenario benchmark is exposed through the ordinary Justfile
+as =performance-index-sharing=. Its immutable reference remains commit
+=4fe11743929170e177ab8e7b6388e00d21595e72=, predating earlier projection changes.
+Any new sample measures the cumulative build/extend/read lifecycle against that
+reference; it cannot isolate this collector change. Paired samples, independent
+truth, CPU/allocation counters and predeclared gates remain unchanged. Physical
+memory and whole-application speedup require separate measurements.
+GitHub's Scheme job repeats this native lifecycle gate through that Justfile
+entry; no Python supervisor or additional test entry layer is introduced.

@@ -61,7 +61,7 @@ jobs:
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: .cache/ascent/native-library
-          key: ascent-native-${{ runner.os }}-${{ runner.arch }}-${{ github.job }}-${{ matrix.shard }}-${{ steps.capacity.outputs.toolchain }}-${{ hashFiles('**/*.ss', '!.gerbil/**', '!.ci/**', '!.cache/**', 'justfile', 'gerbil.pkg', '.github/workflows/ci.yml') }}
+          key: ascent-native-${{ runner.os }}-${{ runner.arch }}-${{ github.job }}-${{ matrix.shard }}-${{ steps.capacity.outputs.toolchain }}-${{ hashFiles('**/*.ss', '!manifest.ss', '!.gerbil/**', '!.ci/**', '!.cache/**', 'justfile', 'gerbil.pkg', '.github/workflows/ci.yml') }}
       - name: Qualify semantics and performance with one GxTest per purpose
         run: just test-compiled test-performance-contracts
       - name: Qualify complete standard Gerbil source tests
@@ -136,7 +136,7 @@ jobs:
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: .cache/ascent/native-library
-          key: ascent-native-${{ runner.os }}-${{ runner.arch }}-${{ github.job }}-${{ matrix.shard }}-${{ steps.capacity.outputs.toolchain }}-${{ hashFiles('**/*.ss', '!.gerbil/**', '!.ci/**', '!.cache/**', 'justfile', 'gerbil.pkg', '.github/workflows/ci.yml') }}
+          key: ascent-native-${{ runner.os }}-${{ runner.arch }}-${{ github.job }}-${{ matrix.shard }}-${{ steps.capacity.outputs.toolchain }}-${{ hashFiles('**/*.ss', '!manifest.ss', '!.gerbil/**', '!.ci/**', '!.cache/**', 'justfile', 'gerbil.pkg', '.github/workflows/ci.yml') }}
       - name: Qualify runtime source view loading
         run: just check-source-views
       - name: Enforce Rust warnings and ASP policy

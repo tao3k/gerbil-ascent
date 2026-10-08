@@ -45,12 +45,26 @@ dependency outputs behind dependency/toolchain identity, and native artifacts
 behind complete source, recipe, workflow and toolchain content. Restored
 application package outputs are removed before building this checkout.
 =ASP_GERBIL_SCHEME_POLICY=1= remains the policy trigger; build core capacity is
-independent. Capacity discovery checks Linux =_NPROCESSORS_ONLN= before the\nDarwin =NPROCESSORS_ONLN= spelling. The first submitted Ubuntu run exposed the\nnonportable spelling before any tests ran; it is retained as a failed CI\nexperiment. Test verdicts are never cached.\n\nUbuntu then exposed upstream GxTest local-package setup prepending =.gerbil/lib=\nwhen =GERBIL_PATH= was unset, shadowing the prepared native library. All seven\nperformance modules rejected that unqualified source. Test recipes now select\n=GERBIL_PATH= before tool initialization and retain the prepared-library-first\nload order. The source-origin rejection check remains unchanged.
+independent. Capacity discovery checks Linux =_NPROCESSORS_ONLN= before the
+Darwin =NPROCESSORS_ONLN= spelling. The first submitted Ubuntu run exposed the
+nonportable spelling before any tests ran; it is retained as a failed CI
+experiment. Test verdicts are never cached.
+
+Ubuntu then exposed upstream GxTest local-package setup prepending =.gerbil/lib=
+when =GERBIL_PATH= was unset, shadowing the prepared native library. All seven
+performance modules rejected that unqualified source. Test recipes now select
+=GERBIL_PATH= before tool initialization and retain the prepared-library-first
+load order. The source-origin rejection check remains unchanged.
 
 The native DSL executable passed its complete 15-Suite, 204-Case roster in one invocation.
-Model-source roots are inferred from the actual Scheme study Cases. A discovered AOT\ncompiler-import failure was traced to Gambit resolving =~~= relative to the\nstandalone executable. The compiler interface path is bound at module build time\nfrom the active Gerbil installation; the standalone probe passed all eight\nactual study roots without an extra Gxi or provider call. SS scenarios
+Model-source roots are inferred from the actual Scheme study Cases. A discovered AOT
+compiler-import failure was traced to Gambit resolving =~~= relative to the
+standalone executable. The compiler interface path is bound at module build time
+from the active Gerbil installation; the standalone probe passed all eight
+actual study roots without an extra Gxi or provider call. SS scenarios
 are discovered as Cases in one upstream GxTest invocation, retaining their
-original benchmark bodies and independent truth checks. All three performance\nSuites and 17 Cases passed within the unchanged 180-second command bound. No paid model calls
+original benchmark bodies and independent truth checks. All three performance
+Suites and 17 Cases passed within the unchanged 180-second command bound. No paid model calls
 are part of this change.
 
 The dated sections below retain earlier experiments. References to

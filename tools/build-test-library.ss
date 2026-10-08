@@ -2,7 +2,7 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 ;;; Build only. Upstream Gerbil owns test discovery and execution.
-(import (only-in :gerbil/compiler compile-module compile-exe execute-pending-compile-jobs!)
+(import (only-in :gerbil/compiler compile-exe execute-pending-compile-jobs!)
         :gerbil/expander
         (only-in :std/make make)
         :std/os/flock :std/os/device
@@ -248,7 +248,8 @@
            "t/qualification/ascent-arity-repetition-output.ss"
            "t/qualification/ascent-eqrel-program-output.ss"
            "t/qualification/ascent-byods-query-output.ss"
-           "tools/model-source-closure.ss"))
+           "tools/model-source-closure.ss"
+           "t/model/study.ss"))
         ;; Output-dir precedence binds the executable to this current Library,
         ;; even when GERBIL_PATH also contains an older installed ASCENT.
         (let ((source "t/model/study.ss")
@@ -280,7 +281,7 @@
           ;; An old executable must never survive a no-op/failed compilation.
           (let (binary (path-expand "dsl-closure" test-cache))
             (when (file-exists? binary) (delete-file binary)))
-          (compile-module source [invoke-gsc: #f options ...])
+          ;; make owns module freshness; only regenerate the executable stub.
           (compile-exe source options)
           ;; Drain every queued object and the compiler's link barrier before
           ;; binding. Compiler exceptions propagate; no partial binary qualifies.

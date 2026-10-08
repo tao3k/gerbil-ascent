@@ -463,3 +463,36 @@ sample during startup placed all 890 samples in Gambit dynamic loading through
 not proof of a dispatcher-only defect or a compiler deadlock. Neither rejected
 run qualifies the complete test roster. Ubuntu CI is the independent acceptance
 gate; no deadline was widened and no warm retry is promoted to a cold speedup.
+
+** Exact-head Ubuntu acceptance
+
+Commit =7189f30eca5322daae53f924b138e8abe2fa8d4c= passed all six checks in
+[[https://github.com/tao3k/gerbil-ascent/actions/runs/37804164094][GitHub CI]]. Native preparation compiled 250 test/reference modules and
+executed 520 compile-file jobs, with =production-rebuilt=0. The former path
+compiled 335 modules and executed 723 jobs, including a second compilation of
+all 85 production modules. Shared preparation appeared once for the four
+qualification goals. The independent DSL preparation also rewrote zero
+production interfaces.
+
+The preparation receipt was 180.530100 seconds (inventory before 0.025545,
+upstream make 180.476521, inventory after 0.027266), compared with the earlier
+171.407232-second receipt. Fewer compiler jobs establish eliminated duplicate
+work; these single runs do not establish a wall-clock speedup. Source discovery
+passed in 135 seconds under its unchanged 180-second limit. The unchanged SS
+expression contract passed with candidate p95 531.029 microseconds against the
+2-millisecond budget, with independent semantic equivalence. Lean, Quint and
+all three Rust oracle shards passed. No provider calls were added.
+
+All 15 benchmark build entries produced their native executables after the
+module/link split, including the actor entry added explicitly to its make graph.
+The DSL study entry is likewise part of its upstream make graph: repeated DSL
+construction reuses its module objects and regenerates only the executable
+stub/link needed for a fresh source-bound publication receipt. No unconditional
+=compile-module= remains in these build entries.
+
+The DSL graph contains 195 modules after admitting its study entry. Its full
+204-Case, 15-Suite closure and actual compiler source probe passed. A second
+construction emitted no module compile messages, reported zero rewritten
+production interfaces, completed preparation in 4.136545 seconds and passed
+the fresh publication/source probe. This is an incremental reuse receipt,
+not a cold-build or end-to-end performance claim.

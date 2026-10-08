@@ -9,7 +9,8 @@
   (let (sources (artifact-sources))
     (add-load-path! library)
     (make ["program/actor-round" "t/performance/actor-admission/reference"
-           "t/performance/actor-coordinator/reference" "t/performance/actor-admission-benchmark"]
+           "t/performance/actor-coordinator/reference" "t/performance/actor-admission-benchmark"
+           "t/performance/actor-admission-native"]
           srcdir: (current-directory) libdir: library
           build-deps: (path-expand ".cache/ascent/native-library/build-deps"))
     (let ((source "t/performance/actor-admission-native.ss")

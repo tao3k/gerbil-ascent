@@ -10,7 +10,7 @@ source dates and qualification boundaries. Current evidence is commit-specific.
 The [[file:../../scheme-actor-runtime-design.org][actor runtime design]] now maps the A22 round/SCC and B23 concretization
 premises to actual =program/actor-round.ss= integration: frozen frontiers,
 private frames/indexes, credit-bounded candidates, one owner merge and terminal
-drain before commit. Native tests and Lean/TLA+ gates cover this admitted pure
+drain before commit. Native tests and Lean/Quint gates cover this admitted pure
 Set subset. Ready-SCC scheduling, custom Provider workers, Session cancellation
 publication and matched performance remain separate obligations. No whole-runtime
 closure, model gain or MRR integration is asserted.
@@ -21,7 +21,7 @@ closure, model gain or MRR integration is asserted.
 The [[file:../../scheme-actor-runtime-design.org][actor runtime design]] now has an implemented source-cut owner and independent
 compute worker. Cancel increments generation, refuses old publication and waits
 for assigned worker/monitor drain; failure restores committed sources. Native
-lifecycle tests and TLA+ publication/drain checks accompany the code. B22's
+lifecycle tests and Quint publication/drain checks accompany the code. B22's
 outer/inner natural time distinction motivates generation versus round; A22's
 ready-SCC dependency scheduling remains a next implementation obligation.
 The actor constructor uses fresh engines, not retained incremental reuse. No
@@ -35,7 +35,7 @@ projection to actual native component workers. Completed predecessors release
 successors without waiting for unrelated active SCCs; each SCC retains local
 round completion, one owner charges global unique-row budgets, and the complete
 cut remains the Session publication unit. Native independent truth/rendezvous
-Cases and TLA+ prerequisite/drain gates accompany this slice. A22's SCC
+Cases and Quint prerequisite/drain gates accompany this slice. A22's SCC
 order/local state is implemented for pure Set cuts; B23 Provider concretization
 remains a separate contract. A matched exploratory native timing probe retains
 serial and SCC 1/2/4 observations without asserting general multicore speedup.
@@ -47,7 +47,7 @@ Immutable analysis identity now keys a weak component-plan cache. SCC admission
 policy is owned by the component module, repairing the prior CI module-size
 failure without changing its threshold. Runtime rows/frames/indexes remain
 solve-private. Native exact-identity and fresh-versus-cached projection controls,
-pure Lean identity/cache-construction equations, and replayed TLA scheduling safety are
+pure Lean identity/cache-construction equations, and replayed Quint scheduling safety are
 recorded in [[file:../../evidence/scheme-component-cache-20261005/receipt.json][the qualification receipt]]. Planning-only timing is not an end-to-end
 claim. Remaining gates include persistent worker/index reuse, large SCC
 partitioning, custom Provider concurrency and matched scale/CPU/allocation tests.
@@ -59,7 +59,7 @@ The worker now extends valid total indexes against the old version before
 installing admitted row roots and next versions; delta stays round-local.
 Reverse batch traversal preserves rebuilt bucket order. Native independent
 closure, input immutability and single/composite key controls accompany Lean
-ordered extension laws and TLA private extension/install safety with negative
+ordered extension laws and Quint private extension/install safety with negative
 controls. [[file:../../evidence/scheme-component-index-20261005/receipt.json][CPU, wall and VM allocation receipts]] distinguish local worker cost,
 real actor coordinator cost and unmeasured public/LLM latency. Custom Provider
 concurrency, large SCC partitioning and persistent worker reuse remain open.
@@ -70,7 +70,7 @@ concurrency, large SCC partitioning and persistent worker reuse remain open.
 Native owner credit now restarts the worker traversal distance window. The
 32-row output bound and 64-call no-output checkpoint window are retained.
 Lean's =CreditObservation= laws quantify over any positive natural period;
-the replayed TLA model proves abstract credit/drain safety only. Native matched
+the replayed Quint model proves abstract credit/drain safety only. Native matched
 controls freeze the old round protocol while sharing current worker/index
 implementation. Independent truth and cancellation/drain gates accompany every
 performance lane. See [[file:../../evidence/scheme-credit-observation-20261005/receipt.json][receipt]] for actual samples and unstable timing results.
@@ -82,7 +82,7 @@ model gains remain separate open gates; no model calls or Rust integration.
 * SCC successor snapshots and terminal delivery
 
 The compiled indexed history proof now comes from =IndexedIteration=; this
-follow-up checks its scheduler boundary in the existing =ReadyComponents.tla=.
+follow-up checks its scheduler boundary in the existing =ReadyComponents.qnt=.
 The finite batch/tail fixture distinguishes an intermediate credited batch
 from terminal task completion, records the actual dispatch snapshot, and
 requires all predecessor output witnesses before successor admission. Faults
@@ -114,7 +114,7 @@ The native SCC suite checks completed snapshots independently: for every one
 of the 512 three-node graph inputs, each completed component is rerun from its
 actual private roots with full initialization. It must emit nothing and retain
 all roots. Floyd truth, exact owned emissions and external root preservation
-remain independent checks. TLA+ retains temporal readiness/credit/tail behavior
+remain independent checks. Quint retains temporal readiness/credit/tail behavior
 without duplicating this iteration algebra. See the [[file:../../scheme-compiler-proof-bridge.org][compiler bridge]] and
 [[file:../../evidence/scheme-indexed-least-20261006/receipt.json][qualification receipt]]. Universal native iteration/completion extraction,
 SCC/name/scalar decoding and non-Set Provider instances remain separate gates;

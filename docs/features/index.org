@@ -6,8 +6,11 @@
 
 Each feature groups its design, paper correspondence, semantic proofs, protocol
 models, native implementation and acceptance evidence. Lean owns semantic and
-algebraic laws; TLA+ owns lifecycle and interleaving obligations. Historical
+algebraic laws; Quint owns lifecycle and interleaving obligations. Historical
 receipts retain their source identity and do not certify a later commit.
+Protocol ownership names and source links refer to current Quint modules;
+dated TLA results retain their original checker snapshot. See the
+[[file:qualification/quint.org][complete migration inventory]] for current qualification.
 
 Update the relevant feature page when advancing its implementation. Keep
 cross-feature scope and ordering in the [[file:../scheme-paper-closure.org][closure matrix]] and

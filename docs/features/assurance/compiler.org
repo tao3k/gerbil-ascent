@@ -40,7 +40,7 @@ The [[file:../../evidence/scheme-indexed-least-20261006/receipt.json][source-bou
 suite. The runtime's round loop and actor terminal event still need universal
 extraction to this semantic iteration. SCC projection, native scalar/hash
 representation and complete credit/tail trace correspondence remain distinct
-bridges. Existing TLA+ owns readiness, credits, terminal tails, failure and
+bridges. Existing Quint owns readiness, credits, terminal tails, failure and
 publication; no semantic iteration replica is added. No production runtime
 behavior change or performance improvement is inferred from this proof/test
 package, and MR integration remains deferred.

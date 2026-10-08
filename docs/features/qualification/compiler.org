@@ -27,7 +27,7 @@ the general gxtest/module-pool startup path has its own remaining gate.
 The recorded synchronized proof check included the former Lean Session
 publication replica. That historical receipt remains bound to its original
 sources; the replica is now removed and its unbounded protocol claims retired.
-Current Session protocol checks belong to TLA+, where =TLCGenerationCutoff=
+Current Session protocol checks belong to Quint, where =GenerationCutoff=
 configures finite enumeration only. Native carrier qualification does not
 establish an unbounded protocol theorem.
 

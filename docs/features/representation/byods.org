@@ -11,7 +11,7 @@ The [[file:../provider-views/design.org::#provider-owned-views][architecture rev
 The current engine expands and retains Provider facts despite private SCC
 compression. The proposed next unit is frozen relation views with exact delta,
 keyed enumeration, logical cardinality preflight and owned published snapshots.
-The review separates Lean algebra, TLA reader/publication protocols and native
+The review separates Lean algebra, Quint reader/publication protocols and native
 cost controls, including full export as a distinct unavoidable enumeration cost.
 This is a design proposal, not a new implementation or performance receipt.
 

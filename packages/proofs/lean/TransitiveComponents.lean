@@ -87,7 +87,7 @@ theorem winner_inherits_successors (reach : N → N → Prop)
 -- A losing component has at most the winner's size. A parent-link step
 -- therefore places each losing member in a component at least twice as large.
 -- Applying this to actual parent depth additionally requires forest/ownership
--- preservation, covered as operational invariants by the TLA model.
+-- preservation, covered as operational invariants by the Quint model.
 theorem largest_merge_doubles (loser winner rest : Nat)
     (largest : loser ≤ winner) : 2 * loser ≤ loser + winner + rest := by
   omega

@@ -16,7 +16,7 @@ providers alongside canonical Set and eqrel; it does not instantiate arbitrary
 custom lattices or prove universal native hash/SCC extraction.
 
 The [[file:../../evidence/scheme-directed-frontier-20261006/receipt.json][qualification receipt]] links every law to the complete Lean build and
-finite native per-insertion checks. TLA+ retains temporal responsibilities.
+finite native per-insertion checks. Quint retains temporal responsibilities.
 B23 sections 5.3-5.4 supply the representation motivation; their performance
 results are not attributed to the Scheme implementation. Native actor
 completion/trace and general representation correspondence remain open.
@@ -27,7 +27,7 @@ completion/trace and general representation correspondence remain open.
 The UF design now connects BYODS SCC compression to maximum-size representative
 selection, retained parent chains, member migration, additive sizes and optimized
 absorbed-key deletion. Lean derives the complete-closure conditions for safe key
-cleanup; TLA explores the operational updates and four additional seeded defects;
+cleanup; Quint explores the operational updates and four additional seeded defects;
 native Scheme audits actual storage after graph-prefix acceptance/refusal and a
 balanced ten-node merge sequence. This strengthens representation evidence, not
 a universal mutable-memory proof or a new performance claim. See

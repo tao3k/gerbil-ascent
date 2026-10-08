@@ -17,7 +17,7 @@ canonical Set instance with a non-Set representation-semantic instance.
 The [[file:../../evidence/scheme-eqrel-frontier-20261006/receipt.json][receipt]] records the complete Lean collection and native eqrel suite,
 including 512 graph inputs in both insertion orders, exact independent Floyd
 frontiers, budget rejection/retry, zero-budget replay and two non-singleton
-component merges. Lean test controls remain under =Tests=. TLA+ protocol
+component merges. Lean test controls remain under =Tests=. Quint protocol
 ownership is unchanged. No production representation or runtime behavior was
 changed, and neither paper performance results nor finite observations prove
 universal native representation correspondence. MR remains deferred.

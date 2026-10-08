@@ -27,7 +27,7 @@ extraction are explicit remaining premises rather than assumed whole-frontier
 correctness. The complete Lean build passes 90 jobs, with 24 rectangle laws and
 14 examples.
 
-The shared-reader TLA model checks last-owner retirement, ownership conservation,
+The shared-reader Quint model checks last-owner retirement, ownership conservation,
 revision compatibility and per-reader completion. Aggregate fairness passes a
 single-reader control but permits starvation with two readers. Premature
 retirement, leaked ownership and equal-content revision reuse fail their named
@@ -41,10 +41,10 @@ claim and does not replace the migration's native/cost evidence.
 * Grouped encoding and presentation journal progress (2026-10-07)
 
 The BYODS refinement now includes eleven Lean encoding/orientation laws and
-a separate TLA ProviderReplay publication model. Encoding a two-column row
+a separate Quint ProviderReplay publication model. Encoding a two-column row
 and encoding a three-column false-group row are provably distinct. Exact
 encoded frontiers derive from the constructed root/member plan; derived batch
-orientation preserves facts, uniqueness and counts. The TLA model uses a
+orientation preserves facts, uniqueness and counts. The Quint model uses a
 constructed predecessor/successor step and an independent input-closure oracle;
 six faults discriminate scope aliasing, early/omitted journal events, erased
 derived kind, mutable old cuts and refusal writes. Native Scheme tests cover

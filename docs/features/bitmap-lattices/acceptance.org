@@ -54,7 +54,7 @@ monotonicity and blocker antitonicity for arbitrary finite widths. Lean tests
 remain under =Tests=. Native integer-to-BitVec correspondence is exercised by
 qualification rather than claimed as extracted code correctness.
 
-TLA+ retains protocol ownership: =PositiveNonmembershipSession=,
+Quint retains protocol ownership: =PositiveNonmembershipSession=,
 =SessionTransaction= and =NativeSessionPublication= check committed snapshots,
 provisional updates and recovery, with seven mutation counterexamples. This
 integration adds no Session transition, so no duplicate bitmap-specific

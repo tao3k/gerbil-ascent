@@ -36,7 +36,7 @@ This closes the algebraic eqrel instance and qualifies these native finite
 observations. It does not extract Gambit hash equality, component-pointer
 identity, membership-list iteration, budget arithmetic or row ordering into
 Lean. B23's general custom lattice contracts and universal native actor
-completion/trace refinement remain separate obligations. TLA+ continues to
+completion/trace refinement remain separate obligations. Quint continues to
 own private-state publication, failure and credit lifecycle; no duplicate
 algebraic protocol model is introduced. No runtime speedup is claimed.
 

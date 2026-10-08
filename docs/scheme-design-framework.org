@@ -100,7 +100,7 @@ laws and rank/height correspondence. Native scalar equality/hash conformance
 and actual descriptor/step refinement keep their separate R1 obligations.
 
 Its [[file:evidence/scheme-row-representation-20261004/receipt.json][source-bound acceptance]] covers 109 Cases across six native modules,
-16 new Lean laws and the existing TLA controls. A bare-source typed result now
+16 new Lean laws and the existing Quint controls. A bare-source typed result now
 receives an explicit derived set view; raw source occurrences and budgets remain
 observable. Named checked Sessions accept derived query relations and restrict
 mutation to admitted source handles. Rejected duplicate-result and Session
@@ -118,7 +118,7 @@ encoding and admission to the source-only IR branch and closed lexical lowering.
 Its [[file:evidence/scheme-identity-materialization-20261005/receipt.json][acceptance receipt]] separates the current 33-Case higher-order rerun from
 the historical 109-Case qualification. It establishes this mathematical step;
 the native rule emitter, equality/hash implementation and exact per-term domains
-still require their own correspondence proofs. TLA lifecycle behavior is unchanged.
+still require their own correspondence proofs. Quint lifecycle behavior is unchanged.
 
 The [[file:scheme-compiler-proof-bridge.org][positive primitive domain slice]] adds local row-domain laws for union,
 join, arbitrary checked projection, selection and finite mapping. Each law
@@ -164,7 +164,7 @@ matching validity and the edge/chain balance. This establishes the mathematical
 minimum-chain criterion; extraction of native column graphs and trie execution
 into those premises and full paper application costs retain separate obligations.
 
-The 82-module, 717-Case native qualification and separate Lean/TLA collection
+The 82-module, 717-Case native qualification and separate Lean/Quint collection
 establish this implementation boundary. Existing default-path performance gates
 passed; the shared complete-solve fixture did not establish a CPU/allocation
 benefit. Reduced physical root count is not a speed or peak-memory claim.
@@ -338,7 +338,7 @@ and bucket discriminators extend =ascent-index-lifecycle-test.ss=. Private fresh
 variables, the positive slot machine, callbacks, scalar/identity decoding and
 actual hash/cache representation remain separate bridges.
 
-=ActorRound.tla= owns work-key rejection, duplicate/stale replies, cancellation,
+=ActorRound.qnt= owns work-key rejection, duplicate/stale replies, cancellation,
 frozen frontiers, drain and publication protocol checks. =RoundAdmission.lean=
 retains checkpoint-distance arithmetic, immutable cache identity and bucket
 extension equations. It contains no matching actor state machine. Neither
@@ -366,7 +366,7 @@ module; native generation does not substitute expected diagnostics or assertions
 This historical qualification used LeanPoo =9e16095=. The current dependency
 and consumer migration are recorded in [[file:scheme-compiler-proof-bridge.org][the compiler proof bridge]].
 The current Lean library and concrete tests build with LeanPoo =247d1d6=.
-=ActorTestPool.tla= checks capacities 1/2/3 and rejects premature return. This is
+=ActorTestPool.qnt= checks capacities 1/2/3 and rejects premature return. This is
 protocol safety over a finite exploration, not worker liveness or a native
 refinement theorem. Existing unbounded solver round laws remain unchanged.
 
@@ -399,7 +399,7 @@ the rejected GitHub head. No performance speedup is inferred from worker count.
 The [[file:scheme-actor-runtime-design.org][actor runtime design]] now maps the A22 round/SCC and B23 concretization
 premises to actual =program/actor-round.ss= integration: frozen frontiers,
 private frames/indexes, credit-bounded candidates, one owner merge and terminal
-drain before commit. Native tests and Lean/TLA+ gates cover this admitted pure
+drain before commit. Native tests and Lean/Quint gates cover this admitted pure
 Set subset. Ready-SCC scheduling, custom Provider workers, Session cancellation
 publication and matched performance remain separate obligations. No whole-runtime
 closure, model gain or MRR integration is asserted.
@@ -409,7 +409,7 @@ closure, model gain or MRR integration is asserted.
 The [[file:scheme-actor-runtime-design.org][actor runtime design]] now has an implemented source-cut owner and independent
 compute worker. Cancel increments generation, refuses old publication and waits
 for assigned worker/monitor drain; failure restores committed sources. Native
-lifecycle tests and TLA+ publication/drain checks accompany the code. B22's
+lifecycle tests and Quint publication/drain checks accompany the code. B22's
 outer/inner natural time distinction motivates generation versus round; A22's
 ready-SCC dependency scheduling remains a next implementation obligation.
 The actor constructor uses fresh engines, not retained incremental reuse. No
@@ -422,7 +422,7 @@ projection to actual native component workers. Completed predecessors release
 successors without waiting for unrelated active SCCs; each SCC retains local
 round completion, one owner charges global unique-row budgets, and the complete
 cut remains the Session publication unit. Native independent truth/rendezvous
-Cases and TLA+ prerequisite/drain gates accompany this slice. A22's SCC
+Cases and Quint prerequisite/drain gates accompany this slice. A22's SCC
 order/local state is implemented for pure Set cuts; B23 Provider concretization
 remains a separate contract. A matched exploratory native timing probe retains
 serial and SCC 1/2/4 observations without asserting general multicore speedup.
@@ -433,7 +433,7 @@ Immutable analysis identity now keys a weak component-plan cache. SCC admission
 policy is owned by the component module, repairing the prior CI module-size
 failure without changing its threshold. Runtime rows/frames/indexes remain
 solve-private. Native exact-identity and fresh-versus-cached projection controls,
-pure Lean identity/cache-construction equations, and replayed TLA scheduling safety are
+pure Lean identity/cache-construction equations, and replayed Quint scheduling safety are
 recorded in [[file:evidence/scheme-component-cache-20261005/receipt.json][the qualification receipt]]. Planning-only timing is not an end-to-end
 claim. Remaining gates include persistent worker/index reuse, large SCC
 partitioning, custom Provider concurrency and matched scale/CPU/allocation tests.
@@ -444,7 +444,7 @@ The worker now extends valid total indexes against the old version before
 installing admitted row roots and next versions; delta stays round-local.
 Reverse batch traversal preserves rebuilt bucket order. Native independent
 closure, input immutability and single/composite key controls accompany Lean
-ordered extension laws and TLA private extension/install safety with negative
+ordered extension laws and Quint private extension/install safety with negative
 controls. [[file:evidence/scheme-component-index-20261005/receipt.json][CPU, wall and VM allocation receipts]] distinguish local worker cost,
 real actor coordinator cost and unmeasured public/LLM latency. Custom Provider
 concurrency, large SCC partitioning and persistent worker reuse remain open.

@@ -75,7 +75,7 @@ it is not an implemented capability or a proved space bound.
 
 Lean must connect admitted domain ordinals, membership, cardinality, old/delta/
 total cuts and indexed column projections to the rule consequence operator.
-TLA+ must cover private domain/index construction, owner publication, foreign or
+Quint must cover private domain/index construction, owner publication, foreign or
 stale roots and actor cancellation. The existing publication models may be
 reused where those transitions remain unchanged; copying their semantic laws
 into another protocol model adds no assurance. Native controls must compare
@@ -136,7 +136,7 @@ control had identical origin rosters and could not distinguish those rules.
 The two input rosters now differ in a permanent regression control; the
 independent reference observations were retained unchanged.
 
-** Lean and TLA+ responsibilities
+** Lean and Quint responsibilities
 
 =PoloniusInitialization.lean= proves four laws without axioms:
 
@@ -152,7 +152,7 @@ Initialization instantiates these laws once with assignment seeds and move
 blockers, and once with move seeds and assignment blockers. Tests reside under
 =packages/proofs/lean/Tests=. These are relation-level proofs, not extraction
 proofs of the native Program compiler, all Polonius rules, or bitmap storage.
-The existing Session/actor publication and cancellation TLA+ models remain the
+The existing Session/actor publication and cancellation Quint models remain the
 protocol owners. No new application publication protocol was introduced, so
 copying those models into an application-specific state machine would duplicate
 their obligations. A future compact representation must extend protocol
@@ -233,7 +233,7 @@ are introduced. These mathematical byte laws do not establish extraction of
 Gambit u8vector operations or completeness of the native queue implementation.
 
 The kernel introduces no actor publication protocol: one call owns all mutable
-state and returns only its completed frozen view. Existing actor/Session TLA+
+state and returns only its completed frozen view. Existing actor/Session Quint
 models remain their protocol owners. The current UF view recovery journal is
 UF-specific; granting this bitmap view UF identity would be incorrect. The next
 integration must admit fixed domains, exact total/delta cuts and recovery without

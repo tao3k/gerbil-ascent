@@ -111,7 +111,7 @@ Gerbil actor implementation, cancellation protocol or performance claim.
 
 * Executable safety model and next gates
 
-=packages/proofs/tla/ActorRound.tla= models two positive producers over a tiny
+=packages/proofs/quint/ActorRound.qnt= models two positive producers over a tiny
 finite source domain, frozen rounds, out-of-order replies, replay, generation
 invalidation, cancellation draining and atomic publication. Independent closure
 is {1,2,3} for seed {1}, and {2,3} for seed {2}. Fault controls disable the
@@ -126,7 +126,7 @@ Native implementation gates:
   duplicate, late, canceled, failed-worker and full-mailbox discriminators.
 - Positive SCC worker results equal the independent serial truth after every
   round and at publication, including provider expansion and skewed partitions.
-- TLA+ refinement must link actual coordinator transitions to protocol safety.
+- Quint refinement must link actual coordinator transitions to protocol safety.
   Finite model checking does not establish an unbounded native trace theorem.
 - Matched 1/2/4-worker measurements report queue delay, work, merge time, CPU,
   allocations, throughput and latency, including regressions and backend limits.
@@ -134,7 +134,7 @@ Native implementation gates:
 This decision adds no native concurrent solver or measured parallel benefit.
 MRR Rust integration retains its later acceptance gate.
 
-=ActorRound.tla= owns different-key/generation rejection, duplicate terminal
+=ActorRound.qnt= owns different-key/generation rejection, duplicate terminal
 replies, cancellation and publication checks over reachable modeled traces.
 The former Lean work-key transition replica has been removed; its unbounded
 claims are retired. Native coordinator correspondence and worker liveness
@@ -179,7 +179,7 @@ Exclusive modules start only after the successful parallel lane is fully drained
 The native qualification uses an explicit two-worker rendezvous to demonstrate
 actual overlap without comparing wall-clock samples. Additional Cases check
 failure admission, output failure draining, caller mailbox isolation, monitored
-worker exceptions, serial line ordering and empty inventory. =ActorTestPool.tla=
+worker exceptions, serial line ordering and empty inventory. =ActorTestPool.qnt=
 checks the abstract task partition, bounded active/output credits, stopped
 admission and complete return for exploration capacities 1, 2 and 3; an early
 return mutation must violate =CompleteReturn=. Exploration sizes are not runtime
@@ -256,7 +256,7 @@ Callback trace/order remains serial through the eligibility gate. A single large
 rule is still one task: skew partitioning, persistent worker reuse, ready-SCC
 scheduling, Session actor generation/cancel publication and custom Provider
 concretization are outstanding. This slice must not be called whole-runtime
-closure or native refinement of all =ActorRound.tla= actions.
+closure or native refinement of all =ActorRound.qnt= actions.
 
 ** Paper obligations mapped to this slice
 
@@ -274,7 +274,7 @@ worker-safe representation. Plain concurrent tuple union does not establish it.
 
 ** Formal/evidence boundary
 
-=ActorRoundCredits.tla= owns queued/assigned work, stop and terminal
+=ActorRoundCredits.qnt= owns queued/assigned work, stop and terminal
 acknowledgement transitions. It checks assignment capacity, one outstanding
 credit per worker and return only after
 drain at exploration capacities 1/2/3. An injected early return must produce a
@@ -353,7 +353,7 @@ it does not yet dispatch ready independent SCCs. That future scheduler must
 retain component-local round completion while releasing independent ready SCCs.
 Cancel cannot be made effective by deleting the complete-publication condition.
 
-=ActorSession.tla= owns idle/foreign reply handling, failed/canceled publication
+=ActorSession.qnt= owns idle/foreign reply handling, failed/canceled publication
 and close-after-drain protocol checks. The duplicate Lean actor state machine
 has been retired. Native/VM refinement and fairness remain separate. TLC's
 configurable generation constraint limits exploration, not the runtime or
@@ -436,7 +436,7 @@ and ready-callback failure drain. Session cancel/close/failure tests continue to
 exercise the actual SCC engine. This is executable causal overlap evidence,
 without an inference of multicore CPU scaling.
 
-=ReadyComponents.tla= owns ready predecessor admission, foreign/duplicate
+=ReadyComponents.qnt= owns ready predecessor admission, foreign/duplicate
 completion and dispatch alongside unrelated active work. It explores capacities
 1/2/3 for prerequisite,
 partition, capacity and complete-return safety. Premature dispatch and early
@@ -523,7 +523,7 @@ The planning probe cannot establish end-to-end or multicore benefit.
 
 =RoundAdmission.lean= proves immutable identity hit/miss and the equations
 for completed/failed cache construction. These are pure function laws, not
-publication or synchronization protocols. =ReadyComponents.tla= is replayed unchanged because the
+publication or synchronization protocols. =ReadyComponents.qnt= is replayed unchanged because the
 cache adds no active/done/return transitions. Neither proves the native weak
 hash/mutex implementation. The [[file:evidence/scheme-component-cache-20261005/receipt.json][cache qualification receipt]] records outcomes,
 negative measurements and the preceding CI failure. Model calls remain 0.
@@ -613,7 +613,7 @@ coordinators import the same current component worker and indexes. Native tests
 check independent stream and recursive closure truth for every alternating
 sample and verify cancellation rejects further rows and drains assigned workers.
 Lean proves the counter bound for every positive natural period, successful
-reset and refused-credit preservation. Existing TLA credit/drain checks cover
+reset and refused-credit preservation. Existing Quint credit/drain checks cover
 capacities 1/2/3 plus an early-return negative control; they do not model this
 counter or refine the native VM. Generations remain unbounded.
 

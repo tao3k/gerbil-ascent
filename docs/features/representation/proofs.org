@@ -73,7 +73,7 @@ single-source API deliberately leaves replacement provisional until =run!=;
 even a precomputed checked result must respect timed-run round boundaries.
 These are different observable contracts and need separate trace refinements.
 
-Publication safety is owned by the TLA+ protocol collection. The [[file:../../../packages/proofs/tla/SessionTransaction.tla][TLA transaction model]] has symbolic
+Publication safety is owned by the Quint protocol collection. The [[file:../../../packages/proofs/quint/SessionTransaction.qnt][Quint transaction model]] has symbolic
 source cuts and an external-commit action. The inspected native Session has no
 corresponding public generation token or asynchronous commit protocol. A future
 refinement must map synchronous clean batch boundaries to abstract snapshots
@@ -115,7 +115,7 @@ pairs; lazy result reversal does not establish compressed relation storage.
 
 The proposal supplies implementation seams and falsifiable acceptance gates,
 not a completed migration. Lean owns enumeration, filtering and cardinality
-correspondence; TLA owns revision/retirement/publication interleavings. Existing
+correspondence; Quint owns revision/retirement/publication interleavings. Existing
 finite native checks and exact-head CI retain their original scope. Higher-order
 function-change compilation and MR consumer integration remain separate work.
 

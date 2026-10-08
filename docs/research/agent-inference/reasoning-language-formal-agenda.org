@@ -87,7 +87,7 @@ identity and representation obligations in more detail.
 
 The [[file:../../scheme-actor-runtime-design.org][actor runtime decision]] now requires source-bound work keys, frozen
 rounds, merge barriers, cancellation draining and unchanged completed publication.
-TLA+ owns stale/duplicate/canceled reply admission and cancellation/resume
+Quint owns stale/duplicate/canceled reply admission and cancellation/resume
 protocol checks. Lean retains mathematical checkpoint and bucket laws.
 =ActorRound= is a finite protocol model with early-barrier, stale-reply and
 canceled-publication fault controls. These are scheduling specifications;
@@ -180,26 +180,26 @@ generation-bound candidate result with MRR's accepted identity,
 lineage and transition premises. The two proof projects should not be
 silently identified by matching type names.
 
-* TLA+: present lifecycle models and missing bridge
+* Quint: present lifecycle models and missing bridge
 
-[[file:../../../packages/proofs/tla/SessionTransaction.tla][SessionTransaction]] models atomic source/result publication, stale
+[[file:../../../packages/proofs/quint/SessionTransaction.qnt][SessionTransaction]] models atomic source/result publication, stale
 work and abort over one symbolic direct/via/blocked row. Its =ResultOf=
 is the branch-local formula from the Lean slice; a =global= mutation
 puts exclusion after union and must violate =AtomicSnapshot= when a
 blocked direct witness is published. This compares the same formula
 as a semantic oracle for transaction traces. Lean owns the universal
-branch-local equation; TLA+ checks its use during publication and invalidation.
-This is not a mechanized Lean-to-TLA translation or a duplicate algebra proof.
+branch-local equation; Quint checks its use during publication and invalidation.
+This is not a mechanized Lean-to-Quint translation or a duplicate algebra proof.
 A =reuse= mutation keeps the old answer when only the blocker bit
 changes; it must also violate =AtomicSnapshot= once a via witness is
 retracted or restored. This directly checks that a lower-stratum
 source change is not treated as monotone growth of the old answer.
-[[file:../../../packages/proofs/tla/PositiveNonmembershipSession.tla][PositiveNonmembershipSession]] models certificate binding
+[[file:../../../packages/proofs/quint/PositiveNonmembershipSession.qnt][PositiveNonmembershipSession]] models certificate binding
 and stale-use rejection. Their =Cuts= are tiny symbolic domains for
 TLC; neither model is a native Gerbil trace refinement, source
 authentication model or liveness proof. The inspected MRR checkout at
 =faedb3e= has one tracked Lean file and no tracked =.tla= or =.cfg=
-file; MRR's README describes TLA evidence at a broader architecture
+file; MRR's README describes Quint evidence at a broader architecture
 level, so that claim should be reconciled before asserting a passing
 MRR-side TLC gate.
 
@@ -208,7 +208,7 @@ transaction model and =NoStalePublished/NoStaleUse= in the certificate
 model. They speak about protocol state and the symbolic branch result,
 not a native least-fixed-point computation.
 
-The [[file:../../../packages/proofs/tla/NativeSessionPublication.tla][NativeSessionPublication]] slice follows the *synchronous* retained
+The [[file:../../../packages/proofs/quint/NativeSessionPublication.qnt][NativeSessionPublication]] slice follows the *synchronous* retained
 Session entrypoints more closely. =committed=, =pending= and =published=
 abstract =program/session.ss='s accepted committed source, pending source
 and =committed-result=, respectively. =published= deliberately does not
@@ -224,7 +224,7 @@ native public generation token. Source appends, callback failures inside
 adoption, opaque providers and native trace refinement remain outside
 this model.
 
-The synchronous protocol belongs to =NativeSessionPublication.tla=. Its former
+The synchronous protocol belongs to =NativeSessionPublication.qnt=. Its former
 Lean transition replica is retired. Finite TLC exploration does not acquire
 the replica's universal-trace theorem; unbounded temporal refinement remains
 open. Current native correspondence is a review obligation:
@@ -262,7 +262,7 @@ locality premise. LeanPOO's =reuse= transports a certificate across a
 disjoint batch; =pending= selects affected and new obligations;
 =closePending= requires fresh evidence for those selected. The module
 retains typed patch/certificate reuse and invalidation laws. Atomic publication
-belongs to the TLA+ Session models; no Lean publication wrapper is counted. Concrete qualification cases live in
+belongs to the Quint Session models; no Lean publication wrapper is counted. Concrete qualification cases live in
 [[file:../../../packages/proofs/lean/Tests/AscentProofTests.lean][AscentProofTests]]. These statements require an accurate dependency
 list and completed =resultOf=; native source-dependency closure, typed
 row representation and evaluator correspondence remain open. The same
@@ -510,14 +510,15 @@ still be mutable during a fresh evaluation, and Gerbil-to-Lean evaluator
 refinement remains open.
 No performance claim follows from this proof.
 
-The =TLCGenerationCutoff= constant is a finite *model-checking* search
-parameter, supplied by =ASCENT_TLC_GENERATION_CUTOFF= in the =Justfile= (four
-generations in CI). Direct =.cfg= invocation samples two generations.
+The =GenerationCutoff= constant is a finite *model-checking* search
+parameter, supplied by =ASCENT_FORMAL_GENERATION_CUTOFF= in the =Justfile= (four
+generations in CI; the default Session exploration uses two). Checker
+configuration is generated by the Quint gate.
 Neither value limits a native Session, an ASCENT fixed point, or a model's
 reasoning budget. The former Lean =publications_consistent= protocol theorem
 has been removed and its unbounded trace claim retired. Current finite TLC
 checks do not replace that claim. An unbounded temporal result and native
-trace refinement remain TLA+ obligations.
+trace refinement remain Quint obligations.
 
 The next cross-owner safety model belongs at the ASCENT-to-MRR
 publication boundary. Model =Propose=, =Solve=, =SourceChange=,

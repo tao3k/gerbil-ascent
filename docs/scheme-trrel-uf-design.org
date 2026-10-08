@@ -59,7 +59,7 @@ rectangle traversal and merge normalization have costs that require controls.
   edge, remains transitive and is least among transitive supersets. SCC quotient
   concretization is exact given a root partition matching mutual reachability.
   This premise is not a proof of actual mutable parent/hash code.
-- TLA =TransitiveComponents=: three already admitted nodes, component rectangles,
+- Quint =TransitiveComponents=: three already admitted nodes, component rectangles,
   SCC remapping, root identity, concrete reachability and refusal. Mutations
   retaining split SCCs, stale edges and refusal writes must produce counterexamples.
   The finite node set is a fixture; no generation limit is introduced.

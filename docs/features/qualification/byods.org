@@ -14,7 +14,7 @@ while the direct Scheme, BYODS, scale and formal gates passed.
 
 The adapter now preserves typed errors/partial bytes and requires complete
 independent pipe reads before decoding and row comparison. Lean owns ordered
-chunk replay and terminal rejection; TLA owns exit/read/request interleavings
+chunk replay and terminal rejection; Quint owns exit/read/request interleavings
 and four fault controls. This is an acceptance-path correction, not a new BYODS
 algebra theorem or Rust runtime integration. The historical syscall cause is
 unknown because its diagnostic was lost. The original graph truth and deadlines

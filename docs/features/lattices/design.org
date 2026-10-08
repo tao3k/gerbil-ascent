@@ -29,7 +29,7 @@ contract below. Native event order, visited-table deduplication, stable field
 equality and Scheme hash lookup retain representation premises.
 No shape check certifies a caller's arbitrary join procedure as a semilattice.
 
-The TLA model owns the transaction boundary rather than join algebra. It admits
+The Quint model owns the transaction boundary rather than join algebra. It admits
 a finite batch in any order, checks the private map against an independent
 minimum over all admitted events, permits projection only after all events are
 collected, replaces visible tuple rows, and preserves a previously held snapshot.
@@ -99,11 +99,11 @@ key events. An event stores only its key: publication always reads the final
 table value, so an earlier event cannot resurrect an earlier value. Coverage
 is equality of roster support and table domain; it does not certify join purity,
 physical hash behavior or uniqueness of the mutable visited table's list output.
-The TLA min transaction now publishes through a dirty-key set, retains untouched
+The Quint min transaction now publishes through a dirty-key set, retains untouched
 rows, and checks KeyCoverage. Dropping a first changed key and forgetting a key
-on repeated improvement produce distinct typed counterexamples. TLA owns this
+on repeated improvement produce distinct typed counterexamples. Quint owns this
 publication protocol; Lean owns universal coverage and weighted graph laws.
-No duplicate TLA weighted-graph theorem model is introduced.
+No duplicate Quint weighted-graph theorem model is introduced.
 
 Acceptance and source identities are recorded in
 [[file:../../evidence/scheme-provider-views-20261007/strict-dependencies-pending-keys.json][the refinement receipt]].
@@ -141,7 +141,7 @@ across publications; this is not a bound on live rows or physical memory.
 Native checks compare =derived-count + pending-count= with the derived limit and
 =source-materialized-count + derived-count + pending-count= with the output limit.
 
-The TLA model owns admission/refusal/publication, not the Lean update algebra.
+The Quint model owns admission/refusal/publication, not the Lean update algebra.
 =Remaining= is the available resource parameter after committed/source work;
 configurations 0, 1 and 2 explore exhausted, single-key and full two-key capacity.
 An ineffective event can be consumed at zero remaining capacity. Refusal may

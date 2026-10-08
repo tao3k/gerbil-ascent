@@ -13,7 +13,7 @@ import Tests.ComponentProjectionTests
 import Tests.SnapshotClosureTests
 
 /-! Compile-time qualification for LeanPoo source patches, invalidation,
-certificate reuse and source-count algebra. Temporal publication belongs to TLA+. -/
+certificate reuse and source-count algebra. Temporal publication belongs to Quint. -/
 
 namespace Ascent.ProofTests
 

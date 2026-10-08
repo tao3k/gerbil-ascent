@@ -15,7 +15,7 @@ source dates and qualification boundaries. Current evidence is commit-specific.
 This review reads implementation =93e81c1c3645197578073fd5481bf7195f16fd0b=.
 It reopens B23 sections 3.3, 4 and 5.1 and S20 sections 6.3 and 7. The
 following design is a proposal; no relation-view implementation, new theorem,
-TLA trace refinement or measured benefit is delivered by this review.
+Quint trace refinement or measured benefit is delivered by this review.
 
 B23 section 4 queries relation representations through logical indexes and
 iterators. Section 3.3 requires total/delta coverage of the joined concrete
@@ -106,7 +106,7 @@ are met.
 | Built-in compressed instance | UF frozen total views and exact rectangle delta with separate cardinality | Every insertion prefix against independent reachability; bridge joins, repeated atoms, explicit self inputs and grouped isolation |
 | Evaluator and publication | Initialization, derived admission, append, indexes, result ownership and recovery consume the same view contract | Old result after SCC merge/replacement; exact-budget refusal/retry; interrupted publication; no hidden fallback retaining all UF pairs |
 | Formal correspondence | Lean enumeration/key filtering and rectangle partition/cardinality connect to existing frontier and indexed iteration laws | Native decoding/representation premises remain explicit; tests and axiom reports belong under =Tests/= |
-| Temporal correspondence | TLA view revision, reader retirement, stale reply, cancel/drain and staged publication actions | Mutations for mutable old views, early retirement and partial publication must fail; no semantic generation maximum |
+| Temporal correspondence | Quint view revision, reader retirement, stale reply, cancel/drain and staged publication actions | Mutations for mutable old views, early retirement and partial publication must fail; no semantic generation maximum |
 | Benefit acceptance | Matched current explicit engine versus compressed engine, on identical logical inputs and budgets | Sparse keyed query and full export measured separately; include DAG/cycle, grouped joins, retained updates, peak live memory, allocation and time |
 
 Implement the representation boundary and one UF instance together before
@@ -204,7 +204,7 @@ measurement. Derived injection journals can themselves be quadratic on dense
 programs; replay allocates a temporary UF owner and every exported pair, so full
 ordered export is a separate measured cost.
 Full export must still emit every logical pair. Native tests establish bounded
-correspondence; the separate Lean/TLA thread owns formal view and lifecycle
+correspondence; the separate Lean/Quint thread owns formal view and lifecycle
 refinement, and its obligations are not closed by these tests.
 
 ** Acceptance sequence
@@ -325,7 +325,7 @@ commit coordinator; injected failures are prospective protocol discriminators.
 
 The abstraction does not prove Gambit scheduling fairness, termination of host
 callbacks, multi-key actor source extraction or journal replay ordering. Lean
-owns component/fact algebra; TLA+ owns reader lifecycle and publication. Existing
+owns component/fact algebra; Quint owns reader lifecycle and publication. Existing
 native controls and cost receipts remain separate evidence, including negative
 full-export and grouped-join measurements.
 
@@ -402,7 +402,7 @@ claims that the correct current implementation contains those seeded defects.
 
 | Obligation | Current evidence | Remaining scope |
 | Public grouped row encoding | Eleven Lean laws, group isolation and exact frontier controls | Stable equality of nested Scheme fields remains an admission premise |
-| Journal semantic preservation | Orientation algebra and independent TLA input-closure assertion | Universal refinement of the complete mutable replay implementation |
+| Journal semantic preservation | Orientation algebra and independent Quint input-closure assertion | Universal refinement of the complete mutable replay implementation |
 | Journal publication and held cut | Six new typed faults, source/derived/cycle and multi-input native controls | Concurrent reader protocol remains in the existing ProviderViews gate |
 | Complete BYODS design | These controls strengthen Sections 3.3 and 5.4 correspondence | User-defined providers, general lattices, application replication and matched scale/benefit evidence remain in the paper closure matrix |
 

@@ -57,7 +57,7 @@ same initial program. This is an executable integration slice for relation-backe
 queries. Full Steensgaard, Polonius, PageRank and LLVM experiments retain their
 separate obligations in =scheme-paper-closure.org=. This thread owns Scheme,
 consumer tests and correspondence documentation; the theorem thread owns the
-Lean/TLA implementations.
+Lean/Quint implementations.
 
 The previous receipt remains a historical source cut. The runtime closure
 receipt binds the published =978b294= Scheme cut, source/native/oracle gates and

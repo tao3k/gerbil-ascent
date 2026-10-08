@@ -67,7 +67,7 @@ candidate intent are outside the set-equivalence claim.
 
 The repository gate is =just build=, =just test=, =just oracle=,
 =just performance= and policy checks at one exact head, followed by
-the same-head Ubuntu CI. The abstract Lean/TLA nonmembership gate is
+the same-head Ubuntu CI. The abstract Lean/Quint nonmembership gate is
 =just check-nonmembership-formal= when that toolchain is available; it
 does not prove the Gerbil implementation. A prior green head cannot
 qualify a later edit.

@@ -16,7 +16,7 @@ performs no new load/store unions; positive native fixtures still qualify that
 consequence rule and retained lifecycle. CI repeats this full-input check.
 
 The mathematical component-square correspondence belongs to Lean; frozen
-publication/read/lifetime interleavings remain in TLA+. General native
+publication/read/lifetime interleavings remain in Quint. General native
 algorithm extraction, the other full paper applications and matched benefit
 qualification remain explicit gates. VM allocation accounting is not physical
 constructor bytes: the new full runs retain negative differences and reject

@@ -14,7 +14,7 @@ completed facts into the current database equals current local evaluation,
 and snapshot stability yields current closure. Writes by another component
 with no read edge derive the frame via =iterate_frame=. Changed predecessor
 reads are a negative control, even if the old empty snapshot was stable.
-Lean contains no temporal protocol replica. Existing TLA+ ready/credit models
+Lean contains no temporal protocol replica. Existing Quint ready/credit models
 check terminal delivery and admission; the native concurrent fixture completes
 right while left retains an older snapshot and verifies both results survive.
 This closes completed-result semantic rebasing under the explicit frame. It
@@ -33,7 +33,7 @@ fold to current local evaluation and stable closure through the prior snapshot
 frame theorem. A missing candidate rejects the delivery premise in Lean.
 The native 65-candidate/17-value fixture crosses two credit batches and a
 terminal tail and checks successor admission after complete owner observation.
-Existing TLA+ credit/terminal controls retain temporal ownership. This closes
+Existing Quint credit/terminal controls retain temporal ownership. This closes
 batch algebra under candidate origin and complete-delivery premises; native
 trace extraction and cancellation semantics remain outstanding. See [[file:../../evidence/scheme-batch-closure-20261006/receipt.json][receipt]].
 
@@ -174,6 +174,6 @@ retained separately. This slice qualifies distinct-row pending reconstruction;
 it does not qualify a replay that itself fails or external callback rollback.
 The [[file:../../research/scheme-dsl/byods-b23.org][B23 flush-footprint inference]] connects the implementation boundary to
 §3.3's total/delta decomposition and §5.5's logical/physical index distinction.
-No Lean/TLA theorem or performance claim is added. Full CI remains tied to
+No Lean/Quint theorem or performance claim is added. Full CI remains tied to
 the subsequently pushed revision.
 

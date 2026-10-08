@@ -23,7 +23,7 @@ The existing Rust BYODS shard passes 11 tests with its one pre-existing ignored
 case; package build/policy passes with zero errors and 18 advisory findings.
 
 This regression reinforces the evidence split: Lean verifies the algebra,
-TLA+ checks the protocol, and public source/native entry gates verify that the
+Quint checks the protocol, and public source/native entry gates verify that the
 actual library can be loaded and exercised. A compiled-only acceptance cannot
 substitute for public source execution. The shared-reader proof receipt and this
 entry repair receipt retain their separate source identities.

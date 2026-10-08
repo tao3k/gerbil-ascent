@@ -43,7 +43,7 @@ raw input tuple family. Controls reject anti-monotone concretization and show
 that an empty fresh head state cannot overwrite an accumulated true state.
 Axioms and tests belong under =packages/proofs/lean/Tests=.
 
-The existing ProviderFrontier TLA model adds a =replace= fault that overwrites
+The existing ProviderFrontier Quint model adds a =replace= fault that overwrites
 accumulated consumer heads with only the current pivot output. Its independent
 =ConsumerSnapshot= invariant must reject the fault. This is a publication and
 retention control, not a second proof of abstract join algebra. Native retained

@@ -8,10 +8,10 @@ source dates and qualification boundaries. Current evidence is commit-specific.
 * BYODS frozen-view validation unit (2026-10-07)
 
 [[file:../../scheme-trrel-uf-design.org][The UF design follow-up]] couples twelve Lean rectangle enumeration/cardinality
-laws, a TLA view-lifetime/publication model with five discriminating fault
+laws, a Quint view-lifetime/publication model with five discriminating fault
 variants, and independently checked native frozen total/frontier views.
 Lean's exact-frontier transport retains its concretization premise; the native
-Floyd oracle checks that premise on 4,608 insertion prefixes. TLA checks
+Floyd oracle checks that premise on 4,608 insertion prefixes. Quint checks
 protocol observations and avoids duplicating the relation algebra. Its seeded
 counterexamples establish design discriminators, not five production incidents.
 
@@ -24,7 +24,7 @@ required before claiming B23's compressed-storage application result.
 
 ** BYODS validation coverage after the frozen-view unit
 
-| Design obligation | Lean owner / premise | TLA owner / premise | Native discriminator / remaining gap |
+| Design obligation | Lean owner / premise | Quint owner / premise | Native discriminator / remaining gap |
 |-------------------+----------------------+---------------------+--------------------------------------|
 | Concretization of declared built-ins | EquivalenceComponents and DirectedFrontier: active-domain closure and exact frontier | TransitiveComponents: finite merge/remap/refusal actions | Independent per-insertion graph truth; general Scheme hash/root extraction remains open |
 | Every implied fact reaches a delta consumer | ProviderFrontier and SemiNaive: body decomposition and positive Set iteration under monotone views | ProviderFrontier: injection/consumption and initial-cut publication | Repeated atoms and split producers; arbitrary lattice gamma contracts remain open |
@@ -50,7 +50,7 @@ extraction are explicit remaining premises rather than assumed whole-frontier
 correctness. The complete Lean build passes 90 jobs, with 24 rectangle laws and
 14 examples.
 
-The shared-reader TLA model checks last-owner retirement, ownership conservation,
+The shared-reader Quint model checks last-owner retirement, ownership conservation,
 revision compatibility and per-reader completion. Aggregate fairness passes a
 single-reader control but permits starvation with two readers. Premature
 retirement, leaked ownership and equal-content revision reuse fail their named
@@ -64,10 +64,10 @@ claim and does not replace the migration's native/cost evidence.
 * Grouped encoding and presentation journal progress (2026-10-07)
 
 The BYODS refinement now includes eleven Lean encoding/orientation laws and
-a separate TLA ProviderReplay publication model. Encoding a two-column row
+a separate Quint ProviderReplay publication model. Encoding a two-column row
 and encoding a three-column false-group row are provably distinct. Exact
 encoded frontiers derive from the constructed root/member plan; derived batch
-orientation preserves facts, uniqueness and counts. The TLA model uses a
+orientation preserves facts, uniqueness and counts. The Quint model uses a
 constructed predecessor/successor step and an independent input-closure oracle;
 six faults discriminate scope aliasing, early/omitted journal events, erased
 derived kind, mutable old cuts and refusal writes. Native Scheme tests cover
@@ -118,7 +118,7 @@ Lean adds =equivalence_blocks_exact=, =equivalence_blocks_count=,
 =equivalence_blocks_budget= and =equivalence_blocks_units= to =ProviderRectangles=. They derive the constructed
 frontier from explicit member extraction premises and the equivalence insertion
 law; the native hash/member extraction bridge remains qualified by executable
-truth tests. Lean tests remain under =Tests=. TLA+ reuses =ProviderViews= for
+truth tests. Lean tests remain under =Tests=. Quint reuses =ProviderViews= for
 publication, logical budgets, held readers, cancel/drain and stale replies.
 A finite TLC run is not a proof of arbitrary native histories or liveness.
 Full OpenJDK correctness/performance and the ten connected package gates remain

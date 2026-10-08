@@ -61,7 +61,7 @@ reach and SCC ownership, closing the activation premise left by latent-reach
 homogeneity. Three new Lean laws and two discriminators pass the complete build.
 A sealed finite task cohort also qualifies the reusable-reader starvation result:
 aggregate completion fairness suffices when completed tasks cannot be readmitted.
-TLA checks this separately from reusable-reader completion and rejects the
+Quint checks this separately from reusable-reader completion and rejects the
 sealed control without fairness. These are implementation obligations inferred
 from Section 3 concretization and host scheduling, not additions attributed to
 the paper's Theorem 3.5. Native extraction and ordered journal replay remain

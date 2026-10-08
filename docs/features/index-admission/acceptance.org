@@ -17,7 +17,7 @@ Section 4 requires relation indexes to agree on concretization. Native custom
 lookup preserves admitted occurrence counts, including duplicate source rows;
 a Set observation cannot establish aggregate multiplicity. Per-row quota caps
 plus equal matching-key mass now derive exact occurrence counts in Lean. The
-TLA packet protocol distinguishes six faults, and a native control rejects
+Quint packet protocol distinguishes six faults, and a native control rejects
 compensated omission despite equal cardinality and Set membership, accepts
 reordered complete packets and checks delta ownership/recovery. Ordered callback
 traces require the additional receiver-order premise retained in the canonical
@@ -30,7 +30,7 @@ for proof ownership, implementation seams and admission evidence.
 
 The B23 Section 4 logical-index obligation now has universal selected-coordinate,
 candidate-coverage, ordered-output, key-permutation and repeated-key laws in
-ProviderRouting. Separate TLA+ checks exercise independent lazy row/parts cursor
+ProviderRouting. Separate Quint checks exercise independent lazy row/parts cursor
 completion and four incorrect traversals. The source correspondence is explicit:
 native bucket construction/equality and optimized visitor extraction remain
 premises until refined, and full paper application/cost replication is not

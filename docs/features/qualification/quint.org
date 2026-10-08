@@ -4,60 +4,122 @@
 
 * Authoring decision
 
-Protocol specifications migrate from handwritten TLA+ to typed Quint modules.
-Lean continues to prove semantic and algebraic statements over arbitrary data.
+All eighteen ASCENT protocol specifications are authored in typed Quint.
+Handwritten TLA specifications, CFG fixtures, their license sidecars and the
+legacy checker bootstrap have been removed. The existing Justfile is the
+verification entry point; no second test runner is introduced.
+
+Lean proves semantic and algebraic statements over arbitrary admitted data.
 Quint covers transitions, ownership, publication, resource accounting and
 adversarial interleavings. Scheme tests establish observable correspondence to
-native code. A modern authoring language improves specification maintenance;
-it does not, by itself, strengthen the underlying theorem or implementation.
+native code. Changing the specification language does not establish new native
+refinement, universal protocol proofs or application performance benefits.
 
 The [[https://quint.sh/docs/model-checkers][official checker documentation]] distinguishes exhaustive finite TLC exploration
-from Apalache's bounded symbolic checks. The normal acceptance gate uses
-=quint verify --backend tlc=. Random =quint run= samples are diagnostic and do
-not discharge the exhaustive gate. Temporal/fairness properties must survive
-migration explicitly; preservation of safety alone is insufficient for models
-that currently check temporal properties.
+from Apalache's bounded symbolic checks. Acceptance compiles Quint and checks
+the generated protocol with the bundled TLC backend. The Justfile generates
+checker configuration so that state constraints and fairness specifications
+remain explicit. Random =quint run= samples do not discharge this gate.
+Generated backend TLA/configuration and execution output remain uncommitted.
 
 Quint 0.33.0 and its transitive dependencies are pinned in the package manifest
 and lockfile under =packages/proofs/quint=. These JSON files are consumed by
-=npm ci= to reproduce the tool, rather than duplicating benchmark receipts.
-Installation stays in the ignored tool cache. The transcompiler/backend is
-Apalache 0.62.1. Generated checker files and execution logs are not committed.
-The existing Justfile remains the verification entry point.
+=npm ci=, rather than duplicating benchmark receipts. Installation stays in the
+ignored tool cache. Apalache 0.62.1 is the compiler/backend distribution; its
+jar checksum is pinned in Justfile. Java 21 is required by that distribution.
 
 * Feature migration inventory
 
-| Feature | Protocol modules | Authoring status |
-|---------+------------------+------------------|
-| Shared indexes | ComponentIndex | Quint; four invariants, thirteen defect controls |
-| Provider admission | ProviderAdmission | TLA source awaiting migration |
-| Provider frontiers | ProviderFrontier, TransitiveComponents | TLA sources awaiting migration |
-| Provider replay | ProviderReplay | TLA source awaiting migration |
-| Provider views and routing | ProviderViews, ProviderRouting | TLA sources awaiting migration |
-| Lattice projection | LatticeProjection | TLA source awaiting migration |
-| Component scheduling | ReadyComponents, ActorRound | TLA sources awaiting migration |
-| Actor capacity and lifecycle | ActorTestPool, ActorRoundCredits, ActorSession | TLA sources awaiting migration |
-| Oracle transport | OracleTransport | TLA source awaiting migration |
-| Session publication | NativeSessionPublication, PositiveNonmembershipSession, ReaderLifetime, SessionTransaction | TLA sources awaiting migration |
+All modules below have passed their positive configurations and original
+property-specific defect controls. Sources live under =packages/proofs/quint=.
 
-This is an inventory of eighteen original modules, not a claim that all have
-already been converted. Remaining handwritten specifications keep their active
-acceptance gates until an equivalent Quint module qualifies, then are removed.
-New protocol work is authored in Quint.
+| Feature | Protocol modules | Required defect controls |
+|---------+------------------+--------------------------|
+| Shared indexes | ComponentIndex | 13 |
+| Provider admission | ProviderAdmission | 6 |
+| Provider frontiers | ProviderFrontier, TransitiveComponents | 17 |
+| Provider replay | ProviderReplay | 6 |
+| Provider views and routing | ProviderViews, ProviderRouting | 9 |
+| Lattice projection | LatticeProjection | 12 |
+| Component scheduling | ReadyComponents, ActorRound | 8 |
+| Actor capacity and lifecycle | ActorTestPool, ActorRoundCredits, ActorSession | 4 |
+| Oracle transport | OracleTransport | 4 |
+| Session publication | NativeSessionPublication, PositiveNonmembershipSession, ReaderLifetime, SessionTransaction | 14 |
+| Total | 18 modules | 93 |
 
-* Migration acceptance
+* Transition and property correspondence
 
-For each feature, preserve constants, initial states, transitions, stuttering,
-fairness/temporal properties, invariants and every expected defect control.
-Finite fixture limits belong to qualification configuration and must not become
-production generation limits. Compare reachable graph counts when the state
-representation is bijective. Otherwise document the refinement relation and
-which traces/properties it preserves; matching counts alone is insufficient.
+The migrated state record packs the former variables into named fields.
+Projection of each field recovers the corresponding state; finite symbolic
+worker/reader/node identifiers are renamed bijectively. Stuttering and fairness
+refer to the complete record, corresponding to the former variable tuple.
+Each action retains its guards and changed/unchanged observations.
 
-Reject parse, type/effect, backend, startup and resource failures. A negative
-control passes only when the requested property produces an actual invariant
-counterexample, with its expected exit status and typed checker diagnostic.
-A timeout or arbitrary nonzero exit is not a successful defect discovery.
-Lean tests remain under =Tests/=; no duplicated protocol theorem is introduced
-solely to inflate coverage. Preserve dated historical TLA results as historical
-results. Final-commit GitHub checks remain a separate delivery gate.
+Positive graph closure uses a finite Floyd-style set fold, rather than recursive
+Quint definitions. Replay ordering uses an ordered fold over the admitted
+fixture's unique row codes. Expected closure still comes from independent
+input facts, not from the implementation's emitted frontier. Matching state
+counts are a discriminator, not a complete compiler-refinement theorem.
+
+Session action properties use =orKeep(q).always()= around the action implication.
+This preserves the original stuttering action property. Wrapping a next-state
+expression in an unrestricted =always()= compiled but failed the backend's
+semantic analysis; that attempted translation is excluded from acceptance.
+
+ReaderLifetime preserves per-reader weak completion fairness, the insufficient
+aggregate fairness control, the valid single-reader aggregate case and the
+sealed-round completion property. Strong fairness was not substituted for weak
+fairness. No fairness assumption was dropped to obtain a passing result.
+
+* Compiler compatibility finding
+
+The raw compiler output's =:= assignments caused TLC to report an unexpected
+ReaderCompletion counterexample for the correct model. The unchanged original
+model passed on the same bundled checker. Erasing assignment annotation tokens
+in the generated copy restored both the correct-model verdict and its exact
+state counts: 132,616 generated and 14,175 distinct states.
+
+The backend's bundled =Apalache= standard module defines =__x := __e= as
+=__x = __e=; the [[https://github.com/apalache-mc/apalache/blob/main/src/tla/Apalache.tla][upstream module]] documents this erasure interpretation.
+The Justfile applies that equality lowering only to operator tokens, preserving
+quoted model values, including escaped quotes. Authored Quint actions and
+fairness are unchanged. The entire positive/defect matrix is checked after
+lowering; raw compiler artifacts alone are not accepted as verification.
+
+* Complete migration qualification (2026-10-08)
+
+The full CI configuration passes thirty positive configurations and all
+ninety-three expected counterexamples. Session and provider-view exploration
+use generation bound four; actor generation/round bounds remain two/four and
+ActorSession uses four. Pool, credit and ready scheduling check capacities
+one/two/three; lattice projection checks remaining budgets zero/one/two.
+Frontiers include empty, seeded and overlapping producer configurations.
+The complete Lean package and its separate =Tests/= library pass 115 build jobs.
+The observed full protocol replay took 508 seconds in one warm-cache invocation;
+this includes all mutant checker processes and is not a Gerbil test duration or
+a statistical speedup result.
+
+=GenerationCutoff= and =RoundCutoff= constrain finite checker enumeration only.
+They are referenced by exploration predicates, not protocol transition guards.
+Default Session enumeration uses two, default ProviderViews uses three and CI
+sets =ASCENT_FORMAL_GENERATION_CUTOFF= to four. These limits do not constrain a
+native Session, a fixed point or a model's reasoning budget.
+
+The compiler starts once per invocation if a source-bound compiled artifact is
+missing. Cache admission checks the source, lockfile, backend, selected module,
+properties and artifact checksum; checker outcomes are always recomputed.
+Two independent protocol lanes explore states while Lean builds separately.
+Real TLC exploration progress is emitted. Each checker has a private temporary
+directory for standard module extraction and state storage.
+
+Positive acceptance requires exit zero and completed model checking. A defect
+control requires its exact violated property and expected exit twelve or
+thirteen. Parse, type/effect, startup, backend and resource errors fail the gate.
+Invalid checksum/bound controls are refused; failure-join controls confirm that
+either failed branch prevents the aggregate success marker. These entry tests
+are not counted among the ninety-three protocol counterexamples.
+
+Dated TLA receipts retain their source hashes, checker identities and measured
+results. They do not certify this migration or a later commit. Final-commit
+GitHub checks remain the independent delivery gate. No new model-provider calls,
+Scheme runtime changes or performance benefits are claimed by this migration.

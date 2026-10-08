@@ -49,12 +49,12 @@ not results the authors established for Gerbil.
 
 * Current proof ownership
 
-Lean and TLA+ have disjoint acceptance claims. Lean owns universally quantified
-semantic and algebraic laws; TLA+ owns reachable protocol states, interleavings,
+Lean and Quint have disjoint acceptance claims. Lean owns universally quantified
+semantic and algebraic laws; Quint owns reachable protocol states, interleavings,
 cancellation, draining and publication. Native execution remains a third
 independent implementation discriminator, not a theorem from either collection.
 
-| Concern | Lean claim | TLA+ claim |
+| Concern | Lean claim | Quint claim |
 |---------+------------+------------|
 | Language and evaluation | Typing, lexical lowering, monotonicity, least fixed points and finite-height laws | No duplicate language/fixed-point calculus |
 | Source updates | Dependency/certificate frames and exact source-count arithmetic in SourceUpdateFrame | Session transaction, provisional/bounded work, failure and publication traces |
@@ -67,15 +67,15 @@ The Lean SessionPublication and NativeSessionPublication transition replicas,
 RoundAdmission protocol state and ReadyComponents task-completion state have
 been removed. Source-count laws remain in SourceUpdateFrame. The publication
 wrapper theorem in SourceCertificates was removed; typed patch/certificate
-laws remain. TLA models and their negative controls retain protocol ownership.
+laws remain. Quint models and their negative controls retain protocol ownership.
 Historical receipts still certify their original sources, not the current set.
 Removing those Lean replicas retires their universal protocol-trace claims;
 finite TLC exploration does not inherit them. A future unbounded temporal
-claim needs a TLA proof/refinement, not another Lean state-machine copy.
+claim needs a Quint proof/refinement, not another Lean state-machine copy.
 
 The [[file:evidence/scheme-proof-ownership-20261005/receipt.json][ownership qualification receipt]] records the ownership split before the
 =RuleBodyFrame= addition: Lean's
-62 build jobs pass, and all existing TLA gates across eleven models and
+62 build jobs pass, and all existing Quint gates across eleven models and
 23 negative controls pass. Runtime code and historical receipts are unchanged.
 
 * Formal coverage and what this patch adds
@@ -98,8 +98,8 @@ The [[file:evidence/scheme-proof-ownership-20261005/receipt.json][ownership qual
 | [[file:../packages/proofs/lean/PositiveTraversal.lean][PositiveTraversal]] | Precompiled finite raw-row multi-atom traversal produces the same entire ordered emissions as ordinary association-list binding. Failed partial writes and successful suffix returns preserve the parent prefix; the returned dirty frame admits a repeated traversal. Lean qualifiers retain duplicate and reversed heads, literals, zero-arity bodies and a parent-prefix corruption fault. Native three-atom qualification compares 81 emissions and provider visit counts across four stale starts and repeated dirty returns | Equal-arity admission, fixed finite raw row lists and an emission function respecting the represented environment. The following IndexedPositiveTraversal composes physical row selection and delta pivots with this traversal. Native decoding/vector ownership and scheduling remain separate refinements; no extraction or whole-engine claim |
 | [[file:../packages/proofs/lean/IndexedPositiveTraversal.lean][IndexedPositiveTraversal]] | Once-compiled indexed slot plans preserve complete ordered ordinary-binding emissions for every position-selected delta pivot. Known column reads are actual bound/literal actions; partial/reordered/repeated keys and the 32-row threshold preserve matching candidates. Concrete row-coverage partition, permitting old/delta overlap, covers every new head through at least one compiled indexed pivot; every pivot head belongs to the full next solve. Native qualification makes 480 ordered comparisons across layouts, relation aliases, pivots, dirty starts, custom probes and canonical scalar/composite retained caches, with wrong-pivot and dropped-candidate faults | Fixed snapshots, admitted equal arity/known columns, old-row inclusion, complete new-row delta coverage and no delta rows outside the current snapshot. Exact differences satisfy this contract via =exact_covers=. Canonical bucket order is modeled as ordered filtering; custom provider membership alone promises no order. Native decoding, lawful equality, vector ownership and mutable cache version publication remain representation obligations. Overlapping pivots require authoritative deduplication |
 | [[file:../packages/proofs/lean/IndexedIteration.lean][IndexedIteration]] | Complete compiled indexed initialization and dirty-return pivot batches compose into synchronous multi-rule Set history. Every natural-number round equals full ordinary-binding iteration; all-old head coverage is derived from the preceding step. Duplicate heads are retained by traversal and deduplicated by Set admission. Returned seed-prefix frames remain valid and give identical pivot streams; observed stability persists forever. Native twelve-round chain/clique qualification retains physical indexes and actual frames, agrees per round with a full-scan oracle, and matches an independent 102-path Floyd closure; missing full initialization is a negative control | Schema arity/known-column admission and faithful finite row enumeration derive the premises. Semantic history uses a representative prefix-valid frame, justified by returned-frame invariance. Stable-result transport is conditional on observed stability, not a native termination/cutoff claim. Native encoding, mutable cache publication and actor scheduling remain separate representation/protocol obligations |
-| [[file:../packages/proofs/tla/PositiveNonmembershipSession.tla][Certificate lifecycle]] | In explored states, no stale published/used certificate across source swaps | Exact program/query identity, replay of concrete rule instances, consumer ownership and nonfinite liveness |
-| [[file:../packages/proofs/tla/SessionTransaction.tla][Transaction publication]] | In explored states, atomic source/result pairing, no stale commit and abort preservation; early/stale fault variants must produce counterexamples | ResultOf is a symbolic two-row surrogate, not a rule solver. Transaction interruption and all concrete mutation locations need Scheme-to-model mapping |
+| [[file:../packages/proofs/quint/PositiveNonmembershipSession.qnt][Certificate lifecycle]] | In explored states, no stale published/used certificate across source swaps | Exact program/query identity, replay of concrete rule instances, consumer ownership and nonfinite liveness |
+| [[file:../packages/proofs/quint/SessionTransaction.qnt][Transaction publication]] | In explored states, atomic source/result pairing, no stale commit and abort preservation; early/stale fault variants must produce counterexamples | ResultOf is a symbolic two-row surrogate, not a rule solver. Transaction interruption and all concrete mutation locations need Scheme-to-model mapping |
 
 Generation has no maximum in either protocol's =Init/Next/Spec=. It ranges over
 =Nat= and can keep increasing. =ExplorationDepth= and =ExplorationBound= exist
@@ -107,19 +107,19 @@ only for TLC state-space exploration; configuration values do not limit runtime
 or constitute an all-generations theorem. Repeated source cuts are allowed,
 so a stale job cannot become current merely because source bytes return to an
 earlier value (ABA). The removed Lean publication replicas no longer supply
-unbounded generation/trace claims. Current finite TLA checks neither inherit
+unbounded generation/trace claims. Current finite Quint checks neither inherit
 those claims nor establish Gerbil trace refinement.
 
-Safety is not liveness. Neither TLA model claims a solver eventually finishes,
+Safety is not liveness. Neither Quint model claims a solver eventually finishes,
 or a transaction eventually wins against continuous competing publication.
 A fairness/termination claim needs an explicit scheduling assumption and a
 separate proof. Abort preservation is encoded as a required action contract;
 model checking does not establish that native exceptions implement it.
 
 Previously GitHub's =formal= job ran Lean only. It now executes the common
-[[file:../justfile][Justfile proof gate]], including the TLA models and intentional faults. TLC is
+[[file:../justfile][Justfile proof gate]], including the Quint models and intentional faults. TLC is
 pinned to the official 1.7.4 jar and verified by SHA256. The gate accepts
-=ASCENT_TLC_GENERATION_CUTOFF= independently of protocol semantics; GitHub
+=ASCENT_FORMAL_GENERATION_CUTOFF= independently of protocol semantics; GitHub
 uses 4, the default exploration configuration uses 2. Counterexample checks
 require both TLC's violation exit code and the expected violated property;
 parse/tool crashes cannot count as successful fault detection.

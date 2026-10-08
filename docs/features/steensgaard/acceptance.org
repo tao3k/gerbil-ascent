@@ -29,7 +29,7 @@ active component roster. =component_squares_partition_equal= proves that equal
 component member lists determine every concrete pair. Complete native roster
 extraction is verified by the application comparisons; these Lean laws do not
 claim a universal refinement of mutable Scheme hash/parent algorithms.
-ProviderViews TLA+ continues to check frozen reads, atomic publication, budget
+ProviderViews Quint continues to check frozen reads, atomic publication, budget
 admission and reader lifetime. No duplicate Lean protocol state machine was
 introduced. The existing =byods-scale= GitHub job now runs this full-input
 source/partition admission in addition to the existing directed scale oracle.

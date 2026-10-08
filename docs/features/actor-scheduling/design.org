@@ -54,7 +54,7 @@ Two deliberately faulty designs must fail: =stuck= removes stale discard and
 =unfair= removes completion fairness. Both require TLC exit 13 and a temporal
 violation, rather than accepting any nonzero exit. The original five safety
 faults still require exit 12 and the corresponding invariant name. Lean owns
-relation algebra; TLA+ owns reader lifetime and publication protocol.
+relation algebra; Quint owns reader lifetime and publication protocol.
 
 ** Acceptance and scope
 

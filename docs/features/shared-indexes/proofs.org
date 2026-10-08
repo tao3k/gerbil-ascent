@@ -34,7 +34,7 @@ false values, repeated row occurrences, reordered keys, immutable old views,
 alias extension and owner/delta isolation. Lean proves universal prefix-coverage
 lookup equality, ordered batch decomposition and exact membership; minimum
 matching optimality and native trie ordinal collection are not inferred from
-those theorems. TLA+ extends the existing root-publication model with alias and
+those theorems. Quint extends the existing root-publication model with alias and
 foreign-owner mutations; it does not repeat those algebraic statements.
 
 The Linux CI run at =67da108a97de39722087b6bcabe8398d8b4163ba= passed
@@ -94,7 +94,7 @@ remaining sources plus unaffected founded facts for any dependency-closed
 invalidation set. It also distinguishes duplicate source occurrences from fact
 identity and rules out source-free cycles when every rule has a nonempty body.
 Empty-body constants remain independent foundations. These are semantic laws;
-transaction publication and cancellation remain TLA+ responsibilities. Native
+transaction publication and cancellation remain Quint responsibilities. Native
 support-graph completeness and its correspondence to Session invalidation remain
 explicit premises to discharge. All examples and axiom reports reside in =Tests=.
 The complete Lean collection passes 84 jobs. This source needs its own GitHub CI.
@@ -152,7 +152,7 @@ cover bounds every legal competing chain partition. Adjacency edges, endpoint
 uniqueness and the edge/chain balance are constructed from the partition rather
 than supplied as independent matching/count assumptions. This is an unbounded
 finite mathematical result; the native-to-Lean graph representation bridge and
-trie refinement remain distinct obligations. Existing TLA publication/ownership
+trie refinement remain distinct obligations. Existing Quint publication/ownership
 checks are retained without duplicating the matching algebra. Native invalid
 matching controls and independent exhaustive partition comparisons qualify the
 implementation separately. The [[file:../../evidence/scheme-index-sharing-20261006/receipt.json][receipt]] retains source identity, verification
@@ -257,7 +257,7 @@ not verify Gambit's sorting implementation. Native direct-column truth and
 frozen reference comparisons independently qualify that correspondence.
 All examples and fault controls remain under =Tests/ProviderRoutingTests.lean=.
 
-TLA+ =ComponentIndex.ReadView= adds cold all-row prefix caching. =viewValid=
+Quint =ComponentIndex.ReadView= adds cold all-row prefix caching. =viewValid=
 means the cache may be reused, not that a previously returned reader is still
 alive. =ViewConsistent= requires a reusable view to equal the committed root
 and forbids reuse during private extension or failed mutation. =HeldStable=
@@ -313,10 +313,10 @@ after extension, and preserves valid cached spines and held old readers.
 It retains the independent direct-filter and frozen-reference corpus.
 
 The ordinary Justfile commands qualify this bridge. Lean owns positional
-semantics; the unchanged TLA+ =ComponentIndex= owns extension, failure, rebuilding,
+semantics; the unchanged Quint =ComponentIndex= owns extension, failure, rebuilding,
 view admission and held-reader stability. Repeating its existing 13 fault
 controls provides lifecycle regression evidence without duplicating the key
-algebra in TLA+. The [[file:qualification.org::*Logical key adaptation qualification][feature qualification]] records results and source identity.
+algebra in Quint. The [[file:qualification.org::*Logical key adaptation qualification][feature qualification]] records results and source identity.
 Native trie extraction, primitive hash/equality/sort implementation contracts,
 rectangle visitors and complete paper applications remain separate gates.
 
@@ -363,7 +363,7 @@ reversed sparse physical layouts, all prefix depths, reordered logical keys,
 duplicates, row identity, warm spine identity, extensions and held old readers.
 Each result is compared with independent =list-ref= filtering. Those finite
 fixtures do not bound the theorem or runtime depth. Production Scheme storage
-and routing are unchanged in this slice. TLA+ retains lifecycle ownership;
+and routing are unchanged in this slice. Quint retains lifecycle ownership;
 the unchanged =ComponentIndex= model is qualified separately, without adding
 positional or trie algebra to its state machine. See the
 [[file:qualification.org::*Trie construction qualification][feature qualification]]. No new performance samples are claimed.
@@ -397,5 +397,5 @@ The four invariants and thirteen mutations are preserved. The finite input
 fixture is supplied by a module instance; no generation cap is imposed on the
 library. =just check-component-index-formal= performs Quint type/effect checking
 and exhaustive TLC exploration through Quint's verification backend. Generated
-TLA is a temporary checker representation, not an authored repository model.
+Quint is a temporary checker representation, not an authored repository model.
 See the [[file:../qualification/quint.org][protocol migration contract]] for the remaining feature owners.

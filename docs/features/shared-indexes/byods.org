@@ -11,7 +11,7 @@ The read interface on printed page 264:11 requires every logical index to
 represent the same relation. Our Scheme index key projection now shares the
 ordered cursor with batch construction. Lean derives its direct-column
 meaning, fallback dispatch, constructed bucket order, finite batch history and
-admitted bounds. TLA+ checks declared column metadata across private extension,
+admitted bounds. Quint checks declared column metadata across private extension,
 installation, failed-extension rebuild and frozen old readers. Its three new
 layout faults must produce the named consistency/lifetime counterexamples.
 
@@ -29,7 +29,7 @@ The Scheme shared-index collector now carries a result tail through nested
 children, copying last-level bucket spines once. Ordinal restoration preserves
 source order and duplicate occurrences independently of hash traversal order.
 Lean derives fresh label bounds, order through finite histories and exact
-restoration from occurrence permutations. TLA+ separately checks reusable
+restoration from occurrence permutations. Quint separately checks reusable
 cached views through private extension, failure and rebuild, retaining the
 held-reader invariant. Native qualification enumerates all six three-column
 permutations and every prefix depth over 64 source histories with direct-column
@@ -47,7 +47,7 @@ columns admit arbitrary positional values, including false fields. Missing
 columns and overlong requests have explicit rejection laws. Native malformed
 requests are checked across cold, warm and extended views without changing
 published results. See [[file:proofs.org::*B23 constructed logical key adaptation (2026-10-08)][the adapter bridge]] and
-[[file:qualification.org::*Logical key adaptation qualification][feature qualification]]. The TLA+ lifecycle model remains separate from
+[[file:qualification.org::*Logical key adaptation qualification][feature qualification]]. The Quint lifecycle model remains separate from
 positional algebra. Complete native extraction and paper-scale application
 benefits are not established by these laws.
 

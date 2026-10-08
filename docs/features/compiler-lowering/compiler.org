@@ -128,7 +128,7 @@ This is structural reuse evidence, not a runtime speedup measurement.
 The [[file:../../evidence/scheme-recursive-lowering-20261004/receipt.json][recursive receipt]] binds source, proofs and native qualification.
 The formal model does not mechanize hash-table cache correctness, descriptor
 identity translation, generated rules or native semi-naive execution. These
-implementation refinement obligations remain explicit. No TLA protocol or
+implementation refinement obligations remain explicit. No Quint protocol or
 Generation limit changes in this slice; its existing lifecycle models still
 run through the common formal gate. On the bound source, four focused native
 modules passed 55 Cases, with all four MODULE/HARNESS/final OK markers and exit
@@ -147,7 +147,7 @@ uses the authorized activity gate without a total 180-second deadline.
 
 On this frozen native source, all 13 Suites / 139 Cases passed with exit 0,
 including all 16 new finite input pairs; the activity-supervised build completed
-in 128.052 seconds. Five Lean files and both normal TLA models passed, and both
+in 128.052 seconds. Five Lean files and both normal Quint models passed, and both
 intentional publication faults produced the expected counterexamples. These
 results are recorded directly in the structured receipt, without process logs.
 
@@ -234,7 +234,7 @@ height theorem or by finite native test samples alone.
 The [[file:../../evidence/scheme-finite-signature-20261004/receipt.json][finite-signature receipt]] binds the source patch and qualified artifact.
 Five native modules passed 90 Cases (including dynamically expanded model-task
 cases), with five MODULE/HARNESS/final OK markers and exit 0. Eight Lean files,
-both TLA models and both expected faults passed; the proof slice adds 20
+both Quint models and both expected faults passed; the proof slice adds 20
 theorems. Three failed development builds and one rejected native artifact
 (eight CASE errors, exit 1, no final OK) remain excluded and recorded.
 Qualification binds =50c79d4= plus the published patch; subsequent certificate
@@ -320,7 +320,7 @@ domains and mutation contract belong to the remaining term/rule refinement.
 The [[file:../../evidence/scheme-row-representation-20261004/receipt.json][row-representation receipt]] qualifies =fa521d4=, reconstructed from
 =3abb8bc= plus the published source patch. Six native modules pass 109 Cases,
 with six MODULE/HARNESS/final OK markers and exit 0. Eight Lean files, both
-normal TLA models and both expected faults pass; 16 row representation theorems
+normal Quint models and both expected faults pass; 16 row representation theorems
 were added. Native source and binary hashes match before and after qualification.
 One compiler subprocess-capacity failure is excluded; the successful build used
 two workers with the original progress and module budgets. Both rejected native
@@ -332,7 +332,7 @@ into [[file:../../../program/scheme-session.ss][scheme-session]] and the [[file:
 The [[file:../../evidence/scheme-row-lifecycle-20261005/receipt.json][lifecycle integration receipt]] independently qualifies =84ba4ac= on source
 base =6d407ea=: 365 bound input hashes (including three build-control files), a freshly built native artifact and
 the same 109 Cases across six modules, with complete success markers and exit 0.
-The eight Lean files and TLA models are unchanged from the fully checked parent
+The eight Lean files and Quint models are unchanged from the fully checked parent
 snapshot; GitHub =formal= also succeeded for =84ba4ac=. Later documentation-only
 changes do not expand this receipt's runtime scope. The earlier source patch
 and all excluded attempts retain their historical boundary.
@@ -372,6 +372,6 @@ the inadmissible fresh-key counterexample and missing head cells. The
 representation checks. Actual Scheme scalar/equality/hash interpretation,
 symbol identity mapping, universal descriptor decoding, callback refinement
 and native Provider/completed-component correspondence remain open bridges.
-TLA+ retains lifecycle/publication ownership. This adds no runtime validator,
+Quint retains lifecycle/publication ownership. This adds no runtime validator,
 performance claim, model call or MR integration.
 

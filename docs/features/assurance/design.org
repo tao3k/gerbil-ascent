@@ -44,7 +44,7 @@ still required; the injection journal is not the authoritative recovery log.
 | Public UF homogeneity | Derived Lean law including active endpoints |
 | Fresh compressed delta | Derived selection law conditional on candidate encoding |
 | Unique logical count | Existing member/root-pair uniqueness and separation laws |
-| Finite round completion | New bounded TLA control; aggregate fairness required |
+| Finite round completion | New bounded Quint control; aggregate fairness required |
 | Reusable reader completion | Existing per-reader fairness model and starvation control |
 | Native decoding and scheduler correspondence | Explicit implementation refinement obligation |
 | Ordered journal replay | Existing native differential checks; general order proof open |

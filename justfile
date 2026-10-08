@@ -13,8 +13,7 @@ gxi_command := gerbil_command + " env gxi"
 
 gerbil_test_runtime_options := "-:max-heap=1G,debug=q"
 native_qualification := 'GERBIL_LOADPATH="' + justfile_directory() + '${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" ' + gerbil_command + ' env gxi -:max-heap=1G,debug=q t/native/qualification.ss'
-tlc_release_url := "https://github.com/tlaplus/tlaplus/releases/download/v1.7.4/tla2tools.jar"
-tlc_sha256 := "936a262061c914694dfd669a543be24573c45d5aa0ff20a8b96b23d01e050e88"
+quint_backend_sha256 := "880c0b2b72354816f12e9a9755829f2907071e9a181ffea1937954c23d54739d"
 
 default:
     @just --list
@@ -583,164 +582,277 @@ check-lean-proofs:
     cd packages/proofs/lean
     lake -v build AscentProof AscentProofTests
 
-# Bootstrap the pinned checker before independent verification lanes start.
-prepare-tlc:
+# Install the locked Quint tool and checksum-pinned compiler/checker backend once.
+prepare-quint:
     #!/usr/bin/env bash
     set -euo pipefail
-    if [[ -n "${TLC_BIN:-}" ]]; then exit 0; fi
-    jar="${TLC_JAR:-.cache/ascent/tools/tla2tools-v1.7.4.jar}"
-    if [[ ! -f "$jar" ]]; then
-      mkdir -p "$(dirname "$jar")"
-      curl -fLsS "{{ tlc_release_url }}" -o "$jar.download"
-      mv "$jar.download" "$jar"
+    tool=.cache/ascent/tools/quint
+    mkdir -p "$tool"
+    if [[ ! -x "$tool/node_modules/.bin/quint" ]] || ! cmp -s packages/proofs/quint/package-lock.json "$tool/package-lock.json" || ! cmp -s packages/proofs/quint/package.json "$tool/package.json"; then
+      cp packages/proofs/quint/package.json packages/proofs/quint/package-lock.json "$tool/"
+      (cd "$tool"; npm ci --ignore-scripts --no-audit --no-fund)
     fi
-    actual="$(shasum -a 256 "$jar" | awk '{print $1}')"
-    [[ "$actual" == "{{ tlc_sha256 }}" ]] || { echo "TLC jar checksum mismatch: $jar" >&2; exit 2; }
+    [[ "$("$tool/node_modules/.bin/quint" --version)" = 0.33.0 ]]
+    export QUINT_HOME="$PWD/.cache/ascent/tools/quint-backends"
+    jar="$QUINT_HOME/apalache-dist-0.62.1/apalache/lib/apalache.jar"
+    if [[ ! -f "$jar" ]]; then
+      node - <<'JS'
+    const {fetchApalache} = require('./.cache/ascent/tools/quint/node_modules/@informalsystems/quint/dist/src/apalache.js');
+    fetchApalache('0.62.1', 2).then(result => {
+      if (result.isLeft()) {console.error(result.value); process.exit(1)}
+    }).catch(error => {console.error(error); process.exit(1)});
+    JS
+    fi
+    actual=$(shasum -a 256 "$jar" | awk '{print $1}')
+    [[ "$actual" = "{{ quint_backend_sha256 }}" ]] || { echo 'Quint backend checksum mismatch' >&2; exit 2; }
 
-# Two independent lanes; both must finish successfully. Leaf gates retain all
-# original configurations, properties, mutations, workers and exploration bounds.
-check-formal: prepare-tlc
+# Lean kernel checking and exhaustive Quint protocol exploration are independent.
+# Both parent exit statuses are required; cached model results are never reused.
+check-formal: prepare-quint
     #!/usr/bin/env bash
     set -euo pipefail
-    just check-actor-round-formal check-actor-pool-formal check-actor-credit-formal check-actor-session-formal check-transitive-components-formal check-provider-replay-formal check-provider-admission-formal &
-    contracts=$!
+    just check-lean-proofs &
+    lean=$!
     status=0
-    just check-ready-components-formal check-component-index-formal check-provider-frontier-formal check-provider-views-formal check-lattice-projection-formal check-oracle-transport-formal check-provider-routing-formal || status=$?
-    wait "$contracts" || status=$?
+    just _check-quint all || status=$?
+    wait "$lean" || status=$?
     [[ "$status" = 0 ]] || exit "$status"
     echo 'ALL-FORMAL-CHECK-OK'
 
-# Lean proofs and bounded TLC publication models. Supply TLC_JAR or TLC_BIN.
 check-nonmembership-formal: check-lean-proofs
-    #!/usr/bin/env bash
-    set -euo pipefail
-    if [[ -z "${TLC_JAR:-}" && -z "${TLC_BIN:-}" ]]; then
-      TLC_JAR=.cache/ascent/tools/tla2tools-v1.7.4.jar
-      mkdir -p "$(dirname "$TLC_JAR")"
-      if [[ ! -f "$TLC_JAR" ]]; then
-        curl -fLsS "{{ tlc_release_url }}" -o "$TLC_JAR.download"
-        mv "$TLC_JAR.download" "$TLC_JAR"
-      fi
-    fi
-    if [[ -n "${TLC_JAR:-}" ]]; then
-      actual="$(shasum -a 256 "$TLC_JAR" | awk '{print $1}')"
-      [[ "$actual" == "{{ tlc_sha256 }}" ]] || { echo "TLC jar checksum mismatch: $TLC_JAR" >&2; exit 2; }
-      tlc=(java -XX:+UseParallelGC -Xmx1g -cp "$TLC_JAR" tlc2.TLC)
-    else
-      tlc=("${TLC_BIN:-tlc}")
-    fi
-    cutoff="${ASCENT_TLC_GENERATION_CUTOFF:-2}"
-    [[ "$cutoff" =~ ^[0-9]+$ ]] && (( cutoff >= 2 )) || { echo 'TLC generation cutoff must be an integer >= 2' >&2; exit 2; }
-    temp="$(mktemp -d)"
-    trap 'rm -rf "$temp"' EXIT
-    # TLC extracts standard modules under java.io.tmpdir; concurrent JVMs
-    # must not truncate/delete each other's module files.
-    if [[ "${tlc[0]}" == java ]]; then tlc=(java "-Djava.io.tmpdir=$temp" "${tlc[@]:1}"); fi
-    for model in PositiveNonmembershipSession SessionTransaction NativeSessionPublication; do
-      sed "s/TLCGenerationCutoff = [0-9][0-9]*/TLCGenerationCutoff = $cutoff/" "packages/proofs/tla/$model.cfg" > "$temp/$model.cfg"
-      echo "TLA-CHECK $model generation-cutoff=$cutoff (TLC enumeration only)"
-      "${tlc[@]}" -workers 2 -config "$temp/$model.cfg" -metadir "$temp/$model" "packages/proofs/tla/$model.tla"
-    done
-    for mutation in early bounded alias; do
-      sed "s/Mutation = \"none\"/Mutation = \"$mutation\"/" "$temp/NativeSessionPublication.cfg" > "$temp/native-$mutation.cfg"
-      if "${tlc[@]}" -workers 2 -config "$temp/native-$mutation.cfg" -metadir "$temp/native-$mutation" packages/proofs/tla/NativeSessionPublication.tla > "$temp/native-$mutation.log" 2>&1; then
-        cat "$temp/native-$mutation.log"
-        echo "Missing native Session counterexample for $mutation" >&2
-        exit 1
-      else
-        code=$?
-      fi
-      cat "$temp/native-$mutation.log"
-      [[ "$code" = 12 ]] && grep -q 'Invariant CommittedSnapshot is violated' "$temp/native-$mutation.log"
-      echo "COUNTEREXAMPLE-OK native-$mutation"
-    done
-    for mutation in early stale global reuse; do
-      sed "s/Mutation = \"none\"/Mutation = \"$mutation\"/" "$temp/SessionTransaction.cfg" > "$temp/$mutation.cfg"
-      if "${tlc[@]}" -workers 2 -config "$temp/$mutation.cfg" -metadir "$temp/$mutation" packages/proofs/tla/SessionTransaction.tla > "$temp/$mutation.log" 2>&1; then
-        cat "$temp/$mutation.log"
-        echo "Missing counterexample for $mutation" >&2
-        exit 1
-      else
-        code=$?
-      fi
-      cat "$temp/$mutation.log"
-      case "$mutation" in
-        early) [[ "$code" = 12 ]] && grep -q 'Invariant AtomicSnapshot is violated' "$temp/$mutation.log" ;;
-        stale) [[ "$code" = 13 ]] && grep -q 'Action property NoStaleCommit is violated' "$temp/$mutation.log" ;;
-        global) [[ "$code" = 12 ]] && grep -q 'Invariant AtomicSnapshot is violated' "$temp/$mutation.log" ;;
-        reuse) [[ "$code" = 12 ]] && grep -q 'Invariant AtomicSnapshot is violated' "$temp/$mutation.log" ;;
-      esac
-      echo "COUNTEREXAMPLE-OK $mutation"
-    done
-    echo 'FORMAL-CHECK-OK'
+    just _check-quint Nonmembership
 
-# Proposed actor protocol plus the existing unbounded Lean and Session gates.
 check-actor-round-formal: check-nonmembership-formal
-    #!/usr/bin/env bash
-    set -euo pipefail
-    if [[ -n "${TLC_BIN:-}" ]]; then tlc=("$TLC_BIN"); else tlc=(java -XX:+UseParallelGC -cp "${TLC_JAR:-.cache/ascent/tools/tla2tools-v1.7.4.jar}" tlc2.TLC); fi
-    temp=$(mktemp -d)
-    trap 'rm -rf "$temp"' EXIT
-    # TLC extracts standard modules under java.io.tmpdir; concurrent JVMs
-    # must not truncate/delete each other's module files.
-    if [[ "${tlc[0]}" == java ]]; then tlc=(java "-Djava.io.tmpdir=$temp" "${tlc[@]:1}"); fi
-    generations="${ASCENT_ACTOR_TLC_GENERATION_CUTOFF:-2}"
-    rounds="${ASCENT_ACTOR_TLC_ROUND_CUTOFF:-4}"
-    [[ "$generations" =~ ^[0-9]+$ && "$rounds" =~ ^[0-9]+$ && "$generations" -ge 2 && "$rounds" -ge 3 ]]
-    sed -e "s/TLCGenerationCutoff = [0-9][0-9]*/TLCGenerationCutoff = $generations/" -e "s/TLCRoundCutoff = [0-9][0-9]*/TLCRoundCutoff = $rounds/" packages/proofs/tla/ActorRound.cfg > "$temp/normal.cfg"
-    echo "TLA-CHECK ActorRound generation-cutoff=$generations round-cutoff=$rounds (TLC enumeration only)"
-    "${tlc[@]}" -workers 2 -config "$temp/normal.cfg" -metadir "$temp/normal" packages/proofs/tla/ActorRound.tla
-    for mutation in early stale cancel; do
-      sed "s/Mutation = \"none\"/Mutation = \"$mutation\"/" "$temp/normal.cfg" > "$temp/$mutation.cfg"
-      code=0
-      "${tlc[@]}" -workers 2 -config "$temp/$mutation.cfg" -metadir "$temp/$mutation" packages/proofs/tla/ActorRound.tla > "$temp/$mutation.out" 2>&1 || code=$?
-      if [[ "$mutation" = stale ]]; then expected=NoStaleCompletion; else expected=CompletePublication; fi
-      [[ "$code" = 12 ]] && grep -q "Invariant $expected is violated" "$temp/$mutation.out"
-      echo "COUNTEREXAMPLE-OK actor-$mutation $expected"
-    done
-    echo 'ACTOR-ROUND-CHECK-OK'
+    just _check-quint ActorRound
 
-# Solver streaming credits and terminal drain safety.
 check-actor-credit-formal:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    if [[ -n "${TLC_BIN:-}" ]]; then tlc=("$TLC_BIN"); else tlc=(java -XX:+UseParallelGC -cp "${TLC_JAR:-.cache/ascent/tools/tla2tools-v1.7.4.jar}" tlc2.TLC); fi
-    temp=$(mktemp -d)
-    trap 'rm -rf "$temp"' EXIT
-    # TLC extracts standard modules under java.io.tmpdir; concurrent JVMs
-    # must not truncate/delete each other's module files.
-    if [[ "${tlc[0]}" == java ]]; then tlc=(java "-Djava.io.tmpdir=$temp" "${tlc[@]:1}"); fi
-    for capacity in 1 2 3; do
-      sed "s/Capacity = 2/Capacity = $capacity/" packages/proofs/tla/ActorRoundCredits.cfg > "$temp/$capacity.cfg"
-      "${tlc[@]}" -workers 1 -config "$temp/$capacity.cfg" -metadir "$temp/$capacity" packages/proofs/tla/ActorRoundCredits.tla
-    done
-    sed 's/EarlyReturn = FALSE/EarlyReturn = TRUE/' packages/proofs/tla/ActorRoundCredits.cfg > "$temp/early.cfg"
-    code=0
-    "${tlc[@]}" -workers 1 -config "$temp/early.cfg" -metadir "$temp/early" packages/proofs/tla/ActorRoundCredits.tla > "$temp/early.out" 2>&1 || code=$?
-    [[ "$code" = 12 ]] && grep -q 'Invariant CompleteReturn is violated' "$temp/early.out"
-    echo 'COUNTEREXAMPLE-OK actor-credit-early CompleteReturn'
-    echo 'ACTOR-CREDIT-CHECK-OK'
+    just _check-quint ActorRoundCredits
 
-# Test-pool protocol safety is distinct from solver round safety.
 check-actor-pool-formal:
+    just _check-quint ActorTestPool
+
+check-actor-session-formal:
+    just _check-quint ActorSession
+
+check-ready-components-formal:
+    just _check-quint ReadyComponents
+
+check-component-index-formal:
+    just _check-quint ComponentIndex
+
+check-provider-frontier-formal:
+    just _check-quint ProviderFrontier
+
+check-transitive-components-formal:
+    just _check-quint TransitiveComponents
+
+check-provider-views-formal:
+    just _check-quint ProviderViews
+
+check-provider-replay-formal:
+    just _check-quint ProviderReplay
+
+check-provider-admission-formal:
+    just _check-quint ProviderAdmission
+
+check-lattice-projection-formal:
+    just _check-quint LatticeProjection
+
+check-oracle-transport-formal:
+    just _check-quint OracleTransport
+
+check-provider-routing-formal:
+    just _check-quint ProviderRouting
+
+_check-quint group='all': prepare-quint
     #!/usr/bin/env bash
     set -euo pipefail
-    if [[ -n "${TLC_BIN:-}" ]]; then tlc=("$TLC_BIN"); else tlc=(java -XX:+UseParallelGC -cp "${TLC_JAR:-.cache/ascent/tools/tla2tools-v1.7.4.jar}" tlc2.TLC); fi
+    group="{{ group }}"
+    models=(ActorRound ActorRoundCredits ActorSession ActorTestPool ComponentIndex LatticeProjection NativeSessionPublication OracleTransport PositiveNonmembershipSession ProviderAdmission ProviderFrontier ProviderReplay ProviderRouting ProviderViews ReaderLifetime ReadyComponents SessionTransaction TransitiveComponents)
+    case "$group" in
+      all) ;;
+      Nonmembership) models=(PositiveNonmembershipSession SessionTransaction NativeSessionPublication) ;;
+      ProviderViews) models=(ProviderViews ReaderLifetime) ;;
+      *) found=0; for model in "${models[@]}"; do if [[ "$model" = "$group" ]]; then found=1; fi; done; [[ "$found" = 1 ]] || { echo "Unknown Quint feature: $group" >&2; exit 2; }; models=("$group") ;;
+    esac
+    export QUINT_HOME="$PWD/.cache/ascent/tools/quint-backends"
+    export OUT_DIR="$PWD/.cache/ascent/quint-output"
+    export no_proxy="127.0.0.1,localhost${no_proxy:+,$no_proxy}"
+    export NO_PROXY="127.0.0.1,localhost${NO_PROXY:+,$NO_PROXY}"
+    quint=.cache/ascent/tools/quint/node_modules/.bin/quint
+    jar="$QUINT_HOME/apalache-dist-0.62.1/apalache/lib/apalache.jar"
     temp=$(mktemp -d)
-    trap 'rm -rf "$temp"' EXIT
-    # TLC extracts standard modules under java.io.tmpdir; concurrent JVMs
-    # must not truncate/delete each other's module files.
-    if [[ "${tlc[0]}" == java ]]; then tlc=(java "-Djava.io.tmpdir=$temp" "${tlc[@]:1}"); fi
-    for capacity in 1 2 3; do
-      sed "s/Capacity = 2/Capacity = $capacity/" packages/proofs/tla/ActorTestPool.cfg > "$temp/$capacity.cfg"
-      "${tlc[@]}" -workers 1 -config "$temp/$capacity.cfg" -metadir "$temp/$capacity" packages/proofs/tla/ActorTestPool.tla
+    server_pid=
+    cleanup() {
+      if [[ -n "$server_pid" ]]; then kill "$server_pid" 2>/dev/null || true; wait "$server_pid" 2>/dev/null || true; fi
+      rm -rf "$temp"
+    }
+    trap cleanup EXIT
+    cutoff="${ASCENT_FORMAL_GENERATION_CUTOFF:-2}"
+    actor_cutoff="${ASCENT_FORMAL_ACTOR_GENERATION_CUTOFF:-2}"
+    round_cutoff="${ASCENT_FORMAL_ROUND_CUTOFF:-4}"
+    session_cutoff="${ASCENT_FORMAL_SESSION_GENERATION_CUTOFF:-4}"
+    views_cutoff="${ASCENT_FORMAL_GENERATION_CUTOFF:-3}"
+    for bound in "$cutoff" "$actor_cutoff" "$round_cutoff" "$session_cutoff" "$views_cutoff"; do
+      [[ "$bound" =~ ^[0-9]+$ ]] && ((bound >= 2)) || { echo 'Invalid finite exploration bound' >&2; exit 2; }
     done
-    sed 's/EarlyReturn = FALSE/EarlyReturn = TRUE/' packages/proofs/tla/ActorTestPool.cfg > "$temp/early.cfg"
-    code=0
-    "${tlc[@]}" -workers 1 -config "$temp/early.cfg" -metadir "$temp/early" packages/proofs/tla/ActorTestPool.tla > "$temp/early.out" 2>&1 || code=$?
-    [[ "$code" = 12 ]] && grep -q 'Invariant CompleteReturn is violated' "$temp/early.out"
-    echo 'COUNTEREXAMPLE-OK actor-pool-early CompleteReturn'
-    echo 'ACTOR-POOL-CHECK-OK'
+    ((session_cutoff >= 3 && round_cutoff >= 3))
+    configure() {
+      main="$model"; specification=; constraint=; properties=
+      case "$model" in
+        ActorRound) constants="Workers = {1,2}\nGenerationCutoff = $actor_cutoff\nRoundCutoff = $round_cutoff\nMutation = \"none\""; invariants='CompletePublication NoStaleCompletion CompleteBarrier'; constraint=Exploration ;;
+        ActorRoundCredits) constants='Tasks = {1,2,3}\nCapacity = 2\nEarlyReturn = FALSE'; invariants='Partition BoundedCredit BoundedAssigned CompleteReturn' ;;
+        ActorTestPool) constants='Tasks = {1,2,3}\nCapacity = 2\nEarlyReturn = FALSE'; invariants='Partition BoundedCredits StoppedAdmission CompleteReturn' ;;
+        ActorSession) constants="Cuts = {0,1}\nGenerationCutoff = $session_cutoff\nMutation = \"none\""; invariants='ConsistentPublication NoStalePublication DrainedClose'; constraint=Exploration ;;
+        ComponentIndex) main=ComponentIndexFixture; constants='Fault = "none"'; invariants='Consistent PrivateExtension HeldStable ViewConsistent' ;;
+        LatticeProjection) constants='Mutation = "none"\nRemaining = 2'; invariants='MapExact SnapshotExact PrivateStable HeldStable KeyCoverage BudgetBound RefusalSound RefusalStable' ;;
+        NativeSessionPublication) constants="GenerationCutoff = $cutoff\nMutation = \"none\""; invariants='TypeOK CommittedSnapshot CleanAligned PartialBounded'; properties=NoPrematurePublication; constraint=ExplorationBound ;;
+        PositiveNonmembershipSession) constants="GenerationCutoff = $cutoff"; invariants='TypeOK NoStalePublished NoStaleUse'; constraint=ExplorationBound ;;
+        SessionTransaction) constants="GenerationCutoff = $cutoff\nMutation = \"none\""; invariants='TypeOK AtomicSnapshot'; properties='NoStaleCommit AbortPreservesSnapshot'; constraint=ExplorationBound ;;
+        OracleTransport) constants='Mutation = "none"'; invariants='ReaderErrorSound CompleteReaders ReaderClean CompleteBytes ExitAndRequest' ;;
+        ProviderAdmission) main=ProviderAdmissionFixture; constants='Fault = "none"'; invariants='CountCaps MatchingExact OutputExact DetachedPacket NoEarlyCallbacks FailedCacheRevoked' ;;
+        ProviderFrontier) main=ProviderFrontierFixture; constants='Fault = "none"\nSeeded = FALSE'; invariants='ExactFrontier FrontierComplete DeliveredExact ConsumerSnapshot' ;;
+        ProviderReplay) constants='Nodes = {0,1}\nScopes = {0,1}\nMutation = "none"'; invariants='PublishedExact JournalExact OrderExact HeldExact RefusalAtomic' ;;
+        ProviderRouting) constants='Mutation = "none"'; invariants=CompleteExact ;;
+        ProviderViews) constants="Rows = {0,1,2}\nBudget = 2\nMutation = \"none\"\nExplorationBound = $views_cutoff"; invariants='AtomicPublication FrozenRead ReaderAlive CurrentReply LogicalBudget'; constraint=Explore ;;
+        ReaderLifetime) constants='Rows = {0,1,2}\nReaders = {1,2}\nBudget = 2\nMutation = "none"'; invariants='ReaderAlive AcceptedCurrent CreditBalance'; properties=ReaderCompletion; specification=spec ;;
+        ReadyComponents) constants='Tasks = {1,2,3}\nCapacity = 2\nMutation = "none"'; invariants='Partition Prerequisites CapacityBound CompleteReturn DependencySnapshot CompletedDelivery' ;;
+        TransitiveComponents) constants='Nodes = {1,2,3}\nMutation = "none"'; invariants='ReachExact SCCExact ParentRoots PrivateArcs RefusalAtomic ActiveExact DeltaExact ParentChains MemberPartition SizeExact' ;;
+      esac
+      base="$temp/$model.cfg"
+      if [[ -n "$specification" ]]; then printf 'SPECIFICATION %s\n' "$specification" > "$base"; else printf 'INIT q_init\nNEXT q_step\n' > "$base"; fi
+      configured_invariants=
+      for property in $invariants; do
+        if [[ "$main" != "$model" ]]; then property="${main}_${model}_$property"; fi
+        configured_invariants+=" $property"
+      done
+      printf 'CONSTANTS\n%b\nINVARIANTS %s\nCHECK_DEADLOCK FALSE\n' "$constants" "$configured_invariants" >> "$base"
+      if [[ -n "$properties" ]]; then printf 'PROPERTIES %s\n' "$properties" >> "$base"; fi
+      if [[ -n "$constraint" ]]; then printf 'CONSTRAINT %s\n' "$constraint" >> "$base"; fi
+    }
+    cache=.cache/ascent/quint-compiled
+    mkdir -p "$cache"
+    backend_hash=$(shasum -a 256 "$jar" | awk '{print $1}')
+    port=$((20000 + $$ % 30000))
+    start_compiler() {
+      java -Xmx1G -Xss32m -XX:+UseParallelGC "-Djava.io.tmpdir=$temp" -jar "$jar" server "--port=$port" > "$temp/server.out" 2>&1 &
+      server_pid=$!
+      ready=0
+      for ((attempt=0; attempt<30; attempt++)); do
+        if node - "$port" <<'JS'
+    const grpc = require('./.cache/ascent/tools/quint/node_modules/@grpc/grpc-js');
+    const loader = require('./.cache/ascent/tools/quint/node_modules/@grpc/proto-loader');
+    const proto = grpc.loadPackageDefinition(loader.loadSync('./.cache/ascent/tools/quint/node_modules/@informalsystems/quint/dist/src/reflection.proto', {keepCase:true}));
+    const client = new proto.grpc.reflection.v1alpha.ServerReflection('127.0.0.1:'+process.argv[2], grpc.credentials.createInsecure());
+    const call = client.ServerReflectionInfo({deadline:new Date(Date.now()+1000)});
+    call.on('data', r => {client.close(); process.exit(r.file_descriptor_response ? 0 : 1)});
+    call.on('error', () => {client.close(); process.exit(1)});
+    call.write({file_containing_symbol:'shai.cmdExecutor.CmdExecutor'});
+    JS
+        then ready=1; break; fi
+        kill -0 "$server_pid" 2>/dev/null || break
+        sleep 1
+      done
+      if [[ "$ready" != 1 ]]; then cat "$temp/server.out" >&2; exit 1; fi
+    }
+    for model in "${models[@]}"; do
+      configure
+      source="packages/proofs/quint/$model.qnt"
+      temporal="$properties"
+      if [[ "$model" = ReaderLifetime ]]; then temporal='ReaderCompletion RoundCompletion spec roundSpec'; fi
+      fingerprint=$({ cat "$source" packages/proofs/quint/package-lock.json; printf '%s\n' "$backend_hash" "$main" "$invariants" "$temporal" "$constraint"; } | shasum -a 256 | awk '{print $1}')
+      hit=0
+      if [[ -f "$cache/$model.identity" && -f "$cache/$model.tla" ]]; then
+        read -r expected artifact_hash < "$cache/$model.identity"
+        actual=$(shasum -a 256 "$cache/$model.tla" | awk '{print $1}')
+        if [[ "$expected" = "$fingerprint" && "$artifact_hash" = "$actual" ]]; then hit=1; fi
+      fi
+      if [[ "$hit" = 1 ]]; then cp "$cache/$model.tla" "$temp/$main.tla"; else
+        if [[ -z "$server_pid" ]]; then start_compiler; fi
+        compile_invariants="$invariants${constraint:+ $constraint}"
+        options=(--main "$main" --target tlaplus --init init --step step --invariant "${compile_invariants// /,}" --apalache-version 0.62.1 --server-endpoint "127.0.0.1:$port" --verbosity 0)
+        if [[ -n "$temporal" ]]; then options+=(--temporal "${temporal// /,}"); fi
+        "$quint" compile "$source" "${options[@]}" > "$temp/$main.tla"
+        grep -q "MODULE $main " "$temp/$main.tla"
+        cp "$temp/$main.tla" "$cache/$model.tla"
+        artifact_hash=$(shasum -a 256 "$cache/$model.tla" | awk '{print $1}')
+        printf '%s %s\n' "$fingerprint" "$artifact_hash" > "$cache/$model.identity"
+      fi
+      # Apalache defines assignment annotations as equality. TLC's ENABLED
+      # handling of the annotated call can spuriously disable fair actions.
+      # Erase only operator tokens, preserving all quoted model values.
+      node - "$temp/$main.tla" <<'JS'
+    const fs = require('fs');
+    const path = process.argv[2];
+    const source = fs.readFileSync(path, 'utf8');
+    fs.writeFileSync(path, source.replace(/"(?:\\.|[^"\\])*"|:=/g, token => token === ':=' ? '=' : token));
+    JS
+      echo "QUINT-COMPILE-OK $model cache=$hit"
+        done
+        if [[ -n "$server_pid" ]]; then kill "$server_pid"; wait "$server_pid" || true; server_pid=; fi
+        check_model() {
+          local model="$1" main base specification constraint properties constants invariants variant code expected property mutation capacity
+          configure
+          execute() {
+            local variant="$1" config="$2" expected="$3" property="${4:-}" code=0
+            java -Xmx1G -XX:+UseParallelGC "-Djava.io.tmpdir=$temp/$model" -cp "$jar" tlc2.TLC -workers 1 -config "$config" -metadir "$temp/$model/$variant" "$temp/$main.tla" 2>&1 | tee "$temp/$model-$variant.out" | awk -v label="$model-$variant" '/^Progress\(/ {print label ": " $0; fflush()}' || code=$?
+            if [[ "$code" != "$expected" ]]; then cat "$temp/$model-$variant.out" >&2; echo "Quint checker failure: $model $variant exit=$code expected=$expected" >&2; return 1; fi
+            if [[ "$expected" = 0 ]]; then
+              grep -q 'Model checking completed. No error has been found.' "$temp/$model-$variant.out"
+              grep 'states generated.*distinct states found' "$temp/$model-$variant.out" | tail -1
+              echo "QUINT-CHECK-OK $model $variant"
+            elif [[ "$expected" = 12 ]]; then
+              grep -q "Invariant $property is violated" "$temp/$model-$variant.out" || { cat "$temp/$model-$variant.out" >&2; return 1; }
+              echo "COUNTEREXAMPLE-OK $model-$variant $property exit=12"
+            else
+              grep -Eq "Temporal propert(y $property was|ies were) violated|Action property $property is violated" "$temp/$model-$variant.out" || { cat "$temp/$model-$variant.out" >&2; return 1; }
+              echo "COUNTEREXAMPLE-OK $model-$variant $property exit=13"
+            fi
+          }
+          fault() {
+            mutation="$1"; property="$2"; expected="${3:-12}"
+            if [[ "$main" != "$model" ]]; then property="${main}_${model}_$property"; fi
+            variant="$temp/$model-$mutation.cfg"
+            sed -e "s/Mutation = \"none\"/Mutation = \"$mutation\"/" -e "s/Fault = \"none\"/Fault = \"$mutation\"/" -e 's/EarlyReturn = FALSE/EarlyReturn = TRUE/' -e '/^INVARIANTS /d' -e '/^PROPERTIES /d' "$base" > "$variant"
+            if [[ "$expected" = 12 ]]; then printf 'INVARIANT %s\n' "$property" >> "$variant"; else printf 'PROPERTY %s\n' "$property" >> "$variant"; fi
+            if [[ "$model" = ProviderFrontier && "$mutation" = initial ]]; then sed -i.bak 's/Seeded = FALSE/Seeded = TRUE/' "$variant"; fi
+            if [[ "$model" = LatticeProjection && "$mutation" = budget-skip || "$model" = LatticeProjection && "$mutation" = budget-events || "$model" = LatticeProjection && "$mutation" = refusal-publish ]]; then sed -i.bak 's/Remaining = 2/Remaining = 1/' "$variant"; fi
+            execute "$mutation" "$variant" "$expected" "$property"
+          }
+          mkdir -p "$temp/$model"
+          execute correct "$base" 0
+          case "$model" in
+            ActorRound) fault early CompletePublication; fault stale NoStaleCompletion; fault cancel CompletePublication ;;
+            ActorRoundCredits|ActorTestPool) for capacity in 1 3; do sed "s/Capacity = 2/Capacity = $capacity/" "$base" > "$temp/$model-capacity.cfg"; execute "capacity-$capacity" "$temp/$model-capacity.cfg" 0; done; fault early CompleteReturn ;;
+            ActorSession) fault stale NoStalePublication; fault early DrainedClose ;;
+            ComponentIndex) for mutation in order early failed alias foreign reset columns rebuild-columns; do fault "$mutation" Consistent; done; fault held HeldStable; fault held-columns HeldStable; for mutation in extend-view failed-view rebuild-view; do fault "$mutation" ViewConsistent; done ;;
+            LatticeProjection) for capacity in 0 1; do sed "s/Remaining = 2/Remaining = $capacity/" "$base" > "$temp/$model-capacity.cfg"; execute "remaining-$capacity" "$temp/$model-capacity.cfg" 0; done; for mutation in overwrite prior false; do fault "$mutation" MapExact; done; for mutation in retain early stale; do fault "$mutation" SnapshotExact; done; fault borrow HeldStable; fault lost-key KeyCoverage; fault repeat-key KeyCoverage; fault budget-skip BudgetBound; fault budget-events RefusalSound; fault refusal-publish RefusalStable ;;
+            NativeSessionPublication) for mutation in early bounded alias; do fault "$mutation" CommittedSnapshot; done ;;
+            SessionTransaction) fault early AtomicSnapshot; fault stale NoStaleCommit 13; fault global AtomicSnapshot; fault reuse AtomicSnapshot ;;
+            ProviderFrontier) sed 's/Seeded = FALSE/Seeded = TRUE/' "$base" > "$temp/seeded.cfg"; execute seeded "$temp/seeded.cfg" 0; sed 's/Fault = "none"/Fault = "overlap"/' "$base" > "$temp/overlap.cfg"; execute overlap "$temp/overlap.cfg" 0; fault raw FrontierComplete; fault foreign FrontierComplete; fault omit DeliveredExact; for mutation in early old initial replace; do fault "$mutation" ConsumerSnapshot; done ;;
+            ProviderReplay) fault scope PublishedExact; fault early JournalExact; fault drop JournalExact; fault kind OrderExact; fault cut HeldExact; fault reject RefusalAtomic ;;
+            ProviderAdmission) fault nocap MatchingExact; fault set MatchingExact; fault allwitness CountCaps; fault early NoEarlyCallbacks; fault borrow DetachedPacket; fault retain FailedCacheRevoked ;;
+            ProviderRouting) for mutation in drop order representative prefix; do fault "$mutation" CompleteExact; done ;;
+            ProviderViews) fault alias FrozenRead; fault retire ReaderAlive; fault early AtomicPublication; fault stale CurrentReply; fault budget LogicalBudget ;;
+            ReaderLifetime) for mutation in stuck unfair global; do fault "$mutation" ReaderCompletion 13; done; fault retire ReaderAlive; fault credit CreditBalance; fault aba AcceptedCurrent;
+              sed -e 's/Readers = {1,2}/Readers = {1}/' -e 's/Mutation = "none"/Mutation = "global"/' "$base" > "$temp/single.cfg"; execute single-reader-global-fairness "$temp/single.cfg" 0;
+              sed -e 's/SPECIFICATION spec/SPECIFICATION roundSpec/' -e 's/PROPERTIES ReaderCompletion/PROPERTIES ReaderCompletion RoundCompletion/' "$base" > "$temp/round.cfg"; execute sealed-round "$temp/round.cfg" 0;
+              sed -e 's/Mutation = "none"/Mutation = "unfair"/' -e '/^INVARIANTS /d' -e '/^PROPERTIES /d' "$temp/round.cfg" > "$temp/round-unfair.cfg"; printf 'PROPERTY RoundCompletion\n' >> "$temp/round-unfair.cfg"; execute sealed-round-unfair "$temp/round-unfair.cfg" 13 RoundCompletion ;;
+            ReadyComponents) for capacity in 1 3; do sed "s/Capacity = 2/Capacity = $capacity/" "$base" > "$temp/$model-capacity.cfg"; execute "capacity-$capacity" "$temp/$model-capacity.cfg" 0; done; fault prerequisite Prerequisites; fault early CompleteReturn; fault snapshot DependencySnapshot; fault tail CompletedDelivery; fault credit CompletedDelivery ;;
+            TransitiveComponents) fault split SCCExact; fault stale ReachExact; fault reject RefusalAtomic; for mutation in raw diagonal old; do fault "$mutation" DeltaExact; done; fault chain ParentChains; fault members MemberPartition; fault size SizeExact; fault adjacency PrivateArcs ;;
+            OracleTransport) fault early CompleteReaders; fault swallow ReaderClean; fault tail CompleteBytes; fault interrupt ReaderErrorSound ;;
+          esac
+        }
+        # Calls run as simple commands in independent subshells: failures terminate
+        # their lane, and both child exit statuses are required by the parent.
+        lane() { local offset="$1" i; for ((i=offset;i<${#models[@]};i+=2)); do check_model "${models[i]}"; done; }
+        lane 0 & first=$!
+        lane 1 & second=$!
+        status=0
+        wait "$first" || status=$?
+        wait "$second" || status=$?
+        [[ "$status" = 0 ]] || exit "$status"
+        echo 'ALL-QUINT-CHECK-OK'
 
 # Matched finite-operator research probe; every sample checks independent
 # closure before reporting cost. This is separate from the SS suite.
@@ -1326,360 +1438,3 @@ check-dsl-closure:
     test "$(grep -c '^MODULE-OK ' "$output_file")" -eq 15
     test "$(grep -c '^HARNESS-OK ' "$output_file")" -eq 15
     test "$(grep -cx 'OK' "$output_file")" -eq 15
-
-# Unbounded Session protocol with configurable finite TLC exploration.
-check-actor-session-formal:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    if [[ -n "${TLC_BIN:-}" ]]; then tlc=("$TLC_BIN"); else tlc=(java -XX:+UseParallelGC -cp "${TLC_JAR:-.cache/ascent/tools/tla2tools-v1.7.4.jar}" tlc2.TLC); fi
-    temp=$(mktemp -d)
-    trap 'rm -rf "$temp"' EXIT
-    # TLC extracts standard modules under java.io.tmpdir; concurrent JVMs
-    # must not truncate/delete each other's module files.
-    if [[ "${tlc[0]}" == java ]]; then tlc=(java "-Djava.io.tmpdir=$temp" "${tlc[@]:1}"); fi
-    generations="${ASCENT_SESSION_TLC_GENERATION_CUTOFF:-4}"
-    [[ "$generations" =~ ^[0-9]+$ && "$generations" -ge 3 ]]
-    sed "s/TLCGenerationCutoff = [0-9][0-9]*/TLCGenerationCutoff = $generations/" packages/proofs/tla/ActorSession.cfg > "$temp/normal.cfg"
-    "${tlc[@]}" -workers 1 -config "$temp/normal.cfg" -metadir "$temp/normal" packages/proofs/tla/ActorSession.tla
-    for mutation in stale early; do
-      sed "s/Mutation = \"none\"/Mutation = \"$mutation\"/" "$temp/normal.cfg" > "$temp/$mutation.cfg"
-      code=0
-      "${tlc[@]}" -workers 1 -config "$temp/$mutation.cfg" -metadir "$temp/$mutation" packages/proofs/tla/ActorSession.tla > "$temp/$mutation.out" 2>&1 || code=$?
-      if [[ "$mutation" = stale ]]; then invariant=NoStalePublication; else invariant=DrainedClose; fi
-      [[ "$code" = 12 ]] && grep -q "Invariant $invariant is violated" "$temp/$mutation.out"
-      echo "COUNTEREXAMPLE-OK actor-session-$mutation $invariant"
-    done
-    echo 'ACTOR-SESSION-CHECK-OK'
-
-check-ready-components-formal:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    if [[ -n "${TLC_BIN:-}" ]]; then tlc=("$TLC_BIN"); else tlc=(java -XX:+UseParallelGC -cp "${TLC_JAR:-.cache/ascent/tools/tla2tools-v1.7.4.jar}" tlc2.TLC); fi
-    temp=$(mktemp -d)
-    trap 'rm -rf "$temp"' EXIT
-    # TLC extracts standard modules under java.io.tmpdir; concurrent JVMs
-    # must not truncate/delete each other's module files.
-    if [[ "${tlc[0]}" == java ]]; then tlc=(java "-Djava.io.tmpdir=$temp" "${tlc[@]:1}"); fi
-    for capacity in 1 2 3; do
-      sed "s/Capacity = 2/Capacity = $capacity/" packages/proofs/tla/ReadyComponents.cfg > "$temp/$capacity.cfg"
-      "${tlc[@]}" -workers 1 -config "$temp/$capacity.cfg" -metadir "$temp/$capacity" packages/proofs/tla/ReadyComponents.tla
-    done
-    for mutation in prerequisite early snapshot tail credit; do
-      sed "s/Mutation = \"none\"/Mutation = \"$mutation\"/" packages/proofs/tla/ReadyComponents.cfg > "$temp/$mutation.cfg"
-      code=0
-      "${tlc[@]}" -workers 1 -config "$temp/$mutation.cfg" -metadir "$temp/$mutation" packages/proofs/tla/ReadyComponents.tla > "$temp/$mutation.out" 2>&1 || code=$?
-      invariant=CompletedDelivery
-      if [[ "$mutation" = prerequisite ]]; then invariant=Prerequisites; fi
-      if [[ "$mutation" = early ]]; then invariant=CompleteReturn; fi
-      if [[ "$mutation" = snapshot ]]; then invariant=DependencySnapshot; fi
-      [[ "$code" = 12 ]] && grep -q "Invariant $invariant is violated" "$temp/$mutation.out"
-      echo "COUNTEREXAMPLE-OK ready-components-$mutation $invariant"
-    done
-    echo 'READY-COMPONENTS-CHECK-OK'
-
-# Quint authors the protocol; the TLC backend exhausts the finite fixture.
-prepare-quint:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    tool=.cache/ascent/tools/quint
-    mkdir -p "$tool"
-    if [[ ! -x "$tool/node_modules/.bin/quint" ]] || ! cmp -s packages/proofs/quint/package-lock.json "$tool/package-lock.json"; then
-      cp packages/proofs/quint/package.json packages/proofs/quint/package-lock.json "$tool/"
-      npm ci --prefix "$tool" --ignore-scripts --no-audit --no-fund
-    fi
-    [[ "$("$tool/node_modules/.bin/quint" --version)" = 0.33.0 ]]
-
-check-component-index-formal: prepare-quint
-    #!/usr/bin/env bash
-    set -euo pipefail
-    quint=.cache/ascent/tools/quint/node_modules/.bin/quint
-    export QUINT_HOME="$PWD/.cache/ascent/tools/quint-backends"
-    export OUT_DIR="$PWD/.cache/ascent/quint-output"
-    temp=$(mktemp -d)
-    server_pid=
-    cleanup() {
-      if [[ -n "$server_pid" ]]; then kill "$server_pid" 2>/dev/null || true; wait "$server_pid" 2>/dev/null || true; fi
-      rm -rf "$temp"
-    }
-    trap cleanup EXIT
-    printf '%s\n' '{"workers":1,"maxHeap":"-Xmx1G","stackSize":"-Xss32m"}' > "$temp/tlc.json"
-    "$quint" typecheck packages/proofs/quint/ComponentIndex.qnt
-    "$quint" verify packages/proofs/quint/ComponentIndex.qnt --main ComponentIndexFixture --backend tlc --apalache-version 0.62.1 --invariant safety --tlc-config "$temp/tlc.json" --verbosity 3
-    # Reuse one owned compiler service across controls, rather than starting a JVM
-    # per mutation. The correct run above also prepares the pinned backend.
-    port=$((20000 + $$ % 30000))
-    java -Xmx1G -Xss32m -XX:+UseParallelGC "-Djava.io.tmpdir=$temp" -jar "$QUINT_HOME/apalache-dist-0.62.1/apalache/lib/apalache.jar" server "--port=$port" > "$temp/server.out" 2>&1 &
-    server_pid=$!
-    ready=0
-    for ((attempt=0; attempt<30; attempt++)); do
-      if grep -q "server is running on port $port" "$temp/server.out"; then ready=1; break; fi
-      kill -0 "$server_pid" 2>/dev/null || break
-      sleep 1
-    done
-    if [[ "$ready" != 1 ]]; then cat "$temp/server.out" >&2; exit 1; fi
-    for mutation in order early failed alias foreign reset held columns held-columns rebuild-columns extend-view failed-view rebuild-view; do
-      sed "s/Mutation = \"none\"/Mutation = \"$mutation\"/" packages/proofs/quint/ComponentIndex.qnt > "$temp/ComponentIndex.qnt"
-      invariant=Consistent
-      if [[ "$mutation" = held || "$mutation" = held-columns ]]; then invariant=HeldStable; fi
-      if [[ "$mutation" = extend-view || "$mutation" = failed-view || "$mutation" = rebuild-view ]]; then invariant=ViewConsistent; fi
-      code=0
-      "$quint" verify "$temp/ComponentIndex.qnt" --server-endpoint "localhost:$port" --main ComponentIndexFixture --backend tlc --apalache-version 0.62.1 --invariant "$invariant" --tlc-config "$temp/tlc.json" --verbosity 3 > "$temp/$mutation.out" 2>&1 || code=$?
-      if [[ "$code" != 1 ]] || ! grep -q 'Invariant q_inv is violated' "$temp/$mutation.out" || ! grep -q 'found a counterexample' "$temp/$mutation.out"; then
-        cat "$temp/$mutation.out" >&2
-        echo "Expected Quint invariant counterexample: $mutation $invariant (exit $code)" >&2
-        exit 1
-      fi
-      echo "COUNTEREXAMPLE-OK component-index-$mutation $invariant"
-    done
-    echo 'COMPONENT-INDEX-CHECK-OK'
-
-# BYODS concrete frontier coverage and consumer visibility; finite eqrel model.
-check-provider-frontier-formal:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    if [[ -n "${TLC_BIN:-}" ]]; then tlc=("$TLC_BIN"); else tlc=(java -XX:+UseParallelGC -cp "${TLC_JAR:-.cache/ascent/tools/tla2tools-v1.7.4.jar}" tlc2.TLC); fi
-    temp=$(mktemp -d)
-    trap 'rm -rf "$temp"' EXIT
-    # TLC extracts standard modules under java.io.tmpdir; concurrent JVMs
-    # must not truncate/delete each other's module files.
-    if [[ "${tlc[0]}" == java ]]; then tlc=(java "-Djava.io.tmpdir=$temp" "${tlc[@]:1}"); fi
-    "${tlc[@]}" -workers 1 -config packages/proofs/tla/ProviderFrontier.cfg -metadir "$temp/good" packages/proofs/tla/ProviderFrontier.tla
-    sed 's/InitialInputs = {}/InitialInputs <- SeededInputs/' packages/proofs/tla/ProviderFrontier.cfg > "$temp/seeded.cfg"
-    "${tlc[@]}" -workers 1 -config "$temp/seeded.cfg" -metadir "$temp/seeded" packages/proofs/tla/ProviderFrontier.tla
-    sed 's/Mutation = "none"/Mutation = "overlap"/' packages/proofs/tla/ProviderFrontier.cfg > "$temp/overlap.cfg"
-    "${tlc[@]}" -workers 1 -config "$temp/overlap.cfg" -metadir "$temp/overlap" packages/proofs/tla/ProviderFrontier.tla
-    for mutation in raw foreign omit early old initial replace; do
-      sed "s/Mutation = \"none\"/Mutation = \"$mutation\"/" packages/proofs/tla/ProviderFrontier.cfg > "$temp/$mutation.cfg"
-      if [[ "$mutation" == initial ]]; then
-        sed 's/InitialInputs = {}/InitialInputs <- SeededInputs/' "$temp/$mutation.cfg" > "$temp/initial-seeded.cfg"
-        mv "$temp/initial-seeded.cfg" "$temp/$mutation.cfg"
-      fi
-      code=0
-      "${tlc[@]}" -workers 1 -config "$temp/$mutation.cfg" -metadir "$temp/$mutation" packages/proofs/tla/ProviderFrontier.tla > "$temp/$mutation.out" 2>&1 || code=$?
-      invariant=FrontierComplete
-      if [[ "$mutation" == omit ]]; then invariant=DeliveredExact; fi
-      if [[ "$mutation" == early || "$mutation" == old || "$mutation" == initial || "$mutation" == replace ]]; then invariant=ConsumerSnapshot; fi
-      [[ "$code" = 12 ]] && grep -q "Invariant $invariant is violated" "$temp/$mutation.out"
-      echo "COUNTEREXAMPLE-OK provider-frontier-$mutation $invariant"
-    done
-    echo 'PROVIDER-FRONTIER-CHECK-OK'
-
-# SCC union-find insertion/remapping and refusal, with discriminating mutations.
-check-transitive-components-formal:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    if [[ -n "${TLC_BIN:-}" ]]; then tlc=("$TLC_BIN"); else tlc=(java -XX:+UseParallelGC -cp "${TLC_JAR:-.cache/ascent/tools/tla2tools-v1.7.4.jar}" tlc2.TLC); fi
-    temp=$(mktemp -d)
-    trap 'rm -rf "$temp"' EXIT
-    # TLC extracts standard modules under java.io.tmpdir; concurrent JVMs
-    # must not truncate/delete each other's module files.
-    if [[ "${tlc[0]}" == java ]]; then tlc=(java "-Djava.io.tmpdir=$temp" "${tlc[@]:1}"); fi
-    "${tlc[@]}" -workers 1 -config packages/proofs/tla/TransitiveComponents.cfg -metadir "$temp/good" packages/proofs/tla/TransitiveComponents.tla
-    for mutation in split stale reject raw diagonal old chain members size adjacency; do
-      invariant=SCCExact
-      if [[ "$mutation" == stale ]]; then invariant=ReachExact; fi
-      if [[ "$mutation" == reject ]]; then invariant=RefusalAtomic; fi
-      if [[ "$mutation" == raw || "$mutation" == diagonal || "$mutation" == old ]]; then invariant=DeltaExact; fi
-      if [[ "$mutation" == chain ]]; then invariant=ParentChains; fi
-      if [[ "$mutation" == members ]]; then invariant=MemberPartition; fi
-      if [[ "$mutation" == size ]]; then invariant=SizeExact; fi
-      if [[ "$mutation" == adjacency ]]; then invariant=PrivateArcs; fi
-      sed -e "s/Mutation = \"none\"/Mutation = \"$mutation\"/" -e "s/INVARIANTS .*/INVARIANTS $invariant/" packages/proofs/tla/TransitiveComponents.cfg > "$temp/$mutation.cfg"
-      code=0
-      "${tlc[@]}" -workers 1 -config "$temp/$mutation.cfg" -metadir "$temp/$mutation" packages/proofs/tla/TransitiveComponents.tla > "$temp/$mutation.out" 2>&1 || code=$?
-      [[ "$code" = 12 ]] && grep -q "Invariant $invariant is violated" "$temp/$mutation.out"
-      echo "COUNTEREXAMPLE-OK transitive-components-$mutation $invariant"
-    done
-    echo 'TRANSITIVE-COMPONENTS-CHECK-OK'
-
-# Frozen BYODS relation views: lifetime, publication and logical budgets.
-check-provider-views-formal:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    if [[ -n "${TLC_BIN:-}" ]]; then tlc=("$TLC_BIN"); else tlc=(java -XX:+UseParallelGC -Xmx1g -cp "${TLC_JAR:-.cache/ascent/tools/tla2tools-v1.7.4.jar}" tlc2.TLC); fi
-    temp=$(mktemp -d)
-    trap 'rm -rf "$temp"' EXIT
-    # TLC extracts standard modules under java.io.tmpdir; concurrent JVMs
-    # must not truncate/delete each other's module files.
-    if [[ "${tlc[0]}" == java ]]; then tlc=(java "-Djava.io.tmpdir=$temp" "${tlc[@]:1}"); fi
-    cutoff="${ASCENT_TLC_GENERATION_CUTOFF:-3}"
-    [[ "$cutoff" =~ ^[0-9]+$ ]] || { echo 'Invalid TLC exploration bound' >&2; exit 2; }
-    sed "s/ExplorationBound = [0-9][0-9]*/ExplorationBound = $cutoff/" packages/proofs/tla/ProviderViews.cfg > "$temp/base.cfg"
-    echo "TLA-CHECK ProviderViews exploration-bound=$cutoff (TLC enumeration only)"
-    "${tlc[@]}" -workers 1 -config "$temp/base.cfg" -metadir "$temp/good" packages/proofs/tla/ProviderViews.tla
-    for mutation in alias retire early stale budget; do
-      case "$mutation" in
-        alias) invariant=FrozenRead ;;
-        retire) invariant=ReaderAlive ;;
-        early) invariant=AtomicPublication ;;
-        stale) invariant=CurrentReply ;;
-        budget) invariant=LogicalBudget ;;
-      esac
-      sed -e "s/Mutation = \"none\"/Mutation = \"$mutation\"/" -e "s/INVARIANTS .*/INVARIANTS $invariant/" "$temp/base.cfg" > "$temp/$mutation.cfg"
-      code=0
-      "${tlc[@]}" -workers 1 -config "$temp/$mutation.cfg" -metadir "$temp/$mutation" packages/proofs/tla/ProviderViews.tla > "$temp/$mutation.out" 2>&1 || code=$?
-      [[ "$code" = 12 ]] && grep -q "Invariant $invariant is violated" "$temp/$mutation.out"
-      echo "COUNTEREXAMPLE-OK provider-views-$mutation $invariant"
-    done
-    cp packages/proofs/tla/ReaderLifetime.cfg "$temp/live.cfg"
-    "${tlc[@]}" -workers 1 -config "$temp/live.cfg" -metadir "$temp/live" packages/proofs/tla/ReaderLifetime.tla
-    for mutation in stuck unfair global; do
-      sed "s/Mutation = \"none\"/Mutation = \"$mutation\"/" "$temp/live.cfg" > "$temp/$mutation.cfg"
-      code=0
-      "${tlc[@]}" -workers 1 -config "$temp/$mutation.cfg" -metadir "$temp/$mutation" packages/proofs/tla/ReaderLifetime.tla > "$temp/$mutation.out" 2>&1 || code=$?
-      if [[ "$code" != 13 ]] || ! grep -q 'Temporal properties were violated' "$temp/$mutation.out"; then
-        cat "$temp/$mutation.out"
-        exit 1
-      fi
-      echo "COUNTEREXAMPLE-OK provider-views-$mutation ReaderCompletion exit=$code"
-    done
-    for mutation in retire credit aba; do
-      case "$mutation" in
-        retire) invariant=ReaderAlive ;;
-        credit) invariant=CreditBalance ;;
-        aba) invariant=AcceptedCurrent ;;
-      esac
-      sed -e "s/Mutation = \"none\"/Mutation = \"$mutation\"/" -e '/PROPERTY ReaderCompletion/d' -e "s/INVARIANTS .*/INVARIANTS $invariant/" "$temp/live.cfg" > "$temp/shared-$mutation.cfg"
-      code=0
-      "${tlc[@]}" -workers 1 -config "$temp/shared-$mutation.cfg" -metadir "$temp/shared-$mutation" packages/proofs/tla/ReaderLifetime.tla > "$temp/shared-$mutation.out" 2>&1 || code=$?
-      [[ "$code" = 12 ]] && grep -q "Invariant $invariant is violated" "$temp/shared-$mutation.out"
-      echo "COUNTEREXAMPLE-OK shared-reader-$mutation $invariant"
-    done
-    # The same global fairness assumption suffices for one reader but not two.
-    sed -e 's/Readers = {r1, r2}/Readers = {r1}/' -e 's/Mutation = "none"/Mutation = "global"/' "$temp/live.cfg" > "$temp/single.cfg"
-    "${tlc[@]}" -workers 1 -config "$temp/single.cfg" -metadir "$temp/single" packages/proofs/tla/ReaderLifetime.tla
-    echo 'SINGLE-READER-GLOBAL-FAIRNESS-OK'
-    "${tlc[@]}" -workers 1 -config packages/proofs/tla/ReaderRound.cfg -metadir "$temp/round" packages/proofs/tla/ReaderLifetime.tla
-    sed 's/Mutation = "none"/Mutation = "unfair"/' packages/proofs/tla/ReaderRound.cfg > "$temp/round-unfair.cfg"
-    code=0
-    "${tlc[@]}" -workers 1 -config "$temp/round-unfair.cfg" -metadir "$temp/round-unfair" packages/proofs/tla/ReaderLifetime.tla > "$temp/round-unfair.out" 2>&1 || code=$?
-    [[ "$code" = 13 ]] && grep -q 'Temporal properties were violated' "$temp/round-unfair.out"
-    echo 'COUNTEREXAMPLE-OK sealed-round-unfair Completion exit=13'
-    echo 'SEALED-ROUND-GLOBAL-FAIRNESS-OK'
-    echo 'PROVIDER-VIEWS-CHECK-OK'
-
-# Grouped UF journal publication, presentation order and immutable export cuts.
-check-provider-replay-formal:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    if [[ -n "${TLC_BIN:-}" ]]; then tlc=("$TLC_BIN"); else tlc=(java -XX:+UseParallelGC -cp "${TLC_JAR:-.cache/ascent/tools/tla2tools-v1.7.4.jar}" tlc2.TLC); fi
-    temp=$(mktemp -d)
-    trap 'rm -rf "$temp"' EXIT
-    if [[ "${tlc[0]}" == java ]]; then tlc=(java "-Djava.io.tmpdir=$temp" "${tlc[@]:1}"); fi
-    "${tlc[@]}" -workers 1 -config packages/proofs/tla/ProviderReplay.cfg -metadir "$temp/good" packages/proofs/tla/ProviderReplay.tla
-    for mutation in scope early drop kind cut reject; do
-      case "$mutation" in
-        scope) invariant=PublishedExact ;;
-        early|drop) invariant=JournalExact ;;
-        kind) invariant=OrderExact ;;
-        cut) invariant=HeldExact ;;
-        reject) invariant=RefusalAtomic ;;
-      esac
-      sed -e "s/Mutation = \"none\"/Mutation = \"$mutation\"/" -e "s/INVARIANTS .*/INVARIANTS $invariant/" packages/proofs/tla/ProviderReplay.cfg > "$temp/$mutation.cfg"
-      code=0
-      "${tlc[@]}" -workers 1 -config "$temp/$mutation.cfg" -metadir "$temp/$mutation" packages/proofs/tla/ProviderReplay.tla > "$temp/$mutation.out" 2>&1 || code=$?
-      [[ "$code" = 12 ]] && grep -q "Invariant $invariant is violated" "$temp/$mutation.out"
-      echo "COUNTEREXAMPLE-OK provider-replay-$mutation $invariant"
-    done
-    echo 'PROVIDER-REPLAY-CHECK-OK'
-
-# Custom index bag coverage, lane ownership, detachment and error revocation.
-check-provider-admission-formal:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    if [[ -n "${TLC_BIN:-}" ]]; then tlc=("$TLC_BIN"); else tlc=(java -XX:+UseParallelGC -cp "${TLC_JAR:-.cache/ascent/tools/tla2tools-v1.7.4.jar}" tlc2.TLC); fi
-    temp=$(mktemp -d)
-    trap 'rm -rf "$temp"' EXIT
-    if [[ "${tlc[0]}" == java ]]; then tlc=(java "-Djava.io.tmpdir=$temp" "${tlc[@]:1}"); fi
-    "${tlc[@]}" -workers 1 -config packages/proofs/tla/ProviderAdmission.cfg -metadir "$temp/good" packages/proofs/tla/ProviderAdmission.tla
-    for mutation in nocap set allwitness early borrow retain; do
-      case "$mutation" in
-        nocap|set) invariant=MatchingExact ;;
-        allwitness) invariant=CountCaps ;;
-        early) invariant=NoEarlyCallbacks ;;
-        borrow) invariant=DetachedPacket ;;
-        retain) invariant=FailedCacheRevoked ;;
-      esac
-      sed -e "s/Mutation = \"none\"/Mutation = \"$mutation\"/" -e "s/INVARIANTS .*/INVARIANTS $invariant/" packages/proofs/tla/ProviderAdmission.cfg > "$temp/$mutation.cfg"
-      code=0
-      "${tlc[@]}" -workers 1 -config "$temp/$mutation.cfg" -metadir "$temp/$mutation" packages/proofs/tla/ProviderAdmission.tla > "$temp/$mutation.out" 2>&1 || code=$?
-      [[ "$code" = 12 ]] && grep -q "Invariant $invariant is violated" "$temp/$mutation.out"
-      echo "COUNTEREXAMPLE-OK provider-admission-$mutation $invariant"
-    done
-    echo 'PROVIDER-ADMISSION-CHECK-OK'
-
-# Replacement-valued map collection, settled projection and held snapshots.
-check-lattice-projection-formal:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    if [[ -n "${TLC_BIN:-}" ]]; then tlc=("$TLC_BIN"); else tlc=(java -XX:+UseParallelGC -cp "${TLC_JAR:-.cache/ascent/tools/tla2tools-v1.7.4.jar}" tlc2.TLC); fi
-    temp=$(mktemp -d)
-    trap 'rm -rf "$temp"' EXIT
-    if [[ "${tlc[0]}" == java ]]; then tlc=(java "-Djava.io.tmpdir=$temp" "${tlc[@]:1}"); fi
-    "${tlc[@]}" -workers 1 -config packages/proofs/tla/LatticeProjection.cfg -metadir "$temp/good" packages/proofs/tla/LatticeProjection.tla
-    for capacity in 0 1; do
-      sed "s/Remaining = 2/Remaining = $capacity/" packages/proofs/tla/LatticeProjection.cfg > "$temp/capacity-$capacity.cfg"
-      "${tlc[@]}" -workers 1 -config "$temp/capacity-$capacity.cfg" -metadir "$temp/capacity-$capacity" packages/proofs/tla/LatticeProjection.tla
-    done
-    for mutation in overwrite prior false retain early borrow stale lost-key repeat-key budget-skip budget-events refusal-publish; do
-      case "$mutation" in
-        overwrite|prior|false) invariant=MapExact ;;
-        retain|early|stale) invariant=SnapshotExact ;;
-        borrow) invariant=HeldStable ;;
-        lost-key|repeat-key) invariant=KeyCoverage ;;
-        budget-skip) invariant=BudgetBound ;;
-        budget-events) invariant=RefusalSound ;;
-        refusal-publish) invariant=RefusalStable ;;
-      esac
-      sed -e "s/Mutation = \"none\"/Mutation = \"$mutation\"/" -e "s/INVARIANTS .*/INVARIANTS $invariant/" packages/proofs/tla/LatticeProjection.cfg > "$temp/$mutation.cfg"
-      case "$mutation" in
-        budget-skip|budget-events|refusal-publish) sed -i.bak 's/Remaining = 2/Remaining = 1/' "$temp/$mutation.cfg" ;;
-      esac
-      code=0
-      "${tlc[@]}" -workers 1 -config "$temp/$mutation.cfg" -metadir "$temp/$mutation" packages/proofs/tla/LatticeProjection.tla > "$temp/$mutation.out" 2>&1 || code=$?
-      [[ "$code" = 12 ]] && grep -q "Invariant $invariant is violated" "$temp/$mutation.out"
-      echo "COUNTEREXAMPLE-OK lattice-projection-$mutation $invariant"
-    done
-    echo 'LATTICE-PROJECTION-CHECK-OK'
-
-
-check-oracle-transport-formal:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    if [[ -n "${TLC_BIN:-}" ]]; then tlc=("$TLC_BIN"); else tlc=(java -XX:+UseParallelGC -cp "${TLC_JAR:-.cache/ascent/tools/tla2tools-v1.7.4.jar}" tlc2.TLC); fi
-    temp=$(mktemp -d)
-    trap 'rm -rf "$temp"' EXIT
-    if [[ "${tlc[0]}" == java ]]; then tlc=(java "-Djava.io.tmpdir=$temp" "${tlc[@]:1}"); fi
-    "${tlc[@]}" -workers 1 -config packages/proofs/tla/OracleTransport.cfg -metadir "$temp/good" packages/proofs/tla/OracleTransport.tla
-    for mutation in early swallow tail interrupt; do
-      case "$mutation" in
-        early) invariant=CompleteReaders ;;
-        swallow) invariant=ReaderClean ;;
-        tail) invariant=CompleteBytes ;;
-        interrupt) invariant=ReaderErrorSound ;;
-      esac
-      sed -e "s/Mutation = \"none\"/Mutation = \"$mutation\"/" -e "s/INVARIANTS .*/INVARIANTS $invariant/" packages/proofs/tla/OracleTransport.cfg > "$temp/$mutation.cfg"
-      code=0
-      "${tlc[@]}" -workers 1 -config "$temp/$mutation.cfg" -metadir "$temp/$mutation" packages/proofs/tla/OracleTransport.tla > "$temp/$mutation.out" 2>&1 || code=$?
-      [[ "$code" = 12 ]] && grep -q "Invariant $invariant is violated" "$temp/$mutation.out"
-      echo "COUNTEREXAMPLE-OK oracle-transport-$mutation $invariant"
-    done
-    echo 'ORACLE-TRANSPORT-CHECK-OK'
-
-
-check-provider-routing-formal:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    if [[ -n "${TLC_BIN:-}" ]]; then tlc=("$TLC_BIN"); else tlc=(java -XX:+UseParallelGC -cp "${TLC_JAR:-.cache/ascent/tools/tla2tools-v1.7.4.jar}" tlc2.TLC); fi
-    temp=$(mktemp -d)
-    trap 'rm -rf "$temp"' EXIT
-    if [[ "${tlc[0]}" == java ]]; then tlc=(java "-Djava.io.tmpdir=$temp" "${tlc[@]:1}"); fi
-    "${tlc[@]}" -workers 1 -config packages/proofs/tla/ProviderRouting.cfg -metadir "$temp/good" packages/proofs/tla/ProviderRouting.tla
-    for mutation in drop order representative prefix; do
-      sed "s/Mutation = \"none\"/Mutation = \"$mutation\"/" packages/proofs/tla/ProviderRouting.cfg > "$temp/$mutation.cfg"
-      code=0
-      "${tlc[@]}" -workers 1 -config "$temp/$mutation.cfg" -metadir "$temp/$mutation" packages/proofs/tla/ProviderRouting.tla > "$temp/$mutation.out" 2>&1 || code=$?
-      [[ "$code" = 12 ]] && grep -q "Invariant CompleteExact is violated" "$temp/$mutation.out"
-      echo "COUNTEREXAMPLE-OK provider-routing-$mutation CompleteExact"
-    done
-    echo 'PROVIDER-ROUTING-CHECK-OK'

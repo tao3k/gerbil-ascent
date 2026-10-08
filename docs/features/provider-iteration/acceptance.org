@@ -18,7 +18,7 @@ The complete-join and concretization/frontier laws are explicit semantic
 obligations, not automatically established by caller Scheme functions. Native
 state/key/equality extraction, asynchronous custom-domain execution, general
 lattice projection and complete application/memory/cost replication remain
-acceptance gates. Lean algebra is separated from the TLA accumulated-head
+acceptance gates. Lean algebra is separated from the Quint accumulated-head
 publication fault and native retained-session truth controls. See
 [[file:../../scheme-trrel-uf-design.org][the design]] and
 [[file:../../evidence/scheme-provider-views-20261007/abstract-provider-iteration.json][the iteration receipt]].

@@ -67,7 +67,8 @@ retained negative controls. No new performance samples were taken.
 The source commit and GitHub checks must be read from the associated PR;
 these command results do not substitute for final-commit CI. Native per-node
 hash extraction, sort primitive correspondence and application benefits remain
-separate gates. The TLA+ model retains lifecycle ownership and was unchanged.
+separate gates. The protocol model was unchanged at that snapshot; its current Quint
+source retains lifecycle ownership.
 
 * Materialized dictionary qualification
 
@@ -98,7 +99,7 @@ Execution time excludes compilation/linking; no performance gain is claimed.
 fixture. All four original safety predicates are checked together. Each of the
 thirteen mutation controls separately produced the requested invariant violation
 and expected Quint exit status. Parse/type, backend and service failures do not
-satisfy the negative-control gate. The original authored TLA/CFG pair is removed.
+satisfy the negative-control gate. The original authored Quint/CFG pair is removed.
 
 The owner-record state factors the earlier fourteen owner-indexed functions:
 selecting a record field at an owner recovers each original function entry.

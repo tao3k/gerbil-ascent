@@ -32,6 +32,6 @@ those boundaries independently. No Scheme sources change in this slice;
 the prior six-module receipt remains historical evidence, while the new
 receipt records only the independently rerun higher-order module and the
 current formal checks. Full per-term domain preservation and mapping-table
-mutation contracts remain open. TLA lifecycle models are unchanged because
+mutation contracts remain open. Quint lifecycle models are unchanged because
 this refinement adds no state transition.
 

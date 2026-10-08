@@ -11,7 +11,7 @@ The [[file:../../scheme-paper-closure.org][paper closure matrix]] and [[file:../
 ProviderFrontier beyond its earlier binary join. Lean proves arbitrary finite
 positive-body decomposition, projection and output subtraction. Omitting
 all-old derivations explicitly requires prior heads to be covered by the known
-database; at that receipt snapshot the iteration-history proof remained open. TLA+ owns the staged
+database; at that receipt snapshot the iteration-history proof remained open. Quint now owns the staged
 frontier/consumer publication sequence, with early-publication and old-snapshot
 fault controls. Native Scheme checks delayed producers and repeated Provider
 atoms against independent complete output sets. These are complementary claims,
@@ -27,7 +27,7 @@ monotone view needed by SemiNaive, rather than leaving it as an unrelated
 evaluator assumption. Actual native index/pivot/head decoding and general
 Provider gamma contracts remain explicit implementation obligations.
 All Lean qualification modules are under =packages/proofs/lean/Tests/=;
-proof roots and test roots remain separate Lake libraries. Existing TLA
+proof roots and test roots remain separate Lake libraries. Existing Quint
 Provider publication checks retain protocol ownership. [[file:../../evidence/scheme-positive-consequence-20261006/receipt.json][The receipt]] records the
 combined Lean, protocol and native regression results without promoting them
 to whole-engine refinement.
@@ -39,7 +39,7 @@ to whole-engine refinement.
 ground positive Set rules: local stability implies closure, owned writes preserve
 unrelated facts, no backward reads preserve earlier closures, and complete
 stable topological plans compute the least model. Independent component orders
-agree. Unlike the TLA+ task inventory, this proof contains no mailbox, credit,
+agree. Unlike the Quint task inventory, this proof contains no mailbox, credit,
 worker or publication state. No generation or iteration upper bound is imposed.
 
 The [[file:../../evidence/scheme-component-closure-20261006/receipt.json][receipt]] distinguishes this universal ground-rule theorem from the native
@@ -66,7 +66,7 @@ Frozen finite row enumeration must be faithful for every database; compiled
 schema/frame/emitter validity and sound complete topological ownership remain
 explicit premises. This narrows the open bridge to native representation and
 SCC correspondence. It does not close arbitrary generated domains, lattices,
-mutable index publication or asynchronous execution refinement. TLA+ retains
+mutable index publication or asynchronous execution refinement. Quint retains
 protocol ownership and no new overlapping temporal model is introduced.
 See [[file:../../evidence/scheme-binder-grounding-20261006/receipt.json][qualification receipt]].
 
@@ -81,7 +81,7 @@ The native 512-graph qualifier uses independent Floyd reachability to inspect
 SCC equivalence, total unique ownership, immediate predecessors, topological
 IDs and preserved projected head count. This closes the semantic projection
 contract and strengthens bounded native correspondence evidence. It is not a
-universal native Tarjan proof, nor a temporal scheduler proof. TLA+ models stay
+universal native Tarjan proof, nor a temporal scheduler proof. Quint models stay
 unchanged and retain ready/credit protocol ownership. See [[file:../../evidence/scheme-component-projection-20261006/receipt.json][source-bound receipt]].
 
 
@@ -99,7 +99,7 @@ faithfulness, row admission and monotonicity premises. Those constructed laws
 feed compiled grounding and every indexed history round. The finite ground
 planner then characterizes the least ordinary-binder model with head coverage
 and topology, constructing its own stabilization witness. Examples and axiom
-reports stay under =Tests/=; TLA+ keeps the separate temporal protocols.
+reports stay under =Tests/=; Quint keeps the separate temporal protocols.
 
 The [[file:../../evidence/scheme-set-frontier-20261006/receipt.json][receipt]] records the complete native Set-batch suite, the complete Lean
 collection and repaired proof elaboration failures. This is a canonical Set

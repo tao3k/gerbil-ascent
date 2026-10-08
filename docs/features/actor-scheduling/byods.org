@@ -13,7 +13,7 @@ rectangles, rather than assuming an =Exact= frontier. A Lean counterexample
 shows that rejecting a mixed-old rectangle loses fresh implied facts. This is
 an explicit missing-premise discriminator for the paper's delta obligations.
 
-TLA+ separately checks stale-reader release under completion fairness. The
+Quint separately checks stale-reader release under completion fairness. The
 =ReaderLifetime= abstraction invalidates a read even when row sets return after
 replacement (ABA), and has no generation cutoff or state constraint. Both
 missing stale discard and missing fairness violate eventual completion. Native

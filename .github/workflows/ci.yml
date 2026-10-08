@@ -181,9 +181,9 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y elan just nodejs npm openjdk-21-jre-headless
           elan toolchain install leanprover/lean4:v4.34.0
-      - name: Check Lean contracts, Quint/TLA protocols and counterexamples
+      - name: Check Lean contracts, Quint protocols and counterexamples
         env:
-          ASCENT_TLC_GENERATION_CUTOFF: '4'
+          ASCENT_FORMAL_GENERATION_CUTOFF: '4'
         run: |
           export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
           export PATH="$JAVA_HOME/bin:$PATH"

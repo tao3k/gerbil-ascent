@@ -87,7 +87,7 @@ This closes reuse of interrupted custom engine state under independent fresh
 construction and stable fields. It does not prove arbitrary concretization
 completeness, rollback private state, or reverse external closure side effects.
 Native extraction and those remaining Provider laws still require separate
-work. No Lean/TLA source is changed by this implementation.
+work. No Lean/Quint source is changed by this implementation.
 
 
 * B23 native correspondence: graph state readiness beyond kernel preflight (2026-10-06)
@@ -127,5 +127,5 @@ custom state/row ownership and raw native graph budget/frontier qualification
 remain required regressions. The [[file:../../evidence/scheme-native-storage-state-20261006/receipt.json][receipt]] retains exact source and native log
 boundaries. This closes the native graph publication gap under stable field
 values and independent constructors; external effects, general lattice laws
-and native-to-proof extraction remain open. No Lean/TLA source or speed claim
+and native-to-proof extraction remain open. No Lean/Quint source or speed claim
 is changed by this implementation.

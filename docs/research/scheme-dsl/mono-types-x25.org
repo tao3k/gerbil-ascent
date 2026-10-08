@@ -92,7 +92,7 @@ if a finite admitted descriptor satisfies the two observable laws and
 its lowering emits the same element relation for every reachable state,
 then completed native rows equal the finite reference closure. Merely
 restating =mono_law= and =ord_indep= in Lean would duplicate the paper's
-Rocq work and leave native correctness open. TLA+ belongs to the separate
+Rocq work and leave native correctness open. Quint belongs to the separate
 Session/publication trace: it must show no stale or incomplete container
 observation is released across a source generation change.
 

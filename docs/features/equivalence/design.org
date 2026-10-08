@@ -31,7 +31,7 @@ Together with existing count/budget laws this supplies unique-fact counting for
 the plan. The rectangle package has 32 laws; this unit also adds the separate
 DirectedFrontier decomposition law. Tests and axiom reports remain in =Tests=.
 
-The repaired TLA model stores active endpoints, pre-insertion visible rows and
+The repaired Quint model stores active endpoints, pre-insertion visible rows and
 the actual published frontier. It constructs delta using the old parent/reach
 graph and fresh endpoint diagonals. Input closure appears only in the independent
 publication assertion =DeltaExact=. =ActiveExact= checks endpoint activation;
@@ -49,7 +49,7 @@ this is finite exploration, not a semantic generation limit.
 | Captured output before SCC merge | Immutable member-list interpretation | Delta checked against input closure after publication |
 
 The two proof systems retain different responsibilities: Lean derives the
-frontier algebra for arbitrary admitted finite domains; TLA explores construction,
+frontier algebra for arbitrary admitted finite domains; Quint explores construction,
 refusal and publication across insertion sequences. At that stage the model used canonical
 root normalization and a minimum representative, whereas Scheme merges into
 the largest component and removes absorbed keys in place. Native parent chains,

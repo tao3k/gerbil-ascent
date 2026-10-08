@@ -103,7 +103,7 @@ serialized nine independent recipe groups. Lake already tracks proof inputs
 and builds incrementally; the optimization does not skip kernel compilation
 for changed dependencies or cache admission decisions.
 
-=just check-formal= verifies the pinned TLC artifact before launching two
+At this historical snapshot, =just check-formal= verified the pinned TLC artifact\nbefore launching two
 independent lanes. The contracts lane builds Lean once, then checks actor,
 Session and SCC gates. The other checks ready components, indices, concrete
 frontiers and frozen views. Each leaf recipe retains its configurations,
@@ -134,12 +134,12 @@ extracts standard modules to =TMPDIR/module-name= with =FileOutputStream= and
 can therefore truncate or delete each other's extracted modules. Source:
 [[https://raw.githubusercontent.com/tlaplus/tlaplus/v1.7.4/tlatools/org.lamport.tlatools/src/util/SimpleFilenameToStream.java][pinned upstream resolver]], verified against the exact pinned jar bytecode.
 
-Every default JVM-backed TLA leaf gate now sets =java.io.tmpdir= to its existing
+The repaired historical JVM-backed TLA leaf gates set =java.io.tmpdir= to its existing
 private temporary directory. Its configurations, state directories and standard
 module extraction consequently belong to the same invocation. Sequential JVMs
 inside a leaf share that directory only after the preceding JVM has exited.
 The two verification lanes remain concurrent and their failure join remains
-strict. External =TLC_BIN= implementations retain their own temporary-directory
+strict. Historical external =TLC_BIN= implementations retained their own temporary-directory
 responsibility; the standard launcher uses the pinned jar. This changes no
 model, bound, property, worker count, timeout or heap setting.
 

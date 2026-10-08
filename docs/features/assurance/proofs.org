@@ -12,7 +12,7 @@ step and proves naive/pivot equality for every natural-number round of a finite
 positive rule set over a monotone concrete Set view. Initialization executes
 the full body, including empty-body facts. No completed-solve premise or finite
 iteration cutoff is used. The [[file:../../evidence/scheme-seminaive-history-20261006/receipt.json][qualification receipt]] separates this universal
-algebra result from finite TLA initial/consume publication checks and native
+algebra result from finite Quint initial/consume publication checks and native
 Provider regressions. General abstract gamma/join/injection contracts,
 descriptor finite-height termination and native combined refinement remain open.
 
@@ -62,6 +62,6 @@ independently enumerated source facts. The
 
 No automatic retry occurs inside a failing read. Rebuild can still fail if the
 Provider remains invalid. Nested field stability, host side effects and general
-storage refinement remain open. No Lean/TLA source or performance claim is
+storage refinement remain open. No Lean/Quint source or performance claim is
 changed by this Scheme repair.
 

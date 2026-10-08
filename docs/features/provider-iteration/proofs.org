@@ -56,7 +56,7 @@ works over an abstract database and does not require powerset representation,
 join-preserving gamma or disjoint delta. Semantic Domain/Program laws remain
 caller obligations; native procedure shape is not a proof of those laws.
 
-Lean owns abstract order, supremum, injection and rule/history equations. TLA
+Lean owns abstract order, supremum, injection and rule/history equations. Quint
 owns the accumulated-head publication seam: overwriting retained answers with
 only fresh pivot output must fail ConsumerSnapshot. Scheme retained sessions
 exercise implied rows, empty frontiers, delayed producers, repeated three-body

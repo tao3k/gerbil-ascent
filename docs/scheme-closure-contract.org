@@ -176,6 +176,6 @@ The mathematical obligation is complete member and active-roster equality, not
 aggregate cardinality equality. =component_squares_exact= constructs the square
 semantics of a component roster; =component_squares_partition_equal= proves that
 matching component lists determine all concrete pairs. Native member extraction
-remains checked by independent application comparisons. ProviderViews TLA+
+remains checked by independent application comparisons. ProviderViews Quint
 continues to own frozen reads, publication and reader lifetime; these pure
 partition laws belong to Lean.

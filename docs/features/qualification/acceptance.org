@@ -73,7 +73,7 @@ comparison must validate an explicit non-diagonal projection rather than
 silently comparing only counts or error sets. These differences must be tested
 before admitting a complete Scheme Polonius application.
 
-Lean owns representation-independent rule, projection and lattice laws; TLA+
+Lean owns representation-independent rule, projection and lattice laws; Quint
 owns actual worker/source publication and cancellation histories. Application
 laws must connect to the admitted native descriptors and full outputs. Existing
 protocol models can be reused for unchanged publication paths; adding another

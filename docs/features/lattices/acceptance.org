@@ -16,7 +16,7 @@ label enumeration checks 8,704 configurations rather than using the old planner
 as the truth source.
 
 PendingKeys adds seven laws for effective-write event coverage and final table
-materialization, with duplicate keys and false-key discriminators. The TLA
+materialization, with duplicate keys and false-key discriminators. The Quint
 transaction now publishes through touched keys; two new KeyCoverage faults
 bring its controls to nine. Native lattice retained-session controls remain
 separate from both universal Lean laws and bounded temporal publication checks.
@@ -34,7 +34,7 @@ publication and zero/one pending-slot cost to the typed update semantics.
 Abstract growth separately requires join laws; callback purity/hash/equality
 are not obtained from interface declarations.
 
-The TLA transaction explores remaining capacity 0, 1 and 2, including private
+The Quint transaction explores remaining capacity 0, 1 and 2, including private
 staging on refusal without public publication. Three additional faults detect
 budget bypass, event-count over-rejection and refusal publication; twelve faults
 are retained in the projection gate. Native tests add a one-slot repeated-key

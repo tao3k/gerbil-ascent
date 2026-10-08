@@ -39,7 +39,7 @@ The native positive-plan discriminator checks actual compiled tagged pairs and
 vectors against independent expected actions and ordinary association-list
 keys. It retains head order, duplicates, false values, dirty frame reuse and
 the unbound-head unsupported result. All Lean examples and axiom reports remain
-in =Tests/=. No TLA+ matching/vector algebra is added: existing protocol models
+in =Tests/=. No Quint matching/vector algebra is added: existing protocol models
 retain scheduling, cancellation, ownership and publication responsibilities.
 See the [[file:../../scheme-compiler-proof-bridge.org][compiler bridge]] and [[file:../../evidence/scheme-stored-actions-20261006/receipt.json][source-bound receipt]].
 

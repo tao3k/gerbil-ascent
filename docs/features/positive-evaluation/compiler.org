@@ -23,7 +23,7 @@ native Tarjan/head projection and representation are not inferred. General
 non-ground and lattice termination are not inferred.
 =IndexedIteration= remains the compiled binder/history theorem; composing its
 operator with this ground presentation is now constructed in =GroundedBinding=
-for frozen finite admitted rows; native encoding still needs refinement. TLA+ owns the unchanged ready/credit protocol. Lean tests live in
+for frozen finite admitted rows; native encoding still needs refinement. Quint owns the unchanged ready/credit protocol. Lean tests live in
 =Tests/ComponentClosureTests.lean=, including a recursive diamond, independent
 component swap, premature successor and insufficient local rounds. The native
 same-case qualifier checks exact seed/left/right/output rows under both relation
@@ -102,7 +102,7 @@ This removes an externally assumed read-equality condition for that concrete
 unrelated-write case; changed predecessors still invalidate the frame.
 
 The proof is database algebra, with no mailbox, credit, scheduler or publication
-state. TLA+ retains readiness and complete terminal delivery. The native actor
+state. Quint retains readiness and complete terminal delivery. The native actor
 fixture freezes the left snapshot, allows right to complete and publish first,
 then admits both left rows and checks all writes survive. Existing 32+1 terminal
 tail and successor-overlap controls are retained. Tests under =Tests/= qualify
@@ -132,7 +132,7 @@ filtering, current unrelated facts and a missing terminal candidate. Native
 qualification delivers 65 candidates with 17 distinct values through two full
 credit batches and a terminal tail, deduplicates in the owner callback, and
 admits a successor only after all candidates have been seen. The existing
-terminal-tail/stale-snapshot controls remain. TLA+ checks delivery/credit order
+terminal-tail/stale-snapshot controls remain. Quint checks delivery/credit order
 separately. The native worker-to-candidate trace certificate, cancellation,
 and complete mutable representation refinement remain open. See [[file:../../evidence/scheme-batch-closure-20261006/receipt.json][batch closure receipt]].
 
@@ -270,7 +270,7 @@ remains separate, while this slice covers the two-body optimized branch.
 
 The [[file:../../evidence/scheme-projected-join-rule-20261005/receipt.json][projected-join receipt]] binds the formal snapshot and refreshed native
 qualification after the upstream index lifecycle change. Rejected build or
-qualification attempts, if any, remain excluded. TLA lifecycle models are
+qualification attempts, if any, remain excluded. Quint lifecycle models are
 unchanged; no model calls or performance claim is added.
 
 Native qualification exposed an entry-path issue while integrating the index
@@ -372,7 +372,7 @@ The [[file:../../evidence/scheme-vector-traversal-20261006/receipt.json][vector 
 The next connected obligation is actual Scheme action/key/head and scalar/name
 decoding, followed by Provider snapshot/frontier instances and constructed
 least-model output. Callback execution, native scalar/hash conformance and
-arbitrary custom Provider laws remain separate. No duplicate TLA+ vector model
+arbitrary custom Provider laws remain separate. No duplicate Quint vector model
 is added: scheduling and publication keep their existing temporal owner.
 
 
@@ -429,6 +429,6 @@ The [[file:../../evidence/scheme-set-frontier-20261006/receipt.json][source-boun
 This closes the canonical finite Set model instance and qualifies its native
 batch observations. It does not instantiate arbitrary lattice/custom Provider
 concretizations or prove universal Gambit hash extraction. No production
-Scheme runtime behavior changes here. TLA+ retains publication, ownership,
+Scheme runtime behavior changes here. Quint retains publication, ownership,
 cancellation and failure sequencing; no duplicate Set algebra model is added.
 

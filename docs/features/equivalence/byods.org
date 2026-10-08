@@ -47,7 +47,7 @@ both participate in the private node key, including the real group value =#f=.
 membership from the component-member extraction premises and the existing
 =EquivalenceComponents.emitted_exact= law. Additional laws bind the exact preflight arithmetic, expansion
 budget and the four-descriptor bound. These remain conditional native
-representation bridges, not a verified Scheme compiler. Existing TLA+
+representation bridges, not a verified Scheme compiler. Existing Quint
 =ProviderViews= owns atomic publication, logical admission, frozen reads,
 cancel/drain and stale reply rejection; no redundant Lean protocol is added.
 Native acceptance includes every three-node graph subset in both orders,

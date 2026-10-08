@@ -22,7 +22,7 @@ size doubling of a losing component; it is not a complete native depth theorem.
 The four reach laws have no axioms; size arithmetic uses only the standard
 =propext= and =Quot.sound= axioms. All tests and reports are in =Tests=.
 
-TLA now selects a component of maximum stored size, adds predecessor/successor
+Quint now selects a component of maximum stored size, adds predecessor/successor
 arcs, retains survivor tables and conditionally removes absorbed target keys.
 It no longer verifies only canonical remapping through a minimum representative.
 A separate =link= retains direct parent chains; =parent= is the abstract root

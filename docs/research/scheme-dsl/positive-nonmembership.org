@@ -93,7 +93,7 @@ inspector, generator, or verifier implements the premises. The finite
 qualification cases and independent checker are separate evidence for
 that mapping.
 
-=packages/proofs/tla/PositiveNonmembershipSession.tla= models local snapshot
+=packages/proofs/quint/PositiveNonmembershipSession.qnt= models local snapshot
 generation and two-source atomic cut replacement, proof computation,
 bounded failure, publishing and using a certificate. A stale
 computation may finish after a source swap but cannot publish or be
@@ -104,8 +104,8 @@ cross-GQL admission.
 =just check-nonmembership-formal= compiles the Lean file and explores
 the bounded TLC configuration. The checked configuration has four
 two-source cuts and generations 0–2; TLC explored 72 distinct states
-and reported no invariant violation. The gate accepts =TLC_BIN= when
-=tlc= is not on =PATH=. This finite search does not prove arbitrary
+and reported no invariant violation. The current gate compiles the Quint
+source with the pinned backend and checks the finite protocol. This finite search does not prove arbitrary
 session behavior or correspondence to the Scheme implementation.
 
 * Evidence and exclusions

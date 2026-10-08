@@ -9,7 +9,7 @@ source dates and qualification boundaries. Current evidence is commit-specific.
 
 =table/trrel-uf.ss= now owns a distinct union-find SCC representation instead
 of reflexive ordinary trrel state. =TransitiveComponents= Lean proves abstract
-one-edge closure and quotient laws; TLA checks component normalization and
+one-edge closure and quotient laws; Quint checks component normalization and
 refusal with split/stale/rejected-write mutations. Native prefix truth and
 structural/atomicity tests connect this slice to actual storage execution;
 complete VM/hash/parent refinement remains open. [[file:../../scheme-trrel-uf-design.org][Design]] and [[file:../../evidence/scheme-trrel-uf-20261005/receipt.json][receipt]] retain
@@ -31,7 +31,7 @@ Graph truth is computed independently of provider predecessor/successor and
 SCC tables. Exact/generous budgets, rejected retry, structure counts, binary /
 ternary order permutations and non-singleton SCC bridges are checked at each
 insertion. Existing producer and larger graph controls remain. Test controls
-stay under =Tests=, and existing TLA+ retains temporal protocol ownership.
+stay under =Tests=, and existing Quint retains temporal protocol ownership.
 Universal native representation extraction, arbitrary lattice instances and
 actor trace refinement remain separate gates; MR remains deferred.
 

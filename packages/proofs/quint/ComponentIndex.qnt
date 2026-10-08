@@ -133,6 +133,7 @@ module ComponentIndex {
 }
 
 module ComponentIndexFixture {
-  import ComponentIndex(Owners = Set(1, 2), Mutation = "none",
+  const Fault: str
+  import ComponentIndex(Owners = Set(1, 2), Mutation = Fault,
     Inputs = List(List(3, 2), List(4, 3)), DeclaredColumns = List(0, 1)).*
 }

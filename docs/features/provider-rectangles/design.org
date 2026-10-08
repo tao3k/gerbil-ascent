@@ -46,9 +46,9 @@ but one descriptor, repeated rectangles with the same membership but twice the
 count, a raw-edge delta missing an implied pair, empty rectangles and diagonals.
 No custom axiom, =sorry= or =native_decide= is introduced.
 
-** TLA protocol and fault discrimination
+** Quint protocol and fault discrimination
 
-[[file:../../../packages/proofs/tla/ProviderViews.tla][ProviderViews]] models one outstanding reader, staged source cuts, atomic
+[[file:../../../packages/proofs/quint/ProviderViews.qnt][ProviderViews]] models one outstanding reader, staged source cuts, atomic
 publication, cancel/drain, view retirement, reply revision and logical budgets.
 Cuts can repeat (including ABA). Generation ranges over natural numbers;
 =Explore= constrains TLC enumeration only and is absent from =Spec=.

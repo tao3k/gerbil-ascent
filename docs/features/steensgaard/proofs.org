@@ -16,7 +16,7 @@ callback mutation isolation. The full dataset has no effective store/load
 unions, so the positive small applications remain necessary discriminators.
 
 Lean adds constructed component-square expansion and partition-equality laws,
-with two equal-count/different-partition controls under =Tests=. TLA+ retains
+with two equal-count/different-partition controls under =Tests=. Quint retains
 publication/read/lifetime protocol ownership. Full-input execution is concrete
 native evidence; it does not discharge the universal native extraction premises
 of either proof family. The GitHub scale job repeats source verification and

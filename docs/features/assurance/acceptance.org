@@ -23,7 +23,7 @@ remain open. The earlier full run with a parent heap failure is not admitted.
 
 LatticeProjection closes the stated keyed update/staging/publication algebra and
 last-column row encoding component. The settled min-map transaction has seven
-discriminating TLA faults; native tests check actual false/true multi-field keys,
+discriminating Quint faults; native tests check actual false/true multi-field keys,
 multiple same-key inputs in both orders, improved/ineffective updates, source
 replacement and immutable earlier projections. Superseded tuple values must not
 remain in the ordinary relation.
@@ -63,7 +63,7 @@ The other oracle failure at 9cd4897 requires a launch-boundary repair and a
 fresh exact-head CI result. Restoring blocking inherited standard streams is
 qualified by actual Gerbil/Rust backpressure; the missing original CI panic
 text prevents attributing its exact historical syscall. Case-level truth and
-transport admission remain distinct. The theorem thread retains Lean/TLA
+transport admission remain distinct. The theorem thread retains Lean/Quint
 ownership; universal native extraction and the other paper applications remain
 on the closure matrix.
 

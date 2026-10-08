@@ -39,7 +39,7 @@ retained. See the [[file:../../evidence/scheme-directed-frontier-20261006/receip
 These are concrete algebra and finite native observations. Hash/index
 membership, parent/root selection, SCC merge and member-rectangle extraction
 remain universal native representation bridges, not conclusions of these
-proofs. TLA+ owns publication, failure, credits and cancellation lifecycle;
+proofs. Quint owns publication, failure, credits and cancellation lifecycle;
 no algebraic state machine duplicate is added. No production runtime behavior
 change, speedup, general lattice law or MR integration is claimed.
 

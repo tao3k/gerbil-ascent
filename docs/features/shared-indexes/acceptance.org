@@ -50,7 +50,7 @@ exact implicit frontiers, frozen totals, keyed rectangular reads and actor
 worker eligibility. The engine no longer retains the eager equivalence pair
 list on that canonical path. Ordered public export remains explicit and
 custom dispatch remains checked. The associated Lean construction laws and
-existing TLA+ publication controls have distinct responsibilities; native
+existing Quint publication controls have distinct responsibilities; native
 truth and full-suite qualification are recorded with source bindings.
 
 All ten package acceptance criteria remain active. In particular this
@@ -81,7 +81,7 @@ Package 3 now connects native forward column gaps to direct selection and
 constructed ordered buckets over arbitrary finite histories. The public key
 function shares the ordered batch cursor and recomputes gaps for caller-owned
 columns. Repeated/reordered columns retain direct selection. Nine Lean laws
-cover the ordered algorithm, dispatcher and bounds; TLA+ owns declared-layout
+cover the ordered algorithm, dispatcher and bounds; Quint owns declared-layout
 publication and old-reader lifetime, with three discriminating layout faults.
 Independent native truth checks 96-field projections, value identities,
 mutable helper inputs, callback header isolation, 256 retained histories and
@@ -106,7 +106,7 @@ permutation of those occurrences. Duplicate row values retain distinct labels.
 Native strict sorting is connected through its explicit primitive contract;
 no Gambit sorting or hash-table implementation proof is inferred.
 
-TLA+ adds query cache admission independently of old held readers. Extension,
+Quint adds query cache admission independently of old held readers. Extension,
 failed mutation and wrong rebuild views have their own =ViewConsistent= fault
 controls. Native tests cover six physical permutations and every prefix depth
 across 64 retained histories, independent direct-column truth, frozen reference,
@@ -118,7 +118,7 @@ executable Lean laws in =IndexedPositiveTraversal.SharedIndex=. The
 [[file:proofs.org::*B23 constructed logical key adaptation (2026-10-08)][adapter bridge]] derives the physical comparison from the supplied logical
 field function and prefix coverage; distinct-column positional lookup also
 admits arbitrary values. Native malformed-key tests protect cold, warm and
-extended views. TLA+ retains exclusive ownership of the lifecycle protocol.
+extended views. Quint retains exclusive ownership of the lifecycle protocol.
 
 Native trie/hash extraction, complete native adapter extraction, rectangle
 visitor correspondence and complete paper application benefits retain their
@@ -133,7 +133,7 @@ previously assumed enumeration permutation inside the functional map model.
 Native extraction of per-node child inventories and coherent hash operations
 remains explicit. Tests retain missing/duplicate inventory controls and native
 sparse layouts at depths one through five; these fixture depths are not runtime
-limits. TLA+ continues to own cache and publication lifecycle separately.
+limits. Quint continues to own cache and publication lifecycle separately.
 
 * Per-node dictionary and protocol acceptance (2026-10-08)
 

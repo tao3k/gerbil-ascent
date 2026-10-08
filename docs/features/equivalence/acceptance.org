@@ -20,7 +20,7 @@ observations and lists the remaining representation extraction boundary.
 This advances eqrel's semantic instance. General gamma/join/injection laws,
 other non-Set/custom lattice instances, universal Scheme equality/component
 extraction and native actor trace refinement remain distinct work. Existing
-TLA+ publication/credit/failure models are unchanged; Lean owns these algebraic
+Quint publication/credit/failure models are unchanged; Lean owns these algebraic
 laws. Published B23 performance does not establish a Scheme speedup.
 
 
@@ -28,7 +28,7 @@ laws. Published B23 performance does not establish a Scheme speedup.
 
 The [[file:../../scheme-trrel-uf-design.org][UF design]] now derives finite root-plan completeness from SCC equivalence,
 root coverage and complete member lists. Candidate/frontier encoding is a
-conclusion for that abstract construction. The SCC TLA publication model now
+conclusion for that abstract construction. The SCC Quint publication model now
 constructs emitted delta rather than assigning its oracle value, and admits
 new endpoint activation explicitly. Three frontier mutations discriminate the
 previous model's missing coverage. Native optimized remapping and grouped

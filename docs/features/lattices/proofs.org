@@ -12,7 +12,7 @@ laws. Abstract map growth is distinct from inclusion of current tuple rows:
 min updates can remove the old materialized tuple. Monotone-gamma ProviderIteration
 therefore retains its admission scope rather than silently covering every lattice.
 
-TLA owns settled publication and held-snapshot ownership for one finite min-map
+Quint owns settled publication and held-snapshot ownership for one finite min-map
 transaction. Native tests own actual multi-field false/true keys, repeated same-key
 updates, strict ordinary projection, retained append/replacement and old results.
 Seven protocol faults distinguish the expected rejection conditions; raw checker
@@ -36,10 +36,10 @@ these laws are not a universal proof of native mutable Tarjan output.
 PendingKeys proves roster support equals pending-table domain after arbitrary
 effective writes, and that materialization observes the final value per key.
 Its representation contract separates logical membership from native visited
-hash-table list order and deduplication. TLA handles dirty-key publication and
+hash-table list order and deduplication. Quint handles dirty-key publication and
 held snapshots, with two added faults for lost and repeated changed keys.
 Scheme independently enumerates admissible three-node labels and rechecks the
-existing native lattice session cases. No additional weighted-graph TLA model
+existing native lattice session cases. No additional weighted-graph Quint model
 repeats the Lean algebra. See
 [[file:../../evidence/scheme-provider-views-20261007/strict-dependencies-pending-keys.json][the receipt]]
 for source identities, fault witnesses and the acceptance boundary.
@@ -55,13 +55,13 @@ mathematical merge/equality premises; growth uses the existing JoinLaws contract
 Pending-slot cost follows fresh effective key support rather than event count.
 The runtime cumulative derived-work/output budgets are not allocator bounds.
 
-TLA explores exhausted, single-key and full two-key remaining capacity. Refused
+Quint explores exhausted, single-key and full two-key remaining capacity. Refused
 private staging cannot publish; earlier held cuts remain stable. The three new
 faults must fail BudgetBound, RefusalSound and RefusalStable with exit 12 and
 actual behavior states. A checker evaluation exception encountered during model
 construction was repaired and excluded from accepted defect evidence. These
 faults concern temporal admission/publication, while Lean owns static replay
-and support laws. No duplicate TLA proof of the Lean fold equations is added.
+and support laws. No duplicate Quint proof of the Lean fold equations is added.
 
 Native tight-budget cases check repeated-key acceptance, exact typed refusal,
 held-result stability, and replacement/reconstruction against a fresh solve.

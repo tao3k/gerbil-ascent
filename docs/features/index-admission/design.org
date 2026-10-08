@@ -46,7 +46,7 @@ A negative test substitutes counts =(1,2)= for source counts =(2,1)=: total mass
 and Set membership are equal, but one quota is exceeded while another fact is
 missing. This is the discriminator that a cardinality-only check misses.
 
-The =ProviderAdmission= TLA model owns a different responsibility: choosing
+The =ProviderAdmission= Quint model owns a different responsibility: choosing
 all/delta witnesses, completing admission before callbacks, detaching accepted
 packets from retained buffers, revoking failed cache entries and rebuilding on
 retry. It includes duplicated total facts, a narrower delta and a foreign row.
@@ -108,7 +108,7 @@ changing results. =stored_occurrence= retains original rows and multiplicity.
 These laws replace the first-coordinate-only proof boundary for abstract routing;
 they do not assert that native hash bucket construction meets coverage by fiat.
 
-The TLA+ model owns operational lazy enumeration by independent row/parts
+The Quint model owns operational lazy enumeration by independent row/parts
 cursors: build one candidate lane, consume one occurrence at a time, reject a
 nonmatching row, finish only after exhaustion, or cancel. Completed output must
 equal the captured full scan including identity/order. Four faults remove a

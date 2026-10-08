@@ -13,7 +13,7 @@ keyed update, staged join accumulation, untouched-key preservation, exact touche
 publication, current-row uniqueness, removal of old key rows and last-column
 encoding. Join algebra remains a semantic caller obligation.
 
-A separate TLA transaction checks full collection before projection and immutable
+A separate Quint transaction checks full collection before projection and immutable
 held results; seven faults must produce typed counterexamples. Native false/true
 group keys and both update orders discriminate staged-before-committed lookup,
 final minima, source replacement and stale ordinary projections. Strict stratum
@@ -35,7 +35,7 @@ premises rather than being hidden inside the theorem statement.
 
 PendingKeys connects effective pending writes to an exact key roster and final
 current-value materialization. Repeated key events do not select an earlier
-value. The dirty-key TLA publication model detects first-key loss and repeated
+value. The dirty-key Quint publication model detects first-key loss and repeated
 improvement key loss; native Scheme tests independently enumerate 8,704 weighted
 kind configurations and exercise real retained lattice projection. This closes
 the stated typed compilation/functional roster components while preserving the
@@ -56,7 +56,7 @@ result to replacement-valued tuple observations without its stated premises.
 
 The current-round pending cost counts fresh effective keys, not input or event
 occurrences; cumulative runtime work budgets remain separate from live map size.
-TLA admission/refusal states explore three resource configurations and detect
+Quint admission/refusal states explore three resource configurations and detect
 bypass, false refusal and refused private-state publication. Native one-slot
 same-key and retained refusal/reconstruction controls connect the model to
 Scheme. These injected faults discriminate design violations; the current

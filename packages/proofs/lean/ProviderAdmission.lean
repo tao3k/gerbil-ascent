@@ -5,7 +5,7 @@ import ProviderFrontier
 /-! B23 concretization obligations and multiplicity-preserving custom index
 admission. Procedure/shape contracts do not establish these semantic laws.
 Witness extraction, stable field equality and finite bucket coverage are
-implementation premises, checked separately by Scheme and TLA controls. -/
+implementation premises, checked separately by Scheme and Quint controls. -/
 namespace Ascent.ProviderAdmission
 
 def mass (bucket : List Row) (count : Row → Nat) : Nat :=

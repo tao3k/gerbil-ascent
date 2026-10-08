@@ -8,7 +8,7 @@ source dates and qualification boundaries. Current evidence is commit-specific.
 * SCC scheduling boundary for indexed history
 
 =IndexedIteration= proves synchronous indexed batch/history correspondence.
-The existing =ReadyComponents= TLA+ model now captures successor snapshots and
+The existing =ReadyComponents= Quint model now captures successor snapshots and
 predecessor batch/tail merge ordering. =program/positive-components.ss= captures
 private root/size vectors only after predecessor task completion, which follows
 owner merge credit and terminal-tail merging in =actor-round.ss=. Whole-pool

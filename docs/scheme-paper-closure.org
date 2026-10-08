@@ -24,7 +24,7 @@ An item closes only when all of the following evidence agrees:
 1. Identify its paper location, admitted Scheme behavior and implementation owner.
 2. Cover the item and its interactions with independent truth, Rust comparison
    or explicitly recorded upstream differences.
-3. Connect Lean/TLA+ statements to the actual implementation and distinguish
+3. Connect Lean/Quint statements to the actual implementation and distinguish
    premises from conclusions.
 4. Bind positive and negative controls, failure/timeout behavior and resource
    constraints to execution results for the current source.
@@ -84,7 +84,7 @@ truth checks in 34.5 seconds. GitHub CI has a separate full-scale gate. Proof
 links specify statements and premises; independent native runs qualify their
 implementation correspondence.
 
-| Feature | Implementation / existing qualification | Lean / TLA+ correspondence | Remaining acceptance obligations |
+| Feature | Implementation / existing qualification | Lean / Quint correspondence | Remaining acceptance obligations |
 |---------+------------------------------------------+----------------------------+----------------------------------|
 | Declarations, arbitrary arity, types, invalid programs | program/types, schema; arity_repetition and compile-fail comparisons | DescriptorScope / AtomicBinding abstract syntax and matching | All admitted native declarations; remaining attributes, APIs and diagnostic classes; Scheme host predicates differ from Rust static types |
 | Binding, repeated variables, joins, wildcards, multiple heads | core/rule-bindings, rule-semantics; clause_composition, composed_corpus | AtomicBinding / LexicalLowering local soundness and completeness | Native scalar equality, vector encoding, arbitrary admitted body composition and rule execution correspondence |
@@ -95,7 +95,7 @@ implementation correspondence.
 | Indexes / physical plans | table/provider, program/index; hash/alist/composite and scale comparisons | AtomicBinding indexed_atom_iff; ProviderRouting constructed buckets and cursor projection; ComponentIndex row/layout lifetime | Native hash/value equality and curried visitor refinement, user lookup completeness, further scale and cost evidence |
 | Timeout, resume, repeated run, source replacement | Session, source log, reuse; retained state and deletion corpus | SourceUpdateFrame dependency-frame/counting algebra; SessionTransaction / NativeSessionPublication temporal protocols | Completed solving remains a proof premise; native trace refinement and external Provider rollback scope |
 | Module / fragment / macro embedding | Gerbil syntax and include fixtures | DescriptorScope / local lowering correspondence | Broader macro capture and diagnostics; Scheme APIs corresponding to remaining Rust attributes |
-| Actor concurrency extension | Pure positive canonical Set SCCs support ready/credit/drain; the original serial-only description is obsolete | TLA: ActorRound / ReadyComponents / ActorRoundCredits / ActorSession; Lean: checkpoint/index algebra | Custom Provider and lattice concurrency, partitioning one large SCC, actual multicore benefits, native mailbox/mutex refinement |
+| Actor concurrency extension | Pure positive canonical Set SCCs support ready/credit/drain; the original serial-only description is obsolete | Quint: ActorRound / ReadyComponents / ActorRoundCredits / ActorSession; Lean: checkpoint/index algebra | Custom Provider and lattice concurrency, partitioning one large SCC, actual multicore benefits, native mailbox/mutex refinement |
 
 * BYODS design coverage
 
@@ -105,13 +105,13 @@ Three built-in closure Providers alone do not cover the entire paper.
 
 | Acceptance item | Existing implementation / evidence | Formal and native strengthening | Remaining gaps |
 |-----------------+------------------------------------+---------------------------------+----------------|
-| Custom index / storage interfaces | POO Provider, hash/alist, Set/eqrel/trrel/trrel_uf | ProviderAdmission derives matching occurrence equality from quotas and key mass; Domain states monotone concretization and delta laws; native reordered/compensated-omission controls and six TLA admission faults | Native witness/key/equality extraction and caller storage semantic laws remain premises; interface declarations alone do not certify an arbitrary Provider |
+| Custom index / storage interfaces | POO Provider, hash/alist, Set/eqrel/trrel/trrel_uf | ProviderAdmission derives matching occurrence equality from quotas and key mass; Domain states monotone concretization and delta laws; native reordered/compensated-omission controls and six Quint admission faults | Native witness/key/equality extraction and caller storage semantic laws remain premises; interface declarations alone do not certify an arbitrary Provider |
 | Built-in eqrel/trrel/trrel_uf concrete rows | Three/four/eight-node graphs, two-producer partitions, group isolation and scale corpus | Independent concrete difference after each insertion; 512 graphs x 3 Providers x forward/reverse order | Larger group arities, native algorithm refinement for general graphs, scale/memory and complexity benefits |
-| trrel_uf storage algorithm | Independent table/trrel-uf.ss state: weighted union parent links, SCC members/size and component reach; budget preflight precedes merge/remapping | Native stepwise frontier, 64-node compression, budget rejection/retry; TransitiveComponents Lean/TLA and three mutations | Storage and admitted UF/hash engine representation implemented with source-bound native/cost controls; native hash/parent/row refinement, universal complexity/memory benefits and paper applications retain acceptance gates; see trrel_uf design and receipt |
-| Delta visibility | Independent closure and split-producer discriminator; retained Rust eqrel omission difference | ProviderAdmission finite-body decomposition; ProviderIteration complete-join injection, arbitrary-round abstract history equivalence, least-state construction and ranked convergence; TLA accumulated-head overwrite control and native retained three-body sessions | Conditional abstract merged-snapshot core proved; native binder/gamma/head extraction, asynchronous custom-domain histories and arbitrary infinite-height execution convergence remain separate |
+| trrel_uf storage algorithm | Independent table/trrel-uf.ss state: weighted union parent links, SCC members/size and component reach; budget preflight precedes merge/remapping | Native stepwise frontier, 64-node compression, budget rejection/retry; TransitiveComponents Lean/Quint and three mutations | Storage and admitted UF/hash engine representation implemented with source-bound native/cost controls; native hash/parent/row refinement, universal complexity/memory benefits and paper applications retain acceptance gates; see trrel_uf design and receipt |
+| Delta visibility | Independent closure and split-producer discriminator; retained Rust eqrel omission difference | ProviderAdmission finite-body decomposition; ProviderIteration complete-join injection, arbitrary-round abstract history equivalence, least-state construction and ranked convergence; Quint accumulated-head overwrite control and native retained three-body sessions | Conditional abstract merged-snapshot core proved; native binder/gamma/head extraction, asynchronous custom-domain histories and arbitrary infinite-height execution convergence remain separate |
 | Duplicate input, budgets, failure atomicity, retained updates | Native preflight/retry, byods_session and timeout comparisons | Every step checks frontier uniqueness and completeness | Complete models/refinement of external Provider state interacting with timeout, source replacement and strata |
-| Index sharing (ind_share) | Engine/worker-owned curried physical chains; maximum matching over logical subset requirements; ordered adapters and batch invalidation | All 128 three-column requirement families compared with independent minimum chain partitions; exact rows/duplicates/reordered keys; serial and component actor solve truth; Lean prefix coverage and ordered extension; TLA alias/foreign-root controls | Universal native planner/trie refinement, full Polonius/LLVM datasets and peak-memory/application cost evidence remain required; the runtime tight-cover certificate and Lean minimum-partition theorem establish the mathematical optimality criterion; lazy ordered views also retain row-reference spines |
-| User-defined lattices and concurrent Providers | Finite serial lattice comparisons; actor eligibility restricted to pure Set and frozen built-in UF/hash paths | LatticeProjection keyed join staging, current-row replacement and last-column encoding; effective lattice admission, pending-first join/skip and support cost laws; dirty-key projection/refusal TLA with twelve faults; native false/true multi-field keys and retained projection controls | StrictDependencies weighted extraction and LatticeAdmission effective-write/roster contracts are proved; arbitrary callback join laws/purity and universal native vector/SCC/hash extraction, general recursive aggregate semantics and asynchronous custom-lattice execution remain gates; monotone-gamma iteration does not cover replacement row observations automatically |
+| Index sharing (ind_share) | Engine/worker-owned curried physical chains; maximum matching over logical subset requirements; ordered adapters and batch invalidation | All 128 three-column requirement families compared with independent minimum chain partitions; exact rows/duplicates/reordered keys; serial and component actor solve truth; Lean prefix coverage and ordered extension; Quint alias/foreign-root controls | Universal native planner/trie refinement, full Polonius/LLVM datasets and peak-memory/application cost evidence remain required; the runtime tight-cover certificate and Lean minimum-partition theorem establish the mathematical optimality criterion; lazy ordered views also retain row-reference spines |
+| User-defined lattices and concurrent Providers | Finite serial lattice comparisons; actor eligibility restricted to pure Set and frozen built-in UF/hash paths | LatticeProjection keyed join staging, current-row replacement and last-column encoding; effective lattice admission, pending-first join/skip and support cost laws; dirty-key projection/refusal Quint with twelve faults; native false/true multi-field keys and retained projection controls | StrictDependencies weighted extraction and LatticeAdmission effective-write/roster contracts are proved; arbitrary callback join laws/purity and universal native vector/SCC/hash extraction, general recursive aggregate semantics and asynchronous custom-lattice execution remain gates; monotone-gamma iteration does not cover replacement row observations automatically |
 | Paper applications and benefits | Complete native Steensgaard allocation/assignment/load/store rules and pinned OpenJDK source; closure examples and selected Rust package examples | Full member partition admission is documented in the Steensgaard acceptance section below; retain cost scope and negative measurements | Polonius, PageRank and LLVM/index-sharing full applications, matched cost baselines and universal native refinement remain required; full experimental replication has not been established |
 
 * Other papers and the proof chain
@@ -161,7 +161,7 @@ Packages 1--4 establish the shared correspondence before widening packages
 5--8. Application implementations in package 9 may proceed with explicit
 capability prerequisites, but package 10 is admitted only after their output
 truth passes. Closure requires the final GitHub commit's complete CI, not a
-previous successful head. Lean owns semantic/algebraic correspondence and TLA+
+previous successful head. Lean owns semantic/algebraic correspondence and Quint
 owns operational interleavings; native discriminators remain independent.
 
 Signed-weight DBSP circuits and raw real-model comprehension retain separate
@@ -182,7 +182,7 @@ deferred. This authorization creates no new paid model-call budget.
    publication isolation. Restricted test scale cannot replace implementation.
 4. Complete paper applications, interaction cases, datasets and performance/
    memory comparisons, retaining upstream differences.
-5. Once every closure item has current source, native/Rust/Lean/TLA+ evidence,
+5. Once every closure item has current source, native/Rust/Lean/Quint evidence,
    negative controls and evidence for each claimed benefit, verify ASCENT
    final-head CI before declaring complete ASCENT/BYODS library closure.
    MR/MRR integration is outside this acceptance decision.

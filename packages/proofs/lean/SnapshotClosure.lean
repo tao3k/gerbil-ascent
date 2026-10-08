@@ -3,7 +3,7 @@
 import ComponentClosure
 
 /-! Pure semantic rebasing of completed component evaluation. Mailboxes,
-credits, readiness and terminal delivery belong to TLA+, not this algebra. -/
+credits, readiness and terminal delivery belong to Quint, not this algebra. -/
 namespace Ascent.SnapshotClosure
 open ComponentClosure
 variable {Fact Component : Type}

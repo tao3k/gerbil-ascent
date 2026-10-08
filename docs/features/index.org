@@ -1,0 +1,37 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+#+TITLE: ASCENT feature design, implementation and assurance
+
+* Navigation and ownership
+
+Each feature groups its design, paper correspondence, semantic proofs, protocol
+models, native implementation and acceptance evidence. Lean owns semantic and
+algebraic laws; TLA+ owns lifecycle and interleaving obligations. Historical
+receipts retain their source identity and do not certify a later commit.
+
+Update the relevant feature page when advancing its implementation. Keep
+cross-feature scope and ordering in the [[file:../scheme-paper-closure.org][closure matrix]] and
+[[file:../scheme-research-proof-audit.org][research audit]] overviews. Preserve explicit remaining obligations.
+
+| Feature | Design and proof modules |
+|---------+--------------------------|
+| Actor Scheduling | [[file:actor-scheduling/byods.org][byods]] / [[file:actor-scheduling/compiler.org][compiler]] / [[file:actor-scheduling/design.org][design]] / [[file:actor-scheduling/proofs.org][proofs]] |
+| Assurance | [[file:assurance/acceptance.org][acceptance]] / [[file:assurance/byods.org][byods]] / [[file:assurance/compiler.org][compiler]] / [[file:assurance/design.org][design]] / [[file:assurance/proofs.org][proofs]] |
+| Bitmap Lattices | [[file:bitmap-lattices/acceptance.org][acceptance]] |
+| Closure Plan | [[file:closure-plan/design.org][design]] / [[file:closure-plan/proofs.org][proofs]] |
+| Compiler Lowering | [[file:compiler-lowering/compiler.org][compiler]] / [[file:compiler-lowering/proofs.org][proofs]] |
+| Equivalence | [[file:equivalence/acceptance.org][acceptance]] / [[file:equivalence/byods.org][byods]] / [[file:equivalence/compiler.org][compiler]] / [[file:equivalence/design.org][design]] / [[file:equivalence/proofs.org][proofs]] |
+| Index Admission | [[file:index-admission/acceptance.org][acceptance]] / [[file:index-admission/byods.org][byods]] / [[file:index-admission/compiler.org][compiler]] / [[file:index-admission/design.org][design]] / [[file:index-admission/proofs.org][proofs]] |
+| Lattices | [[file:lattices/acceptance.org][acceptance]] / [[file:lattices/byods.org][byods]] / [[file:lattices/compiler.org][compiler]] / [[file:lattices/design.org][design]] / [[file:lattices/proofs.org][proofs]] |
+| Polonius | [[file:polonius/acceptance.org][acceptance]] |
+| Positive Evaluation | [[file:positive-evaluation/acceptance.org][acceptance]] / [[file:positive-evaluation/byods.org][byods]] / [[file:positive-evaluation/compiler.org][compiler]] / [[file:positive-evaluation/proofs.org][proofs]] |
+| Provider Admission | [[file:provider-admission/byods.org][byods]] / [[file:provider-admission/proofs.org][proofs]] |
+| Provider Iteration | [[file:provider-iteration/acceptance.org][acceptance]] / [[file:provider-iteration/byods.org][byods]] / [[file:provider-iteration/design.org][design]] / [[file:provider-iteration/proofs.org][proofs]] |
+| Provider Rectangles | [[file:provider-rectangles/design.org][design]] |
+| Provider Views | [[file:provider-views/acceptance.org][acceptance]] / [[file:provider-views/byods.org][byods]] / [[file:provider-views/design.org][design]] / [[file:provider-views/proofs.org][proofs]] |
+| Qualification | [[file:qualification/acceptance.org][acceptance]] / [[file:qualification/byods.org][byods]] / [[file:qualification/compiler.org][compiler]] / [[file:qualification/design.org][design]] / [[file:qualification/proofs.org][proofs]] |
+| Representation | [[file:representation/acceptance.org][acceptance]] / [[file:representation/byods.org][byods]] / [[file:representation/compiler.org][compiler]] / [[file:representation/proofs.org][proofs]] |
+| Shared Indexes | [[file:shared-indexes/acceptance.org][acceptance]] / [[file:shared-indexes/byods.org][byods]] / [[file:shared-indexes/compiler.org][compiler]] / [[file:shared-indexes/proofs.org][proofs]] / [[file:shared-indexes/qualification.org][qualification]] |
+| Source Lifecycle | [[file:source-lifecycle/byods.org][byods]] / [[file:source-lifecycle/compiler.org][compiler]] / [[file:source-lifecycle/proofs.org][proofs]] |
+| Steensgaard | [[file:steensgaard/acceptance.org][acceptance]] / [[file:steensgaard/byods.org][byods]] / [[file:steensgaard/design.org][design]] / [[file:steensgaard/proofs.org][proofs]] |
+| Transitive | [[file:transitive/acceptance.org][acceptance]] / [[file:transitive/byods.org][byods]] / [[file:transitive/compiler.org][compiler]] / [[file:transitive/design.org][design]] / [[file:transitive/proofs.org][proofs]] |

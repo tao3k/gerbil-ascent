@@ -1,0 +1,65 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+#+TITLE: Shared Indexes: byods
+
+Feature owner: [[file:../index.org][feature index]]. This page retains the original
+source dates and qualification boundaries. Current evidence is commit-specific.
+
+* Section 4 column projection and layout ownership (2026-10-08)
+
+The read interface on printed page 264:11 requires every logical index to
+represent the same relation. Our Scheme index key projection now shares the
+ordered cursor with batch construction. Lean derives its direct-column
+meaning, fallback dispatch, constructed bucket order, finite batch history and
+admitted bounds. TLA+ checks declared column metadata across private extension,
+installation, failed-extension rebuild and frozen old readers. Its three new
+layout faults must produce the named consistency/lifetime counterexamples.
+
+Native direct-column truth also checks changing caller-owned headers between
+helper calls and malicious callback header mutation. Declared engine layouts
+and mutable low-level helper inputs have different ownership contracts; the
+protocol model covers the former. The [[file:proofs.org::*B23 constructed column projection and index layout lifetime (2026-10-08)][implementation/proof correspondence]] and
+[[file:../../evidence/scheme-column-projection-20261008/receipt.json][source-bound acceptance]] retain native hash equality, curried visitors and
+complete application benefit as further obligations.
+
+
+* Section 5.5 curried collection and cached views (2026-10-08)
+
+The Scheme shared-index collector now carries a result tail through nested
+children, copying last-level bucket spines once. Ordinal restoration preserves
+source order and duplicate occurrences independently of hash traversal order.
+Lean derives fresh label bounds, order through finite histories and exact
+restoration from occurrence permutations. TLA+ separately checks reusable
+cached views through private extension, failure and rebuild, retaining the
+held-reader invariant. Native qualification enumerates all six three-column
+permutations and every prefix depth over 64 source histories with direct-column
+truth and frozen-reference comparisons. See [[file:proofs.org::*B23 curried collection, ordinal restoration and cached views (2026-10-08)][the proof/implementation bridge]] and
+[[file:qualification.org::*Curried collection qualification][feature qualification]]. Full native hash/trie refinement, complete native adapter
+extraction and complete application benefit remain separate acceptance gates.
+
+
+* Section 5.5 constructed logical keys (2026-10-08)
+
+The native logical-to-physical key search now has executable Lean definitions
+and six laws. Covered logical fields construct the physical prefix key;
+comparison of that key implements the original logical constraints. Distinct
+columns admit arbitrary positional values, including false fields. Missing
+columns and overlong requests have explicit rejection laws. Native malformed
+requests are checked across cold, warm and extended views without changing
+published results. See [[file:proofs.org::*B23 constructed logical key adaptation (2026-10-08)][the adapter bridge]] and
+[[file:qualification.org::*Logical key adaptation qualification][feature qualification]]. The TLA+ lifecycle model remains separate from
+positional algebra. Complete native extraction and paper-scale application
+benefits are not established by these laws.
+
+
+* Section 5.5 constructed curried dictionaries (2026-10-08)
+
+Nine new Lean laws connect recursive dictionary construction, branch insertion,
+batch histories, prefix enumeration and ordinal restoration. Occurrence
+permutation is derived from construction and unique covered child inventories;
+the restored result equals the direct ordered filter through finite histories.
+Duplicate and missing inventory controls reject broken enumeration. Native
+tests add sparse layouts at depths one through five with all prefixes, row
+identity and held readers. See [[file:proofs.org::*B23 constructed curried trie and prefix occurrences (2026-10-08)][the construction bridge]] and
+[[file:qualification.org::*Trie construction qualification][feature qualification]]. Per-node native hash extraction, primitive
+correspondence and complete application benefits remain distinct obligations.

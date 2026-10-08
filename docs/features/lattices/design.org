@@ -1,0 +1,181 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+#+TITLE: Lattices: design
+
+Feature owner: [[file:../index.org][feature index]]. This page retains the original
+source dates and qualification boundaries. Current evidence is commit-specific.
+
+* Keyed replacement lattice and settled projection (2026-10-07)
+
+B23 Sections 3.2 and 5.6 require separate reasoning for map lattices whose
+concretization returns only the current value for each key. Improving a value
+can remove an earlier concrete tuple. Abstract map growth therefore does not
+imply Set inclusion of materialized rows. The general monotone-gamma iteration
+result cannot be applied to this observation without an additional argument.
+The native compiler treats lattice-to-ordinary-relation dependencies as strict
+stratum edges and rejects a strict projection cycle.
+
+=LatticeProjection= models the actual keyed update seam: consult the pending
+value first, otherwise the committed value; join the prior value with the
+incoming value; publish one final row per touched key and retain untouched keys.
+=update_inflationary= and =stage_inflationary= establish abstract growth under
+associative, commutative, idempotent join laws. =update_twice= connects repeated
+same-key inputs to their joined injection. =publish_stage_exact= derives exact
+publication of the staged fold. =gamma_unique= and =old_key_removed= establish
+one current value and removal of superseded tuple observations. =encode_key=
+and =encode_value= connect last-column encoding to the native butlast/last
+convention. PendingKeys now supplies the functional pending-table/event-roster coverage
+contract below. Native event order, visited-table deduplication, stable field
+equality and Scheme hash lookup retain representation premises.
+No shape check certifies a caller's arbitrary join procedure as a semilattice.
+
+The TLA model owns the transaction boundary rather than join algebra. It admits
+a finite batch in any order, checks the private map against an independent
+minimum over all admitted events, permits projection only after all events are
+collected, replaces visible tuple rows, and preserves a previously held snapshot.
+Seven faults overwrite instead of join, consult only committed values, ignore
+the false-key identity, retain superseded projected rows, settle before collecting
+the full batch, mutate held results or publish a stale projection. Checker parse
+or runtime exceptions are failures, not accepted fault evidence.
+
+The model represents one finite refinement transaction with two abstract keys
+and three values. These are exploration populations, not a runtime generation
+limit, convergence bound or proof of arbitrary joins. Native tests use actual
+false/true group fields, two-column keys and multiple same-key updates in both
+input orders. They check the final min map and ordinary projection, improved
+and ineffective appends, source replacement/recomputation, and immutable old
+results. Expected values are explicit independent minima; an earlier weaker
+value must not remain in the current ordinary relation.
+
+This closes the stated keyed update/publication algebra and finite settled
+projection protocol, with source-bound native controls. Universal lowered-rule
+stratum extraction, all custom callback/hash representations, generic recursive
+aggregate semantics and asynchronous lattice execution remain separate gates.
+See [[file:../../evidence/scheme-provider-views-20261007/keyed-lattice-projection.json][the keyed projection receipt]].
+
+Qualification passed 99 Lean build jobs, 26 positive TLC configurations and 72
+fault controls. The new transaction explored 1,651 generated and 858 distinct
+states; all seven mutations produced exit 12 with their named invariant. The
+native lattice suite passed 12 cases with final =OK=. Evidence contains source
+hashes and actual counterexample states, without committing execution logs.
+
+* Strict dependency and pending-key refinement (2026-10-07)
+
+B23 Section 5.6 current-value materialization can replace an earlier tuple.
+The compiler must therefore classify a positive lattice-to-ordinary read as
+strict, even though an ordinary positive read has weight zero. This is our
+native observation boundary; it is not inferred from B23's monotone-gamma
+iteration theorem and does not extend that theorem to arbitrary map lattices.
+
+| Obligation | Universal Lean owner | Operational/native owner |
+| Complete lowered read edges | StrictDependencies.extraction_exact: every reading clause contributes an edge to every head; guard/generator/binding clauses contribute none | Lowered Scheme vectors, relation indices and kinds must match the typed extraction |
+| Safe graph fast path | strict_preflight, skipped_edges_nonstrict, skipped_zero_valid | Actual global negation/aggregate/projection preflight in core/rule-semantics.ss |
+| Strict projection and rejection | projection_later, path_bound, strict_cycle_impossible, mutual_paths_equal | SCC membership/order extraction; typed native cycle diagnostics |
+| Minimum levels | relax_below_valid, propagated_below_valid, completed_propagation_minimal, component_max_below, normalization_below_valid | Native component maximum normalization and condensation sweep; completeness of the resulting constraints is an explicit premise |
+| Pending-key roster | PendingKeys.empty_covered, write_covered, replay_covered | LatticeAdmission derives this contract for the typed pending-first join/skip branch; native hash and field-check extraction remain premises |
+| Final current row per key | materialization_exact, materialization_unique, repeated_key_final, write_untouched | Native visited table emits each key once using the final pending value; arbitrary hash equality and emitted list order remain premises |
+
+A completed propagation result is valid and below every valid labeling, hence
+minimal. This theorem takes validity of the completed result as a premise:
+it does not assume or prove an arbitrary native Tarjan traversal correct.
+SCC maximum normalization separately preserves the same lower-bound invariant
+because every valid labeling is constant on mutually reachable nodes.
+
+The native test independently enumerates all 27 assignments in {0,1,2} for
+three nodes. It checks 8,704 graph/kind configurations: 512 positive graphs with
+all eight lattice-kind assignments, plus each present edge separately changed
+to negation and aggregation with ordinary kinds. The expected result is the
+coordinatewise minimum of all valid assignments, or rejection when none exist.
+This oracle constructs no SCCs and performs no relaxation. A feasible weighted
+three-node graph has a minimum in this population because strict edges cannot
+occur within an SCC and a simple condensation path has at most two edges.
+Additional cases discriminate strict incoming/outgoing edges around a positive
+SCC, multi-head projection with ignored non-reading clauses, duplicates and
+empty declarations. The frozen old implementation remains a separate historical
+comparison, not the source of this independent expected result.
+
+PendingKeys covers arbitrary effective-write histories, including duplicate
+key events. An event stores only its key: publication always reads the final
+table value, so an earlier event cannot resurrect an earlier value. Coverage
+is equality of roster support and table domain; it does not certify join purity,
+physical hash behavior or uniqueness of the mutable visited table's list output.
+The TLA min transaction now publishes through a dirty-key set, retains untouched
+rows, and checks KeyCoverage. Dropping a first changed key and forgetting a key
+on repeated improvement produce distinct typed counterexamples. TLA owns this
+publication protocol; Lean owns universal coverage and weighted graph laws.
+No duplicate TLA weighted-graph theorem model is introduced.
+
+Acceptance and source identities are recorded in
+[[file:../../evidence/scheme-provider-views-20261007/strict-dependencies-pending-keys.json][the refinement receipt]].
+The existing lattice native cases exercise repeated same-key writes, ineffective
+updates, multi-field false/true keys and unchanged earlier projections. These
+are finite implementation discriminators; universal native hash/vector/SCC
+extraction and asynchronous custom-lattice execution remain separate gates.
+
+* Effective lattice admission and refused publication (2026-10-07)
+
+The previous PendingKeys model began after deciding whether to write.
+=LatticeAdmission= now models that decision: read pending first and committed
+second; compute the merged value; suppress an unchanged value; otherwise write
+the merged value and its key event. =admission_update_exact= proves the resulting
+overlay equals the full keyed update, including the suppressed branch.
+=collection_stage_exact= and =empty_collection_stage_exact= lift this to arbitrary
+finite histories, without a fixed round or generation bound. No assumption that
+every input produces a key event is needed.
+
+=admit_covered= and =collection_covered= derive pending-table/key-roster support
+from the actual typed branch. =publication_exact= and
+=collection_publication_exact= connect effective-key publication to the complete
+update fold. Repeated events observe the final table value. =pending_priority=
+and =committed_fallback= state the lookup contract explicitly. These equivalence
+laws work for any stable mathematical merge function; they do not certify a
+Scheme callback's purity or join laws. =collection_inflationary= separately
+requires =JoinLaws=, preserving the algebraic admission boundary.
+
+The pending resource cost is zero for an unchanged join and for an improvement
+to a key already in the pending table. A fresh effective key costs one slot.
+=cost_support_exact= connects this branch to roster support, not event-list
+length. A key can have several improvement events while consuming one pending
+slot within the current round. The runtime derived-work budget remains cumulative
+across publications; this is not a bound on live rows or physical memory.
+Native checks compare =derived-count + pending-count= with the derived limit and
+=source-materialized-count + derived-count + pending-count= with the output limit.
+
+The TLA model owns admission/refusal/publication, not the Lean update algebra.
+=Remaining= is the available resource parameter after committed/source work;
+configurations 0, 1 and 2 explore exhausted, single-key and full two-key capacity.
+An ineffective event can be consumed at zero remaining capacity. Refusal may
+leave private buffers changed, matching an exception after private staging;
+public rows and earlier held cuts must remain unchanged. No physical rollback
+of arbitrary user callbacks is assumed. Refused transactions cannot settle or
+publish in the model. Recovery ownership is checked separately by a native
+source replacement followed by comparison with a fresh solve.
+
+Three new fault controls discriminate different defects:
+
+| Fault | Required invariant | Discriminating behavior |
+| Skip resource admission | BudgetBound | Two changed keys enter a collecting transaction with capacity one |
+| Count events instead of fresh effective keys | RefusalSound | An event for an already staged key rejects despite actual pending cost one |
+| Publish private state on refusal | RefusalStable | A second changed key exceeds capacity, but private values replace public rows |
+
+These are injected faults in the specification, not newly discovered failures in
+the current Scheme runtime. Checker exceptions are not accepted counterexamples.
+The model retains the earlier nine faults and adds these three; independent
+held-snapshot and complete projection invariants remain in every positive gate.
+
+Native qualification adds two concrete discriminators. A three-input same-key
+min computation completes with one derived slot, in both selected input orders.
+A retained session stages two distinct improved keys against a one-slot derived
+budget and produces the exact budget error; its earlier result remains unchanged.
+Replacing the inputs with one key reconstructs successfully and matches a fresh
+solve for both source and lattice rows. This distinguishes rejection safety from
+claims of in-place callback rollback or automatic repair.
+
+See [[file:../../evidence/scheme-provider-views-20261007/effective-lattice-admission.json][the source-bound admission receipt]]
+for the seventeen Lean laws, thirteen examples, three resource configurations,
+actual fault states and native acceptance. Remaining representation obligations
+are Scheme hash/equality, field/callback validation, native emitted-list order
+and deduplication, SCC/vector extraction and asynchronous custom-lattice execution.
+Full BYODS application/time/memory replication is a separate acceptance track.
+
+

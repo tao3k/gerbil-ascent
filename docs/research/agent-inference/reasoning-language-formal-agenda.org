@@ -80,7 +80,7 @@ The immediate design rule is to keep three equalities separate:
   admission and publication.
 
 Conflating these makes a structurally valid model proposal look like
-authoritative evidence. The current [[file:../../scheme-research-proof-audit.org::#cross-layer-refinement][refinement audit]] identifies the native
+authoritative evidence. The current [[file:../../features/representation/proofs.org::#cross-layer-refinement][refinement audit]] identifies the native
 identity and representation obligations in more detail.
 
 * Lean: proved kernels and next theorem

@@ -1,0 +1,58 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+#+TITLE: Steensgaard: acceptance
+
+Feature owner: [[file:../index.org][feature index]]. This page retains the original
+source dates and qualification boundaries. Current evidence is commit-specific.
+
+* Complete Steensgaard partition acceptance (2026-10-07)
+
+The full pinned OpenJDK input is now evaluated by the ordinary native Scheme
+Steensgaard Program: 47,069 facts in the four original blobs. The published
+result is observed through keyed =visit-rows= calls, one per unseen active
+component, without forcing =rows-of= over 440,438,706 implied pairs. The
+canonical member roster includes 51,022 members in 12,688 components; the
+largest component contains 20,956 members. Rust checks exact member-to-component
+identity against both its actual Ascent eqrel application and an independent
+partition saturation model. Missing/extra members and different merges with
+the same aggregate count fail admission. The Rust and Lean negative controls
+explicitly preserve the equal-count/different-partition discriminator.
+
+The frozen input produces zero additional effective load/store unions in the
+independent model. Full-input equality therefore complements the native small
+applications that exercise positive field-matched consequences, inactive
+self-reads, wrong fields, repeated rounds, retained withdrawal and cancellation;
+it does not replace those discriminating tests.
+
+=component_squares_exact= constructs the complete square semantics of the
+active component roster. =component_squares_partition_equal= proves that equal
+component member lists determine every concrete pair. Complete native roster
+extraction is verified by the application comparisons; these Lean laws do not
+claim a universal refinement of mutable Scheme hash/parent algorithms.
+ProviderViews TLA+ continues to check frozen reads, atomic publication, budget
+admission and reader lifetime. No duplicate Lean protocol state machine was
+introduced. The existing =byods-scale= GitHub job now runs this full-input
+source/partition admission in addition to the existing directed scale oracle.
+
+Resource admission separates solve CPU, wall intervals and directly measured
+process RSS/footprint. The VM counter exposed as =serial-allocation= in the
+qualification diagnostic is not a physical constructor-byte observer. Its
+raw differences include negative values in otherwise correct full runs. Both
+positive and negative values are retained as accounting diagnostics; physical
+allocation and allocation savings are unadmitted. Earlier small-fixture
+"allocation ratios" must be read as VM accounting ratios, not physical memory
+savings. The pinned Gambit source combines movable heap/stack occupancy and
+still storage with GC-maintained adjustment terms:
+[[https://github.com/gambit/gambit/blob/dcd677cd3e40860bdd27dfbdbf5e3ce46ab03813/lib/mem.c#L360][movable occupancy]] and
+[[https://github.com/gambit/gambit/blob/dcd677cd3e40860bdd27dfbdbf5e3ce46ab03813/lib/mem.c#L7509][the accounting counter]].
+This identifies a metric mismatch; the exact cause of each non-monotone native
+sample is not claimed as proven from that formula alone.
+
+This closes full Steensgaard input/partition correspondence. Full Polonius,
+PageRank and LLVM/index-sharing applications, matched end-to-end benefit
+baselines, physical allocation observation and universal native algorithm
+refinement remain acceptance obligations in the ten-item matrix. MR integration
+remains deferred. See the source-bound
+[[file:../../evidence/scheme-steensgaard-partition-20261007/receipt.json][acceptance receipt]] for executable identities,
+measurements, counterexamples and rejected observations.
+

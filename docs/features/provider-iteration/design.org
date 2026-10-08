@@ -1,0 +1,66 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+#+TITLE: Provider Iteration: design
+
+Feature owner: [[file:../index.org][feature index]]. This page retains the original
+source dates and qualification boundaries. Current evidence is commit-specific.
+
+* Abstract injection and complete-join iteration (2026-10-07)
+
+=ProviderIteration= connects the positive-body delta law to abstract head
+injection and complete program histories. =CompleteJoin= declares reflexive,
+transitive, antisymmetric order and arbitrary-family supremum upper/least laws.
+An abstract database may be a product of heterogeneous relation domains; a head
+fact is injected into the appropriate coordinate by =head=. The module does
+not assume that the database itself is a powerset or that concretization
+preserves joins. These semantic obligations are not inferred from a Scheme
+procedure or certified by a shape check.
+
+=inject= is the supremum of the tuple injections admitted by a rule-head family.
+=inject_mono= and =inject_union= derive monotone accumulation and union/join
+correspondence. =heads_partition= lifts ProviderAdmission's arbitrary finite
+body partition through rule projection. =pivot_after_full= then derives that
+all-old head injections are already subsumed by the retained abstract state.
+=iterations_equal= proves equality of naive and semi-naive abstract histories
+for every natural-number round, including empty bodies and repeated relations.
+Delta may include old facts; it must be sound and cover newly concretized facts.
+Non-pivot occurrences read the merged concrete snapshot. This is the library's
+synchronous merged-snapshot strategy, not a proof of every scheduler or the
+paper's exact operational presentation of the split total/delta pair.
+
+The complete-join laws also construct the least closed state above an arbitrary
+initial state. =least_fixed= establishes its fixed-point equation without an
+assumed completed run. =stationary_eq_least= identifies any stabilized history
+with that state. =ranked_converges= connects parameterized bounded rank and strict
+progress to finite convergence of both execution histories to the same least
+state. Neither a fixed generation cap nor finite convergence of arbitrary
+infinite-height domains is asserted. A complete lattice provides fixed-point
+existence; finite execution needs the separate rank/progress witness.
+
+Tests instantiate a two-element abstract lattice that collapses distinct head
+facts to one state. Injection can expose implied observations absent from the
+raw input tuple family. Controls reject anti-monotone concretization and show
+that an empty fresh head state cannot overwrite an accumulated true state.
+Axioms and tests belong under =packages/proofs/lean/Tests=.
+
+The existing ProviderFrontier TLA model adds a =replace= fault that overwrites
+accumulated consumer heads with only the current pivot output. Its independent
+=ConsumerSnapshot= invariant must reject the fault. This is a publication and
+retention control, not a second proof of abstract join algebra. Native retained
+sessions check eqrel, trrel and trrel_uf with a three-occurrence downstream body,
+a delayed new edge, an already-implied new source tuple and repeated runs.
+Independent graph closure and explicit body witnesses determine the expected
+heads; earlier published results must remain unchanged.
+
+This closes the conditional abstract injection, round-equivalence, least-state
+and ranked-convergence components. Universal native state/key/equality
+extraction, asynchronous custom-domain iteration, general lattice projection
+semantics and paper application/cost acceptance retain their separate gates.
+See [[file:../../evidence/scheme-provider-views-20261007/abstract-provider-iteration.json][the abstract iteration receipt]].
+
+Qualification passed 97 Lean build jobs, 25 positive TLC configurations and 65
+fault controls. The native BYODS invariants suite passed 14 cases with final
+=OK=, including all three retained-injection Provider controls. The receipt
+retains the actual five-state overwrite counterexample and source SHA256s;
+raw execution transcripts are excluded from Git history.
+

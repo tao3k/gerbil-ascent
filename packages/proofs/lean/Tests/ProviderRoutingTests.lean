@@ -2,6 +2,48 @@
 -- SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 import ProviderRouting
 open Ascent.ProviderRouting
+
+-- Actual nested construction and insertion, including duplicate-valued rows.
+def trieCoordinate (row : List Bool) (i : Nat) : Bool := row[i]?.getD false
+def trieRows : List (List Bool) := [[false, true], [true, false], [false, true]]
+example : trieRead [false, true] 2 [false] (trieBuild 2 trieCoordinate trieRows) =
+    [[false, true], [false, true]] := by decide
+example : trieRead [true, false] 2 [false, true] (trieBuild 2 trieCoordinate trieRows) =
+    [[false, true], [false, true]] := by decide
+example : trieRead [false, true] 2 [true, true] (trieBuild 2 trieCoordinate trieRows) = [] := by decide
+example : trieRead [false, true] 2 [false, true, false]
+    (trieBuild 2 trieCoordinate trieRows) = [] := by decide
+example : trieRead [false, true] 2 [false]
+    (triePrepend 2 trieCoordinate [[false, true], [false, false]]
+      (trieBuild 2 trieCoordinate trieRows)) =
+    [[false, false], [false, true], [false, true], [false, true]] := by decide
+-- Repeated or missing child enumeration cannot satisfy occurrence coverage.
+example : ¬(trieCollect [false, false, true] 2 (trieBuild 2 trieCoordinate trieRows)).Perm
+    trieRows := by decide
+example : ¬(trieCollect [true] 2 (trieBuild 2 trieCoordinate trieRows)).Perm trieRows := by decide
+example : trieInsert 2 trieCoordinate [false, true] (trieBuild 2 trieCoordinate trieRows) =
+    trieBuild 2 trieCoordinate ([false, true] :: trieRows) :=
+  trie_insert_build _ _ _ _
+example :
+    (restoreRecords (trieRead [true, false] 2 [false]
+      (trieNumberedReplay 2 (fun record : Nat × List Bool => trieCoordinate record.2)
+        (trieRows.length + 1) [[], [[false, true]]]
+        (trieBuild 2 (fun record : Nat × List Bool => trieCoordinate record.2)
+          (numberRows 1 trieRows.reverse).reverse)))).map Prod.snd =
+      [[false, true], [false, true], [false, true]] := by
+  have restored := trie_numbered_prefix_restore 2 trieCoordinate trieRows
+    [[], [[false, true]]] [true, false] [false] (by decide)
+    (by intro record _ i _; cases trieCoordinate record.2 i <;> simp)
+  simpa [replayRows, trieRows, List.filter_cons, prefixSelected, trieCoordinate] using restored
+#print axioms trie_insert_build
+#print axioms trie_prepend_build
+#print axioms trie_replay_build
+#print axioms trie_collect_build_count
+#print axioms trie_collect_build_perm
+#print axioms trie_read_build_perm
+#print axioms prefix_selected_projection
+#print axioms trie_numbered_replay_build
+#print axioms trie_numbered_prefix_restore
 -- Identity is independent of value equality. Output retains original occurrences.
 def coordinate (row : Nat × Nat) (_column : Nat) : Nat := row.2
 example : scan coordinate [(2,7),(0,7)] [(10,7),(11,7),(10,7),(12,9)] =

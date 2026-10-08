@@ -1,0 +1,46 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+#+TITLE: Lattices: acceptance
+
+Feature owner: [[file:../index.org][feature index]]. This page retains the original
+source dates and qualification boundaries. Current evidence is commit-specific.
+
+* Strict read and pending-key closure (2026-10-07)
+
+StrictDependencies adds fourteen laws connecting typed lowered rules to strict
+weighted reads, the zero-level fast path, projection ordering, impossibility of
+strict cycles, SCC equal levels, and propagation/normalization lower bounds.
+Minimum labeling is conditional on a completed valid result; native vector
+extraction and SCC completeness are explicit premises. Independent Scheme
+label enumeration checks 8,704 configurations rather than using the old planner
+as the truth source.
+
+PendingKeys adds seven laws for effective-write event coverage and final table
+materialization, with duplicate keys and false-key discriminators. The TLA
+transaction now publishes through touched keys; two new KeyCoverage faults
+bring its controls to nine. Native lattice retained-session controls remain
+separate from both universal Lean laws and bounded temporal publication checks.
+See [[file:../../scheme-trrel-uf-design.org][the ownership and premises]] and
+[[file:../../evidence/scheme-provider-views-20261007/strict-dependencies-pending-keys.json][the acceptance receipt]].
+
+
+
+* Effective lattice admission closure (2026-10-07)
+
+LatticeAdmission removes the earlier premise that every effective write has
+already been chosen correctly. Seventeen laws connect pending-first lookup,
+unchanged-value suppression, arbitrary finite replay, roster support, final
+publication and zero/one pending-slot cost to the typed update semantics.
+Abstract growth separately requires join laws; callback purity/hash/equality
+are not obtained from interface declarations.
+
+The TLA transaction explores remaining capacity 0, 1 and 2, including private
+staging on refusal without public publication. Three additional faults detect
+budget bypass, event-count over-rejection and refusal publication; twelve faults
+are retained in the projection gate. Native tests add a one-slot repeated-key
+case and typed budget refusal/held-result/reconstruction comparison. No runtime
+failure was found in these controls; injected faults demonstrate discrimination.
+See [[file:../../scheme-trrel-uf-design.org][the design and resource semantics]] and
+[[file:../../evidence/scheme-provider-views-20261007/effective-lattice-admission.json][the receipt]].
+
+

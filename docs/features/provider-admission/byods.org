@@ -1,0 +1,69 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+#+TITLE: Provider Admission: byods
+
+Feature owner: [[file:../index.org][feature index]]. This page retains the original
+source dates and qualification boundaries. Current evidence is commit-specific.
+
+* Storage injection ownership in Scheme (2026-10-06)
+
+Sections 3.1 and 3.3 separate injection into private representation from the
+facts exposed by total/delta concretization. At our Scheme boundary an
+extension receives admitted facts and returns newly visible facts. It must
+not retain writable access to the evaluator's source or published row spines.
+Two native counterexamples exposed that access: mutating a returned row
+changed an already-published result; mutating a retained input row changed the
+source declaration used for recovery.
+
+The immutable relation schema now selects storage dispatch once. Native Set,
+=eqrel=, =trrel= and =trrel_uf= receivers retain direct dispatch by privately
+captured identity. Custom receivers receive owned all/pending/input row spines;
+a proper returned batch passes bounded arity admission before its spines are
+detached. Initialization, rule emission and retained append share this seam.
+Nested field identity remains shared, and all/pending header identity is
+preserved when the engine supplied the same root.
+
+The [[file:../../scheme-research-proof-audit.org][audit]] and
+[[file:../../evidence/scheme-storage-spines-20261006/receipt.json][receipt]] bind native ownership and malformed-packet controls. This does not
+prove arbitrary concretization completeness or roll back private Provider
+state after a failed extension. Custom copies add work proportional to the
+supplied snapshots and returned batch; no speedup is claimed.
+
+
+* Custom state readiness and source replay (2026-10-06)
+
+The injection/concretization transfer also needs a state publication boundary.
+An extension can mutate private state and then fail, or pass its own shape
+check before a later field, budget or rule callback rejects the evaluation.
+A physical state that already remembers an unpublished fact can suppress it
+on retry. The paper's Section 3 operators do not specify recovery from these
+Scheme exceptions.
+
+Custom engine states now have a private readiness owner. Dispatch marks them
+pending; callback/shape failure marks them failed. Only complete source batch
+or rule-round publication restores readiness. Pending states accept further
+injections within the same round, but a later public engine run/append requires
+all owners ready. Session recovery reconstructs fresh states from its retained
+source snapshot. The shared schema caches dispatch only, never these owners.
+
+The [[file:../../evidence/scheme-storage-state-20261006/receipt.json][native receipt]] covers mutable callback failures, shape/field/budget
+rejection, a later guard failure after a successful emission, source replay,
+and prior-result preservation. Native providers keep their raw state and
+existing preflight laws. This prevents silent reuse of uncertain custom state;
+it does not clone or roll back arbitrary private representation or undo host
+side effects. Fresh independent state construction remains a Provider premise.
+
+
+* Public concretization and finite admission (2026-10-07)
+
+The [[file:../../scheme-trrel-uf-design.org][UF design audit]] now derives public membership homogeneity from supported
+reach and SCC ownership, closing the activation premise left by latent-reach
+homogeneity. Three new Lean laws and two discriminators pass the complete build.
+A sealed finite task cohort also qualifies the reusable-reader starvation result:
+aggregate completion fairness suffices when completed tasks cannot be readmitted.
+TLA checks this separately from reusable-reader completion and rejects the
+sealed control without fairness. These are implementation obligations inferred
+from Section 3 concretization and host scheduling, not additions attributed to
+the paper's Theorem 3.5. Native extraction and ordered journal replay remain
+separately identified in the audit and receipt.
+

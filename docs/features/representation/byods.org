@@ -1,0 +1,18 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+#+TITLE: Representation: byods
+
+Feature owner: [[file:../index.org][feature index]]. This page retains the original
+source dates and qualification boundaries. Current evidence is commit-specific.
+
+* Representation ownership follow-up (2026-10-07)
+
+The [[file:../provider-views/design.org::#provider-owned-views][architecture review]] revisits sections 3.3, 4 and 5.1 against =93e81c1=.
+The current engine expands and retains Provider facts despite private SCC
+compression. The proposed next unit is frozen relation views with exact delta,
+keyed enumeration, logical cardinality preflight and owned published snapshots.
+The review separates Lean algebra, TLA reader/publication protocols and native
+cost controls, including full export as a distinct unavoidable enumeration cost.
+This is a design proposal, not a new implementation or performance receipt.
+
+

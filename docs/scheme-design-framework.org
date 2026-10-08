@@ -21,7 +21,7 @@ Historical receipts bind their own sources and do not certify later commits.
 
 * Current closure plan (2026-10-06)
 
-The [[file:scheme-research-proof-audit.org::#current-closure-plan][current integrated design audit]] supersedes historical next-step wording
+The [[file:features/closure-plan/proofs.org::#current-closure-plan][current integrated design audit]] supersedes historical next-step wording
 in dated sections below. It retains the R1-R5 library acceptance scope and the full
 [[file:scheme-paper-closure.org][ASCENT/BYODS closure matrix]]. The immediate mainline is native acceptance,
 admitted compiler/row/execution refinement, then Provider/index and actor
@@ -89,7 +89,7 @@ remain open implementation bridges.
 Native qualification binds its exact artifact; no abstract theorem substitutes
 for actual source-bound execution or closes R5/R6.
 
-The [[file:scheme-research-proof-audit.org::#cross-layer-refinement][cross-layer refinement audit]] distinguishes binding identity, public semantic
+The [[file:features/representation/proofs.org::#cross-layer-refinement][cross-layer refinement audit]] distinguishes binding identity, public semantic
 equivalence, ordered certificate identity, source occurrences, pending work and
 committed observations. R1/R3/R4 acceptance must preserve those distinctions;
 paper algorithms cannot be transferred by treating all of them as row equality.
@@ -290,7 +290,7 @@ cannot authorize a changed source payload; zero new model calls were made.
 The [[file:scheme-research-proof-audit.org][research/proof audit]] maps all eight DSL sources to current implementation, formal premises and falsifiable exit gates. It prioritizes compiler preservation, transaction refinement and finite evidence algebra before optimization, paid model validation and MRR integration. Unbounded protocol generations are distinct from finite TLC exploration; abstract proofs do not certify the Scheme compiler.
 
 
-The [[file:scheme-research-proof-audit.org::#joint-research-design-implementation][joint research/design/implementation sequence]] connects each paper premise
+The [[file:features/closure-plan/proofs.org::#joint-research-design-implementation][joint research/design/implementation sequence]] connects each paper premise
 with its Scheme owner, formal obligation and independent native discriminator.
 The later type, finite-signature, row and source-root slices below supersede
 that first work item. The next R1 bridge is the concrete scalar/identity decoder,
@@ -460,7 +460,7 @@ and passes the actual ASP package policy without changing its threshold.
 
 * Next native compiler correspondence
 
-The [[file:scheme-research-proof-audit.org::#native-compiler-correspondence][connected native compiler obligation]] now fixes the next implementation
+The [[file:features/closure-plan/proofs.org::#native-compiler-correspondence][connected native compiler obligation]] now fixes the next implementation
 order: complete finite-vector traversal, actual Scheme action/key/head and
 scalar/name decoding, Provider snapshot/frontier instances, then constructed
 least-model output and completed publication. It separates pure logical plans,

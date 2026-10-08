@@ -544,4 +544,188 @@ theorem constructed_prefix_restore (source : List RecordRow) (history : List (Li
   rw [← values, List.filter_map]
   rfl
 end OrdinalCollection
+
+/-! A depth-indexed curried dictionary. Functional branches model the map
+lookup/update contract; a finite unique key inventory models child enumeration.
+The depth is a parameter, not a runtime arity or generation bound. -/
+section CurriedConstruction
+variable {K R : Type} [DecidableEq K]
+
+def CurriedTrie (K R : Type) : Nat → Type
+  | 0 => List R
+  | depth + 1 => K → CurriedTrie K R depth
+
+def trieBuild : (depth : Nat) → (R → Nat → K) → List R → CurriedTrie K R depth
+  | 0, _, rows => rows
+  | depth + 1, coordinate, rows => fun key =>
+      trieBuild depth (fun row i => coordinate row (i + 1))
+        (keyScan (fun row => coordinate row 0) key rows)
+
+def trieInsert : (depth : Nat) → (R → Nat → K) → R →
+    CurriedTrie K R depth → CurriedTrie K R depth
+  | 0, _, row, tree => row :: tree
+  | depth + 1, coordinate, row, tree => fun key =>
+      if key = coordinate row 0 then
+        trieInsert depth (fun row i => coordinate row (i + 1)) row (tree key)
+      else tree key
+
+def trieCollect (keys : List K) : (depth : Nat) → CurriedTrie K R depth → List R
+  | 0, tree => tree
+  | depth + 1, tree => keys.flatMap fun key => trieCollect keys depth (tree key)
+
+def trieRead (keys : List K) : (depth : Nat) → List K → CurriedTrie K R depth → List R
+  | depth, [], tree => trieCollect keys depth tree
+  | 0, _ :: _, _ => []
+  | depth + 1, key :: rest, tree => trieRead keys depth rest (tree key)
+
+def prefixSelected : Nat → (R → Nat → K) → List K → R → Bool
+  | _, _, [], _ => true
+  | 0, _, _ :: _, _ => false
+  | depth + 1, coordinate, key :: rest, row =>
+      (coordinate row 0 == key) &&
+        prefixSelected depth (fun row i => coordinate row (i + 1)) rest row
+
+theorem trie_insert_build (depth : Nat) (coordinate : R → Nat → K)
+    (row : R) (rows : List R) :
+    trieInsert depth coordinate row (trieBuild depth coordinate rows) =
+      trieBuild depth coordinate (row :: rows) := by
+  induction depth generalizing coordinate rows with
+  | zero => rfl
+  | succ depth ih =>
+    funext key
+    by_cases hit : key = coordinate row 0
+    · simp [trieInsert, trieBuild, keyScan, hit, ih]
+    · simp [trieInsert, trieBuild, keyScan, hit, Ne.symm hit]
+
+def triePrepend (depth : Nat) (coordinate : R → Nat → K) :
+    List R → CurriedTrie K R depth → CurriedTrie K R depth
+  | [], tree => tree
+  | row :: rest, tree => triePrepend depth coordinate rest (trieInsert depth coordinate row tree)
+
+def trieReplay (depth : Nat) (coordinate : R → Nat → K) :
+    List (List R) → CurriedTrie K R depth → CurriedTrie K R depth
+  | [], tree => tree
+  | batch :: rest, tree => trieReplay depth coordinate rest (triePrepend depth coordinate batch tree)
+
+theorem trie_prepend_build (depth : Nat) (coordinate : R → Nat → K)
+    (batch rows : List R) :
+    triePrepend depth coordinate batch (trieBuild depth coordinate rows) =
+      trieBuild depth coordinate (batch.reverse ++ rows) := by
+  induction batch generalizing rows with
+  | nil => rfl
+  | cons row rest ih =>
+    rw [triePrepend, trie_insert_build, ih]
+    simp [List.reverse_cons, List.append_assoc]
+
+theorem trie_replay_build (depth : Nat) (coordinate : R → Nat → K)
+    (history : List (List R)) (rows : List R) :
+    trieReplay depth coordinate history (trieBuild depth coordinate rows) =
+      trieBuild depth coordinate (replayRows history rows) := by
+  induction history generalizing rows with
+  | nil => rfl
+  | cons batch rest ih => rw [trieReplay, trie_prepend_build, ih]; rfl
+
+theorem trie_collect_build_count [DecidableEq R] (depth : Nat)
+    (coordinate : R → Nat → K) (rows : List R) (keys : List K)
+    (unique : keys.Nodup)
+    (covered : ∀ row ∈ rows, ∀ i < depth, coordinate row i ∈ keys) (row : R) :
+    (trieCollect keys depth (trieBuild depth coordinate rows)).count row = rows.count row := by
+  induction depth generalizing coordinate rows with
+  | zero => rfl
+  | succ depth ih =>
+    have children (key : K) :
+        (trieCollect keys depth (trieBuild depth (fun row i => coordinate row (i + 1))
+          (keyScan (fun row => coordinate row 0) key rows))).count row =
+        (keyScan (fun row => coordinate row 0) key rows).count row := by
+      apply ih
+      intro candidate member i bound
+      exact covered candidate (List.mem_filter.mp member).1 (i + 1) (Nat.succ_lt_succ bound)
+    simp only [trieCollect, trieBuild, List.count_flatMap]
+    simp only [Function.comp_def, children]
+    have exactCount := complete_read_all_count (fun row => coordinate row 0) rows keys unique
+      (fun candidate member => covered candidate member 0 (Nat.zero_lt_succ depth)) row
+    simpa only [enumerateBuckets, List.count_flatMap, Function.comp_def, build_buckets_exact] using exactCount
+
+theorem trie_collect_build_perm [DecidableEq R] (depth : Nat)
+    (coordinate : R → Nat → K) (rows : List R) (keys : List K)
+    (unique : keys.Nodup)
+    (covered : ∀ row ∈ rows, ∀ i < depth, coordinate row i ∈ keys) :
+    (trieCollect keys depth (trieBuild depth coordinate rows)).Perm rows := by
+  exact List.perm_iff_count.mpr (trie_collect_build_count depth coordinate rows keys unique covered)
+
+theorem trie_read_build_perm [DecidableEq R] (depth : Nat)
+    (coordinate : R → Nat → K) (rows : List R) (keys query : List K)
+    (unique : keys.Nodup)
+    (covered : ∀ row ∈ rows, ∀ i < depth, coordinate row i ∈ keys) :
+    (trieRead keys depth query (trieBuild depth coordinate rows)).Perm
+      (rows.filter (prefixSelected depth coordinate query)) := by
+  have allRows (input : List R) : input.filter (fun _ => true) = input :=
+    List.filter_eq_self.mpr (by intro _ _; rfl)
+  induction depth generalizing coordinate rows query with
+  | zero => cases query <;> simp [trieRead, trieCollect, trieBuild, prefixSelected, allRows]
+  | succ depth ih =>
+    cases query with
+    | nil => simpa [trieRead, prefixSelected, allRows] using
+        trie_collect_build_perm (depth + 1) coordinate rows keys unique covered
+    | cons key rest =>
+      have tailCovered : ∀ candidate ∈ keyScan (fun row => coordinate row 0) key rows,
+          ∀ i < depth, coordinate candidate (i + 1) ∈ keys := by
+        intro candidate member i bound
+        exact covered candidate (List.mem_filter.mp member).1 (i + 1) (Nat.succ_lt_succ bound)
+      have recursive := ih (fun row i => coordinate row (i + 1))
+        (keyScan (fun row => coordinate row 0) key rows) rest tailCovered
+      simpa [trieRead, trieBuild, keyScan, List.filter_filter, prefixSelected, Bool.and_comm] using recursive
+theorem prefix_selected_projection {Row : Type} (depth : Nat)
+    (coordinate : Row → Nat → K) (query : List K) (project : R → Row) (row : R) :
+    prefixSelected depth (fun r => coordinate (project r)) query row =
+      prefixSelected depth coordinate query (project row) := by
+  induction depth generalizing coordinate query with
+  | zero => cases query <;> rfl
+  | succ depth ih =>
+    cases query with
+    | nil => rfl
+    | cons key rest =>
+      exact congrArg (fun selected => (coordinate (project row) 0 == key) && selected)
+        (ih (fun row i => coordinate row (i + 1)) rest)
+
+def trieNumberedReplay {Row : Type} (depth : Nat) (coordinate : (Nat × Row) → Nat → K) :
+    Nat → List (List Row) → CurriedTrie K (Nat × Row) depth → CurriedTrie K (Nat × Row) depth
+  | _, [], tree => tree
+  | next, batch :: rest, tree =>
+      trieNumberedReplay depth coordinate (next + batch.length) rest
+        (triePrepend depth coordinate (numberRows next batch) tree)
+
+theorem trie_numbered_replay_build {Row : Type} (depth : Nat)
+    (coordinate : (Nat × Row) → Nat → K) (next : Nat)
+    (history : List (List Row)) (prior : List (Nat × Row)) :
+    trieNumberedReplay depth coordinate next history (trieBuild depth coordinate prior) =
+      trieBuild depth coordinate (replayNumbered next prior history).2 := by
+  induction history generalizing next prior with
+  | nil => rfl
+  | cons batch rest ih =>
+      rw [trieNumberedReplay, trie_prepend_build, ih]
+      rfl
+
+theorem trie_numbered_prefix_restore {Row : Type} [DecidableEq Row]
+    (depth : Nat) (coordinate : Row → Nat → K) (source : List Row)
+    (history : List (List Row)) (keys query : List K) (unique : keys.Nodup)
+    (covered : ∀ record ∈
+      (replayNumbered (source.length + 1) (numberRows 1 source.reverse).reverse history).2,
+      ∀ i < depth, coordinate record.2 i ∈ keys) :
+    (restoreRecords (trieRead keys depth query
+      (trieNumberedReplay depth (fun record : Nat × Row => coordinate record.2)
+        (source.length + 1) history
+        (trieBuild depth (fun record : Nat × Row => coordinate record.2)
+          (numberRows 1 source.reverse).reverse)))).map
+      Prod.snd = (replayRows history source).filter (prefixSelected depth coordinate query) := by
+  rw [trie_numbered_replay_build]
+  apply constructed_prefix_restore
+  have enumerated := trie_read_build_perm depth
+    (fun record : Nat × Row => coordinate record.2) _ keys query unique covered
+  have lifted : prefixSelected depth (fun record : Nat × Row => coordinate record.2) query =
+      (fun record => prefixSelected depth coordinate query record.2) :=
+    funext (fun record => prefix_selected_projection depth coordinate query Prod.snd record)
+  rw [lifted] at enumerated
+  exact enumerated
+end CurriedConstruction
 end Ascent.ProviderRouting

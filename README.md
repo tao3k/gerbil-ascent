@@ -31,6 +31,8 @@ source or causal authority remain open research gates.
 
 - [Native Library contract](docs/native-library-acceptance.org) — implemented
   language, admission, and result boundaries.
+- [Feature design and assurance](docs/features/index.org) — implementation,
+  paper correspondence, proofs and acceptance grouped by feature.
 - [Research and proof audit](docs/scheme-research-proof-audit.org) — papers,
   code, formal results, and remaining obligations.
 - [Agent inference research](docs/research/agent-inference/index.org) —

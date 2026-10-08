@@ -1,0 +1,377 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+#+TITLE: Compiler Lowering: compiler
+
+Feature owner: [[file:../index.org][feature index]]. This page retains the original
+source dates and qualification boundaries. Current evidence is commit-specific.
+
+* Stated claim
+
+[[file:../../../packages/proofs/lean/LexicalLowering.lean][LexicalLowering]] supplies a typed expression calculus, lexical environments,
+a distinct relational IR, its interpreter and a logical relation between
+compiled values and source meanings. It proves lowering preservation for every
+well-typed expression in its source/parameter/function/apply/union/join/project/
+select/flatmap grammar. The target relational IR has no function or application
+node. Mathematical arrow values stand for compiler closures and capture their
+defining environment. They do not authorize runtime Scheme callbacks.
+
+The theorem is universally quantified over related environments and all
+realizing arguments, including function arguments and returned functions. It
+does not compare closure identities or choose a finite list of observed inputs.
+The row case establishes extensional equality of relation membership. This
+is a formal normalization theorem for the specified kernel, not yet a theorem
+that =program/higher-order.ss= implements it.
+
+The finite native discriminator enumerates all 16 pairs of subsets of ={0,1}=.
+One factory returns a closure over a captured input; that closure is reused for
+each argument. Its body combines union, keyed join, equality selection,
+projection and finite mapping. Expected rows are computed by direct membership:
+retain the captured set, adding 1 precisely when both inputs contain 0. The
+reference does not call the typed compiler or positive operator interpreter.
+Existing function-valued fix, escaped-binder, finite-domain and rollback Cases
+remain in the same native Suite.
+
+
+* Phase and branch correspondence
+
+| Scheme branch / phase | Mathematical artifact | Discharged statement | Concrete remaining obligation |
+|-----------------------+-----------------------+----------------------+-------------------------------|
+| =check-type!/check-term!= | Intrinsically typed =Expression= and scoped =Variable= | Ill-typed or escaped variables cannot be formed in the formal grammar | Prove admitted mutable descriptors translate to this grammar; revalidation, cycles, signature equality and malformed payload errors remain native code |
+| =source= | =Expression.source= → =RelationalIR.source= | Fixed source membership is preserved | Freeze/copy Gerbil row spines and encode scalar equality/domain membership; source-name collision checks belong to operator admission |
+| =parameter= / =assq= | =lookup= and =lookup_realizes= | A scoped parameter resolves to related values | Identity-based Scheme binders must translate to the same formal lexical index |
+| =function= / =typed-closure= | =lower.function= captures the supplied environment | Returned closures preserve the defining lexical scope | Concrete closure fields and environment spines must realize that capture; alpha-renaming/identity translation remains separate |
+| =apply-closure= / =apply= | Extend captured environment with argument; =lowering_preserves_meaning= | Beta application preserves meaning at relation and nested arrow types | Show actual =cons/assq= environment operations implement formal lookup and extension |
+| =union= | Separate source and IR constructors/interpreters | Complete union membership preserved | Native atom/rule emission and duplicate handling must realize IR semantics |
+| =join= | =join_tuple_encoding= | Pair-valued join equals concatenated finite tuple membership at both key columns | Prove Gerbil list layout/scalar encoding implements the finite tuple representation; planner indexes remain an execution proof obligation |
+| =project= | Column function in both calculi | Existential projected membership preserved | Admitted column list must translate to that function, including repeated/empty projections |
+| =select-eq= | Fixed selection predicate | Conjunctive filtered membership preserved | Scalar equality and column extraction must agree with the admitted domain encoding |
+| =flatmap= | Fixed finite mapping membership | Zero/one/many mapped membership preserved | Split mapping rows at input width and preserve set semantics/declared output domain |
+| Function-valued =fix= unroll | =bottom_realizes= and =unrolling_preserves_meaning= | Every finite iteration from pointwise bottom preserves meaning | Establish actual =bounded-height= sufficiency, saturation correctness and remaining-budget admission; relate to =FiniteHeight.bounded_bottom_least_fixed= |
+| Relation-valued =fix= feedback | =RecursiveLowering.feedback=, =lowering_preserves_meaning= and =lowered_feedback_is_least= | Positive scoped recursive IR preserves the least relation, including nested captures; completed accumulation equals that closure | Higher-order elimination to this relation-only grammar, descriptor identity to lexical indices, finite bound sufficiency and native delta-plan/rule refinement remain open |
+| Native =relational-op-compile= | Relational IR interpreter | Formal denotation specified | Named relation allocation, SCC/delta variants, tuple storage and emitted rules are not mechanically refined by this patch |
+
+
+* Descriptor preflight and owned row snapshots
+
+=program/operator.ss= now revalidates the entire exposed descriptor graph
+before compilation, fragment emission or reference interpretation. The DFS
+checks node kinds, child counts, natural arities, matching signatures, column
+indices, finite scalar source/mapping rows and transformer parameter/body
+signatures. A visiting node rejects a descriptor pointer cycle. Legitimate
+feedback is a finite body graph referring to a parameter node; it is not a
+pointer cycle. A shared checked node remains a valid DAG edge.
+
+After structural validation, the root must have no free parameters. This
+check precedes =free-parameters= recursion on an unvalidated graph and precedes
+rule emission. Validation snapshots source and mapping row spines; emission
+uses those owned snapshots, so later mutation through descriptor accessors
+cannot change the generated program's rows. Reference interpretation uses a
+fresh validated snapshot per call. This is a synchronous admission contract,
+not a claim of atomic snapshot acquisition under concurrent mutation.
+
+=packages/proofs/lean/DescriptorScope.lean= proves seven identity-scope laws.
+For finite acyclic descriptor unfoldings, all free identities being bound is
+equivalent to recursive lexical scope validity. Closed roots, binder capture,
+distinct identities, context extension and a shared child escaping its binder
+are covered. Natural keys denote descriptor identities, not source spelling.
+This abstraction models the dependency spine (other operator children combine
+free dependencies); it is not mechanized extraction of the complete native
+validator, row typing, DFS color table or descriptor-to-typed-IR translation.
+
+Native regressions mutate rows, inject an opaque procedure into selection,
+replace a child with an incompatible arity, create a graph pointer cycle and
+modify source/mapping rows after compilation. All relevant entry points must
+reject malformed graphs; a generated program must retain the original owned
+rows while a fresh reference observes the later valid descriptor values.
+The [[file:../../evidence/scheme-descriptor-scope-20261004/receipt.json][descriptor receipt]] binds the final source and qualification:
+four focused native modules passed 58 Cases with all MODULE/HARNESS/final OK
+markers and exit 0; eight Lean files, both lifecycle models and both expected
+faults passed. This is not a full native-suite rerun or a performance/model
+benefit claim.
+
+
+* Scoped recursive relation bridge
+
+=packages/proofs/lean/RecursiveLowering.lean= adds a relation-only compiler
+phase with separate =PositiveExpression= and =ScopedIR= syntaxes. Both have
+intrinsically scoped, row-typed variables and explicit =feedback= binders.
+Sources, union, heterogeneous join, projection, selection and frozen flatmap
+tables coexist with nested feedback. This phase follows lexical function
+elimination; it does not silently extend =LexicalLowering.Expression= with
+unproved general higher-order recursion.
+
+Fourteen proved statements establish environment monotonicity, monotonicity
+of each positive feedback body, lowering preservation for arbitrary captured
+environments, and least-fixed-point equality. Feedback denotes the
+intersection of all pre-fixed relations. =accumulating_least= proves that
+adding current rows to the body result leaves this least closure unchanged.
+=completed_iteration_is_least= establishes exact closure when an iteration
+from bottom is actually stationary. Exhausting an iteration or row budget is
+not this premise, and no termination/finite-height claim is smuggled into it.
+
+The native compiler now keys its memo first by descriptor identity, then by
+the relation handles of every free parameter. Closed nodes use the empty
+binding list. Every free parameter is resolved before cache lookup, so an
+escaped child remains an error even after it was compiled in a valid scope.
+The same open subgraph under the same bindings shares a compiled instance;
+different transformer inputs or outer fixed-point bindings remain distinct.
+This ownership applies to fix, apply and ordinary emission paths.
+
+Native regressions independently enumerate closure rows and inspect emitted
+structure: a shared recursive mapping produces one private mapping source,
+while duplicated consumers remain present. Two separately constructed
+applications to the same source share a pipeline; applications to different
+sources retain separate pipelines and results. Existing nested fixed-point,
+escaped-parameter, source-withdrawal and fragment cases remain acceptance gates.
+This is structural reuse evidence, not a runtime speedup measurement.
+
+The [[file:../../evidence/scheme-recursive-lowering-20261004/receipt.json][recursive receipt]] binds source, proofs and native qualification.
+The formal model does not mechanize hash-table cache correctness, descriptor
+identity translation, generated rules or native semi-naive execution. These
+implementation refinement obligations remain explicit. No TLA protocol or
+Generation limit changes in this slice; its existing lifecycle models still
+run through the common formal gate. On the bound source, four focused native
+modules passed 55 Cases, with all four MODULE/HARNESS/final OK markers and exit
+0. Seven Lean files, both normal lifecycle models and both expected faults
+passed. No full native-suite rerun or new timing distribution is claimed here.
+
+
+* Acceptance and next refinement
+
+The [[file:../../evidence/scheme-lexical-lowering-20261004/receipt.json][receipt]] binds the checked proof files, source patch, native artifact and
+structured formal/build/qualification outcomes. Execution logs are excluded
+under the [[file:../../evidence/README.org][publication policy]]. All current Lean files run through the
+existing proof gate and GitHub =formal= job. Native admission remains under the
+1G heap, five-second output progress and 120-second module bounds. Compilation
+uses the authorized activity gate without a total 180-second deadline.
+
+On this frozen native source, all 13 Suites / 139 Cases passed with exit 0,
+including all 16 new finite input pairs; the activity-supervised build completed
+in 128.052 seconds. Five Lean files and both normal TLA models passed, and both
+intentional publication faults produced the expected counterexamples. These
+results are recorded directly in the structured receipt, without process logs.
+
+The preceding GitHub head =aa07037= has a separate failed benefit gate: after
+the solve-only arm, group 0 raised =Stack overflow= in =##structure-instance-of?=
+before fresh-update completion (exit 70). Both Rust oracle jobs and formal
+passed. This is not a successful benefit measurement or an exact-head CI pass
+for this new slice. The candidate self-field recursion was subsequently corrected and the
+three-arm gate qualified in the [[file:../../scheme-retained-benefit.org][fresh-update receipt]]; this historical failure
+stays explicit in its original receipt.
+
+The next compiler proof slice is concrete descriptor/binder translation and
+finite signature enumeration/cardinality and height sufficiency. The scoped
+relation feedback and saturation arithmetic sub-obligations above are proved. After it, descriptor admission
+and lexical-identity translation must establish that an accepted Scheme graph
+is a well-typed expression of the proved calculus. Only then can the abstract
+normalization theorem qualify the actual compiler's accepted grammar.
+Native differential qualification, implementation refinement, performance and
+real-model comprehension remain separate gates in the [[file:../../scheme-research-proof-audit.org][research plan]]. No provider
+call or new model accuracy/benefit claim belongs to this compiler-proof slice.
+
+The descriptor receipt also records rebase onto =a093838= (binary kernel
+separation and coding-style documentation). The rebuilt source-bound artifact
+passed the same four native modules and all 58 Cases. Proof source hashes are
+unchanged from the successful formal gate. This is focused qualification,
+not a claim that all native modules or model experiments were rerun.
+
+
+
+* Finite signature interpretation and typed admission snapshots
+
+F16 §5.3 Lemma 4 requires monotonicity, a least element and finite height.
+The new =FiniteHeight.FiniteShape= development instantiates these premises
+with nested finite pointwise tables. =indexed_rank_bounded=, =indexed_rank_mono= and =indexed_rank_strict= sum over every input index;
+=rank_bounded=, =rank_mono=, =rank_strict= and =bottom_least= extend those laws
+through nested tables. =full_height_least_fixed= proves full-height unrolling
+is stationary and below every fixed point, assuming the step is monotone.
+
+=enumerateTables= lists all finite tables, with both length and completeness
+proved. Tuple enumeration has length =d^a=, including one empty tuple when
+=a= is zero; an empty atom domain and positive arity has no tuples. Complete
+nested-value enumeration has length =cardinality= and covers every value.
+=arrow_encoding_injective= encodes a semantic function over all input values,
+not observed arguments; equality of complete tables reflects function equality.
+The enumeration is a proof construction, not a production allocation policy.
+
+=FiniteSignature= mirrors the exact native formulas: relation cardinality
+=2^(d^a)= / height =d^a=, arrow cardinality =card(B)^card(A)= / height
+=card(A)*height(B)=. =shape_cardinality= and =shape_height= establish formula
+correspondence, and =signature_height_least_fixed= proves height sufficiency
+for the exhaustively represented signature semantics. Full function spaces
+supply conservative bounds for admitted monotone inhabitants. The step's
+monotonicity remains a premise; constructing a native type is not its proof.
+
+The native compiler already had a scoped recursive validator. It now returns
+owned canonical types and typed-term graphs and lowers that returned graph.
+Domain duplicates are removed by the same finite relation type constructor;
+source/mapping rows, vectors, projection lists and child lists are reconstructed.
+The binder itself is checked even when unused in its body. A global descriptor
+copy table preserves binder/node identity; scoped validation still checks every
+term occurrence and its current bindings before returning a cached copy.
+Snapshot acquisition is synchronous; concurrent mutation atomicity is not claimed.
+
+Public =relational-type-height-expression= uses the same type shape/cycle/depth
+admission. Per-invocation cardinality/height caches reuse validated type identity;
+they hold no callback or cross-invocation state. Production capped arithmetic
+and the independent actual normalization work counter remain in effect. A
+resource rejection is not a theorem of semantic nontermination.
+
+Native discriminators enumerate nine tiny signatures (0/1/2 atoms and 0/1/2
+columns), check relation/arrow height against independently generated tuples
+and subsets, analyze a 24-layer shared type graph, reject opaque/cyclic domains
+and typed graph cycles/out-of-domain maps, and mutate domains/source/mapping
+rows after compilation to check program ownership. Existing exact expansion
+boundaries and lexical/nested fixed-point controls remain required.
+
+Remaining bridge: native scalar equality and deduplication to =Fin= atom codes;
+row lists to tuples; native descriptors and captured environments to the typed
+signature/term semantics; actual lowering-step monotonicity and memo/rule/delta
+execution correspondence. These obligations cannot be discharged by the new
+height theorem or by finite native test samples alone.
+
+
+The [[file:../../evidence/scheme-finite-signature-20261004/receipt.json][finite-signature receipt]] binds the source patch and qualified artifact.
+Five native modules passed 90 Cases (including dynamically expanded model-task
+cases), with five MODULE/HARNESS/final OK markers and exit 0. Eight Lean files,
+both TLA models and both expected faults passed; the proof slice adds 20
+theorems. Three failed development builds and one rejected native artifact
+(eight CASE errors, exit 1, no final OK) remain excluded and recorded.
+Qualification binds =50c79d4= plus the published patch; subsequent certificate
+and table refactors are preserved by rebase and require exact integrated-head
+CI. No log files, model calls, performance claim or whole-repository closure
+claim belong to this receipt.
+
+
+* Scalar and row representation slice
+
+=Ascent.RowRepresentation= in =FiniteHeight.lean= now gives an explicit list-row model:
+=admitted= checks exact row length and domain membership; =tuples= enumerates
+the list universe, and =encode= maps row membership to the existing Boolean
+table of width =domain.length ^ arity=. The model's scalar constructors are
+exact integers, Booleans, symbol identities and characters, matching the
+categories admitted by =program/scheme-checked.ss=. Symbol identity is abstract;
+it is not the symbol's displayed text.
+
+The proved laws cover tuple enumeration length and admission completeness,
+domain deduplication/reordering, extensional encoding, duplicate row elimination,
+union, empty relations, nullary rows, empty positive-arity domains and relation
+rank/height correspondence. Inclusion preserves rank; adding a genuinely new
+admitted row strictly increases it. Duplicates cannot witness strict progress.
+=admitted_encoding_faithful= requires every input
+row to be admitted. An unchecked encoding observes only the declared universe;
+it must never become a runtime mechanism for silently dropping invalid rows.
+
+Native qualification adds six Cases: distinct mixed scalar categories with
+duplicate domains/rows, rejection of inexact/mutable/opaque values, two fresh
+symbols with the same printed name, empty/nullary relation outcomes, and source
+occurrence/materialization budget boundaries, and retained source-only updates
+with immutable prior results.
+These exercise actual Gerbil membership, domain hashing, lowering and solve.
+All expected complete rows are Scheme data, independent of the compiler.
+
+The first native run exposed a concrete boundary mismatch: source initialization
+deliberately retains duplicate occurrences, but typed compilation returned a
+bare source as its set-valued result. Mixed duplicate rows returned eight rows
+instead of four; two empty tuples returned two instead of one. That artifact
+failed qualification (exit 1, no final OK) and is excluded.
+
+=program/higher-order.ss= now wraps a lowered source root in an identity
+projection, so the returned typed output handle names a derived set relation.
+Source handles, occurrence rows and source budgets retain their meaning. This
+also covers a parameter application or function bottom that lowers to a source.
+Existing computed roots already produce derived set relations. Callers use the
+returned output handle; it need not equal a source's name. The materialized
+output consumes derived/output budget, and the new budget Case requires that
+cost rather than hiding it. No performance gain follows from this repair.
+
+The first integrated qualification then exposed the named Session constructor's
+all-relations-as-sources restriction. The new derived output correctly was not
+a source handle, so two existing retained Cases failed. Named Sessions now
+retain the snapshot's declared source arities, just as fragment Sessions do;
+all checked append/replacement/transaction paths use that whitelist. Derived
+relations remain queryable and cannot be updated through their output handles.
+The added retained Case checks rejected helper mutations, source insertion and
+replacement, duplicate occurrence observations, set output and a frozen old
+result. This constructor repair does not grant helper mutation authority.
+
+The mathematical =eraseDups= uses lawful decidable equality. Its equivalence
+to Gerbil's =delete-duplicates/hash= and table hashing is not a mechanized
+toolchain theorem. The native Cases discriminate that boundary on concrete
+inputs. A total native scalar decoder, full runtime equality/hash correspondence,
+descriptor/capture interpretation and actual compiler-step preservation remain
+open. This slice establishes the row interpretation laws required by those
+later refinements, without certifying arbitrary Scheme objects or callbacks.
+
+The next descriptor/rule bridge must also distinguish typed term domains from
+compiled schema envelopes: derived relations currently use the collected scalar
+pool, while original sources retain their specific domains. The existing domain
+order Case records that pooled envelope. A rule-preservation proof must show
+which produced rows inhabit each term's own type; merely passing the broader
+compiled field predicate is insufficient. Checked retained updates use the
+source-handle whitelist; direct use of the generic native engine is outside
+that typed authority boundary.
+
+The compiler also declares mapping/selection tables as source inputs. The
+whitelist enforces declared mutation authority, rather than proving arbitrary
+changes to those tables preserve the original typed term. Their per-column
+domains and mutation contract belong to the remaining term/rule refinement.
+
+The [[file:../../evidence/scheme-row-representation-20261004/receipt.json][row-representation receipt]] qualifies =fa521d4=, reconstructed from
+=3abb8bc= plus the published source patch. Six native modules pass 109 Cases,
+with six MODULE/HARNESS/final OK markers and exit 0. Eight Lean files, both
+normal TLA models and both expected faults pass; 16 row representation theorems
+were added. Native source and binary hashes match before and after qualification.
+One compiler subprocess-capacity failure is excluded; the successful build used
+two workers with the original progress and module budgets. Both rejected native
+artifacts and the superseded cancelled build stay excluded in the record. No
+logs, model calls or runtime performance claim are published by this slice.
+
+After the checked runtime was split into lifecycle owners, the repair moved
+into [[file:../../../program/scheme-session.ss][scheme-session]] and the [[file:../../../program/scheme-query.ss][query owner]] documents the same authority boundary.
+The [[file:../../evidence/scheme-row-lifecycle-20261005/receipt.json][lifecycle integration receipt]] independently qualifies =84ba4ac= on source
+base =6d407ea=: 365 bound input hashes (including three build-control files), a freshly built native artifact and
+the same 109 Cases across six modules, with complete success markers and exit 0.
+The eight Lean files and TLA models are unchanged from the fully checked parent
+snapshot; GitHub =formal= also succeeded for =84ba4ac=. Later documentation-only
+changes do not expand this receipt's runtime scope. The earlier source patch
+and all excluded attempts retain their historical boundary.
+
+
+* Stored head and finite key correspondence (2026-10-06)
+
+=PositiveSlots.compileHead= lowers the admitted literal/bound head grammar.
+=compiled_head_vector_refines= equates reading those stored actions with
+sequencing ordinary finite-vector observations, preserving order, repeated
+terms and literal false. Unbound variables and wildcard heads are outside this
+grammar. =readHeadVector= separates missing cells and body-only fresh actions
+from successful output; this model refusal is not a new native decoder.
+=compiled_head_binding_refines= composes that stored reader directly with
+ordinary declared-head observations under the represented environment.
+
+=IndexedPositiveTraversal.compiled_vector_key_refines= transports the actual
+selected compiled actions to finite vectors. Compiler-derived slot bounds and
+=VectorRep= provide the read correspondence. The existing =KnownColumns=
+premise remains essential: key evaluation precedes candidate matching, so a
+fresh variable cannot be admitted merely because its dirty cell is readable.
+Columns retain their declared order and multiplicity, including an empty key.
+
+The existing native positive-plan suite now inspects actual compiler-produced
+vectors and tagged action pairs. Six ordered column layouts cover empty,
+singleton, repeated, increasing, decreasing and mixed selections. It checks
+the dense extent, distinct body/head action roles, immutable duplicated heads,
+the purity flag, false-valued keys and complete ordered emissions over two
+dirty-frame traversals. The ordinary association-list key reader supplies
+independent key truth. An unbound head variable makes direct compilation
+unsupported. Wildcard head rejection belongs to source admission: the private
+compiler assumes admitted descriptors and does not validate that contract.
+
+Lean executable controls and axiom reports stay under =Tests/=; they include
+the inadmissible fresh-key counterexample and missing head cells. The
+[[file:../../evidence/scheme-stored-actions-20261006/receipt.json][stored-action receipt]] separates universal model laws from native finite
+representation checks. Actual Scheme scalar/equality/hash interpretation,
+symbol identity mapping, universal descriptor decoding, callback refinement
+and native Provider/completed-component correspondence remain open bridges.
+TLA+ retains lifecycle/publication ownership. This adds no runtime validator,
+performance claim, model call or MR integration.
+

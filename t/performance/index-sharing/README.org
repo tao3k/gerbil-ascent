@@ -136,6 +136,6 @@ reference in these measurements. Small/scalar/empty allocation indicators
 increase and are retained. These counters do not establish physical memory
 savings, peak RSS or complete application speedup. The earlier measurement
 table above remains historical. See
-[[file:../../../docs/evidence/scheme-curried-collection-20261008/receipt.json][the source-bound receipt]] for the current source, all numerical pair records and
+[[file:../../../docs/features/shared-indexes/qualification.org::*Curried collection qualification][feature qualification]] for the current source, all numerical pair records and
 the initial cache-lease refusal before sampling. Running the shared-cache
 benchmark after native qualification passed without changing the lock deadline.

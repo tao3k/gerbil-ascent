@@ -1,0 +1,53 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+#+TITLE: Assurance: design
+
+Feature owner: [[file:../index.org][feature index]]. This page retains the original
+source dates and qualification boundaries. Current evidence is commit-specific.
+
+* Active endpoint and finite-round refinement (2026-10-07)
+
+BYODS Section 3 defines concretization as the visible tuple set. Latent UF
+reach is not that set: =ufVisible= requires both endpoints to be active. The
+previous =component_plan_reach_uniform= therefore left an activation obligation.
+=component_active_iff= derives activation homogeneity from supported reach and
+SCC ownership, including inactive singleton components. =component_plan_uf_uniform=
+and =component_uf_selected_exact= then derive the public frontier selection law
+without an independent Uniform premise. Candidate encoding and native SCC
+extraction remain explicit; no native parent-map refinement is assumed. Lean
+now checks 27 rectangle laws and 16 examples, with a complete 90-job build.
+The inactive singleton and unsupported mixed-activation examples distinguish
+latent reach from public membership; these are specification discriminators,
+not newly observed Scheme failures.
+
+=ReaderLifetime.RoundSpec= isolates a sealed finite task cohort. Tasks are
+admitted once; completion removes a task and no action adds it back. Under
+weak fairness of aggregate completion, both individual release and eventual
+empty ownership pass TLC. This qualifies the earlier reusable-reader result:
+aggregate fairness can starve a reader when another slot is repeatedly borrowed,
+but is sufficient for this finite decreasing cohort. =Readers= denotes task
+identities in this control, not reusable worker slots. The native coordinator
+accepts a finite task list and joins assigned work before return; its admission,
+credit, worker mapping and callback termination are not extracted by this model.
+Publication during a read is an overapproximation of the native drain boundary.
+Removing fairness deliberately violates completion. There is no generation
+ceiling, state constraint, new runtime integration or measured cost claim.
+
+The ordered export audit found existing native differential coverage for frozen
+source, append and derived journals in =ascent-relation-view-test.ss=. The journal
+is a presentation history: source batches and derived batches have different
+orientation in =view-export-cut=. BYODS set concretization and these new laws do
+not prove that order. A deterministic injection replay/ordering refinement is
+still required; the injection journal is not the authoritative recovery log.
+
+| Obligation | Evidence and status |
+| Public UF homogeneity | Derived Lean law including active endpoints |
+| Fresh compressed delta | Derived selection law conditional on candidate encoding |
+| Unique logical count | Existing member/root-pair uniqueness and separation laws |
+| Finite round completion | New bounded TLA control; aggregate fairness required |
+| Reusable reader completion | Existing per-reader fairness model and starvation control |
+| Native decoding and scheduler correspondence | Explicit implementation refinement obligation |
+| Ordered journal replay | Existing native differential checks; general order proof open |
+
+See [[file:../../evidence/scheme-provider-views-20261007/active-support-refinement.json][the source-bound formal receipt]].
+

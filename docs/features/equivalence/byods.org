@@ -1,0 +1,69 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+#+TITLE: Equivalence: byods
+
+Feature owner: [[file:../index.org][feature index]]. This page retains the original
+source dates and qualification boundaries. Current evidence is commit-specific.
+
+* eqrel frontier instance follow-up (2026-10-06)
+
+The primary text was reread at sections 3.1 and 3.3. The active-domain eqrel
+instance now has Lean least-insertion and finite-history laws, reusable state
+invariants, group isolation and exact emitted/total decomposition. The
+[[file:../../evidence/scheme-eqrel-frontier-20261006/receipt.json][source-bound receipt]] records native independent Floyd per-batch qualification,
+budget rejection/retry and non-singleton merges. This closes this algebraic
+instance; it does not close arbitrary Provider contracts or universal hash /
+component representation extraction. Section 5.1's asymptotic and measured
+benefits are retained as paper results, not attributed to this Scheme change.
+
+
+
+* Equivalence components now reach canonical engine views (2026-10-07)
+
+B23 §5.1 (PDF p. 13) contrasts explicit K-squared pair storage with component
+membership storage. The previous native =eqrel= kernel already merged weighted
+components, but emitted every pair into the engine's ordinary row buffers.
+This representation gap prevented the library from obtaining the paper's
+space benefit. =table/eqrel.ss= now constructs at most four disjoint frontier
+rectangles: fresh diagonals and both directions between distinct components.
+The total cut contains one square descriptor per equivalence component.
+
+Canonical =eqrel= with the canonical hash index now follows the existing
+frozen-view engine path. Source admission, derived rounds, keyed reads, counts
+and actor worker reads use these representations; only the coordinator mutates
+components. Public explicit row export remains an intentional materialization
+boundary. Its injection journal retains the original interleaved symmetric
+order, including grouped relations and source/derived round conventions.
+Derived/custom receivers keep checked dispatch and do not inherit canonical
+capability merely by sharing methods. Failed engine owners require source
+replay; standalone kernel budget rejection occurs before any mutation.
+
+Logical budgets count diagonals plus twice the product of distinct component
+sizes. Descriptor count never substitutes for that number. Frozen member spines
+survive later weighted merges without changing earlier cuts. Width and group
+both participate in the private node key, including the real group value =#f=.
+
+=ProviderRectangles.equivalence_blocks_exact= derives concrete descriptor
+membership from the component-member extraction premises and the existing
+=EquivalenceComponents.emitted_exact= law. Additional laws bind the exact preflight arithmetic, expansion
+budget and the four-descriptor bound. These remain conditional native
+representation bridges, not a verified Scheme compiler. Existing TLA+
+=ProviderViews= owns atomic publication, logical admission, frozen reads,
+cancel/drain and stale reply rejection; no redundant Lean protocol is added.
+Native acceptance includes every three-node graph subset in both orders,
+refused admission/retry, old frozen cuts, grouped keyed reads and a thousand-node
+component representing one million logical pairs with one total descriptor.
+
+This change enables application qualification; it does not itself establish
+full OpenJDK output equality, peak memory, universal speedup or all BYODS
+application closure. Explicit full export still requires space proportional to
+the number of returned pairs. Completed-closure reuse admission is unchanged.
+
+The [[file:../../evidence/scheme-eqrel-views-20261007/receipt.json][source-bound receipt]] records the full native and formal gates plus
+supplementary compiled-engine and worker probes. The small application control
+is explicit equivalence rules versus the current implicit provider, not the
+previous implicit implementation. All twelve alternating pairs and six
+explicit worker pairs are retained, including a CPU regression. Allocation is
+reported only for the serial arm; wall samples occurred within the four-process
+suite and are not promoted to a general wall-time gain.
+

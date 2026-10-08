@@ -1,0 +1,30 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+#+TITLE: Actor Scheduling: compiler
+
+Feature owner: [[file:../index.org][feature index]]. This page retains the original
+source dates and qualification boundaries. Current evidence is commit-specific.
+
+* SCC scheduling boundary for indexed history
+
+=IndexedIteration= proves synchronous indexed batch/history correspondence.
+The existing =ReadyComponents= TLA+ model now captures successor snapshots and
+predecessor batch/tail merge ordering. =program/positive-components.ss= captures
+private root/size vectors only after predecessor task completion, which follows
+owner merge credit and terminal-tail merging in =actor-round.ss=. Whole-pool
+worker/monitor joins happen at run exit; they do not gate each successor.
+The [[file:../../evidence/scheme-dependency-snapshot-20261006/receipt.json][receipt]] records a native 32+1-row rendezvous and discriminating protocol
+faults. This supplies a checked scheduling premise; native grounding, SCC projection
+and trace extraction still require refinement.
+
+
+* Selected activation fixture correspondence correction (2026-10-06)
+
+The full Scheme CI at =4ac16d4= exposed a stale metadata fixture: it supplied
+four positive-plan fields, while the compiled plan owner requires the fifth
+atom-extent field. Head projection then failed reading index four. The empty
+body fixture now supplies extent zero; its native mask controls additionally
+check that selected projections preserve purity and extent. No runtime
+compatibility branch, weakened admission check or enlarged test deadline was
+introduced. The corrected selected-activation suite passes independently;
+the [[file:../../evidence/scheme-selected-activation-layout-20261006/receipt.json][receipt]] retains the original failed run and qualified source identity.

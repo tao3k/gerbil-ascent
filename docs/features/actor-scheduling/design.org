@@ -1,0 +1,76 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+#+TITLE: Actor Scheduling: design
+
+Feature owner: [[file:../index.org][feature index]]. This page retains the original
+source dates and qualification boundaries. Current evidence is commit-specific.
+
+* BYODS component selection and reader completion (2026-10-07)
+
+** Research question and algebraic repair
+
+B23 section 3.2 requires newly implied facts to traverse the delta observation;
+Theorem 3.5 relies on that history condition. The previous rectangle theorem
+transported an =Exact= frontier premise. The follow-up now derives it from
+=DirectedFrontier.uf_emitted_exact=, candidate encoding and component homogeneity.
+
+=ProviderRectangles.Uniform= states that old membership is constant throughout
+one rectangle. =component_uniform= derives this from constant left/right roots
+and a relation interpreted through the ordered root pair. =selected_member=
+proves that rejecting entirely old component rectangles leaves precisely the
+fresh candidates; =uf_selected_exact= connects that selection to UF insertion
+without assuming =Exact=. =selected_nodup= preserves uniqueness under unique
+member lists and pairwise disjoint rectangles. Together with =count_exact= this
+retains unique-fact budget meaning; membership alone still does not prove it.
+
+The new negative example uses =[0,1] x [2,3]= with only =(0,2)= old. Rejecting
+this mixed rectangle loses fresh =(0,3)=. Therefore generic custom Providers
+cannot use whole-rectangle rejection without proving homogeneity. This is a
+counterexample to a proposed optimization, not an observed native UF failure.
+Native UF selects missing ordered root pairs before mutation and emits new
+node diagonals separately. The abstract candidate encoding, active-node handling,
+root equality, component partition and Scheme row decoding remain explicit
+implementation obligations. No theorem extracts the mutable SCC implementation.
+
+** Temporal repair and independent liveness model
+
+The earlier =ProviderViews= specification allowed a reader to become stale;
+its reply was disabled, but releasing it depended on an external cancellation.
+Safety invariants did not require eventual completion. Add =Discard= to release
+stale credit without accepting the old rows. This is the protocol requirement
+for future engine-view integration; it is not a claim that the current actor
+runtime already transports compressed views.
+
+=ReaderLifetime= is a separate finite compatibility abstraction. Its =current=
+bit becomes false on every publication while a reader is active, and only a
+new borrow resets it. Equal row sets after replacement never restore validity
+(ABA). It models publication, borrow, cancel, drain, current reply and stale
+discard. It has no numeric generation and no state/action exploration constraint.
+Under explicit weak fairness of the combined =Finish= action, it checks
+=reading ~> ~reading=. This assumes the completion worker continues to execute;
+it does not prove scheduler fairness, host callback termination or a deadline.
+
+Two deliberately faulty designs must fail: =stuck= removes stale discard and
+=unfair= removes completion fairness. Both require TLC exit 13 and a temporal
+violation, rather than accepting any nonzero exit. The original five safety
+faults still require exit 12 and the corresponding invariant name. Lean owns
+relation algebra; TLA+ owns reader lifetime and publication protocol.
+
+** Acceptance and scope
+
+The complete Lean collection passes 90 build jobs; the rectangle module now has
+16 checked laws and its Tests module has 12 examples, including the mixed-old
+rectangle counterexample. Axiom reports use only the standard Lean axioms.
+=ProviderViews= passes 55,197 distinct states (197,536 generated) at enumeration
+bound 4. =ReaderLifetime= passes all 315 distinct states (2,577 generated),
+including temporal checking, without a generation constraint. Seven seeded
+faults are detected: five safety and two liveness faults.
+
+An initial liveness experiment reused the generation constraint and was rejected
+as acceptance evidence because it constrained temporal exploration. The accepted
+compatibility abstraction avoids that constraint. Tool startup and Lean test
+elaboration failures were repaired and never counted as design counterexamples.
+The mapping is =current <=> captured revision equals published revision= during
+an active reader; this correspondence is documented, not machine-checked source
+refinement. Multi-reader credits, whole-engine compression, exact legacy export
+order and measured retention/allocation benefits remain integration gates.

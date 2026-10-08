@@ -1,0 +1,135 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+#+TITLE: Compiler Lowering: proofs
+
+Feature owner: [[file:../index.org][feature index]]. This page retains the original
+source dates and qualification boundaries. Current evidence is commit-specific.
+
+* Compiler dependency-layer implementation (2026-10-06)
+
+The existing Scheme test coordinator now compiles production, reference/support
+and Suite dependency layers in fresh compiler processes. std/make still owns
+ordering, currentness and parallel compilation within each layer. A single
+package lane protects shared outputs; compiler children never reacquire it.
+All 299 selected modules remain covered across layers of 75, 142 and 82.
+The original 1 GiB Scheme heap contract and five-second module progress limits
+remain unchanged.
+
+The [[file:../../evidence/scheme-compilation-layers-20261006/receipt.json][source-bound receipt]] records 82 native modules, 710 CASE-OK, 82 explicit OK
+and parent exit zero, plus invalid-specification and missing-module refusal
+controls. The first layered run exposed stale three-field activation fixture
+metadata; references now retain the actual compiler purity field without changing
+the comparison algorithms. Its failed result remains recorded. Remote final-head
+CI must separately qualify this implementation. This addresses the concrete
+build blocker and full native gate of milestone 0; remaining milestones and
+model/application benefit claims retain their stated obligations.
+
+
+* Connected compiler representation closure (2026-10-06)
+
+The finite-vector traversal package is now followed by stored head and key
+correspondence in the existing proof owners. This continues the A22/B23
+compiler/index sequence: ordinary binding, dense action lowering, finite dirty
+traversal, declared head reads and selected prior-prefix keys. The new key law
+keeps =KnownColumns= explicit, preserving the distinction between an available
+cell and a logically bound variable. S20 function/argument change translation
+is still a separate transfer argument; these Set/slot laws do not supply it.
+
+The native positive-plan discriminator checks actual compiled tagged pairs and
+vectors against independent expected actions and ordinary association-list
+keys. It retains head order, duplicates, false values, dirty frame reuse and
+the unbound-head unsupported result. All Lean examples and axiom reports remain
+in =Tests/=. No TLA+ matching/vector algebra is added: existing protocol models
+retain scheduling, cancellation, ownership and publication responsibilities.
+See the [[file:../../scheme-compiler-proof-bridge.org][compiler bridge]] and [[file:../../evidence/scheme-stored-actions-20261006/receipt.json][source-bound receipt]].
+
+The remaining connected gate is universal native descriptor/scalar/name
+interpretation, then concrete Provider frontier and completed component
+least-model correspondence. Native finite probes qualify representation
+examples; they are not the universal extraction theorem. Callback/host closure
+refinement, typed change algebra and measured application benefit remain
+distinct obligations. MR is a future consumer of the accepted library.
+
+
+* A22 native correspondence: checked delta ordinals and one projection owner
+
+This Scheme implementation slice starts from PR #1 revision
+=0c042d4a014fd7251dae95eb63b736d8f6c298d1=. It follows the admitted compiler
+correspondence obligation above. Theorem construction remains a separate owner;
+this slice changes no Lean or TLA+ source.
+
+The compiled positive runner previously accepted any delta selector. A selector
+outside the relation-atom ordinals matched no lookup and silently performed a
+total traversal. That could hide a scheduler/lowering mismatch while producing
+plausible rows. =core/positive-plan.ss= now records the relation atom extent
+when lowering actions. Callback segments do not consume relation ordinals.
+Execution admits only the total selector =-1= or an exact integer in
+=[0, atom-extent)=, before callbacks, row lookup, checkpoint or frame mutation.
+Empty-body facts have no delta ordinal and retain their total traversal.
+The metadata count is computed once during compilation; execution checks it
+without rescanning actions.
+
+Native execution exposed another representation gap: SCC head projection in
+=program/component-plan.ss= reconstructed an independent four-field vector,
+while source-update projection in =program/update-selection.ss= had its own
+copy. The first SCC native attempt consequently rejected the missing extent.
+Both now call =gerbil-ascent-positive-plan-with-outputs=, owned by the compiler.
+Projection replaces only ordered emissions and shares action identity, frame
+extent, purity and atom extent. Engine/worker frames remain privately allocated.
+This centralizes the compiled representation boundary across ordinary execution,
+SCC ownership and partial-head source updates.
+
+The native positive-plan Suite passes 26 Cases after rebasing the parallel
+stored-actions theorem revision =cdf5dd8=. The added discriminator checks
+invalid selectors before side effects, total/first/second atom selection across
+callback segments, exact ordered duplicate/multiple-head emissions against an
+independent binding interpreter, and nullary empty-body facts. Existing corpus
+checks exercise repeated variables, dirty frames, indexed lookups, callbacks,
+source updates, partial heads and concurrent engines. The SCC Suite passes 21
+Cases, including actual workers, recursive diamonds, projected heads, complete
+terminal dependency snapshots, global budgets and failure drain. Commands exit
+0 with MODULE-OK, HARNESS-OK and explicit final OK using the repository's
+isolated Gerbil SDK; the default host prefix initially lacked building-api.
+
+[[file:../../evidence/scheme-delta-selector-20261006/receipt.json][The source-bound receipt]] qualifies this native contract and its consumers.
+It does not prove universal native compiler refinement, whole-framework paper
+replication or a performance improvement. Those audit gaps remain as stated;
+this supplies the executable selector/projection invariant for the separate
+semantic correspondence work.
+
+
+* Native key lowering checks the prior binding prefix (2026-10-06)
+
+B23 lookup keys are evaluated before the current atom's candidate matching.
+The stored-action correspondence above keeps KnownColumns explicit; a cell
+existing in a frame does not mean its logical variable was bound in the prior
+prefix. =core/positive-plan.ss= now enforces that distinction during lowering.
+It records the slot extent before each atom, checks selected columns are proper
+lists of exact in-range positions, and admits keys only for literals, previously
+bound slots or expressions whose dependencies all lie in that earlier extent.
+
+A repeated variable in one atom illustrates the gap: its second occurrence is
+lowered as bound for matching, but both occurrences belong to a newly assigned
+row slot. Neither may be an index key before matching that row. Wildcards and
+fresh slots are likewise not keys. Malformed key metadata returns unsupported
+instead of producing a compiled action that can observe stale frame cells.
+This is the compiler's optimized-plan boundary, not a replacement for whole
+program admission or a new general-interpreter guarantee for forged metadata.
+
+Legal prefix variables, literal false values, repeated selected columns and
+prefix-dependent expression keys preserve their existing ordered evaluation.
+Compilation executes no key expression. The native positive-plan Suite passes
+27 Cases; the new discriminator checks the same-atom repeated-variable hole,
+row-local expression dependencies, wildcard keys, negative/out-of-range/nonexact
+columns and improper lists. It also checks a valid expression key against a
+dirty frame without modifying the unrelated cell. An old wide projection test
+was corrected: selecting fresh and wildcard columns is shape-correct selection
+but invalid pre-match lookup metadata. Its wide literal-key and actual wide
+composite-join controls remain. The first failed test is retained in the receipt.
+
+The actual SCC native Suite passes 21 Cases. Both final commands exit 0 with
+MODULE-OK, HARNESS-OK and explicit final OK under the isolated SDK. The
+[[file:../../evidence/scheme-key-prefix-20261006/receipt.json][source-bound receipt]] records this Scheme slice. No Lean/TLA source is changed;
+universal descriptor extraction and Provider correspondence remain their
+separate obligations. No CPU, allocation or whole-framework speedup is claimed.
+

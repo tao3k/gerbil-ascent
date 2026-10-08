@@ -1,0 +1,68 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+#+TITLE: Bitmap Lattices: acceptance
+
+Feature owner: [[file:../index.org][feature index]]. This page retains the original
+source dates and qualification boundaries. Current evidence is commit-specific.
+
+* Immutable mask lattices in ordinary Program and Session
+
+=applications/finite-flow-program.ss= implements finite may propagation with
+ordinary Program relations and a keyed lattice =(Point, Mask)=. Masks are
+immutable nonnegative Scheme integers below =2^width=; join is bitwise OR.
+Seed and blocker source rows contain masks rather than one row per decoded
+fact. CFG endpoints and all mask fields are checked against the fixed domain.
+The supported mutable sources are =flow_seed=, =flow_edge= and =flow_block=;
+=flow_point= is the construction-time domain, and =flow_blocked= and
+=flow_state= are implementation-owned derived relations. Changing the domain
+requires construction of another Program.
+
+Blocker masks at a point are aggregated by OR, including an empty-group zero.
+This aggregate is a strict dependency before propagation. Seeds remain admitted
+at their own points even when blocked there. Successor propagation computes
+=incoming AND NOT blocked= and joins it into the target mask. This prevents
+multiple blocker source rows from accidentally permitting each other's killed
+facts. Adding blockers is antitone and must withdraw previous derived facts.
+The existing opaque-procedure Session path performs replay from accepted
+sources on updates; this integration does not claim affected-only incremental
+reuse. Opaque lattice callbacks also retain ordered evaluation, rather than
+claiming parallel actor admission from a requested worker count.
+
+=gerbil-ascent-freeze-finite-masks= validates an immutable lattice cut and
+publishes its exact binary gamma relation through the existing FrozenView API.
+It rejects duplicate points, negative or out-of-width masks, and logical
+cardinality exceeding the publication budget. Fresh private byte roots retain
+no expanded tuple journal. Program budgets charge packed rows; the gamma
+publication budget charges decoded logical facts. These are separate admission
+units and must not be substituted for each other. Mask ordinals correspond to
+the supplied ordered fact domain; callers must retain that domain identity.
+No canonical UF provider identity is granted and the UF replay journal is not
+used. Selected rows and parts preserve the existing frozen view contract.
+
+The native tests compose the previous independently checked worklist with
+all 256 two-point controls, exercise duplicate blocker append, blocker and seed
+replacement, invalid source admission, old cuts, timed partial runs and retry,
+and cross the fixnum boundary with 65-bit masks and false-valued domains.
+A dense 512-fact/2,048-point star validates every decoded pair from 2,048 final
+lattice rows. Its 131,072-byte gamma payload excludes integer objects, Program
+rows, source retention, indexes, domain maps, temporary masks and the collector;
+it is not an end-to-end memory or speedup measurement.
+
+=FiniteFlowPacking.lean= now also proves the three OR semilattice laws, exact
+gamma union and target filtering, transfer distribution over join, input
+monotonicity and blocker antitonicity for arbitrary finite widths. Lean tests
+remain under =Tests=. Native integer-to-BitVec correspondence is exercised by
+qualification rather than claimed as extracted code correctness.
+
+TLA+ retains protocol ownership: =PositiveNonmembershipSession=,
+=SessionTransaction= and =NativeSessionPublication= check committed snapshots,
+provisional updates and recovery, with seven mutation counterexamples. This
+integration adds no Session transition, so no duplicate bitmap-specific
+publication model is introduced. The models are bounded protocol checks and
+are not a proof of native Scheme implementation refinement. Their generation
+cutoff limits TLC enumeration only, not runtime source updates or fixed points.
+Full =clap-rs= native application truth, automatic compressed downstream
+relation admission, lattice actor execution and paired application benefits
+remain independent qualification gates. No model calls or MR integration are
+part of this change.
+

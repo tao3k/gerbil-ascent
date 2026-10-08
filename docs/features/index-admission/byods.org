@@ -1,0 +1,140 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+#+TITLE: Index Admission: byods
+
+Feature owner: [[file:../index.org][feature index]]. This page retains the original
+source dates and qualification boundaries. Current evidence is commit-specific.
+
+* Native index snapshot membership (2026-10-06)
+
+Section 4 (PDF p. 11) requires logical indexes to agree on represented tuples.
+The Scheme implementation separates storage concretization from physical
+lookup: a custom index reads a supplied snapshot and cannot add relation facts.
+=program/index.ss= now couples each custom lookup with a versioned membership
+witness for its actual all/delta snapshot. Shape-correct foreign candidates
+reject before rule-term callbacks, including total-only rows returned by a
+delta index and rows left over after source replacement. Append extends the
+witness only after a successful Provider extension; failed mutations revoke
+the index version and require rebuilding. See the
+[[file:../../scheme-research-proof-audit.org][research audit]] and
+[[file:../../evidence/scheme-provider-members-20261006/receipt.json][native receipt]].
+
+This closes candidate membership for stable values, not lookup completeness
+or arbitrary Provider refinement. The custom boundary uses an additional
+equality table per physical index; runtime benefit has not been measured.
+
+* Native key coverage and aggregate enumeration (2026-10-06)
+
+Section 4's key lookup must enumerate all corresponding tuples. The native
+custom-index boundary now couples row membership with projected keys and
+unique per-key counts. Each answer must be unique and contain every matching
+snapshot member. Unique overselection is still legal and preserves order;
+different-key rows cannot disguise a dropped matching row. Checks precede
+rule-term callbacks and aggregate invocation, and reuse the evaluated key
+without calling host expressions again. Native controls include an aggregate
+whose 16-row key group would otherwise be undercounted or inflated by duplicate
+candidates. The [[file:../../scheme-research-proof-audit.org][audit]] and
+[[file:../../evidence/scheme-provider-coverage-20261006/receipt.json][receipt]] retain source identity and remaining semantic premises.
+
+This is a concrete finite coverage check under stable-value and admitted-key
+premises. It does not establish arbitrary callback purity, general storage
+refinement or the full semi-naive equivalence theorem. Per-key counts add
+verification cost; the paper's performance results are not transferred.
+
+* Row ownership and failed index builds (2026-10-06)
+
+The storage/evaluation owner enumerates represented facts for physical indexes.
+A native failure/retry counterexample showed that mutating a supplied row
+spine during build could also mutate the Session's accepted source log:
+after an exception, retry returned 31 of 32 expected facts. The interface now
+copies custom build/extend row spines and detaches custom lookup packets
+after bounded shape admission. Retained receiver references therefore cannot
+rewrite source roots, accepted append batches or already-admitted packets.
+
+The [[file:../../scheme-research-proof-audit.org][ownership audit]] and
+[[file:../../evidence/scheme-provider-row-spines-20261006/receipt.json][native receipt]] retain the counterexample and repaired execution. This is
+a concrete preservation condition for the Section 3/4 transfer, not general
+Provider refinement. Field values remain shared: nested-value stability and
+callback purity remain separate. Custom snapshot cost is explicit and no
+paper performance result is attributed to this change.
+
+
+* Physical index revocation and engine publication are separate (2026-10-07)
+
+B23 §3.3, PDF pp. 7–9, requires represented total/delta facts to remain
+consistent with the concretization; §4 adds indexes as implementation
+structures. Those premises do not specify exception recovery for a mutable
+index callback after engine admission. A cache's revoked version is therefore
+insufficient evidence that the engine itself remains reusable.
+
+The Scheme Set source flush admits membership before extending a live total
+index. A custom extension that clears its index and raises can interrupt that
+flush before total/delta rows, sizes and versions advance. The previous raw
+engine accepted a second run, despite the interrupted membership publication.
+The executable counterexample observes this successful retry; it is not a
+performance result or a new algebraic proof.
+
+The evaluator now owns an engine-local =publication-failed?= flag. Its shared
+index advance dispatch marks this flag on any extension failure and rethrows
+the original condition. Raw run, timed run and both source append entrypoints
+require source replay thereafter. A successful whole-source replacement can
+clear the flag because it builds and evaluates a fresh candidate before
+adoption. Checked Session uses its existing reconstruction from the last
+committed source cut. Private graph/custom storage readiness remains a
+separate prerequisite and retains its original failure diagnostic.
+
+This wrapper covers Set flush, whole-round commit and non-Set source admission
+at their one index advance seam. A direct physical index owner can still revoke
+and rebuild its cache from committed rows; the engine has the stronger burden
+of preserving rows, membership, budgets and delta publication together.
+Arbitrary callback effects and mutable nested fields remain outside this
+recovery guarantee. The native Case checks ordinary and single-relation Set
+entrypoints, Session restoration and old snapshot stability. See
+[[file:../../evidence/scheme-engine-publication-20261007/receipt.json][the focused publication receipt]].
+
+
+
+* General Provider and custom-index admission progress (2026-10-07)
+
+B23 Section 3.3 equations (1)/(2) permit overlapping total/delta concretizations
+and require newly visible facts in delta. ProviderAdmission now states these
+abstract laws and derives arbitrary finite positive-body completeness directly
+from them, alongside growth and soundness. The Domain record is a proof-level
+contract; POO procedure validation does not certify arbitrary semantic behavior.
+
+Section 4 requires relation indexes to agree on concretization. Native custom
+lookup preserves admitted occurrence counts, including duplicate source rows;
+a Set observation cannot establish aggregate multiplicity. Per-row quota caps
+plus equal matching-key mass now derive exact occurrence counts in Lean. The
+TLA packet protocol distinguishes six faults, and a native control rejects
+compensated omission despite equal cardinality and Set membership, accepts
+reordered complete packets and checks delta ownership/recovery. Ordered callback
+traces require the additional receiver-order premise retained in the canonical
+bucket calculus. Native witness extraction, full abstract-lattice iteration and
+paper application/benefit qualification remain open. See [[file:../../scheme-trrel-uf-design.org][the UF design]]
+for proof ownership, implementation seams and admission evidence.
+
+
+* Logical index routing refinement (2026-10-07)
+
+Section 4, PDF page 11, requires key lookup to return all tuples corresponding
+to the indexed columns and requires all logical indexes to share a concretization.
+The Scheme rectangle router is an implementation of this obligation.
+
+ProviderRouting proves ordered full-scan equivalence for arbitrary multi-column
+constraints under candidate coverage, derives coverage for a selected coordinate,
+and separates stored row identity from query value equality. Reordered keys and
+conflicting repeated columns have explicit theorems. TLA+ checks independent lazy
+row/parts cursors and four faulty traversals; it does not duplicate the list
+algebra or claim concurrent publication refinement. Native hash/equality and
+owned-member correspondence remain explicit premises. These results strengthen
+index semantics; they do not establish the paper's application/time/memory gains.
+See [[file:../../evidence/scheme-provider-views-20261007/multi-column-routing.json][the receipt]].
+
+The paper's common-concretization requirement is extensional. Exact ordered
+list output, duplicate occurrences and Scheme object identity are stronger
+ASCENT callback-interface obligations. A representative-identity fault is an
+ASCENT contract violation; it is not claimed as a counterexample to the paper's
+value-level formalization. The correspondence keeps those responsibilities
+separate.
+

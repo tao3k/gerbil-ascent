@@ -1,0 +1,68 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+#+TITLE: Lattices: byods
+
+Feature owner: [[file:../index.org][feature index]]. This page retains the original
+source dates and qualification boundaries. Current evidence is commit-specific.
+
+* Map-lattice materialization and strict projection (2026-10-07)
+
+Section 5.6's partial-map lattice differs from a Set of currently visible tuples:
+a value improvement replaces a tuple for the same key. LatticeProjection proves
+keyed update, staged join accumulation, untouched-key preservation, exact touched
+publication, current-row uniqueness, removal of old key rows and last-column
+encoding. Join algebra remains a semantic caller obligation.
+
+A separate TLA transaction checks full collection before projection and immutable
+held results; seven faults must produce typed counterexamples. Native false/true
+group keys and both update orders discriminate staged-before-committed lookup,
+final minima, source replacement and stale ordinary projections. Strict stratum
+planning is the native boundary for non-monotone tuple materialization; this
+round does not claim all arbitrary lattice programs satisfy monotone gamma.
+See [[file:../../scheme-trrel-uf-design.org][the design]] and
+[[file:../../evidence/scheme-provider-views-20261007/keyed-lattice-projection.json][the source-bound receipt]].
+
+
+
+* Weighted observation boundary and pending-key extraction (2026-10-07)
+
+Section 5.6's current-value map observations motivate the compiler's strict
+lattice-to-ordinary edge. StrictDependencies formalizes all lowered reads,
+fast-path safety, strict-cycle impossibility and projection ordering. SCC
+normalization and completed propagation preserve the lower bound against every
+valid labeling. Completion validity and native SCC/vector extraction remain
+premises rather than being hidden inside the theorem statement.
+
+PendingKeys connects effective pending writes to an exact key roster and final
+current-value materialization. Repeated key events do not select an earlier
+value. The dirty-key TLA publication model detects first-key loss and repeated
+improvement key loss; native Scheme tests independently enumerate 8,704 weighted
+kind configurations and exercise real retained lattice projection. This closes
+the stated typed compilation/functional roster components while preserving the
+separate join, hash/equality, native SCC and asynchronous execution obligations.
+See [[file:../../scheme-trrel-uf-design.org][the refinement design]] and
+[[file:../../evidence/scheme-provider-views-20261007/strict-dependencies-pending-keys.json][the source-bound receipt]].
+
+
+
+* Effective map-lattice injection and admission costs (2026-10-07)
+
+Section 5.6 pointwise map joins require an injection implementation as well as
+join algebra. LatticeAdmission connects pending-first lookup, effective-write
+suppression, key-roster support and final publication to the full update fold.
+This removes the typed effective-write decision premise from the previous
+PendingKeys component. It does not apply Section 3's monotone concretization
+result to replacement-valued tuple observations without its stated premises.
+
+The current-round pending cost counts fresh effective keys, not input or event
+occurrences; cumulative runtime work budgets remain separate from live map size.
+TLA admission/refusal states explore three resource configurations and detect
+bypass, false refusal and refused private-state publication. Native one-slot
+same-key and retained refusal/reconstruction controls connect the model to
+Scheme. These injected faults discriminate design violations; the current
+native implementation passed the controls. General callback/hash/SCC refinement
+and the paper's application/time/memory reproduction retain their own gates.
+See [[file:../../scheme-trrel-uf-design.org][the design]] and
+[[file:../../evidence/scheme-provider-views-20261007/effective-lattice-admission.json][the receipt]].
+
+

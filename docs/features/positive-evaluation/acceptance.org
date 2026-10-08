@@ -1,0 +1,92 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+#+TITLE: Positive Evaluation: acceptance
+
+Feature owner: [[file:../index.org][feature index]]. This page retains the original
+source dates and qualification boundaries. Current evidence is commit-specific.
+
+* Positive body / frontier joint progress (2026-10-05)
+
+B23 section 3.2, especially Lemmas 3.2-3.4 and Theorem 3.5 (pages 8-9), was
+reread. The paper separates single-step decomposition, historical coverage of
+old facts, abstract data structure gamma contracts and iteration equivalence.
+The implementation must retain all four obligations.
+
+The [[file:../../evidence/scheme-body-frontier-20261005/receipt.json][joint acceptance receipt]] records the following distinct responsibilities:
+
+- Lean =ProviderFrontier.body_partition= proves full = old union single-delta
+  pivots for finite positive bodies of arbitrary length. Environment passing
+  permits shared variables and repeated relation keys.
+  =projected_partition= / =projected_frontier= establish projected results and
+  exact output delta for arbitrary pure head projection. Pivots may overlap;
+  a new witness need not produce a new head.
+- =new_consequence_pivot= requires every all-old head to belong to the known
+  database before omitting the all-old body. Establishing this premise requires
+  iteration history; Provider frontier completeness alone does not establish it.
+  Empty bodies preserve seeds; initial full execution remains necessary.
+- TLA+ =ProviderFrontier= checks consumption from private pending frontier to
+  committed total and downstream publication through three atoms.
+  =ConsumerSnapshot= holds in both pending and idle states. Premature publication
+  and consumption of stale total are rejected by mutation controls.
+- The native Scheme suite enumerates 27 three-edge input/producer partitions
+  for each of eqrel, trrel and trrel-uf, yielding 81 complete programs. A relay
+  delays the second producer; three reads of the same closure relation share
+  variables. Independent graph closure and three-edge witness enumeration
+  supply truth independently of the evaluator under test.
+
+This establishes a single-step semantic chain for positive concrete bodies.
+General lattices, negation, aggregation and arbitrary host callback delta
+decomposition remain unproved; no native extraction is claimed.
+
+** Subsequent design gaps and proof responsibilities
+
+| Paper / design stage | Next Lean statement | Next TLA+ obligation | Native correspondence gate |
+|----------------------+---------------------+----------------------+----------------------------|
+| A22 section 4 / B23 section 3.2 | Binder/index behavior to environment transitions; historical all-old head coverage to full naive/semi-naive iteration equivalence | Frontiers retain their cut during dispatch/consumption; failure never installs partial round results | Compiled pivot positions, source/delta selection, index lookup completeness and row equality |
+| F16 / S20 | Finite descriptor domains to rank; typed function change translation separate from relation delta | Bounded/provisional results retain status; cancellation drain and result publication | Arbitrary host closures still need totality/monotonicity constraints; fact budgets do not imply termination |
+| H18 / B22 | Founded rederivation, source dependency frames and correctness after retraction; current algorithms are neither DRedc nor signed-weight DBSP | Source/result atomicity and ABA isolation across repeated updates, failure and resume | Multiple supports, unfounded cycles, lower-stratum changes and external Provider rollback |
+| H13 / F20 / L25 | Native correspondence for hygiene, generativity, fragment composition / lexical lowering | Cross-owner/cut lifecycle only; lexical semantics belongs to Lean | Macro expansion and native descriptors to the proved IR |
+
+Finite TLC safety exploration does not establish unbounded temporal theorems.
+Unbounded protocol proofs and Scheme trace refinement remain TLA+ work. General
+Lean algebra does not replace those obligations. This historical round added
+no model calls, prompts, Rust runtime integration or performance benefit claims.
+
+
+* Concrete positive Set iteration history (2026-10-06)
+
+[[file:../../../packages/proofs/lean/SemiNaive.lean][SemiNaive]] extends rule-body decomposition to complete synchronous iteration
+for a finite rule set:
+
+1. =consequences_partition= proves full/old/pivot decomposition of all rule outputs.
+2. =pivot_after_full= derives all-old head coverage from the preceding fullStep
+   definition, without caller-provided coverage or completed-solving premises.
+3. =iterations_equal= proves corresponding naive and semiNaive snapshots equal
+   for every Nat round. The initial round uses fullStep; empty-body facts remain
+   included.
+
+Exact scope: concrete Set databases, finitely many rules, finite positive
+body environment transitions, pure fixed head projections, and views monotone
+under Set inclusion. Delta is the exact difference between adjacent concrete
+views. Repeated keys and shared variables retain ProviderFrontier semantics.
+The rule set and rule bodies may be empty; round numbers have no upper bound.
+
+The theorem assumes neither successful native results nor termination.
+Equality at every round alone does not imply finite convergence. Termination
+still requires FiniteHeight's finite-height/progress premises and descriptor
+correspondence. B23's general abstract lattice join, gamma/injection and
+gamma-total/delta contracts need separate connections; arbitrary caller
+Providers are not assumed to satisfy them.
+
+TLA+ retains protocol responsibilities. ProviderFrontier checks both empty and
+seeded initial cuts and rejects the mutation that only runs pivots while
+omitting initial full consumer publication. This finite safety check establishes
+neither Lean's iteration algebra nor unbounded temporal theorems.
+
+The [[file:../../evidence/scheme-seminaive-history-20261006/receipt.json][iteration receipt]] binds rebased source and actual checks. Earlier sections
+and receipts describing unproved iteration history refer to the 2026-10-05
+source. This section updates the conclusion for concrete Sets. Remaining
+mainline obligations include composed native slot/binder/index/pivot
+correspondence, general Provider gamma contracts and unbounded TLA/native trace
+refinement.
+

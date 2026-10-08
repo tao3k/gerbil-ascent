@@ -1,0 +1,62 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+#+TITLE: Equivalence: design
+
+Feature owner: [[file:../index.org][feature index]]. This page retains the original
+source dates and qualification boundaries. Current evidence is commit-specific.
+
+* Constructed root frontier and independent publication checks (2026-10-07)
+
+A deeper review of BYODS Section 3.3 exposed a model coverage defect. The
+previous =TransitiveComponents.Plan.delta= was the oracle expression
+=Expected(inputs plus edge) minus Concrete=. It did not construct the provider's
+emitted rows, and all nodes were treated as already active. Consequently that
+model could validate SCC remapping while missing lost activation diagonals or
+an incorrect delta implementation. No new native provider defect was observed.
+
+=DirectedFrontier.uf_emitted_decomposition= now derives the native frontier
+shape: missing predecessor/successor reach pairs, plus the diagonals of newly
+activated endpoints. An already reachable active row is not emitted. Supported
+reach proves an inactive SCC is a singleton, so a new-root diagonal cannot
+expand into extra old members.
+
+=ProviderRectangles.component_plan_member_iff= distinguishes ownership from
+complete member coverage. =root_frontier_exact= connects the root predicate to
+the derived visible delta. =rootFrontierPairs= enumerates a finite captured
+root product and selects missing reach and activation diagonals.
+=root_plan_exact= derives exact delta from this construction, SCC equivalence,
+complete member lists and root coverage; it does not assume candidate/frontier
+encoding. =root_plan_nodup= derives unique rows from unique roots and members.
+Together with existing count/budget laws this supplies unique-fact counting for
+the plan. The rectangle package has 32 laws; this unit also adds the separate
+DirectedFrontier decomposition law. Tests and axiom reports remain in =Tests=.
+
+The repaired TLA model stores active endpoints, pre-insertion visible rows and
+the actual published frontier. It constructs delta using the old parent/reach
+graph and fresh endpoint diagonals. Input closure appears only in the independent
+publication assertion =DeltaExact=. =ActiveExact= checks endpoint activation;
+existing SCC, root, private arc and refusal checks remain. The three new
+seeded mutations are raw input-only emission, omitted activation diagonals and
+old-row re-emission. They must violate =DeltaExact=, rather than a model parse or
+execution error. The correct model checks 38,374 distinct states on three nodes;
+this is finite exploration, not a semantic generation limit.
+
+| Native step | General algebra | Temporal/publication check |
+| =preds= / =succs= and missing root arcs | =uf_emitted_decomposition= / =root_frontier_exact= | Delta constructed from old root graph |
+| =new= endpoint singleton rectangles | =inactive_component_singleton= | =ActiveExact= and missing-diagonal mutation |
+| Root/member enumeration | Complete coverage, =root_plan_exact= | Finite domain and parent/root invariants |
+| Additive =needed= before commit | Unique expansion plus existing count laws | Refusal preserves graph and active set |
+| Captured output before SCC merge | Immutable member-list interpretation | Delta checked against input closure after publication |
+
+The two proof systems retain different responsibilities: Lean derives the
+frontier algebra for arbitrary admitted finite domains; TLA explores construction,
+refusal and publication across insertion sequences. At that stage the model used canonical
+root normalization and a minimum representative, whereas Scheme merges into
+the largest component and removes absorbed keys in place. Native parent chains,
+member/size extraction, optimized adjacency remapping and grouped prefix
+decoding therefore remain explicit correspondence obligations. The abstract
+=rootFrontierPairs= product/filter is an extensional plan, not a new runtime
+implementation or a performance claim. Existing Scheme controls independently
+check all 512 three-node graphs in forward and reverse insertion order, every
+frontier, refusal, repeat insertion and frozen view. See [[file:../../evidence/scheme-provider-views-20261007/root-frontier-refinement.json][the receipt]].
+

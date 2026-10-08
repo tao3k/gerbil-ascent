@@ -1,0 +1,147 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+#+TITLE: Qualification: compiler
+
+Feature owner: [[file:../index.org][feature index]]. This page retains the original
+source dates and qualification boundaries. Current evidence is commit-specific.
+
+* Single-module native carrier qualification (2026-10-05)
+
+The [[file:../../evidence/scheme-native-entry-20261005/receipt.json][new carrier receipt]] follows the startup failure above. Correcting the
+diagnostic's omitted =ASCENT_PERFORMANCE_MODULES= variable still reproduced
+the five-second failure. Separate import probes completed the native library
+preflight and located substantial startup work in the gxtest CLI dependency
+graph, including =std/cli/getopt= and =std/format=. A narrower interpreted
+adapter still failed the output gate while discovering the target module;
+those attempts remain excluded.
+
+The supported single-module commands now move export discovery and binding
+to native compilation. The generated entry uses the original =std/test=
+objects and callbacks, and returns 42 on a failed native verdict. The outer
+recipe additionally rejects a successful empty Suite by requiring actual
+Cases. Independent setup, Case, cleanup and empty-Suite controls exercise
+these boundaries. The index Suite retains its five independent reference
+Cases. This carrier work closes the qualified single-module execution path;
+the general gxtest/module-pool startup path has its own remaining gate.
+
+The recorded synchronized proof check included the former Lean Session
+publication replica. That historical receipt remains bound to its original
+sources; the replica is now removed and its unbounded protocol claims retired.
+Current Session protocol checks belong to TLA+, where =TLCGenerationCutoff=
+configures finite enumeration only. Native carrier qualification does not
+establish an unbounded protocol theorem.
+
+The [[file:../../evidence/scheme-native-entry-20261005/session-repair.json][Session follow-up receipt]] records a failed exact-head CI at =53df4c1=:
+the newly added replacement-ownership Case lacked two closing parentheses,
+so the full Scheme and native differential preparations could not read that
+module. The repair preserves every assertion and closes the =check-fresh=
+call and its enclosing Case. After integrating the immutable dependency-graph
+update, the full Session Suite passed all 15 Cases with exit 0 in 41 seconds
+of execution under the original five-second output and 120-second deadline
+gates. It includes caller row-spine isolation, a 4096-node graph, all 64
+three-node graphs and 192 successive withdrawals compared with fresh closure.
+The earlier receipt keeps its original snapshot and scope. The follow-up binds
+373 Scheme files plus three controls, and confirms the earlier proof source
+hashes remain unchanged. Final GitHub CI must independently qualify the
+submitted descendant of this repair snapshot.
+
+The [[file:../../evidence/scheme-native-entry-20261005/integrated.json][merged qualification]] retains the incoming append row-spine Case and
+LeanPoo-backed source-certificate package. All 16 Session Cases pass with exit
+0 in 38 seconds of execution under the same bounds. =just
+check-nonmembership-formal= builds =AscentProof= and =AscentProofTests=
+successfully (34 Lake jobs; 13 ASCENT proof/test modules), then checks three
+TLA models and seven required counterexamples. The package's toolchain and
+LeanPoo revision are fixed by its checked-in Lake metadata. This supersedes
+the earlier shell proof runner for current qualification; historical receipts
+keep their original toolchain, source hashes and result counts.
+
+
+* LeanPoo usage and API synchronization（2026-10-06）
+
+The consumer now pins published LeanPoo main
+=247d1d6094b6af1bb873f69564b271bc978730ed= in both Lake files,
+using Lean =v4.34.0=. The producer's local feature branch is not the
+consumer release identity. Historical qualification receipts retain their
+original dependency revisions.
+
+** Use case to consumer mapping
+
+Read the pinned [[https://github.com/tao3k/lean-poo/blob/247d1d6094b6af1bb873f69564b271bc978730ed/docs/use-case.md][PO use case]],
+[[https://github.com/tao3k/lean-poo/blob/247d1d6094b6af1bb873f69564b271bc978730ed/docs/usage.org][usage guide]] and
+[[https://github.com/tao3k/lean-poo/blob/247d1d6094b6af1bb873f69564b271bc978730ed/docs/reusable-contracts.org][reusable contracts]] together.
+The primary PO path declares typed behavior, composes declarations through
+C4, then evaluates slots through a shared lazy instance. Proof objects are
+an additional capability for consumers carrying obligations across changes.
+ASCENT currently consumes that proof capability for source/result cuts.
+
+| Workflow | LeanPoo API | ASCENT responsibility |
+|----------+-------------+-----------------------|
+| Declare correctness once | =Obligation=, =ProofObject=, =Certificate= | =resultObligation= states derive/observed equality; RuleBodyFrame supplies semantic locality |
+| Apply ordered source edits | =Patch.setMany=, =Patch.composeAll= | Admit the actual source cut and preserve last-write order |
+| Carry an unaffected proof | =reuse=, =unaffected_setMany_iff= | Prove dependency/touched-key disjointness from the compiled rule closure |
+| Select affected obligations | =pending=, =mem_pending_iff= | Revalidate touched positive, negative and aggregate dependencies |
+| Publish a complete certificate | =closePending= | Discharge every selected old or newly added obligation |
+| Relate staged and batched edits | =append_composeAll=, =unaffected_composeAll_iff= | Check every constituent footprint, including repeated writes |
+
+The compiled =stagedReuse= use case in AscentProofTests applies two edits
+to an unrelated source and carries the original certificate into the exact
+stepwise result through the producer's composition laws. A control writes a
+dependency and then restores its original value: it remains pending. Final
+value equality alone cannot authorize proof reuse.
+
+** New capability boundary
+
+The updated reusable-contract modules also expose typed capability families,
+prepared consumer caches, indexed registry transactions, narrow/public views
+and certified solver transport. =applyTransactionCached= publishes the full
+registry transaction and distinguishes =reused= from =fresh=; fresh data still
+requires an analytic certificate. =CertifiedTransformation= requires supplied
+forward validity and reverse witness soundness; =pullSolver= transports an
+already admitted solver's data and proof. These are concrete public APIs,
+not automatic dependency discovery or a solver generator.
+
+ASCENT's current source state is a dependent key/value function, not a C4
+provider registry. Its native planner, physical index and publication protocol
+still need their own source-bound qualification. The existing Proof APIs
+remain compatible at this revision; adopting the new registry workflow would
+require an explicit provider/context mapping and a refinement to this source
+cut. This synchronization records the usable boundary and qualifies the
+current consumer against the new producer without claiming that mapping.
+
+Qualification: =direnv exec . just check-lean-proofs= completes with exit 0
+and 83 Lake jobs. =stagedReuse= reports only =propext= and =Quot.sound=;
+the restoration control compiles as a kernel-checked pending-membership proof.
+This gate qualifies the updated Lean consumer; it supplies no new native
+performance or publication receipt.
+
+** Existing consumer migration: prepare reads independently of the cut
+
+=FunctionalDependency.lean= now uses the producer's context adaptation workflow
+in its existing implementation. =provider= selects source-reading functions
+whose context is the complete typed source cut. =Program.prepare= depends only
+on a target's checklist. =Program.step= adapts that prepared tuple to the
+current cut with =Requirements.reindex= and feeds the existing rule evaluator.
+Previously each provider captured one source cut before preparation.
+
+=Program.step_eq_prepared_cut= proves the migrated evaluator equals its
+previous per-cut behavior for every source/checklist. =Program.prepare_at=
+applies upstream =prepare_reindex= to prove the adapted
+tuple equals independent preparation at the exact cut, including the complete
+success/error outcome. =Program.local= combines this law with =prepare_congr=;
+=SourceUpdateFrame.completed_reuse= and the downstream RuleBodyFrame proof
+continue to use the same locality contract. No separate solver-route module
+is part of this migration.
+
+The existing AscentProofTests retain one checklist with heterogeneous Nat/Bool
+values and a repeated Nat key, then adapt that same tuple to two source cuts.
+They check current values and duplicate request order, while the existing
+self-read and completed-frame fixtures qualify the changed consumer. Preparation
+is independent of the cut; these Lean contracts do not demonstrate a native
+cache or a runtime speedup. The native Scheme implementation has not changed.
+
+Qualification: =direnv exec . just check-lean-proofs= succeeds with exit 0
+and 84 Lake jobs. The preparation correspondence and evaluator equivalence
+report only =propext=; the existing completed-frame theorem retains its
+standard-only axiom report. The earlier solver-route files and imports have
+been removed because they did not migrate the existing consumer.
+

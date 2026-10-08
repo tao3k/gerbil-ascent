@@ -1,0 +1,106 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+#+TITLE: Assurance: byods
+
+Feature owner: [[file:../index.org][feature index]]. This page retains the original
+source dates and qualification boundaries. Current evidence is commit-specific.
+
+* Frontier verification and full-paper closure (2026-10-05)
+
+The [[file:../../scheme-paper-closure.org][paper closure matrix]] distinguishes the entire B23 target from bounded
+built-in Provider receipts. =ProviderFrontier.lean= proves three local laws;
+=ProviderFrontier.tla= explores eqrel injection and delivery, rejecting raw-only
+frontiers and dropped consumption. Native tests compare each expansion against
+an independent graph model for all 512 three-node inputs, all three built-in
+Providers and both insertion orders. These checks do not prove Theorem 3.5,
+user-defined Providers, lattice concurrency or index-sharing applications.
+
+A concrete implementation gap is recorded: =trrel_uf= currently calls the same
+=trrel-extend= with reflexive mode enabled, using the same membership and
+predecessor/successor tables. It is not the paper's SCC/union-find representation.
+Output/frontier qualification does not close that storage or memory-cost claim.
+
+
+* Lookup borrow ownership in Scheme (2026-10-06)
+
+Figure 1's =RelIndexRead::index_get= takes a shared key reference. At the
+Scheme receiver boundary, the engine now supplies a fresh header for the
+key list, and for build/extend column lists. This preserves the original
+evaluated key for coverage checking and the admitted columns for cache
+selection even if a custom receiver mutates its argument headers.
+
+A negative rule provides the concrete discriminator: a receiver changes a
+represented key to an absent key and returns empty. Without header isolation
+this can pass coverage and publish a false absence result. Native controls
+and the source-bound [[file:../../evidence/scheme-provider-headers-20261006/receipt.json][receipt]] distinguish this repair from the broader
+stable-value and callback-purity obligations. Only headers are copied; no
+new deep-value, runtime-benefit or universal Provider proof claim is made.
+
+
+* Failed read recovery at the Scheme boundary (2026-10-06)
+
+Section 4's =RelIndexRead= supplies the concretization used by rule consumers;
+logical index aliases must continue to represent the same facts. The paper
+does not specify recovery from effectful Scheme callbacks. Our implementation
+therefore needs a separate cache validity rule: a failed custom read cannot
+certify that its physical state still represents the committed source version.
+
+Lookup dispatch and complete candidate admission now form one failure boundary.
+A raised callback or rejected answer revokes only the selected physical entry's
+version and rethrows the original failure. Aliases rebuild that entry on their
+next read, while another all/delta lane keeps its own valid entry. Successful
+reads keep ordinary reuse; no automatic retry or callback correction is added.
+See the [[file:../../scheme-research-proof-audit.org][research audit]] and
+[[file:../../evidence/scheme-provider-lookup-recovery-20261006/receipt.json][native receipt]] for failure controls and source identity.
+
+Rebuilding requires a Provider that can build a valid index again. Shared
+nested field stability, external effects and general storage rollback remain
+separate premises; this is not a new DLDS theorem or a performance claim.
+
+
+* Native kernel atomicity versus engine publication (2026-10-06)
+
+Section 3.3's total/delta conditions apply to the facts actually consumed by
+the evaluator. A native graph kernel can successfully inject an edge before a
+stored-field checker or later guard rejects the enclosing evaluation. Its
+standalone budget preflight does not undo that successful injection. Native
+=eqrel= then remembers the edge and can suppress its entire four-fact frontier
+on raw engine retry, even though the engine published none of those facts.
+
+The schema now selects engine-specific storage dispatch. Native graph states
+use the same readiness owner as custom states; their raw algorithms still get
+borrowed rows and their original state values. Canonical Set remains direct.
+The public raw algorithm dispatch and constructor retain the native protocol,
+including standalone budget refusal/retry. Engine dispatch conservatively
+requires source replay after a graph extension failure or interrupted round.
+Session reconstructs fresh states through its existing recovery path.
+
+The [[file:../../evidence/scheme-native-storage-state-20261006/receipt.json][native receipt]] binds the zero-frontier counterexample, stored-field
+rejection and later-guard controls for all three native graph Providers,
+Session recovery and raw algorithm regression. This extends the concrete
+publication protocol; it does not prove arbitrary callback purity, private
+state rollback or full native refinement. Added readiness work has no measured
+performance benefit attributed to it.
+
+
+
+* Engine representation migration (2026-10-07)
+
+The [[file:../provider-views/design.org::#frozen-native-representations][engine follow-up]] integrates the proved Provider API into one frozen carrier,
+then carries total/delta cardinality through source admission, derived rounds,
+append, indexes, retained publication and actor consumption. Canonical UF/hash
+execution retains component rectangles instead of expanded membership/index
+pairs. Public ordered export replays a frozen injection journal; source replay
+continues to use only authoritative sources. See the
+[[file:../../evidence/scheme-relation-views-20261007/receipt.json][source-bound native/cost receipt]].
+
+This makes B23's distinction between representation and concretization concrete
+in the engine. Sparse keyed observation, repeated grouped joins, retained updates
+and ordered full export have separate costs. Full export regenerates both a
+transient graph owner and output tuples; a descriptor count is not a whole-engine
+memory result. Qualified negative costs remain published. The matched reference
+is the repository's explicit evaluator running the same current UF kernel,
+not a claim of exact performance against the entire previous PR revision or
+replication of the paper's applications. General callback-trace and native
+Lean/TLA refinement remain separate obligations.
+

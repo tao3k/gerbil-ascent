@@ -1,0 +1,86 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+#+TITLE: Provider Iteration: byods
+
+Feature owner: [[file:../index.org][feature index]]. This page retains the original
+source dates and qualification boundaries. Current evidence is commit-specific.
+
+* Concretized support and admitted row occurrences are distinct (2026-10-07)
+
+B23 §3 models concretization into a powerset, with an idempotent join. Equal
+facts therefore have one logical support element. Our Scheme source interface
+also retains ordered initial rows, including duplicate occurrences and their
+input-budget cost. A physical index receives that current row snapshot. A
+custom receiver inherited from the native hash Provider must be able to return
+its repeated rows just as the native index does. Treating the second occurrence
+as an invented fact confused logical support with admitted enumeration.
+
+[[https://www.cs.ucdavis.edu/~green/papers/pods07.pdf][Green, Karvounarakis and Tannen, Provenance Semirings (PODS 2007)]], §2–3,
+provides a useful distinction: natural-number annotations express tuple
+multiplicity, while the ordinary relation records support. We use that
+counting idea only for a finite physical snapshot witness; our Datalog heads
+still use existing Set admission. This change does not implement recursive bag
+Datalog or provenance polynomial evaluation, nor extend B23's theorem to
+mutable callbacks.
+
+For each physical all/delta entry at version v, let M_v(r) be the number of
+admitted occurrences of row r and K_v(k) the sum of M_v(r) over rows whose
+projected key is k. For a returned candidate packet P, acceptance requires:
+
+- complete row shape and membership in the represented snapshot;
+- count_P(r) <= M_v(r) for every candidate, including overselected rows;
+- sum of count_P(r) for requested-key rows = K_v(k).
+
+Together these constraints require every matching occurrence and forbid extra
+repetitions. Deduplicating either the Provider input or the returned packet
+would change the source enumeration; merely allowing arbitrary duplicates
+would permit unsupported rule invocations. The same cap protects other-key
+rows in an overselected packet. Missing-key lookup may return no matching
+occurrences while retaining bounded overselection, as before.
+
+The private witness now retains row occurrences alongside represented keys
+and per-key counts. Build captures all counts; incremental extension adds the
+new admitted occurrences. Existing physical entry versions keep all and delta
+independent and revoke failed lookups. No public type, compatibility wrapper,
+source budget or native index representation changes.
+
+The new low-level native control compares a duplicate-bearing custom hash
+index with the canonical index, rejects one extra repeat and one omission,
+checks recovery through an alias, extends all with a repeated row and confirms
+delta remains unchanged. A Session control then repeats the previous flush
+failure with an accepted duplicate source: pending reconstruction must retain
+34 source occurrences, including two copies of (0 0), rather than falling back
+to 32 committed rows. It covers both same-relation and cross-relation append
+targets. See [[file:../../evidence/scheme-index-occurrences-20261007/receipt.json][the occurrence coverage receipt]]. This closes the duplicate replay
+limitation recorded in the preceding slice for the qualified hash receiver;
+fresh replay may still fail for other Provider/callback reasons.
+
+The =384ab64= Provider-owned view proposal retains source duplicate counts and
+unique derived admission. This explicit-row occurrence witness supplies the
+first boundary's duplicate discriminator. A compressed relation view still
+needs its own concretization, exact delta and logical cardinality; a custom
+IndexProvider cannot obtain compressed semantics by omitting supplied rows.
+The present repair does not implement or qualify that representation migration.
+
+* Abstract injection and iteration refinement (2026-10-07)
+
+ProviderIteration now lifts Section 3's concretization/delta conditions through
+abstract tuple injection and whole-program histories. CompleteJoin supplies
+arbitrary supremum laws; tuple-family injection monotonicity and union/join
+correspondence are derived. All-old head coverage follows from the preceding
+full step. Every natural-number semi-naive round equals its naive counterpart
+under sound, fresh-covering delta and monotone gamma, including overlapping
+delta. Non-pivot positions use the merged snapshot.
+
+Least-state existence is distinct from executable convergence: a complete
+abstract lattice yields a least fixed state above the seed; a bounded rank with
+strict progress yields finite convergence to it. No fixed generation limit is
+introduced. The concrete test domain compresses distinct facts into one Bool
+state and does not require gamma to preserve joins.
+
+ProviderFrontier's new overwrite control and retained Scheme sessions cover the
+accumulated-head publication seam. Native refinement of arbitrary caller
+Providers, asynchronous protocols and application replication remain separate.
+See [[file:../../scheme-trrel-uf-design.org][the implementation/proof design]] and
+[[file:../../evidence/scheme-provider-views-20261007/abstract-provider-iteration.json][the source-bound receipt]].
+

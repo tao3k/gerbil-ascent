@@ -1,0 +1,70 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+#+TITLE: Shared indexes: qualification
+
+* Evidence ownership
+
+[[file:proofs.org][Proof obligations]], [[file:compiler.org][compiler correspondence]], [[file:byods.org][BYODS interpretation]] and
+[[file:acceptance.org][acceptance boundaries]] belong to this feature. Record actual commands and
+results here. Performance measurements come from the existing
+[[file:../../../t/performance/index-sharing/benchmark.ss][benchmark implementation]] through =just performance-index-sharing=.
+Handwritten JSON copies of these qualification summaries are not maintained.
+
+* Curried collection qualification
+
+Commit =de79986f6a277ec0ad5c511aea432cf223e9adc7= qualified the tail collector,
+ordinal restoration and reusable view lifecycle on 2026-10-08:
+
+| Command | Result |
+|---------+--------|
+| just check-lean-proofs | Successful full package build, 113 jobs |
+| just check-formal | Successful positive checks and 93 expected counterexamples |
+| just test-file t/qualification/ascent-index-entry-test.ss | 26 cases; OK; exit 0; 33 seconds |
+| just test-native t/qualification/ascent-index-entry-test.ss | 26 cases; native marker and OK; exit 0; 5 seconds execution |
+| just performance-index-sharing | Five scenarios, 250 matched pairs, original gates passed |
+
+The [[file:../../../t/performance/index-sharing/README.org][benchmark specification]] defines the frozen reference, counters and
+predeclared gates. Generated numerical samples remain in
+[[file:../../evidence/scheme-curried-collection-20261008/wide.sexp][wide]], [[file:../../evidence/scheme-curried-collection-20261008/sparse.sexp][sparse]], [[file:../../evidence/scheme-curried-collection-20261008/small.sexp][small]], [[file:../../evidence/scheme-curried-collection-20261008/scalar.sexp][scalar]] and
+[[file:../../evidence/scheme-curried-collection-20261008/empty.sexp][empty]] S-expression outputs. This cumulative lifecycle comparison does not
+isolate the collector change or establish whole-application benefits.
+
+* Logical key adaptation qualification
+
+Commit =079919f8f2b66f151bf0d79b9d04156879d6890c= qualified six positional
+key-adaptation laws and malformed requests on 2026-10-08:
+
+| Command | Result |
+|---------+--------|
+| just check-lean-proofs | Successful full package build, 113 jobs |
+| just check-component-index-formal | 673 generated states; 196 distinct; 13 expected faults; exit 0 |
+| just test-file t/qualification/ascent-index-entry-test.ss | 27 cases; OK; exit 0; 32 seconds |
+| just test-native t/qualification/ascent-index-entry-test.ss | 27 cases; native marker and OK; exit 0; 5 seconds execution |
+
+The [[file:proofs.org::*B23 constructed logical key adaptation (2026-10-08)][algorithm bridge]] retains coverage, native exception abstraction and
+primitive representation contracts. Production Scheme was unchanged.
+
+* Trie construction qualification
+
+The 2026-10-08 continuation adds nine laws for recursive dictionary construction,
+insertion, histories, prefix occurrence counts and fresh ordinal restoration.
+The [[file:proofs.org::*B23 constructed curried trie and prefix occurrences (2026-10-08)][construction bridge]] states the functional map and inventory assumptions.
+
+| Command | Result |
+|---------+--------|
+| lake build ProviderRouting Tests.ProviderRoutingTests | Nine laws and their positive/negative examples passed; exit 0 |
+| just check-lean-proofs | Full proof package passed; exit 0 |
+| just check-component-index-formal | 673 generated states; 196 distinct; depth 11; 13 expected faults; exit 0 |
+| just test-file t/qualification/ascent-index-entry-test.ss | 28 cases; OK; exit 0; 37 seconds |
+| just test-native t/qualification/ascent-index-entry-test.ss | 28 cases; NATIVE-MODULES-OK and OK; parent exit 0; 8 seconds execution |
+
+Native compilation qualified layers of 85 production modules, 91 support
+modules and one test module. Execution time excludes admission, compilation
+and linking. Sparse layout fixtures cover depths one through five; proof depth
+is an arbitrary natural number. Duplicate and omitted child inventories are
+retained negative controls. No new performance samples were taken.
+
+The source commit and GitHub checks must be read from the associated PR;
+these command results do not substitute for final-commit CI. Native per-node
+hash extraction, sort primitive correspondence and application benefits remain
+separate gates. The TLA+ model retains lifecycle ownership and was unchanged.

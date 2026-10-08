@@ -1,0 +1,122 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+#+TITLE: Representation: proofs
+
+Feature owner: [[file:../index.org][feature index]]. This page retains the original
+source dates and qualification boundaries. Current evidence is commit-specific.
+
+* Cross-layer representation and refinement audit
+:PROPERTIES:
+:CUSTOM_ID: cross-layer-refinement
+:END:
+
+Research inspection baseline: PR #1 =eb99600da0db227339e1f630c3a10ef706661ba7=.
+The following are design obligations derived from the inspected interfaces,
+not additional runtime capabilities or newly passed native tests. S20 §4.2,
+H18 §3–4, L25 §3.7 and B22 §4 were revisited for this audit. The earlier
+receipt and CI observations above retain their historical source boundaries.
+
+** Identity and equality have different owners
+
+| Carrier | Actual owner and meaning | Required cross-layer law and discriminator |
+|---------+--------------------------+-------------------------------------------|
+| Binder/descriptor identity | =program/operator.ss= and =program/higher-order.ss=: lexical binding and environment-sensitive interpretation | Renaming a bound display name preserves observations; sharing a descriptor across different bindings must not reuse the wrong interpretation. Structural equality alone cannot key an environment-dependent result |
+| Private predicate identity | =program/objects.ss=: generative fragment construction and composition | Repeated constructors with equal printed names stay independent. A bijective private rename preserves exported rows; composition must check the assembled dependency graph |
+| Certificate program identity | =candidate/program-identity.ss=: ordered wire projection of relations, facts, rules, query terms and limits | Semantic equivalence does not imply identical fingerprints. Reordering must preserve its documented wire meaning; verification binds the supplied program, not a canonical equivalence class |
+| Row membership | Derived relation tables and returned typed output: set observations; raw native source observations retain ordered occurrences | Compare complete typed result sets using admitted scalar equality, separately from raw source counts. Results must remain stable after later Session updates; persistent root sharing does not prove deep immutability of arbitrary host values |
+| Source occurrence | =candidate/provenance-graph.ss=: distinct frozen source positions supporting a row | Removing one of two identical occurrences leaves membership; removing the last founded support removes the row. Selectors retain original positions; derived rows never enter the source log |
+| Source authority | Caller/POO boundary, outside certificate hashing | A verified certificate establishes consistency with supplied inputs. It does not establish origin, freshness or completeness of those inputs |
+
+L25 §3.7 requires fresh private names on each evaluated rho abstraction.
+Our transfer decision is a generativity and observable-equivalence obligation,
+not permission to alpha-normalize certificate bytes. Existing protocol tags and
+ordered encodings stay at their wire boundary. H18's distinction between
+recursive and nonrecursive derivations likewise cannot be replaced by counting
+equal output rows: a cycle without a remaining founded input must disappear.
+
+** Concrete interpretation must precede compiler refinement
+
+The next R1 proof should introduce explicit interpretation relations rather
+than identify a Scheme list with a Lean finite table by notation:
+
+1. =TypeRep(native-type, shape)=: admission owns the canonical acyclic type
+   graph; distinct scalar-domain values and arity determine its tuple universe.
+   Specify the admitted scalar equality and duplicate elimination, including
+   empty domain / zero arity. The full arrow space supplies a conservative
+   cardinality bound; admitted monotone functions are a subset of that space.
+2. =ValueRep(shape, native-value, semantic-value)=: rows represent sets of
+   tuples; a captured closure represents a function only relative to its typed
+   lexical environment. Specify total application on the admitted domain,
+   extensional observation and immutable capture obligations. Rejection of an
+   escaped domain is distinct from an empty relation.
+3. =StepRep(native-work, semantic-state)=: each successful normalization or
+   engine step preserves typing and implements the stated semantic operator.
+   Prove actual step monotonicity before applying =FiniteHeight= termination;
+   its existing bounded-rank theorem assumes this premise. Capped arithmetic
+   and actual work counters remain separate resource checks.
+4. =ResultRep(native-result, least-model)=: finished public rows equal the
+   least closure; unfinished/unsupported/bounded outcomes cannot be promoted
+   to a completed result or a complete absence certificate.
+
+Use the existing =DescriptorScope=, =LexicalLowering=, =RecursiveLowering= and
+=FiniteHeight= files for these refinements. The immediate delivery is an
+explicit scalar/row interpretation and native discrimination of duplicate
+atoms, zero arity and captured environments; the compiler proof follows it.
+Do not broaden the checked language while these premises remain unconnected.
+
+** Publication has an explicit abstraction boundary
+
+=program/session.ss= maintains pending source logs, committed source logs,
+last/committed results and private engine state. Its explicit batch replacement
+validates a prospective snapshot and completes the solve before adoption. Its
+single-source API deliberately leaves replacement provisional until =run!=;
+even a precomputed checked result must respect timed-run round boundaries.
+These are different observable contracts and need separate trace refinements.
+
+Publication safety is owned by the TLA+ protocol collection. The [[file:../../../packages/proofs/tla/SessionTransaction.tla][TLA transaction model]] has symbolic
+source cuts and an external-commit action. The inspected native Session has no
+corresponding public generation token or asynchronous commit protocol. A future
+refinement must map synchronous clean batch boundaries to abstract snapshots
+and pending work, or implement a token if asynchronous work is introduced.
+Do not claim that the model already proves a native concurrent Session.
+Generation is an unbounded logical natural; TLC exploration depth constrains
+model exploration and must not become a runtime admission limit.
+
+The native discriminator is a trace of public observations: fresh recomputation
+after each completed batch, unchanged committed observations after rejected
+batches, provisional single-source replacement followed by timed/resumed runs,
+and frozen old results after subsequent insertions. Abstract failure controls
+remain distinct from native failure qualification.
+
+** Three change algebras require three transfer arguments
+
+| Change family | Paper premise and present scope | Gate before optimization |
+|---------------+---------------------------------+--------------------------|
+| Increasing typed change | S20 §4.2 defines =df x dx= relating =f(x)= to =g(y)= when =dx= relates =x= to =y=. Current typed lowering has no such function-change translation | Define the change relation per admitted type and prove simultaneous function/argument application preservation. Tiny tests must include a changed argument and a change visible only at an unsampled input |
+| Source withdrawal | H18 keeps recursive and nonrecursive support distinct; recursive counters become useful only after overdeletion. Native Session currently invalidates/rederives affected components; the positive grounded kernel is a separate product | Prove source-only logs, support completeness and founded recovery before replacing component rederivation with grounded maintenance. Keep unrooted-cycle and last-support controls |
+| Signed stream change | B22 §4 represents changes with signed weights and derives set operators from Z-set operators. No corresponding circuit algebra is implemented here | Specify accumulation and set distinctness boundaries, then prove correspondence with snapshot solve. Duplicate source occurrences are not automatically signed multiplicities |
+
+The ordered next work is therefore: concrete type/value interpretation;
+descriptor and rule-step preservation; separate batch/provisional transaction
+refinement; complete support correspondence; then typed changes and measured
+benefit. Use native Scheme truth models and the existing proof suite for each
+slice. A shared final row set alone does not qualify intermediate identities,
+publication behavior, support completeness or cost. Model comprehension and
+MRR Rust integration keep their existing later gates.
+
+
+* Representation ownership review (2026-10-07)
+
+The [[file:../provider-views/design.org::#provider-owned-views][Provider-owned view review]] reads implementation =93e81c1= and reopens B23
+sections 3.3/4/5.1 and S20 sections 6.3/7. Its next architectural unit connects
+compressed storage to actual rule reads, delta, budgets, actor view lifetime and
+result ownership. Current =.extend-rows= and engine buffers retain expanded
+pairs; lazy result reversal does not establish compressed relation storage.
+
+The proposal supplies implementation seams and falsifiable acceptance gates,
+not a completed migration. Lean owns enumeration, filtering and cardinality
+correspondence; TLA owns revision/retirement/publication interleavings. Existing
+finite native checks and exact-head CI retain their original scope. Higher-order
+function-change compilation and MR consumer integration remain separate work.
+
+

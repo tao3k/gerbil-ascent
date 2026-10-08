@@ -1,0 +1,164 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+#+TITLE: Actor Scheduling: proofs
+
+Feature owner: [[file:../index.org][feature index]]. This page retains the original
+source dates and qualification boundaries. Current evidence is commit-specific.
+
+* Positive Set actor round implementation update (2026-10-05)
+
+The [[file:../../scheme-actor-runtime-design.org][actor runtime design]] now maps the A22 round/SCC and B23 concretization
+premises to actual =program/actor-round.ss= integration: frozen frontiers,
+private frames/indexes, credit-bounded candidates, one owner merge and terminal
+drain before commit. Native tests and Lean/TLA+ gates cover this admitted pure
+Set subset. Ready-SCC scheduling, custom Provider workers, Session cancellation
+publication and matched performance remain separate obligations. No whole-runtime
+closure, model gain or MRR integration is asserted.
+
+
+* Cancelable positive Set Session actor update (2026-10-05)
+
+The [[file:../../scheme-actor-runtime-design.org][actor runtime design]] now has an implemented source-cut owner and independent
+compute worker. Cancel increments generation, refuses old publication and waits
+for assigned worker/monitor drain; failure restores committed sources. Native
+lifecycle tests and TLA+ publication/drain checks accompany the code. B22's
+outer/inner natural time distinction motivates generation versus round; A22's
+ready-SCC dependency scheduling remains a next implementation obligation.
+The actor constructor uses fresh engines, not retained incremental reuse. No
+performance gain or whole-runtime closure is asserted.
+
+
+* Ready positive Set SCC implementation update (2026-10-05)
+
+The [[file:../../scheme-actor-runtime-design.org][actor runtime design]] now maps canonical dependency SCCs and multi-head
+projection to actual native component workers. Completed predecessors release
+successors without waiting for unrelated active SCCs; each SCC retains local
+round completion, one owner charges global unique-row budgets, and the complete
+cut remains the Session publication unit. Native independent truth/rendezvous
+Cases and TLA+ prerequisite/drain gates accompany this slice. A22's SCC
+order/local state is implemented for pure Set cuts; B23 Provider concretization
+remains a separate contract. A matched exploratory native timing probe retains
+serial and SCC 1/2/4 observations without asserting general multicore speedup.
+
+
+* Component metadata cache qualification (2026-10-05)
+
+Immutable analysis identity now keys a weak component-plan cache. SCC admission
+policy is owned by the component module, repairing the prior CI module-size
+failure without changing its threshold. Runtime rows/frames/indexes remain
+solve-private. Native exact-identity and fresh-versus-cached projection controls,
+pure Lean identity/cache-construction equations, and replayed TLA scheduling safety are
+recorded in [[file:../../evidence/scheme-component-cache-20261005/receipt.json][the qualification receipt]]. Planning-only timing is not an end-to-end
+claim. Remaining gates include persistent worker/index reuse, large SCC
+partitioning, custom Provider concurrency and matched scale/CPU/allocation tests.
+
+
+* SCC worker incremental index ownership (2026-10-05)
+
+The worker now extends valid total indexes against the old version before
+installing admitted row roots and next versions; delta stays round-local.
+Reverse batch traversal preserves rebuilt bucket order. Native independent
+closure, input immutability and single/composite key controls accompany Lean
+ordered extension laws and TLA private extension/install safety with negative
+controls. [[file:../../evidence/scheme-component-index-20261005/receipt.json][CPU, wall and VM allocation receipts]] distinguish local worker cost,
+real actor coordinator cost and unmeasured public/LLM latency. Custom Provider
+concurrency, large SCC partitioning and persistent worker reuse remain open.
+
+
+* Successful credit observation qualification (2026-10-05)
+
+Native owner credit now restarts the worker traversal distance window. The
+32-row output bound and 64-call no-output checkpoint window are retained.
+Lean's =CreditObservation= laws quantify over any positive natural period;
+the replayed TLA model proves abstract credit/drain safety only. Native matched
+controls freeze the old round protocol while sharing current worker/index
+implementation. Independent truth and cancellation/drain gates accompany every
+performance lane. See [[file:../../evidence/scheme-credit-observation-20261005/receipt.json][receipt]] for actual samples and unstable timing results.
+This advances the A22 planning implementation without expanding B23 Provider
+concurrency claims. Persistent workers, large SCC partitioning and whole-runtime
+model gains remain separate open gates; no model calls or Rust integration.
+
+
+* SCC successor snapshots and terminal delivery
+
+The compiled indexed history proof now comes from =IndexedIteration=; this
+follow-up checks its scheduler boundary in the existing =ReadyComponents.tla=.
+The finite batch/tail fixture distinguishes an intermediate credited batch
+from terminal task completion, records the actual dispatch snapshot, and
+requires all predecessor output witnesses before successor admission. Faults
+for stale snapshots, dropped terminal tails and completion before merge credit
+must fail alongside the existing premature-dispatch/early-return controls.
+=ActorRoundCredits= remains unchanged and owns bounded assignment and drain;
+Lean remains responsible for pure ordered emissions and iteration history.
+
+The native 32+1-row rendezvous blocks a predecessor after its credited batch,
+verifies its successor remains unassigned, then releases the terminal tail and
+checks all 33 rows in the captured snapshot. Worker reuse follows task completion;
+worker/monitor joins occur at whole-pool exit, not at each SCC completion. This
+corrects source and design descriptions without changing scheduling behavior.
+See [[file:../../evidence/scheme-dependency-snapshot-20261006/receipt.json][qualification receipt]]. General DAG-to-relational-closure and complete native
+representation/trace refinement remain open; finite TLC is protocol evidence.
+
+
+* Indexed result leastness without supplied completion premises (2026-10-06)
+
+The canonical Set package now identifies ordinary full steps with constructed
+ground steps and transports their equality through every round. The existing
+finite ground-head argument supplies a stabilization witness; actual modeled
+indexed history reaches declarative derivability there and remains equal for
+every later natural round. No caller-supplied completed answer, soundness,
+closure or stability enters this final indexed theorem. The finite bound is
+derived from constructed rules and is not a runtime generation restriction.
+
+The native SCC suite checks completed snapshots independently: for every one
+of the 512 three-node graph inputs, each completed component is rerun from its
+actual private roots with full initialization. It must emit nothing and retain
+all roots. Floyd truth, exact owned emissions and external root preservation
+remain independent checks. TLA+ retains temporal readiness/credit/tail behavior
+without duplicating this iteration algebra. See the [[file:../../scheme-compiler-proof-bridge.org][compiler bridge]] and
+[[file:../../evidence/scheme-indexed-least-20261006/receipt.json][qualification receipt]]. Universal native iteration/completion extraction,
+SCC/name/scalar decoding and non-Set Provider instances remain separate gates;
+MR remains a later library consumer.
+
+This package integrates =e01949a1370b614b8143ccb1f4a903135b9b073a= and
+retains its native prior-prefix key admission checks and their separate
+receipt. The complete Lean collection and native SCC suite are requalified
+on the combined source. Both parallel audit additions are preserved; the
+indexed-least receipt keeps pre-rebase and combined native evidence distinct.
+
+
+* Selected activation fixture correspondence correction (2026-10-06)
+
+The full Scheme CI at =4ac16d4= exposed a stale metadata fixture: it supplied
+four positive-plan fields, while the compiled plan owner requires the fifth
+atom-extent field. Head projection then failed reading index four. The empty
+body fixture now supplies extent zero; its native mask controls additionally
+check that selected projections preserve purity and extent. No runtime
+compatibility branch, weakened admission check or enlarged test deadline was
+introduced. The corrected selected-activation suite passes independently;
+the [[file:../../evidence/scheme-selected-activation-layout-20261006/receipt.json][receipt]] retains the original failed run and qualified source identity.
+
+
+* BYODS selection and completion audit (2026-10-07)
+
+The follow-up connects rectangle selection to the existing directed insertion
+law instead of requiring a pre-established =Exact= frontier. Its remaining
+premises are candidate encoding, homogeneous root rectangles, unique members
+and disjoint descriptors. A mixed-old rectangle is a checked counterexample to
+omitting homogeneity. These are distinct from native hash/SCC extraction.
+
+The prior view model checked safety but could leave a stale reader awaiting
+external cancellation. =ProviderViews.Discard= repairs the proposed protocol.
+=ReaderLifetime= checks eventual release under explicit completion fairness,
+without any generation cutoff or state constraint. A missing stale-discard
+transition and an unfair worker are separately detected temporal counterexamples.
+This requirement precedes compressed-view actor integration; it does not assert
+that the current engine has implemented that integration.
+
+Lean: 90 jobs, 16 rectangle laws, 12 examples, standard axioms only.
+TLA+: 55,197 safety states at enumeration bound 4; 315 states in the independent
+reader-lifetime abstraction; five safety and two temporal seeded faults caught.
+The [[file:../../scheme-trrel-uf-design.org][UF design]] documents the abstraction mapping,
+remaining premises and engine integration gates. No new Scheme runtime behavior,
+model API experiment or whole-engine performance benefit is claimed here.
+

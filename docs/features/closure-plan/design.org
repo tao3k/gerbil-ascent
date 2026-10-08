@@ -1,0 +1,199 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+#+TITLE: Closure Plan: design
+
+Feature owner: [[file:../index.org][feature index]]. This page retains the original
+source dates and qualification boundaries. Current evidence is commit-specific.
+
+* Runtime audit closure and paper-to-code bridge (2026-10-07)
+
+The =9fd161f= GitHub run passed formal checks but failed Scheme performance and
+all three oracle shards at source loading: the =only-in= import of =take= in
+=core/relation-view.ss= expanded to an empty runtime import. Native compilation
+did not expose that interpreter error. Prefix membership now compares directly,
+and =just check-source-views= exercises the source loader, old frozen cuts and
+the callback evaluator independently of the native test library. Both Scheme
+and oracle jobs run this gate. Exact-head CI is a separate admission receipt.
+
+** Ordered consumers and cost repair
+
+The total journal exporter retains public legacy order. Internal evaluator roots
+are its reverse. Bound delta exporters instead reproduce legacy pending order:
+source and derived injections both prepend frontier occurrences. Replaying a
+delta reconstructs earlier injections without expanding their old pairs; the
+cut must fall at an injection boundary. Total export streams source frontiers
+directly, eliminating the temporary source batch and its extra list reversal.
+Derived batches retain their required orientation. Replay still allocates a UF
+owner and exported pairs; remaining regressions must remain in the new receipt.
+
+Ordered consumers own an explicit expansion cache per captured total/delta cut.
+This cache is allocated only for programs with observable callbacks, custom
+receivers, field checks or lattice joins. A changed cut replaces its cache entry.
+Pure canonical programs retain compressed access, including worker execution.
+Thus pair-retention avoidance applies to that pure path; callback compatibility
+has a separately documented expansion cost. Nested host values still require
+the existing stability contract.
+
+** One implementation and research chain
+
+[[https://kmicinski.com/assets/byods.pdf][B23 section 3.2 and Theorem 3.5]] require total/delta concretizations to cover
+the current relation and ensure newly implied facts traverse delta before total.
+This implementation uses exact positive Set difference, a stronger local
+instance of that history requirement. It does not generalize that contract to
+arbitrary lattice concretizations. The paper was reread for this integration.
+
+| Obligation | Native owner and discriminator | Existing formal correspondence | Remaining refinement obligation |
+|------------+--------------------------------+--------------------------------+--------------------------------|
+| Owned immutable members and exact pair count | trrel-uf freeze / old cuts after SCC merge; row and parts exports agree | ProviderRectangles count_exact, component_plan_separate, component_plan_nodup | Extract native member ownership, candidate root-pair completeness and decoding |
+| Every implied fact enters delta exactly once | trrel-uf insert / independent Floyd checks for insertion prefixes; retained ordered delta callbacks and frozen-kernel ordered frontier control | DirectedFrontier uf_emitted_exact; ProviderRectangles component_plan_uf_uniform, component_uf_selected_exact, root_plan_exact, root_plan_nodup, successive_union_exact | Extract native SCC/member lists into the supported root plan; refine candidate construction and private adjacency |
+| Key access is a complete ordered filter | relation-view routing / scan-versus-indexed keys, repeated and reordered columns, false group keys and equal-but-distinct host members | ProviderRectangles lookup_exact covers the abstract first coordinate | Prove generic routing bucket coverage, stored-value identity and parts binder correspondence |
+| Publication preserves old views and accepted sources on failure | view-state, evaluate, Session / prospective callback failure followed by recovery and successful retry | ProviderViews FrozenRead, AtomicPublication, LogicalBudget | Connect multi-relation staging and journal cuts to model steps |
+| Readers finish before the owner advances | actor-round / canceled run followed by successful retry and grouped worker controls | ReaderLifetime ReaderAlive, CreditBalance, ReaderCompletion under per-reader weak fairness | Native task/reader credit/drain correspondence and VM scheduling refinement |
+
+The new grouped request consumer combines bound source requests, two UF joins,
+partial SCC topology, append, SCC expansion, replacement and a held old result.
+An independent grouped Floyd closure checks every phase; worker controls run the
+same initial program. This is an executable integration slice for relation-backed
+queries. Full Steensgaard, Polonius, PageRank and LLVM experiments retain their
+separate obligations in =scheme-paper-closure.org=. This thread owns Scheme,
+consumer tests and correspondence documentation; the theorem thread owns the
+Lean/TLA implementations.
+
+The previous receipt remains a historical source cut. The runtime closure
+receipt binds the published =978b294= Scheme cut, source/native/oracle gates and
+individual paired costs. Exact published-head CI is checked separately;
+earlier passes do not substitute for this source cut.
+
+** Plan-selected routing and native differential entry
+
+The first eager-routing native cut passed 800 Cases but raised sparse DAG
+allocation above the explicit path. The engine now admits sources with an
+unindexed frozen carrier, inspects the already validated atom plans afterwards,
+and activates total routing for bound variable keys. Fixed literal keys retain
+filtering without routing construction. Routed source totals are recaptured
+with unchanged identity, revision and logical cardinality; future publications
+use the same per-relation decision. Callback programs retain ordered expansion.
+Source diagnostics still precede rule planning. Construction and recapture costs
+remain inside the matched whole-engine measurement.
+
+Five-second runtime controls rejected both parallel and serial interpreter
+startup for the old differential recipe. EQREL/TRREL/UF and grouped-query
+fixtures now enter the existing native DSL closure with the same stdin and row
+protocol. The native entry runs the existing artifact admission checker before
+reading fixture input; its verification marker goes to stderr so row stdout
+remains unchanged. Admission checks the current source/recipe hashes before
+execution. Every oracle shard builds that closure; =just oracle= owns its build
+prerequisite. The independent =check-source-views= gate continues to exercise
+source loading. Rust preserves exact stdout bytes while reporting actual reads
+and completed eight-node cuts; CI uses =--nocapture= and serial BYODS execution.
+Oracle recipes supervise stdout and stderr separately: diagnostics count as
+actual output without entering the row protocol. Six transport glue tests cover
+binary bytes, stderr progress, stalled children, CPU build progress and failure
+propagation. No synthetic heartbeat or
+runtime timeout widening qualifies this path.
+
+** Local SCC adjacency for the scale progress gate
+
+The five-second runtime gate exposed whole-root scanning in every UF insertion
+on the 10,000-edge disconnected-component fixture. Groups retain the legacy
+scan through 64 roots; after successful preflight a larger group installs a
+private inverse reach map. Predecessor/successor candidates then come from local
+closure maps and are ordered by stable root creation ordinals, matching the
+legacy prepended scan. SCC merges rebuild inverse maps from canonical surviving
+reach keys. Failed admission does not activate routing or mutate graph state.
+The new ordered-frontier Case compares every insertion with the frozen
+=c131042= UF kernel across activation, partial SCC unions, external bridges,
+grouped keys and zero-budget rejection; held frozen cuts remain stable. This
+is an implementation discriminator, not a new extracted adjacency theorem.
+
+The first four-process full native run stopped at the existing opaque
+64-graph reasoning Case. It now reports each completed eight-graph group only
+after both receipt-status and independent closure assertions succeed. This
+retains the same 64 masks and five-second deadline; the rejected run is excluded
+from the final acceptance receipt.
+
+The latest =e406584= provider audit is retained. The private reverse maps and
+root ordinals now enter its explicit validator as well: root-list order,
+complete inverse edges, no stale predecessor keys and absorbed-map release
+are checked after successful and rejected admission in the large-root control.
+This validator remains outside insertion and query hot paths. Rejection checks
+compare logical snapshot content and physical counts; independently captured
+hash traversal order is not a mutation contract. Ordered frontiers, journal
+replay and held-cut traversal retain their exact sequence controls.
+
+Grouped decoding and journal correspondence now include
+=ProviderEncoding.root_plan_encoded_exact=, =scopes_disjoint= and
+=orient_member/count/nodup=, plus the six =ProviderReplay= mutation controls.
+The local replay gate retains the original TLC checker/model/bounds and reads
+its generated-state counter once per second; it emits a marker only when that
+counter increases. An unchanged counter provides no progress marker. The
+qualifier source is retained with the runtime evidence for reproducibility.
+
+
+
+* Qualified runtime implementation (2026-10-07)
+
+** Source-cut and routing ownership
+
+Module policy rejected the first evaluator at 1028 effective lines. Initial
+source journals, immutable total/delta cuts and validated-plan routing now
+belong to =program/view-state.ss=. A private =view-routing-state= record carries
+only the owning engine's buffers, generation, journals and routing decisions.
+Source admission still finishes before initialization and plan inspection;
+recapture preserves relation identity, generation, revision and cardinality.
+The existing ordered callback, error, retained consumer and provider audit
+controls qualify the extracted path. The policy limit is unchanged.
+
+The =43ee40d= research revision is integrated. Its ProviderAdmission and
+ProviderIteration laws and native retained-injection/custom-packet controls
+remain proof-thread-owned; the runtime bridge retains their stated premises.
+
+** Earlier qualified runtime cut and cost baseline
+
+[[file:../../evidence/scheme-view-runtime-closure-20261007/receipt.json][The runtime closure receipt]] binds 551 Scheme sources at published =978b294= with digest
+=89527a08478920e4ceef362fe1e7ec0fda567e1ba004c9e7f9245c0c07541493=.
+The full native gate passed 85 modules and 808 Cases, with 85 final =OK= markers
+and exit zero. The independent relation-view module passed 19 Cases and emitted
+72 alternating paired measurements. Source loading, native artifact admission
+including stale-binding rejection, 11 BYODS differential tests, six supervision
+glue tests, Rust clippy and module policy passed. ProviderViews/reader/round
+and ProviderReplay retain their 12 and six mutation controls respectively;
+the selected model inputs are unchanged by the latest integration. The three
+new proof-thread native controls, including the =0a48020= keyed lattice update
+and settled-projection Case, are included in the full 808-Case cut.
+
+The table reports median paired frozen/explicit ratios from the independently
+run native cost module, with 12 pairs per workload. The explicit reference uses
+current shared helpers and the current UF kernel, rather than an entire older
+Git revision. Both construction and selected routing recapture are measured.
+
+| Workload | CPU ratio | elapsed ratio | allocated bytes ratio |
+|----------+-----------+---------------+-----------------------|
+| sparse DAG | 0.665 | 0.665 | 0.769 |
+| sparse cycle | 0.443 | 0.442 | 0.486 |
+| full DAG export | 1.423 | 1.425 | 1.532 |
+| full cycle export | 1.074 | 1.075 | 1.295 |
+| grouped query | 1.097 | 1.106 | 1.074 |
+| retained update, old result held | 0.341 | 0.338 | 0.455 |
+
+The retained workload's sampled live-byte ratio is 0.884; this samples initial
+and updated cuts while old rows remain held, not continuous peak RSS. Full
+export at that earlier cut replayed UF injections and allocated the concrete
+output family; its export and grouped regressions prompted the implementation
+repair below. This table remains the historical baseline, not the status of
+the repaired code.
+No general speedup or full paper-application replication is admitted. Native
+routing/binder extraction, VM scheduling correspondence and full application
+experiments remain the separate research gates listed above. Exact published
+revision CI is checked after publication and is separate from this local receipt.
+
+The subsequent =5c6057c= strict-dependency/pending-key integration changes only
+=ascent-strata-test.ss= among Scheme sources; production modules and the other
+550 sources are byte-identical to the qualified =978b294= cut. The updated
+native strata module separately passed five Cases, including its independent
+8,704 graph/kind assignment oracle, with final =OK= and exit zero. Formal CI at
+=5c6057c= passed. This incremental qualification and its source hashes are
+recorded in the receipt; the earlier full 808-Case run remains identified by its
+own published code cut. Final-head whole CI is a separate pending gate.
+
+

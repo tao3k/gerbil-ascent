@@ -1,0 +1,47 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+#+TITLE: Lattices: compiler
+
+Feature owner: [[file:../index.org][feature index]]. This page retains the original
+source dates and qualification boundaries. Current evidence is commit-specific.
+
+* Native budget arithmetic bridge
+
+=program/finite-arithmetic.ss= now owns natural capped multiplication and
+power; =higher-order.ss= calls these operations while traversing the shared
+finite type formulas. The cap remains =expansion-limit + 1=, a caller-owned
+normalization budget sentinel, not a language Generation limit. A result at
+that sentinel rejects expansion; it is never accepted as the true height.
+
+=packages/proofs/lean/CappedArithmetic.lean= proves:
+
+- Capping either operand preserves the capped product, including zero.
+- The accumulator recurrence computes =min cap (acc * base^exponent)=.
+- Clipping initial inputs preserves that recurrence.
+- Zero cap, zero/one base and saturated positive-base branches are sound.
+- The public power result equals =min cap (base^exponent)= for every natural
+  cap, base and exponent, including =0^0=.
+- Clipping an exponent before a later power preserves its capped result;
+  this is required when nested type cardinalities supply capped exponents.
+- Structural induction preserves entire nested power/product expressions,
+  including the relation/arrow cardinality and height formulas.
+
+Native multiplication clips both operands before multiplication. Power clips
+its factor and accumulator, and exits on zero, one or saturation; it neither
+constructs the full exact power nor decrements an enormous one-base exponent.
+Its remaining exponent decreases on every nonterminal iteration. The proof
+recurrence and native loop share the multiplication step; the optimized exits
+have separate proved equations. Native regression compares all 4,913 triples
+=cap/base/exponent in 0..16= with independent unbounded integer products,
+then checks huge exponents, nullary/empty types, budget rejection and actual
+function-valued fixed-point results.
+
+This bridge proves arithmetic, not the semantic sufficiency of the composite
+type height, descriptor-to-intrinsic binding translation, recursive IR or
+native delta execution. Those compiler obligations remain open. The
+[[file:../../evidence/scheme-capped-arithmetic-20261004/receipt.json][structured receipt]] binds the checked source and qualification;
+execution logs are excluded. The bound native artifact passed two focused
+modules with 49 Cases and 24 model-task native preflight checks; all six Lean
+files, both TLA models and both expected faults passed. This is not a rerun of
+all native modules or a new model experiment.
+

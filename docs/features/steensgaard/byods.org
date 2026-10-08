@@ -1,0 +1,27 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+#+TITLE: Steensgaard: byods
+
+Feature owner: [[file:../index.org][feature index]]. This page retains the original
+source dates and qualification boundaries. Current evidence is commit-specific.
+
+* Full Steensgaard application correspondence (2026-10-07)
+
+The complete pinned OpenJDK Program now has exact component-member admission
+across native Scheme, actual Rust Ascent eqrel and independent partition truth.
+The result visitor observes one complete frozen component at a time; it does
+not expand the 440,438,706 logical pairs for verification. The 51,022 active
+members, 12,688 components and largest component size 20,956 agree. This input
+performs no new load/store unions; positive native fixtures still qualify that
+consequence rule and retained lifecycle. CI repeats this full-input check.
+
+The mathematical component-square correspondence belongs to Lean; frozen
+publication/read/lifetime interleavings remain in TLA+. General native
+algorithm extraction, the other full paper applications and matched benefit
+qualification remain explicit gates. VM allocation accounting is not physical
+constructor bytes: the new full runs retain negative differences and reject
+physical allocation claims, including reinterpretation of historical positive
+ratios as memory savings. See
+[[file:acceptance.org::*Complete Steensgaard partition acceptance (2026-10-07)][the current closure section]] and
+[[file:../../evidence/scheme-steensgaard-partition-20261007/receipt.json][the acceptance evidence]].
+

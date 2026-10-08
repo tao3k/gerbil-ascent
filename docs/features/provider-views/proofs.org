@@ -1,0 +1,137 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+#+TITLE: Provider Views: proofs
+
+Feature owner: [[file:../index.org][feature index]]. This page retains the original
+source dates and qualification boundaries. Current evidence is commit-specific.
+
+* BYODS frozen-view validation unit (2026-10-07)
+
+[[file:../../scheme-trrel-uf-design.org][The UF design follow-up]] couples twelve Lean rectangle enumeration/cardinality
+laws, a TLA view-lifetime/publication model with five discriminating fault
+variants, and independently checked native frozen total/frontier views.
+Lean's exact-frontier transport retains its concretization premise; the native
+Floyd oracle checks that premise on 4,608 insertion prefixes. TLA checks
+protocol observations and avoids duplicating the relation algebra. Its seeded
+counterexamples establish design discriminators, not five production incidents.
+
+The existing UF list entrypoint consumes the same compressed frontier plan.
+At this unit's qualified revision (=2040128=), the evaluator still materializes
+that frontier at its row boundary.
+Thus this acceptance unit validates the representation/lifetime design; the
+whole-engine representation migration and measured benefit remain separately
+required before claiming B23's compressed-storage application result.
+
+** BYODS validation coverage after the frozen-view unit
+
+| Design obligation | Lean owner / premise | TLA owner / premise | Native discriminator / remaining gap |
+|-------------------+----------------------+---------------------+--------------------------------------|
+| Concretization of declared built-ins | EquivalenceComponents and DirectedFrontier: active-domain closure and exact frontier | TransitiveComponents: finite merge/remap/refusal actions | Independent per-insertion graph truth; general Scheme hash/root extraction remains open |
+| Every implied fact reaches a delta consumer | ProviderFrontier and SemiNaive: body decomposition and positive Set iteration under monotone views | ProviderFrontier: injection/consumption and initial-cut publication | Repeated atoms and split producers; arbitrary lattice gamma contracts remain open |
+| Keyed reads agree with the relation | IndexedPositiveTraversal / IndexedIteration: faithful bucket and admitted-column premises; ProviderRectangles: first-column rectangle filtering | ComponentIndex: root/version installation and aliases | Native keyed UF rectangle reads plus current explicit indexes; compressed engine dispatch remains open |
+| Unique logical fact budgets | ProviderRectangles: enumeration count plus unique members/disjoint rectangles | ProviderViews: a staged candidate exceeding the logical budget cannot publish | Exact-budget refusal/retry, duplicate zero delta; descriptor count cannot replace fact count |
+| Old observations survive later mutation | Immutable member-list representation is a Lean premise, not a temporal proof | ProviderViews: frozen reads, cancel/drain and backing lifetime | Held native total/frontier through SCC merge and exported-row mutation; borrowed field values are not deeply frozen |
+| No stale source/result publication | No Lean replica of the transaction machine | NativeSessionPublication / SessionTransaction / ProviderViews: cut/revision and atomic publication | Existing Session recovery controls; compressed-view integration still needs native trace mapping |
+| General lattice transfer | Lawful joins alone do not establish ViewMonotone; the new min-winner counterexample rejects this inference | No duplicate lattice fixed-point calculus | Trusted callback semantics remain outside this UF contract; do not widen actor eligibility without new contracts |
+| Whole-engine cost benefit | No timing theorem follows from semantic equivalence | No throughput theorem follows from finite safety exploration | Current engine retains pairs; sparse query/full export and retained-history costs still require matched measurement |
+
+The matrix records both verified laws and missing premises. It is the acceptance
+map for continued BYODS work; a passing formal job cannot be substituted for the
+native correspondence and cost columns.
+
+
+* Component ownership and shared-reader refinement (2026-10-07)
+
+The [[file:../../scheme-trrel-uf-design.org][UF design]] now connects captured member ownership and unique
+root pairs to disjoint rectangle enumeration, and derives disjoint additive
+union for consecutive exact frontiers. Repeated members and root pairs remain
+checked Lean counterexamples. SCC equivalence, candidate completeness and native
+extraction are explicit remaining premises rather than assumed whole-frontier
+correctness. The complete Lean build passes 90 jobs, with 24 rectangle laws and
+14 examples.
+
+The shared-reader TLA model checks last-owner retirement, ownership conservation,
+revision compatibility and per-reader completion. Aggregate fairness passes a
+single-reader control but permits starvation with two readers. Premature
+retirement, leaked ownership and equal-content revision reuse fail their named
+invariants. The accepted shared model covers 14,175 states, has no generation
+ceiling or state constraint, and retains a 315-state one-reader control. Eleven
+seeded defects are caught across the view and reader models. This formal unit
+uses the engine migration at =9fd161f=; it adds no new Scheme behavior or cost
+claim and does not replace the migration's native/cost evidence.
+
+
+* Grouped encoding and presentation journal progress (2026-10-07)
+
+The BYODS refinement now includes eleven Lean encoding/orientation laws and
+a separate TLA ProviderReplay publication model. Encoding a two-column row
+and encoding a three-column false-group row are provably distinct. Exact
+encoded frontiers derive from the constructed root/member plan; derived batch
+orientation preserves facts, uniqueness and counts. The TLA model uses a
+constructed predecessor/successor step and an independent input-closure oracle;
+six faults discriminate scope aliasing, early/omitted journal events, erased
+derived kind, mutable old cuts and refusal writes. Native Scheme tests cover
+false/true/ungrouped isolation, actual public export order, old cuts, detached
+row spines and whole-batch orientation.
+
+These are representation and publication obligations around Sections 3.3 and
+5.4. Export order is an additional Scheme Library contract, not a BYODS semantic
+requirement. Full custom-provider/lattice admission, application and benefit
+coverage remains open. Continue with universal storage/replay refinement and
+application controls under the existing closure matrix; MR/MRR remains deferred.
+See [[file:../../scheme-trrel-uf-design.org][the UF design]] for the complete ownership/scope mapping.
+
+
+* Canonical parts capability extraction and application correspondence (2026-10-07)
+
+Native dispatch must distinguish a checked custom visitor from an admitted
+exact-selector visitor, including nested unions. A source-bound native red
+control exposes the previous type failure; the repaired predicate extracts
+actual admission, unions compose both child capabilities, and bind/export
+retain the captured capability. The canonical index owner declines before key
+evaluation or consumer invocation. This supplies executable representation
+controls for the selected-matcher equality-elision premise. It does not prove
+universal native key equality or foreign callback laws.
+
+The complete Steensgaard program instantiates allocation/assignment injection
+and field-matched store/load consequences. Independent partition and graph
+saturation, Rust explicit/eqrel comparison, retained withdrawal and actor
+cancellation controls qualify this finite application correspondence. The
+then-eager eqrel buffers retained a concrete B23 storage gap. The later
+compressed equivalence publication section supersedes that representation
+limitation. Full application and resource acceptance require their own
+source-bound evidence; universal native refinement remains separate.
+Cross-thread VM allocation subtraction is invalid and is excluded from
+worker comparisons. See the [[file:../../scheme-trrel-uf-design.org][implementation design]] and its integrated receipt.
+
+
+* Canonical equivalence representation bridge (2026-10-07)
+
+The B23 equivalence representation audit identified an implementation gap:
+weighted components existed, but the canonical engine retained every implied
+pair. Native =eqrel= now constructs frozen component-square totals and exact
+cross-component frontiers, with logical budget preflight and ordered explicit
+journal export. Canonical receiver identity admits frozen actor reads; the
+coordinator retains exclusive component mutation and failure recovery.
+
+Lean adds =equivalence_blocks_exact=, =equivalence_blocks_count=,
+=equivalence_blocks_budget= and =equivalence_blocks_units= to =ProviderRectangles=. They derive the constructed
+frontier from explicit member extraction premises and the equivalence insertion
+law; the native hash/member extraction bridge remains qualified by executable
+truth tests. Lean tests remain under =Tests=. TLA+ reuses =ProviderViews= for
+publication, logical budgets, held readers, cancel/drain and stale replies.
+A finite TLC run is not a proof of arbitrary native histories or liveness.
+Full OpenJDK correctness/performance and the ten connected package gates remain
+separate from this representation implementation.
+
+The [[file:../../evidence/scheme-eqrel-views-20261007/receipt.json][source-bound receipt]] retains all small application pairs and the
+negative worker sample. Full native acceptance is 86 modules / 829 Cases;
+full formal acceptance is 109 Lean jobs / 30 positive models / 87 named
+counterexample controls. The million-pair count-only engine probe does not
+claim full pair export, peak memory or universal correctness from one input.
+
+Pinned Rust differential acceptance reports one unit test and 79 integration
+tests passing; the existing opt-in 10,000-edge =trrel_uf= reference remains
+ignored. The receipt keeps that qualification boundary and the rejected SDK
+build attempts. No model calls or MR integration were performed.
+

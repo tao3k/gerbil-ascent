@@ -65,9 +65,7 @@ jobs:
       - name: Qualify semantics and performance with one GxTest per purpose
         run: just test-compiled test-performance-contracts
       - name: Qualify complete standard Gerbil source tests
-        run: |
-          bash tools/test-source-parallel-test.sh
-          just test-source-parallel
+        run: GERBIL_LOADPATH="$PWD/.cache/ascent/native-library/lib${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" just test
       - name: Qualify runtime source view loading
         run: just check-source-views
       - name: Build native DSL closure entry

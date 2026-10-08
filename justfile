@@ -73,18 +73,6 @@ _test-file path heap='2G':
 test heap='2G':
     just test-file t/qualification "{{ heap }}"
 
-# Source Suites share the same global deadline while using the configured CPU
-# capacity. Compiled semantic Suites still run together in one GxTest below.
-test-source-parallel:
-    timeout "${ASCENT_GXTEST_TIMEOUT:-120s}" just _test-source-parallel
-
-_test-source-parallel:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    export GERBIL_PATH="{{ gerbil_package_prefix }}"
-    export GERBIL_LOADPATH="{{ justfile_directory() }}/.cache/ascent/native-library/lib:{{ justfile_directory() }}${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}"
-    exec bash tools/test-source-parallel.sh {{ gerbil_command }} -:max-heap=2G,debug=q test -v 5
-
 # One compiler invocation; upstream make owns threads, ordering and currentness.
 prepare-test-library:
     {{ gxi_command }} -:max-heap=3G,debug=q tools/build-test-library.ss library

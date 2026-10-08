@@ -98,7 +98,14 @@ counterexample, and an extra stable round must admit nothing. Mutable native
 representation and actor publication remain outside this semantic history.
 
 
+The [[file:features/representation/compiler.org::*Equality-preserving scalar representation][scalar representation bridge]] now proves that faithful value encoding
+commutes with ordinary binding, first-occurrence compilation, dirty-frame slot
+execution, ordered observations and keys. The equality premise is explicit and
+has a noninjective counterexample. Native heap decoding and stable Scheme
+hash/equality correspondence remain separate from that representation algebra.
+
 * Feature modules
+
 
 Detailed design, proof and acceptance records are maintained by feature.
 Do not append cross-feature implementation history to this overview.

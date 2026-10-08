@@ -5,6 +5,43 @@
 Feature owner: [[file:../index.org][feature index]]. This page retains the original
 source dates and qualification boundaries. Current evidence is commit-specific.
 
+* Test preparation and CLI startup (2026-10-08)
+
+A warm =just test-native t/qualification/ascent-positive-plan-test.ss= run
+completed all 30 Cases with exit 0 in 101.16 seconds; its Case invocation
+reported 31 seconds. Preparation and final content verification are part of
+the total, rather than Case execution. A previous entry rebuild also included
+three compiler layers (85 production modules, 87 support modules, one Suite)
+and native linkage. Cold and warm timings must be reported separately.
+
+In the same captured environment, an empty direct =gxi= invocation took 1.04
+seconds, while =gerbil env gxi= took 14.95 seconds. Inspection of the installed
+=gxpkg= implementation confirmed that =env-exec= selects the package prefix,
+prepends its =bin= directory to =PATH=, and invokes the command. The Justfile
+now applies those settings directly for interpreter recipes, preserving an
+explicit =GERBIL_PATH= or selecting the repository's =.gerbil= prefix. Ordinary
+Suite discovery and verdicts remain owned by =gerbil test=.
+
+The existing content inventory covered 10,035 inputs in 8.53 seconds. This
+measurement does not justify replacing content admission with timestamps or
+caching test verdicts. Binary, generated entry, source, dependency and
+compiler content checks remain in force. The launch change introduces no
+additional runner, Python process, receipt format, timeout or concurrency
+variable. Final comparison uses the same Suite after the changed Justfile has
+been admitted through a fresh compilation.
+
+The first direct-entry cold qualification passed all 30 Cases in 320.39
+seconds total (26 seconds for Cases). Following an interrupted invocation,
+receipt recovery required another cold build: 55.69 seconds total, all 30
+Cases passing in 4 seconds. The immediate subsequent run reported both
+=NATIVE-LIBRARY-CACHE-HIT= and =NATIVE-ENTRY-CACHE-HIT=, completed in 7.84
+seconds total and passed the same 30 Cases in 3 seconds. These observations
+show substantial timing variation even without a source change; they must
+not be interpreted as a controlled 101.16-to-7.84-second launcher speedup.
+The paired empty-launch measurement isolates CLI startup; the complete
+runs establish functioning content admission and uncached Case execution.
+Cold AOT preparation remains a separate optimization responsibility.
+
 * Single-module native carrier qualification (2026-10-05)
 
 The [[file:../../evidence/scheme-native-entry-20261005/receipt.json][new carrier receipt]] follows the startup failure above. Correcting the

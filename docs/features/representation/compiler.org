@@ -43,3 +43,56 @@ all native modules, all existing formal gate targets and pinned Rust differentia
 cases. See [[file:../../evidence/scheme-integrated-closure-20261006/receipt.json][source-bound acceptance receipt]]. Finite qualification is kept distinct from
 a machine-checked operational semantics of the Gerbil VM and compiler.
 
+
+* Equality-preserving scalar representation
+
+[[file:../../../packages/proofs/lean/ScalarEncoding.lean][ScalarEncoding]] connects admitted value encoding to the existing ordinary
+binder and first-occurrence slot compiler. An injective representation of
+logical values preserves both acceptance and the complete substitution. The
+slot execution theorem preserves every returned cell, including fresh writes
+made before a later mismatch. Compilation preserves all fresh/bound addresses
+and the name roster; the composed theorem applies to compiled terms directly.
+Ordered head observations preserve explicit absence separately from a value,
+and known-column keys preserve order and multiplicity. No clean-frame or
+rollback premise is introduced. A partial decoder round-trip on admitted values\nderives the injectivity premise; values outside admission can remain rejected.
+
+The representation premise concerns logical equality classes, not allocation
+identity. Two separately allocated Scheme strings or containers can be equal
+logical values. A decoder for the admitted native subset must preserve and
+reflect the actual stable equality relation; identity alone is insufficient.
+Likewise, hashing must agree with that relation before a physical bucket lookup
+can inherit the semantic key theorem. This module neither models Scheme heap
+mutation nor proves arbitrary user equality/hash procedures lawful.
+
+The executable Lean controls remain in [[file:../../../packages/proofs/lean/Tests/ScalarEncodingTests.lean][Tests/ScalarEncodingTests]]. They preserve
+false-like values through an option encoding, retain partial writes on failure,
+and distinguish a missing observation from an encoded false. A noninjective
+encoding that maps both Boolean values to zero is a required counterexample:
+it accepts a repeated-variable row that the ordinary binder rejects. Axiom
+reports expose the kernel dependencies of the representation theorems.
+
+The existing native [[file:../../../t/qualification/ascent-positive-plan-test.ss][positive-plan Suite]] adds an independent ordinary-binding
+comparison over ten heterogeneous values: Booleans, integers, a rational,
+symbol, string, vector, list and a large integer. Equal container counterparts
+are separately allocated. A literal mismatch first leaves dirty slots; the
+same oversized frame then produces the complete 200 ordered emissions, and
+reversed traversal retains the corresponding ordinary-binding stream. Unused
+tail cells remain unchanged. The same complete output is checked through\nthe canonical hash index above its scan threshold, and compiled keys are\nobserved for every value. This is a finite discriminator for actual Scheme
+execution, not a universal native decoder proof.
+
+[[https://kmicinski.com/assets/byods.pdf][BYODS section 4 (PDF page 11)]] requires physical indexes to expose the same concrete relation;
+value/key representation is one dependency of that obligation. The next
+representation owner is actual native action/key/head decoding and stable
+hash/equality correspondence. Provider snapshot/frontier composition and
+whole-component least-model admission retain their separate gates. Quint
+continues to own protocol interleavings; no scalar algebra is duplicated there.
+
+Qualification also rejected two toolchain preparation failures before any Case
+ran: dependency objects from an incompatible Gerbil build, followed by a native
+link referencing a retired OpenSSL Cellar directory. The locked dependencies
+were rebuilt in dependency order. On macOS, the existing Justfile environment
+now clears inherited library paths and supplies the active Homebrew OpenSSL
+formula directory. Linking the same generated objects with that directory
+succeeded. The normal admitted native entry subsequently passed all 30 Cases
+with exit 0, and the standard source Suite also passed all 30 Cases. Neither
+preparation failure is counted as a semantic pass or a model timeout.

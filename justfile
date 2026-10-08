@@ -4,15 +4,21 @@
 set shell := ["bash", "-euo", "pipefail", "-c"]
 
 # Match the repository's mrr-gerbil environment boundary. Homebrew's configured
-# compiler must not inherit Nix compiler flags or its macOS SDK.
+# compiler must not inherit Nix compiler flags or its macOS SDK. Resolve the
+# active Homebrew OpenSSL library after clearing inherited search paths; Gerbil
+# release metadata can retain a removed Cellar directory after a formula upgrade.
 gerbil_environment := if os() == "macos" {
-    "env -u CC -u CFLAGS -u CPPFLAGS -u LDFLAGS -u CPATH -u C_INCLUDE_PATH -u CPLUS_INCLUDE_PATH -u LIBRARY_PATH -u NIX_CFLAGS_COMPILE -u NIX_LDFLAGS -u DEVELOPER_DIR -u SDKROOT"
+    "env -u CC -u CFLAGS -u CPPFLAGS -u LDFLAGS -u CPATH -u C_INCLUDE_PATH -u CPLUS_INCLUDE_PATH -u LIBRARY_PATH -u NIX_CFLAGS_COMPILE -u NIX_LDFLAGS -u DEVELOPER_DIR -u SDKROOT LIBRARY_PATH=\"$(brew --prefix openssl@3)/lib\""
 } else { "env" }
 gerbil_command := gerbil_environment + " gerbil"
-gxi_command := gerbil_command + " env gxi"
+# gxpkg env only selects the package prefix and prepends its bin directory.
+# The captured environment already fixes the toolchain; apply that boundary
+# directly instead of importing the package-management CLI for every script.
+gerbil_package_prefix := '${GERBIL_PATH:-' + justfile_directory() + '/.gerbil}'
+gxi_command := gerbil_environment + ' GERBIL_PATH="' + gerbil_package_prefix + '" PATH="' + gerbil_package_prefix + '/bin:$PATH" gxi'
 
 gerbil_test_runtime_options := "-:max-heap=1G,debug=q"
-native_qualification := 'GERBIL_LOADPATH="' + justfile_directory() + '${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" ' + gerbil_command + ' env gxi -:max-heap=1G,debug=q t/native/qualification.ss'
+native_qualification := 'GERBIL_LOADPATH="' + justfile_directory() + '${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" ' + gxi_command + ' -:max-heap=1G,debug=q t/native/qualification.ss'
 quint_backend_sha256 := "880c0b2b72354816f12e9a9755829f2907071e9a181ffea1937954c23d54739d"
 
 default:

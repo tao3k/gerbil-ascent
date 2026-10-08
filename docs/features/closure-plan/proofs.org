@@ -243,6 +243,9 @@ The finite-vector scan/recursive traversal is now composed with the existing
 dirty-frame and ordinary-binding laws in =finite_precompiled_refines=; direct
 finite head observation discharges the qualification emitter correspondence.
 The [[file:../../scheme-compiler-proof-bridge.org][compiler bridge]] records its precise model/native boundary.
+The [[file:../representation/compiler.org::*Equality-preserving scalar representation][scalar encoding laws]] now compose ordinary binding, slot allocation, dirty
+execution and ordered key/head observations for faithful value representations.
+Their noninjective counterexample makes the equality premise falsifiable.
 Next establish native action/key/head decoding and scalar/name correspondence
 on the same admitted pure plan. Next instantiate Provider
 snapshot/frontier contracts and connect constructed component output to the

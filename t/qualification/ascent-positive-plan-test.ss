@@ -135,6 +135,45 @@
 
 (def ascent-positive-plan-test
   (test-suite "Complete positive rule slot plans"
+    (poo-flow-test-case "heterogeneous equality preserves repeated bindings and dirty-frame reuse"
+      ;; Equal separately allocated containers distinguish structural equality
+      ;; from identity; false remains a value and never an absent binding.
+      (let* ((values (list #f #t 0 -7 1/3 'value (string-copy "value")
+                           (vector #f 7) (list 'value #f) (expt 2 90)))
+             (copies (list #f #t 0 -7 1/3 'value (string-copy "value")
+                           (vector #f 7) (list 'value #f) (expt 2 90)))
+             (patterns '((variable . b) (variable . a) (variable . b) (literal . #f)))
+             (heads (list (vector 2 '((variable . a) (variable . b) (literal . #f)))
+                          (vector 3 '((variable . b) (variable . a)))))
+             (first (vector 0 '((variable . a)) [] '((variable . a)) []))
+             (second (vector 1 patterns '(1) patterns '((variable . a))))
+             (plan (gerbil-ascent-compile-positive-plan heads
+                     (list (vector 'atom first) (vector 'atom second))))
+             (first-rows (map list values))
+             (second-rows
+               (append-map (lambda (bound)
+                             (map (lambda (fresh copy) (list fresh bound copy #f))
+                                  values copies)) copies))
+             (bad-rows (map (lambda (row) (list (car row) (cadr row) (caddr row) #t))
+                            second-rows))
+             (frame (make-vector 4 'stale))
+             (expected (binding-stream patterns heads first-rows second-rows)))
+        (check-equal? (vector-ref plan 2) 2)
+        (check-equal? (length expected) 200)
+        (check-equal? (slot-stream plan frame first-rows bad-rows) [])
+        (check-equal? (slot-stream plan frame first-rows second-rows) expected)
+        (check-equal? (slot-stream plan frame (reverse first-rows) (reverse second-rows))
+                      (binding-stream patterns heads (reverse first-rows) (reverse second-rows)))
+        (check-equal? (indexed-slot-stream plan frame -1
+                        (vector first-rows second-rows []) (vector [] [] [])
+                        gerbil-ascent-hash-index-provider (list first second)) expected)
+        (for-each (lambda (value)
+                    (vector-set! frame 0 value)
+                    (check-equal? (gerbil-ascent-index-key patterns '(1) frame
+                                    (vector-ref (cadr (vector-ref plan 1)) 2))
+                                  (list value))) copies)
+        (check-equal? (vector-ref frame 2) 'stale)
+        (check-equal? (vector-ref frame 3) 'stale)))
     (poo-flow-test-case "exact parts matching preserves duplicate and projected output heads"
       (let* ((head (vector 2 '((variable . g) (variable . x) (variable . y))))
              (other (vector 3 '((variable . y) (variable . x))))

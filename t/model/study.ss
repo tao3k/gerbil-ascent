@@ -38,7 +38,7 @@
                  scheme-stratified-provenance-test))
 
 (import (only-in :gerbil-ascent/t/qualification/scheme-model-closure-test
-                 scheme-model-closure-test model-closure-compute model-closure-score))
+                 scheme-model-closure-test model-closure-compute model-closure-score model-closure-source-roots))
 
 
 ;;; These are the unchanged Rust differential fixtures, compiled into the
@@ -74,7 +74,7 @@
      (apply eqrel-program-main flags)
      (exit 0))
     (["--retained-benefit"] (session-benefit-main) (exit 0))
-    (["--source-closure" . roots] (apply source-closure-main roots) (exit 0))
+    (["--source-closure" . roots] (apply source-closure-main (if (null? roots) (model-closure-source-roots) roots)) (exit 0))
     (["--oracle" name]
      (check-native-oracle!)
      (case (string->symbol name)

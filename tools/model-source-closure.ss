@@ -3,7 +3,12 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 (import :gerbil/compiler/driver :gerbil/expander :std/encoding/json)
 (export main)
+;; Gambit's ~~ in an AOT program follows the executable location. Resolve the
+;; compiler interface directory when this module is built by the active Gxi.
+(defsyntax (compiler-library-path stx)
+  (datum->syntax #f (path-expand "lib" (gerbil-home))))
 (def (main . roots)
+  (add-load-path! (compiler-library-path))
   ;; Report completed compiler imports, not a synthetic startup heartbeat.
   ;; A whole root may load many interfaces; each completion is real work.
   (let (loader (current-expander-module-import))

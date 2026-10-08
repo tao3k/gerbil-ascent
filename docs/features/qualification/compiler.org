@@ -5,6 +5,58 @@
 Feature owner: [[file:../index.org][feature index]]. This page retains the original
 source dates and qualification boundaries. Current evidence is commit-specific.
 
+* Standard test entry and native source inventory (2026-10-08)
+
+Current commands are =just test=, =just test-compiled= and
+=just test-performance-contracts=. Each invokes upstream GxTest once over its
+complete purpose-specific roster. There is no project process pool, executable
+Suite carrier, registry, entry cache or per-Suite process supervisor. The three
+checks specific to that retired framework were removed with explicit approval;
+project runtime actor and resource rejection tests remain.
+
+=just prepare-test-library= runs one Gxi build entry using upstream =std/make=.
+Compiler capacity comes from ASP's machine-capacity projection. The Just
+prerequisite is shared: invoking compiled semantics and performance contracts
+together prepares once. Normal compiler subprocesses belong to upstream Gerbil;
+this build entry neither launches test workers nor supervises test commands.
+
+The semantic roster contains 89 Suites and 844 Cases. Seven performance Suites
+retain 10 Cases, including the original lifecycle benchmark moved unchanged to
+its performance namespace. Native compiled semantics and performance contracts
+both passed with a 2 GiB heap and the original 120-second deadline. Standard
+source directory discovery passed 89 Suites and 844 Cases in 92.48 seconds.
+The performance-contract command, including incremental preparation, completed
+in 79.30 seconds. These are prepared-dependency receipts, not cold-build gains.
+The rejected combined 96-Suite invocation exceeded 120 seconds while executing
+repeated benchmarks; that experiment is not counted as a pass.
+
+Artifact inventory and fixture directory operations now use native Scheme,
+with no =std/misc/process= import. Every Scheme source and =justfile= is hashed.
+Declared build/dependency directories and the root Gerbil-generated
+=manifest.ss= are excluded. Hidden source directories are included using
+=directory-files= with =ignore-hidden: 'dot-and-dot-dot=; see the
+[[https://gambitscheme.org/4.9.8/manual/][Gambit directory-files reference]].
+Eight artifact Cases verify publication admission and rejection, including
+added, removed and hidden source membership. Git inventory comparison remains
+an independent acceptance check, not a runtime dependency of the inventory.
+
+CI caches the immutable release archive only behind its pinned checksum,
+dependency outputs behind dependency/toolchain identity, and native artifacts
+behind complete source, recipe, workflow and toolchain content. Restored
+application package outputs are removed before building this checkout.
+=ASP_GERBIL_SCHEME_POLICY=1= remains the policy trigger; build core capacity is
+independent. Test verdicts are never cached.
+
+The native DSL executable passed its complete 15-Suite, 204-Case roster in one invocation.
+Model-source roots are inferred from the actual Scheme study Cases. A discovered AOT\ncompiler-import failure was traced to Gambit resolving =~~= relative to the\nstandalone executable. The compiler interface path is bound at module build time\nfrom the active Gerbil installation; the standalone probe passed all eight\nactual study roots without an extra Gxi or provider call. SS scenarios
+are discovered as Cases in one upstream GxTest invocation, retaining their
+original benchmark bodies and independent truth checks. All three performance\nSuites and 17 Cases passed within the unchanged 180-second command bound. No paid model calls
+are part of this change.
+
+The dated sections below retain earlier experiments. References to
+=test-native=, =test-native-suite=, process pools, registry or entry cache describe
+retired revisions and are not current execution instructions.
+
 * Ordinary directory tests and memory policy (2026-10-08)
 
 Ordinary qualification Cases use upstream =std/test= directly. Thirty-seven

@@ -1,21 +1,26 @@
 ;;; -*- Gerbil -*-
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
-(import :std/test :std/misc/process :std/encoding/json "../native/artifact-admission"
+(import :std/test :std/encoding/json "../native/artifact-admission"
         (only-in :std/crypto/digest sha256) (only-in :std/encoding/hex hex-encode))
 (export scheme-artifact-test)
 (def (put path text)
   (call-with-output-file [path: path truncate: #t] (lambda (out) (display text out))))
+(def (remove-fixture! path)
+  (if (eq? (file-type path) 'directory)
+    (begin
+      (for-each (lambda (name) (remove-fixture! (path-expand name path))) (directory-files [path: path ignore-hidden: 'dot-and-dot-dot]))
+      (delete-directory path))
+    (delete-file path)))
 (def (with-artifact-fixture thunk)
   (let* ((old (current-directory))
          (root (path-expand (string-append ".cache/ascent/tmp/artifact-" (number->string (current-jiffy))) old))
          (token (getenv "ASCENT_DSL_BUILD_TOKEN" #f))
          (started (getenv "ASCENT_DSL_BUILD_STARTED" #f)))
-    (run-process/batch (list "mkdir" "-p" root))
+    (artifact-directory! root)
     (try
      (current-directory root)
-     (run-process/batch '("git" "init" "-q"))
-     (run-process/batch '("mkdir" "-p" "t/native" ".cache/ascent/native-library"))
+     (artifact-directory! (path-expand ".cache/ascent/native-library"))
      (for-each (lambda (name) (put name "fixture bytes\n"))
                '("fixture.ss" "justfile"))
      (put ".cache/ascent/native-library/dsl-closure" "fixture executable bytes")
@@ -26,7 +31,7 @@
       (current-directory old)
       (if token (setenv "ASCENT_DSL_BUILD_TOKEN" token) (setenv "ASCENT_DSL_BUILD_TOKEN"))
       (if started (setenv "ASCENT_DSL_BUILD_STARTED" started) (setenv "ASCENT_DSL_BUILD_STARTED"))
-      (run-process/batch (list "rm" "-rf" root))))))
+      (remove-fixture! root)))))
 (def (stage) (artifact-main "freeze") (artifact-main "bind"))
 (def (rejected? thunk)
   (with-catch (lambda (_) #t) (lambda () (thunk) #f)))
@@ -56,6 +61,18 @@
       (with-artifact-fixture (lambda ()
         (stage) (put "fixture.ss" "changed source")
         (check (rejected? (lambda () (artifact-main "bind"))) => #t)
+        (check (rejected? (lambda () (artifact-main "finalize"))) => #t))))
+    (test-case "source membership includes hidden directories and rejects additions and deletions"
+      (with-artifact-fixture (lambda ()
+        (artifact-directory! (path-expand ".source"))
+        (put ".source/hidden.ss" "hidden source")
+        (check (hash-get (artifact-sources) ".source/hidden.ss") => (artifact-digest ".source/hidden.ss"))
+        (stage)
+        (put "added.ss" "new source")
+        (check (rejected? (lambda () (artifact-main "bind"))) => #t)
+        (delete-file "added.ss")
+        (stage)
+        (delete-file ".source/hidden.ss")
         (check (rejected? (lambda () (artifact-main "finalize"))) => #t))))
     (test-case "changed binary cannot publish or be used"
       (with-artifact-fixture (lambda ()

@@ -4,8 +4,8 @@
 ;;; Native artifact admission; never evaluates model data or DSL verdicts.
 (import :std/encoding/json :std/encoding/hex :std/crypto/digest
         (only-in :std/io/file call-with-file-reader)
-        :std/misc/process :std/misc/ports)
-(export artifact-main artifact-sources artifact-digest artifact-matching-sources? artifact-read-json)
+        :std/misc/ports)
+(export artifact-main artifact-sources artifact-digest artifact-matching-sources? artifact-read-json artifact-directory!)
 (def cache ".cache/ascent/native-library/")
 (def (file name) (string-append cache name))
 (def (clock) (time->seconds (current-time)))
@@ -23,13 +23,32 @@
 (def (save-json path value)
   (call-with-output-file [path: path truncate: #t]
     (lambda (out) (display (json->string value) out) (newline out))))
+;; Build output and dependency directories are outside the project source tree.
+;; All other directories, including hidden source directories, are inventoried.
+(def artifact-output-directories
+  '(".git" ".cache" ".gerbil" ".data" ".ci" ".devenv" ".direnv"
+    ".lake" "target" "node_modules" ".venv" "__pycache__"))
+(def (artifact-directory! location)
+  (let trim ((path (path-expand location)))
+    (if (and (> (string-length path) 1) (string-suffix? "/" path))
+      (trim (substring path 0 (- (string-length path) 1)))
+      (unless (file-exists? path)
+        (artifact-directory! (path-directory path))
+        (create-directory path)))))
 (def (artifact-sources)
-  (let* ((text (run-process '("git" "ls-files" "-z" "--cached" "--others" "--exclude-standard" "--" "*.ss")))
-         (paths (string-split text #\nul))
-         (result (make-hash-table)))
-    (for-each (lambda (path)
-                (unless (string=? path "") (hash-put! result path (artifact-digest path))))
-              (append paths '("justfile")))
+  (let (result (make-hash-table))
+    (def (visit directory)
+      (for-each (lambda (name)
+        (let (path (if (string=? directory "") name (string-append directory "/" name)))
+          (cond
+           ((eq? (file-type path) 'directory)
+            (unless (member name artifact-output-directories) (visit path)))
+           ;; Gerbil generates the root version manifest during package builds.
+           ((and (string-suffix? ".ss" name) (not (string=? path "manifest.ss")))
+            (hash-put! result path (artifact-digest path))))))
+        (directory-files [path: (if (string=? directory "") "." directory) ignore-hidden: 'dot-and-dot-dot])))
+    (visit "")
+    (hash-put! result "justfile" (artifact-digest "justfile"))
     result))
 (def (artifact-matching-sources? left right)
   (and (= (hash-length left) (hash-length right))
@@ -38,7 +57,7 @@
 (def (finite-nonnegative? value)
   (and (real? value) (>= value 0) (< value +inf.0)))
 (def (artifact-main mode)
-  (run-process/batch (list "mkdir" "-p" cache))
+  (artifact-directory! (path-expand cache))
   (let* ((current (artifact-sources))
          (manifest (file "dsl-closure.json")) (pending (file "dsl-closure-pending.json"))
          (run-path (file "dsl-closure-run.json")) (freeze (file "dsl-closure-sources.json"))

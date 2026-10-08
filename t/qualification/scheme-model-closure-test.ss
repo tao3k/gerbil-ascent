@@ -12,7 +12,7 @@
         (only-in :std/list/list find take)
         (only-in :std/test/base TestCase test-case-add!))
 (import (only-in "../model/response-projection" read-prediction project-prediction))
-(export scheme-model-closure-test model-closure-compute model-closure-score)
+(export scheme-model-closure-test model-closure-compute model-closure-score model-closure-source-roots)
 (defsyntax (study-case stx)
   (syntax-case stx ()
     ((_ family variant expression expected)
@@ -28,6 +28,12 @@
     '(:gerbil-ascent/program/scheme-language :gerbil-ascent/program/session :clan/poo/object))
    (else '(:gerbil-ascent/candidate/reasoning :gerbil-ascent/candidate/program
            :gerbil-ascent/candidate/finite-evidence :gerbil-ascent/candidate/stratified-provenance))))
+;; The compiler probe follows the actual imports of every frozen study case.
+(def (model-closure-source-roots)
+  (map symbol->string
+    (foldl (lambda (record seen)
+      (foldl (lambda (root roots) (if (memq root roots) roots (cons root roots)))
+             seen (case-imports record))) [] cases)))
 (def cases
   (list
     (study-case higher-input initial

@@ -5,6 +5,43 @@
 Compiler sources, checked calling conventions, lexical scope and finite types. Study notes and receipts retain their original revision and scope;
 historical source paths and timings are not current qualification claims.
 
+* Choose an expression layer from the transformation it owns
+
+The installed Gerbil =1cfb032= compiler shows several complementary forms.
+=compiler/compile.ss= defines =with-primitive-bind+args= with =defrules=:
+the syntax wrapper owns ordered argument traversal and temporary bindings.
+=compiler/method.ss= defines =with-context= with =defrule=, while
+=defcompile-method= uses =syntax-case= and =with-syntax= to generate class
+inheritance, delayed method registration and a parameterized traversal entry.
+=compile-e= dispatches by the normalized AST terminal. These are different
+expression tools with different responsibilities, rather than one object
+pattern to apply throughout a program.
+
+In =program/syntax.ss=, pure declaration and rule forms now use
+=defrule=/=defrules=. Omitted relation, lattice and program arguments normalize
+to a complete form before reaching one constructor expression. Single rule
+heads normalize to the same multiple-head form; facts use the same empty-body
+form. The collector forwards declaration options to their declaration macro
+instead of duplicating its option grammar. This retains source order and
+keeps construction at the declaration boundary.
+
+Identifier-sensitive term classification, macro argument diagnostics and the
+guarded collector still use =syntax-case=. Index and storage providers retain
+their existing generic dispatch, where alternative implementations actually
+share a behavioral contract. Pure graph traversal remains a named algorithm.
+Syntax normalization removes duplicated expansion definitions; it does not
+establish a runtime or end-to-end performance improvement.
+
+The native =std/test= qualification runs the syntax, lattice, aggregate,
+BYODS index, positive rule, binding and equivalence-storage Suites:
+93 Cases pass with final =OK= and exit zero. The syntax Suite also evaluates
+malformed source to check its original expansion diagnostics. Its static
+entry therefore links the expander, calls =gerbil-load-expander!= and resolves
+the installed Gerbil core through =GERBIL_HOME=. Earlier entries without
+these requirements failed; their logs and the successful receipt remain in
+ignored =.cache/ascent/syntax-normalization/=. This is local qualification,
+not a completed remote CI claim.
+
 * Study: expression optimization conditions and compiler output
 
 Study the installed Gerbil compiler directly, including the conditions that

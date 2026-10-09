@@ -67,11 +67,8 @@
 ;;       ;; => an atom for edge with two variable terms
 ;;       ```
 ;;     %
-(defsyntax (ascent-atom stx)
-  (syntax-case stx ()
-    ((_ (name term ...))
-     (syntax (gerbil-ascent-atom 'name
-                               (list (ascent-term term) ...))))))
+(defrule (ascent-atom (name term ...))
+  (gerbil-ascent-atom 'name (list (ascent-term term) ...)))
 
 ;;; A column without a declared predicate accepts any value. Explicit field
 ;;; predicates stay in the declaration and run at the source-admission edge.
@@ -223,29 +220,20 @@
 ;;       ;; => a two-column relation with default providers
 ;;       ```
 ;;     %
-(defsyntax (ascent-relation stx)
-  (syntax-case stx (index storage)
+(defrules ascent-relation (index storage)
     ((_ (name (column ...) source (index provider) (storage storage-provider)))
-     (syntax (gerbil-ascent-relation
+     (gerbil-ascent-relation
               'name (length '(column ...)) source provider storage-provider
-              (ascent-field-predicates (column ...)))))
+              (ascent-field-predicates (column ...))))
     ((_ (name (column ...) source (index provider)))
-     (syntax (gerbil-ascent-relation
-              'name (length '(column ...)) source provider
-              gerbil-ascent-set-storage-provider
-              (ascent-field-predicates (column ...)))))
+     (ascent-relation
+      (name (column ...) source (index provider)
+            (storage gerbil-ascent-set-storage-provider))))
     ((_ (name (column ...) source))
-     (syntax (gerbil-ascent-relation
-              'name (length '(column ...)) source
-              gerbil-ascent-hash-index-provider
-              gerbil-ascent-set-storage-provider
-              (ascent-field-predicates (column ...)))))
+     (ascent-relation
+      (name (column ...) source (index gerbil-ascent-hash-index-provider))))
     ((_ (name (column ...)))
-     (syntax (gerbil-ascent-relation
-              'name (length '(column ...)) []
-              gerbil-ascent-hash-index-provider
-              gerbil-ascent-set-storage-provider
-              (ascent-field-predicates (column ...)))))))
+     (ascent-relation (name (column ...) []))))
 
 ;;; Lattice declarations keep their join operation distinct from ordinary
 ;;; set relations because a refinement replaces a key's current value.
@@ -261,17 +249,14 @@
 ;;       ;; => a lattice declaration using max as its join operation
 ;;       ```
 ;;     %
-(defsyntax (ascent-lattice stx)
-  (syntax-case stx (index)
+(defrules ascent-lattice (index)
     ((_ (name (column ...) source join (index provider)))
-     (syntax (gerbil-ascent-lattice
+     (gerbil-ascent-lattice
               'name (length '(column ...)) source join provider
-              (ascent-field-predicates (column ...)))))
+              (ascent-field-predicates (column ...))))
     ((_ (name (column ...) source join))
-     (syntax (gerbil-ascent-lattice
-              'name (length '(column ...)) source join
-              gerbil-ascent-hash-index-provider
-              (ascent-field-predicates (column ...)))))))
+     (ascent-lattice
+      (name (column ...) source join (index gerbil-ascent-hash-index-provider)))))
 
 ;;; A rule may publish multiple heads, but its body is planned once so all
 ;;; heads observe the same bound variables and source snapshot.
@@ -287,19 +272,15 @@
 ;;       ;; => a rule with one reach head and one edge body atom
 ;;       ```
 ;;     %
-(defsyntax (ascent-rule stx)
-  (syntax-case stx (<--)
+(defrules ascent-rule (<--)
     ((_ (((name term ...) ...) <-- body ...))
-     (syntax (gerbil-ascent-rule
+     (gerbil-ascent-rule
               (list (ascent-atom (name term ...)) ...)
-              (list (ascent-clause body) ...))))
+              (list (ascent-clause body) ...)))
     ((_ ((name term ...) <-- body ...))
-     (syntax (gerbil-ascent-rule
-              (list (ascent-atom (name term ...)))
-              (list (ascent-clause body) ...))))
+     (ascent-rule (((name term ...)) <-- body ...)))
     ((_ ((name term ...)))
-     (syntax (gerbil-ascent-rule
-              (list (ascent-atom (name term ...))) [])))))
+     (ascent-rule ((name term ...) <--))))
 
 ;;; Finite disjunctions become ordinary rules at expansion time. This keeps
 ;;; the evaluator's rule loop independent of branch syntax.
@@ -315,16 +296,15 @@
 ;;       ;; => a one-element rule list
 ;;       ```
 ;;     %
-(defsyntax (ascent-rule-family stx)
-  (syntax-case stx (or and)
+(defrules ascent-rule-family (or and)
     ((_ head (done ...) ((or (and branch ...) ...) rest ...))
-     (syntax (append
+     (append
               (ascent-rule-family head (done ...) (branch ... rest ...))
-              ...)))
+              ...))
     ((_ head (done ...) (item rest ...))
-     (syntax (ascent-rule-family head (done ... item) (rest ...))))
+     (ascent-rule-family head (done ... item) (rest ...)))
     ((_ head (done ...) ())
-     (syntax (list (ascent-rule (head <-- done ...)))))))
+     (list (ascent-rule (head <-- done ...)))))
 
 ;;; User macro parameters have only expression and identifier kinds. Reject
 ;;; invalid identifier arguments at expansion time, before program creation.
@@ -395,53 +375,19 @@
                (ascent-collect mode (declared ...) (lowered ...)
                                clause ...))))
     ((_ mode (declared ...) (lowered ...)
-        (lattice name (column ...) source join (index provider)) clause ...)
+        (lattice name (column ...) option ...) clause ...)
      (syntax (ascent-collect
               mode
               (declared ...
                         (list (ascent-lattice
-                               (name (column ...) source join
-                                     (index provider)))))
+                               (name (column ...) option ...))))
               (lowered ...) clause ...)))
     ((_ mode (declared ...) (lowered ...)
-        (lattice name (column ...) source join) clause ...)
+        (relation name (column ...) option ...) clause ...)
      (syntax (ascent-collect
               mode
               (declared ...
-                        (list (ascent-lattice (name (column ...) source join))))
-              (lowered ...) clause ...)))
-    ((_ mode (declared ...) (lowered ...)
-        (relation name (column ...) source (index provider)
-                  (storage storage-provider)) clause ...)
-     (syntax (ascent-collect
-              mode
-              (declared ...
-                        (list (ascent-relation
-                               (name (column ...) source
-                                     (index provider)
-                                     (storage storage-provider)))))
-              (lowered ...) clause ...)))
-    ((_ mode (declared ...) (lowered ...)
-        (relation name (column ...) source (index provider)) clause ...)
-     (syntax (ascent-collect
-              mode
-              (declared ...
-                        (list (ascent-relation
-                               (name (column ...) source (index provider)))))
-              (lowered ...) clause ...)))
-    ((_ mode (declared ...) (lowered ...)
-        (relation name (column ...) source) clause ...)
-     (syntax (ascent-collect
-              mode
-              (declared ...
-                        (list (ascent-relation (name (column ...) source))))
-              (lowered ...) clause ...)))
-    ((_ mode (declared ...) (lowered ...)
-        (relation name (column ...)) clause ...)
-     (syntax (ascent-collect
-              mode
-              (declared ...
-                        (list (ascent-relation (name (column ...)))))
+                        (list (ascent-relation (name (column ...) option ...))))
               (lowered ...) clause ...)))
     ((_ mode (declared ...) (lowered ...)
         (include imported-fragment) clause ...)
@@ -582,14 +528,11 @@
 ;;       ;; => a program with one source relation
 ;;       ```
 ;;     %
-(defsyntax (ascent stx)
-  (syntax-case stx (default-storage)
+(defrules ascent (default-storage)
     ((_ (default-storage provider) clause ...)
-     (syntax (ascent-with-default-storage
-              program provider () clause ...)))
+     (ascent-with-default-storage program provider () clause ...))
     ((_ clause ...)
-     (syntax (ascent-with-default-storage
-              program gerbil-ascent-set-storage-provider () clause ...)))))
+     (ascent (default-storage gerbil-ascent-set-storage-provider) clause ...)))
 
 ;;; Fragments are validated as POO values when included in a program, so a
 ;;; reusable fragment cannot silently inject malformed declarations.
@@ -605,11 +548,8 @@
 ;;       ;; => a fragment with one source relation
 ;;       ```
 ;;     %
-(defsyntax (ascent-fragment stx)
-  (syntax-case stx (default-storage)
+(defrules ascent-fragment (default-storage)
     ((_ (default-storage provider) clause ...)
-     (syntax (ascent-with-default-storage
-              fragment provider () clause ...)))
+     (ascent-with-default-storage fragment provider () clause ...))
     ((_ clause ...)
-     (syntax (ascent-with-default-storage
-              fragment gerbil-ascent-set-storage-provider () clause ...)))))
+     (ascent-fragment (default-storage gerbil-ascent-set-storage-provider) clause ...)))

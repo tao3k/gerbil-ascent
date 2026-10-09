@@ -10,34 +10,6 @@
 
 (export gerbil-ascent-program-summary)
 
-;;; Declaration names are admitted symbols. Each invocation owns membership;
-;;; the common zero/one-name layout needs no table or retained projection list.
-;;; The projection runs once per item, including duplicates and nonreads.
-;; : (forall (a) (-> [a] RelationProjectionBindings BodyExpressions Void))
-;; : (-> DeclarationItems RelationProjectionBindings BodyExpressions Void)
-(defrule (for-summary-relations items (item name projection) body ...)
-  (let ((first #f) (seen #f))
-    (for-each
-     (lambda (item)
-       (let (name projection)
-         (when name
-           (cond
-            ((eq? first name) (void))
-            ((not first) (set! first name) body ...)
-            (else
-             (unless seen (set! seen (make-hash-table-eq)))
-             (unless (hash-key? seen name)
-               (hash-put! seen name #t)
-               body ...)))))) items)))
-
-;;; All reads of a consumer are published together. Its edge is either absent
-;;; or the current list head, so duplicate admission needs no per-vertex table.
-;; : (-> Successors Natural Natural Void)
-(def (publish-summary-edge! successors producer consumer)
-  (let (neighbors (vector-ref successors producer))
-    (unless (and (pair? neighbors) (= (car neighbors) consumer))
-      (vector-set! successors producer (cons consumer neighbors)))))
-
 ;; gerbil-ascent-program-summary
 ;;   : (forall (row) (-> (Program row) (ProgramSummary row)))
 ;;   : (-> Program ProgramSummary)
@@ -64,17 +36,31 @@
          (successors (make-vector count [])))
     (for-each
      (lambda (rule index)
-       (for-summary-relations (.ref rule 'heads) (head name (.ref head 'relation))
-         (hash-update! producers name (cut cons index <>) [])))
+       (for-each
+        (lambda (head)
+          (let (name (.ref head 'relation))
+            (hash-update! producers name
+                          (lambda (prior) (cons index prior)) [])))
+        (.ref rule 'heads)))
      rules (iota count))
     (for-each
      (lambda (rule consumer)
-       (for-summary-relations (.ref rule 'body)
-         (clause name (and (memq (.ref clause 'ascent-clause-kind) '(atom negation aggregate))
-                          (.ref clause 'relation)))
-         (for-each (cut publish-summary-edge! successors <> consumer)
-                   (or (hash-get producers name) []))))
+       (for-each
+        (lambda (clause)
+          (when (memq (.ref clause 'ascent-clause-kind)
+                      '(atom negation aggregate))
+            (for-each
+             (lambda (producer)
+               (vector-set! successors producer
+                            (cons consumer
+                                  (vector-ref successors producer))))
+             (or (hash-get producers (.ref clause 'relation)) []))))
+        (.ref rule 'body)))
      rules (iota count))
+    (set! successors
+      (vector-map (lambda (neighbors)
+                    (delete-duplicates/hash neighbors))
+                  successors))
     ;; std/struct/dag rejects cyclic graphs, so it cannot find these SCCs.
     ;; Tarjan visits each rule and dependency once. The reversed list of
     ;; completed components is in producer-before-consumer order.

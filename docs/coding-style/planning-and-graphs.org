@@ -467,3 +467,42 @@ The initial failed positive-plan invocation is not included in this receipt.
 The incoming remote revision =c5df1ac= changes formal proofs and CI configuration,
 with no changes to these Scheme production or qualification sources. Local
 qualification remains distinct from current-head remote CI and static AOT.
+
+* Declaration summary: admission before dependency expansion
+
+Gerbil =1cfb032= =std/list/list.ss:24-32= makes distinct publication a
+membership operation around an explicit consumer. =std/struct/dag.ss:36-47=
+keeps visited and visiting state local to one traversal. These are useful
+construction contracts even though the DAG walker itself cannot accept our
+cyclic dependency graphs. The existing native Tarjan partition remains intact.
+
+=program/summary.ss= previously indexed every repeated head, expanded every
+repeated reading clause against those producers, and then deduplicated each
+complete adjacency list. The private =for-summary-relations= syntax now owns
+relation-name admission for both producer indexing and reading-clause expansion.
+The item projection runs once per declaration item; atom, negation and aggregate
+reads remain admitted, while guard/binding clauses never read a relation slot.
+An inline first symbol handles zero/one-name layouts. A construction-local
+identity table is created only on the second distinct name. No membership state
+or projected name spine survives the invocation.
+
+Consumers publish in rule order. Every edge for a given consumer is contiguous
+in its producer adjacency list, so =publish-summary-edge!= needs only to inspect
+the current list head before publishing a fresh pair. This removes duplicate
+edges before allocation and removes the final graph-wide deduplication pass.
+Reverse consumer order, exact SCC order, sorted rule/name descriptors and
+self-loop detection retain their existing semantics. Public descriptors stay
+POO objects; this pure planning protocol does not introduce runtime inheritance,
+execution frames or source-row state.
+
+The fixture also exposed a POO construction mistake: =(rules rules)= recursively
+references the slot rather than an identically named outer value. The pinned
+POO =object.ss:489-495= expands slot identifiers through a local syntax scope;
+=object.ss:314-318= documents slot construction forms, including the single-name
+form for an outer binding. The fixture now uses a distinct =declarations=
+binding. Its failed startup and the separately corrected isolated-component
+oracle remain in cache. Neither failure changes a performance gate.
+
+See [[file:../../t/performance/declaration-summary/README.org][declaration summary qualification]] for complete native summary construction
+and descriptor consumption, independent controls and finite ordered-graph
+comparisons. Duplicate-heavy construction gains are not public solve gains.

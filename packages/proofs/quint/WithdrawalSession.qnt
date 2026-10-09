@@ -1,36 +1,50 @@
 // SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 // SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
-// Stable IDs model duplicate source occurrences. Public selectors use current
-// list positions. ResultOf is a finite graph, not the native grounded solver.
+// Stable IDs distinguish duplicate source occurrences. The initial complete
+// graph is immutable; removed memberships accumulate across serialized cuts.
+// ResultOf is a finite graph, not the native grounded solver.
 module WithdrawalSession {
   const Mutation: str
+  pure val Initial = Set(0,1,2)
+  pure val InitialOrder = List(0,1,2)
   pure def ResultOf(source: Set[int]): Set[int] =
     (if (source.contains(0) or source.contains(1)) Set(1) else Set()).union(
       if (source.contains(2)) Set(2) else Set()).union(
       if ((source.contains(0) or source.contains(1)) and source.contains(2)) Set(3) else Set())
-  type State = {source: Set[int], graph: Set[int], rows: Set[int], generation: int,
-    phase: str, pending: Set[int], expected: Set[int], native: Set[int], good: bool}
+  type State = {source: Set[int], graph: Set[int], removed: Set[int], ids: List[int],
+    savedSource: Set[int], savedRows: Set[int], rows: Set[int], generation: int, phase: str, pending: Set[int], expected: Set[int],
+    pendingRemoved: Set[int], pendingIds: List[int], candidate: Set[int], good: bool}
   var q: State
-  action init = q' = {source: Set(0,1,2), graph: Set(0,1,2), rows: Set(1,2,3),
-    generation: 0, phase: "idle", pending: Set(), expected: Set(), native: Set(), good: false}
+  action init = q' = {source: Initial, graph: Initial, removed: Set(), ids: InitialOrder,
+    savedSource: Set(), savedRows: Set(), rows: Set(1,2,3), generation: 0, phase: "idle", pending: Set(), expected: Set(),
+    pendingRemoved: Set(), pendingIds: List(), candidate: Set(), good: false}
   action Begin = {
     nondet position = Set(0,1,2).oneOf()
-    val ordered = List(0,1,2).select(id => q.source.contains(id))
-    all {q.phase == "idle", position < ordered.length(),
+    val token = q.ids.nth(position)
+    all {q.phase == "idle", position < q.ids.length(),
       q' = {...q, phase: "checking", good: false,
-        expected: q.source.exclude(Set(ordered.nth(position))),
-        pending: q.source.exclude(Set(if (Mutation == "ordinal") position else ordered.nth(position)))}}
+        expected: q.source.exclude(Set(token)),
+        pending: q.source.exclude(Set(if (Mutation == "ordinal") position else token)),
+        pendingIds: q.ids.select(id => id != token),
+        pendingRemoved: if (Mutation == "forgetRemoved") Set(token) else q.removed.union(Set(token))}}
   }
   action Check = {nondet good = Set(true,false).oneOf(); all {q.phase == "checking",
     q' = {...q, phase: "ready", good: good,
-      native: if (good) ResultOf(q.pending) else Set(9)}}}
+      candidate: if (good) ResultOf(q.graph.exclude(q.pendingRemoved)) else Set(9)}}}
   action Commit = all {q.phase == "ready", q.good or Mutation == "unchecked",
-    q' = {...q, phase: "idle", generation: q.generation+1, source: q.pending, rows: q.native,
-      graph: if (Mutation == "staleGraph") q.graph else q.pending}}
+    q' = {...q, phase: "idle", generation: q.generation+1, source: q.pending, rows: q.candidate,
+      savedRows: if (Mutation == "borrowObservation") q.candidate else q.savedRows,
+      graph: if (Mutation == "graphEdit") q.pending else q.graph, removed: q.pendingRemoved,
+      ids: if (Mutation == "rebase") InitialOrder.select(id => id < q.pendingIds.length()) else q.pendingIds}}
   action Abort = all {q.phase != "idle", q' = {...q, phase: "idle"}}
   action Early = all {q.phase == "checking", Mutation == "early", q' = {...q, source: q.pending}}
-  action step = any {Begin, Check, Commit, Abort, Early}
-  val AtomicSnapshot = q.rows == ResultOf(q.source) and q.graph == q.source
+  action Observe = all {q.phase == "idle", q' = {...q, savedSource: q.source, savedRows: q.rows}}
+  action step = any {Begin, Check, Commit, Abort, Early, Observe}
+  val AtomicSnapshot = q.rows == ResultOf(q.source) and q.graph.exclude(q.removed) == q.source
+  val FrozenGraph = q.graph == Initial
+  val CurrentTokens = q.ids == InitialOrder.select(id => q.source.contains(id))
   val CurrentOrdinal = q.phase == "idle" or q.pending == q.expected
+  val CumulativeSupport = q.phase == "idle" or q.graph.exclude(q.pendingRemoved) == q.expected
+  val HistoricalObservation = q.savedRows == ResultOf(q.savedSource)
   val ExplorationBound = q.generation <= 3
 }

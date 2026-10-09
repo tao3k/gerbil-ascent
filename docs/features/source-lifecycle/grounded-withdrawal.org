@@ -5,11 +5,13 @@
 
 * Executable owner
 
-=candidate/withdrawal-session.ss= admits one bounded positive candidate and
-owns a copied source snapshot, its complete checked grounded graph and a native
-Session. Its POO contract exposes observation and occurrence withdrawal. Native
-Session and maintenance state never escape. Observation copies source identity,
-source rows and query rows; proposal mutation cannot modify the admitted owner.
+=candidate/withdrawal-session.ss= admits one bounded positive candidate.
+Initialization solves the copied source with the native evaluator and verifies
+its complete grounded graph. Its POO owner then retains that graph, mutable
+membership snapshots and private stable source occurrence tokens. Observation
+and occurrence withdrawal are the only methods; no native engine or support
+state escapes. Maintained rows follow surviving initial root order; the query
+meaning is set-valued. Negative rules and reducers do not enter this positive owner.
 
 #+begin_src scheme
 (def owner (candidate-open-withdrawal-session snapshot proposal))
@@ -17,54 +19,121 @@ source rows and query rows; proposal mutation cannot modify the admitted owner.
 ;; => POO observation with source: (generation 1) and rows:
 #+end_src
 
-The request supplies the expected CURRENT generation. Source selectors are
-=(relation one-based-position)= in that generation, including duplicate rows.
+Requests supply the expected CURRENT generation. Public selectors are
+=(relation one-based-position)= in that generation. Private tokens retain the
+initial occurrence identity even when positions shift or row values coincide.
 Unknown, duplicate, empty, stale and over-budget requests fail before publication.
-Withdrawing a source occurrence cannot withdraw an equal candidate-owned fact.
-This is source-cut consistency, not authority to retire an external source.
+An equal candidate-owned fact is a separate support and survives source removal.
+This is local cut consistency, not authority to retire an external source.
 
-* Transaction sequence
+Each observation captures its source AND row roots at creation. POO field
+laziness must not read a mutable current-state cell later. Source identity,
+source pairs and row pairs are copied on observation. Holding an old observation
+across another cut cannot change its generation, rows or source contents.
 
-1. Validate the expected generation and every source occurrence.
-2. Build the prospective copied cut and stage DRed overdelete/rederive.
-3. Independently replay and verify every grounded alternative at the new cut.
-4. Run native affected-component replacement against that cut, retaining candidate facts.
-5. Compare complete native query rows to the staged rows before native publication.
-6. Publish the private committed source/graph/rows triple.
+* Maintained positive transaction
 
-Each cut rebuilds its verified graph. This is necessary because surviving rows
-receive new occurrence positions. Keeping old positions would make the second
-withdrawal remove a different occurrence. The independent graph replay is also
-the rule-instance coverage gate. Failed preview, graph admission, native solve,
-row comparison or acceptance preserves the prior owner.
+1. Validate generation and every current occurrence; translate to stable tokens.
+2. Copy the prospective source cut and filter its token lists in the same order.
+3. Stage DRed overdelete/rederive against the initially verified complete graph.
+4. Complete bounded work and allocate the prospective rows/source/support/token state.
+5. Publish through one private state swap.
 
-=gerbil-ascent-session-replace-sources!= now accepts an optional trusted
-=result -> Boolean= acceptance procedure. Only exact =#t= accepts. It runs on a
-completed prospective result before engine/source publication. Reentrant append,
-run, timed run and replacement operations are rejected throughout the transaction;
-the guard is released on success and exception. Custom provider or callback
-side effects remain their own host responsibilities. A caller must serialize
-concurrent access to a native Session or withdrawal owner. This is not a lock.
+Positive source deletion cannot introduce a new grounded rule instance.
+The initial graph covers all future subcuts; cumulative removed-token membership
+retires initial source edges without changing the graph. Candidate constants and
+remaining grounded alternatives can rederive overdeleted facts. Unsupported
+cycles cannot seed themselves. No graph replay or native fixed-point solve runs
+on subsequent cuts. The initial certificate remains bound to its initial cut;
+it is not republished as a fresh certificate for later generations.
+
+Failure preserves the previous cut, including token translation. The owner
+serializes public method calls and rejects reentrant access. Callers must
+serialize concurrent access; this is not a thread lock. Insertions require a
+new owner and complete graph admission. Physical edge compaction is not added.
+
+* General native transaction boundary
+
+=gerbil-ascent-session-replace-sources!= retains its optional trusted
+=result -> Boolean= acceptance procedure. Only exact =#t= accepts. It checks a
+completed prospective result before native engine/source publication; reentrant
+append, run, timed run and replacement are rejected throughout the transaction.
+It continues to serve native affected-component replacement for general admitted
+programs. It is also used by the frozen replay baseline, rather than by the
+maintained positive owner after initialization.
 
 * Connected evidence
 
 | Layer | Gate | Boundary |
 |-------+------+----------|
-| Native Suite | 64 three-node graphs, each occurrence cut, successive duplicate cuts, candidate support, ownership, failure and reentry | Finite test corpus |
-| WD26 | Real pinned administrative cut, independent walk, native Session and fresh receipt agree | Finite extract, no model synthesis score |
-| Lean SourceOccurrences | Exact surviving-occurrence membership and rejected/stale/accepted publication; duplicate and rebasing examples | Pure list model, no extraction of Scheme loop or graph solver |
-| Quint WithdrawalSession | Atomic rows/source/graph and current-position translation; early, stale-graph, unchecked-result and wrong-ordinal mutants | Finite duplicate-support graph at serialized public boundaries |
+| Native semantic Suite | 64 graphs and all single cuts; all alternating-position sequences against independent walks AND fresh native receipts; mixed sources, duplicates, constants, rollback and held observations | Finite corpus, no native extraction proof |
+| WD26 | Administrative source cut, independent walk, maintained rows and fresh receipt agree | Finite extract, no model synthesis score |
+| Lean StableSourceSupport | Initial rule-instance coverage remains sufficient for positive subcuts; stable token survival and cumulative cuts | Native grounding and token decoding remain representation obligations |
+| Lean ComponentClosure.SourceWithdrawal | Founded overdelete/rederive recovery and surviving occurrence support | Mutable Scheme loop refinement remains open |
+| Quint WithdrawalSession | Frozen graph, cumulative removed membership, token order and atomic publication; seven fault variants including historical observation borrowing | Finite duplicate-support graph, serialized public boundaries |
 
-* Research and remaining work
+* Matched complete lifecycle costs
 
-This connects the existing [[file:../../research/scheme-dsl/deletion-h18.org][deletion study]] to native transaction admission:
-complete grounded alternatives implement overdelete/rederive, while the native
-Session still reevaluates affected components. This is not DRedc and has no
-performance improvement claim. Independent graph reconstruction currently costs
-a complete finite replay for every cut; retaining graph updates requires a new
-stable occurrence identity and an incremental coverage proof.
+=t/performance/withdrawal-support/replay-reference.ss= freezes the =f1bd5ef=
+per-cut graph-replay algorithm. Both arms receive the same held-observation bug
+fix and share current native dependencies. This compares algorithms, not two
+historical toolchain builds. The maintained arm uses the same initial native
+solve and graph admission, then DRed; the baseline uses complete graph replay
+and native Session replacement at every cut.
 
-Negative rules, reducers and non-finite operators are outside this positive
-owner. General native source replacement still handles their admitted semantics.
-The [[file:../../research/scheme-dsl/differential-m13.org][signed differential trace]] and
-[[file:../../research/agent-inference/provenance-z19.org][minimum-height annotation]] designs remain separate open work.
+Both measured lifecycles include construction, all source deletions and public
+observations. Fifty paired samples alternate order. After each sample, every
+source generation and complete query row set is compared across arms and to an
+independent source-pair BFS, outside measurement. Chain and diamond require
+20 percent CPU reduction, 25 percent allocation reduction and 35/50 CPU wins.
+Duplicate and tiny controls allow at most 10 percent plus 20us CPU and 10 percent
+plus 4096 bytes allocation. Thresholds were fixed before measurement.
+
+The first stable-token experiment retained native replacement at every cut.
+It failed the chain contract (CPU 12.088 to 10.094ms; allocation 18,463,208 to
+16,067,072 bytes). That rejection remains in the local receipt. Moving the
+positive owner to maintained DRed is the subsequent algorithm change; neither
+budgets nor admission thresholds were widened.
+
+The subsequent native run passed all four scenarios. Chain median CPU was
+12.206 to 8.346ms and allocated bytes 18,463,208 to 13,487,768; diamond was
+11.324 to 7.858ms and 17,357,112 to 12,979,008 bytes. Both targets won all
+50 CPU pairs. These are eight-cut finite lifecycles. Allocation is not a
+resident-memory measurement: the initial complete graph stays resident until
+the owner is released, even after all sources are withdrawn.
+
+* Research boundary
+
+The [[file:../../research/scheme-dsl/deletion-h18.org][deletion study]] now has an executable grounded DRed owner. This is not
+DRedc: no recursive/nonrecursive derivation-count optimization is added.
+The [[file:../../research/scheme-dsl/differential-m13.org][signed trace]] and
+[[file:../../research/agent-inference/provenance-z19.org][minimum-height annotation]] designs remain open. Results from these finite
+lifecycle measurements do not establish large-data, general Session, lattice,
+or whole-provider performance.
+
+* Native gate isolation
+
+The combined nine-Suite GxTest hit its unchanged 120-second deadline during
+the older change-plan Suite, before the new support Suite ran. The gate now
+uses =tools/test-performance-contracts.ss= with the declared ASP testing memory
+and process-isolation profiles. Every child is the standard native GxTest with
+2 GiB; each Suite runs in a fresh process. Existing Scheme workgroups and ASP's
+native core-capacity projection dispatch independent Suites concurrently;
+paired arms stay sequential and counterbalanced inside each process. CPU
+counters are process-local. Separate logs preserve contiguous native Case
+receipts, while actual completed work is forwarded during execution. The enclosing total deadline remains
+120 seconds. Native child failure is explicitly propagated and was qualified
+with an intentional failing Case. Source discovery and build scheduling remain
+Gerbil-owned. The serial isolated lane also exhausted 120 seconds after eight completed
+Suites. Both negative logs remain retained. No sample count, CPU/allocation
+threshold, source corpus, heap or deadline was relaxed. No second test harness
+or Bash process scheduler was added.
+
+The final native gate completed all nine Suites within that unchanged deadline,
+with nine =MODULE-OK= receipts and a successful Case audit. In this concurrent
+run, chain lifecycle CPU was 10.339 to 5.776 ms and allocation 18,516,992 to
+13,488,824 bytes; diamond CPU was 8.869 to 5.774 ms and allocation 17,367,352 to
+12,978,512 bytes. Both controls passed their original gates. These are finite
+paired process-CPU and allocated-byte results, not an end-to-end wall-time or
+resident-memory claim. An intentional failing child propagated exit 70 through
+the workgroup runner; its failure cannot produce =PERFORMANCE-CONTRACTS-OK=.

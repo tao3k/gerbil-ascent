@@ -3,7 +3,9 @@
 #+TITLE: Source Lifecycle: compiler
 
 The [[file:grounded-withdrawal.org][grounded withdrawal Session owner]] now connects staged positive deletion
-to native source replacement, generation checks and complete graph admission.
+to generation checks and complete graph admission. Stable occurrence identities
+now let this positive owner maintain grounded subcuts without repeated native
+fixed-point solving.
 General deletion, signed traces and native proof refinement remain open.
 
 Feature owner: [[file:../index.org][feature index]]. This page retains the original

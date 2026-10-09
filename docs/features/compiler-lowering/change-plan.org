@@ -95,6 +95,7 @@ and a fresh generation-bound candidate solve must agree on the remaining cities;
 the old state and receipt remain bound to the original cut.
 
 The [[file:../source-lifecycle/grounded-withdrawal.org][grounded withdrawal Session owner]] now supplies the bounded positive
-transaction bridge: current occurrence selection, complete graph rebinding and
-prepublication native row validation. It does not extend this insertion plan
+transaction bridge: current occurrence selection and initially verified stable
+grounded support. Positive subcuts use DRed and atomic publication; fresh native
+receipts qualify each cut in tests. It does not extend this insertion plan
 with general deletion semantics.

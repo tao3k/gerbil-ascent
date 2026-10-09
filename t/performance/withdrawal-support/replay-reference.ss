@@ -2,28 +2,28 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-;;; One serialized positive owner publishes maintained rows, source generation
-;;; and grounded support together. Native evaluation qualifies the initial cut.
+;;; Frozen algorithm baseline from f1bd5ef. Per-cut full graph replay is
+;;; intentional. Shared current native Session isolates support-plan costs.
 (import (only-in :clan/poo/object .o .ref)
         (only-in :clan/poo/mop define-type validate .defgeneric)
         (only-in :core/types PooFlowNativeObjectContract. poo-flow-predicate-contract)
-        (only-in "datum.ss" candidate-copy-pairs reasoning-bounded-data?)
-        (only-in "types.ss" reasoning-snapshot-valid? reasoning-snapshot-relations
+        (only-in :gerbil-ascent/candidate/datum candidate-copy-pairs reasoning-bounded-data?)
+        (only-in :gerbil-ascent/candidate/types reasoning-snapshot-valid? reasoning-snapshot-relations
                  reasoning-snapshot-identity reasoning-snapshot-generation
-                 reasoning-candidate-query)
-        (only-in "reasoning.ss" reasoning-source-snapshot candidate-content-digest)
-        (only-in "program.ss" candidate-inspect candidate-program)
-        (only-in "funs.ss" candidate-bind-atom)
-        (only-in "provenance-graph.ss" candidate-positive-provenance
+                 reasoning-candidate-query reasoning-candidate-facts)
+        (only-in :gerbil-ascent/candidate/reasoning reasoning-source-snapshot candidate-content-digest)
+        (only-in :gerbil-ascent/candidate/program candidate-inspect candidate-program)
+        (only-in :gerbil-ascent/candidate/funs candidate-bind-atom candidate-same-row-set?)
+        (only-in :gerbil-ascent/candidate/provenance-graph candidate-positive-provenance
                  candidate-open-provenance-maintenance
                  candidate-provenance-preview-withdraw)
         (only-in :gerbil-ascent/program/session gerbil-ascent-open-session
-                 gerbil-ascent-session-run))
-(export candidate-open-withdrawal-session candidate-withdrawal-observe
-        candidate-withdrawal-session! GerbilAscentWithdrawalSessionContract)
+                 gerbil-ascent-session-run gerbil-ascent-session-replace-sources!))
+(export reference-open-withdrawal-session reference-withdrawal-observe
+        reference-withdrawal-session! ReplayWithdrawalSessionContract)
 
-(define-type (GerbilAscentWithdrawalSessionContract @ PooFlowNativeObjectContract.)
-  identity: 'ascent/grounded-withdrawal-session
+(define-type (ReplayWithdrawalSessionContract @ PooFlowNativeObjectContract.)
+  identity: 'ascent/reference-withdrawal-replay
   proto: (.o)
   responsibilities:
   (.o .observe: (poo-flow-predicate-contract 'ascent/observe procedure? (lambda (_v _c) []))
@@ -36,14 +36,10 @@
     (reasoning-source-snapshot (if (string? id) (string-copy id) id)
                               generation declarations)))
 
-;;; One accessor owns the private relation-to-token list representation.
-;; : (-> OccurrenceMap Symbol SourceTokens)
-(def (source-tokens occurrences name) (cdr (assq name occurrences)))
-
 ;;; Selectors refer to one-based occurrences in the CURRENT source cut. All
 ;;; selectors are checked before removal; duplicate row values remain distinct.
-;; : (-> ReasoningSnapshot OccurrenceMap SourceOccurrences (Values ReasoningSnapshot OccurrenceMap SourceOccurrences))
-(def (withdraw-source-cut source occurrences selectors)
+;; : (-> ReasoningSnapshot SourceOccurrences ReasoningSnapshot)
+(def (withdraw-source-cut source selectors)
   (unless (and (reasoning-bounded-data? selectors 131072 128)
                (list? selectors) (pair? selectors))
     (error "withdrawal requires a nonempty occurrence batch"))
@@ -60,33 +56,20 @@
            (error "unknown source occurrence" selector)))
        (when (hash-get selected selector) (error "duplicate source occurrence" selector))
        (hash-put! selected (candidate-copy-pairs selector) #t)) selectors)
-    ;; Retain initial occurrence tokens, independently of current positions.
-    ;; Both lists are private and filtered together, so duplicate row values
-    ;; cannot collapse tokens or shift an already selected original support.
-    (let* ((stable (map (lambda (selector)
-                          (list (car selector)
-                            (list-ref (source-tokens occurrences (car selector))
-                                      (- (cadr selector) 1)))) selectors))
-           (survivors
-             (map (lambda (entry)
-                    (let (kept
-                          (filter-map (lambda (row token ordinal)
-                                        (and (not (hash-get selected (list (car entry) ordinal)))
-                                             (cons row token)))
-                            (caddr entry) (source-tokens occurrences (car entry))
-                            (iota (length (caddr entry)) 1)))
-                      (list (car entry) (cadr entry) (map car kept) (map cdr kept)))) declarations)))
-      (values
-        (owned-snapshot source (+ 1 (reasoning-snapshot-generation source))
-          (map (lambda (entry) (list (car entry) (cadr entry) (caddr entry))) survivors))
-        (map (lambda (entry) (cons (car entry) (cadddr entry))) survivors)
-        stable))))
+    (owned-snapshot source (+ 1 (reasoning-snapshot-generation source))
+      (map (lambda (entry)
+             (list (car entry) (cadr entry)
+               (let loop ((rows (caddr entry)) (ordinal 1))
+                 (if (null? rows) []
+                   (let (rest (loop (cdr rows) (+ ordinal 1)))
+                     (if (hash-get selected (list (car entry) ordinal)) rest
+                       (cons (car rows) rest))))))) declarations))))
 
-;;; Admit a complete graph once. Positive source deletion cannot introduce
-;;; new ground instances. Current positions map to private initial occurrence
-;;; tokens; the original graph remains coverage for every subsequent subcut.
+;;; Constructor and each transaction replay a complete graph at the prospective
+;;; cut. This rebinds occurrence ordinals and covers all actual alternatives;
+;;; retaining the previous graph after row removal would mislabel later cuts.
 ;; : (-> ReasoningSnapshot Datum Nat Nat WithdrawalSession)
-(def (candidate-open-withdrawal-session source proposal (proof-steps 100000) (edge-limit 4096))
+(def (reference-open-withdrawal-session source proposal (proof-steps 100000) (edge-limit 4096))
   (unless (reasoning-snapshot-valid? source) (error "invalid withdrawal source"))
   (unless (and (reasoning-bounded-data? proposal 16384 128)
                (exact-integer? proof-steps) (> proof-steps 0)
@@ -107,10 +90,8 @@
       (let (graph (candidate-positive-provenance cut spec digest 'complete rows budget edge-limit))
         (candidate-open-provenance-maintenance cut spec digest 'complete rows graph budget)))
     (let* ((initial-rows (query-rows result))
-           ;; Only this closure owns the committed source, support, rows and tokens.
-           (current (vector snapshot (open-support snapshot initial-rows proof-steps) initial-rows
-                      (map (lambda (entry) (cons (car entry) (iota (length (caddr entry)) 1)))
-                           (reasoning-snapshot-relations snapshot))))
+           ;; Only this closure owns the native Session and committed triple.
+           (current (vector snapshot (open-support snapshot initial-rows proof-steps) initial-rows))
            (active? #f))
       (def (observe)
         (when active? (error "withdrawal observation during transaction"))
@@ -127,28 +108,41 @@
         (dynamic-wind
           (lambda () (set! active? #t))
           (lambda ()
-            (let-values (((cut occurrences stable)
-                          (withdraw-source-cut (vector-ref current 0) (vector-ref current 3) selectors)))
-              (let-values (((support rows _work)
-                            (candidate-provenance-preview-withdraw (vector-ref current 1) stable budget)))
-                ;; Initial graph admission covers all ground instances. Positive
-                ;; deletion only retires source seeds: DRed computes the founded
-                ;; remaining closure without another native fixed-point solve.
-                ;; Every allocation and bounded phase completes before one swap.
-                (let (next (vector cut support (candidate-copy-pairs rows) occurrences))
+            (let* ((cut (withdraw-source-cut (vector-ref current 0) selectors))
+                   (next #f))
+              (let-values (((_preview rows _work)
+                            (candidate-provenance-preview-withdraw (vector-ref current 1) selectors budget)))
+                ;; Prospective certificate admission happens before native publication.
+                (let* ((support (open-support cut rows budget))
+                       (replacements
+                         (map (lambda (entry)
+                                (cons (car entry)
+                                  (append (caddr entry)
+                                    (map (lambda (fact) (vector-ref fact 1))
+                                      (filter (lambda (fact) (eq? (vector-ref fact 0) (car entry)))
+                                              (reasoning-candidate-facts spec))))))
+                              (reasoning-snapshot-relations cut))))
+                  (gerbil-ascent-session-replace-sources! native replacements
+                    (lambda (result)
+                      (let (actual (query-rows result))
+                        (unless (candidate-same-row-set? rows actual)
+                          (error "withdrawal preview and native result disagree"))
+                        ;; Allocate every published owner before the native commit.
+                        (set! next (vector cut support (candidate-copy-pairs actual)))
+                        #t)))
                   (set! current next)))))
           (lambda () (set! active? #f)))
         (observe))
-      (validate GerbilAscentWithdrawalSessionContract
-        (.o (:: @ (.ref GerbilAscentWithdrawalSessionContract 'proto))
+      (validate ReplayWithdrawalSessionContract
+        (.o (:: @ (.ref ReplayWithdrawalSessionContract 'proto))
             (.observe observe) (.withdraw withdraw!))))))
 
 (def (withdrawal-observe session) ((.ref session '.observe)))
 (.defgeneric (withdrawal-update session generation selectors budget) slot: .withdraw)
 ;;; Observations detach every public pair and identity string from the owner.
 ;; : (-> WithdrawalSession WithdrawalObservation)
-(def (candidate-withdrawal-observe session) (withdrawal-observe session))
+(def (reference-withdrawal-observe session) (withdrawal-observe session))
 ;;; The expected generation selects current occurrences; failures publish no cut.
 ;; : (-> WithdrawalSession Nat SourceOccurrences Nat WithdrawalObservation)
-(def (candidate-withdrawal-session! session generation selectors (budget 100000))
+(def (reference-withdrawal-session! session generation selectors (budget 100000))
   (withdrawal-update session generation selectors budget))

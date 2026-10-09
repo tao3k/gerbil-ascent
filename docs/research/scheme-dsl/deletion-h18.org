@@ -94,3 +94,12 @@ incremental deletion performance.
 Native checked Session replacement now invalidates and fully rederives affected dependency components, reusing independent completed components. Opaque callbacks/providers still fully recompute. The founded support kernel is separate; this is not DRedc or a deletion speedup receipt.
 
 See the [[file:../../scheme-research-proof-audit.org][research/proof audit]] for the current transfer obligations and ordered exit gates. Earlier experiments retain their original source and cost boundaries.
+
+* Maintained positive source owner (2026-10-09)
+
+The [[file:../../features/source-lifecycle/grounded-withdrawal.org][grounded withdrawal Session]] now retains a complete initially admitted graph.
+Current positions translate to stable initial source occurrences; cumulative
+DRed memberships maintain positive subcuts. Each native qualification cut is
+compared with independent traversal and a fresh receipt. General native Session
+replacement remains affected-component rederivation. No DRedc count optimization,
+negation derivative, lattice inverse or signed trace is introduced.

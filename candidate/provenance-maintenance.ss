@@ -131,8 +131,9 @@
     (let-values (((rows work) (candidate-provenance-withdraw! next selectors max-steps)))
       (values next rows work))))
 
-;;; DRed preserves the former edge order and probe count exactly. Indexes remove
-;;; list membership searches, not bounded work. A cycle cannot seed itself;
+;;; DRed preserves the former edge order. Every inspected premise and result
+;;; root also consumes work; wide rules cannot hide inside one edge probe.
+;;; A cycle cannot seed itself;
 ;;; remaining founded source/rule support may restore overdeleted facts.
 ;; candidate-provenance-withdraw!
 ;;   : (-> ProvenanceMaintenance SourceOccurrences Nat (Values Rows Nat))
@@ -168,7 +169,7 @@
                 (hash-put! selected selector #t) (hash-put! removed selector #t))
               (candidate-copy-pairs selectors))
     ;; : (-> Void)
-    ;; Charge exactly one original edge visit; exhaustion publishes nothing.
+    ;; Charge each inspected edge, premise and root; exhaustion publishes nothing.
     (def (probe!)
       (set! steps (+ steps 1))
       (when (> steps max-steps) (error "provenance withdrawal budget exceeded")))
@@ -184,7 +185,7 @@
            (probe!)
            (when (and (eq? (cadr edge) 'rule)
                       (not (hash-get affected (car edge)))
-                      (ormap (lambda (id) (hash-get affected id)) (cadddr edge)))
+                      (ormap (lambda (id) (probe!) (hash-get affected id)) (cadddr edge)))
              (hash-put! affected (car edge) #t) (set! changed? #t))) edges)
         (when changed? (overdelete))))
     (hash-for-each (lambda (id _) (hash-remove! alive id)) affected)
@@ -196,10 +197,13 @@
            (when (and (hash-get affected (car edge))
                       (not (hash-get alive (car edge)))
                       (not (and (eq? (cadr edge) 'source) (hash-get removed (caddr edge))))
-                      (andmap (lambda (id) (hash-get alive id)) (cadddr edge)))
+                      (andmap (lambda (id) (probe!) (hash-get alive id)) (cadddr edge)))
              (hash-put! alive (car edge) #t) (set! changed? #t))) edges)
         (when changed? (rederive))))
-    (let (rows (maintenance-rows state alive))
+    (let (rows (map (lambda (id) (candidate-copy-pairs
+                      (hash-ref (provenance-maintenance-rows-table state) id)))
+                   (filter (lambda (id) (probe!) (hash-get alive id))
+                           (provenance-maintenance-roots state))))
       (provenance-maintenance-alive-set! state alive)
       (provenance-maintenance-removed-set! state removed)
       (values rows steps))))

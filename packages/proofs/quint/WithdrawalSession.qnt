@@ -14,12 +14,12 @@ module WithdrawalSession {
   type State = {source: Set[int], graph: Set[int], storage: Set[int], priorStorage: Set[int],
     pendingStorage: Set[int], removed: Set[int], ids: List[int],
     savedSource: Set[int], savedRows: Set[int], rows: Set[int], generation: int, phase: str, pending: Set[int], expected: Set[int],
-    pendingRemoved: Set[int], pendingIds: List[int], candidate: Set[int], good: bool}
+    pendingRemoved: Set[int], pendingIds: List[int], candidate: Set[int], good: bool, budget: int}
   var q: State
   action init = q' = {source: Initial, graph: Initial, storage: Initial, priorStorage: Initial,
     pendingStorage: Initial, removed: Set(), ids: InitialOrder,
     savedSource: Set(), savedRows: Set(), rows: Set(1,2,3), generation: 0, phase: "idle", pending: Set(), expected: Set(),
-    pendingRemoved: Set(), pendingIds: List(), candidate: Set(), good: false}
+    pendingRemoved: Set(), pendingIds: List(), candidate: Set(), good: false, budget: 0}
   action Begin = {
     nondet position = Set(0,1,2).oneOf()
     val token = q.ids.nth(position)
@@ -30,9 +30,14 @@ module WithdrawalSession {
         pendingIds: q.ids.select(id => id != token),
         pendingRemoved: if (Mutation == "forgetRemoved") Set(token) else q.removed.union(Set(token))}}
   }
-  action Check = {nondet good = Set(true,false).oneOf(); all {q.phase == "checking",
-    q' = {...q, phase: "ready", good: good,
-      candidate: if (good) ResultOf(q.storage.exclude(q.pendingRemoved)) else Set(9)}}}
+  // A finite cost witness: four edge visits, eight inspected premises and
+  // one result root. This models admission, not native trace extraction.
+  pure val CompleteWork = 4 + 8 + 1
+  action Check = {nondet budget = Set(12,13).oneOf(); all {q.phase == "checking",
+    q' = {...q, phase: "ready", budget: budget,
+      good: budget >= (if (Mutation == "uncharged") 4 else CompleteWork),
+      candidate: if (budget >= CompleteWork or Mutation == "uncharged")
+        ResultOf(q.storage.exclude(q.pendingRemoved)) else Set(9)}}}
   action Commit = all {q.phase == "ready", q.good or Mutation == "unchecked",
     q' = {...q, phase: "idle", generation: q.generation+1, source: q.pending, rows: q.candidate,
       savedRows: if (Mutation == "borrowObservation") q.candidate else q.savedRows,
@@ -53,6 +58,7 @@ module WithdrawalSession {
     q' = {...q, storage: q.pendingStorage}}
   action step = any {Begin, Check, Commit, Abort, Early, Observe,
     BeginCompact, CheckCompact, CommitCompact, EarlyCompact}
+  val BudgetAdmission = q.phase != "ready" or not(q.good) or q.budget >= CompleteWork
   val AtomicSnapshot = q.rows == ResultOf(q.source) and q.graph.exclude(q.removed) == q.source
   val FrozenGraph = q.graph == Initial
   val CurrentTokens = q.ids == InitialOrder.select(id => q.source.contains(id))

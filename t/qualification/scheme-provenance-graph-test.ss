@@ -99,24 +99,48 @@
         ;; Discarded previews have not accumulated source removals in original.
         (let-values (((rows _) (candidate-provenance-withdraw! original '((s 2)))))
           (check-equal? rows '((1))))))
-    (test-case "withdrawal probe budgets and ordered rows match the prior owner"
+    (test-case "complete withdrawal work bounds preserve reference rows and rollback"
       (let* ((snapshot (reasoning-source-snapshot 'budget-parity 1 '((s 1 ((1) (1) (2))))))
              (spec (recursive-provenance-spec))
              (rows '((1) (2)))
              (old-graph (prior-graph snapshot spec 'program 'complete rows 128))
              (new-graph (candidate-positive-provenance snapshot spec 'program 'complete rows 128)))
-        (def (attempt withdraw state selectors budget)
-          (with-catch (lambda (e) (list 'failed (error-message e)))
-            (lambda () (let-values (((rows work) (withdraw state selectors budget))) (list rows work)))))
+        (def (fresh)
+          (candidate-open-provenance-maintenance snapshot spec 'program 'complete rows new-graph 128))
         (for-each
-         (lambda (budget)
-           (let ((old (prior-open snapshot spec 'program 'complete rows old-graph 128))
-                 (new (candidate-open-provenance-maintenance snapshot spec 'program 'complete rows new-graph 128)))
-             (for-each (lambda (selectors)
-                         (check-equal? (attempt candidate-provenance-withdraw! new selectors budget)
-                                       (attempt prior-withdraw! old selectors budget))
-                         (check-equal? (provenance-maintenance-rows new) (prior-rows old)))
-                       '(((s 1)) ((s 2)) ((s 2)) ((s 3)) () ((unknown 1)))))) (iota 64 1))))
+         (lambda (selectors)
+           (let-values (((expected old-work)
+                         (prior-withdraw! (prior-open snapshot spec 'program 'complete rows old-graph 128) selectors))
+                        ((actual work) (candidate-provenance-withdraw! (fresh) selectors)))
+             (check-equal? actual expected)
+             (check-equal? (> work old-work) #t)
+             (for-each
+              (lambda (budget)
+                (let (state (fresh))
+                  (if (< budget work)
+                    (begin
+                      (check-exception (candidate-provenance-withdraw! state selectors budget) true)
+                      (check-equal? (provenance-maintenance-rows state) rows)
+                      ;; Failure even at the last root visit has not retired s1.
+                      (let-values (((remaining _) (candidate-provenance-withdraw! state '((s 2)))))
+                        (check-equal? remaining rows)))
+                    (let-values (((result measured) (candidate-provenance-withdraw! state selectors budget)))
+                      (check-equal? result expected)
+                      (check-equal? measured work))))) (iota 64 1))))
+         '(((s 1)) ((s 2)) ((s 3)) ()))))
+    (test-case "wide grounded conjunctions charge every inspected premise"
+      (let* ((snapshot (reasoning-source-snapshot 'wide-budget 1 '((s 1 ((1))) (t 1 ((1))))))
+             (body (append (make-list 24 '(t ?x)) '((s ?x))))
+             (spec (make-reasoning-candidate '((p . 1)) []
+                     (list (vector '(p ?x) body 10)) (vector '(p ?x) 11) '(8 64 128)))
+             (graph (candidate-positive-provenance snapshot spec 'program 'complete '((1)) 1024))
+             (state (candidate-open-provenance-maintenance snapshot spec 'program 'complete '((1)) graph 1024)))
+        ;; An edge-only budget previously admitted all twenty-five inspections.
+        (check-exception (candidate-provenance-withdraw! state '((s 1)) 16) true)
+        (check-equal? (provenance-maintenance-rows state) '((1)))
+        (let-values (((rows work) (candidate-provenance-withdraw! state '((s 1)))))
+          (check-equal? rows [])
+          (check-equal? (> work 25) #t))))
     (test-case "published withdrawals and query rows own their pair spines"
       (let* ((snapshot (reasoning-source-snapshot 'owned-withdrawal 1 '((s 1 ((1) (1))))))
              (spec (recursive-provenance-spec))

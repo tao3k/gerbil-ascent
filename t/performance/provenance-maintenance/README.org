@@ -48,8 +48,8 @@ The fixture has one source relation, a copy rule and a recursive self-support
 rule. Wide has 256 distinct values and withdraws 128 source occurrences;
 duplicates has 256 occurrences of one value and withdraws all; read returns
 256 admitted rows; small withdraws its sole source. Independent sorted-row
-truth is checked, while old/new ordered rows and exact returned work counts
-must also agree. Calls run on one VM processor with 50 alternating pairs.
+truth is checked, while old/new ordered rows must agree; current withdrawal work must exceed the
+edge-only reference because inspected premises and roots also consume work. Calls run on one VM processor with 50 alternating pairs.
 Forced GC is outside each interval; natural GC remains inside. CPU is process
 user+system time. Allocation observes field 7 and subtracts endpoint field 9
 as Gambit's =time= does; negative deltas reject the run.
@@ -81,9 +81,12 @@ measurement. Raw pairs and all compile/qualification logs stay under ignored
 
 * Semantic controls
 
-Native controls compare each budget 1-64 against the exact prior owner across
-successive, repeated, empty and unknown withdrawals. Ordered rows, returned
-work and error messages must match; failed calls preserve published state.
+Native controls compare unlimited-budget ordered rows against the frozen prior
+owner. Each budget 1-64 is checked against the current complete measured work:
+insufficient budgets fail atomically, sufficient budgets return the exact
+measured count. Premise and output-root work is charged in addition to the same
+edge traversal. A wide conjunction rejects an edge-only budget. Failed calls,
+including exhaustion at the last output root, preserve source membership.
 Ownership controls mutate both returned rows and the caller's selector pairs
 before the next withdrawal. The existing 64 directed-graph corpus checks every
 successive source withdrawal against independent matrix closure and native

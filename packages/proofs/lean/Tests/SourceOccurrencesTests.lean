@@ -17,3 +17,11 @@ example (old next later : Cut (List Nat) (List Nat))
 
 example : publish (Cut.mk 1 [20] [20]) (Cut.mk 2 [] []) 0 true =
     (Cut.mk 1 [20] [20]) := by decide
+
+-- Edge-only admission fits, but twenty-five inspected premises exhaust it.
+example : publishBounded (Cut.mk 0 [1] [1]) (Cut.mk 1 [] []) 0 9 25 1 16 =
+    (Cut.mk 0 [1] [1]) := by decide
+example : publishBounded (Cut.mk 0 [1] [1]) (Cut.mk 1 [] []) 0 9 25 1 35 =
+    (Cut.mk 1 [] []) := by decide
+example : publishBounded (Cut.mk 0 [1] [1]) (Cut.mk 1 [] []) 0 9 25 1 34 =
+    (Cut.mk 0 [1] [1]) := by decide

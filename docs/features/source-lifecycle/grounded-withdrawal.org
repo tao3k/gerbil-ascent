@@ -164,7 +164,7 @@ resident-memory measurement. That measured lifecycle does not call the new
 explicit compaction operation; support stays resident until the owner is released.
 
 Compaction has a separate deterministic bounded-work discriminator. After seven
-of eight independent source edges are withdrawn, a final cut with budget 8
+of eight independent source edges are withdrawn, a final cut with budget 16
 fails on the uncompressed owner and succeeds on the compacted owner; both agree
 with the default-budget result. Retained node/edge/root counts decrease. This
 qualifies reclaimed graph visits, not a CPU, allocated-byte or RSS speedup.
@@ -224,3 +224,32 @@ run, chain lifecycle CPU was 10.339 to 5.776 ms and allocation 18,516,992 to
 paired process-CPU and allocated-byte results, not an end-to-end wall-time or
 resident-memory claim. An intentional failing child propagated exit 70 through
 the workgroup runner; its failure cannot produce =PERFORMANCE-CONTRACTS-OK=.
+
+* Complete support traversal accounting
+
+Withdrawal now charges every edge visit, every premise actually inspected by
+short-circuit overdelete/rederive, and every result-root membership visit.
+The default 100000-unit budget is unchanged. Previously an arbitrarily wide
+conjunction could fit an edge-only allowance. Work receipts now describe these
+three visit kinds; historical edge-only receipts are not numerically comparable.
+Selector validation, native hash copies and row payload copying remain outside
+this support-traversal counter; this is not a bound on total CPU or bytes.
+
+Native controls enumerate budgets 1-64 around independently measured work,
+compare admitted rows with the frozen reference, and verify rollback even at
+the final root. A twenty-five-premise conjunction rejects budget 16. The
+compaction discriminator uses 16 complete traversal units, replacing its old
+8-edge-visit fixture; runtime defaults and performance gates remain unchanged.
+Lean SourceOccurrences proves exhausted admission preserves the whole cut and
+exact-budget acceptance publishes it. Quint WithdrawalSession checks finite
+edge/premise/root admission and rejects an eleventh uncharged-work mutation.
+These abstractions do not extract Scheme execution traces.
+
+Local qualification for complete accounting: 13 grounded graph Cases (16s),
+16 withdrawal owner Cases (19s), all 146 Lean build jobs and all eleven Quint
+fault controls pass. The standalone 50-pair maintenance controls pass unchanged
+CPU/allocation thresholds: wide 4468 to 250 us, duplicates 1675 to 155 us,
+read 557 to 24 us. Tiny is a retained negative result: 3 to 6 us and 4032 to
+10256 bytes, within its existing 5% + 30 us and 8 KiB allowances. The nine
+native performance Suites also pass under the unchanged 120s total deadline.
+These are local receipts; remote CI must be checked at the delivered revision.

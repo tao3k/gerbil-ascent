@@ -42,4 +42,17 @@ theorem competing_request_rejected (old next later : Cut Source Evidence)
   apply stale_preserves
   rw [advance]
   exact Nat.ne_of_lt (Nat.lt_succ_self old.generation)
+/-- Resource units cover edge, inspected premise and output-root visits.
+This admission abstraction does not extract a native execution trace. -/
+def publishBounded (old next : Cut Source Evidence) (expected edgeVisits premiseVisits rootVisits budget : Nat) : Cut Source Evidence :=
+  publish old next expected (decide (edgeVisits + premiseVisits + rootVisits ≤ budget))
+theorem exhausted_preserves (old next : Cut Source Evidence)
+    (expected edges premises roots budget : Nat)
+    (exhausted : budget < edges + premises + roots) :
+    publishBounded old next expected edges premises roots budget = old := by
+  simp [publishBounded, Nat.not_le.mpr exhausted, rejection_preserves]
+theorem bounded_accepted (old next : Cut Source Evidence)
+    (edges premises roots budget : Nat) (fit : edges + premises + roots ≤ budget) :
+    publishBounded old next old.generation edges premises roots budget = next := by
+  simp [publishBounded, fit, accepted_publication]
 end Ascent.SourceOccurrences

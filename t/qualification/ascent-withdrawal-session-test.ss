@@ -256,8 +256,8 @@
           (candidate-withdrawal-compact! owner 1)
           (check-equal? (< (.ref (candidate-withdrawal-support-size owner) 'nodes) (.ref before 'nodes)) #t)
           (check-equal? (< (.ref (candidate-withdrawal-support-size owner) 'roots) (.ref before 'roots)) #t))
-        (check-exception (candidate-withdrawal-session! plain 1 '((edge 1)) 8) (lambda (_) #t))
-        (check-set (.ref (candidate-withdrawal-session! owner 1 '((edge 1)) 8) 'rows) [])
+        (check-exception (candidate-withdrawal-session! plain 1 '((edge 1)) 16) (lambda (_) #t))
+        (check-set (.ref (candidate-withdrawal-session! owner 1 '((edge 1)) 16) 'rows) [])
         (check-set (.ref (candidate-withdrawal-session! plain 1 '((edge 1))) 'rows) [])))
     (test-case "all sixty-four graphs retain coverage through alternating-position deletion sequences"
       (let (possible '((0 1) (0 2) (1 0) (1 2) (2 0) (2 1)))

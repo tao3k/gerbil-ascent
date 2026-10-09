@@ -2,14 +2,20 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 (import (only-in :gerbil-ascent/program/view-replay gerbil-ascent-small-journal-export)
+        (only-in :clan/poo/object .o)
         (only-in :std/test check-equal? check-exception test-suite test-case)
         (only-in :gerbil-ascent/core/relation-view gerbil-ascent-view-rows
                  relation-view-count relation-view-units gerbil-ascent-view-select
-                 gerbil-ascent-for-each-row)
+                 gerbil-ascent-for-each-row relation-view-identity relation-view-generation
+                 relation-view-revision relation-view-lane)
         (only-in :gerbil-ascent/table/eqrel gerbil-ascent-eqrel-state
                  gerbil-ascent-eqrel-insert! gerbil-ascent-eqrel-freeze gerbil-ascent-eqrel-observation)
         (only-in :gerbil-ascent/program/view-state
-                 gerbil-ascent-view-journal-event gerbil-ascent-view-export-cut)
+                 gerbil-ascent-view-journal-event gerbil-ascent-view-export-cut
+                 make-view-routing-state gerbil-ascent-initialize-view-cuts! gerbil-ascent-route-view-sources!)
+        (only-in :gerbil-ascent/table/storage gerbil-ascent-storage-engine-state
+                 gerbil-ascent-eqrel-storage-provider gerbil-ascent-storage-view-extension!
+                 gerbil-ascent-storage-admit-state! gerbil-ascent-storage-freeze-view)
         (only-in :gerbil-ascent/table/trrel-uf
                  gerbil-ascent-trrel-uf-state gerbil-ascent-trrel-uf-extension
                  gerbil-ascent-trrel-uf-frontier-extension gerbil-ascent-trrel-uf-snapshot
@@ -72,6 +78,41 @@
 
 (def ascent-provider-views-test
   (test-suite "frozen BYODS Provider views"
+    (test-case "initial and routed cuts share metadata and consume only compiled key terms"
+      (let* ((owner (gerbil-ascent-storage-engine-state gerbil-ascent-eqrel-storage-provider))
+             (_ (gerbil-ascent-storage-view-extension! owner '(#f 0 1) 4))
+             (_ (gerbil-ascent-storage-admit-state! owner))
+             (all (vector (gerbil-ascent-storage-freeze-view owner #f) 'excluded))
+             (delta (vector #f 'excluded-delta)) (routing (vector #f #f))
+             (journals (vector #f #f))
+             (state (make-view-routing-state (vector owner #f) all delta '#(7 0) '#(reach excluded) 42 journals routing))
+             (relations (list (.o rows: '((#f 0 1))) (.o rows: '((invalid)))))
+             (terms '((literal . #f) (variable . x) (literal . 1)))
+             (eligible? (lambda (i) (= i 0))))
+        (gerbil-ascent-initialize-view-cuts! relations eligible? state)
+        (let ((held (vector-ref all 0)) (held-delta (vector-ref delta 0)))
+          (check-equal? (list (relation-view-identity held) (relation-view-generation held)
+                             (relation-view-revision held) (relation-view-lane held)) '(reach 42 0 total))
+          (check-equal? (gerbil-ascent-view-rows held-delta) (reverse (gerbil-ascent-view-rows held)))
+          ;; An unbound body variable outside the compiled key cannot enable routing.
+          (gerbil-ascent-route-view-sources!
+            (list (vector [] (list (vector 'atom (vector 0 terms '(0 2) terms (list (car terms) (caddr terms))))))) eligible? state)
+          (check-equal? routing '#(#f #f))
+          (check-equal? (eq? held (vector-ref all 0)) #t)
+          (gerbil-ascent-route-view-sources!
+            (list (vector [] (list (vector 'atom (vector 0 terms '(0 1 2) terms terms))))) eligible? state)
+          (let (total (vector-ref all 0))
+            (check-equal? routing '#(#t #f))
+            (check-equal? (list (relation-view-identity total) (relation-view-generation total)
+                               (relation-view-revision total) (relation-view-lane total)) '(reach 42 7 total))
+            (check-equal? (relation-view-lane (vector-ref delta 0)) 'delta)
+            (check-equal? (gerbil-ascent-view-rows total) (gerbil-ascent-view-rows held))
+            (gerbil-ascent-storage-view-extension! owner '(#f 1 2) 5)
+            (check-equal? (gerbil-ascent-view-rows total) (gerbil-ascent-view-rows held))
+            (check-equal? (gerbil-ascent-view-rows held-delta) (reverse (gerbil-ascent-view-rows held)))))
+        (check-equal? (vector-ref all 1) 'excluded)
+        (check-equal? (vector-ref delta 1) 'excluded-delta)
+        (check-equal? (vector-ref journals 1) #f)))
     (test-case "packed ordered replay matches all three-node graph histories"
       (let (edges (apply append (map (lambda (a) (map (lambda (b) (list a b)) (iota 3))) (iota 3))))
         (for-each (lambda (mask)

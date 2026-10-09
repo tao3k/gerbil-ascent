@@ -1089,3 +1089,20 @@ loops. Native syntax controls check evaluation counts, lexical shadowing,
 empty input and held-bucket identity. Complete build/append/query A/B is in
 =t/performance/index-batch/README.org=, including tiny-call allocation cost and
 the arbitrary-column CPU control.
+
+* Consume admitted correspondence and projections directly
+
+Gerbil =1cfb032= =compiler/optimize-top.ss:259-262= traverses identifiers and
+expressions together with multi-list =for-each=; the syntax contract already
+supplies correspondence. =optimize-call.ss:390-415= similarly consumes resolved
+class metadata while emitting constructor calls. Avoid rediscovering information
+that a preceding owned phase has established.
+
+In =program/view-state.ss=, relation declarations and schema positions now move
+through one traversal. Indexed atoms already contain their exact key-term
+projection, so routing reads that projection instead of repeated =list-ref=
+lookups into the original terms. Both publication paths call one private owner
+for journal-backed total/delta metadata. The exporter closes over its frozen cut,
+without retaining live routing state. Populated source/held-cut controls and
+complete publication/routing A/B are in
+=t/performance/view-source-publication/README.org=.

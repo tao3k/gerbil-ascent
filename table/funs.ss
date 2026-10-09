@@ -23,6 +23,8 @@
 
 ;;; Copy admitted outer/row spines while preserving field value identity.
 ;;; Custom lookup callers must finish bounded row-shape admission first.
+;; : (forall (v) (-> [[v]] [[v]]))
+;; : (-> Rows DetachedRowSpines)
 (def (gerbil-ascent-index-row-snapshot rows)
   (map (lambda (row) (map values row)) rows))
 
@@ -54,51 +56,87 @@
        (hash-put! index key (reverse! rows)))) index)
   index)
 
-;;; Ordered planner columns can be projected with one forward row cursor.
-;;; Unordered or repeated columns retain the public arbitrary-column semantics.
+;;; Build distances only for nondecreasing columns. A false suffix
+;;; rejects the whole layout before allocating a partial distance spine.
+;;; Each result belongs to this call/batch; caller-owned columns are never cached.
+;; : (-> Columns (Maybe [Nat]))
+;; | doc m%
+;;     Return a fresh ordered distance spine or false for reordered columns.
+;;     Zero distances reread fields; rejection publishes no partial layout.
+;;
+;;     # Examples
+;;
+;;     ```scheme
+;;     (forward-column-steps '(0 0 2))
+;;     ;; => (0 0 2)
+;;     ```
+;;   %
+(def (forward-column-steps columns)
+  (let step ((remaining columns) (position 0))
+    (match remaining
+      ([] [])
+      ([column . rest]
+       (and (>= column position)
+            (alet (steps (step rest column))
+              (cons (inexact->exact (- column position)) steps)))))))
+
+;;; Single-key consumers validate without retaining a distance layout. The
+;;; empty tuple is ordered; nonnegative integral inexact positions normalize
+;;; at field selection, retaining the existing public ordered-key convention.
 ;; : (-> Columns Boolean)
-(def (increasing-columns? columns)
-  (let loop ((remaining columns) (prior -1))
-    (or (null? remaining)
-        (and (> (car remaining) prior)
-             (loop (cdr remaining) (car remaining))))))
+(def (nondecreasing-columns? columns)
+  (let ordered ((remaining columns) (position 0))
+    (match remaining
+      ([] #t)
+      ([column . rest] (and (>= column position) (ordered rest column))))))
 
-;;; Distances belong to this batch, never a cache of caller-owned columns.
-;;; The next cursor starts immediately after the preceding selected value.
-;; : (-> Columns (List Nat))
-(def (column-steps columns)
-  (let loop ((remaining columns) (position 0))
-    (if (null? remaining)
-      []
-      (cons (inexact->exact (- (car remaining) position))
-            (loop (cdr remaining) (+ (car remaining) 1))))))
-
-;; : (-> Row (List Nat) Key)
+;;; Both consumers share field publication; parameter identifiers are hygienic.
+;;; Distance and the row are observed only for a selected field, once per step.
+;; : (-> Row Selections Bindings DistanceExpression NextExpression Key)
+(defrule (forward-key-step row selections (column rest selected) distance next)
+  (match selections
+    ([] [])
+    ([column . rest]
+     (let (selected (list-tail row distance))
+       (cons (car selected) next)))))
+;; : (-> Row [Nat] Key)
 (def (stepped-key row steps)
-  (if (null? steps)
-    []
-    (let (selected (list-tail row (car steps)))
-      (cons (car selected) (stepped-key (cdr selected) (cdr steps))))))
+  (forward-key-step row steps (distance rest selected) distance
+    (stepped-key selected rest)))
+;; : (-> Row Columns Nat Key)
+(def (column-key row columns position)
+  (forward-key-step row columns (column rest selected)
+    (inexact->exact (- column position)) (column-key selected rest column)))
 
-;; Public projection and batch construction share the same ordered cursor.
-;; Recompute gaps for this call: columns remain caller-owned and may change.
-;; Repeated/reordered columns retain direct selection and field identities.
+;;; Recompute admission for each call; columns remain caller-owned. Single-key
+;;; consumers stream gaps, while a batch retains only its shared distance spine.
 ;; : (-> Row (List ColumnIndex) Key)
+;; : (forall (v) (-> [v] [Nat] [v]))
+;; | doc m%
+;;     Project current columns in order, preserving repeated fields and their
+;;     identities. Each call owns its cursor; no caller metadata is cached.
+;;
+;;     # Examples
+;;
+;;     ```scheme
+;;     (gerbil-ascent-index-key '(#f 2 3) '(0 0 2))
+;;     ;; => (#f #f 3)
+;;     ```
+;;   %
 (def (gerbil-ascent-index-key row columns)
-  (if (increasing-columns? columns)
-    (stepped-key row (column-steps columns))
+  (if (nondecreasing-columns? columns)
+    (column-key row columns 0)
     (map (lambda (column) (list-ref row column)) columns)))
 
 ;; : (-> Index (List Row) (List ColumnIndex) Index)
 (def (gerbil-ascent-index-extend! index new-rows columns)
-  ;; New batches are in insertion order; prepend keeps relation bucket order.
-  ;; Select the complete loop once. Ordered rows need no column comparison,
-  ;; position counter or shape branch while traversing their key values.
-  ;; Native hash-update! invokes its callback synchronously and does not retain
-  ;; it. One private slot supplies the row to a single batch callback, keeping
-  ;; lexical bindings stable and avoiding one captured closure per input row.
-  ;; Prepending creates a fresh spine; no previously returned bucket is edited.
-  (if (increasing-columns? columns)
-    (let (steps (column-steps columns))
-      (gerbil-ascent-index-batch! index new-rows row (stepped-key row steps)))
-    (gerbil-ascent-index-batch! index new-rows row (gerbil-ascent-index-key row columns))))
+  ;; Select the complete batch loop once. Distances retain no row state.
+  ;; The synchronous native update and its private row slot preserve published
+  ;; bucket spines; unordered projection still observes each current column.
+  (cond
+    ((forward-column-steps columns) =>
+     (lambda (steps)
+       (gerbil-ascent-index-batch! index new-rows row (stepped-key row steps))))
+    (else
+     (gerbil-ascent-index-batch! index new-rows row
+       (map (lambda (column) (list-ref row column)) columns)))))

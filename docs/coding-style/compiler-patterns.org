@@ -1288,3 +1288,26 @@ reader closure or branch per runtime coordinate.
 See [[file:../../t/performance/parts-layout/README.org][coordinate layout qualification]] for complete positive-plan compilation A/B,
 existing semantic consumers and controls. Gains belong to plan construction,
 not complete evaluator solves or query traversal.
+
+* Forward key projection with consumer-owned retention
+
+Gerbil =1cfb032= =core/sugar.ss:933-973= expands =alet= into once-bound
+conditional values. It is useful when a constructor may reject a complete
+layout: =table/funs.ss:forward-column-steps= propagates an unordered suffix
+before publishing any partial distance spine. Structural matching makes the
+finite layout recurrence explicit. Repeated ordered columns use zero distances
+and keep the row cursor at its selected field.
+
+A private =forward-key-step= syntax owns field selection and key publication
+for both retained distances and streamed columns. Single-key callers validate
+and consume columns without retaining distances. Batch extension constructs
+one distance layout; unordered batches select their direct loop once rather
+than invoking public layout classification again for every row. Each consumer
+chooses retention according to its reuse, while both preserve field identity,
+current-call metadata and fresh key/bucket spines.
+
+An intermediate candidate retained distances for every public key and failed
+its allocation gate despite lower CPU. The final protocol retains only batch
+layouts. See [[file:../../t/performance/repeated-columns/README.org][repeated-column qualification]] for complete native index lifecycle A/B,
+negative evidence, controls and semantic coverage. These are physical index
+cycle measurements, not complete evaluator-solve gains.

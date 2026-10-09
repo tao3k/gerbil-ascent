@@ -552,3 +552,11 @@ existing SessionTransaction Quint checks align semantics and replacement/
 publication. Three native Cases include 512 independent finite graph comparisons.
 This closes the finite path transfer, with graph extraction, model-generated
 specifications and real-Java benchmark evidence retained as distinct next gates.
+
+* DB26 finite execution feedback transfer, 2026-10-09
+
+[[file:features/candidate-feedback/acceptance.org][Candidate feedback]] connects the dedicated DB26 reading to native snapshot-bound
+complete row differences, independent held-out graph controls, five Lean laws
+and a 128-state Quint publication gate with four rejected fault variants.
+This transfers the finite discriminator; model synthesis and the released
+Souffle benchmark remain separate open experiments.

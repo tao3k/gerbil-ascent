@@ -1,0 +1,47 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+#+TITLE: Candidate execution feedback: finite reference qualification
+#+DATE: 2026-10-09
+
+* Design and ownership
+
+[[file:../../research/agent-inference/datalogbench-db26.org][DB26 reading]] motivates separating static admission, native completion and
+semantic agreement. [[file:../../../candidate/feedback.ss][reasoning-compare-rows]] consumes the existing snapshot,
+proposal and receipt, plus a caller-owned finite reference for the full query
+row. It checks snapshot identity/generation/content and proposal content before
+requiring native completion. An inconclusive result carries a reason and no
+differences; it cannot count as agreement. Malformed, cyclic, executable or
+oversized references are refused using the existing bounded datum walker
+(16384 nodes, depth 128). Duplicate reference rows use set semantics.
+
+The comparison indexes actual/reference rows once using equal?-hash tables,
+then returns every missing and extra row in first-occurrence input order.
+Published differences copy caller-owned pairs. Neither this API nor the
+receipt establishes the reference's authority or natural-language fidelity.
+A match applies only to this reference, query and snapshot; it is not program
+equivalence or a proof/certificate verification result.
+
+* Assurance correspondence
+
+[[file:../../../packages/proofs/lean/ExecutionFeedback.lean][Five Lean laws]] establish absence of both differences iff extensional equality,
+a mismatch witness, disjoint missing/extra sets and binding/completion premises
+for admitted matches. Actual hash equality, finite tuple encoding and digest
+correspondence remain implementation premises; no new custom axioms or sorry.
+[[file:../../../packages/proofs/quint/ExecutionFeedback.qnt][Quint]] explores 128 distinct states for two-row finite sets, binding and
+completion. Four mutants admit stale/partial observations or drop missing/extra
+rows; each produces the expected invariant counterexample. This model checks
+the feedback gate, not all execution/session interleavings.
+
+[[file:../../../t/qualification/ascent-candidate-feedback-test.ss][Native qualification]] freezes five proposals before enumerating all 64 directed
+non-self graphs on three vertices: correct reachability, removed base, removed
+step, wrong recursive join and reversed base. All 320 completed attempts are
+compared with independent graph walks and exact missing/extra outputs. Every
+mutant is distinguished somewhere; individual agreement remains allowed.
+A one-edge demonstration passes the wrong join, while a held-out chain rejects
+it. Additional controls cover withdrawal/current generation, proposal mismatch,
+undeclared helper diagnostics, refused execution, duplicate rows, malformed and
+cyclic references, material bound and detached differences.
+
+Local native four Cases, full Lean 134 jobs and the Quint gate pass. Remote
+whole-revision CI is a separate delivery gate. No model-generated proposal,
+Souffle corpus execution, published DB26 score or general equivalence is claimed.

@@ -15,7 +15,7 @@ for all these states.
 | README paper | Repository reading | Current transfer and remaining work |
 |--------------+--------------------+-------------------------------------|
 | LLM-MatLogic | [[file:agent-inference/matlogic-ml26.org][note]] | Dedicated reading; WD26 finite executor fixture; model/KGQA benchmark pending |
-| DatalogBench | [[file:agent-inference/datalogbench-db26.org][note]] | Dedicated reading; held-out synthesis/mutation corpus pending |
+| DatalogBench | [[file:agent-inference/datalogbench-db26.org][note]] | Dedicated reading; finite held-out graph/mutant discriminator implemented; model/Souffle corpus pending |
 | IRIS | [[file:agent-inference/iris-ir25.org][note]] | Dedicated reading added; finite sanitizer-path Program, Lean and Session checks |
 | BRINK | [[file:agent-inference/2026-logic-ai-screen.org][note]] | Screen only; no dedicated artifact study or admitted mined-rule benchmark |
 | Datafun | [[file:scheme-dsl/datafun-f16.org][note]] | Dedicated reading; checked finite operators/fixed-point laws |

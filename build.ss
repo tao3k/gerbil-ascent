@@ -93,6 +93,7 @@
     "candidate/stratified-proof"
     "candidate/stratified-producer"
     "candidate/reasoning"
+    "candidate/feedback"
     "temporal/graph"
     "temporal/lens"
     "interface/request"))

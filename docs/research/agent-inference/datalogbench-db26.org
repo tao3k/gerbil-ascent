@@ -53,3 +53,20 @@ Repeat after source withdrawal; compare all rows with a separate
 finite graph model, not merely a single expected answer.
 
 [[file:index.org][Research index]].
+
+* Execution transfer, 2026-10-09
+
+Re-reading §§4.3, 5.1 and Appendix G sharpens the protocol: freeze a
+candidate before grading held-out variants; demonstration feedback stays
+separate. The paper's mutation families remove rules, remove body atoms
+or rebind joins. They do not exercise negation, aggregate functions or
+grouping scope, so their score cannot establish correctness there.
+
+The [[file:../../features/candidate-feedback/acceptance.org][finite Scheme discriminator]] now implements complete missing/extra feedback
+through the existing reasoning receipt and snapshot binding. It freezes five
+hand-written proposals and compares 320 attempts over 64 finite graphs with
+independent graph walks. A demonstration-pass/held-out-failure control,
+withdrawal, rejected helper and unfinished attempt are included. Lean proves
+the set-difference characterization; Quint checks completion and binding before
+comparison publication. This closes the local discriminator described above;
+model synthesis and running the released Souffle corpus remain open.

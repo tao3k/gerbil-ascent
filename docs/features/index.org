@@ -21,6 +21,7 @@ cross-feature scope and ordering in the [[file:../scheme-paper-closure.org][clos
 | Actor Scheduling | [[file:actor-scheduling/byods.org][byods]] / [[file:actor-scheduling/compiler.org][compiler]] / [[file:actor-scheduling/design.org][design]] / [[file:actor-scheduling/proofs.org][proofs]] |
 | Assurance | [[file:assurance/acceptance.org][acceptance]] / [[file:assurance/byods.org][byods]] / [[file:assurance/compiler.org][compiler]] / [[file:assurance/design.org][design]] / [[file:assurance/proofs.org][proofs]] |
 | Bitmap Lattices | [[file:bitmap-lattices/acceptance.org][acceptance]] |
+| Candidate Feedback | [[file:candidate-feedback/acceptance.org][acceptance]] |
 | Closure Plan | [[file:closure-plan/design.org][design]] / [[file:closure-plan/proofs.org][proofs]] |
 | Compiler Lowering | [[file:compiler-lowering/compiler.org][compiler]] / [[file:compiler-lowering/proofs.org][proofs]] |
 | Equivalence | [[file:equivalence/acceptance.org][acceptance]] / [[file:equivalence/byods.org][byods]] / [[file:equivalence/compiler.org][compiler]] / [[file:equivalence/design.org][design]] / [[file:equivalence/proofs.org][proofs]] |

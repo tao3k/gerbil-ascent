@@ -16,7 +16,7 @@
                  row-indexes-rows row-indexes-advance! row-indexes-plan-atoms!)
         (only-in :clan/poo/object .o .ref)
         (only-in :gerbil-ascent/table/provider gerbil-ascent-hash-index-provider gerbil-ascent-curried-index-provider)
-        (only-in :std/test check-equal? test-case test-suite)
+        (only-in :std/test check-equal? check-exception test-case test-suite)
         :gerbil-ascent/t/performance/index-entry/fixture
         (only-in :gerbil-ascent/program/evaluate gerbil-ascent-evaluate-program)
         (rename-in (only-in :gerbil-ascent/t/performance/index-entry/reference-evaluate gerbil-ascent-evaluate-program)
@@ -371,6 +371,22 @@
         (check-equal? (with-catch (lambda (e) (error-message e))
                         (lambda () (query atom [] #f #f) 'accepted))
                       "ASCENT index provider omitted matching rows")))
+    (test-case "column planning detaches permutations and rejects repeated large integers"
+      (let* ((large (expt 2 80))
+             (first (list large 0)) (second (list 2 large 0))
+             (requirements (list first second [] (list 0 large)))
+             (snapshot (map (cut append <> []) requirements))
+             (layout (gerbil-ascent-index-sharing-layout requirements)))
+        (check-equal? requirements snapshot)
+        (check-equal? (hash-ref layout (list 0 large)) (list 0 large 2))
+        (check-equal? (hash-ref layout (list 0 2 large)) (list 0 large 2))
+        (check-exception (gerbil-ascent-index-sharing-layout (list (list large (+ large 0)))) true)
+        (check-exception (gerbil-ascent-index-sharing-layout '((0 -1))) true)
+        (check-exception (gerbil-ascent-index-sharing-layout '((0 . 1))) true)
+        ;; The independent checker accepts unsorted admitted sets. Its test
+        ;; must not inherit the planner's sorted-input merge precondition.
+        (check-equal? (gerbil-ascent-index-sharing-certificate?
+                       (vector first second) (vector 1 #f) (vector #f 0)) #t)))
     (test-case "matching certificates reject inconsistent and nonmaximum search output"
       (let (sets (vector '(0) '(0 1) '(0 1 2)))
         (check-equal? (gerbil-ascent-index-sharing-certificate? sets

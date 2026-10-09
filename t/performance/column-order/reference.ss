@@ -31,22 +31,11 @@
                  (= (vector-length sets) (vector-length left) (vector-length right)))
       (reject #f))
     (let* ((count (vector-length sets)) (ids (iota count))
-           (widths (vector-map length sets))
-           ;; Checker metadata is rebuilt from the supplied columns. It never
-           ;; accepts the planner's precomputed successor graph as evidence.
-           (members (make-vector count #f))
            (seen-left (make-vector count #f)) (seen-right (make-vector count #f))
            (pending []) (matched 0) (cover-count 0))
-      (def (membership j)
-        (or (vector-ref members j)
-            (let (table (make-hash-table))
-              (for-each (cut hash-put! table <> #t) (vector-ref sets j))
-              (vector-set! members j table)
-              table)))
       (def (below? i j)
-        (and (< (vector-ref widths i) (vector-ref widths j))
-             (let (table (membership j))
-               (andmap (cut hash-key? table <>) (vector-ref sets i)))))
+        (let ((a (vector-ref sets i)) (b (vector-ref sets j)))
+          (and (< (length a) (length b)) (andmap (cut member <> b) a))))
       (def (index? x) (or (eq? x #f) (and (exact-integer? x) (<= 0 x) (< x count))))
       (unless (and (andmap index? (vector->list left)) (andmap index? (vector->list right)))
         (reject #f))
@@ -84,77 +73,40 @@
                                 (not (vector-ref seen-right j))) (reject #f))) ids)) ids)
       (= matched cover-count))))
 
-;;; Sorted distinct columns admit a monotone merge, without allocating a
-;;; membership table. This predicate is private to the planner; the checker
-;;; derives membership independently from the original supplied column lists.
-;; : (-> OrderedColumns OrderedColumns Boolean)
-(def (ordered-subset? selected available)
-  (cond ((null? selected) #t)
-        ((null? available) #f)
-        ((= (car selected) (car available))
-         (ordered-subset? (cdr selected) (cdr available)))
-        ((> (car selected) (car available))
-         (ordered-subset? selected (cdr available)))
-        (else #f)))
-
-;;; One invocation owns the ordered sets and all strict-subset successors.
-;;; Search and chain publication consume this descriptor, without recomputing
-;;; column relationships at every alternating-path step.
-(defstruct column-order (sets successors) final: #t)
-;; : (-> (Vector OrderedColumns) ColumnOrder)
-(def (compile-column-order sets)
-  (let ((widths (vector-map length sets)) (ids (iota (vector-length sets))))
-    (make-column-order sets
-      (list->vector
-       (map (lambda (i)
-              (filter (lambda (j)
-                        (and (< (vector-ref widths i) (vector-ref widths j))
-                             (ordered-subset? (vector-ref sets i) (vector-ref sets j)))) ids)) ids)))))
-
-;; : (-> OrderedColumns Boolean)
-(def (distinct-ordered-columns? columns)
-  (match columns
-    ([left right . _]
-     (and (< left right) (distinct-ordered-columns? (cdr columns))))
-    (else #t)))
-
-;;; Admission owns detached sorted spines; an adjacent comparison rejects
-;;; duplicates without allocating a second hash table for every requirement.
-;; : (-> ColumnRequirements (Vector OrderedColumns))
-(def (normalize-column-requirements requirements)
-  (let (unique (make-hash-table))
-    (for-each
-     (lambda (columns)
-       (unless (and (list? columns)
-                    (andmap (lambda (n) (and (exact-integer? n) (>= n 0))) columns))
-         (error "invalid index sharing columns" columns))
-       (let (ordered (list-sort < columns))
-         (unless (distinct-ordered-columns? ordered)
-           (error "repeated index sharing columns" columns))
-         (unless (null? ordered) (hash-put! unique ordered #t)))) requirements)
-    (list->vector (hash-keys unique))))
-
 ;;; Maximum bipartite matching on strict subset edges yields a chain cover.
 ;;; Only chains with multiple logical requirements change physical storage;
 ;;; singleton chains retain the existing specialized hash representation.
 ;; : (-> ColumnRequirements IndexSharingLayout)
 (def (gerbil-ascent-index-sharing-layout requirements)
-  (let* ((sets (normalize-column-requirements requirements))
-         (order (compile-column-order sets))
-         (successors (column-order-successors order))
-         (count (vector-length (column-order-sets order)))
+  (let* ((unique (make-hash-table))
+         (sets (begin
+                 (for-each
+                  (lambda (columns)
+                    (unless (and (list? columns)
+                                 (andmap (lambda (n) (and (exact-integer? n) (>= n 0))) columns))
+                      (error "invalid index sharing columns" columns))
+                    (let (ordered (list-sort < columns))
+                      (unless (= (length ordered) (hash-length (let (seen (make-hash-table-eq)) (for-each (lambda (c) (hash-put! seen c #t)) ordered) seen)))
+                        (error "repeated index sharing columns" columns))
+                      (unless (null? ordered) (hash-put! unique ordered #t)))) requirements)
+                 (list->vector (hash-keys unique))))
+         (count (vector-length sets))
          (left (make-vector count #f)) (right (make-vector count #f))
          (layout (make-hash-table)))
+    (def (below? i j)
+      (let ((a (vector-ref sets i)) (b (vector-ref sets j)))
+        (and (< (length a) (length b)) (andmap (cut member <> b) a))))
     (def (augment! i visited)
-      (ormap
-       (lambda (j)
-         (and (not (vector-ref visited j))
-              (begin
-                (vector-set! visited j #t)
-                (let (prior (vector-ref right j))
-                  (and (or (not prior) (augment! prior visited))
-                       (begin (vector-set! left i j) (vector-set! right j i) #t))))))
-       (vector-ref successors i)))
+      (let search ((j 0))
+        (and (< j count)
+             (if (and (below? i j) (not (vector-ref visited j)))
+               (begin
+                 (vector-set! visited j #t)
+                 (let (prior (vector-ref right j))
+                   (if (or (not prior) (augment! prior visited))
+                     (begin (vector-set! left i j) (vector-set! right j i) #t)
+                     (search (+ j 1)))))
+               (search (+ j 1))))))
     (for-each (lambda (i) (augment! i (make-vector count #f))) (iota count))
     (unless (gerbil-ascent-index-sharing-certificate? sets left right)
       (error "invalid index sharing maximum matching certificate"))

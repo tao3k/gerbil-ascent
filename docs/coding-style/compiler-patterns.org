@@ -42,6 +42,33 @@ these requirements failed; their logs and the successful receipt remain in
 ignored =.cache/ascent/syntax-normalization/=. This is local qualification,
 not a completed remote CI claim.
 
+* Invocation-owned analysis and ordered search
+
+Gerbil =1cfb032= =compiler/optimize-base.ss:24-33= defines =optimizer-info=
+with a constructor that owns its analysis tables. The useful lesson for
+=table/index-sharing.ss= is to make column analysis a complete invocation-owned
+descriptor. Admission now detaches and sorts the requirements; adjacent
+comparison rejects duplicate columns. A private =column-order= carries the
+admitted sets and ordered strict-subset successors. Matching uses =ormap= for
+first-success augmentation, retaining successor order and matching updates.
+Sorted-set inclusion is a flat monotone recurrence. Compiler and search
+metadata do not retain runtime rows or cross an engine's ownership boundary.
+
+The certificate checker independently rebuilds widths and lazy membership
+tables from the original supplied sets. It accepts unsorted admitted sets;
+it cannot depend on the planner's sorted-merge precondition or successor graph.
+One selected membership table is captured before each =andmap= traversal.
+Existing exhaustive partition enumeration checks all 128 subsets of the
+three-column requirement universe, alongside rejected nonmaximum and
+inconsistent certificates.
+
+The complete native layout call improves target chain/split CPU about 95%/88%
+with lower allocation. A branching fixture fails exact layout stability even
+for repeated baseline calls and remains a negative result. Empty input adds
+128 allocated bytes. See [[file:../../t/performance/column-order/README.org][column-order qualification]]
+for the frozen source, fixed gates, controls and scope. These measurements do
+not establish runtime query or solve improvements.
+
 * Study: expression optimization conditions and compiler output
 
 Study the installed Gerbil compiler directly, including the conditions that

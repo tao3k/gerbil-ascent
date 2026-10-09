@@ -1,0 +1,88 @@
+#+title: Native column-order planning qualification
+
+* Scope and source
+
+=reference.ss= is the complete =table/index-sharing.ss= at
+=603c77b4c1060c71ef103f6634218d9e846489b3=. It retains the original admission,
+matching, independent certificate and publication code. The measured call is
+=gerbil-ascent-index-sharing-layout=, including all these phases. Runtime trie
+insertion and query/solve execution are outside the measurement.
+
+Gerbil =1cfb032= =compiler/optimize-base.ss= gives =optimizer-info= ownership of
+analysis tables. This planner follows invocation ownership with a private
+=column-order= record. Sorted column sets admit a monotone subset merge; an
+ordered successor vector replaces repeated inclusion tests during matching.
+=ormap= expresses ordered first-success augmentation. The checker rebuilds
+membership from the supplied column sets and accepts unsorted admitted sets;
+it does not consume the planner's successors or its merge predicate.
+
+* Fixed admission
+
+The public ASP =make-benchmark-fixture= generated =benchmark.ss= before any
+measurements. Each scenario has 50 alternating old/new pairs. Every pair
+checks all physical permutations and the complete unchanged input snapshot.
+Nested chains, split chains and branching sets require CPU <=80% of baseline and at least
+35 CPU wins. Antichain, small and empty controls allow <=105% plus 20us.
+All shapes allow allocation <=110% plus 4096 bytes. ASP pair p95 is <=999ms.
+These gates are fixed independently of results. Allocation measures Gambit's
+process allocation counter; it is not retained heap.
+
+* Native entry points
+
+Use the existing project Gerbil library environment and OpenSSL link path.
+Prepare the canonical library with =just prepare-test-library=; build these
+entries through the native Gerbil compiler:
+
+#+begin_src scheme
+;; gxi t/performance/column-order/build.ss LIBRARY BINARY runner
+;; gxi t/performance/column-order/build.ss LIBRARY QUALIFIER qualify
+;; BINARY chain RECEIPT
+;; BINARY split RECEIPT
+;; BINARY branch RECEIPT
+;; BINARY antichain RECEIPT
+;; BINARY small RECEIPT
+;; BINARY empty RECEIPT
+;; QUALIFIER
+#+end_src
+
+=qualify.ss= runs the existing index-entry, lifecycle and BYODS index Suites.
+The index-entry Suite retains the independent 128-subset partition oracle and
+adversarial matching certificates. An additional Case checks large integers,
+unsorted checker input, duplicate rejection and unchanged borrowed lists.
+Final =OK= and exit zero are required. Build and run one measurement process
+at a time. Logs, native binaries and raw receipts stay under ignored
+=.cache/ascent/column-order/=. A stopped or failed series remains evidence.
+
+* Negative branch evidence
+
+The original branching scenario fails the fixed exact-layout check. Diagnostic
+execution records =(same-layout? old first-old) => #f= as well as
+=(same-layout? new first-old) => #f=, with the original input snapshot unchanged.
+Thus this particular check also fails for repeated baseline calls: the shared
+branch permits different physical chain permutations. No timing receipt for
+this scenario is admitted. The original =branch= scenario remains callable,
+and its failures stay in =branch.log= and =branch-debug.log=.
+
+A separate =split= scenario uses two disjoint chains with unique physical
+permutations. It was added with the same 80% CPU, 35-win and allocation gates,
+without changing the original branch scenario or its assertion. Tests retain
+the independently enumerated minimum-chain oracle for branching subsets.
+
+* Admitted local measurements
+
+Each row has 50 alternating pairs from the final native implementation.
+
+| Shape | Old CPU us | New CPU us | Old allocated bytes | New allocated bytes | CPU wins |
+|-------+------------+------------+---------------------+---------------------+----------|
+| chain |      64748 |       3216 |              859200 |              719952 |       50 |
+| split |      16074 |       1905 |              753456 |              646448 |       50 |
+| antichain |    838 |        292 |              426768 |              152976 |       50 |
+| small |    3.21875 |    2.65625 |               14976 |              8478.5 |       48 |
+| empty |        0.5 |    0.53125 |                2784 |                2912 |        5 |
+
+The target chain/split layouts reduce CPU about 95%/88% and allocation about
+16%/14%. Empty input adds 128 allocated bytes and about 0.031us in this series;
+it passes the original absolute control allowance and is not a speedup.
+Earlier successful series and the rejected branch diagnostic are preserved.
+These results establish this complete planning call, not an end-to-end solve
+or actor scheduling gain. Native consumers and policy are separate gates.

@@ -6,6 +6,9 @@
 #+DATE: 2026-09-30
 #+FILETAGS: :research:llm:inference:
 
+Dedicated [[file:brink-b26.org][BRINK method reading]] connects whole-batch evidence protection to
+[[file:../../features/withholding/acceptance.org][native snapshot withholding and finite qualification]].
+
 * Question and scope
 :PROPERTIES:
 :CUSTOM_ID: agent-inference-research

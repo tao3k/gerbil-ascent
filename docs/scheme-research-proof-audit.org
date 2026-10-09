@@ -560,3 +560,11 @@ complete row differences, independent held-out graph controls, five Lean laws
 and a 128-state Quint publication gate with four rejected fault variants.
 This transfers the finite discriminator; model synthesis and the released
 Souffle benchmark remain separate open experiments.
+
+* BRINK evidence-preserving snapshot transfer, 2026-10-09
+
+[[file:features/withholding/acceptance.org][Whole-batch withholding]] connects the dedicated BRINK method reading to
+Scheme snapshot copying, global head/body conflict rejection and existing
+complete-answer feedback. Six Lean laws, a 28-state Quint model with four
+faults and native cut/composition controls cover this finite transfer.
+Rule mining, real-KG/model experiments and source authority remain separate.

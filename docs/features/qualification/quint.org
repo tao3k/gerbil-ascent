@@ -131,3 +131,10 @@ The finite correct configuration explores 128 distinct states. Stale binding,
 partial completion, omitted missing rows and omitted extra rows each violate
 the designated invariant (exit 12). This new feedback model is additional to
 the historical migration inventory above.
+
+* Whole-batch withholding qualification (2026-10-09)
+
+[[file:../withholding/acceptance.org][Withholding]] adds a 28-state finite publication model to all/Nonmembership.
+Early publication, local-only protection, stale binding and missing body
+membership each produce the designated counterexample (exit 12). This
+addition is separate from the historical migration inventory.

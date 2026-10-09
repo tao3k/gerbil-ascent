@@ -82,7 +82,8 @@ starts the executor check for branch-scoped exclusion over a finite real-KG extr
 - [DatalogBench: Evaluating Large Language Models on Text-to-Datalog Synthesis](https://arxiv.org/abs/2609.37233) (2026 preprint) — generated recursive rules checked by execution, with preprint and dialect limits.
 - [IRIS: LLM-Assisted Static Analysis for Detecting Security Vulnerabilities](https://proceedings.iclr.cc/paper_files/paper/2025/file/582d4e27fa24168f3af1f4582655034b-Paper-Conference.pdf) (ICLR 2025) — real-code candidate specifications and CodeQL results; adjacent language and high false-alert cost.
 
-[BRINK](https://aclanthology.org/2026.eacl-long.114/) (EACL 2026) is a
+[BRINK](https://aclanthology.org/2026.eacl-long.114/) (EACL 2026), now covered by a
+[dedicated reading and finite withholding implementation](docs/research/agent-inference/brink-b26.org), is a
 useful incomplete-KG evaluation comparator, not a semantic oracle: it
 removes observed facts while preserving rule-body paths, but its rules are
 mined with confidence thresholds rather than established as universal laws.

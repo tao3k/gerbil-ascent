@@ -17,7 +17,7 @@ for all these states.
 | LLM-MatLogic | [[file:agent-inference/matlogic-ml26.org][note]] | Dedicated reading; WD26 finite executor fixture; model/KGQA benchmark pending |
 | DatalogBench | [[file:agent-inference/datalogbench-db26.org][note]] | Dedicated reading; finite held-out graph/mutant discriminator implemented; model/Souffle corpus pending |
 | IRIS | [[file:agent-inference/iris-ir25.org][note]] | Dedicated reading added; finite sanitizer-path Program, Lean and Session checks |
-| BRINK | [[file:agent-inference/2026-logic-ai-screen.org][note]] | Screen only; no dedicated artifact study or admitted mined-rule benchmark |
+| BRINK | [[file:agent-inference/brink-b26.org][note]] | Dedicated method reading; whole-batch finite withholding implemented; upstream mined-rule/KG-RAG experiments pending |
 | Datafun | [[file:scheme-dsl/datafun-f16.org][note]] | Dedicated reading; checked finite operators/fixed-point laws |
 | Higher-order seminaive evaluation | [[file:scheme-dsl/datafun-s20.org][note]] | Dedicated reading; higher-order derivative execution remains a research seam |
 | BYODS | [[file:scheme-dsl/byods-b23.org][note]] | Built-in Provider/frontier/shared-index engineering baseline qualified; full paper workloads separate |
@@ -58,13 +58,16 @@ LLVM/index-sharing application replication, matched whole-application benefits
 and universal native extraction remain distinct research work. The feature
 [[file:../features/steensgaard/acceptance.org][Steensgaard]] and [[file:../features/polonius/acceptance.org][Polonius]] pages specify those source-bound limits.
 
-* Connected next work
+* Connected work and remaining head-paper gates
 
-This audit advances IRIS from screening into a dedicated method reading and a
-finite executable path contract. Its Program is an application of existing
-stratified evaluation; Lean states path semantics and SessionTransaction Quint
-owns replacement/refusal/publication. Native graph and retained tests connect
-those boundaries. No Java extractor, CodeQL equivalence, LLM-labeling experiment
-or CWE-Bench-Java result is implied. The next missing head-paper artifact is
-DB26 held-out candidate semantics and ML26 raw model proposal/specification
-comparison; the existing WD26 gold executor is the common snapshot baseline.
+IRIS supplies finite path specifications; DB26 supplies frozen-proposal full-row
+feedback; BRINK adds whole-batch incomplete-source construction and preserved
+original answers. Scheme snapshot/receipt owners connect these transfers. Lean
+states semantic laws; Quint states completion, binding and publication premises.
+The dedicated feature pages record their executable native controls.
+
+Remaining head-paper experiments include ML26 raw model proposal/specification
+comparison and BRINK released mined-rule groundings with versioned real-KG
+answers and retrieval metrics. DB26 model synthesis/Souffle corpus and IRIS Java
+extraction/CodeQL/CWE-Bench-Java remain separate. The existing WD26 gold executor
+is a finite real-KG baseline, not closure of those model experiments.

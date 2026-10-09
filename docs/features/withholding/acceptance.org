@@ -1,0 +1,44 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+#+TITLE: Whole-batch withholding: design and finite qualification
+#+DATE: 2026-10-09
+
+* Contract
+
+[[file:../../research/agent-inference/brink-b26.org][BRINK reading]] identifies global evidence protection and original-KG answer
+completion. [[file:../../../candidate/withholding.ss][reasoning-withhold-source-snapshot]] accepts a valid source snapshot,
+a strictly higher generation, and at most 64 groundings. Each grounding is a
+head atom plus a nonempty list of body atoms. Atoms must match a declared
+relation's arity and equal an observed scalar source row. The existing bounded
+datum walker caps external input at 16384 nodes and depth 128 before traversal.
+
+The builder hashes complete relation-tagged atoms, collects all heads/protected
+bodies and rejects any overlap across the entire batch. It copies a new snapshot
+only after successful validation, removes all duplicates of selected heads and
+retains row order/schema/identity. Rejections use existing typed candidate
+rejections and located diagnostics. Source rows and submitted groundings are
+not mutated. The returned snapshot has no hidden dependency on caller spines.
+No mining, rule-entailment or source-authority claim is made by this low-level
+cut operation. The caller owns rule admission and the original answer reference.
+
+* Correspondence
+
+[[file:../../../packages/proofs/lean/Withholding.lean][Six Lean laws]] establish no invention, selected-head absence, unselected and
+protected preservation, preservation iff global disjointness and removal-order
+independence. They apply to abstract fact membership, not native hash extraction.
+[[file:../../../packages/proofs/quint/Withholding.qnt][Quint]] explores 28 distinct states. Four faults expose early publication, local-only
+protection, stale input binding and absent body membership; each violates the
+specified invariant (exit 12). The existing Justfile all/Nonmembership gates own
+execution; no new test runner is introduced.
+
+[[file:../../../t/qualification/ascent-withholding-test.ss][Native tests]] enumerate 64 head/protection pairs against independent finite sets,
+check conflicting groundings in both orders, duplicate source rows, malformed
+schema/body membership, generations, cyclic and oversized input, and detachment.
+A two-answer finite family snapshot loses one direct sibling fact while retaining
+parent/child evidence. An admitted composition proposal recovers both original
+answers with independently verified finite evidence; a direct lookup loses one.
+The old full source cannot validate the incomplete-source execution receipt.
+
+Local four Cases, full Lean 136 jobs and the correct/fault Quint gate pass.
+Whole-revision remote CI remains a separate delivery gate. This is not replication
+of BRINK mining, model inference, real-KG tasks or reported performance scores.

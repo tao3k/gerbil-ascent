@@ -1340,3 +1340,31 @@ replacement of ordinary local bindings or conditionals.
 See [[file:../../t/performance/affected-outputs/README.org][affected output qualification]] for the complete selection/activation A/B,
 partial allocation cost and semantic controls. The measured CPU improvement
 belongs to this phase, not complete program evaluation.
+
+* Aggregate input shape and consumer-owned retention
+
+Gerbil =1cfb032= =core/match.ss:638-672= binds and dispatches a structural
+input once. The pinned POO =support/base.ss:10= defines =lambda-match= as a
+unary wrapper over that matcher; it must be imported explicitly rather than
+assumed to be a core identifier. =runtime/util.ss:268-283= shows =foldl='s
+ordered item/accumulator protocol. These mechanisms let tuple admission and
+arithmetic consumption have separate, explicit contracts.
+
+=program/aggregators.ss= now uses =single-column-value= for the shared singleton
+shape boundary. It reads the sole value structurally; an improper or cyclic
+individual tuple is rejected without an unbounded =length= walk. The private
+=with-single-column= syntax binds input once and validates the complete tuple
+batch before arithmetic. A later malformed tuple therefore still precedes an
+earlier nonnumeric value's arithmetic failure.
+
+Sum folds directly over borrowed tuples, with the original =(+ item prior)=
+operand order. Mean uses the same admitted traversal and an invocation-local
+count, converting the completed sum to inexact before division exactly as
+before. Neither consumer retains a copied value column. Min/max retain their
+value list and original multiargument =apply=, preserving numeric coercion,
+NaN, signed-zero and large-exact-number behavior. Count keeps its zero-column
+contract. Inputs are not mutated, memoized or attached to published results.
+
+See [[file:../../t/performance/aggregate-input/README.org][aggregate input qualification]] for complete builtin-call A/B, finite numeric
+comparisons, public aggregate consumers and rejected counter observations.
+Arithmetic speedups here do not establish whole-evaluator throughput gains.

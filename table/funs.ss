@@ -5,7 +5,8 @@
 ;;; Private index algorithms. The evaluator owns cache invalidation.
 
 (export gerbil-ascent-index-build gerbil-ascent-index-extend! gerbil-ascent-index-order!
-        gerbil-ascent-index-key gerbil-ascent-index-row-snapshot gerbil-ascent-index-batch!)
+        gerbil-ascent-index-key gerbil-ascent-index-row-snapshot
+        gerbil-ascent-index-row-snapshot/arity gerbil-ascent-index-batch!)
 
 ;;; Native update invokes the callback synchronously. Bind each row in the
 ;;; caller's key expression, while one private slot/callback belongs to the
@@ -22,11 +23,27 @@
     target))
 
 ;;; Copy admitted outer/row spines while preserving field value identity.
-;;; Custom lookup callers must finish bounded row-shape admission first.
+;;; Build/extend callers already own admitted rows; lookup uses the arity protocol.
 ;; : (forall (v) (-> [[v]] [[v]]))
 ;; : (-> Rows DetachedRowSpines)
 (def (gerbil-ascent-index-row-snapshot rows)
   (map (lambda (row) (map values row)) rows))
+
+;;; Admit and detach the whole provider packet before membership or callbacks.
+;;; The width bounds traversal even for cyclic/improper rows. Each copied
+;;; suffix is admitted before its prefix is constructed; failed packets escape
+;;; no row spines. Field values remain borrowed, including mutable values.
+;; : (-> ProperRowPacket Nat DetachedRowSpines)
+(def (gerbil-ascent-index-row-snapshot/arity rows width)
+  (def (wrong-arity)
+    (error "ASCENT index provider returned wrong row arity" width))
+  (def (copy row left)
+    (if (zero? left)
+      (if (null? row) [] (wrong-arity))
+      (match row
+        ([value . rest] (cons value (copy rest (- left 1))))
+        (else (wrong-arity)))))
+  (map (cut copy <> width) rows))
 
 ;; : (-> (List Row) (List ColumnIndex) Index)
 (def (gerbil-ascent-index-build rows columns)

@@ -657,3 +657,44 @@ are byte-identical across that integration. The four changed production
 modules pass the policy audit with zero findings and zero errors.
 This focused receipt does not establish full-suite, whole-engine SS or
 current-head remote CI closure.
+
+* Study: version-owned member admission and detached provider packets
+
+Gerbil =1cfb032= =core/match.ss:626-672= exposes structural shape clauses;
+=runtime/hash.ss:460-483= chooses physical tables by equality contract. Apply
+these mechanisms at a protocol boundary: declaration admission, physical index
+construction, source extension, returned packet admission and callback consumption.
+Public provider behavior remains POO-extensible; private member records belong
+to one physical index version and are not a new public object model.
+
+=table/funs.ss:gerbil-ascent-index-row-snapshot/arity= validates and detaches
+row spines together, with traversal bounded by declared width. The whole packet
+passes before membership/coverage checks. Field values remain borrowed; prior
+valid rows may allocate temporary detached spines before a later malformed row
+raises. No partial packet is published. Shape errors still precede a foreign-row
+error elsewhere in the same packet; no term callback runs on rejection.
+
+=program/index.ss= replaces separate row-key and occurrence tables with one
+value-keyed table of =provider-row-member= records. The record holds a version-local
+integer ordinal, projected key and allowed occurrence count. Source extension
+updates existing equal-value classes and assigns ordinals to new classes.
+Returned packets do one full-row member lookup, then count ordinals in a fresh
+packet-local table. Duplicate occurrences, overselecting packets, required-key
+coverage, alias revocation and all/delta publication retain the existing owner.
+There is no mutable enumeration stamp in a retained member.
+
+The abstraction reduces repeated row hashing across the complete lookup flow.
+A shape/copy fusion alone failed the 10% CPU gate. Default eq tables, eqv
+record-key tables and immediate ordinal tables failed narrow allocation or CPU
+controls; retain these negative receipts. The existing generic table with integer
+ordinals passes all gates with unchanged allocation. Specialized table names
+and fewer source expressions do not prove lower runtime cost.
+
+=t/performance/provider-packet/= freezes the complete prior index owner and
+uses ASP Scheme's benchmark API for 50 alternating pairs. Complete warm Provider
+lookup, shape/detachment, membership, coverage and field consumption lower median
+CPU 4327 ->3011 us at width 256 and 1750 ->1029 us at width 64, with equal
+allocation. Build and witness construction are outside timing; these figures
+make no cold-build or whole-evaluator performance claim. Narrow, small and empty
+controls retain the predeclared regression gates. Root =build.ss= stays a
+production roster; native qualification and benchmarks live under =t/=.

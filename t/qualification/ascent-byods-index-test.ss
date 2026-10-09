@@ -92,7 +92,16 @@
         "ASCENT index provider returned wrong row arity")
        (check-equal? calls 0))
      (list '(0 1 2) '(0) '(0 . 1) cycle))
+    ;; Whole-packet shape failure wins even when an earlier row is foreign.
+    (set! override '((0 99) (0)))
+    (set! calls 0)
+    (check-equal?
+     (with-catch (lambda (failure) (error-message failure))
+       (lambda () (gerbil-ascent-session-run session) 'accepted))
+     "ASCENT index provider returned wrong row arity")
+    (check-equal? calls 0)
     (set! override '((0 #f) (0 99)))
+
     (set! calls 0)
     (check-equal?
      (with-catch (lambda (failure) (error-message failure))

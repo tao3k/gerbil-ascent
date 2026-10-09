@@ -18,7 +18,7 @@
         (only-in :gerbil-ascent/table/provider gerbil-ascent-canonical-hash-index-provider?
                  gerbil-ascent-curried-index-provider?)
         (rename-in (only-in :gerbil-ascent/table/funs gerbil-ascent-index-key
-                           gerbil-ascent-index-row-snapshot/arity)
+                           gerbil-ascent-index-row-snapshot)
                    (gerbil-ascent-index-key row-key)))
 (export gerbil-ascent-make-row-indexes row-indexes-rows row-indexes-visit-parts row-indexes-advance! row-indexes-plan-atoms! row-indexes-plan-rules! row-indexes-plan-actions! row-indexes-plan-positive-rules!)
 
@@ -67,30 +67,37 @@
 ;;; Custom indexes may overselect candidates, but each must still represent
 ;;; a complete relation tuple. Check the whole batch before term callbacks.
 ;;; Traversal is bounded by admitted arity, including improper/cyclic rows.
-;;; One value-keyed admission per equal row class; transient packet counts
-;;; use this version-owned member identity instead of rehashing wide rows.
-(defstruct provider-row-member (ordinal key occurrences))
-(defstruct provider-row-witness (members counts))
+(defstruct provider-row-witness (keys counts occurrences))
 
 (def (checked-provider-rows rows terms witness key)
-  ;; Shape admission and spine detachment share one bounded traversal. The
-  ;; entire packet still precedes membership, coverage and term callbacks.
+  (for-each
+   (lambda (row)
+     (let loop ((remaining row) (columns terms))
+       (if (null? columns)
+         (unless (null? remaining)
+           (error "ASCENT index provider returned wrong row arity" (length terms)))
+         (if (pair? remaining)
+           (loop (cdr remaining) (cdr columns))
+           (error "ASCENT index provider returned wrong row arity" (length terms))))))
+   rows)
+  ;; Membership follows complete shape admission, before any term matching.
   ;; The witness belongs to this physical entry's all/delta version.
-  (let ((snapshot (gerbil-ascent-index-row-snapshot/arity rows (length terms)))
-        ;; Dense ordinals belong to this witness version, never to provider rows.
+  ;; Detach the admitted packet from retained Provider references before
+  ;; checking membership and before any rule callback can mutate those refs.
+  (let ((snapshot (gerbil-ascent-index-row-snapshot rows))
         (seen (make-hash-table)) (matched 0))
     (for-each
      (lambda (row)
-       (let (member (hash-get (provider-row-witness-members witness) row))
-         (unless member
+       (let (represented-key (hash-get (provider-row-witness-keys witness) row))
+         (unless represented-key
            (error "ASCENT index provider returned foreign row"))
          ;; Initial source snapshots can contain equal row occurrences.
          ;; Reject only enumeration beyond this lane/version's admitted count.
-         (let (enumerated (or (hash-get seen (provider-row-member-ordinal member)) 0))
-          (when (>= enumerated (provider-row-member-occurrences member))
+         (let (enumerated (or (hash-get seen row) 0))
+          (when (>= enumerated (hash-get (provider-row-witness-occurrences witness) row))
            (error "ASCENT index provider returned duplicate row"))
-          (hash-put! seen (provider-row-member-ordinal member) (+ enumerated 1)))
-         (when (equal? (provider-row-member-key member) key) (set! matched (+ matched 1)))))
+          (hash-put! seen row (+ enumerated 1)))
+         (when (equal? represented-key key) (set! matched (+ matched 1)))))
      snapshot)
     ;; Represented occurrences cover this key iff their count equals the
     ;; snapshot's key count. No second key-expression evaluation.
@@ -98,27 +105,21 @@
       (error "ASCENT index provider omitted matching rows"))
     snapshot))
 
-;;; Extend the same value classes only after source admission. Their identity
-;;; stays stable for the physical version; packet-local counters never escape.
-;; : (-> ProviderRowWitness Rows Columns ProviderRowWitness)
 (def (extend-provider-row-witness! witness rows columns)
-  (let ((members (provider-row-witness-members witness))
-        (counts (provider-row-witness-counts witness)))
+  (let ((keys (provider-row-witness-keys witness))
+        (counts (provider-row-witness-counts witness))
+        (occurrences (provider-row-witness-occurrences witness)))
     (for-each
      (lambda (row)
-       (let* ((member (or (hash-get members row)
-                         (let (fresh (make-provider-row-member (hash-length members) (row-key row columns) 0))
-                           (hash-put! members row fresh) fresh)))
-              (key (provider-row-member-key member)))
-         (provider-row-member-occurrences-set! member
-           (+ 1 (provider-row-member-occurrences member)))
-         (hash-put! counts key (+ 1 (or (hash-get counts key) 0))))) rows))
+       (let (key (or (hash-get keys row) (row-key row columns)))
+           (hash-put! keys row key)
+           (hash-put! occurrences row (+ 1 (or (hash-get occurrences row) 0)))
+           (hash-put! counts key (+ 1 (or (hash-get counts key) 0))))) rows))
   witness)
 
-;; : (-> Rows Columns ProviderRowWitness)
 (def (build-provider-row-witness rows columns)
   (extend-provider-row-witness!
-   (make-provider-row-witness (make-hash-table) (make-hash-table)) rows columns))
+   (make-provider-row-witness (make-hash-table) (make-hash-table) (make-hash-table)) rows columns))
 
 ;;; Index ownership includes discovery of the logical lookup requirements.
 ;;; The three execution owners supply admitted metadata, never row snapshots

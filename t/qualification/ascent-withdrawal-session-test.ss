@@ -119,4 +119,7 @@
                                                edges (iota (length edges))))
                          (after (candidate-withdrawal-session! session 0 (list (list 'edge (+ ordinal 1))))))
                     (check-set (.ref after 'rows) (reference remaining))))
-                (iota (length edges))))) (iota 64))))))
+                (iota (length edges)))
+              (when (zero? (modulo (+ mask 1) 8))
+                (displayln "WITHDRAWAL-GRAPHS-CHECKED " (+ mask 1) "/64")
+                (force-output)))) (iota 64))))))

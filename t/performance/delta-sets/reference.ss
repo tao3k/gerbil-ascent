@@ -3,14 +3,14 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 ;;; Insertion changes for the finite positive relation operator graph.
-(import (only-in "operator.ss"
+(import (only-in :gerbil-ascent/program/operator
                  relational-op-kind relational-op-inputs
                  relational-op-data relational-transform?
                  relational-transform-parameter
                  relational-transform-body
                  relational-transform-input-arity
                  relational-op-count-join! relational-op-count-fix!)
-        (only-in "scheme-checked.ss" relational-copy-rows)
+        (only-in :gerbil-ascent/program/scheme-checked relational-copy-rows)
         (only-in :std/list/list append-map delete-duplicates/hash take))
 
 (export relational-op-delta-change)
@@ -46,22 +46,9 @@
           (error "operator delta row limit exceeded" row-limit))
         unique))
     (def (difference rows old)
-      ;; Every caller supplies normalized, bounded sets. Filtering preserves
-      ;; both uniqueness and order; a second normalization has no work to do.
-      (cond
-        ((null? rows) [])
-        ((null? old) rows)
-        ((null? (cdr old))
-         (filter (lambda (row) (not (equal? row (car old)))) rows))
-        (else
-         (let (seen (make-hash-table))
-           (for-each (cut hash-put! seen <> #t) old)
-           (filter (lambda (row) (not (hash-key? seen row))) rows)))))
+      (normalize (filter (lambda (row) (not (member row old))) rows)))
     (def (union left right)
-      (cond
-        ((null? left) right)
-        ((null? right) left)
-        (else (normalize (append left right)))))
+      (normalize (append left right)))
     (def (join left right left-key right-key)
       (normalize
        (append-map
@@ -229,10 +216,7 @@
                     environment))))
           ((fix)
            (let* ((body (car inputs))
-                  (parameter data)
-                  ;; External bindings do not change as this frontier moves.
-                  ;; Delay publication so an empty frontier pays no map/union.
-                  (steady (delay (grown-environment environment))))
+                  (parameter data))
              ;;; These recursions are the least-fixed-point closure and its
              ;;; delta frontier, rather than list-accumulator transforms.
              (letrec
@@ -252,14 +236,15 @@
                  (lambda (base current frontier)
                    (if (null? frontier)
                      (values base (difference current base))
-                     (let (grown (union current frontier))
+                     (let* ((grown (union current frontier))
+                            (steady (grown-environment environment)))
                        (relational-op-count-fix!)
                        (let (next-delta
                              (derivative
                               body
                               (cons (cons parameter
                                           (cons current frontier))
-                                    (force steady))))
+                                    steady)))
                          (advance base grown
                                   (difference next-delta grown))))))))
                (let (base (close []))

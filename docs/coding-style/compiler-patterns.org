@@ -1266,3 +1266,25 @@ Preparing descriptors for the one-pass successor consumer was an intermediate
 cost regression; the final syntax lets that consumer stream without retaining
 objects. See [[file:../../t/performance/rule-reads/README.org][rule-read qualification]] for controls and complete dependency-planning
 CPU/allocation results. This is not an evaluator-solve speedup claim.
+
+* Coordinate matcher construction as a structural protocol
+
+Gerbil =1cfb032= =core/match.ss:638-672= binds the matched expression once
+and generates structural dispatch. =compiler/compile.ss:319-341= uses a
+=defrules= wrapper to own repeated construction steps while keeping emitted
+operations explicit. In =core/positive-plan.ss=, ordinary and exact-selected
+coordinate matchers now dispatch on the complete lowered term list. Slot IDs
+are captured directly by structural patterns; neither constructor builds a
+transient tag list and then manually extracts the same fields.
+
+A private =parts-matcher= syntax rule owns matcher parameter binding, coordinate
+shape admission and the complete general fallback. The caller supplies the
+parameter identifiers hygienically. Specialized writes and bound comparisons
+remain explicit, left-to-right expressions. Exact-selected matching still
+requires the canonical key proof before omitting comparisons; custom or
+oversupplying providers retain the full matcher. The shared protocol adds no
+reader closure or branch per runtime coordinate.
+
+See [[file:../../t/performance/parts-layout/README.org][coordinate layout qualification]] for complete positive-plan compilation A/B,
+existing semantic consumers and controls. Gains belong to plan construction,
+not complete evaluator solves or query traversal.

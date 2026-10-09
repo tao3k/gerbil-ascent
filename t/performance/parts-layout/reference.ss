@@ -4,12 +4,12 @@
 
 ;;; Private positive-rule execution plans. Plans are immutable and shared;
 ;;; each engine owns its variable frames, including nested/concurrent solves.
-(import (only-in "ordered-call.ss" dispatch-ordered-call)
-        (only-in "relation-view.ss" relation-view? gerbil-ascent-for-each-row
+(import (only-in :gerbil-ascent/core/ordered-call dispatch-ordered-call)
+        (only-in :gerbil-ascent/core/relation-view relation-view? gerbil-ascent-for-each-row
                  gerbil-ascent-row-parts? gerbil-ascent-for-each-row-parts)
-        (only-in "expression-plan.ss" gerbil-ascent-compile-frame-call gerbil-ascent-compile-frame-sequence
+        (only-in :gerbil-ascent/core/expression-plan gerbil-ascent-compile-frame-call gerbil-ascent-compile-frame-sequence
                  gerbil-ascent-compile-input-guard)
-        (only-in "rule-bindings.ss" gerbil-ascent-expression-value gerbil-ascent-head-row gerbil-ascent-call-with-bindings))
+        (only-in :gerbil-ascent/core/rule-bindings gerbil-ascent-expression-value gerbil-ascent-head-row gerbil-ascent-call-with-bindings))
 (export gerbil-ascent-prepare-rule-activations gerbil-ascent-positive-plan gerbil-ascent-compile-positive-plan gerbil-ascent-run-positive-plan!
         gerbil-ascent-positive-plan-with-outputs gerbil-ascent-pure-positive-plan?
         gerbil-ascent-index-key gerbil-ascent-index-key/terms
@@ -278,44 +278,46 @@
     (and (match-value! (car terms) left frame)
          (match-value! (cadr terms) right frame))))
 
-;;; A coordinate matcher owns one shape guard and its complete fallback. The
-;;; caller supplies hygienic parameter names; no reader closure is added per row.
-(defrule (parts-matcher terms (prefix left right frame) shape? body)
-  (lambda (prefix left right frame)
-    (if shape? body (match-parts! terms prefix left right frame))))
-
-;; Compile frequent pure coordinate layouts by matching the complete terms.
-;; No temporary tag spine is needed; source slot IDs are captured once.
+;; Compile the frequent pure coordinate layouts once. Fall back for other
+;; actions and shapes, retaining left-to-right failures and host callbacks.
 (def (compile-parts-matcher terms)
-  (match terms
-    ([['fresh . a] ['fresh . b]]
-     (parts-matcher terms (prefix left right frame) (null? prefix)
-       (begin (vector-set! frame a left) (vector-set! frame b right) #t)))
-    ([['fresh . a] ['fresh . b] ['fresh . c]]
-     (parts-matcher terms (prefix left right frame)
-       (and (pair? prefix) (null? (cdr prefix)))
-       (begin (vector-set! frame a (car prefix)) (vector-set! frame b left)
-              (vector-set! frame c right) #t)))
-    ([['bound . a] ['bound . b] ['fresh . c]]
-     (parts-matcher terms (prefix left right frame)
-       (and (pair? prefix) (null? (cdr prefix)))
-       (and (equal? (vector-ref frame a) (car prefix))
-            (equal? (vector-ref frame b) left)
-            (begin (vector-set! frame c right) #t))))
-    (else (lambda (prefix left right frame) (match-parts! terms prefix left right frame)))))
+  (let (tags (map car terms))
+    (cond
+      ((equal? tags '(fresh fresh))
+       (let ((a (cdar terms)) (b (cdadr terms)))
+         (lambda (prefix left right frame)
+           (if (null? prefix)
+             (begin (vector-set! frame a left) (vector-set! frame b right) #t)
+             (match-parts! terms prefix left right frame)))))
+      ((equal? tags '(fresh fresh fresh))
+       (let ((a (cdar terms)) (b (cdadr terms)) (c (cdaddr terms)))
+         (lambda (prefix left right frame)
+           (if (and (pair? prefix) (null? (cdr prefix)))
+             (begin (vector-set! frame a (car prefix)) (vector-set! frame b left)
+                    (vector-set! frame c right) #t)
+             (match-parts! terms prefix left right frame)))))
+      ((equal? tags '(bound bound fresh))
+       (let ((a (cdar terms)) (b (cdadr terms)) (c (cdaddr terms)))
+         (lambda (prefix left right frame)
+           (if (and (pair? prefix) (null? (cdr prefix)))
+             (and (equal? (vector-ref frame a) (car prefix))
+                  (equal? (vector-ref frame b) left)
+                  (begin (vector-set! frame c right) #t))
+             (match-parts! terms prefix left right frame)))))
+      (else (lambda (prefix left right frame) (match-parts! terms prefix left right frame))))))
 
 ;; The synchronous index owner guarantees exact canonical key selection.
 ;; Only prior-bound actions present in the key can omit their second equality
 ;; test. Generic/overselecting row access continues to use the full matcher.
 (def (compile-selected-parts-matcher terms columns keys)
-  (match terms
-    ([['bound . _] ['bound . _] ['fresh . slot]]
-     (and (member 0 columns) (member 1 columns)
-          (andmap (lambda (column key) (equal? key (list-ref terms column))) columns keys)
-          (parts-matcher terms (prefix left right frame)
-            (and (pair? prefix) (null? (cdr prefix)))
-            (begin (vector-set! frame slot right) #t))))
-    (else #f)))
+  (and (equal? (map car terms) '(bound bound fresh))
+       (member 0 columns) (member 1 columns)
+       (andmap (lambda (column key) (equal? key (list-ref terms column))) columns keys)
+       (let (slot (cdaddr terms))
+         (lambda (prefix left right frame)
+           (if (and (pair? prefix) (null? (cdr prefix)))
+             (begin (vector-set! frame slot right) #t)
+             (match-parts! terms prefix left right frame))))))
 
 ;; : (-> SlotTerm Frame Value)
 (def (term-value term frame)

@@ -4,7 +4,6 @@
 
 ;;; Finite logical column requirements share curried physical chains. Planning
 ;;; owns no rows. Each engine/worker builds and extends its own physical roots.
-(import (only-in :gerbil/runtime/gambit equal?-hash))
 (export gerbil-ascent-index-sharing-layout gerbil-ascent-index-sharing-certificate?
         gerbil-ascent-shared-index-build gerbil-ascent-shared-index-extend!
         gerbil-ascent-shared-index-rows)

@@ -1209,3 +1209,34 @@ continuation contract rather than replacing the algorithm with generic dispatch.
 See [[file:../../t/performance/term-matching/README.org][structural term qualification]] for the complete-pipeline CPU and allocation
 controls. This change improves expression ownership and reduces repeated source;
 it does not establish a performance improvement.
+
+* Candidate continuation as a traversal protocol
+
+Gerbil =1cfb032= =std/io/bio/input.ss:35-85= uses =defrules __bio-read=
+to express a complete read/fill/retry protocol with supplied operations.
+The useful abstraction boundary in =core/positive-plan.ss= is likewise a
+protocol: checkpoint, candidate matching, then terminal emission or next atom.
+Local hygienic =accept= and =resume= rules own that sequence for explicit rows,
+frozen row visitors, rectangle parts and exact selected parts. Provider-specific
+selection and matcher choice remain at their original owners. Callback segments
+advance without changing the relation-atom delta ordinal.
+
+All terminal paths share the output getter prepared during plan compilation.
+Previously ordinary rows rebuilt the head-read mapping even when a small bound
+head already had a direct compiled getter. The unified protocol reads each
+current frame and creates a fresh output row at the original emission point;
+it never caches output values. Legacy two-field output records retain the map
+fallback. No runtime continuation closure is introduced per candidate.
+
+See [[file:../../t/performance/positive-traversal/README.org][positive traversal qualification]] for complete candidate traversal A/B,
+provider traces, controls and the limits of the local CPU improvement.
+
+The output compiler shares =dispatch-ordered-call= syntax rather than passing
+=list= through the runtime frame-call helper. The latter intermediate candidate
+failed its speedup gate. Keeping the constructor visible in generated code
+preserves direct list construction while the syntax owns ordered frame reads.
+Generated static SCM for four-slot heads contains ordered temporaries and a
+literal =list= application. This follows =compiler/compile.ss:319-341=, where
+=with-primitive-bind+args= owns operand temporaries without hiding the emitted
+operation. A runtime abstraction and a syntax abstraction are different cost
+choices; the retained A/B failure makes that distinction executable.

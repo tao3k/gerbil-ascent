@@ -1,0 +1,66 @@
+#+title: Positive candidate continuation qualification
+
+* Frozen source and contract
+
+Baseline =9e0239b0c581a914e9a4c84e68f1a9d6769f70f2=, original
+=core/positive-plan.ss= blob =5b747e097f49b3d27f8fc8c4c684d22fb8bfd848=.
+Frozen =reference.ss= blob =5a6e5443327ddb09935b34a5ae51d0aba8eab250=.
+Only relative imports of relation-view, expression-plan and rule-bindings
+are normalized to their package paths.
+
+Source study: installed Gerbil =1cfb032= =std/io/bio/input.ss:35-85=.
+Local syntax owns the checkpoint/match/advance protocol across row providers.
+Terminal traversal consumes the output getter already prepared by the immutable
+plan compiler, retaining a fallback for legacy two-field output records.
+
+* Native matched A/B
+
+The ASP Scheme benchmark API runs 50 alternating pairs of complete compiled
+candidate traversal, ordered head construction and result consumption. Plans
+and input rows are prepared outside measurement; frame creation is included.
+Both results must equal an independent sum of the original input. Process CPU
+and allocated bytes are measured with GC outside the timed call. No build or
+qualification overlaps the measured lanes.
+
+Before execution, the multiple-head target required >=10% CPU improvement and
+>=40 faster pairs. Controls allow 10% + 20 microseconds CPU overhead; allocation
+allows 10% + 4096 bytes. No thresholds were relaxed after measurement.
+
+| Scenario | Candidates | Old CPU us | New CPU us | Old bytes | New bytes | Faster pairs |
+|----------+------------+------------+------------+-----------+-----------+--------------|
+| two three-slot heads | 10000 | 1600 | 1350 | 2880640 | 2880640 | 42 |
+| generic five-slot head | 10000 | 849 | 840 | 2400464 | 2400464 | 43 |
+| small one-slot head | 1 | 1 | 1 | 448 | 448 | 12 |
+| empty | 0 | 1 | 1 | 432 | 432 | 19 |
+
+The target improves CPU about 15.6% with unchanged allocation. Generic output
+is about 1.1% faster; all controls pass. These are local prepared positive-plan
+traversal results, not full compilation, evaluator solve or wall-clock gains.
+Receipts and logs stay under ignored =.cache/ascent/positive-traversal=.
+
+* Semantic qualification
+
+The native entry combines positive-plan and callback suites with provider
+continuation tests. Matched traces cover explicit rows, frozen explicit views,
+rectangle parts and direct selected parts, checkpoint order, detached duplicate
+heads, head callbacks, first exceptions and legacy output records. Existing
+positive tests cover repeated variables, dirty frame reuse, projected heads,
+declined parts access, delta extent, callback suffixes and output budgets.
+Root =build.ss= is unchanged; the native entries remain under =t/=.
+
+* Rejected runtime abstraction
+
+An intermediate candidate passed =list= as a runtime procedure argument to the
+frame-call compiler. The multiple-head CPU gate failed: 1580 -> 1578 microseconds,
+32 faster pairs and 32 additional bytes. It was rejected without relaxing gates.
+The final output compiler uses the shared =dispatch-ordered-call= syntax directly,
+leaving the =list= constructor visible in generated static SCM. Small heads use
+ordered direct reads; mixed or wider heads retain the mapping fallback. Failed
+and intermediate receipts remain in cache alongside the final results.
+
+Final local qualification: three Suites, 42 completed Cases, final =OK= and
+exit zero. The source-loaded four-slot false-value/duplicate-head pipeline also
+passed. The native policy scan completed with 31 advisories and zero errors;
+this is not a warning-free repository claim. The invalid zero-atom fixture
+originally used an empty list instead of a zero-length vector and correctly
+failed the frame guard; its failed receipt is retained in cache.

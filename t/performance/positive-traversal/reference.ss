@@ -4,12 +4,11 @@
 
 ;;; Private positive-rule execution plans. Plans are immutable and shared;
 ;;; each engine owns its variable frames, including nested/concurrent solves.
-(import (only-in "ordered-call.ss" dispatch-ordered-call)
-        (only-in "relation-view.ss" relation-view? gerbil-ascent-for-each-row
+(import (only-in :gerbil-ascent/core/relation-view relation-view? gerbil-ascent-for-each-row
                  gerbil-ascent-row-parts? gerbil-ascent-for-each-row-parts)
-        (only-in "expression-plan.ss" gerbil-ascent-compile-frame-call gerbil-ascent-compile-frame-sequence
+        (only-in :gerbil-ascent/core/expression-plan gerbil-ascent-compile-frame-call gerbil-ascent-compile-frame-sequence
                  gerbil-ascent-compile-input-guard)
-        (only-in "rule-bindings.ss" gerbil-ascent-expression-value gerbil-ascent-head-row gerbil-ascent-call-with-bindings))
+        (only-in :gerbil-ascent/core/rule-bindings gerbil-ascent-expression-value gerbil-ascent-head-row gerbil-ascent-call-with-bindings))
 (export gerbil-ascent-prepare-rule-activations gerbil-ascent-positive-plan gerbil-ascent-compile-positive-plan gerbil-ascent-run-positive-plan!
         gerbil-ascent-positive-plan-with-outputs gerbil-ascent-pure-positive-plan?
         gerbil-ascent-index-key gerbil-ascent-index-key/terms
@@ -330,10 +329,14 @@
 ;; reads once; row consumers retain their original map path. The getter is
 ;; stored with its output, so projected/multiple heads preserve order/identity.
 (def (compile-parts-output terms)
-  (if (and (<= (length terms) 4)
-           (andmap (lambda (term) (eq? (car term) 'bound)) terms))
-    (dispatch-ordered-call (lambda (frame)) list (map cdr terms)
-      (slot (vector-ref frame slot)))
+  (if (and (memq (length terms) '(1 2 3)) (andmap (lambda (term) (eq? (car term) 'bound)) terms))
+    (let (slots (map cdr terms))
+      (case (length slots)
+        ((1) (let (a (car slots)) (lambda (frame) (list (vector-ref frame a)))))
+        ((2) (let ((a (car slots)) (b (cadr slots)))
+               (lambda (frame) (list (vector-ref frame a) (vector-ref frame b)))))
+        (else (let ((a (car slots)) (b (cadr slots)) (c (caddr slots)))
+                (lambda (frame) (list (vector-ref frame a) (vector-ref frame b) (vector-ref frame c)))))))
     (lambda (frame) (map (lambda (term) (term-value term frame)) terms))))
 (def (emit-parts-heads! heads frame emit-row!)
   (unless (null? heads)
@@ -377,45 +380,52 @@
 ;;; Explicit rows keep the direct list loop; frozen views invoke a local visitor.
 ;; : (-> Atoms Heads Frame Integer Nat RowsAccess EmitRow Void)
 (def (visit-positive-atoms! atoms heads frame delta-at depth rows-access emit-row! checkpoint! parts-access)
-  ;; Syntax owns the candidate protocol; no continuation closure per row.
-  ;; Observe the remaining action tail after user code, at the original boundary.
-  (defrule (resume next-depth)
-    (visit-positive-atoms! (cdr atoms) heads frame delta-at next-depth
-                          rows-access emit-row! checkpoint! parts-access))
-  (defrule (accept matched?)
-    (begin
-      (when checkpoint! (checkpoint!))
-      (when matched?
-        (if (null? (cdr atoms))
-          (emit-parts-heads! heads frame emit-row!)
-          (resume (+ depth 1))))))
-  (match atoms
-    ([] (emit-parts-heads! heads frame emit-row!))
-    ([action . _]
-     (case (vector-ref action 0)
-       ((callbacks) (when ((vector-ref action 1) frame) (resume depth)))
-       (else
-        (unless (and parts-access
-                  (parts-access (vector-ref action 0) frame (= depth delta-at) (vector-ref action 2)
-                    (lambda (prefix left right)
-                      (accept ((or (vector-ref action 4) (vector-ref action 3))
-                               prefix left right frame)))))
-          (let (rows (rows-access (vector-ref action 0) frame
+  (if (null? atoms)
+    (let outputs ((remaining heads))
+      (unless (null? remaining)
+        (let (output (car remaining))
+          (emit-row! (vector-ref output 0)
+                     (map (lambda (term) (term-value term frame))
+                          (vector-ref output 1))))
+        (outputs (cdr remaining))))
+    (let (action (car atoms))
+      (case (vector-ref action 0)
+        ((callbacks)
+         (when ((vector-ref action 1) frame)
+           (visit-positive-atoms! (cdr atoms) heads frame delta-at depth
+                                  rows-access emit-row! checkpoint! parts-access)))
+        (else
+         (unless (and parts-access
+                   (parts-access (vector-ref action 0) frame (= depth delta-at) (vector-ref action 2)
+                     (lambda (prefix left right)
+                       (when checkpoint! (checkpoint!))
+                       (when ((or (vector-ref action 4) (vector-ref action 3)) prefix left right frame)
+                         (if (null? (cdr atoms)) (emit-parts-heads! heads frame emit-row!)
+                           (visit-positive-atoms! (cdr atoms) heads frame delta-at (+ depth 1)
+                             rows-access emit-row! checkpoint! parts-access))))))
+         (let (rows (rows-access (vector-ref action 0) frame
                                  (= depth delta-at) (vector-ref action 2)))
-            (cond
-              ((or (pair? rows) (null? rows))
-               (let candidates ((remaining rows))
-                 (unless (null? remaining)
-                   (accept (match-row! (vector-ref action 1) (car remaining) frame))
-                   (candidates (cdr remaining)))))
-              ((gerbil-ascent-row-parts? rows)
+           (if (or (pair? rows) (null? rows))
+             (let candidates ((remaining rows))
+               (unless (null? remaining)
+                 (when checkpoint! (checkpoint!))
+                 (when (match-row! (vector-ref action 1) (car remaining) frame)
+                   (visit-positive-atoms! (cdr atoms) heads frame delta-at (+ depth 1)
+                                          rows-access emit-row! checkpoint! parts-access))
+                 (candidates (cdr remaining))))
+             (if (gerbil-ascent-row-parts? rows)
                (gerbil-ascent-for-each-row-parts
                 (lambda (prefix left right)
-                  (accept ((vector-ref action 3) prefix left right frame))) rows))
-              (else
+                  (when checkpoint! (checkpoint!))
+                  (when ((vector-ref action 3) prefix left right frame)
+                    (visit-positive-atoms! (cdr atoms) heads frame delta-at (+ depth 1)
+                                           rows-access emit-row! checkpoint! parts-access))) rows)
                (gerbil-ascent-for-each-row
                 (lambda (row)
-                  (accept (match-row! (vector-ref action 1) row frame))) rows))))))))))
+                  (when checkpoint! (checkpoint!))
+                  (when (match-row! (vector-ref action 1) row frame)
+                    (visit-positive-atoms! (cdr atoms) heads frame delta-at (+ depth 1)
+                                           rows-access emit-row! checkpoint! parts-access))) rows))))))))))
 
 ;;; Build the provider's ordered key after index construction. Compiled terms
 ;;; read proved frame slots; the general path preserves expression callbacks.

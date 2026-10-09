@@ -82,29 +82,6 @@
 ;; : (-> Row Columns Key Boolean)
 (def (matches-key? row columns key)
   (andmap (lambda (column value) (equal? (list-ref row column) value)) columns key))
-;; A query owns its relative offsets; each row owns its traversal cursor.
-;; Preserve condition order, including duplicate columns and short-circuiting.
-;; Unordered or malformed selectors retain the general list-ref protocol.
-(def (ordered-key-offsets columns key)
-  (and (list? columns) (list? key) (= (length columns) (length key))
-       (let/cc unordered
-         (let (previous 0)
-           (map (lambda (column)
-                  (unless (and (exact-integer? column) (>= column previous))
-                    (unordered #f))
-                  (let (offset (- column previous))
-                    (set! previous column)
-                    offset)) columns)))))
-(def (matches-offset-key? row offsets key)
-  (or (null? offsets)
-      (let (rest (list-tail row (car offsets)))
-        (and (equal? (list-ref rest 0) (car key))
-             (matches-offset-key? rest (cdr offsets) (cdr key))))))
-(def (compile-explicit-key-match columns key)
-  (let (offsets (ordered-key-offsets columns key))
-    (if offsets
-      (cut matches-offset-key? <> offsets key)
-      (cut matches-key? <> columns key))))
 ;; Compare without allocating a temporary prefix or importing a prelude binding.
 (def (matches-prefix? row prefix)
   (or (null? prefix)
@@ -121,8 +98,7 @@
   (def (rows) (if (promise? snapshot) (force snapshot) snapshot))
   (make-relation-view #f #f 0 'total count count
     (lambda (columns key consume)
-      (let (matches? (compile-explicit-key-match columns key))
-        (for-each (lambda (row) (when (matches? row) (consume (map values row)))) (rows))))
+      (for-each (lambda (row) (when (matches-key? row columns key) (consume (map values row)))) (rows)))
     (lambda (row) (and (member row (rows)) #t)) #f #f))
 ;; : (-> FrozenView FrozenView FrozenView)
 ;; The caller establishes disjoint facts; this is not a general Set union.

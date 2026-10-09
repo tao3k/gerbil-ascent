@@ -34,7 +34,9 @@ the feedback gate, not all execution/session interleavings.
 
 [[file:../../../t/qualification/ascent-candidate-feedback-test.ss][Native qualification]] freezes five proposals before enumerating all 64 directed
 non-self graphs on three vertices: correct reachability, removed base, removed
-step, wrong recursive join and reversed base. All 320 completed attempts are
+step, wrong recursive join and reversed base. The corpus uses =reasoning-attempt= with its third argument =#f= to omit
+optional positive proof/absence replay while retaining complete native solve.
+All 320 completed attempts are
 compared with independent graph walks and exact missing/extra outputs. Every
 mutant is distinguished somewhere; individual agreement remains allowed.
 A one-edge demonstration passes the wrong join, while a held-out chain rejects
@@ -45,3 +47,14 @@ cyclic references, material bound and detached differences.
 Local native four Cases, full Lean 134 jobs and the Quint gate pass. Remote
 whole-revision CI is a separate delivery gate. No model-generated proposal,
 Souffle corpus execution, published DB26 score or general equivalence is claimed.
+
+* Initial CI timeout and execution-only consumer correction
+
+Revision =e888940= passed all four DB26 compiled Cases in CI, but the full
+semantic roster reached the unchanged 120-second invocation deadline during
+the subsequent BYODS invariant Suite (exit 124). This is rejected aggregate
+qualification, not a DB26 semantic failure. Execution grading does not consume
+optional positive certificates, so =reasoning-attempt= now accepts =#f= for
+that work budget and omits both replays. Default certificate production and
+its regression Suite remain active. The 320 native attempts and exact row
+assertions remain unchanged; no timeout, graph corpus or semantic gate is relaxed.

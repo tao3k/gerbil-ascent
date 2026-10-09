@@ -406,7 +406,9 @@
 ;;       observation. The receipt cannot promote candidate facts to source.
 ;;       The optional third argument caps positive-proof body-row probes;
 ;;       native query completion, Why proof and ground Why-Not certificate
-;;       statuses remain independent. An optional fourth positive work
+;;       statuses remain independent. Passing #f omits both optional positive
+;;       certificates for execution-only consumers; native admission, solve,
+;;       query and snapshot binding still run. An optional fourth positive work
 ;;       budget requests finite stratified replay and a founded proof;
 ;;       it never changes the native answer or completion status.
 ;;
@@ -429,8 +431,9 @@
   (unless (reasoning-snapshot-valid? snapshot)
     (error "reasoning attempt requires a current valid source snapshot"
            snapshot))
-  (unless (and (exact-integer? proof-steps) (> proof-steps 0))
-    (error "reasoning attempt requires positive proof work budget"
+  (unless (or (not proof-steps)
+              (and (exact-integer? proof-steps) (> proof-steps 0)))
+    (error "reasoning attempt requires positive proof work budget or #f"
            proof-steps))
   (unless (or (not stratified-steps)
               (and (exact-integer? stratified-steps) (> stratified-steps 0)))
@@ -511,15 +514,17 @@
                          (proof-result
                           (capture
                            (lambda ()
-                             (candidate-positive-proof
-                              snapshot spec digest 'complete rows
-                              proof-steps))))
+                             (and proof-steps
+                                  (candidate-positive-proof
+                                   snapshot spec digest 'complete rows
+                                   proof-steps)))))
                          (absence-result
                           (capture
                            (lambda ()
-                             (candidate-positive-nonmembership
-                              snapshot spec digest 'complete rows
-                              proof-steps))))
+                             (and proof-steps
+                                  (candidate-positive-nonmembership
+                                   snapshot spec digest 'complete rows
+                                   proof-steps)))))
                          (stratified-result
                           (and stratified-steps
                                (capture

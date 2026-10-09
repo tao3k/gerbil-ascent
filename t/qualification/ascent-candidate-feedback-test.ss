@@ -5,6 +5,7 @@
         :gerbil-ascent/candidate/feedback
         (only-in :gerbil-ascent/candidate/reasoning reasoning-source-snapshot
                  reasoning-attempt reasoning-receipt-status reasoning-receipt-rows
+                 reasoning-receipt-proof reasoning-receipt-nonmembership
                  reasoning-receipt-diagnostics reasoning-diagnostic-code))
 (export ascent-candidate-feedback-test)
 (def (append-map f rows) (apply append (map f rows)))
@@ -34,7 +35,7 @@
 (def (snapshot generation pairs)
   (reasoning-source-snapshot 'db26-graph generation (list (list 'edge 2 pairs))))
 (def (compare source p wanted)
-  (reasoning-compare-rows source p (reasoning-attempt source p) wanted))
+  (reasoning-compare-rows source p (reasoning-attempt source p #f) wanted))
 (def ascent-candidate-feedback-test
   (test-suite "DB26 candidate execution feedback"
     (test-case "frozen proposals on 64 held-out graphs with exact differences"
@@ -44,12 +45,14 @@
            (let* ((pairs (graph mask)) (source (snapshot mask pairs)) (wanted (oracle pairs)))
              (for-each
               (lambda (variant)
-                (let* ((p (proposal variant)) (receipt (reasoning-attempt source p))
+                (let* ((p (proposal variant)) (receipt (reasoning-attempt source p #f))
                        (actual (reasoning-receipt-rows receipt))
                        (feedback (reasoning-compare-rows source p receipt wanted))
                        (missing (filter (lambda (r) (not (member r actual))) wanted))
                        (extra (filter (lambda (r) (not (member r wanted))) actual)))
                   (check-equal? (reasoning-receipt-status receipt) 'complete)
+                  (check-equal? (reasoning-receipt-proof receipt) #f)
+                  (check-equal? (reasoning-receipt-nonmembership receipt) #f)
                   (check-equal? (reasoning-feedback-status feedback)
                                 (if (and (null? missing) (null? extra)) 'match 'mismatch))
                   (check-equal? (reasoning-feedback-missing feedback) missing)
@@ -68,7 +71,7 @@
           (check-equal? (reasoning-feedback-missing f) '((0 2))))))
     (test-case "withdrawal, candidate binding, rejected and unfinished attempts"
       (let* ((p (proposal 'correct)) (source (snapshot 0 '((0 1) (1 2))))
-             (receipt (reasoning-attempt source p)) (changed (snapshot 1 '((0 1))))
+             (receipt (reasoning-attempt source p 1)) (changed (snapshot 1 '((0 1))))
              (bad '(candidate (relation path 2) (rule (path ?x ?y) (helper ?x ?y))
                               (query path ?x ?y) (limits 16 64 128)))
              (rejected (reasoning-attempt source bad))
@@ -80,7 +83,7 @@
         (check-equal? (reasoning-feedback-reason (reasoning-compare-rows source bad rejected [])) 'rejected)
         (check-equal? (reasoning-feedback-status (compare source limited [])) 'inconclusive)))
     (test-case "set semantics and bounded reference validation"
-      (let* ((p (proposal 'correct)) (source (snapshot 0 '((0 1)))) (r (reasoning-attempt source p)))
+      (let* ((p (proposal 'correct)) (source (snapshot 0 '((0 1)))) (r (reasoning-attempt source p 1)))
         (check-equal? (reasoning-feedback-status (reasoning-compare-rows source p r '((0 1) (0 1)))) 'match)
         (let* ((row (list 0 2)) (wanted (list row))
                (f (reasoning-compare-rows source p r wanted)))

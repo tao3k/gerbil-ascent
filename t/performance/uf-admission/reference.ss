@@ -12,7 +12,6 @@
         gerbil-ascent-trrel-uf-observation gerbil-ascent-trrel-uf-validate)
 (defstruct uf-node (parent members size reach predecessors order))
 (defstruct uf-group (nodes roots next-order indexed?))
-(defstruct uf-insertion (group-key group row left-node right-node a b) final: #t)
 (defstruct frozen-members (rows count) final: #t)
 (def (gerbil-ascent-trrel-uf-state) (make-hash-table))
 ;; Preflight reads parent links without compression, preserving rejected state.
@@ -32,14 +31,6 @@
   (for-each (lambda (n)
     (hash-for-each (lambda (target _)
       (hash-put! (uf-node-predecessors target) n #t)) (uf-node-reach n))) roots))
-;; Closure supplies every external edge to/from the surviving winner already.
-;; Retire absorbed reverse keys before clearing any component's storage.
-(def (retire-cycle-predecessors! winner cycle)
-  (for-each (lambda (n)
-    (unless (eq? n winner)
-      (hash-for-each (lambda (target _)
-        (hash-remove! (uf-node-predecessors target) n)) (uf-node-reach n)))
-    (hash-remove! (uf-node-predecessors winner) n)) cycle))
 ;; Complete closure already gives the winner every outgoing cycle edge.
 ;; Keep its owned reach table; only absorbed keys need removal.
 (def (merge-cycle! group roots cycle)
@@ -48,8 +39,6 @@
                        (car cycle) (cdr cycle)))
          (merged (uf-node-members winner))
          (size (uf-node-size winner)))
-    (when (uf-group-indexed? group)
-      (retire-cycle-predecessors! winner cycle))
     (for-each (lambda (n)
       (unless (eq? n winner)
         (set! merged (append (uf-node-members n) merged))
@@ -75,7 +64,8 @@
         (when (or (eq? n winner) (hash-get (uf-node-reach n) winner))
           (for-each (lambda (target)
             (when (or (not (eq? target winner)) (eq? n winner))
-              (hash-remove! (uf-node-reach n) target))) cycle)))) roots)))
+              (hash-remove! (uf-node-reach n) target))) cycle)))) roots)
+    (when (uf-group-indexed? group) (rebuild-predecessors! roots))))
 
 (def (gerbil-ascent-trrel-uf-insert! groups row budget)
   (let* ((width (length row))
@@ -90,19 +80,6 @@
          (left-node (hash-get nodes left)) (right-node (hash-get nodes right))
          (a (if left-node (root left-node) (fresh left (+ 2 (uf-group-next-order group)) (uf-group-indexed? group))))
          (b (if (equal? left right) a (if right-node (root right-node) (fresh right (+ 1 (uf-group-next-order group)) (uf-group-indexed? group)))))
-         (admitted? (and left-node right-node (reachable? a b))))
-    (if admitted?
-      (begin
-        (when (< budget 0) (error "ASCENT trrel output fact budget exceeded"))
-        (gerbil-ascent-rectangle-view [] 0 0))
-      (insert-components! groups (make-uf-insertion group-key group row left-node right-node a b) budget))))
-
-;; Admission dispatch precedes rectangle planning. This branch alone owns
-;; preflight and commit; an existing closure fact never enters the product scan.
-(def (insert-components! groups admission budget)
-  (with (((uf-insertion group-key group row left-node right-node a b) admission))
-  (let* ((width (car group-key)) (nodes (uf-group-nodes group))
-         (pair (if (= width 3) (cdr row) row)) (left (car pair)) (right (cadr pair))
          (new (append (if left-node [] (list a))
                       (if (or right-node (eq? a b)) [] (list b))))
          (roots (append new (uf-group-roots group)))
@@ -157,7 +134,7 @@
     ;; Merge toward the largest component, bounding union parent depth.
     (when cycle
       (merge-cycle! group roots cycle))
-    (gerbil-ascent-rectangle-view (reverse added) needed (length added)))))
+    (gerbil-ascent-rectangle-view (reverse added) needed (length added))))
 ;; Physical structure counts, not whole-engine memory or allocator receipts.
 (def (gerbil-ascent-trrel-uf-observation groups)
   (let ((nodes 0) (components 0) (arcs 0))

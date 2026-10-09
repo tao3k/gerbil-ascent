@@ -1240,3 +1240,29 @@ literal =list= application. This follows =compiler/compile.ss:319-341=, where
 =with-primitive-bind+args= owns operand temporaries without hiding the emitted
 operation. A runtime abstraction and a syntax abstraction are different cost
 choices; the retained A/B failure makes that distinction executable.
+
+* Rule-local read projection and consumer-owned retention
+
+Gerbil =1cfb032= =compiler/base.ss:89-96= makes private state meaning explicit
+with =symbol-table= fields. =compiler/method.ss:35-43= expresses context
+propagation with a hygienic =with-context= rule. =std/list/list-builder.ss:6-26=
+lets an enclosing syntax own a fresh list spine while supplied operations decide
+which values to publish. These are complementary contracts, not reasons to
+replace every named loop or conditional.
+
+=core/rule-semantics.ss= now owns one =for-rule-reads= syntax contract for the
+admitted atom/negation/aggregate projection. Invalidation streams each read into
+successor heads. Stratification prepares private =rule-read (kind source)=
+records once per rule and reuses them across heads. Nonreading clauses are
+filtered before head expansion, instead of rescanned for every head. The local
+=with-rule-reads= wrapper binds the head/read layout once. Descriptors retain
+neither host procedures nor rows and do not cross invocation boundaries.
+
+The two consumers retain their own observable traversal order: successor
+publication is read-before-head; stratum dependencies are head-before-read.
+The existing reverse dependency list still determines the first strict-cycle
+diagnostic. Pure-positive preflight still avoids constructing stratum edges.
+Preparing descriptors for the one-pass successor consumer was an intermediate
+cost regression; the final syntax lets that consumer stream without retaining
+objects. See [[file:../../t/performance/rule-reads/README.org][rule-read qualification]] for controls and complete dependency-planning
+CPU/allocation results. This is not an evaluator-solve speedup claim.

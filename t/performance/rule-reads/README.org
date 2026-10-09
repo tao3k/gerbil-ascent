@@ -1,0 +1,66 @@
+#+title: Rule-local dependency read qualification
+
+* Source contract
+
+Baseline =38043d2fc3731d038672e236d8940c56ac4009a0=.
+Original =core/rule-semantics.ss= blob =be267aa610fc60c2f4a6332fce2cb5cd5d3f9b20=;
+frozen reference blob =0485026f86b4c4d284ea4b74020110491a962a25=.
+Only relative rule-bindings and dependency-graph imports are normalized.
+
+Source study uses installed Gerbil =1cfb032=:
+=compiler/base.ss:89-96= private named state,
+=compiler/method.ss:35-43= hygienic context wrapper, and
+=std/list/list-builder.ss:6-26= fresh list construction with supplied operations.
+
+One syntax projects dependency-relevant clause kind and source. Successor
+construction streams reads; multihead stratum construction retains rule-local
+read descriptors. Successor and strict-diagnostic ordering remain distinct and
+unchanged. No global descriptor cache or runtime callback evaluation is added.
+
+* Native complete-planning A/B
+
+The ASP Scheme benchmark API executes 50 alternating baseline/candidate pairs.
+Each measured call constructs both invalidation successors and strict strata,
+then consumes their results. Inputs are prepared outside measurement. Both
+checksums must equal the independent edge-count and stratum sum. GC occurs
+outside the measured call; CPU uses process user/system statistics and memory
+uses allocated-byte counters. Compilation and tests do not overlap timing.
+
+The mixed target is declared before execution to require >=10% CPU improvement
+and >=40 faster pairs. Controls allow <=110% baseline CPU + 20 microseconds;
+allocation allows <=110% + 4096 bytes. No gates were relaxed.
+
+| Scenario | Heads | Body entries | Old CPU us | New CPU us | Old bytes | New bytes | Faster pairs |
+|----------+-------+--------------+------------+------------+-----------+-----------+--------------|
+| mixed, one strict read | 32 | 512 | 76 | 12 | 26368 | 26560 | 50 |
+| dense, final strict read | 8 | 32 | 8 | 7 | 74624 | 78288 | 17 |
+| pure positive | 8 | 32 | 2 | 2 | 14080 | 14080 | 17 |
+| small strict | 1 | 1 | 1 | 1 | 1568 | 1760 | 20 |
+| empty | 0 | 0 | 1 | 1 | 336 | 336 | 18 |
+
+Mixed planning improves CPU about 84.2% with 192 extra bytes. Dense allocation
+increases by 3664 bytes (about 4.9%); positive and empty allocation are unchanged.
+All declared gates pass. Microsecond control CPU differences are not promoted
+to stable speedup claims. These results concern complete dependency planning,
+not complete program compilation, evaluation or wall-clock performance.
+
+An intermediate candidate retained descriptors in the one-pass successor path.
+It passed CPU gates but added 3584 bytes to the positive control. The final
+candidate streams that path, restoring its baseline allocation. Intermediate
+and final receipts/logs remain under ignored =.cache/ascent/rule-reads=.
+
+* Semantic qualification
+
+The native qualifier combines existing strata and preflight suites with exact
+successor-order and read-projection cases. These cover repeated heads, strict
+lattice projections, caller metadata changes between invocations and ignored
+callback payloads. Existing suites supply independent finite strata labels,
+mixed read kinds and first-cycle diagnostic comparisons with frozen references.
+The compiler/build entry remains unchanged; fixtures and native entries stay
+under =t/=.
+
+Final local qualification: three Suites, 12 Cases, final =OK= and exit zero.
+A source-loaded duplicate-successor/strict-strata pipeline passed. Native policy
+completed with 31 existing advisories and zero errors after documenting the
+new descriptor builder's ownership. These are local checks; remote CI status
+is a separate delivery gate.

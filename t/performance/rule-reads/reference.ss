@@ -4,11 +4,10 @@
 
 ;;; Dependency planning and lattice row semantics over private lowered plans.
 ;;; Original runtime exports forward to the separate binding owner.
-(import (only-in "rule-bindings.ss" gerbil-ascent-expression-value
+(import (only-in :gerbil-ascent/core/rule-bindings gerbil-ascent-expression-value
                  gerbil-ascent-bind-row gerbil-ascent-head-row)
         (only-in :std/list/list butlast)
-        (only-in :std/list/list-builder with-list-builder)
-        (only-in "dependency-graph.ss" gerbil-ascent-graph-components))
+        (only-in :gerbil-ascent/core/dependency-graph gerbil-ascent-graph-components))
 
 (export gerbil-ascent-rule-strata
         gerbil-ascent-rule-successors
@@ -20,30 +19,6 @@
         gerbil-ascent-expression-value
         gerbil-ascent-bind-row
         gerbil-ascent-head-row)
-
-;;; One rule-local descriptor owns the dependency-relevant clause projection.
-;;; Clause payloads and caller lists are borrowed read-only; descriptors retain
-;;; only the read kind and dense relation ID, never callbacks or runtime rows.
-(defstruct rule-read (kind source) final: #t)
-;;; The consumer decides whether a read is streamed or retained for head reuse.
-(defrule (for-rule-reads clauses (kind source) body ...)
-  (for-each
-   (lambda (clause)
-     (let (kind (vector-ref clause 0))
-       (when (memq kind '(atom negation aggregate))
-         (let (source (vector-ref (vector-ref clause 1) 0)) body ...)))) clauses))
-;;; Preserve clause order in a detached spine for this rule's head expansion.
-;;; The builder is invocation-local; repeated heads reuse only kind/source data.
-;; : (-> Clauses [RuleRead])
-(def (prepare-rule-reads body)
-  (with-list-builder (collect)
-    (for-rule-reads body (kind source)
-      (collect (make-rule-read kind source)))))
-;;; Bind an immutable rule's layout once, before the caller iterates its heads.
-(defrule (with-rule-reads rule (heads reads) body ...)
-  (let ((heads (vector-ref rule 0))
-        (reads (prepare-rule-reads (vector-ref rule 1))))
-    body ...))
 
 ;; gerbil-ascent-rule-successors
 ;;   : (-> RulePlans Nat DenseAdjacency)
@@ -63,13 +38,17 @@
   (let (successors (make-vector count []))
     (for-each
      (lambda (rule)
-       (let (heads (vector-ref rule 0))
-         ;; This consumer uses each read once; do not retain descriptor objects.
-         (for-rule-reads (vector-ref rule 1) (kind source)
-           (for-each
-            (lambda (head)
-              (vector-set! successors source
-                (cons (vector-ref head 0) (vector-ref successors source)))) heads)))) plans)
+       (for-each
+        (lambda (clause)
+          (when (memq (vector-ref clause 0) '(atom negation aggregate))
+            (let (source (vector-ref (vector-ref clause 1) 0))
+              (for-each
+               (lambda (head)
+                 (vector-set! successors source
+                   (cons (vector-ref head 0) (vector-ref successors source))))
+               (vector-ref rule 0)))))
+        (vector-ref rule 1)))
+     plans)
     successors))
 
 (def (gerbil-ascent-lattice-key row)
@@ -127,23 +106,30 @@
               (gerbil-ascent-lattice-feeds-relation? rule-plans kinds))
       (for-each
        (lambda (rule)
-         (with-rule-reads rule (heads reads)
-           ;; Head-before-read order retains reverse dependency diagnostics.
-           (for-each
-            (lambda (head)
-              (def head-index (vector-ref head 0))
-              (for-each
-               (lambda (read)
-                 (using (read :- rule-read)
-                   (let* ((lattice-projection?
-                           (and (eq? read.kind 'atom)
-                                (eq? (vector-ref kinds read.source) 'lattice)
-                                (eq? (vector-ref kinds head-index) 'relation)))
-                          (strict? (or (not (eq? read.kind 'atom)) lattice-projection?)))
-                     (set! dependencies
-                       (cons (vector head-index read.source (if strict? 1 0)
-                                     (if lattice-projection? 'lattice-projection read.kind))
-                             dependencies))))) reads)) heads))) rule-plans)
+         (for-each
+          (lambda (head)
+            (for-each
+             (lambda (clause)
+               (when (memq (vector-ref clause 0)
+                           '(atom negation aggregate))
+                 (let* ((body-atom (vector-ref clause 1))
+                        (kind (vector-ref clause 0))
+                        (head-index (vector-ref head 0))
+                        (body-index (vector-ref body-atom 0))
+                        (lattice-projection?
+                         (and (eq? kind 'atom)
+                              (eq? (vector-ref kinds body-index) 'lattice)
+                              (eq? (vector-ref kinds head-index) 'relation)))
+                        (strict? (or (not (eq? kind 'atom)) lattice-projection?)))
+                   (set! dependencies
+                     (cons (vector head-index body-index
+                                   (if strict? 1 0)
+                                   (if lattice-projection?
+                                     'lattice-projection kind))
+                           dependencies)))))
+             (vector-ref rule 1)))
+          (vector-ref rule 0)))
+       rule-plans)
       (let ((successors (make-vector relation-count []))
             (outgoing (make-vector relation-count []))
             (component-of (make-vector relation-count #f)))

@@ -243,21 +243,11 @@
             ((null? (cdr selected)) (rectangle-bucket-plain (cdar selected)))
             (else (map cdr (list-sort (lambda (a b) (< (car a) (car b)))
                             (apply append (map (lambda (hit) (rectangle-bucket-blocks (cdr hit))) selected)))))))))
-;; Routing narrows descriptors; exact membership still belongs to each captured
-;; rectangle, including equal endpoint values shared by unrelated groups.
-(def (rectangle-contains? block row width)
-  (let* ((prefix (rectangle-prefix block)) (offset (length prefix)))
-    (and (= width (+ offset 2)) (matches-prefix? row prefix)
-         (member (list-ref row offset) (rectangle-left block))
-         (member (list-ref row (+ offset 1)) (rectangle-right block)) #t)))
 ;; : (-> (List Rectangle) Natural Natural Boolean FrozenView)
 ;; Rectangles must be disjoint; member spines belong to the captured cut.
 (def (gerbil-ascent-rectangle-view blocks count units (indexed? #f))
-  (let* ((routes (and indexed? (pair? blocks) (rectangle-routing blocks)))
-         ;; One or two descriptors are cheaper to scan than route and gather.
-         (membership-routes (and routes (pair? (cdr blocks)) (pair? (cddr blocks)) routes))
-         (query-columns (and membership-routes (iota (vector-length membership-routes))))
-         (grouped? (and (pair? blocks) (= (length (rectangle-prefix (car blocks))) 1))))
+  (let ((routes (and indexed? (pair? blocks) (rectangle-routing blocks)))
+        (grouped? (and (pair? blocks) (= (length (rectangle-prefix (car blocks))) 1))))
   (def (selected columns key)
     (if routes (routed-rectangles routes blocks columns key) blocks))
   (def (validate-key! columns key)
@@ -285,14 +275,12 @@
         (visit-rectangle-parts block columns key
           (lambda (prefix left right) (consume (append prefix (list left right)))) routes)) (selected columns key)))
     (lambda (row)
-      (let (width (length row))
-        (and (>= width 2)
-             (or (not membership-routes) (<= width (vector-length membership-routes)))
-             (ormap (cut rectangle-contains? <> row width)
-               (if membership-routes
-                 (routed-rectangles membership-routes blocks
-                   (if (= width (vector-length membership-routes)) query-columns (take query-columns width)) row)
-                 blocks))))) #f
+      (ormap (lambda (block)
+        (let* ((prefix (rectangle-prefix block)) (offset (length prefix)))
+          (and (= (length row) (+ offset 2))
+               (matches-prefix? row prefix)
+               (member (list-ref row offset) (rectangle-left block))
+               (member (list-ref row (+ offset 1)) (rectangle-right block)) #t))) blocks)) #f
     (make-part-visitors
       (lambda (columns key consume)
         (validate-key! columns key)

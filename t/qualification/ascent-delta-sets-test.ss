@@ -11,6 +11,10 @@
         (new (relational-op-measure (cut relational-op-delta-change transformer before added limit)))
         (expected (call-with-values (cut relational-op-reference-change transformer before added limit) list)))
   (check-equal? (relational-op-measurement-result-values new) (relational-op-measurement-result-values old))
+  (check-equal?
+   (call-with-values
+    (cut relational-op-change (relational-op-prepare-change transformer) before added limit) list)
+   (relational-op-measurement-result-values new))
   (check-equal? (delta-same-set? (relational-op-measurement-result-values new) expected) #t)
   (check-equal? (relational-op-measurement-join-probes new) (relational-op-measurement-join-probes old))
   (check-equal? (relational-op-measurement-fix-body-evaluations new) (relational-op-measurement-fix-body-evaluations old))))

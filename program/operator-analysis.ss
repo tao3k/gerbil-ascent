@@ -6,8 +6,10 @@
 ;;; Shared metadata is never cached across calls over mutable descriptors.
 (import "operator-descriptor.ss"
         (only-in "scheme-checked.ss" relational-scalar? relational-copy-rows)
+        (only-in :std/list/list take)
         (only-in :std/list/list-builder with-list-builder))
-(export analyze-operator-graph operator-analysis-checked-rows operator-analysis-free-cache free-parameters)
+(export analyze-operator-graph operator-analysis-checked-rows operator-analysis-free-cache free-parameters
+        snapshot-operator-transform)
 (defstruct operator-analysis (checked-rows free-cache))
 
 ;; Cached dependency lists are ordered identity sets. Reuse a complete spine
@@ -129,3 +131,53 @@
     (unless (null? (free-parameters root free-cache))
       (error "operator fixed-point parameter escaped its body"))
     (make-operator-analysis checked-rows free-cache)))
+
+;;; Clone the admitted graph through its constructors. The caller receives no
+;;; internal node access: an execution plan keeps this graph behind its method.
+;;; Identity memoization preserves shared children and each lexical binder.
+(def (snapshot-operator-transform transform)
+  (unless (relational-transform? transform) (error "expected a relation transformer"))
+  (let* ((root (relational-op-apply transform
+                 (relational-op-source (gensym 'snapshot-input)
+                   (relational-transform-input-arity transform) [])))
+         (rows (operator-analysis-checked-rows (analyze-operator-graph root)))
+         (memo (make-hash-table-eq))
+         (functions (make-hash-table-eq)))
+    (def (copy-transform original)
+      (or (hash-get functions original)
+          (let (copied
+                (relational-op-function
+                 (relational-transform-input-arity original)
+                 (lambda (parameter)
+                   (hash-put! memo (relational-transform-parameter original) parameter)
+                   (copy-node (relational-transform-body original)))))
+            (hash-put! functions original copied)
+            copied)))
+    (def (copy-node node)
+      (or (hash-get memo node)
+          (let* ((inputs (relational-op-inputs node))
+                 (data (relational-op-data node))
+                 (copied
+                  (case (relational-op-kind node)
+                    ((source) (relational-op-source (vector-ref data 0)
+                               (relational-op-arity node) (hash-ref rows node)))
+                    ((union) (relational-op-union (copy-node (car inputs)) (copy-node (cadr inputs))))
+                    ((join) (relational-op-join (copy-node (car inputs)) (copy-node (cadr inputs))
+                             (vector-ref data 0) (vector-ref data 1)))
+                    ((select-eq) (relational-op-select-eq (copy-node (car inputs))
+                                  (vector-ref data 0) (vector-ref data 1)))
+                    ((project) (relational-op-project (copy-node (car inputs)) data))
+                    ((flatmap)
+                     (let (width (vector-ref data 0))
+                       (relational-op-flatmap (copy-node (car inputs)) (relational-op-arity node)
+                         (map (lambda (row) (list (take row width) (list-tail row width)))
+                              (hash-ref rows node)))))
+                    ((fix) (relational-op-fix (relational-op-arity node)
+                             (lambda (parameter)
+                               (hash-put! memo data parameter)
+                               (copy-node (car inputs)))))
+                    ((apply) (relational-op-apply (copy-transform data) (copy-node (car inputs))))
+                    (else (error "unbound parameter during operator snapshot")))))
+            (hash-put! memo node copied)
+            copied)))
+    (copy-transform transform)))

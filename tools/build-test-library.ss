@@ -22,7 +22,8 @@
 (def (performance-contract-files)
   ;; Allocation contracts require compiled production code. Source semantic
   ;; Suites remain in t/qualification; this native-only Case retains its bound.
-  '("t/performance/ascent-source-cut-allocation-test.ss"
+  '("t/performance/ascent-change-plan-performance-test.ss"
+    "t/performance/ascent-source-cut-allocation-test.ss"
      "t/performance/ascent-component-index-performance-test.ss"
      "t/performance/ascent-actor-credit-performance-test.ss"
      "t/performance/ascent-trrel-uf-performance-test.ss"
@@ -45,6 +46,10 @@
                           '("t/performance/native-library" "t/performance/ascent-ss-profile"
                             "t/scenarios/performance/ascent-table-expression/baseline"
                             "t/native/artifact-admission" "t/model/response-projection")
+                          (if (member "t/performance/ascent-change-plan-performance-test.ss" tests)
+                            '("t/performance/mapping-lookup/reference"
+                              "t/performance/mapping-lookup/fixture"
+                              "t/performance/change-plan-runner") [])
                           (if (or (member "t/qualification/ascent-relation-view-test.ss" tests)
                                   (member "t/performance/ascent-relation-view-performance-test.ss" tests))
                             '("t/qualification/ascent-relation-view-fixture") [])

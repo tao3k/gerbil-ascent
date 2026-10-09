@@ -27,7 +27,7 @@ for all these states.
 | FlowLog | [[file:scheme-dsl/flowlog-fl25.org][note]] | Dedicated reading; recursive physical-plan workload comparison pending |
 | Scallop | [[file:agent-inference/scallop-s23.org][note]] | Dedicated reading; weighted/differentiable execution unimplemented |
 | Souffle | [[file:scheme-dsl/souffle-s16.org][note]] | Dedicated synthesis/index-selection method reading; canonical native chain planning implemented; RAM/C++ and full workloads pending |
-| Differential dataflow | [[file:../related-work-matrix.org][note]] | Matrix only; dedicated timestamps/iterate/delta study pending |
+| Differential dataflow | [[file:scheme-dsl/differential-m13.org][note]] | Dedicated signed-change/partial-order semantics reading; trace execution and compaction remain open |
 | DBSP | [[file:scheme-dsl/dbsp-b22.org][note]] | Dedicated reading; derivative circuit implementation pending |
 | DRedc | [[file:scheme-dsl/deletion-h18.org][note]] | Dedicated reading; affected-component rederivation exists; DRedc algorithm pending |
 | egglog | [[file:../related-work-matrix.org][note]] | Matrix only; equality saturation/congruence semantics unimplemented |
@@ -38,7 +38,7 @@ for all these states.
 | Provenance semirings | [[file:agent-inference/provenance-p07.org][note]] | Dedicated method reading; bounded all-tree natural counts implemented; symbolic polynomial/power-series annotations pending |
 | Revisiting semiring provenance | [[file:agent-inference/provenance-p07.org][note]] | Dedicated semantics comparison; all-tree choice and recursive refusal tested; alternative semantics unimplemented |
 | PUG | [[file:agent-inference/pug-p18.org][note]] | Dedicated reading; bounded Why/Why-Not transfer; full PUG replication pending |
-| Large-scale Datalog provenance | [[file:../related-work-matrix.org][note]] | Bibliography-level coverage; dedicated artifact study pending |
+| Large-scale Datalog provenance | [[file:agent-inference/provenance-z19.org][note]] | Dedicated minimum-height/fragment method reading; native height annotations and paper workload replication remain open |
 | Dedalus | [[file:../temporal-causality-module-design.org][note]] | Temporal overview; dedicated temporal/distributed semantics study pending |
 | Structural-model causes | [[file:../temporal-causality-module-design.org][note]] | Temporal overview; counterfactual cause model unimplemented |
 

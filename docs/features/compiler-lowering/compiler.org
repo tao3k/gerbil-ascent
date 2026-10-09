@@ -2,6 +2,9 @@
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 #+TITLE: Compiler Lowering: compiler
 
+The [[file:change-plan.org][owned insertion change plan]] records current descriptor admission,
+prepared capture ownership, mapping correspondence and lifecycle gates.
+
 Feature owner: [[file:../index.org][feature index]]. This page retains the original
 source dates and qualification boundaries. Current evidence is commit-specific.
 
@@ -374,4 +377,3 @@ symbol identity mapping, universal descriptor decoding, callback refinement
 and native Provider/completed-component correspondence remain open bridges.
 Quint retains lifecycle/publication ownership. This adds no runtime validator,
 performance claim, model call or MR integration.
-

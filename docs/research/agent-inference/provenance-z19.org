@@ -1,0 +1,30 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+#+TITLE: Z19 minimal-height proof fragments and current evidence owners
+#+DATE: 2026-10-09
+#+STATUS: dedicated method reading; height-annotation execution open
+
+* Primary method
+
+[[https://arxiv.org/pdf/1907.05045][Provenance for Large-scale Datalog]], sections 2--3, PDF pages 7--14:
+proof height annotations participate in evaluation, can improve after a tuple
+first appears, and constrain a later proof-fragment search. Theorem 1 connects
+the annotations to minimum-height trees. A depth-limited fragment and the
+complete derivation collection have different meanings.
+
+* Repository design decision
+
+=candidate/provenance.ss= owns a replayable witness;
+=candidate/provenance-graph.ss= owns complete bounded grounded alternatives;
+=candidate/annotations.ss= owns all-tree unit natural counts. None currently
+certifies minimum proof height. The first witness is not necessarily minimal;
+productive recursion can bound natural counts while a finite-height witness
+still exists.
+
+A future minimum-height layer needs separate statuses for complete heights,
+truncated fragments and failed computation. Its discriminator must discover
+a long witness first, then a shorter alternative without adding a new output
+tuple, and require the annotation to improve. Withdrawal must invalidate an
+annotation whose chosen support disappears, retaining another founded support
+when present. Lean owns minimum-height correctness; the existing snapshot and
+publication models plus height-specific faults own protocol admission.

@@ -2,6 +2,10 @@
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 #+TITLE: Source Lifecycle: compiler
 
+The [[file:../compiler-lowering/change-plan.org][owned change and withdrawal-preview gate]] stages grounded deletion
+without changing its original maintenance owner. It is a prerequisite for
+Session integration; it does not replace generation or source-cut admission.
+
 Feature owner: [[file:../index.org][feature index]]. This page retains the original
 source dates and qualification boundaries. Current evidence is commit-specific.
 
@@ -34,4 +38,3 @@ receipt records only the independently rerun higher-order module and the
 current formal checks. Full per-term domain preservation and mapping-table
 mutation contracts remain open. Quint lifecycle models are unchanged because
 this refinement adds no state transition.
-

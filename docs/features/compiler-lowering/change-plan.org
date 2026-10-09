@@ -1,0 +1,95 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+#+TITLE: Owned finite insertion change plans
+#+DATE: 2026-10-09
+
+* Public ownership boundary
+
+=relational-op-delta-change= revalidates the complete exposed descriptor graph
+before interpretation, including an empty request. This matches compilation
+and the independent interpreter. Source and mapping rows use the admitted
+snapshots. Malformed captures, pointer cycles and free lexical parameters fail
+before join/fixed-point work. Each returned set owns its outer and row spines.
+
+=relational-op-prepare-change= returns a POO value implementing
+=GerbilAscentChangePlanContract=. Constructor admission clones the complete
+graph through checked constructors, preserving shared node identity and lexical
+binders. The private method captures this owned graph; it exposes no descriptor
+accessor. =relational-op-change= uses ordinary POO generic dispatch. Changing
+the original graph cannot change this plan. Create another plan for different
+captured sources. Per-request inputs, budgets, environments and mapping indexes
+remain local; the plan does not retain a native rule-engine solution.
+
+#+begin_src scheme
+(def transformer
+  (relational-op-function 1
+    (lambda (input) (relational-op-flatmap input 1 '(((0) (a)) ((1) (b)))))))
+(def plan (relational-op-prepare-change transformer))
+(relational-op-change plan '((0)) '((1)) 16)
+;; => old ((a)), grown ((a) (b)), delta ((b))
+#+end_src
+
+This synchronous snapshot does not promise atomic acquisition while another
+thread mutates the input graph. Library-created plans have the owned semantics;
+an independently supplied POO method retains its author's responsibility.
+
+* Correspondence and executable gates
+
+| Owner | Statement | Remaining obligation |
+|-------+-----------+----------------------|
+| OrderedMapping Lean | Prepending then reversing equals the direct scan; ordered batch equality and exact membership, including duplicates | Native hash equality, full key splitting and graph cloning refinement |
+| DescriptorScope / existing operator Lean | Scope, monotonicity and admitted operator meanings | Concrete clone memo/binder translation and native delta execution |
+| ChangePlan Quint | Frozen captures, complete observation publication and failure preservation; four intentional faults | Finite surrogate output is not a rule solver or unbounded trace refinement |
+| Native admission Suite | Mutated rows/metadata, cycles, escaping parameters, immutable prepared captures, detached outputs and nested application/feedback | Concurrent snapshot acquisition is outside this gate |
+| Existing delta/mapping Suites | Prepared and direct paths agree in exact order and with independent meanings over finite changes | Finite enumeration does not prove every graph |
+
+* Lifecycle performance admission
+
+The native =change-plan-runner= compares 64 requests against one frozen capture.
+Both methods copy inputs and publish detached old/grown/delta sets. The baseline
+rechecks descriptors on every request; the plan's one preparation occurs inside
+the measured lifecycle. Fifty pairs alternate order; full per-request equality
+and the separate interpreter are checked after measurement. Inputs alternate
+between the supplied insertion and an empty insertion. This is reusable graph
+admission, not retained Session evaluation or incremental deletion.
+
+The single and empty targets require at least 20 percent CPU reduction,
+35/50 CPU wins and at least 50 percent allocation reduction. Small, identity,
+unique, fanout, miss and fix controls allow at most 10 percent plus 20us CPU
+and 10 percent plus 4096 bytes allocation. No threshold changed after failure.
+The native-only performance Suite is registered in the existing library builder
+and standard performance-contract CI gate.
+
+Two rejected experiments remain in local logs: adding full admission to a
+one-shot comparison against the formerly unchecked frozen implementation failed
+the singleton gate (30 to 60us; 54576 to 210208 bytes). Revalidating the POO
+contract on every prepared call also failed the new lifecycle gate (6.54 to
+6.674ms). Constructor validation plus generic invocation passed all eight
+declared lifecycle scenarios. Historical unchecked one-shot timings cannot be
+promoted to current checked-entry performance claims.
+
+* Connected deletion and inference work
+
+The grounded provenance maintenance kernel already overdeletes and rederives
+from complete checked alternatives. ComponentClosure.SourceWithdrawal proves
+the abstract founded recovery law. Connecting that state to a general Session
+requires exact source occurrence correspondence, admitted rule-instance coverage,
+and generation-bound publication; it is not supplied by this change plan.
+=candidate-provenance-preview-withdraw= now returns a prospective maintenance
+state, rows and bounded work without updating the original state. Immutable
+graph owners are shared; withdraw detaches its memberships before mutation.
+Success can be discarded, chained previews remain independent, and failed
+previews preserve both states. The full grounded graph Suite exercises those
+cases. The existing SessionTransaction model/faults requalify the surrounding
+publication contract; they do not mechanically map this record implementation.
+The surrounding owner must serialize mutation of a maintenance state.
+
+The WD26 native Suite now combines BRINK withholding, scoped queries and DB26
+full-row feedback. Withholding Boston's direct country fact preserves its admin
+path but loses its scoped answer because the capital exclusion still applies.
+The independent reference exposes that loss; stale receipts fail the new cut.
+This finite executor experiment has no model synthesis score.
+Another WD26 case withdraws the Massachusetts-to-US administrative edge from a
+complete positive grounded graph. Its preview, an independent source-pair walk
+and a fresh generation-bound candidate solve must agree on the remaining cities;
+the old state and receipt remain bound to the original cut.

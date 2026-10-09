@@ -8,7 +8,7 @@
                  candidate-positive-provenance candidate-verify-positive-provenance
                  positive-provenance-status positive-provenance-alternatives
                  candidate-open-provenance-maintenance provenance-maintenance-rows
-                 candidate-provenance-withdraw!))
+                 candidate-provenance-withdraw! candidate-provenance-preview-withdraw))
 (import (rename-in (only-in :gerbil-ascent/t/performance/provenance-index/reference
                            candidate-positive-provenance positive-provenance-status
                            positive-provenance-alternatives positive-provenance-witness)
@@ -77,6 +77,27 @@
 
 (def scheme-provenance-graph-test
   (test-suite "Complete grounded provenance and deletion"
+    (test-case "withdrawal previews stage independent cuts before owner publication"
+      (let* ((snapshot (reasoning-source-snapshot 'preview 1 '((s 1 ((1) (1))))))
+             (spec (recursive-provenance-spec))
+             (graph (candidate-positive-provenance snapshot spec 'program 'complete '((1)) 64))
+             (original (candidate-open-provenance-maintenance snapshot spec 'program 'complete '((1)) graph 64)))
+        (let-values (((next rows work) (candidate-provenance-preview-withdraw original '((s 1)))))
+          (check-equal? rows '((1)))
+          (check-equal? (provenance-maintenance-rows original) '((1)))
+          (let-values (((empty empty-rows _) (candidate-provenance-preview-withdraw next '((s 2)))))
+            (check-equal? empty-rows [])
+            (check-equal? (provenance-maintenance-rows empty) [])
+            (check-equal? (provenance-maintenance-rows next) '((1)))
+            (check-equal? (provenance-maintenance-rows original) '((1))))
+          (set-car! (car rows) 9)
+          (check-equal? (provenance-maintenance-rows next) '((1)))
+          (check-exception (candidate-provenance-preview-withdraw next '((s 2)) 1) true)
+          (check-equal? (provenance-maintenance-rows next) '((1))))
+        (check-exception (candidate-provenance-preview-withdraw original '((unknown 1))) true)
+        ;; Discarded previews have not accumulated source removals in original.
+        (let-values (((rows _) (candidate-provenance-withdraw! original '((s 2)))))
+          (check-equal? rows '((1))))))
     (test-case "withdrawal probe budgets and ordered rows match the prior owner"
       (let* ((snapshot (reasoning-source-snapshot 'budget-parity 1 '((s 1 ((1) (1) (2))))))
              (spec (recursive-provenance-spec))

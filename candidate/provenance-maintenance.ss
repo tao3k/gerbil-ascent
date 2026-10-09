@@ -9,7 +9,8 @@
         (only-in "provenance.ss" positive-proof-nodes positive-proof-roots
                  proof-node-id proof-node-row))
 (export candidate-make-provenance-maintenance provenance-maintenance?
-        provenance-maintenance-rows candidate-provenance-withdraw!)
+        provenance-maintenance-rows candidate-provenance-withdraw!
+        candidate-provenance-preview-withdraw)
 (defstruct provenance-maintenance (rows-table roots edges sources alive removed))
 
 ;; candidate-make-provenance-maintenance
@@ -69,6 +70,25 @@
 (def (provenance-maintenance-rows state)
   (unless (provenance-maintenance? state) (error "expected provenance maintenance state"))
   (maintenance-rows state (provenance-maintenance-alive state)))
+
+;;; Stage one prospective source cut for a surrounding transaction. Graph,
+;;; rows and selectors are private immutable owners; withdraw already copies
+;;; both mutable memberships before any work. A new state header can share
+;;; those owners until withdraw installs its detached memberships. Discarding
+;;; a successful preview leaves the original state unchanged.
+;;; The surrounding owner serializes mutations of the original state.
+;; : (-> ProvenanceMaintenance SourceOccurrences Nat (Values ProvenanceMaintenance Rows Nat))
+(def (candidate-provenance-preview-withdraw state selectors (max-steps 100000))
+  (unless (provenance-maintenance? state) (error "expected provenance maintenance state"))
+  (let (next (make-provenance-maintenance
+              (provenance-maintenance-rows-table state)
+              (provenance-maintenance-roots state)
+              (provenance-maintenance-edges state)
+              (provenance-maintenance-sources state)
+              (provenance-maintenance-alive state)
+              (provenance-maintenance-removed state)))
+    (let-values (((rows work) (candidate-provenance-withdraw! next selectors max-steps)))
+      (values next rows work))))
 
 ;;; DRed preserves the former edge order and probe count exactly. Indexes remove
 ;;; list membership searches, not bounded work. A cycle cannot seed itself;

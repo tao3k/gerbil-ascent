@@ -11,10 +11,53 @@
                  relational-transform-input-arity
                  relational-op-count-join! relational-op-count-fix!)
         (only-in "scheme-checked.ss" relational-copy-rows)
+        (only-in "operator-analysis.ss" analyze-operator-graph
+                 operator-analysis-checked-rows snapshot-operator-transform)
+        (only-in "operator-descriptor.ss" relational-op-apply
+                 relational-op-source relational-transform-output-arity)
+        (only-in :clan/poo/object .o .ref)
+        (only-in :clan/poo/mop .defgeneric define-type validate)
+        (only-in :core/types PooFlowNativeObjectContract. poo-flow-predicate-contract)
         (only-in :std/list/list append-map delete-duplicates/hash take)
         (only-in :std/list/list-builder with-list-builder))
 
-(export relational-op-delta-change)
+(export relational-op-delta-change relational-op-prepare-change relational-op-change
+        GerbilAscentChangePlanContract)
+
+(define-type (GerbilAscentChangePlanContract @ PooFlowNativeObjectContract.)
+  identity: 'ascent/operator-change-plan
+  proto: (.o)
+  responsibilities: (.o .change:
+    (poo-flow-predicate-contract 'ascent/change-method procedure? (lambda (_value _context) []))))
+
+;;; Closing the root with an empty input checks captures without borrowing or
+;;; duplicating the request rows; only captured finite rows enter this table.
+(def (change-analysis transformer)
+  (operator-analysis-checked-rows
+   (analyze-operator-graph
+    (relational-op-apply transformer
+     (relational-op-source (gensym 'delta-input)
+                          (relational-transform-input-arity transformer) [])))))
+
+;;; Admission owns all descriptor metadata and row spines once. Captured
+;;; sources are fixed for this plan; callers create another plan to change them.
+;;; Per-call inputs, budgets, environments and lookup registries remain local.
+;; : (-> RelationalTransform ChangePlan)
+(def (relational-op-prepare-change transformer)
+  (let* ((owned (snapshot-operator-transform transformer))
+         (rows (change-analysis owned)))
+    (validate GerbilAscentChangePlanContract
+      (.o (:: @ (.ref GerbilAscentChangePlanContract 'proto))
+          (.change (lambda (before added (row-limit 4096))
+                     (delta-change/admitted owned rows before added row-limit)))))))
+
+;;; Constructor validation owns the method contract. Generic dispatch avoids
+;;; rerunning graph/contract admission for every request on a prepared owner.
+;; : (-> ChangePlan Rows Rows Nat (Values Rows Rows Rows))
+(.defgeneric (execute-change-plan plan before added row-limit) slot: .change)
+;; : (-> ChangePlan Rows Rows Nat (Values Rows Rows Rows))
+(def (relational-op-change plan before added (row-limit 4096))
+  (execute-change-plan plan before added row-limit))
 
 ;; relational-op-delta-change
 ;;   : (-> RelationalTransform Rows Rows Nat (Values Rows Rows Rows))
@@ -36,6 +79,11 @@
                                  (row-limit 4096))
   (unless (relational-transform? transformer)
     (error "expected a relation transformer" transformer))
+  (delta-change/admitted transformer (change-analysis transformer) before added row-limit))
+
+;;; This private entry consumes either this call's admission or a plan's owned
+;;; admission. Every mutable environment/index is still invocation-owned.
+(def (delta-change/admitted transformer checked-rows before added row-limit)
   (unless (and (exact-integer? row-limit) (> row-limit 0))
     (error "delta row limit must be positive" row-limit))
   (let* ((arity (relational-transform-input-arity transformer))
@@ -102,7 +150,7 @@
                          (hash-put! index key
                                     (cons (list-tail entry width)
                                           (or bucket [])))))
-                     (vector-ref data 1)))))
+                     (hash-ref checked-rows node)))))
             ;; These bucket spines belong to the index; table row tails do not.
             ;; Retain descriptor order so append-map observes the same rows.
             (for-each (lambda (key)
@@ -120,7 +168,7 @@
            (lambda (entry)
              (when (equal? row (take entry width))
                (put! (list-tail entry width))))
-           (vector-ref data 1)))))
+           (hash-ref checked-rows node)))))
     (def (flatmap node rows)
       (if (null? rows) []
         (let* ((published (and mapping-indexes
@@ -206,7 +254,7 @@
             (inputs (relational-op-inputs node))
             (data (relational-op-data node)))
         (case kind
-          ((source) (values (normalize (vector-ref data 1)) []))
+          ((source) (values (normalize (hash-ref checked-rows node)) []))
           ((parameter)
            (let (binding (assq node environment))
              (unless binding
@@ -319,4 +367,9 @@
                      (list
                       (cons (relational-transform-parameter transformer)
                             (cons base-input delta-input))))))
-        (values base (union base delta) delta)))))
+        ;; Each publication owns row spines independently, including captured
+        ;; source and mapping tails retained by a reusable plan.
+        (let ((output-arity (relational-transform-output-arity transformer)))
+          (values (relational-copy-rows base output-arity)
+                  (relational-copy-rows (union base delta) output-arity)
+                  (relational-copy-rows delta output-arity)))))))

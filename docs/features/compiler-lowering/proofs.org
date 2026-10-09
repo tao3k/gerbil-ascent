@@ -2,6 +2,9 @@
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 #+TITLE: Compiler Lowering: proofs
 
+The [[file:change-plan.org][change plan correspondence]] adds OrderedMapping's ordered bucket laws
+and ChangePlan's finite publication model alongside the native discriminator.
+
 Feature owner: [[file:../index.org][feature index]]. This page retains the original
 source dates and qualification boundaries. Current evidence is commit-specific.
 
@@ -132,4 +135,3 @@ MODULE-OK, HARNESS-OK and explicit final OK under the isolated SDK. The
 [[file:../../evidence/scheme-key-prefix-20261006/receipt.json][source-bound receipt]] records this Scheme slice. No Lean/TLA source is changed;
 universal descriptor extraction and Provider correspondence remain their
 separate obligations. No CPU, allocation or whole-framework speedup is claimed.
-

@@ -4,7 +4,14 @@
 
 (import (only-in :std/test check-equal? check-exception test-suite test-case)
         (only-in :gerbil-ascent/candidate/types
-                 make-reasoning-snapshot reasoning-snapshot-valid?)
+                 make-reasoning-snapshot reasoning-snapshot-valid? reasoning-snapshot-relations)
+        (only-in :gerbil-ascent/candidate/program candidate-inspect)
+        (only-in :gerbil-ascent/candidate/provenance-graph
+                 candidate-positive-provenance candidate-open-provenance-maintenance
+                 candidate-provenance-preview-withdraw provenance-maintenance-rows)
+        (only-in :gerbil-ascent/candidate/withholding reasoning-withhold-source-snapshot)
+        (only-in :gerbil-ascent/candidate/feedback reasoning-compare-rows
+                 reasoning-feedback-status reasoning-feedback-reason reasoning-feedback-missing)
         (only-in :gerbil-ascent/candidate/reasoning
                  reasoning-source-snapshot reasoning-attempt
                  reasoning-receipt-bound?
@@ -12,6 +19,7 @@
                  reasoning-verify-stratified-receipt
                  reasoning-snapshot-digest
                  reasoning-receipt-status reasoning-receipt-rows
+                 reasoning-receipt-candidate-digest
                  reasoning-receipt-diagnostics reasoning-receipt-evidence
                  reasoning-receipt-stratified
                  reasoning-stratified-evidence-status
@@ -638,6 +646,70 @@
                            (kg-reference withdrawn-direct))
             (kg-check-rows (relational-program-query old 'answer)
                            (kg-reference kg-direct-country))))))
+    (test-case "WD26 withholding preserves body paths without certifying scoped answers"
+      (let* ((source (kg-snapshot 1 kg-direct-country))
+             (cut (reasoning-withhold-source-snapshot source 2
+                    '(((directCountry Q100 Q30)
+                       ((admin Q100 Q54072) (admin Q54072 Q771) (admin Q771 Q30))))))
+             (gold (kg-proposal 'branch '(query answer ?city Q30)))
+             (positive (kg-proposal 'branch '(query viaAdmin ?city Q30)))
+             (wrong (kg-proposal 'global '(query answer ?city Q30)))
+             (original (reasoning-attempt source gold 100000 20000))
+             (changed (reasoning-attempt cut gold 100000 20000))
+             (paths (reasoning-attempt cut positive 100000 20000))
+             (reference (kg-reference kg-direct-country))
+             (feedback (reasoning-compare-rows cut gold changed reference)))
+        ;; The BRINK cut preserves the claimed body. Scoped negation still
+        ;; excludes the administrative witness for this capital: the supplied
+        ;; grounding is not a theorem establishing answer preservation.
+        (kg-check-rows (reasoning-receipt-rows paths) reference)
+        (kg-check-rows (reasoning-receipt-rows changed)
+                       (kg-reference '((Q62 Q30) (Q18013 Q30))))
+        (check-equal? (reasoning-feedback-status feedback) 'mismatch)
+        (check-equal? (reasoning-feedback-missing feedback) '((Q100 Q30)))
+        (check-equal? (reasoning-feedback-reason
+                       (reasoning-compare-rows cut gold original reference)) 'unbound)
+        (check-equal? (reasoning-feedback-status
+                       (reasoning-compare-rows cut wrong
+                         (reasoning-attempt cut wrong 100000 20000)
+                         (kg-reference '((Q62 Q30) (Q18013 Q30))))) 'mismatch)
+        (check-equal? (reasoning-verify-stratified-receipt changed cut gold 20000) 'valid)
+        (check-equal? (reasoning-verify-stratified-receipt original cut gold 20000) 'invalid)
+        (kg-check-rows (reasoning-receipt-rows original) reference)))
+    (test-case "WD26 grounded withdrawal preview agrees with a fresh bound receipt"
+      (let* ((source (kg-snapshot 1 kg-direct-country))
+             (p '(candidate (relation adminPath 2) (relation viaAdmin 2)
+                   (rule (adminPath ?x ?y) (admin ?x ?y))
+                   (rule (adminPath ?x ?z) (adminPath ?x ?y) (admin ?y ?z))
+                   (rule (viaAdmin ?city ?country)
+                         (city ?city) (adminPath ?city ?country) (target ?country))
+                   (query viaAdmin ?city Q30) (limits 32 128 256)))
+             (first (reasoning-attempt source p 100000))
+             (spec (candidate-inspect source p))
+             (digest (reasoning-receipt-candidate-digest first))
+             (graph (candidate-positive-provenance source spec digest
+                      (reasoning-receipt-status first) (reasoning-receipt-rows first) 100000))
+             (state (candidate-open-provenance-maintenance source spec digest
+                      (reasoning-receipt-status first) (reasoning-receipt-rows first) graph 100000))
+             (remaining (filter (lambda (row) (not (equal? row '(Q771 Q30)))) kg-admin))
+             (cut (reasoning-source-snapshot 'wikidata-entity-revisions-2026-10-05 2
+                    (map (lambda (entry)
+                           (if (eq? (car entry) 'admin) (list 'admin 2 remaining) entry))
+                         (reasoning-snapshot-relations source))))
+             (fresh (reasoning-attempt cut p 100000))
+             (expected (filter-map (lambda (city)
+                         (and (kg-reaches? (car city) 'Q30 remaining) (list (car city) 'Q30))) kg-cities)))
+        (let-values (((prospective rows work)
+                      (candidate-provenance-preview-withdraw state '((admin 3)))))
+          (kg-check-rows rows expected)
+          (kg-check-rows (reasoning-receipt-rows fresh) expected)
+          (kg-check-rows (provenance-maintenance-rows prospective) expected)
+          (kg-check-rows (provenance-maintenance-rows state) (reasoning-receipt-rows first))
+          (check-equal? (> work 0) #t)
+          (check-equal? (reasoning-feedback-status
+                         (reasoning-compare-rows cut p fresh rows)) 'match)
+          (check-equal? (reasoning-feedback-reason
+                         (reasoning-compare-rows cut p first rows)) 'unbound))))
     (test-case "all sixty-four three-node graphs match finite reference"
       (let (possible '((0 1) (0 2) (1 0) (1 2) (2 0) (2 1)))
         (for-each

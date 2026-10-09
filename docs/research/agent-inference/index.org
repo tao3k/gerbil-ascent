@@ -173,3 +173,8 @@ code, followed by the [[file:../scheme-dsl/datafun-f16.org][F16]]/[[file:../sche
 frames the optional training-framework question.
 For an actual deployed-model interface, read
 [[file:serving-sglang-vllm.org][SGLang/vLLM serving research]].
+
+* Minimum-height proof fragment reading
+
+The [[file:provenance-z19.org][Z19 method study]] distinguishes minimal-height annotations and
+fragments from current witnesses, complete ground graphs and natural counts.

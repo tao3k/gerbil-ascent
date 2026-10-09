@@ -1,0 +1,29 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+#+TITLE: M13 differential computation and the native change boundary
+#+DATE: 2026-10-09
+#+STATUS: dedicated semantics reading; differential trace implementation open
+
+* Primary method
+
+[[https://www.cidrdb.org/cidr2013/Papers/CIDR13_Paper111.pdf][McSherry et al., Differential dataflow, CIDR 2013]], sections 3.1--3.3,
+PDF pages 3--4: integer multiplicities encode removals; partially ordered
+versions distinguish an input epoch from an iteration. A collection is
+reconstructed from prior differences under that order. Section 4 gives the
+dataflow execution setting; section 5 reports the prototype experiments.
+
+* Repository design decision
+
+=program/operator-change.ss= has Boolean insertion sets and local fixed-point
+frontiers. =program/session.ss= has source generations and affected-component
+replacement. Neither has signed multiplicities, a multidimensional trace, or
+progress/compaction semantics. A prepared change plan freezes descriptor captures;
+it does not add any of those capabilities.
+
+Before admitting signed updates, require an explicit zero-consolidation law,
+set-threshold meaning, epoch/iteration coordinates and a safe trace-retirement
+condition. Lean should own reconstruction and operator equations; Quint should
+own frontier publication and retirement. A native discriminator must mix removal
+and insertion through nested recursion and compare complete rows after each
+epoch with fresh evaluation. Keep the current grounded withdrawal and Session
+publication baseline until those obligations are met.

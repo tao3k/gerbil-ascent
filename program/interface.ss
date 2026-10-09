@@ -26,5 +26,6 @@
         relational-op-measurement-join-probes
         relational-op-measurement-fix-body-evaluations
         relational-op? relational-op-arity
-        relational-op-delta-change
+        relational-op-delta-change relational-op-prepare-change relational-op-change
+        GerbilAscentChangePlanContract
         (import: "operator-session.ss"))

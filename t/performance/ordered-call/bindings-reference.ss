@@ -3,7 +3,6 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 ;;; Runtime operations over admitted terms and evaluation-local environments.
-(import (only-in "ordered-call.ss" dispatch-ordered-call))
 (export gerbil-ascent-expression-value gerbil-ascent-bind-row gerbil-ascent-head-row
         gerbil-ascent-binding-values gerbil-ascent-call-with-bindings
         gerbil-ascent-extend-pattern)
@@ -22,13 +21,13 @@
 (def (gerbil-ascent-binding-values names environment diagnostic)
   (map (lambda (name) (binding-value name environment diagnostic)) names))
 
-;;; Direct calls for admitted zero- through four-input callbacks avoid an
+;;; Direct calls for admitted zero-, one- and two-input callbacks avoid an
 ;;; argument-list allocation. Larger callbacks keep the same apply protocol.
 ;; gerbil-ascent-call-with-bindings
 ;; : (forall (v r) (-> (-> v ... r) [Symbol] [(Pair Symbol v)] String r))
 ;; : (-> Procedure Names Environment Diagnostic Result)
 ;; | doc m%
-;;     Resolve admitted inputs in order and invoke one callback. Zero through four
+;;     Resolve admitted inputs in order and invoke one callback. Zero to two
 ;;     inputs use direct calls; larger arities retain the apply convention.
 ;;
 ;;     # Examples
@@ -39,8 +38,14 @@
 ;;     ```
 ;;   %
 (def (gerbil-ascent-call-with-bindings procedure names environment diagnostic)
-  (dispatch-ordered-call (begin) procedure names
-    (name (binding-value name environment diagnostic))))
+  (match names
+    ([] (procedure))
+    ([one] (procedure (binding-value one environment diagnostic)))
+    ([one two]
+     (let* ((left (binding-value one environment diagnostic))
+            (right (binding-value two environment diagnostic)))
+       (procedure left right)))
+    (else (apply procedure (gerbil-ascent-binding-values names environment diagnostic)))))
 
 ;; : (forall (v r) (-> (Vector Any) [(Pair Symbol v)] r))
 ;; : (-> ExpressionPayload Environment Value)

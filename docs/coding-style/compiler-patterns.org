@@ -1163,3 +1163,27 @@ simple algebraic branch. Provider extensibility remains under existing public
 generics. Complete lifecycle A/B, mutable-header and occurrence controls are in
 =t/performance/shared-key-plan/README.org=, including the initial generic-cache
 regression and the failed intermediate prefix target.
+
+* One syntax contract for ordered callback publication and invocation
+
+The calling convention is an expression-layer responsibility. Gerbil =1cfb032=
+=compiler/compile.ss:319-341= uses =with-primitive-bind+args= to own ordered
+operand traversal and temporary bindings. ASCENT =core/ordered-call.ss= now
+owns hygienic zero-through-four direct reads and the general map/apply fallback.
+The frame compiler supplies a lambda wrapper; runtime bindings supply begin.
+Their readers retain their respective frame/environment ownership. This unifies
+a complete calling protocol without introducing MOP dispatch into a finite
+admitted arity decision or allocating a reader closure per resolved argument.
+
+The syntax recursively binds each operand before invoking user code. Generated
+static SCM retains ordered temporaries and a direct application in small frame
+branches. Multiple values, first failures, false arguments and reentrant frame
+observations remain semantic gates. Both producer paths use the same arity
+boundary; the former binding path's three/four-argument list allocation is
+removed. Pure row algorithms remain named functions.
+
+See [[file:../../t/performance/ordered-call/README.org][ordered callback qualification]] for the frozen sources, native
+matched CPU/allocation results and controls. The syntax abstraction is justified
+by shared calling-convention ownership; its presence alone is not a performance
+claim. Repository documentation remains English, and generated artifacts stay
+under ignored cache/library paths.

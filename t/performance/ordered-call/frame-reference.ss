@@ -6,14 +6,35 @@
 ;;; at their original execution points; neither results nor frames are cached.
 ;;; Known arities avoid a transient argument list; ordered reads finish before
 ;;; invoking the callback. Larger arities retain the general apply path.
-(import (only-in "ordered-call.ss" dispatch-ordered-call))
 (export gerbil-ascent-compile-frame-call gerbil-ascent-compile-frame-sequence
         gerbil-ascent-compile-input-guard)
 
 ;; : (-> Procedure Slots (-> Frame Value))
 (def (gerbil-ascent-compile-frame-call procedure slots)
-  (dispatch-ordered-call (lambda (frame)) procedure slots
-    (slot (vector-ref frame slot))))
+  (match slots
+    ([] (lambda (_) (procedure)))
+    ([one] (lambda (frame) (procedure (vector-ref frame one))))
+    ([one two]
+     (lambda (frame)
+       (let* ((left (vector-ref frame one))
+              (right (vector-ref frame two)))
+         (procedure left right))))
+    ([one two three]
+     (lambda (frame)
+       (let* ((first (vector-ref frame one))
+              (second (vector-ref frame two))
+              (third (vector-ref frame three)))
+         (procedure first second third))))
+    ([one two three four]
+     (lambda (frame)
+       (let* ((first (vector-ref frame one))
+              (second (vector-ref frame two))
+              (third (vector-ref frame three))
+              (fourth (vector-ref frame four)))
+         (procedure first second third fourth))))
+    (else
+     (lambda (frame)
+       (apply procedure (map (lambda (slot) (vector-ref frame slot)) slots))))))
 
 ;;; Compile an ordered callback segment backwards, without executing callbacks.
 ;;; Each continuation reads only its own frame. A failed guard skips its suffix;

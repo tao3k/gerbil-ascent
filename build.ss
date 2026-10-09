@@ -27,6 +27,7 @@
     "program/aggregators"
     "program/syntax"
     "program/planning"
+    "core/ordered-call"
     "core/expression-plan"
     "core/positive-plan"
     "program/index"

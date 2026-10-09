@@ -1,0 +1,88 @@
+#+TITLE: Ordered lexical dependency admission
+
+* Production flow and Gerbil source
+=program/operator-analysis.ss= previously concatenated every child dependency
+list before deduplicating it, including repeated paths through a shared DAG.
+The new private merge consumes ordered identity sets. Empty and identical
+spines are reused. For different sets, a native eq table admits only new right
+members; if the right set adds nothing, the left spine is retained. Only a
+changed result receives a fresh ordered header.
+
+A binding filter copies a dependency spine only if its parameter occurs.
+Fix binds exactly its own parameter; apply binds only its transform parameter,
+then merges actual-input captures with external transform captures. First
+traversal order is now implemented as promised by the original comment; descriptor
+identity and invocation-local cache lifetime remain part of the lexical memo contract. Child cached lists are never mutated.
+
+Gerbil SDK 1cfb032 =src/std/list/list-builder.ss:5-22= provides a hygienic list
+builder with one private tail and owned result cells. The implementation uses
+that native macro for publication of changed ordered sets, native identity hash
+tables for admission, and =foldl= for input composition. No public constructor,
+MOP receiver, build entry, runtime knob or SDK build was added.
+
+* Native evidence contract
+=reference.ss= freezes =cc7f360bcf6285863419522de10e7d00d07ec215:program/operator-analysis.ss=;
+only its two relative production imports become absolute module imports.
+Both A/B lanes are compiled symmetrically. Fifty alternating pairs time complete
+graph validation, detached finite-source admission and scoped dependency
+analysis, then collect dependencies for every node. An independent ordered-list
+oracle checks identity sets in the baseline and exact identity/first-occurrence
+order in the new implementation outside timing.
+
+The public ASP benchmark API constructs and runs the fixture contract. Shared
+DAG and unary-chain targets require >=20% CPU reduction and 35/50 wins. Closed,
+tiny and source-only controls allow 110% plus 20us. Allocation gates are 110%
+plus 4096 bytes. No build or qualification lane is launched by this run during
+timing. These receipts do not claim whole compilation or solve speedups.
+
+* Reproduce
+#+begin_src sh
+LIBRARY_PATH="$(brew --prefix openssl@3)/lib" GERBIL_PATH="$PWD/.gerbil" GERBIL_LOADPATH="$PWD/.gerbil/lib:$PWD" gxi -:max-heap=3G,debug=q t/performance/lexical-dependencies/build.ss "$PWD/.gerbil/lib" "$PWD/.cache/ascent/lexical-dependencies/runner" runner
+GERBIL_HOME=/opt/homebrew/opt/gerbil-scheme@0.19/current GERBIL_PATH="$PWD/.gerbil" GERBIL_LOADPATH="$PWD/.gerbil/lib:$PWD" .cache/ascent/lexical-dependencies/runner shared .cache/ascent/lexical-dependencies/shared.ss
+#+end_src
+Repeat separately for unary, closed, small, empty. Compile =qualify= after
+measurement finishes. Binaries, generators, logs and raw receipts stay ignored
+in =.cache/ascent/lexical-dependencies=.
+
+* Ordering correction and rejected evidence
+SDK =src/std/list/list.ss:9-16= implements its exported =append-map= by folding
+=cons= across every child list. This reverses each child's entries. The old
+analysis therefore promised first traversal order in its comment but did not
+implement it for multiple lexical parameters. A three-parameter example
+produced baseline identity ordinals =(1 0 2)= versus independent truth =(0 1 2)=.
+The new implementation fixes this private dependency order; every node still
+has exactly the same lexical identity set as the frozen baseline.
+
+Gerbil descriptors with identical fields can be =equal?= despite distinct
+lexical identities. The initial structural comparisons and timings are not
+admitted as final evidence. A subsequent strict identity comparison rejected
+the baseline order. Final A/B gates require baseline identity-set equality and
+new exact first-occurrence identity order; they do not claim unchanged baseline
+list order. Qualifier assertions use the same explicit =eq?= comparison.
+
+* Final identity-checked native results
+| Complete graph admission | Old CPU us | New CPU us | Old bytes | New bytes | CPU wins |
+|--------------------------+------------+------------+-----------+-----------+----------|
+| 16 bindings, 256 shared DAG nodes | 1268 | 149 | 1777296 | 159504 | 50/50 |
+| 16 bindings, 256 unary nodes | 624 | 136 | 1582384 | 159504 | 50/50 |
+| Closed shared DAG control | 135 | 132 | 115024 | 82224 | 36/50 |
+| Tiny lexical scope | 5 | 4 | 15328 | 8928 | 41/50 |
+| Source-only control | 2 | 2 | 8672 | 8640 | 20/50 |
+
+All final gates passed with identity comparisons. Target CPU reductions are
+88.2% and 78.2%; allocations fall 91.0% and 89.9%. The source-only control is
+flat; no tiny timing speedup or whole-compiler performance claim is made.
+
+* Qualification and source identity
+Four Suites, 78 Cases passed with final =OK= and exit 0, including the existing
+operator, retained operator and higher-order expression tests. Added cases
+check nested/shared dependencies by identity, distinct overlapping sets and
+first-occurrence order, exact apply binding removal, escaped captures and
+revalidation after mutable descriptor changes.
+
+Direct source loading/execution passed =SOURCE-LEXICAL-OK= with an exact
+parameter identity check and a closed root. Production policy completed with
+30 findings, zero errors and =POLICY-NATIVE-OK=; warnings remain.
+
+Frozen original blob: =d7b3f03913e21285c40031ea53c1fa80cb7eccf5=.
+Reference with only import normalization: =5be15b4e58a13fc32edc1a3f79bb6376e24f3767=.

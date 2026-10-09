@@ -4,30 +4,11 @@
 
 ;;; One admission owns graph validation, detached finite rows and lexical sets.
 ;;; Shared metadata is never cached across calls over mutable descriptors.
-(import "operator-descriptor.ss"
-        (only-in "scheme-checked.ss" relational-scalar? relational-copy-rows)
-        (only-in :std/list/list-builder with-list-builder))
+(import :gerbil-ascent/program/operator-descriptor
+        (only-in :gerbil-ascent/program/scheme-checked relational-scalar? relational-copy-rows)
+        (only-in :std/list/list append-map delete-duplicates/hash))
 (export analyze-operator-graph operator-analysis-checked-rows operator-analysis-free-cache free-parameters)
 (defstruct operator-analysis (checked-rows free-cache))
-
-;; Cached dependency lists are ordered identity sets. Reuse a complete spine
-;; until a genuinely new dependency requires an owned result header.
-(def (merge-free-parameters left right)
-  (cond ((or (null? right) (eq? left right)) left)
-        ((null? left) right)
-        (else
-         (let ((seen (make-hash-table-eq)) (extra []))
-           (for-each (cut hash-put! seen <> #t) left)
-           (for-each (lambda (parameter)
-             (unless (hash-get seen parameter)
-               (hash-put! seen parameter #t)
-               (set! extra (cons parameter extra)))) right)
-           (if (null? extra) left
-             (with-list-builder (put!)
-               (for-each put! left)
-               (for-each put! (reverse! extra))))))))
-(def (unbind-free-parameter free parameter)
-  (if (memq parameter free) (filter (lambda (p) (not (eq? p parameter))) free) free))
 
 ;;; Compute lexical dependencies before consulting the shared compiler memo.
 ;;; Otherwise a child cached while its fix parameter is bound could be
@@ -42,19 +23,28 @@
               (case (relational-op-kind node)
                 ((parameter) (list node))
                 ((fix)
-                 (unbind-free-parameter (free-parameters (car inputs) cache)
-                                        (relational-op-data node)))
+                 (filter
+                  (lambda (parameter)
+                    (not (eq? parameter (relational-op-data node))))
+                  (free-parameters (car inputs) cache)))
                 ((apply)
                  (let (transform (relational-op-data node))
-                   (merge-free-parameters
+                   (append
                     (free-parameters (car inputs) cache)
-                    (unbind-free-parameter
-                     (free-parameters (relational-transform-body transform) cache)
-                     (relational-transform-parameter transform)))))
+                    (filter
+                     (lambda (parameter)
+                       (not (eq? parameter
+                                 (relational-transform-parameter transform))))
+                     (free-parameters
+                      (relational-transform-body transform) cache)))))
                 (else
-                 (foldl (lambda (input free)
-                          (merge-free-parameters free (free-parameters input cache)))
-                        [] inputs)))))
+                 (append-map (lambda (input)
+                               (free-parameters input cache))
+                             inputs)))))
+        ;; A dependency is an identity, not one entry per path through a DAG.
+        ;; Keep first traversal order so lexical memo keys remain deterministic.
+        (set! free (if (or (null? free) (null? (cdr free))) free
+                       (delete-duplicates/hash free table: (make-hash-table-eq) from-end?: #t)))
         (hash-put! cache node free)
         free))))
 

@@ -216,7 +216,8 @@ certificate shape check and independent rule-instance verifier remain active.
 Ordinary positive witnesses keep their admitted derived-fact budget.
 
 The native =std/test= source qualification includes exact row/cell boundaries,
-both overruns, duplicate seeds/clauses, a 65-relation combined schema and a 5120-node ordinary positive
+both overruns, duplicate seeds/clauses, exact/overflowing row arities,
+a 65-relation combined schema and a 5120-node ordinary positive
 witness. Exact-boundary certificates independently verify as =valid=. Restoring
 the previous producer through an isolated load path makes the new node-status
 assertion fail. This is a discriminator for early reservation, not a universal

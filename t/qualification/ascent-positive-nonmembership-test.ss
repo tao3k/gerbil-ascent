@@ -86,6 +86,23 @@
              (certificate (candidate-positive-nonmembership input program 'digest 'complete [] 100)))
         (check-equal? (positive-nonmembership-status certificate) 'bounded)
         (check-equal? (positive-nonmembership-closure certificate) [])))
+    (test-case "wide source row reserves material at the exact arity boundary"
+      (for-each (lambda (width)
+        (let* ((input (reasoning-source-snapshot 'wide-source 0
+                        (list (list 'seed width (list (make-list width 0))))))
+               (program (make-reasoning-candidate '((target . 1)) [] [] (vector '(target 0) 0) '(1 1 1)))
+               (proof (candidate-positive-closed-absence input program 'digest 'complete [] 100))
+               (certificate (candidate-positive-nonmembership input program 'digest 'complete [] 100)))
+          (if (= width 1024)
+            (begin (check-equal? (positive-proof-status proof) 'closed-absent)
+                   (check-equal? (length (positive-proof-nodes proof)) 1)
+                   (check-equal? (positive-nonmembership-status certificate) 'complete)
+                   (check-equal? (candidate-verify-positive-nonmembership input program 'digest 'complete [] certificate 100) 'valid))
+            (begin (check-equal? (positive-proof-status proof) 'bounded)
+                   (check-equal? (positive-proof-nodes proof) [])
+                   (check-equal? (positive-nonmembership-status certificate) 'bounded)
+                   (check-equal? (positive-nonmembership-closure certificate) [])))))
+        '(1024 1025)))
     (test-case "public receipt carries independently verifiable absence"
       (let* ((input
               (reasoning-source-snapshot

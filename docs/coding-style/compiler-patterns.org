@@ -878,3 +878,25 @@ allocation gate and were withdrawn. The final fused path passes matched native
 whole-rule compilation gates and ordered key/row truth; evidence and scope
 limits are recorded in =t/performance/atom-projection/README.org=. Preparation
 reuse is useful only when the complete chosen path improves under measurement.
+
+* Express private traversal invariants in records and local types
+
+Gerbil =1cfb032= uses =match= / =ast-case= for expression shape and
+=using (klass :- !class)= in =compiler/optimize-call.ss:259= after establishing
+the optimizer's class value. Apply that expression-level discipline to owned
+state: =core/dependency-graph.ss= replaces positional pair frames with a final
+private =graph-frame=, then uses =using= for fields whose constructor provenance
+is known. No caller value becomes a frame. Public adjacency access remains
+checked, and deep DFS still runs through a tail loop over explicit frames.
+
+Separate local =advance=, =finish= and =leave= operations express edge traversal,
+SCC completion and parent return. The loop selects its next frame instead of
+nesting all three operations. One discovery table expresses unseen/active/done,
+avoiding a second boolean table describing the same state. Reachability closes
+through one local enqueue operation that marks before scheduling.
+
+Abstraction must also survive native measurement. Direct nested matches and
+untyped record accesses failed the fixed allocation/CPU gates. The final private
+type-directed record passes all six SCC scenarios, with exact output, immutable
+edges and closure controls. =t/performance/dependency-graph/README.org= records
+negative experiments and the cross-edge CPU regression along with the gains.

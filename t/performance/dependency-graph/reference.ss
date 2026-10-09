@@ -9,8 +9,6 @@
 ;;; apply only to these dense traversal counters, never to caller edge labels.
 (export gerbil-ascent-graph-components gerbil-ascent-graph-close!)
 
-(defstruct graph-frame (node remaining parent) final: #t)
-
 ;; gerbil-ascent-graph-close!
 ;;   : (-> (Vector [Nat]) (Vector Boolean) Void)
 ;;   : (-> DenseAdjacency (Vector Boolean) Void)
@@ -34,17 +32,17 @@
       (when (< index count)
         (when (vector-ref selected index) (set! pending (cons index pending)))
         (seed (+ index 1))))
-    (def (enqueue target)
-      (unless (vector-ref selected target)
-        (vector-set! selected target #t)
-        (set! pending (cons target pending))))
     (let visit ()
-      (match pending
-        ([] (void))
-        ([source . rest]
-         (set! pending rest)
-         (for-each enqueue (vector-ref successors source))
-         (visit))))))
+      (unless (null? pending)
+        (let (source (car pending))
+          (set! pending (cdr pending))
+          (for-each
+           (lambda (target)
+             (unless (vector-ref selected target)
+               (vector-set! selected target #t)
+               (set! pending (cons target pending))))
+           (vector-ref successors source)))
+        (visit)))))
 
 ;; gerbil-ascent-graph-components
 ;;   : (-> (Vector [Nat]) [[Nat]])
@@ -68,6 +66,7 @@
          (next-index 0)
          (indices (make-vector count #f))
          (lowlinks (make-vector count 0))
+         (on-stack (make-vector count #f))
          (stack [])
          (components []))
     ;; A frame holds the vertex and the unvisited suffix of its adjacency
@@ -77,48 +76,48 @@
         (set! next-index (fx+ next-index 1))
         (vector-set! indices node index)
         (vector-set! lowlinks node index)
+        (vector-set! on-stack node #t)
         (set! stack (cons node stack)))
-      (make-graph-frame node (vector-ref successors node) frames))
-    ;; indices doubles as DFS state: #f is unseen, a fixnum is on the SCC
-    ;; stack, and #t is completed. A completed vertex has no discovery index.
-    (def (lower! node index)
-      (vector-set! lowlinks node (fxmin (vector-ref lowlinks node) index)))
+      (cons (cons node (vector-ref successors node)) frames))
     (def (finish node)
       (when (fx= (vector-ref lowlinks node) (vector-ref indices node))
         (let pop ((members []))
-          (with ([member . rest] stack)
-            (set! stack rest)
-            (vector-set! indices member #t)
+          (let (member (car stack))
+            (set! stack (cdr stack))
+            (vector-set! on-stack member #f)
             (let (collected (cons member members))
               (if (fx= member node)
                 (set! components (cons collected components))
                 (pop collected)))))))
-    ;; Each transition returns the next frame. The private record replaces
-    ;; the positional pair-of-pairs and owns only its remaining edge suffix.
-    (def (advance node remaining (frame :- graph-frame))
-      (with ([neighbor . rest] remaining)
-        (set! frame.remaining rest)
-        (let (index (vector-ref indices neighbor))
-          (cond
-           ((not index) (enter neighbor frame))
-           ((eq? index #t) frame)
-           (else (lower! node index) frame)))))
-    (def (leave node parent)
-      (finish node)
-      (when parent
-        (using (parent :- graph-frame)
-          (lower! parent.node (vector-ref lowlinks node))))
-      parent)
-    (def (traverse root)
-      (let walk ((frame (enter root #f)))
-        (when frame
-          ;; Every frame is constructed by enter; no caller value enters here.
-          (using (frame :- graph-frame)
-            (walk (if (pair? frame.remaining)
-                    (advance frame.node frame.remaining frame)
-                    (leave frame.node frame.parent)))))))
+    ;; DFS returns through explicit frames instead of a Scheme continuation
+    ;; per vertex. Updating the parent happens only after its child finishes,
+    ;; just as in recursive Tarjan; cross edges use the discovery index.
     (let roots ((root 0))
       (when (fx< root count)
-        (unless (vector-ref indices root) (traverse root))
+        (unless (vector-ref indices root)
+          (let walk ((frames (enter root [])))
+            (unless (null? frames)
+              (let (frame (car frames))
+                (with ([node . remaining] frame)
+                  (if (pair? remaining)
+                    (let (neighbor (car remaining))
+                      (set-cdr! frame (cdr remaining))
+                      (cond
+                       ((not (vector-ref indices neighbor))
+                        (walk (enter neighbor frames)))
+                       (else
+                        (when (vector-ref on-stack neighbor)
+                          (vector-set! lowlinks node
+                            (fxmin (vector-ref lowlinks node)
+                                 (vector-ref indices neighbor))))
+                        (walk frames))))
+                    (let (parents (cdr frames))
+                      (finish node)
+                      (unless (null? parents)
+                        (let (parent (caar parents))
+                          (vector-set! lowlinks parent
+                            (fxmin (vector-ref lowlinks parent)
+                                 (vector-ref lowlinks node)))))
+                      (walk parents))))))))
         (roots (fx+ root 1))))
     components))

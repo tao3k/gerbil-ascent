@@ -472,6 +472,12 @@
                                   (and (not (= 0 (bitwise-and mask (arithmetic-shift 1 i)))) (list-ref universe i))) (iota 7)))
                   (layout (gerbil-ascent-index-sharing-layout requirements))
                   (physical (make-hash-table)))
+             ;; Two minimum covers exist: attach (0 1) to either singleton.
+             ;; Pin the chosen lexicographic tie, beyond comparing repetitions.
+             (when (= mask 11)
+               (check-equal? (hash-get layout '(0)) '(0 1))
+               (check-equal? (hash-get layout '(0 1)) '(0 1))
+               (check-equal? (hash-get layout '(1)) #f))
              ;; Same demand set, different encounter order, column order and
              ;; multiplicity: compare physical choices, not just root counts.
              (for-each

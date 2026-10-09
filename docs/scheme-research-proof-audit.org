@@ -445,3 +445,47 @@ complete at 12 charged probes; budgets 1, 2, 5 and 11 refuse without partial
 publication. Existing material-cap, reducer, graph and nonmembership controls
 remain active. Removing suffix work and eager source ordinals is a structural
 optimization; no end-to-end speedup is inferred from these correctness receipts.
+
+* Bounded positive proof shape admission (2026-10-09)
+
+A22 section 2.1 defines ground predicate tuples and Horn-clause antecedents
+([[https://thomas.gilray.org/pdf/seamless-deductive.pdf][Seamless Deductive Inference via Macros]]). Those semantic shapes motivate
+checking the admitted relation arity and positive-atom dependency count before
+replaying an externally held DAG. The paper does not specify certificate parsing,
+root quotas, hostile list spines, or our resource admission policy.
+
+=candidate-verify-positive-proof= previously checked =list?= and then computed
+complete node/input lengths. It admitted an unbounded root spine and recalculated
+=(length nodes)= for each root. It now bounds nodes by the caller's =max-nodes=
+and roots by the admitted node count before allocating the node vector. Every
+node row must have exactly its inspected relation arity; every rule dependency
+spine must have exactly the rule's positive-atom count before dependency replay.
+Unknown relations and malformed, cyclic or overlong spines are rejected. Source
+and candidate nodes still require empty dependencies. Earlier-node IDs, source
+positions, rule replay, query binding, and completed-answer equality retain their
+existing semantic checks. Root ID range checks reuse the admitted count, removing
+repeated full-node-list traversal; this is a structural cost improvement, not a
+measured end-to-end speed claim.
+
+The ordinary positive witness budget remains distinct from absence-certificate
+material limits: a real 5120-node proof verifies at 5120 and is rejected at 5119.
+Generated proofs have at most one query root per node; the new root bound applies
+this producer shape to external proofs. Existing completed-answer cardinality
+checks still reject duplicate roots against a unique native answer.
+
+=BoundedSpine.lean= proves seven universal laws for finite payload-erased spines:
+the recursive checker equals proper-length admission, acceptance reports the
+exact width within the cap, improper inputs are rejected, exact-cap inputs are
+accepted, oversized inputs are rejected, admission is monotone in the cap, and
+pair advances never exceed the cap. Cyclic mutable Gerbil pointers and payload
+semantics are outside this finite inductive model and have independent native
+controls. =ProofShapeAdmission.qnt= exhausts 260 states for node/root preflight,
+index allocation and publication; four faults (early allocation, root budget
+substitution, improper admission, refused publication) violate their designated
+invariants. Its publication step assumes successful semantic validation; it does
+not replace the DAG verifier or prove certificate soundness.
+
+Native controls mutate node/root spines, dependency lists and row spines to
+cyclic, improper and overlong forms. Exact small-cap admission, one-less rejection,
+completed native joins, source positions, retained proof DAGs and the 5120-node
+ordinary witness remain checked alongside the finite replay and absence suites.

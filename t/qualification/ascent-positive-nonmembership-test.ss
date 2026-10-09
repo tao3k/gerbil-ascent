@@ -5,7 +5,7 @@
 (import (only-in :std/test check-equal? test-suite test-case)
         (only-in :gerbil-ascent/candidate/provenance
                  candidate-positive-closed-absence positive-proof-status positive-proof-nodes
-                 candidate-positive-proof)
+                 candidate-positive-proof candidate-verify-positive-proof)
         (only-in :gerbil-ascent/candidate/types
                  make-reasoning-snapshot make-reasoning-candidate
                  reasoning-snapshot-digest reasoning-snapshot-relations reasoning-candidate-query)
@@ -76,7 +76,9 @@
               (vector-set! (reasoning-candidate-query program) 0 '(copy0 0))
               (let (positive (candidate-positive-proof input program 'digest 'complete '((0)) 20000))
                 (check-equal? (positive-proof-status positive) 'complete)
-                (check-equal? (length (positive-proof-nodes positive)) 5120))))))
+                (check-equal? (length (positive-proof-nodes positive)) 5120)
+                (check-equal? (candidate-verify-positive-proof input program 'digest 'complete '((0)) positive 5120) #t)
+                (check-equal? (candidate-verify-positive-proof input program 'digest 'complete '((0)) positive 5119) #f))))))
         '((1 3 closed-absent complete) (1 4 bounded bounded)
           (8 3 closed-absent complete) (9 3 bounded bounded))))
     (test-case "combined source and candidate schema exceeds absence certificate capacity"

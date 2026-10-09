@@ -131,6 +131,38 @@
           (graph-spec (list (vector 'edge '(2 3) 6)))
           'candidate-digest 'complete '((1 3)) proof 20)
          #f)))
+    (test-case "external DAG spines are bounded before indexing or rule replay"
+      (def spec (graph-spec (list (vector 'edge '(2 3) 6))))
+      (def (fresh) (candidate-positive-proof (graph-source) spec 'bounded 'complete '((1 3)) 200))
+      (def (verify proof (cap 5))
+        (candidate-verify-positive-proof (graph-source) spec 'bounded 'complete '((1 3)) proof cap))
+      (check-equal? (verify (fresh)) #t)
+      (check-equal? (verify (fresh) 4) #f)
+      (for-each (lambda (damage)
+        (let (proof (fresh))
+          (damage proof)
+          (check-equal? (verify proof) #f)))
+        (list
+          ;; Both invalid tails and cycles must stop at the admitted cap.
+          (lambda (proof) (let (nodes (positive-proof-nodes proof)) (set-cdr! (last-pair nodes) nodes)))
+          (lambda (proof) (set-cdr! (last-pair (positive-proof-nodes proof)) 'invalid))
+          (lambda (proof) (let (nodes (positive-proof-nodes proof))
+                            (set-cdr! (last-pair nodes) (list (car nodes)))))
+          (lambda (proof) (let (roots (positive-proof-roots proof)) (set-cdr! roots roots)))
+          (lambda (proof) (let (roots (positive-proof-roots proof))
+                            (set-cdr! roots (make-list 5 (car roots)))))
+          (lambda (proof) (let (inputs (proof-node-inputs (list-ref (positive-proof-nodes proof) 4)))
+                            (set-cdr! (last-pair inputs) inputs)))
+          (lambda (proof) (let (inputs (proof-node-inputs (list-ref (positive-proof-nodes proof) 4)))
+                            (set-cdr! (last-pair inputs) '(0))))
+          (lambda (proof) (let (row (proof-node-row (list-ref (positive-proof-nodes proof) 4)))
+                            (set-cdr! (last-pair row) row)))
+          (lambda (proof) (let (row (proof-node-row (list-ref (positive-proof-nodes proof) 4)))
+                            (set-cdr! (last-pair row) '(99))))))
+      ;; Duplicate roots still fail the existing completed-answer cardinality check.
+      (let* ((proof (fresh)) (roots (positive-proof-roots proof)))
+        (set-cdr! roots (list (car roots)))
+        (check-equal? (verify proof) #f)))
     (test-case "wrong native answer and insufficient work cannot prove"
       (let ((spec (graph-spec (list (vector 'edge '(2 3) 6)))))
         (check-equal?

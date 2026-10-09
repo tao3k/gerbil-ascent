@@ -1032,3 +1032,22 @@ duplicate rows, false values and eight simultaneous readers are qualified in
 unit tests. Complete source-workflow A/B includes held-cut publication and an
 observe-every-update control. The latter has a small overhead, documented with
 the batch gains in =t/performance/source-cut-log/README.org=.
+
+* Use constructor ownership to prove local query metadata
+
+Gerbil =1cfb032= =compiler/optimize-call.ss:259= applies =using= after class
+resolution establishes provenance. The expression abstraction belongs at the
+point where the constructor contract supplies the proof; it is not a cast of
+untrusted external values. In UF freeze, final private =frozen-members= captures
+detached members and committed size together. Rectangle cardinalities use that
+metadata instead of rescanning rows, and the source capture is selected once
+for all of its outgoing descriptors. Frozen views retain no mutable UF owner.
+
+A construction traversal can also prove a cheaper membership operation.
+Rectangle routing finishes one bucket before another begins, so any repeated
+member of the active bucket must have that bucket at the head of its hit list.
+Checking only that head replaces scans through unrelated owners and preserves
+the first equal value's identity. Keep the ordering premise next to the
+optimized expression and qualify duplicate members, repeated keys, overlapping
+owners and visitor parity. Complete freeze/publication controls are recorded in
+=t/performance/frozen-routing/README.org=.

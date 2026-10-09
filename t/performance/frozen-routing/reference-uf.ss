@@ -3,7 +3,7 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 ;;; Private union-find SCCs and reachability between component roots.
 ;;; Concrete frontier rows are returned, never retained in this provider.
-(import :gerbil-ascent/core/relation-view)
+(import :gerbil-ascent/t/performance/frozen-routing/reference-view)
 (export gerbil-ascent-trrel-uf-insert! gerbil-ascent-trrel-uf-freeze
         gerbil-ascent-trrel-uf-state gerbil-ascent-trrel-uf-extension
         gerbil-ascent-trrel-uf-frontier-extension gerbil-ascent-trrel-uf-snapshot
@@ -12,7 +12,6 @@
         gerbil-ascent-trrel-uf-observation gerbil-ascent-trrel-uf-validate)
 (defstruct uf-node (parent members size reach predecessors order))
 (defstruct uf-group (nodes roots next-order indexed?))
-(defstruct frozen-members (rows count) final: #t)
 (def (gerbil-ascent-trrel-uf-state) (make-hash-table))
 ;; Preflight reads parent links without compression, preserving rejected state.
 (def (root node)
@@ -216,19 +215,16 @@
             (prefix (if (= (car key) 3) (list (cadr key)) [])))
         (for-each (lambda (node)
           (let (owned (map values (uf-node-members node)))
-            (set! units (+ units (uf-node-size node)))
-            (hash-put! members node (make-frozen-members owned (uf-node-size node))))) (uf-group-roots group))
+            (set! units (+ units (length owned)))
+            (hash-put! members node owned))) (uf-group-roots group))
         (for-each (lambda (node)
-          ;; Capture each source owner once. Counts come from committed SCC
-          ;; metadata; no arc rescans a copied member spine for cardinality.
-          (using (left (hash-get members node) :- frozen-members)
-            (def (capture target)
-              (using (right (hash-get members target) :- frozen-members)
-                (set! count (+ count (* left.count right.count)))
-                (set! units (+ units 1))
-                (set! blocks (cons (make-rectangle prefix left.rows right.rows) blocks))))
-            (capture node)
-            (hash-for-each (lambda (target _) (capture target)) (uf-node-reach node))))
+          (def (capture target)
+            (let ((left (hash-get members node)) (right (hash-get members target)))
+              (set! count (+ count (* (length left) (length right))))
+              (set! units (+ units 1))
+              (set! blocks (cons (make-rectangle prefix left right) blocks))))
+          (capture node)
+          (hash-for-each (lambda (target _) (capture target)) (uf-node-reach node)))
           (uf-group-roots group)))) groups)
     (gerbil-ascent-rectangle-view (reverse blocks) count units indexed?)))
 

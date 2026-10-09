@@ -14,7 +14,7 @@
 (defstruct part-visitors (checked admitted))
 (defstruct row-stream (view columns key))
 (defstruct rectangle (prefix left right))
-(defstruct rectangle-bucket (members blocks count plain) final: #t)
+(defstruct rectangle-bucket (members blocks count plain))
 ;; : (-> FrozenView Symbol SourceGeneration Natural Symbol FrozenView)
 (def (gerbil-ascent-view-bind view identity generation revision lane)
   (make-relation-view identity generation revision lane (relation-view-count view)
@@ -212,18 +212,16 @@
         (add! (+ offset 1) (rectangle-right block) (rectangle-right block)))) blocks (iota (length blocks)))
     (for-each (lambda (column)
       (hash-for-each (lambda (_ bucket)
-        (using (bucket :- rectangle-bucket)
-          (set! bucket.blocks (reverse bucket.blocks))
-          (set! bucket.plain (map cdr bucket.blocks))
+        (rectangle-bucket-blocks-set! bucket (reverse (rectangle-bucket-blocks bucket)))
+        (rectangle-bucket-plain-set! bucket (map cdr (rectangle-bucket-blocks bucket)))
+        (for-each (lambda (member)
           (let (table (vector-ref routes column))
-            (for-each (lambda (member)
-              (let (hits (or (hash-get table member) []))
-                ;; Construction finishes this bucket before any other bucket
-                ;; inserts. A duplicate must therefore have this owner at the
-                ;; head; retain its first stored value without scanning hits.
-                (unless (and (pair? hits) (eq? (cdar hits) bucket))
-                  (hash-put! table member (cons (cons (list member) bucket) hits))))) bucket.members))))
-        (vector-ref owners column))) (iota arity))
+            (let (hits (or (hash-get table member) []))
+              ;; Keep the first stored value for this owned member spine, even
+              ;; when callers use an equal but distinct query object.
+              (unless (ormap (lambda (hit) (eq? (cdr hit) bucket)) hits)
+                (hash-put! table member (cons (cons (list member) bucket) hits))))))
+          (rectangle-bucket-members bucket))) (vector-ref owners column))) (iota arity))
     routes))
 ;; Choose the smallest descriptor bucket, then preserve captured traversal order.
 ;; Other coordinates (including repeated constraints) remain checked by visitor.

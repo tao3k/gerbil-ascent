@@ -28,6 +28,25 @@ in =scan_movable_objs_to_scan= during eager imports. This is not a successful
 local whole-roster receipt or evidence of a faster end-to-end run. Linux CI must
 independently satisfy the unchanged source-test deadline on the final revision.
 
+** Darwin timeout recovery through standard tool dispatch
+
+The ordinary source branch now invokes =gerbil -:max-heap=2G,debug=q test=,
+instead of importing the test tool into Gxi's interactive top context and
+looking up =main= there. Gerbil's standard tool dispatcher imports the tool and
+invokes its exported runtime binding directly. Discovery, Case execution and
+the existing verdict checks remain unchanged. The 180-second deadline and
+2 GiB heap remain fixed; no pool, module eviction or additional build is added.
+
+The direct standard entry completed all 101 committed modules / 921 Cases with
+final =OK= and exit zero on Darwin. A subsequent =just test= completed the same
+921 Cases but rejected a newly appearing, uncommitted =ascent-delta-sets-test.ss=
+with a reader error at line 42. That concurrent-worktree failure is not a full
+PASS, even though it no longer timed out. An intentional failing-Case control
+also returned nonzero through the Just entry. Direct AOT =gxtest= was rejected
+because it emitted =illegal import= errors despite exit zero; it is not used.
+These observations establish a bounded entry correction, not a universal GC
+or cold-build speedup. Final-revision CI must qualify the committed roster.
+
 Before the parallel eqrel rebase, the semantic roster contained 89 Suites and 844 Cases. Seven performance Suites
 retain 10 Cases, including the original lifecycle benchmark moved unchanged to
 its performance namespace. Native compiled semantics and performance contracts

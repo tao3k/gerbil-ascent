@@ -62,7 +62,7 @@ _test-file path heap='2G':
         test_module="$compiled"
         runner=({{ gxi_command }} {{ gerbil_test_runtime_options }} :gerbil/tools/gxtest)
     else
-        runner=({{ gxi_command }} -:max-heap={{ heap }},debug=q :gerbil/tools/gxtest)
+        runner=({{ gerbil_command }} -:max-heap={{ heap }},debug=q test)
     fi
     timeout "${ASCENT_GXTEST_TIMEOUT:-120s}" "${runner[@]}" -v 5 "$test_module" 2>&1 | tee "$output_file"
     if grep -E 'ERROR (CHECK|CASE|HARNESS|MODULE)|Heap overflow|Stack overflow' "$output_file" >/dev/null; then exit 1; fi

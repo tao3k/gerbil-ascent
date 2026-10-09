@@ -1125,3 +1125,23 @@ named functions without adding a public generic dispatch protocol. Complete
 construction A/B and exhaustive finite ordering controls are in
 =t/performance/component-construction/README.org=, including the rejected
 hash-only allocation experiment and final fan-in allocation tradeoff.
+
+* Let the consuming owner decide whether metadata needs materialization
+
+Gerbil =1cfb032= =std/iter/macros.ss:88-127,282-298= specializes native iteration
+and folds; =std/list/list-builder.ss:6-22= owns ordered list construction.
+=std/text/parser/ll1.ss:225-230= uses that builder for a complete parser traversal.
+Use these forms for a synchronous producer/collector flow instead of mapping,
+flattening and filtering lists before the consumer decides it needs them.
+
+In =program/index.ss=, metadata adapters feed one private owner. Admission of
+live physical state precedes traversal. Canonical owners skip unused metadata;
+curried owners deduplicate their own relation/column requirements without
+inspecting expression terms. Collection completes into a fresh ordered spine
+before publication. A failed traversal retains earlier requirements. Deferred
+layout publication visits only relations with admitted requirements.
+=program/component-worker.ss= now registers bodies directly, preserving its
+independent row/frame ownership. The native lifecycle benchmark and failure,
+ordering and expression controls are in
+=t/performance/index-requirements/README.org=, including small-input allocation
+costs and the limited benefit of the initial traversal-only experiment.

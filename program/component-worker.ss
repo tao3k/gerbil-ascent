@@ -5,7 +5,7 @@
 ;;; One assigned SCC owns its transferred root/size vectors, fresh frames,
 ;;; physical indexes and output membership. Borrowed row roots stay persistent.
 (import (only-in "component-plan.ss" positive-component-members positive-component-rules)
-        (only-in "index.ss" gerbil-ascent-make-row-indexes row-indexes-rows row-indexes-advance! row-indexes-plan-actions!)
+        (only-in "index.ss" gerbil-ascent-make-row-indexes row-indexes-rows row-indexes-advance! row-indexes-plan-positive-rules!)
         (only-in :gerbil-ascent/core/positive-plan gerbil-ascent-run-positive-plan!))
 (export make-component-snapshot gerbil-ascent-run-positive-component!)
 (defstruct component-snapshot (rows sizes))
@@ -44,8 +44,7 @@
                        (vector (vector-ref rule 0) (vector-ref rule 1)
                                (make-vector (vector-ref (vector-ref rule 0) 2) #f)))
                      (positive-component-rules component))))
-    (row-indexes-plan-actions! indexes
-     (foldr append [] (map (lambda (rule) (vector-ref (vector-ref rule 0) 1)) rules)))
+    (row-indexes-plan-positive-rules! indexes rules)
     (for-each
      (lambda (index)
        (let (table (make-hash-table))

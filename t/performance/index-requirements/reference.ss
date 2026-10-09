@@ -4,9 +4,7 @@
 
 ;;; One engine's physical indexes over live all/delta vectors. Metadata plans
 ;;; stay immutable; source admission and row/version publication stay in evaluate.
-(import (only-in :std/iter for for/fold in-vector in-range)
-        (only-in :std/list/list-builder with-list-builder)
-        :gerbil-ascent/core/relation-view
+(import :gerbil-ascent/core/relation-view
         (only-in :gerbil-ascent/table/index-sharing gerbil-ascent-index-sharing-layout
                  gerbil-ascent-shared-index-build gerbil-ascent-shared-index-extend!
                  gerbil-ascent-shared-index-rows)
@@ -20,49 +18,9 @@
         (rename-in (only-in :gerbil-ascent/table/funs gerbil-ascent-index-key
                            gerbil-ascent-index-row-snapshot)
                    (gerbil-ascent-index-key row-key)))
-(export gerbil-ascent-make-row-indexes row-indexes-rows row-indexes-visit-parts row-indexes-advance! row-indexes-plan-atoms! row-indexes-plan-rules! row-indexes-plan-actions! row-indexes-plan-positive-rules!)
+(export gerbil-ascent-make-row-indexes row-indexes-rows row-indexes-visit-parts row-indexes-advance! row-indexes-plan-atoms! row-indexes-plan-rules! row-indexes-plan-actions!)
 
-(defstruct row-indexes (rows advance! plan! visit-parts))
-
-;;; Public metadata adapters feed one synchronous, owner-controlled collector.
-;;; Physical state admission precedes traversal; unused metadata stays borrowed.
-;; row-indexes-plan-atoms!
-;; : (-> RowIndexes (-> AdmittedAtoms Void))
-;; | doc m%
-;;     Return the owner-bound atom registration procedure. Borrow immutable atom
-;;     descriptors; detach retained requirement spines before publication.
-;;
-;;     # Examples
-;;
-;;     ```scheme
-;;     ((row-indexes-plan-atoms! indexes) atoms)
-;;     ```
-;;   %
-(def (row-indexes-plan-atoms! indexes)
-  (lambda (atoms)
-    ((row-indexes-plan! indexes) (lambda (accept!) (for-each accept! atoms)))))
-
-(def (visit-action-atoms! actions accept!)
-  (for-each (lambda (action)
-              (let (atom (vector-ref action 0))
-                (when (vector? atom) (accept! atom)))) actions))
-
-;;; Sharing consumes relation/column requirements, not expression identities.
-;;; Keep the first representative in source order; terms remain unevaluated.
-(def (collect-sharing-atoms visit! providers)
-  (let (seen (make-vector (vector-length providers) #f))
-    (with-list-builder (collect!)
-      (def (accept! atom)
-        (let ((index (vector-ref atom 0)) (columns (vector-ref atom 2)))
-          (when (and (gerbil-ascent-curried-index-provider? (vector-ref providers index))
-                     (pair? columns))
-            (let (table (or (vector-ref seen index)
-                           (let (fresh (make-hash-table))
-                             (vector-set! seen index fresh) fresh)))
-              (unless (hash-get table columns)
-                (hash-put! table columns #t)
-                (collect! atom))))))
-      (visit! accept!))))
+(defstruct row-indexes (rows advance! plan-atoms! visit-parts))
 
 ;;; Custom indexes may overselect candidates, but each must still represent
 ;;; a complete relation tuple. Check the whole batch before term callbacks.
@@ -139,13 +97,13 @@
 ;;     ```
 ;;   %
 (def (row-indexes-plan-rules! indexes rules)
-  ((row-indexes-plan! indexes)
-   (lambda (accept!)
-     (for-each (lambda (rule)
-                 (for-each (lambda (clause)
-                             (when (memq (vector-ref clause 0) '(atom negation aggregate))
-                               (accept! (vector-ref clause 1))))
-                           (vector-ref rule 1))) rules))))
+  ((row-indexes-plan-atoms! indexes)
+   (foldr append []
+    (map (lambda (rule)
+           (filter-map (lambda (clause)
+                         (and (memq (vector-ref clause 0) '(atom negation aggregate))
+                              (vector-ref clause 1)))
+                       (vector-ref rule 1))) rules))))
 
 ;; row-indexes-plan-actions!
 ;; : (forall (i a) (-> (RowIndexes i) [(CompiledAction a)] Void))
@@ -162,26 +120,9 @@
 ;;     ```
 ;;   %
 (def (row-indexes-plan-actions! indexes actions)
-  ((row-indexes-plan! indexes) (cut visit-action-atoms! actions <>)))
-
-;;; SCC rule wrappers share admitted bodies; never flatten their action lists.
-;; row-indexes-plan-positive-rules!
-;; : (-> RowIndexes [PositiveRule] Void)
-;; | doc m%
-;;     Register lookup requirements from admitted SCC rule wrappers in rule and
-;;     action order. The index owner decides whether collection is needed.
-;;
-;;     # Examples
-;;
-;;     ```scheme
-;;     (row-indexes-plan-positive-rules! indexes component-rules)
-;;     ```
-;;   %
-(def (row-indexes-plan-positive-rules! indexes rules)
-  ((row-indexes-plan! indexes)
-   (lambda (accept!)
-     (for-each (lambda (rule)
-                 (visit-action-atoms! (vector-ref (vector-ref rule 0) 1) accept!)) rules))))
+  ((row-indexes-plan-atoms! indexes)
+   (filter-map (lambda (action)
+                 (and (vector? (vector-ref action 0)) (vector-ref action 0))) actions)))
 
 ;;; Stable entries belong to one engine. Column tables share them across
 ;;; equivalent atoms; identity tables only shortcut that structural resolution.
@@ -192,8 +133,8 @@
    (lambda (atom environment use-delta? slot-terms)
      (error "ASCENT empty index owner has no lookup consumer"))
    (lambda (index rows (reverse-order? #f)) (void))
-   (lambda (visit!)
-     (visit! (lambda (_) (error "ASCENT empty index owner has lookup requirements")))) #f))
+   (lambda (atoms)
+     (unless (null? atoms) (error "ASCENT empty index owner has lookup requirements"))) #f))
 
 (defstruct physical-index-entry (version lookup shared? witness))
 (defstruct atom-index-view (entry permutation))
@@ -222,8 +163,6 @@
   (let ((all-indexes #f) (delta-indexes #f)
         (all-atoms #f) (delta-atoms #f)
         (layouts (make-vector (vector-length all) #f)) (planned-atoms #f)
-        (sharing? (for/fold (found? #f) (provider (in-vector index-providers))
-                    (or found? (gerbil-ascent-curried-index-provider? provider))))
         (ordered-all #f) (ordered-delta #f))
       (def (ordered-cut captured index use-delta?)
         (let* ((cache (if use-delta?
@@ -241,14 +180,12 @@
                          (gerbil-ascent-view-rows captured)
                          (reverse (gerbil-ascent-view-rows captured))))
               (vector-set! cache index (cons captured rows)) rows))))
-      (def (plan! visit!)
+      (def (plan-atoms! atoms)
         (when (or all-indexes delta-indexes) (error "cannot replan a live physical index"))
         ;; Small snapshots need no physical plan. An explicit curried receiver
         ;; triggers planning only when an actual lookup first needs an index.
-        ;; Complete a fresh owned spine before replacing earlier requirements.
-        ;; Providers that do not share chains need no metadata traversal.
-        (let (fresh (and sharing? (collect-sharing-atoms visit! index-providers)))
-          (set! planned-atoms (and (pair? fresh) fresh))))
+        (set! planned-atoms
+          (and (ormap gerbil-ascent-curried-index-provider? (vector->list index-providers)) atoms)))
       (def (ensure-layouts!)
         (when planned-atoms
           (let ((requirements (make-vector (vector-length all) []))
@@ -260,11 +197,10 @@
                             (= (length columns) (hash-length (let (seen (make-hash-table-eq))
                               (for-each (lambda (c) (hash-put! seen c #t)) columns) seen))))
                    (vector-set! requirements i (cons columns (vector-ref requirements i)))))) planned-atoms)
-            (for (i (in-range (vector-length all)))
-              (let (columns (vector-ref requirements i))
-                (when (pair? columns)
-                  (let (layout (gerbil-ascent-index-sharing-layout columns))
-                    (vector-set! fresh i (and (> (hash-length layout) 0) layout))))))
+            (for-each (lambda (i)
+                        (let (layout (gerbil-ascent-index-sharing-layout (vector-ref requirements i)))
+                          (vector-set! fresh i (and (> (hash-length layout) 0) layout))))
+                      (iota (vector-length all)))
             ;; Metadata publication follows successful complete planning.
             (set! layouts fresh) (set! planned-atoms #f))))
       (def (visit-parts atom environment use-delta? slot-terms consume)
@@ -404,4 +340,4 @@
                         (physical-index-entry-witness entry) rows columns))
                      (physical-index-entry-version-set! entry (+ version 1)))))
                cache)))))
-    (make-row-indexes indexed-rows advance-all-indexes! plan! visit-parts)))
+    (make-row-indexes indexed-rows advance-all-indexes! plan-atoms! visit-parts)))

@@ -243,7 +243,7 @@ then enters its terminal =bounded= path and returns no partial material.
 | Count distinct seed and derived reservations | =accepted_exact= and =successful_trace_exact= | =CountExact=; omitted-seed fault |
 | Preserve counters on refusal | =refused_unchanged= and =refused_iff= | Reservation precedes copying; native refusal/retry control |
 | Bound every successful finite trace | =successful_trace_bounds=, assuming admitted initial counters | Exact-width finite state exploration |
-| Stop failed producers; publish no partial closure | =blocked_trace_stays_blocked= models option propagation | =FailureTerminal= and =NoPartialPublication=; resume/partial-publication faults |
+| Stop failed producers; publish no partial closure | =trace_append= and =blocked_trace_stays_blocked= reject every suffix after any failed prefix | =FailureTerminal= and =NoPartialPublication=; resume/partial-publication faults |
 
 [[file:../packages/proofs/lean/CertificateMaterial.lean][Lean]] quantifies over natural caps and arbitrary finite width traces. Native
 decoding, scalar equality and deduplication supply those widths; the theorem

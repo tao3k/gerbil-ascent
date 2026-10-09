@@ -65,8 +65,17 @@ theorem successful_trace_exact (cap : Limits) (widths : List Nat) (u v : Usage)
       have ht := ih next h
       simp only [List.length_cons, List.sum_cons]
       constructor <;> omega
-theorem blocked_trace_stays_blocked (cap : Limits) (widths : List Nat) :
-    (none : Option Usage).bind (fun u => reserveAll cap u widths) = none := rfl
+theorem trace_append (cap : Limits) (initialWidths laterWidths : List Nat) (u : Usage) :
+    reserveAll cap u (initialWidths ++ laterWidths) =
+      (reserveAll cap u initialWidths).bind (fun next => reserveAll cap next laterWidths) := by
+  induction initialWidths generalizing u with
+  | nil => simp [reserveAll]
+  | cons width rest ih =>
+    cases hr : reserve cap u width <;> simp [reserveAll, hr, ih]
+theorem blocked_trace_stays_blocked (cap : Limits) (initialWidths laterWidths : List Nat) (u : Usage)
+    (h : reserveAll cap u initialWidths = none) :
+    reserveAll cap u (initialWidths ++ laterWidths) = none := by
+  rw [trace_append, h]; rfl
 theorem successful_trace_bounds (cap : Limits) (widths : List Nat) (u v : Usage)
     (initial : u.rows ≤ cap.rows ∧ u.cells ≤ cap.cells)
     (h : reserveAll cap u widths = some v) :

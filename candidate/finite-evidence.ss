@@ -164,23 +164,24 @@
                        (let* ((output (cadr clause))
                               (operator (caddr clause))
                               (atom (cadddr clause))
+                              (count? (eq? (car operator) 'count))
+                              (count 0)
                               (matches []))
-                         (for-each
-                          (lambda (row)
-                            (when (step!)
-                              (let (next (candidate-bind-atom atom row bindings))
+                         (let probe ((remaining (rows (car atom))))
+                           (when (and (pair? remaining) (step!))
+                              (let (next (candidate-bind-atom atom (car remaining) bindings))
                                 (when next
-                                  (set! matches
-                                    (cons (if (eq? (car operator) 'count)
-                                            #t
-                                            (cdr (candidate-required-entry
-                                                  (cadr operator) next)))
-                                          matches))))))
-                          (rows (car atom)))
+                                  (if count?
+                                    (set! count (+ count 1))
+                                    (set! matches
+                                      (cons (cdr (candidate-required-entry
+                                                  (cadr operator) next))
+                                            matches)))))
+                             (probe (cdr remaining))))
                          (unless bounded?
                            (let (value
                                  (case (car operator)
-                                   ((count) (length matches))
+                                   ((count) count)
                                    ((sum) (and (andmap exact-integer? matches)
                                                (apply + 0 matches)))
                                    ((min) (and (pair? matches)

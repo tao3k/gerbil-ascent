@@ -62,7 +62,7 @@
      'valid)
     (values spec digest rows certificate)))
 
-(def (reducer-program mode root)
+(def (reducer-program mode root (input-limit 8) (output-limit 32))
   (list 'candidate
         '(relation total 2)
         (list 'rule '(total ?r ?v) '(root ?r)
@@ -70,7 +70,7 @@
                     (if (eq? mode 'count) '(count) (list mode '?w))
                     '(weight ?r ?w)))
         (list 'query 'total root '?v)
-        '(limits 8 16 32)))
+        (list 'limits input-limit 16 output-limit)))
 
 (def six-edges '((0 1) (0 2) (1 0) (1 2) (2 0) (2 1)))
 
@@ -111,6 +111,21 @@
 
 (def ascent-finite-evidence-test
   (test-suite "finite stratified replay evidence"
+    (test-case "count accepts nonnumeric matching scalar rows"
+      (check-case (reasoning-source-snapshot 'count-scalars 0
+                    '((root 1 ((1))) (weight 2 ((1 alpha) (1 beta) (2 gamma)))))
+                  (reducer-program 'count 1) '((1 2))))
+    (test-case "streaming count filters rows and refuses an incomplete scan"
+      (let* ((snapshot (reasoning-source-snapshot 'count-scan 0
+                        (list '(root 1 ((0)))
+                              (list 'weight 2 (map (lambda (i) (list (modulo i 2) i)) (iota 1023))))))
+             (datum (reducer-program 'count 0 1024 2048)))
+        (let-values (((spec digest rows certificate) (check-case snapshot datum '((0 512)))))
+          (check-equal? (candidate-verify-finite-evidence snapshot spec digest 'complete rows certificate 2047) 'bounded)
+          (check-equal? (candidate-verify-finite-evidence snapshot spec digest 'complete rows certificate 2048) 'valid)
+          (let (refused (candidate-finite-evidence snapshot spec digest 'complete rows 2047))
+            (check-equal? (finite-evidence-status refused) 'bounded)
+            (check-equal? (finite-evidence-closure refused) [])))))
     (test-case "negative probes stop at witnesses and charge complete absence"
       (def (check-probe rows literal budget expected native-rows)
         (let* ((input (reasoning-source-snapshot 'negative-probe 0 (list (list 'known 1 rows))))

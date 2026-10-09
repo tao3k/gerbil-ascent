@@ -301,3 +301,40 @@ An empty relation similarly needs two charged continuations across both passes.
 Every completed certificate is independently verified at the same budget.
 These exact operation controls establish removed probes, not a wall-clock or
 whole-engine speedup. No semantic, material or work limit is increased.
+
+* Streaming count over completed logical rows (2026-10-09)
+
+Re-reading [[https://kmicinski.com/assets/byods.pdf][B23]], §3, keeps tuple enumeration separate from the physical
+representation: its concretization supplies logical tuples. Our count transfer
+therefore counts matching frozen rows, not storage entries or representatives.
+The paper's core positive calculus does not prove our aggregate or budget policy.
+Count remains a strict lower-stratum read under the existing admission rules.
+
+=candidate/finite-evidence.ss= now accumulates count in one integer instead of
+consing a marker for each matching row and traversing that temporary list again.
+Every probe still charges the original work budget, unmatched rows contribute
+zero, and exhausted scans publish no partial count or closure. All reducer
+scans stop traversing when the budget refuses; sum/min/max retain their existing
+value-list semantics. No new provider cardinality shortcut is admitted.
+
+[[file:../packages/proofs/lean/CountReduction.lean][CountReduction]] proves five pure laws: filtered-list count equivalence,
+prefix composition, unmatched-row preservation, exact suffix contribution and
+the cardinality of rows selected by an arbitrary Boolean binding predicate.
+Five compile-time examples retain empty groups, nonzero initial counts and
+mixed matching outcomes. Lawful native binding and complete distinct row
+enumeration remain representation premises, not an extraction claim.
+
+[[file:../packages/proofs/quint/CountProbe.qnt][CountProbe]] explores 47 states for frozen input lists and budgets. Prefix
+counts, exact complete publication, unpublished refused state, terminal failure
+and position bounds hold. Counting unmatched rows, early completion, publishing
+a refused prefix and resuming failure each produce the designated counterexample.
+An empty scan completes without an extra probe; this differs deliberately from
+the negative-clause continuation charge. No general liveness claim is made.
+
+The native control initializes 1024 source rows, filters 1023 weight rows to
+512 matches, and agrees with the actual completed native count. Both fixed-point
+passes finish at 2048 work steps; 2047 is bounded in generation and independent
+verification and returns no partial closure. Existing count/sum/min/max and
+empty-group controls remain; a mixed symbolic-scalar control also agrees with
+the native count and independent verifier. This removes a temporary list and its length pass;
+there is no measured wall-clock or whole-engine performance claim.

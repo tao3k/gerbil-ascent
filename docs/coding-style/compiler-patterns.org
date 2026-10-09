@@ -1106,3 +1106,22 @@ for journal-backed total/delta metadata. The exporter closes over its frozen cut
 without retaining live routing state. Populated source/held-cut controls and
 complete publication/routing A/B are in
 =t/performance/view-source-publication/README.org=.
+
+* Specialize complete construction under explicit publication owners
+
+Gerbil =1cfb032= =compiler/optimize-call.ss:89-113,190-232= guards admission
+before shape-directed transformations and shares common transformation owners.
+Use that structure to preserve a full survivor directly; allocate projections
+only when ownership actually splits. In =program/component-plan.ss=,
+=project-component-rule!= and =publish-component-rule!= own this protocol.
+Empty outputs, duplicate heads and shared admitted body metadata retain their
+existing contracts.
+
+Predecessor registration similarly owns first-encounter order and membership.
+The first predecessor stays inline, a second distinct ID admits sparse storage,
+and sufficient occupancy pays for a compact bitmap. Returned execution metadata
+retains neither storage representation. This keeps a private algorithm under
+named functions without adding a public generic dispatch protocol. Complete
+construction A/B and exhaustive finite ordering controls are in
+=t/performance/component-construction/README.org=, including the rejected
+hash-only allocation experiment and final fan-in allocation tradeoff.

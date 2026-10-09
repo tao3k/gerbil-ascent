@@ -14,69 +14,6 @@
         positive-component-members positive-component-rules positive-component-predecessors)
 (defstruct positive-component (id members rules predecessors))
 
-;;; Publication owns the rule wrapper; full survivors retain admitted identity.
-(def (publish-component-rule! component plan pivots)
-  (positive-component-rules-set! component
-    (cons (vector plan pivots) (positive-component-rules component))))
-
-(def (project-component-rule! rule membership)
-  (let ((full (vector-ref rule 5)) (pivots (vector-ref rule 2)))
-    (unless (gerbil-ascent-pure-positive-plan? full)
-      (error "unsupported ASCENT positive SCC rule"))
-    (def (owner output)
-      (vector-ref membership (vector-ref (vector-ref output 0) 0)))
-    (match (vector-ref full 0)
-      ([] (void))
-      ([first . rest]
-       (let (component (owner first))
-         (if (andmap (lambda (output) (eq? component (owner output))) rest)
-           (publish-component-rule! component full pivots)
-           (let (grouped (make-hash-table-eq))
-             (for-each (lambda (output)
-                         (hash-update! grouped (owner output) (cut cons output <>) []))
-                       (vector-ref full 0))
-             (hash-for-each
-              (lambda (component outputs)
-                (publish-component-rule! component
-                  (gerbil-ascent-positive-plan-with-outputs full (reverse! outputs)) pivots))
-              grouped))))))))
-
-;;; Keep the first predecessor inline. Promote to construction-owned membership
-;;; only on a second distinct predecessor; returned metadata retains no tables.
-(def (bitmap-first-visit! bitmap id)
-  (let* ((byte (quotient id 8)) (mask (arithmetic-shift 1 (modulo id 8)))
-         (previous (u8vector-ref bitmap byte)))
-    (and (zero? (bitwise-and previous mask))
-         (begin (u8vector-set! bitmap byte (bitwise-ior previous mask)) #t))))
-
-;;; A hash entry costs more than a bit. Promote only when observed occupancy
-;;; pays for the entire dense bitmap, so sparse graphs retain sparse storage.
-(def (predecessor-first-visit! seen target id first)
-  (let (members (vector-ref seen target))
-    (unless members
-      (set! members (make-hash-table-eqv))
-      (hash-put! members first #t)
-      (vector-set! seen target members))
-    (cond
-     ((u8vector? members) (bitmap-first-visit! members id))
-     ((hash-get members id) #f)
-     (else
-      (hash-put! members id #t)
-      (when (>= (hash-length members) (max 32 (quotient (vector-length seen) 128)))
-        (let (bitmap (make-u8vector (quotient (+ (vector-length seen) 7) 8) 0))
-          (hash-for-each (lambda (key _) (bitmap-first-visit! bitmap key)) members)
-          (vector-set! seen target bitmap)))
-      #t))))
-
-(def (register-component-predecessor! from to seen)
-  (unless (eq? from to)
-    (let ((id (positive-component-id from))
-          (previous (positive-component-predecessors to)))
-      (unless (and (pair? previous) (eqv? id (car previous)))
-        (when (or (null? previous)
-                  (predecessor-first-visit! seen (positive-component-id to) id (car previous)))
-          (positive-component-predecessors-set! to (cons id previous)))))))
-
 ;;; Primitive operations own the cache lock; complete immutable planning stays
 ;;; outside it. Failed construction publishes nothing. Source/frame state never
 ;;; enters this cache. Preserve the existing weak Analysis identity key.
@@ -122,8 +59,7 @@
          (groups (gerbil-ascent-graph-components successors))
          (membership (make-vector count #f))
          (components (map (lambda (id members) (make-positive-component id members [] []))
-                          (iota (length groups)) groups))
-         (predecessors-seen (make-vector (length groups) #f)))
+                          (iota (length groups)) groups)))
     (for-each
      (lambda (component)
        (for-each (lambda (relation) (vector-set! membership relation component))
@@ -131,13 +67,31 @@
     (for-each
      (lambda (rules)
        (for-each
-        (cut project-component-rule! <> membership) rules))
+        (lambda (rule)
+          (let ((full (vector-ref rule 5)) (outputs-by-component (make-hash-table-eq)))
+            (unless (gerbil-ascent-pure-positive-plan? full) (error "unsupported ASCENT positive SCC rule"))
+            (for-each
+             (lambda (output)
+               (let (component (vector-ref membership (vector-ref (vector-ref output 0) 0)))
+                 (hash-update! outputs-by-component component (cut cons output <>) [])))
+             (vector-ref full 0))
+            (let (single? (= (hash-length outputs-by-component) 1))
+              (hash-for-each
+               (lambda (component outputs)
+                 (let (plan (if single? full
+                              (gerbil-ascent-positive-plan-with-outputs full (reverse! outputs))))
+                   (positive-component-rules-set! component
+                     (cons (vector plan (vector-ref rule 2)) (positive-component-rules component)))))
+               outputs-by-component)))) rules))
      (vector->list (vector-ref analysis 5)))
     (for-each
      (lambda (source)
        (for-each
         (lambda (target)
-          (register-component-predecessor! (vector-ref membership source)
-                                           (vector-ref membership target) predecessors-seen))
+          (let ((from (vector-ref membership source)) (to (vector-ref membership target)))
+            (unless (or (eq? from to)
+                        (memv (positive-component-id from) (positive-component-predecessors to)))
+              (positive-component-predecessors-set! to
+                (cons (positive-component-id from) (positive-component-predecessors to))))))
         (vector-ref successors source))) (iota count))
     components))

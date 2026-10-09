@@ -1,0 +1,122 @@
+;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+(import :std/test (only-in :clan/poo/object .ref)
+        :gerbil-ascent/candidate/withdrawal-session
+        (only-in :gerbil-ascent/candidate/reasoning reasoning-source-snapshot
+                 reasoning-attempt reasoning-receipt-bound? reasoning-receipt-rows)
+        (only-in :gerbil-ascent/candidate/types reasoning-snapshot-generation reasoning-snapshot-identity
+                 reasoning-snapshot-relations)
+        (only-in :gerbil-ascent/candidate/funs candidate-same-row-set?)
+        (only-in :gerbil-ascent/program/scheme-language relational-program)
+        (only-in :gerbil-ascent/program/session gerbil-ascent-open-session
+                 gerbil-ascent-session-run gerbil-ascent-session-run-timeout
+                 gerbil-ascent-session-append-source! gerbil-ascent-session-replace-source!
+                 gerbil-ascent-session-replace-sources!))
+(export ascent-withdrawal-session-test)
+(def proposal '(candidate (relation path 2)
+                 (rule (path ?x ?y) (edge ?x ?y))
+                 (rule (path ?x ?z) (path ?x ?y) (edge ?y ?z))
+                 (query path ?x ?y) (limits 32 128 256)))
+(def (source edges) (reasoning-source-snapshot 'withdrawal 0 (list (list 'edge 2 edges))))
+(def (observed session) (candidate-withdrawal-observe session))
+(def (check-set a b) (check-equal? (candidate-same-row-set? a b) #t))
+;;; Independent path walk, without candidate/native rule plans or support IDs.
+(def (reference edges)
+  (def (reaches? from target)
+    (let walk ((todo (map cadr (filter (lambda (edge) (= from (car edge))) edges))) (seen []))
+      (cond ((null? todo) #f) ((= (car todo) target) #t)
+            ((memv (car todo) seen) (walk (cdr todo) seen))
+            (else (walk (append (cdr todo)
+                          (map cadr (filter (lambda (edge) (= (car todo) (car edge))) edges)))
+                        (cons (car todo) seen))))))
+  (apply append (map (lambda (a)
+                      (filter-map (lambda (b) (and (reaches? a b) (list a b))) '(0 1 2))) '(0 1 2))))
+(def ascent-withdrawal-session-test
+  (test-suite "Grounded withdrawal and native publication"
+    (test-case "source occurrence ordinals rebind after every committed generation"
+      (let* ((cut (source '((0 1) (0 1) (1 2) (2 1))))
+             (receipt (reasoning-attempt cut proposal))
+             (session (candidate-open-withdrawal-session cut proposal))
+             (first (candidate-withdrawal-session! session 0 '((edge 1)))))
+        (check-equal? (reasoning-snapshot-generation (.ref first 'source)) 1)
+        (check-set (.ref first 'rows) (reasoning-receipt-rows receipt))
+        (check-equal? (reasoning-receipt-bound? receipt (.ref first 'source) proposal) #f)
+        (let (second (candidate-withdrawal-session! session 1 '((edge 1))))
+          (check-set (.ref second 'rows) '((1 2) (2 1) (1 1) (2 2)))
+          (check-equal? (reasoning-snapshot-relations (.ref second 'source))
+                        '((edge 2 ((1 2) (2 1)))))
+          (let (last (candidate-withdrawal-session! session 2 '((edge 1))))
+            (check-set (.ref last 'rows) '((2 1)))))))
+    (test-case "failed budget unknown duplicate and stale requests preserve the triple"
+      (let* ((session (candidate-open-withdrawal-session (source '((0 1) (1 2))) proposal))
+             (before (observed session)))
+        (for-each (lambda (bad)
+                    (check-exception (candidate-withdrawal-session! session 0 bad) (lambda (_) #t)))
+                  '(((edge 9)) ((missing 0)) ((edge 1) (edge 1)) () ((edge -1)) ((edge 0))))
+        (check-exception (candidate-withdrawal-session! session 0 '((edge 1)) 1) (lambda (_) #t))
+        (check-exception (candidate-withdrawal-session! session 1 '((edge 1))) (lambda (_) #t))
+        (check-equal? (reasoning-snapshot-generation (.ref (observed session) 'source)) 0)
+        (check-equal? (.ref (observed session) 'rows) (.ref before 'rows))
+        (check-set (.ref (candidate-withdrawal-session! session 0 '((edge 1))) 'rows) '((1 2)))))
+    (test-case "public observations and original proposal never borrow private owners"
+      (let* ((identity (string-copy "cut"))
+             (cut (reasoning-source-snapshot identity 0 '((edge 2 ((0 1) (1 2))))))
+             (p (call-with-input-string (call-with-output-string "" (lambda (port) (write proposal port))) read))
+             (session (candidate-open-withdrawal-session cut p))
+             (copy (observed session)))
+        (string-set! identity 0 #\X)
+        (string-set! (reasoning-snapshot-identity (.ref copy 'source)) 0 #\Y)
+        (set-car! p 'invalid)
+        (set-car! (car (.ref copy 'rows)) 'invalid)
+        (set-car! (car (caddr (car (reasoning-snapshot-relations (.ref copy 'source))))) 'invalid)
+        (check-equal? (reasoning-snapshot-identity (.ref (observed session) 'source)) "cut")
+        (check-set (.ref (observed session) 'rows) '((0 1) (1 2) (0 2)))
+        (check-set (.ref (candidate-withdrawal-session! session 0 '((edge 1))) 'rows) '((1 2)))))
+    (test-case "candidate fact support survives withdrawal of the equal source occurrence"
+      (let* ((p '(candidate (relation path 2) (fact edge 0 1)
+                  (rule (path ?x ?y) (edge ?x ?y)) (query path ?x ?y) (limits 8 16 32)))
+             (session (candidate-open-withdrawal-session (source '((0 1))) p)))
+        (check-set (.ref (candidate-withdrawal-session! session 0 '((edge 1))) 'rows) '((0 1)))))
+    (test-case "unsupported negative programs and incomplete graph admission reject"
+      (check-exception (candidate-open-withdrawal-session (source '((0 1))) proposal 1) (lambda (_) #t))
+      (check-exception
+        (candidate-open-withdrawal-session (source '((0 1)))
+          '(candidate (relation absent 2)
+            (rule (absent ?x ?y) (edge ?x ?y) (not (edge ?y ?x)))
+            (query absent ?x ?y) (limits 8 16 32))) (lambda (_) #t)))
+    (test-case "native acceptance failure and reentry never publish prospective rows"
+      (let* ((p (relational-program (relation edge (x y) '((0 1)))
+                    (relation path (x y) '()) (rule (path ?x ?y) (edge ?x ?y)) (limits 8 16 32)))
+             (session (gerbil-ascent-open-session p))
+             (before (gerbil-ascent-session-run session)))
+        (for-each
+          (lambda (accept)
+            (check-exception (gerbil-ascent-session-replace-sources! session '((edge (1 2))) accept)
+                             (lambda (_) #t))
+            (check-set ((.ref (gerbil-ascent-session-run session) 'rows-of) 'path) '((0 1))))
+          (list (lambda (_result) #f) (lambda (_result) 'truthy)
+                (lambda (_result) (error "rejected evidence"))
+                (lambda (_result) (gerbil-ascent-session-run session))
+                (lambda (_result) (gerbil-ascent-session-run-timeout session 0))
+                (lambda (_result) (gerbil-ascent-session-append-source! session 'edge '(2 0)))
+                (lambda (_result) (gerbil-ascent-session-replace-source! session 'edge '()))
+                (lambda (_result) (gerbil-ascent-session-replace-sources! session '((edge))))))
+        (let (result (gerbil-ascent-session-replace-sources! session '((edge (1 2))) (lambda (_) #t)))
+          (check-set ((.ref result 'rows-of) 'path) '((1 2)))
+          (check-set ((.ref before 'rows-of) 'path) '((0 1))))))
+    (test-case "all sixty-four source graphs and each occurrence cut match an independent walk"
+      (let (possible '((0 1) (0 2) (1 0) (1 2) (2 0) (2 1)))
+        (for-each
+          (lambda (mask)
+            (let (edges (filter-map (lambda (edge bit)
+                                    (and (not (zero? (bitwise-and mask bit))) edge))
+                                  possible '(1 2 4 8 16 32)))
+              (for-each
+                (lambda (ordinal)
+                  (let* ((session (candidate-open-withdrawal-session (source edges) proposal))
+                         (remaining (filter-map (lambda (edge index) (and (not (= index ordinal)) edge))
+                                               edges (iota (length edges))))
+                         (after (candidate-withdrawal-session! session 0 (list (list 'edge (+ ordinal 1))))))
+                    (check-set (.ref after 'rows) (reference remaining))))
+                (iota (length edges))))) (iota 64))))))

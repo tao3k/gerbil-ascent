@@ -93,3 +93,8 @@ Another WD26 case withdraws the Massachusetts-to-US administrative edge from a
 complete positive grounded graph. Its preview, an independent source-pair walk
 and a fresh generation-bound candidate solve must agree on the remaining cities;
 the old state and receipt remain bound to the original cut.
+
+The [[file:../source-lifecycle/grounded-withdrawal.org][grounded withdrawal Session owner]] now supplies the bounded positive
+transaction bridge: current occurrence selection, complete graph rebinding and
+prepublication native row validation. It does not extend this insertion plan
+with general deletion semantics.

@@ -1,0 +1,37 @@
+/-
+SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+Current-cut one-based occurrence selection retains duplicate values separately.
+Native decoding and grounded graph coverage remain representation obligations.
+-/
+import Std
+namespace Ascent.SourceOccurrences
+variable {Row : Type}
+def withdraw (rows : List Row) (selected : List Nat) : List Row :=
+  ((rows.zipIdx 1).filter (fun entry => decide (entry.2 ∉ selected))).map Prod.fst
+/-- A value survives precisely when some unselected occurrence supports it. -/
+theorem survives (rows : List Row) (selected : List Nat) (row : Row) :
+    row ∈ withdraw rows selected ↔
+      ∃ occurrence ∈ rows.zipIdx 1, occurrence.1 = row ∧ occurrence.2 ∉ selected := by
+  simp only [withdraw, List.mem_map, List.mem_filter, decide_eq_true_eq]
+  constructor
+  · rintro ⟨occurrence, ⟨present, retained⟩, value⟩
+    exact ⟨occurrence, present, value, retained⟩
+  · rintro ⟨occurrence, present, value, retained⟩
+    exact ⟨occurrence, ⟨present, retained⟩, value⟩
+/-- The prospective source and evidence become visible through one publication. -/
+structure Cut (Source Evidence : Type) where
+  generation : Nat
+  source : Source
+  evidence : Evidence
+  deriving DecidableEq
+def publish (old next : Cut Source Evidence) (expected : Nat) (accepted : Bool) : Cut Source Evidence :=
+  if expected = old.generation ∧ accepted = true then next else old
+theorem rejection_preserves (old next : Cut Source Evidence) (expected : Nat) :
+    publish old next expected false = old := by simp [publish]
+theorem stale_preserves (old next : Cut Source Evidence) (expected : Nat)
+    (stale : expected ≠ old.generation) :
+    publish old next expected true = old := by simp [publish, stale]
+theorem accepted_publication (old next : Cut Source Evidence) :
+    publish old next old.generation true = next := by simp [publish]
+end Ascent.SourceOccurrences

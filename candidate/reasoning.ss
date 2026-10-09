@@ -42,7 +42,7 @@
                  relational-diagnostic-detail
                  relational-solve relational-query-name))
 
-(export reasoning-source-snapshot reasoning-attempt
+(export candidate-content-digest reasoning-source-snapshot reasoning-attempt
         reasoning-verify-finite-receipt
         reasoning-verify-stratified-receipt
         reasoning-receipt-bound?

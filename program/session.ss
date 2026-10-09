@@ -85,6 +85,7 @@
          (clean? #f)
          (partial? #f)
          (replay-on-timeout? #f)
+         (replacement-active? #f)
          (last-result #f)
          (engine (gerbil-ascent-make-engine initial-program #t #f #f
                                           measure-rule-times?))
@@ -182,7 +183,11 @@
           (set-cdr! source-state
             (vector-ref engine-additions index))))
       (set! clean? #f))
+    (def (check-idle!)
+      (when replacement-active?
+        (error "ASCENT session operation during replacement validation")))
     (def (append-source! name row)
+      (check-idle!)
       (when partial?
         (error "finish ASCENT partial run before changing sources"))
       (let* ((index (position-of name))
@@ -199,6 +204,7 @@
              (engine-append name owned-row)
              (record-append! index source-state))))))
     (def (direct-append-source! name row)
+      (check-idle!)
       (when partial?
         (error "finish ASCENT partial run before changing sources"))
       (let* ((index (position-of name))
@@ -206,6 +212,7 @@
         (engine-append name owned-row))
       (set! clean? #f))
     (def (replace-source! name rows)
+      (check-idle!)
       (when partial?
         (error "finish ASCENT partial run before changing sources"))
       ;; Opaque providers retain the deferred single-source update contract:
@@ -245,7 +252,15 @@
     ;;; Invalidate dependent relations and solve a prospective source snapshot before
     ;;; changing the retained engine. A failed batch leaves both the last
     ;;; completed result and its source state available for later updates.
-    (def (replace-sources! replacements)
+    (def (replace-sources! replacements (accept-result #f))
+      (check-idle!)
+      (unless (or (not accept-result) (procedure? accept-result))
+        (error "invalid ASCENT replacement acceptance procedure"))
+      (dynamic-wind
+        (lambda () (set! replacement-active? #t))
+        (lambda () (replace-sources/idle! replacements accept-result))
+        (lambda () (set! replacement-active? #f))))
+    (def (replace-sources/idle! replacements accept-result)
       (unless (and initialized? clean?)
         (error "batch replacement requires a completed clean session"))
       (unless (list? replacements)
@@ -277,6 +292,11 @@
                (result ((.ref fresh '.run))))
           (unless (.ref result 'finished)
             (error "batch source replacement did not complete"))
+          ;; A trusted owner checks evidence against this completed prospective
+          ;; result before any retained source or engine is published. Reentrant
+          ;; Session operations are rejected for the whole transaction.
+          (when (and accept-result (not (eq? #t (accept-result result))))
+            (error "ASCENT replacement result was not accepted"))
           (adopt-engine! fresh candidate)
           (set! pending (snapshot-copy prospective))
           (set! committed (snapshot-copy prospective))
@@ -286,6 +306,7 @@
           (set! partial? #f)
           result)))
     (def (run!)
+      (check-idle!)
       (if clean?
         last-result
         (let* ((next-pending
@@ -303,6 +324,7 @@
           (set! replay-on-timeout? #f)
           last-result)))
     (def (run-timeout! duration-nanoseconds)
+      (check-idle!)
 
       (unless (and (exact-integer? duration-nanoseconds)
                    (>= duration-nanoseconds 0))
@@ -359,8 +381,10 @@
 (def (gerbil-ascent-session-replace-source! session name rows)
   ((.ref session '.replace-source!) name rows))
 
-(def (gerbil-ascent-session-replace-sources! session replacements)
-  ((.ref session '.replace-sources!) replacements))
+(def (gerbil-ascent-session-replace-sources! session replacements (accept-result #f))
+  (if accept-result
+    ((.ref session '.replace-sources!) replacements accept-result)
+    ((.ref session '.replace-sources!) replacements)))
 
 (def (gerbil-ascent-session-run session)
   ((.ref session '.run)))

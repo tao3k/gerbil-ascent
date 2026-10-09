@@ -97,6 +97,7 @@
     "candidate/reasoning"
     "candidate/feedback"
     "candidate/withholding"
+    "candidate/withdrawal-session"
     "temporal/graph"
     "temporal/lens"
     "interface/request"))

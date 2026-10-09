@@ -2,9 +2,13 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(import (only-in :std/test check-equal? check-exception test-suite test-case)
+(import (only-in :clan/poo/object .ref)
+        (only-in :gerbil-ascent/candidate/withdrawal-session
+                 candidate-open-withdrawal-session candidate-withdrawal-session!)
+        (only-in :std/test check-equal? check-exception test-suite test-case)
         (only-in :gerbil-ascent/candidate/types
-                 make-reasoning-snapshot reasoning-snapshot-valid? reasoning-snapshot-relations)
+                 make-reasoning-snapshot reasoning-snapshot-valid? reasoning-snapshot-relations
+                 reasoning-snapshot-generation)
         (only-in :gerbil-ascent/candidate/program candidate-inspect)
         (only-in :gerbil-ascent/candidate/provenance-graph
                  candidate-positive-provenance candidate-open-provenance-maintenance
@@ -710,6 +714,27 @@
                          (reasoning-compare-rows cut p fresh rows)) 'match)
           (check-equal? (reasoning-feedback-reason
                          (reasoning-compare-rows cut p first rows)) 'unbound))))
+    (test-case "WD26 publishes source cut native rows and complete support through one owner"
+      (let* ((source (kg-snapshot 1 kg-direct-country))
+             (p '(candidate (relation adminPath 2) (relation viaAdmin 2)
+                   (rule (adminPath ?x ?y) (admin ?x ?y))
+                   (rule (adminPath ?x ?z) (adminPath ?x ?y) (admin ?y ?z))
+                   (rule (viaAdmin ?city ?country)
+                         (city ?city) (adminPath ?city ?country) (target ?country))
+                   (query viaAdmin ?city Q30) (limits 32 128 256)))
+             (old (reasoning-attempt source p))
+             (owner (candidate-open-withdrawal-session source p))
+             (after (candidate-withdrawal-session! owner 1 '((admin 3))))
+             (cut (.ref after 'source))
+             (fresh (reasoning-attempt cut p))
+             (remaining (filter (lambda (row) (not (equal? row '(Q771 Q30)))) kg-admin))
+             (expected (filter-map (lambda (city)
+                         (and (kg-reaches? (car city) 'Q30 remaining) (list (car city) 'Q30))) kg-cities)))
+        (check-equal? (reasoning-snapshot-generation cut) 2)
+        (kg-check-rows (.ref after 'rows) expected)
+        (kg-check-rows (.ref after 'rows) (reasoning-receipt-rows fresh))
+        (check-equal? (reasoning-receipt-bound? fresh cut p) #t)
+        (check-equal? (reasoning-receipt-bound? old cut p) #f)))
     (test-case "all sixty-four three-node graphs match finite reference"
       (let (possible '((0 1) (0 2) (1 0) (1 2) (2 0) (2 1)))
         (for-each

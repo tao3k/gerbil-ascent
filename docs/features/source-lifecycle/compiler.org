@@ -2,9 +2,9 @@
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 #+TITLE: Source Lifecycle: compiler
 
-The [[file:../compiler-lowering/change-plan.org][owned change and withdrawal-preview gate]] stages grounded deletion
-without changing its original maintenance owner. It is a prerequisite for
-Session integration; it does not replace generation or source-cut admission.
+The [[file:grounded-withdrawal.org][grounded withdrawal Session owner]] now connects staged positive deletion
+to native source replacement, generation checks and complete graph admission.
+General deletion, signed traces and native proof refinement remain open.
 
 Feature owner: [[file:../index.org][feature index]]. This page retains the original
 source dates and qualification boundaries. Current evidence is commit-specific.

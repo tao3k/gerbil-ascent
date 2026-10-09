@@ -1,0 +1,70 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+#+TITLE: Grounded withdrawal Session publication
+#+DATE: 2026-10-09
+
+* Executable owner
+
+=candidate/withdrawal-session.ss= admits one bounded positive candidate and
+owns a copied source snapshot, its complete checked grounded graph and a native
+Session. Its POO contract exposes observation and occurrence withdrawal. Native
+Session and maintenance state never escape. Observation copies source identity,
+source rows and query rows; proposal mutation cannot modify the admitted owner.
+
+#+begin_src scheme
+(def owner (candidate-open-withdrawal-session snapshot proposal))
+(candidate-withdrawal-session! owner 0 '((edge 1)))
+;; => POO observation with source: (generation 1) and rows:
+#+end_src
+
+The request supplies the expected CURRENT generation. Source selectors are
+=(relation one-based-position)= in that generation, including duplicate rows.
+Unknown, duplicate, empty, stale and over-budget requests fail before publication.
+Withdrawing a source occurrence cannot withdraw an equal candidate-owned fact.
+This is source-cut consistency, not authority to retire an external source.
+
+* Transaction sequence
+
+1. Validate the expected generation and every source occurrence.
+2. Build the prospective copied cut and stage DRed overdelete/rederive.
+3. Independently replay and verify every grounded alternative at the new cut.
+4. Run native affected-component replacement against that cut, retaining candidate facts.
+5. Compare complete native query rows to the staged rows before native publication.
+6. Publish the private committed source/graph/rows triple.
+
+Each cut rebuilds its verified graph. This is necessary because surviving rows
+receive new occurrence positions. Keeping old positions would make the second
+withdrawal remove a different occurrence. The independent graph replay is also
+the rule-instance coverage gate. Failed preview, graph admission, native solve,
+row comparison or acceptance preserves the prior owner.
+
+=gerbil-ascent-session-replace-sources!= now accepts an optional trusted
+=result -> Boolean= acceptance procedure. Only exact =#t= accepts. It runs on a
+completed prospective result before engine/source publication. Reentrant append,
+run, timed run and replacement operations are rejected throughout the transaction;
+the guard is released on success and exception. Custom provider or callback
+side effects remain their own host responsibilities. A caller must serialize
+concurrent access to a native Session or withdrawal owner. This is not a lock.
+
+* Connected evidence
+
+| Layer | Gate | Boundary |
+|-------+------+----------|
+| Native Suite | 64 three-node graphs, each occurrence cut, successive duplicate cuts, candidate support, ownership, failure and reentry | Finite test corpus |
+| WD26 | Real pinned administrative cut, independent walk, native Session and fresh receipt agree | Finite extract, no model synthesis score |
+| Lean SourceOccurrences | Exact surviving-occurrence membership and rejected/stale/accepted publication; duplicate and rebasing examples | Pure list model, no extraction of Scheme loop or graph solver |
+| Quint WithdrawalSession | Atomic rows/source/graph and current-position translation; early, stale-graph, unchecked-result and wrong-ordinal mutants | Finite duplicate-support graph at serialized public boundaries |
+
+* Research and remaining work
+
+This connects the existing [[file:../../research/scheme-dsl/deletion-h18.org][deletion study]] to native transaction admission:
+complete grounded alternatives implement overdelete/rederive, while the native
+Session still reevaluates affected components. This is not DRedc and has no
+performance improvement claim. Independent graph reconstruction currently costs
+a complete finite replay for every cut; retaining graph updates requires a new
+stable occurrence identity and an incremental coverage proof.
+
+Negative rules, reducers and non-finite operators are outside this positive
+owner. General native source replacement still handles their admitted semantics.
+The [[file:../../research/scheme-dsl/differential-m13.org][signed differential trace]] and
+[[file:../../research/agent-inference/provenance-z19.org][minimum-height annotation]] designs remain separate open work.

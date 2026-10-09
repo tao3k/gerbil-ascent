@@ -380,3 +380,23 @@ step returns =bounded= with no partial closure. Those controls supply a complete
 empty native answer to exercise replay; they do not claim the engine admits
 nonnumeric arithmetic. Existing empty-group, count, negative-probe and all
 64 graph controls remain in the same 16-Case native Suite.
+
+* Shared-key integration correction (2026-10-09)
+
+The subsequent shared-key revision exposed two independent CI gaps. Source
+loading failed at =table/index-sharing.ss= because a primitive-only import
+expanded to an empty runtime import. Removing that redundant import uses the
+existing default =equal?-hash= binding; the source-view gate and corresponding
+native ownership tests pass.
+
+The next CI correctly rejected the sparse lifecycle allocation result:
+=2,008,672 -> 2,055,632= bytes exceeds its unchanged 32,768-byte allowance.
+Key-plan compilation now resolves first-occurrence positions by scanning the
+logical spine instead of allocating a temporary ordinal hash table and entries.
+This compilation has quadratic worst-case column comparisons, occurs once per
+cached plan, and preserves the existing gathered lookup operations and detached
+metadata ownership. Its local sparse result is =2,008,672 -> 2,033,568= bytes,
+inside the original allowance; all five original lifecycle gates and all seven
+new shared-key gates pass. These complete construction/query/extension controls
+retain CPU and allocation admission together. No threshold or semantic contract
+was relaxed; local performance evidence alone does not establish final-head CI.

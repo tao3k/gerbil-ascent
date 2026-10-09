@@ -280,15 +280,19 @@
 ;;; Resolve logical positions once, then reuse the insertion gather protocol.
 ;;; Validation completes before metadata publication; values enter only later.
 (def (compile-key-projection logical physical)
-  (let ((positions (make-hash-table-eqv)) (width (length logical)))
-    (for-each (lambda (column position)
-                (unless (hash-get positions column) (hash-put! positions column position)))
-              logical (iota width))
+  (let (width (length logical))
+    ;; This runs once per cached plan. Avoid a temporary ordinal hash table and
+    ;; its entries; preserve first-occurrence lookup for repeated columns.
+    (def (position-of column)
+      (let seek ((remaining logical) (position 0))
+        (and (pair? remaining)
+             (if (= column (car remaining)) position
+               (seek (cdr remaining) (+ position 1))))))
     (let gather ((remaining physical) (left width) (selected []) (prefix []))
       (if (zero? left)
         (make-key-projection (list->vector (reverse! prefix))
                             (column-writes (reverse! selected)) (make-vector width #f))
-        (let (position (and (pair? remaining) (hash-get positions (car remaining))))
+        (let (position (and (pair? remaining) (position-of (car remaining))))
           (unless position (error "logical index is not a physical prefix" logical physical))
           (gather (cdr remaining) (- left 1) (cons position selected) (cons (car remaining) prefix)))))))
 

@@ -97,6 +97,28 @@
           (check-view initialized '((a 0) (b 0) (a 1) (b 1)))
           (check-view uninitialized []))
         (check-exception (gerbil-ascent-polonius-path-flows inputs 3) true)))
+    (test-case "scratch reuse survives reentrant cancellation observations and retained cuts"
+      (let* ((facts (cons #f (iota 16))) (points '(0 1 2 3))
+             (seeds (map (lambda (fact) (list fact 0)) facts))
+             (edges '((0 1) (0 2) (1 2) (2 1) (2 3) (2 3) (3 3)))
+             (blocks '((#f 1) (7 1) (8 2) (15 2)))
+             (observed? #f)
+             (actual
+              (gerbil-ascent-finite-flow facts points seeds edges blocks 68
+                (lambda ()
+                  (unless observed?
+                    (set! observed? #t)
+                    (check-view (gerbil-ascent-finite-flow '(inner) '(a b)
+                                  '((inner a)) '((a b) (b a)) [] 2)
+                                '((inner a) (inner b))))
+                  #f)))
+             (expected (truth seeds edges blocks)))
+        (check-equal? observed? #t)
+        (check-view actual expected)
+        (check-exception (gerbil-ascent-finite-flow facts points seeds edges blocks 17) true)
+        (check-view (gerbil-ascent-finite-flow '(other) '(0 1)
+                      '((other 0)) '((0 1)) [] 2) '((other 0) (other 1)))
+        (check-view actual expected)))
     (test-case "domain shape budget and cancellation failures publish no result and do not contaminate retry"
       (check-exception (gerbil-ascent-finite-flow '(a a) '(0) [] [] [] 0) true)
       (check-exception (gerbil-ascent-finite-flow '(a) '(0) '((outside 0)) [] [] 1) true)

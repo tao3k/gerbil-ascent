@@ -69,6 +69,31 @@ for repeated baseline calls and remains a negative result. Empty input adds
 for the frozen source, fixed gates, controls and scope. These measurements do
 not establish runtime query or solve improvements.
 
+* Buffered protocols and empty-delta proofs
+
+Gerbil =1cfb032= =std/io/bio/types.ss= separates owned byte buffers and
+cursor state. =std/io/bio/input.ss= expresses complete read/fill/retry protocols
+with =defrules __bio-read=, selecting operations at the buffer boundary.
+=core/finite-flow.ss= applies this pattern to bitmap deltas: a hygienic
+=fill-bitmap-delta!= rule owns write/count order, while =fresh-bits!= selects
+the stored/blocked state before the byte loop. The loop contains no per-byte
+presence tests or callbacks.
+
+One invocation lazily owns a scratch bitmap. Equal incoming/total bitmaps
+prove no new facts; the caller consumes only the zero count and never merges
+stale scratch. Every remaining path overwrites all bytes. Budget checks still
+precede root mutation; first insertion copies scratch separately into total
+and pending. Returned frozen views retain roots and domains, never scratch.
+Reentrant cancellation observations and budget-failure retries exercise these
+ownership boundaries alongside the original exhaustive and million-fact tests.
+
+The complete cyclic flow call improves CPU about 44% and allocation about
+34% in 50 matched native pairs. Ordinary dense and blocker-heavy inputs fail
+their fixed 10% CPU improvement gates; small/empty controls pass, with 32 extra
+allocated bytes for empty input. Three consumer Suites pass 31 Cases. See
+[[file:../../t/performance/flow-delta/README.org][flow delta qualification]] for the frozen reference, independent truth,
+rejected and overlapping series, and the limits of these local results.
+
 * Study: expression optimization conditions and compiler output
 
 Study the installed Gerbil compiler directly, including the conditions that

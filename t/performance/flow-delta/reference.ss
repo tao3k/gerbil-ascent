@@ -5,7 +5,7 @@
 ;;; Each invocation owns all mutation. Published views retain immutable point
 ;;; bitmaps and private fixed domains; they expose no builder or mutable cursor.
 (import :gerbil/runtime/gambit
-        (only-in "relation-view.ss" make-relation-view))
+        (only-in :gerbil-ascent/core/relation-view make-relation-view))
 (export gerbil-ascent-finite-flow gerbil-ascent-freeze-finite-masks)
 (defstruct flow-domain (values ordinals bytes))
 ;; : (forall (a) (-> (List a) FlowDomain))
@@ -43,35 +43,19 @@
 (def popcounts (list->vector (map (lambda (byte)
   (let loop ((n byte) (count 0))
     (if (= n 0) count (loop (quotient n 2) (+ count (modulo n 2)))))) (iota 256))))
-;;; The byte expression is selected before traversal. Explicit index binding
-;;; keeps each specialized expression hygienic while sharing write/count order.
-;; : (-> Syntax Syntax)
-(defrule (fill-bitmap-delta! (fresh bytes i) byte-expression)
-  (let loop ((i 0) (count 0))
-    (if (= i bytes) count
-      (let (byte byte-expression)
-        (u8vector-set! fresh i byte)
-        (loop (+ i 1) (+ count (vector-ref popcounts byte)))))))
-
-;;; Equal incoming/total bitmaps prove an empty delta without touching scratch.
-;;; Otherwise overwrite every scratch byte, including zeros and domain padding.
-;;; No callbacks run here. Total/pending roots change only after budget admission;
-;;; merge-bits! copies on first publication, so scratch never becomes a root.
-;; : (-> ByteVector (Maybe ByteVector) (Maybe ByteVector) ByteVector Natural Natural)
-(def (fresh-bits! incoming stored blocked fresh bytes)
-  (cond
-    ((and stored (equal? incoming stored)) 0)
-    ((and stored blocked)
-     (fill-bitmap-delta! (fresh bytes i)
-       (fxand (u8vector-ref incoming i) (fxnot (u8vector-ref stored i))
-              (fxnot (u8vector-ref blocked i)))))
-    (stored
-     (fill-bitmap-delta! (fresh bytes i)
-       (fxand (u8vector-ref incoming i) (fxnot (u8vector-ref stored i)))))
-    (blocked
-     (fill-bitmap-delta! (fresh bytes i)
-       (fxand (u8vector-ref incoming i) (fxnot (u8vector-ref blocked i)))))
-    (else (fill-bitmap-delta! (fresh bytes i) (u8vector-ref incoming i)))))
+;; : (-> ByteVector (Maybe ByteVector) (Maybe ByteVector) Natural (Values ByteVector Natural))
+;; Compute fresh successor bits without touching the total or pending roots.
+(def (fresh-bits incoming stored blocked bytes)
+  (let ((fresh (make-u8vector bytes 0)) (count 0))
+    (let loop ((i 0))
+      (unless (= i bytes)
+        (let (byte (fxand (u8vector-ref incoming i)
+                         (fxnot (if stored (u8vector-ref stored i) 0))
+                         (fxnot (if blocked (u8vector-ref blocked i) 0))))
+          (u8vector-set! fresh i byte)
+          (set! count (+ count (vector-ref popcounts byte))))
+        (loop (+ i 1))))
+    (values fresh count)))
 ;; : (-> BitmapRoots Natural ByteVector Natural Void)
 (def (merge-bits! roots row fresh bytes)
   (let (stored (vector-ref roots row))
@@ -134,10 +118,7 @@
          (points (vector-length (flow-domain-values right))) (bytes (flow-domain-bytes left))
          (total (make-vector points #f)) (pending (make-vector points #f))
          (blocked (make-vector points #f)) (adjacent (make-vector points []))
-         (queued (make-vector points #f)) (front []) (back []) (count 0)
-         ;; Allocate only when an edge actually propagates. The workspace is
-         ;; synchronous and invocation-owned; no edge or returned view retains it.
-         (scratch #f))
+         (queued (make-vector points #f)) (front []) (back []) (count 0))
     (def (enqueue! point)
       (unless (vector-ref queued point)
         (vector-set! queued point #t) (set! back (cons point back))))
@@ -161,13 +142,12 @@
           (vector-set! pending point #f)
           (for-each (lambda (target)
             (check-canceled!)
-            (unless scratch (set! scratch (make-u8vector bytes 0)))
-            (let (added (fresh-bits! delta (vector-ref total target)
-                                   (vector-ref blocked target) scratch bytes))
+            (let-values (((fresh added) (fresh-bits delta (vector-ref total target)
+                                          (vector-ref blocked target) bytes)))
               (when (> added 0)
                 (when (> (+ count added) budget) (error "ASCENT finite flow fact budget exhausted"))
-                (merge-bits! total target scratch bytes)
-                (merge-bits! pending target scratch bytes)
+                (merge-bits! total target fresh bytes)
+                (merge-bits! pending target fresh bytes)
                 (set! count (+ count added)) (enqueue! target)))) (vector-ref adjacent point)))
         (run)))
     (check-canceled!)

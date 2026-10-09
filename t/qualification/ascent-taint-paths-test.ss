@@ -29,12 +29,15 @@
   (test-suite "IRIS finite unsanitized path transfer"
     (test-case "all three-node graphs and sanitizer sets match independent search"
       (for-each (lambda (mask)
-        (let (edges (subset '((0 1) (0 2) (1 0) (1 2) (2 0) (2 1)) mask))
+        (let* ((edges (subset '((0 1) (0 2) (1 0) (1 2) (2 0) (2 1)) mask))
+               (session (gerbil-ascent-open-session
+                 (gerbil-ascent-taint-path-program edges '((0)) '((2)) []))))
           (for-each (lambda (blocked-mask)
-            (let* ((blocked (subset '(0 1 2) blocked-mask))
-                   (result (gerbil-ascent-evaluate-program
-                     (gerbil-ascent-taint-path-program edges '((0)) '((2)) (map list blocked)))))
-              (check-equal? (alerts result) (if (reachable? edges blocked) '((0 2)) [])))) (iota 8)))
+            (let (blocked (subset '(0 1 2) blocked-mask))
+              (unless (zero? blocked-mask)
+                (gerbil-ascent-session-replace-source! session 'taint_sanitizer (map list blocked)))
+              (check-equal? (alerts (gerbil-ascent-session-run session))
+                            (if (reachable? edges blocked) '((0 2)) [])))) (iota 8)))
         (when (zero? (modulo (+ mask 1) 8))
           (displayln "TAINT-GRAPHS " (+ mask 1) "/64") (force-output))) (iota 64)))
     (test-case "an interior sanitizer blocks only paths traversing it"

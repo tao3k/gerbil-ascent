@@ -16,7 +16,11 @@ refusal. Its local check explores 1081 distinct states and four fault variants;
 no new protocol replica is added for this application.
 
 [[file:../../../t/qualification/ascent-taint-paths-test.ss][Native qualification]] compares 512 graph/sanitizer combinations with independent
-graph search, plus interior blocking, bypass and zero-edge controls. Session
+graph search. Each graph admits one ordinary Session, then replaces its
+sanitizer source across all eight subsets, avoiding repeated rule admission
+while checking both additions and withdrawals against the same independent
+search. Fresh Program controls retain interior blocking, bypass and zero-edge
+checks. Session
 replacement checks removal/restoration, held old results and zero-budget refusal.
 Local execution passes three Cases; whole-revision CI remains a separate gate.
 Java extraction, CodeQL parity, model proposal quality, real-code vulnerabilities

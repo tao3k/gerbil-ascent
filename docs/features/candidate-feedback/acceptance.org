@@ -58,3 +58,12 @@ optional positive certificates, so =reasoning-attempt= now accepts =#f= for
 that work budget and omits both replays. Default certificate production and
 its regression Suite remain active. The 320 native attempts and exact row
 assertions remain unchanged; no timeout, graph corpus or semantic gate is relaxed.
+
+Revision =3dac84c= still hit the aggregate semantic deadline, so skipping
+optional certificate replay alone did not discharge that gate. Its log places
+the IRIS graph enumeration at roughly nine seconds. That fixture now admits
+one ordinary Session per graph and replaces the sanitizer source for all
+eight subsets; all 512 independent oracle comparisons and fresh Program
+controls remain. Focused native execution passes all three IRIS Cases.
+This removes repeated rule admission without changing execution deadlines;
+whole-revision qualification still requires a fresh CI result.

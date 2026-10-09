@@ -258,7 +258,12 @@
              (displayln "COMPONENT-GRAPHS-CHECKED " (+ bits 1) "/512") (force-output))))
        (iota 512)))
     (test-case "actual SCC workers emit exact semantic closure from frozen snapshots"
-      (for-each
+      ;; This Case owns worker execution. Schema/rules are identical across
+      ;; graph inputs; each worker still gets a fresh explicit fact snapshot.
+      (let* ((request (component-scope-request (program [])))
+             (analysis (vector-ref request 0)) (schema (vector-ref request 1))
+             (components (gerbil-ascent-compile-positive-components analysis)))
+       (for-each
        (lambda (bits)
          (let ((edges []) (reach (make-vector 9 #f)))
            (for-each (lambda (i)
@@ -274,11 +279,10 @@
                                         (vector-set! reach (+ (* 3 i) j) #t))) (iota 3))) (iota 3))) (iota 3))
            (let* ((truth (filter (lambda (edge) (vector-ref reach (+ (* 3 (car edge)) (cadr edge))))
                                  (append-map (lambda (i) (map (lambda (j) (list i j)) (iota 3))) (iota 3))))
-                  (request (component-scope-request (program edges)))
-                  (analysis (vector-ref request 0)) (schema (vector-ref request 1))
                   (frontier (vector-copy (vector-ref request 2)))
                   (expected (vector edges truth edges edges '((7) (8)) '((7) (8))))
                   (emitted (make-hash-table)))
+             (vector-set! frontier 0 edges)
              (for-each
               (lambda (component)
                 (let* ((before (vector-copy frontier)) (local (vector-copy frontier))
@@ -315,12 +319,12 @@
                     (for-each (lambda (index)
                                 (check-equal? (eq? (vector-ref local index) (vector-ref closed index)) #t))
                               (iota 6)))))
-              (gerbil-ascent-compile-positive-components analysis))
+              components)
              (for-each (lambda (index)
                          (check-equal? (length (vector-ref frontier index)) (length (vector-ref expected index)))) (iota 6)))
            (when (zero? (modulo (+ bits 1) 16))
              (displayln "WORKER-TRACES-CHECKED " (+ bits 1) "/512") (force-output))))
-       (iota 512)))
+       (iota 512))))
     (test-case "merge failure and credited cancellation drain without completion"
       (for-each
        (lambda (mode)

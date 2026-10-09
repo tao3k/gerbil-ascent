@@ -42,3 +42,16 @@ The old full source cannot validate the incomplete-source execution receipt.
 Local four Cases, full Lean 136 jobs and the correct/fault Quint gate pass.
 Whole-revision remote CI remains a separate delivery gate. This is not replication
 of BRINK mining, model inference, real-KG tasks or reported performance scores.
+
+* Initial aggregate deadline and worker-plan reuse
+
+Revision =0887987= passed all four compiled BRINK Cases (under 0.1 seconds
+between Suite start/end), but the full semantic invocation hit its unchanged
+120-second deadline during a later BYODS Suite (exit 124). That aggregate gate
+is rejected. The worker-only 512-graph SCC Case repeatedly admitted and compiled
+the same schema/rules; it now reuses one fixed plan while constructing fresh
+fact frontiers/private snapshots for every graph. All 512 independent closure,
+output ownership, duplicate suppression, local isolation and re-initialization
+assertions remain. Existing fresh admission/solve controls remain separate.
+Focused native positive-component qualification passes the complete Suite.
+Whole-revision CI is still required; no deadline or oracle corpus is relaxed.

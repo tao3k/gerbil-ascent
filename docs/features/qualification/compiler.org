@@ -496,3 +496,14 @@ construction emitted no module compile messages, reported zero rewritten
 production interfaces, completed preparation in 4.136545 seconds and passed
 the fresh publication/source probe. This is an incremental reuse receipt,
 not a cold-build or end-to-end performance claim.
+
+* Fixed-plan worker oracle reuse (2026-10-09)
+
+The exhaustive SCC worker Case uses identical rule/schema metadata for all 512
+input graphs. It now admits and compiles that metadata once, then replaces the
+input edge frontier in a freshly copied request for each graph. Every component
+receives a new private snapshot and retains all independent closure, emission,
+isolation and second-initialization checks. This verifies worker execution with
+reusable plans; existing fresh solve/admission checks retain their own owner.
+The change addresses aggregate test work without extending the 120-second
+compiled semantic deadline. See [[file:../withholding/acceptance.org][the rejected initial CI and current boundary]].

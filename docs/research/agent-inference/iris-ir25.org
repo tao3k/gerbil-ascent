@@ -14,6 +14,13 @@ GPT-4 versus CodeQL's 27/120, with AvgFDR 84.82% versus 90.03%; section 5.2
 explains that this label-based FDR is coarse. These results concern Java and
 the paper's pipeline, not this Scheme application.
 
+Section 3.2 identifies specifications by node type, API signature/position and
+role. Section 3.3 infers source/sink labels, explicitly excluding sanitizer
+inference. Our caller-supplied sanitizer replacement is an executor stress
+control, not a replication of model-generated sanitizer labels. A future API
+adapter must preserve argument/parameter position rather than label an entire
+method indiscriminately.
+
 * Transfer implemented here
 
 [[file:../../../applications/taint-paths.ss][taint-paths.ss]] constructs an ordinary Program from caller-supplied finite

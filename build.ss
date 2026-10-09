@@ -86,6 +86,7 @@
     "candidate/provenance"
     "candidate/provenance-graph"
     "candidate/provenance-maintenance"
+    "candidate/annotations"
    "candidate/stratified-provenance"
     "candidate/nonmembership"
     "candidate/finite-evidence"

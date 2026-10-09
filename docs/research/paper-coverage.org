@@ -35,8 +35,8 @@ for all these states.
 | microKanren | [[file:scheme-dsl/microkanren-h13.org][note]] | Dedicated reading; separate search semantics; no stream-search executor |
 | First-class Datalog constraints | [[file:scheme-dsl/flix-f20.org][note]] | Dedicated reading; composition/stratification transfer |
 | First-class facts | [[file:agent-inference/2026-logic-ai-screen.org][note]] | Screen only; nested fact identity/domain contract pending |
-| Provenance semirings | [[file:../related-work-matrix.org][note]] | Matrix only; bounded DAG evidence exists; polynomial annotation semantics unimplemented |
-| Revisiting semiring provenance | [[file:../related-work-matrix.org][note]] | Matrix only; dedicated recursive annotation semantics study pending |
+| Provenance semirings | [[file:agent-inference/provenance-p07.org][note]] | Dedicated method reading; bounded all-tree natural counts implemented; symbolic polynomial/power-series annotations pending |
+| Revisiting semiring provenance | [[file:agent-inference/provenance-p07.org][note]] | Dedicated semantics comparison; all-tree choice and recursive refusal tested; alternative semantics unimplemented |
 | PUG | [[file:agent-inference/pug-p18.org][note]] | Dedicated reading; bounded Why/Why-Not transfer; full PUG replication pending |
 | Large-scale Datalog provenance | [[file:../related-work-matrix.org][note]] | Bibliography-level coverage; dedicated artifact study pending |
 | Dedalus | [[file:../temporal-causality-module-design.org][note]] | Temporal overview; dedicated temporal/distributed semantics study pending |

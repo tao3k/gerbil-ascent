@@ -68,10 +68,10 @@ jobs:
           key: ascent-native-${{ runner.os }}-${{ runner.arch }}-${{ github.job }}-${{ matrix.shard }}-${{ steps.capacity.outputs.toolchain }}-${{ hashFiles('**/*.ss', '!manifest.ss', '!.gerbil/**', '!.ci/**', '!.cache/**', 'justfile', 'gerbil.pkg', '.github/workflows/ci.yml') }}
       - name: Build Scheme package
         run: just check-policy
-      - name: Qualify semantics and performance with one GxTest per purpose
+      - name: Qualify compiled performance contracts and benchmarks
         run: |
           set -o pipefail
-          just test-compiled test-performance-contracts performance-index-sharing performance 2>&1 | tee /tmp/ascent-native-qualification.out
+          just test-performance-contracts performance-index-sharing performance 2>&1 | tee /tmp/ascent-native-qualification.out
           grep -Fx 'BUILD-TEST-LIBRARY production-rebuilt=0' /tmp/ascent-native-qualification.out
           if grep -E '^\.\.\. compile (core|table|program|candidate|interface|temporal|applications)/' /tmp/ascent-native-qualification.out; then
             echo 'Production modules were compiled again after the package build.' >&2

@@ -7,18 +7,26 @@ source dates and qualification boundaries. Current evidence is commit-specific.
 
 * Standard test entry and native source inventory (2026-10-08)
 
-Current commands are =just test=, =just test-compiled= and
-=just test-performance-contracts=. Each invokes upstream GxTest once over its
-complete purpose-specific roster. There is no project process pool, executable
-Suite carrier, registry, entry cache or per-Suite process supervisor. The three
-checks specific to that retired framework were removed with explicit approval;
-project runtime actor and resource rejection tests remain.
+Current commands are =just test= and =just test-performance-contracts=.
+Ordinary semantic Suites execute once through upstream GxTest source discovery.
+The duplicate full =test-compiled= pass was removed on 2026-10-09. Performance
+contracts retain compiled consumers, and DSL closure keeps its native executable
+and source-binding checks. The semantic roster and assertions are unchanged.
 
-=just prepare-test-library= runs one Gxi build entry using upstream =std/make=.
-Compiler capacity comes from ASP's machine-capacity projection. The Just
-prerequisite is shared: invoking compiled semantics and performance contracts
-together prepares once. Normal compiler subprocesses belong to upstream Gerbil;
-this build entry neither launches test workers nor supervises test commands.
+=just prepare-test-library= prepares only native performance consumer Suites,
+reference/support modules and production dependencies using upstream =std/make=.
+It no longer precompiles the entire semantic Suite roster. Compiler capacity
+comes from ASP's machine-capacity projection; no project test scheduler is added.
+CI still requires =production-rebuilt=0= after the production build. Existing
+source, performance and AOT deadlines remain unchanged.
+
+Local Darwin whole-directory probes retain two rejected 180-second outcomes:
+the source-only environment completed 87 modules / 804 Cases before timeout;
+the CI library-path environment completed 51 modules before timeout. A one-second
+sample of the latter found approximately 1.8 GiB footprint and garbage collection
+in =scan_movable_objs_to_scan= during eager imports. This is not a successful
+local whole-roster receipt or evidence of a faster end-to-end run. Linux CI must
+independently satisfy the unchanged source-test deadline on the final revision.
 
 Before the parallel eqrel rebase, the semantic roster contained 89 Suites and 844 Cases. Seven performance Suites
 retain 10 Cases, including the original lifecycle benchmark moved unchanged to

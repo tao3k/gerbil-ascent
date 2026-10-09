@@ -25,7 +25,9 @@ The checked Scheme language, evaluator, candidate boundary, and finite
 temporal lens are implemented. Formal results cover selected abstract laws;
 they do not yet prove the native compiler or runtime correct. Full Rust
 replication, general deletion deltas, exhaustive provenance, and external
-source or causal authority remain open research gates.
+source or causal authority remain open research gates. Complete positive
+grounded graphs support bounded unit-weight derivation counts; numeric
+convergence is checked separately from relational closure.
 
 ## Read the work
 
@@ -110,8 +112,8 @@ mined with confidence thresholds rather than established as universal laws.
 
 ### Provenance and time
 
-- [Provenance Semirings](https://www.cs.ucdavis.edu/~green/papers/pods07.pdf) (2007)
-- [Revisiting Semiring Provenance for Datalog](https://proceedings.kr.org/2022/10/kr2022-0010-bourgaux-et-al.pdf) (2022)
+- [Provenance Semirings](https://www.cs.ucdavis.edu/~green/papers/pods07.pdf) (2007) — [dedicated reading and bounded natural annotations](docs/research/agent-inference/provenance-p07.org).
+- [Revisiting Semiring Provenance for Datalog](https://proceedings.kr.org/2022/10/kr2022-0010-bourgaux-et-al.pdf) (2022) — all-tree versus minimum-depth semantics and recursive convergence boundaries.
 - [PUG: A Framework and Practical Implementation for Why & Why-Not Provenance](https://arxiv.org/abs/1808.05752) (2018)
 - [Provenance for Large-scale Datalog](https://arxiv.org/abs/1907.05045) (2019)
 - [Dedalus: Datalog in Time and Space](https://www2.eecs.berkeley.edu/Pubs/TechRpts/2009/EECS-2009-173.html) (2009)

@@ -19,21 +19,16 @@
   '("t/performance/ascent-scenario-performance-test.ss"
     "t/performance/ascent-binary-program-performance-test.ss"
     "t/performance/ascent-shortest-candidates-performance-test.ss"))
-(def (qualification-files)
+(def (performance-contract-files)
   ;; Allocation contracts require compiled production code. Source semantic
   ;; Suites remain in t/qualification; this native-only Case retains its bound.
-  (append
-   (map (lambda (name) (string-append "t/qualification/" name))
-        (list-sort string<?
-                   (filter (lambda (name) (string-suffix? "-test.ss" name))
-                           (directory-files "t/qualification"))))
-   '("t/performance/ascent-source-cut-allocation-test.ss"
+  '("t/performance/ascent-source-cut-allocation-test.ss"
      "t/performance/ascent-component-index-performance-test.ss"
      "t/performance/ascent-actor-credit-performance-test.ss"
      "t/performance/ascent-trrel-uf-performance-test.ss"
      "t/performance/ascent-steensgaard-performance-test.ss"
      "t/performance/ascent-relation-view-performance-test.ss"
-     "t/performance/scheme-library-lifecycle-performance-test.ss")))
+     "t/performance/scheme-library-lifecycle-performance-test.ss"))
 
 (def (build-elapsed started)
   (exact->inexact (/ (- (current-jiffy) started) (jiffies-per-second))))
@@ -198,7 +193,8 @@
       (displayln "BUILD-TEST-LIBRARY-PHASE inventory-before wall-seconds="
                  (build-elapsed started))
       ;; Upstream make owns dependency order, compiler threads and currentness.
-      ;; The complete original Suite roster compiles in one gxi process.
+      ;; Only requested native consumers compile; ordinary semantic Suites are
+      ;; discovered and loaded by the standard Gerbil test entry.
       (let (phase (current-jiffy))
         (make all srcdir: (current-directory) libdir: library
               build-deps: (path-expand "build-deps" test-cache))
@@ -216,7 +212,7 @@
       (force-output))))
 (def (main . args)
   (match args
-    (["library"] (with-test-lane (lambda () (prepare-test-library! (append (qualification-files) performance-modules)))))
+    (["library"] (with-test-lane (lambda () (prepare-test-library! (append (performance-contract-files) performance-modules)))))
     (["dsl"]
      (with-test-lane
       (lambda ()

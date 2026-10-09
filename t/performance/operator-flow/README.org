@@ -1,0 +1,130 @@
+#+title: Operator compiler construction and publication flow
+
+* Production protocol
+
+=program/operator.ss= owns the public compiler contract and publication flow.
+Its validated POO receiver supplies =.make-relation=, =.make-rule=,
+=.make-program= and =.make-fragment=. =.compile= and =.fragment= are inherited
+methods reached through =.defgeneric= on that same receiver. Inherited methods
+resolve the final receiver's constructors once before lowering; forcing a base
+method does not freeze a child's constructor choice. Standalone programs and
+fresh-handle fragments now follow the same receiver protocol.
+
+=program/operator-lowering.ss= owns invocation-local graph admission, lexical
+instances, variable terms, rules and private handles. It calls selected
+constructors, without prototype dispatch at every vertex or tuple. Admission
+still completes before any constructor is invoked. Budgets remain checked at
+the public program boundary. =build.ss= only lists the new production owner.
+
+A variable term is now constructed once in its lexical scope and shared by
+atom headers referring to it. Projection and joined projection select those
+same POO terms; repeated columns preserve identity, order and multiplicity.
+Multi-column reads use one indexed tuple per side, removing repeated list scans
+and the joined variable-list concatenation. Empty/single projections keep their
+small direct paths. Every invocation still constructs fresh variable names.
+
+The installed Gerbil =1cfb032= compiler expresses passes with
+=defcompile-method= and type-directed =defmethod= implementations. Its
+=compiler/optimize-call.ss:390-440= resolves constructor implementations from
+class metadata before emitting calls; unknown implementations retain method
+lookup. That stage separation informs this compiler protocol. POO remains the
+project's extensible object model, with one compiler receiver axis; the private
+finite graph algorithms are ordinary named functions.
+
+* Native matched boundary
+
+=reference.ss= freezes the complete =program/operator.ss= at
+=72229d2ef914271d4a644b7a24095f0e088719cd=. Only five relative imports are
+qualified to coexist with production. Both modules link into one native
+executable; each side has its own admitted descriptor graph. Timing includes
+fresh graph validation, row detachment, lexical analysis, variable/atom/rule
+construction, compiler contract validation, generic dispatch and complete
+program publication. Input construction and native solving are outside timing.
+
+Every one of 50 alternating pairs alpha-normalizes the complete emitted program:
+relation order, source rows, every head/body term binding, repeated-variable
+identity and output handle. Both sides solve before the series and the final
+pair solves again against independent row projection containing =#f=. All
+program shapes are checked per pair; independent solve checks occur at series
+boundaries. Public ASP =make-benchmark-fixture= generated =benchmark.ss= before
+sampling, and =benchmark-run/result= owns the series and p95 verdict.
+
+Fixed gates: wide inputs require <=90% old CPU and at least 35/50 CPU wins;
+controls allow <=105% CPU + 20 us. Allocation allows <=101% old + 2 KiB. The
+ASP p95 must also pass its unchanged 999 ms limit. Process deadline is 60 s.
+These are whole compiler-call observations, not solve throughput claims.
+
+* Rejected experiments and measurement isolation
+
+A 2048-column experiment did not finish 50 pairs within 60 s. It remains
+callable in the fixture with its original gates; do not infer a speedup from
+partial pairs. Smaller scenarios were added without changing relative gates.
+Solving every pair prevented timely progress; that runner snapshot remains
+under ignored =.cache/ascent/operator-flow/=, while final emitted semantics
+are checked per pair and independent solves remain at both series boundaries.
+
+The first 512-column series ran concurrently with policy executable compilation.
+Its compiler CPU/allocation gates passed, but its ASP p95 was 1.383 s and failed.
+The failed receipt is retained. The same scenario rerun without another build
+passes all original gates. Do not run builds or other benchmark processes
+concurrently with these pairs. All binaries, logs and raw receipts stay in
+ignored =.cache/=.
+
+* Reproduce
+
+Use the installed project Gerbil and dependencies. Prepare the canonical
+library with =just prepare-test-library=. From the repository root:
+
+#+begin_src sh
+LIBRARY_PATH="$(brew --prefix openssl@3)/lib" \
+GERBIL_PATH="$PWD/.gerbil" GERBIL_LOADPATH="$PWD/.gerbil/lib:$PWD" \
+gxi -:max-heap=3G,debug=q t/performance/operator-flow/build.ss \
+  "$PWD/.gerbil/lib" "$PWD/.cache/ascent/operator-flow/benchmark"
+timeout 60s .cache/ascent/operator-flow/benchmark -:max-heap=2G,debug=q \
+  plain-dense-512 .cache/ascent/operator-flow/plain-dense-512.sexp
+#+end_src
+
+Other admitted scenario names are recorded below. Pass =qualify= as the
+builder's third argument with a distinct binary output to run the existing
+consumer Suites through native =std/test=. No SDK build or new environment
+configuration is introduced.
+
+* Admitted native series, 2026-10-09
+
+| Scenario | CPU us old / new | Bytes old / new | CPU wins / 50 |
+|----------+------------------+-----------------+---------------|
+| plain-dense-512 | 275627 / 240165 | 571151136 / 494748128 | 46 |
+| plain-repeat-256 | 215658 / 175644 | 429206416 / 352815168 | 50 |
+| join-reverse-256 | 273460 / 236348 | 572578896 / 496014976 | 50 |
+| join-permuted-256 | 274133 / 234274 | 572578896 / 496014976 | 50 |
+| small | 4507 / 4305 | 8027664 / 7605408 | 45 |
+| scalar | 40176 / 40644 | 76538528 / 76406192 | 24 |
+| empty | 21354 / 21130 | 39080112 / 39253248 | 25 |
+
+All seven series pass their ASP, CPU, allocation and applicable win-count gates.
+Wide compiler CPU falls 12.9–18.6%, allocation 13.3–17.8%. Scalar CPU rises
+1.2%; empty projection allocation rises 0.44%. These controls pass the original
+budgets and remain visible rather than being rounded into zero overhead.
+
+The 512-column repeated projection passes CPU/allocation (415481 ->344282 us,
+854815744 ->701856160 bytes, 50/50 wins), but fails ASP p95 at 1007268000 ns.
+That receipt remains rejected; the 256-column repeated projection was added
+with the same relative gates and is separately admitted. No timeout or gate
+was raised to make a larger scenario pass.
+
+* Native consumers and policy
+
+The retained operator, operator, higher-order and combined native lifecycle
+Suites pass 75 Cases, final =HARNESS-OK=, =OK= and exit 0. Existing scope,
+fixed-point, typed-domain, independent finite truth, mutation and Session
+withdrawal assertions remain. Two new Cases prove final-receiver rule/program/
+fragment construction (including shared repeated terms) and complete admission
+before constructor callbacks. The 86-production-module policy scan reports zero
+errors and 27 warnings; it is not a claim that all style warnings are resolved.
+
+The first new export assertion incorrectly treated the Fragment resolver as a
+list. It was corrected to use public =relational-export=. A subsequent static
+link still used an old Suite object and failed with exit 42; that run is not a
+passing receipt. The final build lane explicitly makes all four consumer Suites,
+and the canonical test library was rebuilt before linking the successful run.
+All raw failed and successful executions remain under ignored =.cache/=.

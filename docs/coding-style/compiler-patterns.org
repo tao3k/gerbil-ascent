@@ -900,3 +900,22 @@ untyped record accesses failed the fixed allocation/CPU gates. The final private
 type-directed record passes all six SCC scenarios, with exact output, immutable
 edges and closure controls. =t/performance/dependency-graph/README.org= records
 negative experiments and the cross-edge CPU regression along with the gains.
+
+* Model construction and publication as one compiler receiver flow
+
+A compilation protocol should carry its extensible construction behavior across
+publication paths. =program/operator.ss= now declares relation, rule, program
+and fragment constructors in one POO contract, with generic program/fragment
+publication through inherited methods. Constructors resolve from final =self=
+once. =program/operator-lowering.ss= owns admitted graph algorithms and fresh
+lexical terms; traversals use the selected procedures rather than repeatedly
+performing prototype dispatch. Fragment publication follows the same receiver.
+
+This follows Gerbil =1cfb032= =compiler/optimize-call.ss:390-440=: constructor
+implementation comes from class metadata before expression emission, with method
+lookup retained for open behavior. It also applies the expression discipline of
+constructing a lexical value once and reusing it: operator atoms share immutable
+POO variable terms, and projections select those terms without rebuilding them.
+The public object protocol, pure graph algorithms and private variable scope
+remain separate owners. =t/performance/operator-flow/README.org= records full
+compiler A/B, independent semantic controls and rejected measurements.

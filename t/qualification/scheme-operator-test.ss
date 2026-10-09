@@ -16,7 +16,7 @@
                  relational-op-measure
                  relational-op-measurement-join-probes
                  relational-op-measurement-fix-body-evaluations)
-        (only-in :gerbil-ascent/program/objects gerbil-ascent-relation)
+        (only-in :gerbil-ascent/program/objects gerbil-ascent-relation gerbil-ascent-rule gerbil-ascent-program gerbil-ascent-fragment)
         (only-in :gerbil-ascent/program/interface
                  relational-op-compiler
                  relational-admit relational-solve relational-query-name
@@ -163,6 +163,60 @@
         (check-exception
          (relational-op-compile graph 8 8 16
            (.o (:: @ relational-op-compiler) (.make-relation #f))) true)))
+    (test-case "derived compiler owns rule and both publication stages after base forcing"
+      (let* ((events [])
+             (graph (relational-op-project (relational-op-source 'flow 2 '((#f 7))) '(1 0 1)))
+             (compiler
+              (.o (:: @ relational-op-compiler)
+                  (.make-rule
+                   (lambda (heads body)
+                     (set! events (cons 'rule events))
+                     (let ((head-terms (.ref (car heads) 'terms))
+                           (body-terms (.ref (car body) 'terms)))
+                       (check-equal? (eq? (car head-terms) (cadr body-terms)) #t)
+                       (check-equal? (eq? (car head-terms) (caddr head-terms)) #t))
+                     (gerbil-ascent-rule heads body)))
+                  (.make-program
+                   (lambda (relations rules input derived output sources)
+                     (set! events (cons 'program events))
+                     (gerbil-ascent-program relations rules input derived output sources)))
+                  (.make-fragment
+                   (lambda (relations rules exports sources)
+                     (set! events (cons 'fragment events))
+                     (gerbil-ascent-fragment relations rules exports sources))))))
+        (.ref relational-op-compiler '.compile)
+        (.ref relational-op-compiler '.fragment)
+        (let-values (((program output) (relational-op-compile graph 8 8 16 compiler)))
+          (check-equal? events '(program rule))
+          (check-equal? (relational-query-name (relational-solve (relational-admit program)) output)
+                        '((7 #f 7))))
+        (set! events [])
+        (let (fragment (relational-op-fragment graph 'result compiler))
+          (check-equal? events '(fragment rule))
+          (check-equal? (length (.ref fragment 'rules)) 1)
+          (check-equal? (relational-export fragment 'result)
+                        (.ref (car (.ref (car (.ref fragment 'rules)) 'heads)) 'relation))
+          (check-equal? (relational-export fragment 'flow)
+                        (car (.ref fragment 'source-handles))))
+        (for-each
+         (lambda (slot)
+           (check-exception
+            (relational-op-compile graph 8 8 16
+             (case slot
+              ((rule) (.o (:: @ compiler) (.make-rule #f)))
+              ((program) (.o (:: @ compiler) (.make-program #f)))
+              (else (.o (:: @ compiler) (.make-fragment #f))))) true))
+         '(rule program fragment))))
+    (test-case "compiler flow completes admission before any construction callback"
+      (let* ((events [])
+             (graph (relational-op-project (relational-op-source 'flow-invalid 2 '((1 2))) '(0)))
+             (compiler (.o (:: @ relational-op-compiler)
+                           (.make-relation (lambda args (set! events (cons 'relation events)) (apply gerbil-ascent-relation args)))
+                           (.make-rule (lambda args (set! events (cons 'rule events)) (apply gerbil-ascent-rule args))))))
+        (set-car! (relational-op-data graph) 2)
+        (check-exception (relational-op-compile graph 8 8 16 compiler) true)
+        (check-exception (relational-op-fragment graph 'result compiler) true)
+        (check-equal? events [])))
     (test-case "projected join compiles directly to its output relation"
       (let* ((edge (relational-op-source
                     'edge 2 '((0 1) (1 2) (2 0))))

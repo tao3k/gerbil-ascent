@@ -41,6 +41,7 @@
     "program/operator-analysis"
     "program/operator-measurement"
     "program/operator-reference"
+    "program/operator-lowering"
     "program/operator"
     "program/finite-arithmetic"
     "program/higher-order"

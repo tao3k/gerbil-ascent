@@ -1145,3 +1145,21 @@ independent row/frame ownership. The native lifecycle benchmark and failure,
 ordering and expression controls are in
 =t/performance/index-requirements/README.org=, including small-input allocation
 costs and the limited benefit of the initial traversal-only experiment.
+
+* Compile correspondence and specialize cache constructors by admitted domain
+
+Gerbil =1cfb032= =compiler/optimize-call.ss:660-685= uses known keyword signature
+metadata to resolve positions before emitting a specialized call.
+=runtime/hash.ss:385-489= selects storage from explicit equality/hash contracts.
+Use a private compiled gather when repeatedly rediscovering the same correspondence;
+reuse an existing gather protocol rather than duplicate row/value traversal.
+
+=table/index-sharing.ss= now compiles key positions under a final private record,
+guards detached physical prefix facts, and clears scratch after reading each new
+key. The plan table owns column spines and specializes natural ordinal sequences.
+The result table owns tuple spines and compares arbitrary fields with full Scheme
+value equality. Ordered keys keep their direct path and two-column swaps have a
+simple algebraic branch. Provider extensibility remains under existing public
+generics. Complete lifecycle A/B, mutable-header and occurrence controls are in
+=t/performance/shared-key-plan/README.org=, including the initial generic-cache
+regression and the failed intermediate prefix target.

@@ -4,7 +4,6 @@
 
 ;;; Finite logical column requirements share curried physical chains. Planning
 ;;; owns no rows. Each engine/worker builds and extends its own physical roots.
-(import (only-in :gerbil/runtime/gambit equal?-hash))
 (export gerbil-ascent-index-sharing-layout gerbil-ascent-index-sharing-certificate?
         gerbil-ascent-shared-index-build gerbil-ascent-shared-index-extend!
         gerbil-ascent-shared-index-rows)
@@ -180,26 +179,16 @@
       (error "index sharing chains omit a requirement"))
     layout))
 
-(defstruct shared-index (columns root ordinal views projection key-plans))
+(defstruct shared-index (columns root ordinal views projection))
 ;;; Immutable column facts and one mutable scratch frame belong to one index.
 ;;; Neither metadata nor frame is a result row or a published bucket spine.
 (defstruct column-projection (columns writes frame))
-;;; A lookup plan owns only detached column facts and cleared private scratch.
-(defstruct key-projection (physical writes frame) final: #t)
-
-;;; Lookup keys are proper tuples; compare fields with Scheme's full value
-;;; equality without treating the tuple spine as an arbitrary cyclic graph.
-(def (key-sequence=? left right)
-  (if (null? left) (null? right)
-    (and (pair? right) (equal? (car left) (car right))
-         (key-sequence=? (cdr left) (cdr right)))))
 ;;; Trie nodes retain either child maps or occurrence lists at full depth.
 ;;; Each occurrence has one increasing ordinal, so prefix traversal can restore
 ;;; exact relation order independently of hash traversal order and duplicates.
 ;; : (-> AdmittedRows NonemptyDistinctColumns SharedIndex)
 (def (gerbil-ascent-shared-index-build rows columns)
-  (let (index (make-shared-index columns (make-hash-table) 0
-                                 (make-hash-table test: key-sequence=? hash: equal?-hash) #f #f))
+  (let (index (make-shared-index columns (make-hash-table) 0 (make-hash-table) #f))
     (gerbil-ascent-shared-index-extend! index (reverse rows))
     index))
 
@@ -208,7 +197,7 @@
   ;; Old result spines remain immutable. One successful batch invalidates all
   ;; aliases together; there is no shared mutable bucket between engine owners.
   (when (pair? rows)
-    (shared-index-views-set! index (make-hash-table test: key-sequence=? hash: equal?-hash))
+    (shared-index-views-set! index (make-hash-table))
     (let* ((columns (shared-index-columns index))
            (width (length columns))
            ;; Sort reads, not trie levels. Each instruction carries the forward
@@ -278,62 +267,6 @@
       (vector-set! frame (cdr instruction) (car selected))
       (fill-column-frame! (cdr selected) (cdr writes) frame))))
 
-;;; Resolve logical positions once, then reuse the insertion gather protocol.
-;;; Validation completes before metadata publication; values enter only later.
-(def (compile-key-projection logical physical)
-  (let ((positions (make-hash-table-eqv)) (width (length logical)))
-    (for-each (lambda (column position)
-                (unless (hash-get positions column) (hash-put! positions column position)))
-              logical (iota width))
-    (let gather ((remaining physical) (left width) (selected []) (prefix []))
-      (if (zero? left)
-        (make-key-projection (list->vector (reverse! prefix))
-                            (column-writes (reverse! selected)) (make-vector width #f))
-        (let (position (and (pair? remaining) (hash-get positions (car remaining))))
-          (unless position (error "logical index is not a physical prefix" logical physical))
-          (gather (cdr remaining) (- left 1) (cons position selected) (cons (car remaining) prefix)))))))
-
-(def (same-physical-prefix? physical snapshot)
-  (let compare ((remaining physical) (slot 0))
-    (or (= slot (vector-length snapshot))
-        (and (pair? remaining) (equal? (car remaining) (vector-ref snapshot slot))
-             (compare (cdr remaining) (+ slot 1))))))
-
-;;; Metadata equality consumes natural ordinals, including large exact values.
-;;; Keep hashing under Gerbil's existing structural hash contract.
-(def (column-sequence=? left right)
-  (if (null? left) (null? right)
-    (and (pair? right) (= (car left) (car right))
-         (column-sequence=? (cdr left) (cdr right)))))
-
-(def (project-lookup-key index logical physical key)
-  (let* ((plans (shared-index-key-plans index))
-         (prior (and plans (hash-get plans logical)))
-         (plan (if (and prior (same-physical-prefix? physical (key-projection-physical prior))) prior
-                 (let (fresh (compile-key-projection logical physical))
-                   (unless plans
-                     (set! plans (make-hash-table hash: equal?-hash test: column-sequence=?))
-                     (shared-index-key-plans-set! index plans))
-                   ;; Never retain the caller's mutable logical column spine.
-                   (hash-put! plans (append logical []) fresh) fresh)))
-         (frame (key-projection-frame plan)))
-    (fill-column-frame! key (key-projection-writes plan) frame)
-    (let (owned (vector->list frame))
-      ;; Metadata reuse must not retain a previous query's expression values.
-      (vector-fill! frame #f)
-      owned)))
-
-;;; The only nonidentity two-column prefix is a swap. Express that algebraic
-;;; shape directly, without admitting a cache or scratch frame for a tiny key.
-(def (adapt-lookup-key index logical physical key)
-  (match logical
-    ([left right]
-     (unless (and (pair? physical) (pair? (cdr physical))
-                  (= left (cadr physical)) (= right (car physical)))
-       (error "logical index is not a physical prefix" logical physical))
-     (list (cadr key) (car key)))
-    (else (project-lookup-key index logical physical key))))
-
 ;;; Logical key order may differ from the physical prefix permutation. Resolve
 ;;; that adapter without changing caller columns, keys, rows or published lists.
 ;; : (-> SharedIndex LogicalPrefixColumns LogicalKey OrderedRows)
@@ -346,6 +279,13 @@
       (or (null? logical)
           (and (pair? remaining) (= (car logical) (car remaining))
                (already-ordered? (cdr logical) (cdr remaining)))))
+    (def (value-of column logical values)
+      (cond ((null? logical) (error "logical index is not a physical prefix" columns physical))
+            ((= column (car logical)) (car values))
+            (else (value-of column (cdr logical) (cdr values)))))
+    (def (adapt remaining count)
+      (if (= count 0) []
+        (cons (value-of (car remaining) columns key) (adapt (cdr remaining) (- count 1)))))
     ;; Thread one result tail through every branch. Only leaf bucket spines
     ;; are copied; ancestors never append an already collected subtree again.
     ;; Hash traversal order remains private: unique ordinals restore row order.
@@ -356,7 +296,7 @@
          (if (null? (cdr remaining)) (append child records)
            (collect child (cdr remaining) records))) tail node))
     (let* ((physical-key (if (already-ordered? columns physical) key
-                            (adapt-lookup-key index columns physical key)))
+                            (adapt physical (length columns))))
            (cached (hash-get (shared-index-views index) physical-key)))
       (if cached (cdr cached)
         (let (rows
@@ -367,6 +307,5 @@
                     (if (not child) []
                       (if (null? (cdr remaining)) (map cdr child)
                         (lookup child (cdr remaining) (cdr key))))))))
-          ;; Cache membership owns its spine even on the ordered fast path.
-          (hash-put! (shared-index-views index) (append physical-key []) (cons #t rows))
+          (hash-put! (shared-index-views index) physical-key (cons #t rows))
           rows)))))

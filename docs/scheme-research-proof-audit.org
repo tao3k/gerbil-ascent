@@ -338,3 +338,45 @@ verification and returns no partial closure. Existing count/sum/min/max and
 empty-group controls remain; a mixed symbolic-scalar control also agrees with
 the native count and independent verifier. This removes a temporary list and its length pass;
 there is no measured wall-clock or whole-engine performance claim.
+
+* Numeric streaming folds and absorbing type failure (2026-10-09)
+
+Re-reading [[https://kmicinski.com/assets/byods.pdf][B23]], §3, keeps the concretized relation as the semantic
+input. Its total/delta coverage can overlap; adding aggregate results from
+overlapping pivot batches would double-count. This implementation instead reads
+the complete frozen, deduplicated replay relation after the lower stratum has
+finished. The paper's positive calculus does not certify our numeric reducers.
+
+=candidate/finite-evidence.ss= now streams sum/min/max as well as count. Sum
+starts at exact integer zero; extrema start without a value and use the first
+matching integer as their seed. A noninteger matching value permanently disables
+the numeric result for that scan. Remaining row probes still consume the same
+budget, so a type failure does not hide a later resource refusal. No reducer
+retains a list of matching values. This removes that list, its type pass and its
+final numeric pass; it does not establish a general heap or wall-clock bound.
+
+[[file:../packages/proofs/lean/NumericReduction.lean][NumericReduction]] proves eight laws: seeded and unseeded sum/min/max agree
+with integer-list sum and optional extrema; every noninteger in an arbitrary
+finite prefix/suffix suppresses the completed result; empty sum is zero and
+empty extrema have no result. Eight examples cover signs, zero, invalid values
+and exact arithmetic at =2^100=. =none= input represents a noninteger. The pure
+function determines the result of a completed scan; its immediate invalid-input
+return does not model native work accounting, which remains in Quint.
+
+[[file:../packages/proofs/quint/NumericProbe.qnt][NumericProbe]] checks 150 reachable states across sum/min/max, empty and
+signed inputs, noninteger tags and budget refusal. Typed prefixes, exact scalar
+accumulation, completed publication and unpublished bounded scans hold. Skipping
+a type failure, inventing an empty extreme, seeding an extreme with zero,
+publishing early and publishing a refused scan each violate the designated
+invariant. =999= is an abstract noninteger tag in this finite model; it does not
+exclude the native integer 999. Binding, deduplication and source-generation
+protocols remain owned by their existing implementation/models.
+
+Native tests compare legal numeric results and independent certificate replay
+against the actual completed engine for positive/negative extrema, zero and
+=2^100=. Separate inspected-replay controls place a noninteger first, middle
+and last: all completed scans yield no aggregate row, while one missing work
+step returns =bounded= with no partial closure. Those controls supply a completed
+empty native answer to exercise replay; they do not claim the engine admits
+nonnumeric arithmetic. Existing empty-group, count, negative-probe and all
+64 graph controls remain in the same 16-Case native Suite.

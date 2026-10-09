@@ -111,6 +111,33 @@
 
 (def ascent-finite-evidence-test
   (test-suite "finite stratified replay evidence"
+    (test-case "numeric streaming reducers preserve zero extrema and exact big integers"
+      (def (check-values values sum-value minimum maximum)
+        (let (input (reasoning-source-snapshot 'numeric-fold 0
+                      (list '(root 1 ((1)))
+                            (list 'weight 2 (map (lambda (value) (list 1 value)) values)))))
+          (for-each (lambda (mode expected)
+            (check-case input (reducer-program mode 1) (list (list 1 expected))))
+            '(sum min max) (list sum-value minimum maximum))))
+      (check-values '(-8 3 5) 0 -8 5)
+      (check-values '(8 3 5) 16 3 8)
+      (check-values '(-8 -3 -5) -16 -8 -3)
+      (check-values '(0) 0 0 0)
+      (let (large (expt 2 100)) (check-values (list large (- large)) 0 (- large) large)))
+    (test-case "numeric type failure stays invalid and still consumes the scan budget"
+      (for-each (lambda (values)
+        (let (input (reasoning-source-snapshot 'numeric-invalid 0
+                      (list '(root 1 ((1)))
+                            (list 'weight 2 (map (lambda (value) (list 1 value)) values)))))
+          (for-each (lambda (mode)
+            (let* ((spec (candidate-inspect input (reducer-program mode 1)))
+                   (certificate (candidate-finite-evidence input spec 'invalid 'complete [] 4))
+                   (bounded (candidate-finite-evidence input spec 'invalid 'complete [] 3)))
+              (check-equal? (finite-evidence-status certificate) 'complete)
+              (check-equal? (candidate-verify-finite-evidence input spec 'invalid 'complete [] certificate 4) 'valid)
+              (check-equal? (finite-evidence-status bounded) 'bounded)
+              (check-equal? (finite-evidence-closure bounded) []))) '(sum min max))))
+        '((bad 2 3) (2 bad 3) (2 3 bad))))
     (test-case "count accepts nonnumeric matching scalar rows"
       (check-case (reasoning-source-snapshot 'count-scalars 0
                     '((root 1 ((1))) (weight 2 ((1 alpha) (1 beta) (2 gamma)))))

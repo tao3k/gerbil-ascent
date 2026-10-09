@@ -164,33 +164,28 @@
                        (let* ((output (cadr clause))
                               (operator (caddr clause))
                               (atom (cadddr clause))
-                              (count? (eq? (car operator) 'count))
-                              (count 0)
-                              (matches []))
+                              (mode (car operator))
+                              (accumulator (and (memq mode '(count sum)) 0))
+                              (numeric? #t))
                          (let probe ((remaining (rows (car atom))))
                            (when (and (pair? remaining) (step!))
                               (let (next (candidate-bind-atom atom (car remaining) bindings))
                                 (when next
-                                  (if count?
-                                    (set! count (+ count 1))
-                                    (set! matches
-                                      (cons (cdr (candidate-required-entry
-                                                  (cadr operator) next))
-                                            matches)))))
+                                  (if (eq? mode 'count)
+                                    (set! accumulator (+ accumulator 1))
+                                    (when numeric?
+                                      (let (value (cdr (candidate-required-entry (cadr operator) next)))
+                                        (if (exact-integer? value)
+                                          (set! accumulator
+                                            (case mode
+                                              ((sum) (+ accumulator value))
+                                              ((min) (if accumulator (min accumulator value) value))
+                                              ((max) (if accumulator (max accumulator value) value))
+                                              (else #f)))
+                                          (set! numeric? #f)))))))
                              (probe (cdr remaining))))
                          (unless bounded?
-                           (let (value
-                                 (case (car operator)
-                                   ((count) count)
-                                   ((sum) (and (andmap exact-integer? matches)
-                                               (apply + 0 matches)))
-                                   ((min) (and (pair? matches)
-                                               (andmap exact-integer? matches)
-                                               (apply min matches)))
-                                   ((max) (and (pair? matches)
-                                               (andmap exact-integer? matches)
-                                               (apply max matches)))
-                                   (else #f)))
+                           (let (value (and numeric? accumulator))
                              (when value
                                (walk (cdr clauses)
                                      (cons (cons output value) bindings)))))))

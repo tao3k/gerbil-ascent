@@ -8,7 +8,8 @@
                  candidate-positive-provenance candidate-verify-positive-provenance
                  positive-provenance-status positive-provenance-alternatives
                  candidate-open-provenance-maintenance provenance-maintenance-rows
-                 candidate-provenance-withdraw! candidate-provenance-preview-withdraw))
+                 candidate-provenance-withdraw! candidate-provenance-preview-withdraw
+                 candidate-provenance-compact provenance-maintenance-size))
 (import (rename-in (only-in :gerbil-ascent/t/performance/provenance-index/reference
                            candidate-positive-provenance positive-provenance-status
                            positive-provenance-alternatives positive-provenance-witness)
@@ -209,6 +210,28 @@
                              fresh spec 'program 'complete [] 64)))
           (check-equal? (positive-provenance-status fresh-graph) 'complete)
           (check-equal? (provenance-maintenance-rows state) []))))
+    (test-case "compacted previews preserve their input and final-phase exhaustion publishes nothing"
+      (let* ((snapshot (reasoning-source-snapshot 'compact-preview 1 '((s 1 ((1) (1))))))
+             (spec (recursive-provenance-spec))
+             (graph (candidate-positive-provenance snapshot spec 'program 'complete '((1)) 64))
+             (state (candidate-open-provenance-maintenance snapshot spec 'program 'complete '((1)) graph 64)))
+        (candidate-provenance-withdraw! state '((s 1)))
+        (let-values (((next work) (candidate-provenance-compact state)))
+          (check-equal? (> work 1) #t)
+          (check-exception (candidate-provenance-compact state (- work 1)) true)
+          (check-equal? (provenance-maintenance-rows state) '((1)))
+          (let-values (((exact _work) (candidate-provenance-compact state work)))
+            (check-equal? (provenance-maintenance-rows exact) '((1))))
+          (candidate-provenance-withdraw! next '((s 2)))
+          (check-equal? (provenance-maintenance-rows next) [])
+          (check-equal? (provenance-maintenance-rows state) '((1)))
+          (let-values (((empty _work) (candidate-provenance-compact next)))
+            (let-values (((nodes edges roots) (provenance-maintenance-size empty)))
+              (check-equal? (list nodes edges roots) '(0 0 0)))
+            ;; Initial selector registry survives compaction; retired cuts remain
+            ;; admitted idempotently by the low-level API, without resurrection.
+            (candidate-provenance-withdraw! empty '((s 1) (s 2)) 1)
+            (check-equal? (provenance-maintenance-rows empty) [])))))
     (test-case "failed grounded deletion preserves the published rows and source state"
       (let* ((snapshot (reasoning-source-snapshot 'deletion-rollback 1 '((s 1 ((1))))))
              (spec (recursive-provenance-spec))

@@ -29,7 +29,7 @@ for all these states.
 | Souffle | [[file:scheme-dsl/souffle-s16.org][note]] | Dedicated synthesis/index-selection method reading; canonical native chain planning implemented; RAM/C++ and full workloads pending |
 | Differential dataflow | [[file:scheme-dsl/differential-m13.org][note]] | Dedicated signed-change/partial-order semantics reading; trace execution and compaction remain open |
 | DBSP | [[file:scheme-dsl/dbsp-b22.org][note]] | Dedicated reading; derivative circuit implementation pending |
-| DRedc | [[file:scheme-dsl/deletion-h18.org][note]] | Dedicated reading; grounded positive DRed Session and native component rederivation; DRedc pending |
+| DRedc | [[file:scheme-dsl/deletion-h18.org][note]] | Dedicated reading; grounded positive DRed, bounded deletion-only support compaction and native component rederivation; count-based DRedc pending |
 | egglog | [[file:../related-work-matrix.org][note]] | Matrix only; equality saturation/congruence semantics unimplemented |
 | Formulog | [[file:../related-work-matrix.org][note]] | Matrix only; SMT terms/solver boundary unimplemented |
 | microKanren | [[file:scheme-dsl/microkanren-h13.org][note]] | Dedicated reading; separate search semantics; no stream-search executor |

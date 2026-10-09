@@ -4,7 +4,7 @@
 
 ;;; One serialized positive owner publishes maintained rows, source generation
 ;;; and grounded support together. Native evaluation qualifies the initial cut.
-(import (only-in :clan/poo/object .o .ref)
+(import (only-in :clan/poo/object .o .ref object? .slot?)
         (only-in :clan/poo/mop define-type validate .defgeneric)
         (only-in :core/types PooFlowNativeObjectContract. poo-flow-predicate-contract)
         (only-in "datum.ss" candidate-copy-pairs reasoning-bounded-data?)
@@ -16,18 +16,29 @@
         (only-in "funs.ss" candidate-bind-atom)
         (only-in "provenance-graph.ss" candidate-positive-provenance
                  candidate-open-provenance-maintenance
-                 candidate-provenance-preview-withdraw)
+                 candidate-provenance-preview-withdraw candidate-provenance-compact
+                 provenance-maintenance-size)
         (only-in :gerbil-ascent/program/session gerbil-ascent-open-session
                  gerbil-ascent-session-run))
 (export candidate-open-withdrawal-session candidate-withdrawal-observe
-        candidate-withdrawal-session! GerbilAscentWithdrawalSessionContract)
+        candidate-withdrawal-session! candidate-withdrawal-compact!
+        candidate-withdrawal-support-size GerbilAscentWithdrawalSessionContract)
+
+;;; Admit the named procedure protocol as one responsibility. Four identical
+;;; per-slot evidence trees add construction cost without richer method types.
+;;; Every method is still required and checked before this owner escapes.
+;; : (-> Any Boolean)
+(def (withdrawal-operations? candidate)
+  (and (object? candidate)
+       (andmap (lambda (slot) (and (.slot? candidate slot) (procedure? (.ref candidate slot))))
+               '(.observe .withdraw .compact .support-size))))
 
 (define-type (GerbilAscentWithdrawalSessionContract @ PooFlowNativeObjectContract.)
   identity: 'ascent/grounded-withdrawal-session
   proto: (.o)
   responsibilities:
-  (.o .observe: (poo-flow-predicate-contract 'ascent/observe procedure? (lambda (_v _c) []))
-      .withdraw: (poo-flow-predicate-contract 'ascent/withdraw procedure? (lambda (_v _c) []))))
+  (.o .operations: (poo-flow-predicate-contract 'ascent/withdrawal-operations
+                    withdrawal-operations? (lambda (_v _c) []))))
 
 ;;; Copy source identity as well as declaration spines: strings are mutable.
 ;; : (-> ReasoningSnapshot Nat SourceDeclarations ReasoningSnapshot)
@@ -84,7 +95,7 @@
 
 ;;; Admit a complete graph once. Positive source deletion cannot introduce
 ;;; new ground instances. Current positions map to private initial occurrence
-;;; tokens; the original graph remains coverage for every subsequent subcut.
+;;; tokens; the admitted graph and its live restriction cover subsequent subcuts.
 ;; : (-> ReasoningSnapshot Datum Nat Nat WithdrawalSession)
 (def (candidate-open-withdrawal-session source proposal (proof-steps 100000) (edge-limit 4096))
   (unless (reasoning-snapshot-valid? source) (error "invalid withdrawal source"))
@@ -139,11 +150,32 @@
                   (set! current next)))))
           (lambda () (set! active? #f)))
         (observe))
+      (def (support-size)
+        (when active? (error "support observation during transaction"))
+        (let-values (((node-count edge-count root-count) (provenance-maintenance-size (vector-ref current 1))))
+          (.o nodes: node-count edges: edge-count roots: root-count)))
+      (def (compact! generation budget)
+        (when active? (error "reentrant compaction transaction"))
+        (unless (and (exact-integer? generation)
+                     (= generation (reasoning-snapshot-generation (vector-ref current 0)))
+                     (exact-integer? budget) (> budget 0))
+          (error "stale compaction generation or invalid budget"))
+        (dynamic-wind
+          (lambda () (set! active? #t))
+          (lambda ()
+            (let-values (((support _work) (candidate-provenance-compact (vector-ref current 1) budget)))
+              ;; Maintenance changes representation, not source generation or
+              ;; public rows. A failed bounded build leaves the old owner intact.
+              (let (next (vector (vector-ref current 0) support (vector-ref current 2) (vector-ref current 3)))
+                (set! current next))))
+          (lambda () (set! active? #f)))
+        (observe))
       (validate GerbilAscentWithdrawalSessionContract
         (.o (:: @ (.ref GerbilAscentWithdrawalSessionContract 'proto))
-            (.observe observe) (.withdraw withdraw!))))))
+            (.operations (.o (.observe observe) (.withdraw withdraw!)
+                             (.compact compact!) (.support-size support-size))))))))
 
-(def (withdrawal-observe session) ((.ref session '.observe)))
+(def (withdrawal-observe session) ((.ref (.ref session '.operations) '.observe)))
 (.defgeneric (withdrawal-update session generation selectors budget) slot: .withdraw)
 ;;; Observations detach every public pair and identity string from the owner.
 ;; : (-> WithdrawalSession WithdrawalObservation)
@@ -151,4 +183,13 @@
 ;;; The expected generation selects current occurrences; failures publish no cut.
 ;; : (-> WithdrawalSession Nat SourceOccurrences Nat WithdrawalObservation)
 (def (candidate-withdrawal-session! session generation selectors (budget 100000))
-  (withdrawal-update session generation selectors budget))
+  (withdrawal-update (.ref session '.operations) generation selectors budget))
+
+(.defgeneric (withdrawal-compact session generation budget) slot: .compact)
+;;; Explicit positive-only maintenance preserves source generation and rows.
+;; : (-> WithdrawalSession Nat Nat WithdrawalObservation)
+(def (candidate-withdrawal-compact! session generation (budget 100000))
+  (withdrawal-compact (.ref session '.operations) generation budget))
+;;; Immutable count snapshot; this does not measure resident memory.
+;; : (-> WithdrawalSession SupportSize)
+(def (candidate-withdrawal-support-size session) ((.ref (.ref session '.operations) '.support-size)))

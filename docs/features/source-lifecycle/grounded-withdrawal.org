@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 #+TITLE: Grounded withdrawal Session publication
-#+DATE: 2026-10-09
+#+DATE: 2026-10-10
 
 * Executable owner
 
@@ -9,9 +9,14 @@
 Initialization solves the copied source with the native evaluator and verifies
 its complete grounded graph. Its POO owner then retains that graph, mutable
 membership snapshots and private stable source occurrence tokens. Observation
-and occurrence withdrawal are the only methods; no native engine or support
-state escapes. Maintained rows follow surviving initial root order; the query
+occurrence withdrawal, explicit compaction and retained-size observation are
+public methods; no native engine or support state escapes. Maintained rows follow surviving initial root order; the query
 meaning is set-valued. Negative rules and reducers do not enter this positive owner.
+
+The POO owner admits one =.operations= responsibility whose named map requires
+all four procedure methods. Public helpers dispatch through that map. This
+shares protocol admission evidence; it does not omit validation of any method.
+The qualification Suite rejects a missing map and each nonprocedure method.
 
 #+begin_src scheme
 (def owner (candidate-open-withdrawal-session snapshot proposal))
@@ -35,13 +40,13 @@ across another cut cannot change its generation, rows or source contents.
 
 1. Validate generation and every current occurrence; translate to stable tokens.
 2. Copy the prospective source cut and filter its token lists in the same order.
-3. Stage DRed overdelete/rederive against the initially verified complete graph.
+3. Stage DRed overdelete/rederive against the admitted graph or its live restriction.
 4. Complete bounded work and allocate the prospective rows/source/support/token state.
 5. Publish through one private state swap.
 
 Positive source deletion cannot introduce a new grounded rule instance.
 The initial graph covers all future subcuts; cumulative removed-token membership
-retires initial source edges without changing the graph. Candidate constants and
+retires initial source edges. Optional compaction removes unusable retained edges. Candidate constants and
 remaining grounded alternatives can rederive overdeleted facts. Unsupported
 cycles cannot seed themselves. No graph replay or native fixed-point solve runs
 on subsequent cuts. The initial certificate remains bound to its initial cut;
@@ -50,7 +55,38 @@ it is not republished as a fresh certificate for later generations.
 Failure preserves the previous cut, including token translation. The owner
 serializes public method calls and rejects reentrant access. Callers must
 serialize concurrent access; this is not a thread lock. Insertions require a
-new owner and complete graph admission. Physical edge compaction is not added.
+new owner and complete graph admission.
+
+* Explicit bounded support compaction
+
+=candidate-withdrawal-compact!= accepts the expected source generation and a
+positive work budget. It preserves source generation, token translation, visible
+rows and held observations. It builds a prospective support header, row index,
+edge list and root list, then publishes through the same serialized state swap.
+Budget failure or stale generation leaves the original owner intact. Compaction
+does not run automatically on every cut; callers choose when to spend the work.
+
+An edge survives exactly when its head and every premise are currently founded,
+and a source edge additionally requires an unretired token. Positive source
+subcuts cannot make an unfounded premise live again. Candidate-owned constants
+are retained. Dead row entries and query roots are discarded while surviving
+roots keep their original order. The immutable initial source registry and
+cumulative retired-token membership remain resident, preserving low-level
+selector validation and stable identities. This is deletion-only graph pruning,
+not timestamp/frontier compaction or support-count maintenance.
+
+#+begin_src scheme
+(candidate-withdrawal-compact! owner 1 100000)
+;; Same source generation and query rows.
+(candidate-withdrawal-support-size owner)
+;; Detached POO counts: nodes:, edges:, roots:; not resident memory bytes.
+#+end_src
+
+Every edge, inspected premise, row-index entry and root visit consumes the
+compaction budget. A low-level compact operation returns a new owner and work
+count without mutating its input. Sharing surviving private immutable edge/row
+pairs is safe because later withdrawals copy membership indexes before writing.
+Held public rows are independently copied and can outlive graph maintenance.
 
 * General native transaction boundary
 
@@ -66,11 +102,11 @@ maintained positive owner after initialization.
 
 | Layer | Gate | Boundary |
 |-------+------+----------|
-| Native semantic Suite | 64 graphs and all single cuts; all alternating-position sequences against independent walks AND fresh native receipts; mixed sources, duplicates, constants, rollback and held observations | Finite corpus, no native extraction proof |
+| Native semantic Suite | 64 graphs and all single cuts; all alternating-position sequences with compaction against uncompressed owners, independent walks AND fresh native receipts; mixed sources, duplicates, constants, rollback and held observations | Finite corpus, no native extraction proof |
 | WD26 | Administrative source cut, independent walk, maintained rows and fresh receipt agree | Finite extract, no model synthesis score |
-| Lean StableSourceSupport | Initial rule-instance coverage remains sufficient for positive subcuts; stable token survival and cumulative cuts | Native grounding and token decoding remain representation obligations |
+| Lean StableSourceSupport | Initial coverage, token survival, cumulative cuts and current-founded rule restriction preserve every future source subcut | Native grounding, live-index exactness and token decoding remain representation obligations |
 | Lean ComponentClosure.SourceWithdrawal | Founded overdelete/rederive recovery and surviving occurrence support | Mutable Scheme loop refinement remains open |
-| Quint WithdrawalSession | Frozen graph, cumulative removed membership, token order and atomic publication; seven fault variants including historical observation borrowing | Finite duplicate-support graph, serialized public boundaries |
+| Quint WithdrawalSession | Frozen logical graph, cumulative membership, token order, retained support coverage and atomic cut/compaction publication; ten fault variants | Finite duplicate-support source registry, no full graph-pruning refinement |
 
 * Matched complete lifecycle costs
 
@@ -99,8 +135,34 @@ The subsequent native run passed all four scenarios. Chain median CPU was
 12.206 to 8.346ms and allocated bytes 18,463,208 to 13,487,768; diamond was
 11.324 to 7.858ms and 17,357,112 to 12,979,008 bytes. Both targets won all
 50 CPU pairs. These are eight-cut finite lifecycles. Allocation is not a
-resident-memory measurement: the initial complete graph stays resident until
-the owner is released, even after all sources are withdrawn.
+resident-memory measurement. That measured lifecycle does not call the new
+explicit compaction operation; support stays resident until the owner is released.
+
+Compaction has a separate deterministic bounded-work discriminator. After seven
+of eight independent source edges are withdrawn, a final cut with budget 8
+fails on the uncompressed owner and succeeds on the compacted owner; both agree
+with the default-budget result. Retained node/edge/root counts decrease. This
+qualifies reclaimed graph visits, not a CPU, allocated-byte or RSS speedup.
+
+Adding two independently admitted method responsibilities initially failed the
+unchanged diamond allocation gate: baseline 17,367,352 bytes, new 13,067,904
+bytes. The protocol now validates its four named procedures together rather
+than building four identical per-method classification/evidence trees.
+The failed receipt is retained; thresholds and workload remain unchanged.
+
+After protocol admission was grouped, the native gate passed all nine Suites
+within the unchanged 120-second deadline. Diamond allocation was 12,949,744
+bytes against 17,367,352 bytes for replay. A concurrent local run with source
+qualification/policy build still exhausted 120 seconds in the older change-plan
+Suite after all four support scenarios passed; its negative receipt remains
+retained. The separate native gate passed. These observations do not isolate
+all causes of host scheduling delay.
+
+The connected local qualification comprises 13 withdrawal/compaction Cases and
+12 provenance-kernel Cases, including exhaustion one visit before successful
+compaction, input-owner isolation and retired-token validation after an empty
+graph is compacted. Lean completed all 146 build jobs. Quint explored 9,894
+generated / 3,796 distinct finite states and rejected all ten fault variants.
 
 * Research boundary
 

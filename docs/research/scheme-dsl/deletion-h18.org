@@ -12,6 +12,7 @@
 :SOURCE_PDF: https://ojs.aaai.org/index.php/AAAI/article/view/11554/11413
 :DOI: 10.1609/aaai.v32i1.11554
 :ACCESSED: 2026-10-01
+:RECHECKED: 2026-10-10
 :END:
 
 Pan Hu, Boris Motik and Ian Horrocks, /Optimised Maintenance of
@@ -103,3 +104,18 @@ DRed memberships maintain positive subcuts. Each native qualification cut is
 compared with independent traversal and a fresh receipt. General native Session
 replacement remains affected-component rederivation. No DRedc count optimization,
 negation derivative, lattice inverse or signed trace is introduced.
+
+* Positive support restriction (2026-10-10)
+
+The authoritative H18 PDF was rechecked for §3.1 and §4: its DRedc mechanism
+separates derivation counts and addresses rule evaluation. Our explicit graph
+compaction is a repository-derived deletion-only representation optimization,
+not an implementation or replication of that count algorithm. Lean's
+=StableSourceSupport.restriction_preserves= establishes that restricting a
+ground graph to currently founded heads and premises preserves every future
+positive source subcut. Native live-index exactness and loop refinement remain
+premises. The Scheme owner discards retired source edges, unfounded alternatives,
+dead row entries and dead query roots atomically under a visit budget. Stable
+source identities and candidate constants remain intact. Matched compacted and
+uncompressed deletion sequences and the work-budget discriminator qualify this
+transfer; no resident-memory or wall-time result is claimed.

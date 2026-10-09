@@ -4,14 +4,55 @@
 
 ;;; Private retained state over an already verified grounded support graph.
 ;;; Enumeration and verification belong to provenance-graph. Membership indexes
-;;; never order evidence; every bounded phase still traverses the copied edges.
+;;; never order evidence; every bounded phase still traverses the retained edges.
 (import (only-in "datum.ss" reasoning-bounded-data? candidate-copy-pairs)
         (only-in "provenance.ss" positive-proof-nodes positive-proof-roots
                  proof-node-id proof-node-row))
 (export candidate-make-provenance-maintenance provenance-maintenance?
         provenance-maintenance-rows candidate-provenance-withdraw!
-        candidate-provenance-preview-withdraw)
+        candidate-provenance-preview-withdraw candidate-provenance-compact
+        provenance-maintenance-size)
 (defstruct provenance-maintenance (rows-table roots edges sources alive removed))
+
+;;; Counts describe retained graph owners, not allocator or resident memory.
+;; : (-> ProvenanceMaintenance (Values Nat Nat Nat))
+(def (provenance-maintenance-size state)
+  (unless (provenance-maintenance? state) (error "expected provenance maintenance state"))
+  (values (hash-length (provenance-maintenance-rows-table state))
+          (length (provenance-maintenance-edges state))
+          (length (provenance-maintenance-roots state))))
+
+;;; Positive subcuts cannot make a currently unfounded premise live again.
+;;; Build a detached header and row index; immutable surviving edges can share
+;;; their pairs. Keep the initial source registry and cumulative retired tokens
+;;; so low-level selector validation and repeated cuts retain their meaning.
+;;; Charge edge, premise, row and root visits before returning any new owner.
+;; : (-> ProvenanceMaintenance Nat (Values ProvenanceMaintenance Nat))
+(def (candidate-provenance-compact state (max-steps 100000))
+  (unless (and (provenance-maintenance? state) (exact-integer? max-steps) (> max-steps 0))
+    (error "invalid provenance compaction"))
+  (let ((alive (provenance-maintenance-alive state))
+        (removed (provenance-maintenance-removed state))
+        (rows (make-hash-table-eqv)) (steps 0))
+    (def (probe!)
+      (set! steps (+ steps 1))
+      (when (> steps max-steps) (error "provenance compaction budget exceeded")))
+    (let* ((edges
+             (filter (lambda (edge)
+                       (probe!)
+                       (and (hash-get alive (car edge))
+                            (not (and (eq? (cadr edge) 'source)
+                                      (hash-get removed (caddr edge))))
+                            (andmap (lambda (id) (probe!) (hash-get alive id)) (cadddr edge))))
+                     (provenance-maintenance-edges state)))
+           (roots (filter (lambda (id) (probe!) (hash-get alive id))
+                          (provenance-maintenance-roots state))))
+      (hash-for-each (lambda (id row)
+                       (probe!)
+                       (when (hash-get alive id) (hash-put! rows id row)))
+                    (provenance-maintenance-rows-table state))
+      (values (make-provenance-maintenance rows roots edges
+                 (provenance-maintenance-sources state) alive removed) steps))))
 
 ;; candidate-make-provenance-maintenance
 ;; : (forall (row) (-> (VerifiedPositiveProof row) GroundedAlternatives (ProvenanceMaintenance row)))

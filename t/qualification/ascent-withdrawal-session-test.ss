@@ -1,7 +1,8 @@
 ;;; -*- Gerbil -*-
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
-(import :std/test (only-in :clan/poo/object .ref)
+(import :std/test (only-in :clan/poo/object .ref .cc .o)
+        (only-in :clan/poo/mop validate)
         :gerbil-ascent/candidate/withdrawal-session
         (only-in :gerbil-ascent/candidate/reasoning reasoning-source-snapshot
                  reasoning-attempt reasoning-receipt-bound? reasoning-receipt-rows)
@@ -34,6 +35,16 @@
                       (filter-map (lambda (b) (and (reaches? a b) (list a b))) '(0 1 2))) '(0 1 2))))
 (def ascent-withdrawal-session-test
   (test-suite "Grounded withdrawal and native publication"
+    (test-case "grouped protocol admission requires every named procedure"
+      (let* ((owner (candidate-open-withdrawal-session (source '((0 1))) proposal))
+             (operations (.ref owner '.operations)))
+        (for-each (lambda (slot)
+                    (check-exception
+                      (validate GerbilAscentWithdrawalSessionContract
+                        (.cc owner '.operations (.cc operations slot 'invalid))) (lambda (_) #t)))
+                  '(.observe .withdraw .compact .support-size))
+        (check-exception (validate GerbilAscentWithdrawalSessionContract
+                          (.cc owner '.operations (.o))) (lambda (_) #t))))
     (test-case "source occurrence ordinals rebind after every committed generation"
       (let* ((cut (source '((0 1) (0 1) (1 2) (2 1))))
              (receipt (reasoning-attempt cut proposal))
@@ -121,6 +132,53 @@
         (check-set (.ref second 'rows) (reference '((0 1) (2 0))))
         (check-set (.ref second 'rows)
                    (reasoning-receipt-rows (reasoning-attempt (.ref second 'source) p)))))
+    (test-case "explicit compaction is bounded atomic idempotent and preserves duplicate tokens"
+      (let* ((owner (candidate-open-withdrawal-session (source '((0 1) (0 1) (1 2) (2 1))) proposal))
+             (first (candidate-withdrawal-session! owner 0 '((edge 1))))
+             (size (candidate-withdrawal-support-size owner)))
+        (for-each (lambda (budget)
+                    (check-exception (candidate-withdrawal-compact! owner 1 budget) (lambda (_) #t)))
+                  '(0 -1 1))
+        (check-exception (candidate-withdrawal-compact! owner 0) (lambda (_) #t))
+        (check-equal? (.ref (candidate-withdrawal-support-size owner) 'edges) (.ref size 'edges))
+        (let* ((compacted (candidate-withdrawal-compact! owner 1))
+               (smaller (candidate-withdrawal-support-size owner)))
+          (check-equal? (< (.ref smaller 'edges) (.ref size 'edges)) #t)
+          (check-equal? (.ref compacted 'rows) (.ref first 'rows))
+          (check-equal? (reasoning-snapshot-generation (.ref compacted 'source)) 1)
+          (candidate-withdrawal-compact! owner 1)
+          (check-equal? (.ref (candidate-withdrawal-support-size owner) 'edges) (.ref smaller 'edges))
+          (let (second (candidate-withdrawal-session! owner 1 '((edge 1))))
+            (check-set (.ref second 'rows) (reference '((1 2) (2 1))))
+            (check-set (.ref first 'rows) (reference '((0 1) (1 2) (2 1))))))
+        (candidate-withdrawal-compact! owner 2)
+        (candidate-withdrawal-session! owner 2 '((edge 1) (edge 2)))
+        (candidate-withdrawal-compact! owner 3)
+        (let (empty (candidate-withdrawal-support-size owner))
+          (check-equal? (.ref empty 'edges) 0)
+          (check-equal? (.ref empty 'nodes) 0)
+          (check-equal? (.ref empty 'roots) 0))))
+    (test-case "compaction preserves candidate facts without surviving source occurrences"
+      (let* ((p '(candidate (relation path 2) (fact edge 0 1)
+                  (rule (path ?x ?y) (edge ?x ?y)) (query path ?x ?y) (limits 8 16 32)))
+             (owner (candidate-open-withdrawal-session (source '((0 1))) p)))
+        (candidate-withdrawal-session! owner 0 '((edge 1)))
+        (check-set (.ref (candidate-withdrawal-compact! owner 1) 'rows) '((0 1)))
+        (check-equal? (> (.ref (candidate-withdrawal-support-size owner) 'edges) 0) #t)))
+    (test-case "retired graph visits are reclaimed without increasing the withdrawal budget"
+      (let* ((edges (map (lambda (n) (list (* 2 n) (+ 1 (* 2 n)))) (iota 8)))
+             (owner (candidate-open-withdrawal-session (source edges) proposal))
+             (plain (candidate-open-withdrawal-session (source edges) proposal))
+             (selectors (map (lambda (n) (list 'edge n)) (iota 7 1))))
+        (candidate-withdrawal-session! owner 0 selectors)
+        (candidate-withdrawal-session! plain 0 selectors)
+        (let (before (candidate-withdrawal-support-size owner))
+          (candidate-withdrawal-compact! owner 1)
+          (check-equal? (< (.ref (candidate-withdrawal-support-size owner) 'nodes) (.ref before 'nodes)) #t)
+          (check-equal? (< (.ref (candidate-withdrawal-support-size owner) 'roots) (.ref before 'roots)) #t))
+        (check-exception (candidate-withdrawal-session! plain 1 '((edge 1)) 8) (lambda (_) #t))
+        (check-set (.ref (candidate-withdrawal-session! owner 1 '((edge 1)) 8) 'rows) [])
+        (check-set (.ref (candidate-withdrawal-session! plain 1 '((edge 1))) 'rows) [])))
     (test-case "all sixty-four graphs retain coverage through alternating-position deletion sequences"
       (let (possible '((0 1) (0 2) (1 0) (1 2) (2 0) (2 1)))
         (for-each
@@ -128,7 +186,8 @@
             (let* ((edges (filter-map (lambda (edge bit)
                                        (and (not (zero? (bitwise-and mask bit))) edge))
                                      possible '(1 2 4 8 16 32)))
-                   (owner (candidate-open-withdrawal-session (source edges) proposal)))
+                   (owner (candidate-open-withdrawal-session (source edges) proposal))
+                   (plain (candidate-open-withdrawal-session (source edges) proposal)))
               (let withdraw ((remaining edges) (generation 0))
                 (unless (null? remaining)
                   (let* ((position (if (even? generation) 1 (length remaining)))
@@ -136,6 +195,13 @@
                                            remaining (iota (length remaining) 1)))
                          (after (candidate-withdrawal-session! owner generation (list (list 'edge position)))))
                     (check-set (.ref after 'rows) (reference next))
+                    (check-set (.ref after 'rows)
+                      (.ref (candidate-withdrawal-session! plain generation (list (list 'edge position))) 'rows))
+                    (let ((before (candidate-withdrawal-support-size owner))
+                          (compacted (candidate-withdrawal-compact! owner (+ generation 1))))
+                      (check-equal? (.ref compacted 'rows) (.ref after 'rows))
+                      (check-equal? (<= (.ref (candidate-withdrawal-support-size owner) 'edges)
+                                        (.ref before 'edges)) #t))
                     (let (fresh (reasoning-attempt (.ref after 'source) proposal))
                       (check-set (.ref after 'rows) (reasoning-receipt-rows fresh))
                       (check-equal? (reasoning-receipt-bound? fresh (.ref after 'source) proposal) #t))

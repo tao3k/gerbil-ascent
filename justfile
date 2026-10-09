@@ -675,7 +675,7 @@ _check-quint group='all': prepare-quint
         ProviderFrontier) main=ProviderFrontierFixture; constants='Fault = "none"\nSeeded = FALSE'; invariants='ExactFrontier FrontierComplete DeliveredExact ConsumerSnapshot' ;;
         ProviderReplay) constants='Nodes = {0,1}\nScopes = {0,1}\nMutation = "none"'; invariants='PublishedExact JournalExact OrderExact HeldExact RefusalAtomic' ;;
         ProviderRouting) constants='Mutation = "none"'; invariants=CompleteExact ;;
-        WithdrawalSession) constants='Mutation = "none"'; invariants='AtomicSnapshot FrozenGraph CurrentTokens CurrentOrdinal CumulativeSupport HistoricalObservation'; constraint=ExplorationBound ;;
+        WithdrawalSession) constants='Mutation = "none"'; invariants='AtomicSnapshot FrozenGraph CurrentTokens CurrentOrdinal CumulativeSupport HistoricalObservation SupportCoverage StorageAtomic'; constraint=ExplorationBound ;;
         ChangePlan) constants='Mutation = "none"'; invariants='Frozen CompletePublication FailureAtomic' ;;
         DerivationCounts) constants='Mutation = "none"'; invariants='Private Fixed Exact' ;;
         CanonicalIndex) constants='Mutation = "none"'; invariants='Private Canonical' ;;
@@ -815,7 +815,7 @@ _check-quint group='all': prepare-quint
             ReadyComponents) for capacity in 1 3; do sed "s/Capacity = 2/Capacity = $capacity/" "$base" > "$temp/$model-capacity.cfg"; execute "capacity-$capacity" "$temp/$model-capacity.cfg" 0; done; fault prerequisite Prerequisites; fault early CompleteReturn; fault snapshot DependencySnapshot; fault tail CompletedDelivery; fault credit CompletedDelivery ;;
             TransitiveComponents) fault split SCCExact; fault stale ReachExact; fault reject RefusalAtomic; for mutation in raw diagonal old; do fault "$mutation" DeltaExact; done; fault chain ParentChains; fault members MemberPartition; fault size SizeExact; fault adjacency PrivateArcs ;;
             OracleTransport) fault early CompleteReaders; fault swallow ReaderClean; fault tail CompleteBytes; fault interrupt ReaderErrorSound ;;
-            WithdrawalSession) fault early AtomicSnapshot; fault graphEdit FrozenGraph; fault unchecked AtomicSnapshot; fault ordinal CurrentOrdinal; fault forgetRemoved CumulativeSupport; fault rebase CurrentTokens; fault borrowObservation HistoricalObservation ;;
+            WithdrawalSession) fault early AtomicSnapshot; fault graphEdit FrozenGraph; fault unchecked AtomicSnapshot; fault ordinal CurrentOrdinal; fault forgetRemoved CumulativeSupport; fault rebase CurrentTokens; fault borrowObservation HistoricalObservation; fault compactLoss SupportCoverage; fault compactEarly StorageAtomic; fault compactRebase CurrentTokens ;;
             ChangePlan) fault alias Frozen; fault borrow Frozen; fault early CompletePublication; fault failure FailureAtomic ;;
             DerivationCounts) fault refusal Private; fault early Fixed; fault accumulate Fixed ;;
             CanonicalIndex) fault early Private; fault omit Canonical; fault duplicate Canonical; fault order Canonical ;;

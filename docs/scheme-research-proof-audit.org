@@ -191,3 +191,35 @@ the current revision. The complete OpenJDK partition agreed for all 51,022
 active members in 12,688 components, representing 440,438,706 pairs. Current
 revision gates and GitHub CI are verified separately; universal native
 refinement and asymptotic live-space laws remain distinct obligations.
+
+* Absence certificate construction budget (2026-10-09)
+
+The [[https://thomas.gilray.org/pdf/seamless-deductive.pdf][A22 paper]], §2.1, defines positive evaluation by the least fixed point of
+the immediate-consequence operator. Our absence verifier uses an independently
+checked finite inductive invariant: it contains the supplied seeds, is closed
+under every admitted rule instance, and excludes the ground target. Exhausting
+a work or material budget establishes none of these conditions.
+
+The [[https://kmicinski.com/assets/byods.pdf][B23 paper]], §3 and §5.1, separates relation concretization from its physical
+representation; an equivalence class can represent quadratically many tuples.
+This motivates auditing downstream consumers as well as the Provider. It does
+not establish that our explicit proof-node or certificate representation is
+compressed. These conclusions are our design analysis, not paper claims about
+Gerbil certificates.
+
+=candidate/provenance.ss= now reserves each distinct source or pending derived
+row before copying an absence proof node. The existing certificate limits count
+both kinds together: 4096 rows, 32768 cells and 1024 cells per row. The producer
+also rejects a combined source/candidate schema over 64 relations before replay.
+On exhaustion, it publishes =bounded= with no nodes or closure. The final
+certificate shape check and independent rule-instance verifier remain active.
+Ordinary positive witnesses keep their admitted derived-fact budget.
+
+The native =std/test= source qualification includes exact row/cell boundaries,
+both overruns, duplicate seeds/clauses, a 65-relation combined schema and a 5120-node ordinary positive
+witness. Exact-boundary certificates independently verify as =valid=. Restoring
+the previous producer through an isolated load path makes the new node-status
+assertion fail. This is a discriminator for early reservation, not a universal
+heap bound: indexes, terms, input references and temporary joins have separate
+costs. Large compressed Provider results still require a separately designed
+compressed invariant certificate; they are not admitted by raising these limits.

@@ -3,9 +3,12 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 (import (only-in :std/test check-equal? test-suite test-case)
+        (only-in :gerbil-ascent/candidate/provenance
+                 candidate-positive-closed-absence positive-proof-status positive-proof-nodes
+                 candidate-positive-proof)
         (only-in :gerbil-ascent/candidate/types
                  make-reasoning-snapshot make-reasoning-candidate
-                 reasoning-snapshot-digest reasoning-snapshot-relations)
+                 reasoning-snapshot-digest reasoning-snapshot-relations reasoning-candidate-query)
         (only-in :gerbil-ascent/candidate/program candidate-inspect)
         (only-in :gerbil-ascent/candidate/reasoning
                  reasoning-source-snapshot reasoning-attempt
@@ -40,6 +43,49 @@
 
 (def ascent-positive-nonmembership-test
   (test-suite "finite positive ground nonmembership"
+    (test-case "absence material limits include seeds and pending rows before publication"
+      (def (fixture width copies)
+        (let* ((names (map (lambda (i) (string->symbol (string-append "copy" (number->string i)))) (iota copies)))
+               (terms (map (lambda (i) (string->symbol (string-append "?v" (number->string i)))) (iota width)))
+               (input (reasoning-source-snapshot 'material 0
+                         (list (list 'seed width
+                           (map (lambda (i) (cons i (make-list (- width 1) 0))) (iota 1024))))))
+               (program (make-reasoning-candidate
+                          (map (lambda (name) (cons name width)) names)
+                          (list (vector 'seed (make-list width 0) 100))
+                          (cons (vector (cons (car names) terms) (list (cons 'seed terms)) 101)
+                            (map (lambda (name label) (vector (cons name terms) (list (cons 'seed terms)) label)) names (iota copies)))
+                          (vector (cons (car names) (make-list width -1)) 99) '(1024 4096 4096))))
+          (values input program)))
+      (for-each (lambda (control)
+        (let-values (((input program) (fixture (car control) (cadr control))))
+          ;; Duplicate clauses require up to 10240 probes for a full replay;
+          ;; this budget isolates material exhaustion from work exhaustion.
+          (let ((proof (candidate-positive-closed-absence input program 'digest 'complete [] 20000))
+                (certificate (candidate-positive-nonmembership input program 'digest 'complete [] 20000)))
+            (check-equal? (positive-proof-status proof) (caddr control))
+            (check-equal? (positive-nonmembership-status certificate) (cadddr control))
+            (if (eq? (caddr control) 'bounded)
+              (begin (check-equal? (positive-proof-nodes proof) [])
+                     (check-equal? (positive-nonmembership-closure certificate) []))
+              (begin (check-equal? (length (positive-proof-nodes proof)) 4096)
+                     (check-equal? (candidate-verify-positive-nonmembership input program 'digest 'complete [] certificate 20000) 'valid)))
+            (when (and (= (car control) 1) (= (cadr control) 4))
+              ;; The absence material cap must not replace a positive witness's
+              ;; admitted derived-fact budget (1024 seeds plus 4096 derived).
+              (vector-set! (reasoning-candidate-query program) 0 '(copy0 0))
+              (let (positive (candidate-positive-proof input program 'digest 'complete '((0)) 20000))
+                (check-equal? (positive-proof-status positive) 'complete)
+                (check-equal? (length (positive-proof-nodes positive)) 5120))))))
+        '((1 3 closed-absent complete) (1 4 bounded bounded)
+          (8 3 closed-absent complete) (9 3 bounded bounded))))
+    (test-case "combined source and candidate schema exceeds absence certificate capacity"
+      (let* ((input (reasoning-source-snapshot 'schema-capacity 0
+                       (map (lambda (i) (list (string->symbol (string-append "source" (number->string i))) 1 [])) (iota 64))))
+             (program (make-reasoning-candidate '((target . 1)) [] [] (vector '(target 0) 0) '(1 1 1)))
+             (certificate (candidate-positive-nonmembership input program 'digest 'complete [] 100)))
+        (check-equal? (positive-nonmembership-status certificate) 'bounded)
+        (check-equal? (positive-nonmembership-closure certificate) [])))
     (test-case "public receipt carries independently verifiable absence"
       (let* ((input
               (reasoning-source-snapshot

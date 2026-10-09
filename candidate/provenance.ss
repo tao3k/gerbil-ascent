@@ -8,6 +8,9 @@
 ;;; Its result is checked against the completed native query before use.
 ;;; Node inputs always refer to earlier nodes, so the list is a finite DAG.
 (import (only-in :gerbil-ascent/candidate/datum candidate-copy-pairs)
+        (only-in :gerbil-ascent/candidate/certificate-limits
+                 +max-certificate-rows+ +max-certificate-cells+
+                 +max-certificate-row-arity+ bounded-list-length)
         (only-in :gerbil-ascent/candidate/types
                  reasoning-snapshot-identity reasoning-snapshot-generation
                  reasoning-snapshot-digest reasoning-snapshot-relations
@@ -124,6 +127,8 @@
             (next-id 0)
             (derived-count 0)
             (steps 0)
+            (material-rows 0)
+            (material-cells 0)
             (bounded? #f)
             (derived-limit (cadr (reasoning-candidate-limits spec))))
         (def (facts name)
@@ -132,6 +137,16 @@
         (def (known? name row)
           (let (relation (hash-get index name))
             (and relation (hash-get (proof-relation-members relation) row))))
+        ;; Reserve source and pending rows together, before copying a node.
+        ;; Ordinary positive witnesses retain their existing proposal budget.
+        (def (reserve-row! row)
+          (if (not retain-closed-absence?) #t
+            (let (width (bounded-list-length row +max-certificate-row-arity+))
+              (if (and width (< material-rows +max-certificate-rows+)
+                       (<= (+ material-cells width) +max-certificate-cells+))
+                (begin (set! material-rows (+ material-rows 1))
+                       (set! material-cells (+ material-cells width)) #t)
+                (begin (set! bounded? #t) #f)))))
         (def (install! node)
           (let* ((name (proof-node-relation node))
                  (relation (or (hash-get index name)
@@ -145,7 +160,7 @@
             (hash-put! (proof-relation-members relation) (proof-node-row node) node)
             (set! nodes (cons node nodes))))
         (def (add! kind name row label inputs)
-          (unless (known? name row)
+          (when (and (not bounded?) (not (known? name row)) (reserve-row! row))
             (let (node (make-proof-node next-id kind name (candidate-copy-pairs row)
                                        label (candidate-copy-pairs inputs)))
               (set! next-id (+ next-id 1))
@@ -180,7 +195,7 @@
                            (when (>= (+ derived-count pending-count)
                                      derived-limit)
                              (set! bounded? #t))
-                           (unless bounded?
+                           (when (and (not bounded?) (reserve-row! row))
                              (let* ((node (make-proof-node
                                            (+ next-id pending-count)
                                            'rule name (candidate-copy-pairs row) label

@@ -127,6 +127,8 @@
             (not (andmap positive-rule-body?
                          (reasoning-candidate-rules spec))))
       (result 'unsupported [])
+      (if (> (length (certificate-schema-of snapshot spec)) +max-certificate-relations+)
+        (result 'bounded [])
       (let* ((witness
               (candidate-positive-closed-absence
                snapshot spec candidate-digest native-status
@@ -156,7 +158,7 @@
                (if (certificate-size-valid? closure)
                  (result 'complete closure)
                  (result 'bounded [])))))
-          (else (result 'unsupported [])))))))
+          (else (result 'unsupported []))))))))
 
 ;;; Lower only static term kinds, after certificate admission. Variable names
 ;;; remain candidate symbols; this plan makes no fresh-binding assumption.

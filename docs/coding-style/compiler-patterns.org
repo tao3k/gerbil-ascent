@@ -1311,3 +1311,32 @@ its allocation gate despite lower CPU. The final protocol retains only batch
 layouts. See [[file:../../t/performance/repeated-columns/README.org][repeated-column qualification]] for complete native index lifecycle A/B,
 negative evidence, controls and semantic coverage. These are physical index
 cycle measurements, not complete evaluator-solve gains.
+
+* Affected output selection with lazy spine ownership
+
+Gerbil =1cfb032= =std/list/list-builder.ss:6-26= makes list ownership explicit:
+the enclosing syntax owns a fresh sentinel and tail, while its local publication
+syntax appends fresh pairs in order. Use that construction only when a consumer
+needs a new spine. Constructing a filtered list merely to discover that every
+element survived spends allocation on a result the caller already owns.
+
+=program/update-selection.ss= now shares a private =select-affected= syntax
+between source heads and compiled outputs. The projection reads invocation-local
+affected bits and immutable relation metadata; it invokes no user callback.
+Before the first rejection, selection scans without constructing a list. Full
+survivors return the original spine. A rejected first item uses ordinary filter
+over the suffix; a later rejection copies the accepted prefix and builds the
+remaining accepted items with =with-list-builder=. Every partial spine is fresh,
+including its tail; order, duplicates and element identities remain intact.
+
+The consumer uses spine identity to distinguish full survivors from projected
+rules. Full rules preserve their compiled plan and engine frame. Partial rules
+share lowered body actions, project output descriptors and receive a fresh
+frame at activation. Unsupported compiled plans retain normal selected-head
+lowering. The syntax owns selection and construction, while activation remains
+responsible for mutable state. This is an ownership protocol, not a mechanical
+replacement of ordinary local bindings or conditionals.
+
+See [[file:../../t/performance/affected-outputs/README.org][affected output qualification]] for the complete selection/activation A/B,
+partial allocation cost and semantic controls. The measured CPU improvement
+belongs to this phase, not complete program evaluation.

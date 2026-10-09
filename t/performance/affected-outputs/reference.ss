@@ -4,11 +4,10 @@
 
 ;;; Native dependency invalidation selects components; the evaluator owns
 ;;; reuse capsules, mutable rows, budget accounting and atomic publication.
-(import (only-in :std/list/list-builder with-list-builder)
-        (only-in "source-log.ss" gerbil-ascent-source-log-equal?)
-        (only-in "activation.ss" gerbil-ascent-activate-rule)
+(import (only-in :gerbil-ascent/program/source-log gerbil-ascent-source-log-equal?)
+        (only-in :gerbil-ascent/program/activation gerbil-ascent-activate-rule)
         (only-in :clan/poo/object .ref)
-        (only-in "scheme-checked.ss" relational-stable-procedure?
+        (only-in :gerbil-ascent/program/scheme-checked relational-stable-procedure?
                  relational-scalar?)
         (only-in :gerbil-ascent/core/positive-plan gerbil-ascent-positive-plan gerbil-ascent-positive-plan-with-outputs)
         (only-in :gerbil-ascent/core/dependency-graph gerbil-ascent-graph-close!)
@@ -116,27 +115,6 @@
             (gerbil-ascent-graph-close! (vector-ref analysis 6) affected)
             affected)))))
 
-;;; Selection owns only partial spines. Full survivors retain their identity;
-;;; after the first rejection, every surviving pair is copied in source order.
-;;; The supplied projection reads immutable metadata and invokes no user code.
-(defrule (select-affected affected items (item relation))
-  (let ((bitmap affected) (source items))
-    (def (keep? item) (vector-ref bitmap relation))
-    (let scan ((remaining source))
-      (match remaining
-        ([] source)
-        ([item . rest]
-         (cond
-           ((keep? item) (scan rest))
-           ((eq? remaining source) (filter keep? rest))
-           (else
-            (with-list-builder (collect)
-              ;; Earlier items already passed admission; copy without rechecking.
-              (let prefix ((pending source))
-                (unless (eq? pending remaining)
-                  (collect (car pending)) (prefix (cdr pending))))
-              (for-each (lambda (item) (when (keep? item) (collect item))) rest)))))))))
-
 ;; : (forall (a) (-> (Vector [a]) Vector (Vector [a])))
 ;; gerbil-ascent-select-rule-plans
 ;;   : (-> RulePlansByStratum AffectedRelations RulePlansByStratum)
@@ -156,10 +134,11 @@
    (lambda (rules)
      (filter-map
       (lambda (rule)
-        (let (heads (select-affected affected (vector-ref rule 0)
-                       (head (vector-ref head 0))))
+        (let (heads (filter (lambda (head)
+                             (vector-ref affected (vector-ref head 0)))
+                           (vector-ref rule 0)))
           (and (pair? heads)
-               (if (eq? heads (vector-ref rule 0))
+               (if (= (length heads) (length (vector-ref rule 0)))
                  rule
                  (let* ((full-plan (vector-ref rule 5))
                         ;; Head filtering leaves body slots unchanged. Share
@@ -169,8 +148,10 @@
                          (if full-plan
                            (gerbil-ascent-positive-plan-with-outputs
                             full-plan
-                            (select-affected affected (vector-ref full-plan 0)
-                              (output (vector-ref (vector-ref output 0) 0))))
+                            (filter (lambda (output)
+                                      (vector-ref affected
+                                       (vector-ref (vector-ref output 0) 0)))
+                                    (vector-ref full-plan 0)))
                            (gerbil-ascent-positive-plan
                             (vector heads (vector-ref rule 1)
                                     (vector-ref rule 2) (vector-ref rule 3))))))

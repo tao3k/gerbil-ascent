@@ -330,7 +330,7 @@
          ;; emitted by the generator contain at most one entry per proof node.
          (and node-count
               (bounded-list-length (positive-proof-roots proof) node-count)
-              (let* ((by-id (list->vector nodes))
+              (let* ((by-id (make-vector node-count #f))
                      (arities (proof-metadata-lookup (candidate-schema-of snapshot spec)))
                      (source (reasoning-snapshot-relations snapshot))
                      (facts (reasoning-candidate-facts spec))
@@ -423,7 +423,11 @@
                  (let loop ((remaining nodes) (index 0))
                    (or (null? remaining)
                        (and (node-valid? (car remaining) index)
-                            (loop (cdr remaining) (+ index 1)))))
+                            (begin
+                              ;; Only independently validated predecessors can
+                              ;; be resolved by subsequent rule nodes or roots.
+                              (vector-set! by-id index (car remaining))
+                              (loop (cdr remaining) (+ index 1))))))
                  (andmap
                   (lambda (id)
                     (and (existing-input? id node-count)

@@ -163,6 +163,16 @@
       (let* ((proof (fresh)) (roots (positive-proof-roots proof)))
         (set-cdr! roots (list (car roots)))
         (check-equal? (verify proof) #f)))
+    (test-case "only validated predecessors may justify a rule node"
+      (let (spec (graph-spec (list (vector 'edge '(2 3) 6))))
+        (for-each (lambda (control)
+          (let* ((proof (candidate-positive-proof (graph-source) spec 'prefix 'complete '((1 3)) 200))
+                 (node (list-ref (positive-proof-nodes proof) (car control))))
+            (set-car! (proof-node-inputs node) (cadr control))
+            (check-equal? (candidate-verify-positive-proof
+              (graph-source) spec 'prefix 'complete '((1 3)) proof 5) #f)))
+          ;; In-range future, self, out-of-range, negative and inexact IDs.
+          '((2 3) (4 4) (4 5) (4 -1) (4 2.0)))))
     (test-case "wrong native answer and insufficient work cannot prove"
       (let ((spec (graph-spec (list (vector 'edge '(2 3) 6)))))
         (check-equal?

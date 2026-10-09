@@ -489,3 +489,48 @@ Native controls mutate node/root spines, dependency lists and row spines to
 cyclic, improper and overlong forms. Exact small-cap admission, one-less rejection,
 completed native joins, source positions, retained proof DAGs and the 5120-node
 ordinary witness remain checked alongside the finite replay and absence suites.
+
+* Validated positive DAG prefix and semantic soundness (2026-10-09)
+
+A22 section 2.1 defines immediate consequences using substitutions whose body
+facts are already present ([[https://thomas.gilray.org/pdf/seamless-deductive.pdf][Seamless Deductive Inference via Macros]]). Positive
+proof verification must therefore establish a grounded predecessor for every
+antecedent. This is distinct from complete native query agreement: agreement
+checks the output, while independently replayed dependencies justify its rows.
+A certificate witness proves membership, not absence or provenance completeness.
+
+The Scheme verifier previously populated its private vector from the entire
+external node list before validating nodes. Strict earlier-ID checks already
+rejected forward/self references. The vector now starts with false entries;
+only a successfully validated node is installed at its sequential ID. Subsequent
+rule replay and completed roots resolve only this validated prefix. Source,
+candidate and rule checks, structural preflight, root equality and node budgets
+remain active. This refines index ownership without adding another execution
+backend or changing completed proof results. No performance win is claimed.
+
+=ProofDag.lean= supplies eight universal semantic laws. A resolved predecessor
+is in the known prefix; out-of-range lookup fails; all resolved dependencies
+belong to that prefix; a checked node is derivable under sound source/rule
+checkers; verification preserves derivability for every accumulated node;
+resolved roots are derivable; the complete empty-prefix verification followed
+by root resolution is sound; and every derivable row belongs to every relation
+containing the sources and closed under the admitted rules. The final law
+connects finite witnesses to the positive consequence/least-model boundary.
+It does not prove witness completeness. The abstract Row may include relation
+identity and tuple values; native encoding, label authentication, scalar equality,
+atom binding and fixed-clause-to-rule-checker refinement remain premises. This
+is universal derivation algebra, not a duplicate temporal protocol state machine.
+
+=ProofPrefix.qnt= exhausts 18 states over grounded, forward-reference,
+self-reference and invalid-source controls. Exact private-prefix ownership,
+grounded exposure and publication only after completion hold. Four mutations
+(early index insertion, forward admission, invalid-source acceptance and partial
+failure publication) each violate the designated invariant. Its finite source
+and rule controls do not supply the Lean checkers' universal soundness premises.
+
+Native tests retain completed positive joins and DAG replay, and reject an
+in-range future predecessor, a self dependency, an out-of-range ID, a negative
+ID and an inexact numeric ID. Finite replay and absence suites retain their
+independent controls; the 5120-node ordinary proof still verifies at its exact
+capacity. These tests connect the actual mutable-vector implementation to the
+stated contract independently of Lean and Quint, without claiming extraction.

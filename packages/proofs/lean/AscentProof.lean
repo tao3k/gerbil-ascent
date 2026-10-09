@@ -1,3 +1,4 @@
+import ProofDag
 import BoundedSpine
 import TerminalTraversal
 -- SPDX-FileCopyrightText: 2026 tao3k team and Contributors

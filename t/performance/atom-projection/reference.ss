@@ -4,11 +4,11 @@
 
 ;;; Private positive-rule execution plans. Plans are immutable and shared;
 ;;; each engine owns its variable frames, including nested/concurrent solves.
-(import (only-in "relation-view.ss" relation-view? gerbil-ascent-for-each-row
+(import (only-in :gerbil-ascent/core/relation-view relation-view? gerbil-ascent-for-each-row
                  gerbil-ascent-row-parts? gerbil-ascent-for-each-row-parts)
-        (only-in "expression-plan.ss" gerbil-ascent-compile-frame-call gerbil-ascent-compile-frame-sequence
+        (only-in :gerbil-ascent/core/expression-plan gerbil-ascent-compile-frame-call gerbil-ascent-compile-frame-sequence
                  gerbil-ascent-compile-input-guard)
-        (only-in "rule-bindings.ss" gerbil-ascent-expression-value gerbil-ascent-head-row gerbil-ascent-call-with-bindings))
+        (only-in :gerbil-ascent/core/rule-bindings gerbil-ascent-expression-value gerbil-ascent-head-row gerbil-ascent-call-with-bindings))
 (export gerbil-ascent-prepare-rule-activations gerbil-ascent-positive-plan gerbil-ascent-compile-positive-plan gerbil-ascent-run-positive-plan!
         gerbil-ascent-positive-plan-with-outputs gerbil-ascent-pure-positive-plan?
         gerbil-ascent-index-key gerbil-ascent-index-key/terms
@@ -42,31 +42,39 @@
         (hash-put! +positive-plans+ rule (cons #t plan))
         plan))))
 
-;;; Fuse admitted column selection with ordered key lowering. Source and slot
-;;; views have the same width; no intermediate selected spines escape or form.
-;;; Only the mapper may prepare a key action, in the original column order.
-;; : (forall (a b c) (-> (-> a b c) [a] [b] [Integer] [c]))
-;; : (-> KeyLowering SourceTerms SlotTerms Columns KeyActions)
-(def (map-projected-terms lower original slots columns)
+;;; Shape belongs to immutable admitted metadata. Ordered columns advance one
+;;; cursor; full reverse columns copy in reverse order; other arbitrary or
+;;; repeated columns use a temporary positional view. All paths
+;;; retain action identity and create a detached selected-list spine.
+;; : (-> SlotTerms Columns SlotTerms)
+(def (project-slot-terms terms columns)
   (match columns
     ([] [])
-    ([column] (list (lower (list-ref original column) (list-ref slots column))))
+    ([column] (list (list-ref terms column)))
     (else
      (def (increasing? remaining prior)
        (or (null? remaining)
            (and (> (car remaining) prior)
                 (increasing? (cdr remaining) (car remaining)))))
-     (if (increasing? columns -1)
-       (let select ((sources original) (actions slots) (selected columns) (position 0))
-         (if (null? selected) []
-           (let* ((distance (- (car selected) position))
-                  (source (list-tail sources distance))
-                  (action (list-tail actions distance))
-                  (key (lower (car source) (car action))))
-             (cons key (select (cdr source) (cdr action) (cdr selected) (+ (car selected) 1))))))
-       (let ((sources (list->vector original)) (actions (list->vector slots)))
-         (map (lambda (column)
-                (lower (vector-ref sources column) (vector-ref actions column))) columns))))))
+     (def (reverse-columns? remaining position)
+       (if (null? remaining)
+         (= position -1)
+         (and (= (car remaining) position)
+              (reverse-columns? (cdr remaining) (- position 1)))))
+     (cond
+       ((increasing? columns -1)
+        (let select ((remaining terms) (selected columns) (position 0))
+          (if (null? selected)
+            []
+            (let (cursor (list-tail remaining (- (car selected) position)))
+              (cons (car cursor)
+                    (select (cdr cursor) (cdr selected) (+ (car selected) 1)))))))
+       ((and (reverse-columns? columns (car columns))
+             (= (+ (car columns) 1) (length terms)))
+        (reverse terms))
+       (else
+        (let (positions (list->vector terms))
+          (map (lambda (column) (vector-ref positions column)) columns)))))))
 
 ;;; Plans retain ordered outputs, actions, slot count, purity and atom extent.
 ;;; Unsupported terms or clauses keep the complete rule on the general path.
@@ -151,18 +159,16 @@
                              (prior-count count)
                              (_checked-columns
                               (unless (and (list? columns)
-                                           ;; Keep this shape fact local to admission, rather than
-                                           ;; retaining it in the slot-lowering lexical scope.
-                                           (let (width (length original))
-                                             (andmap (lambda (column)
-                                                       (and (exact-integer? column)
-                                                            (<= 0 column) (< column width))) columns)))
+                                           (andmap (lambda (column)
+                                                     (and (exact-integer? column)
+                                                          (<= 0 column)
+                                                          (< column (length original)))) columns))
                                 (unsupported #f)))
                              (prior-scope
                                (and (ormap (lambda (term) (eq? (car term) 'expression)) original)
                                     (ensure-scope!)))
                              (terms (map (lambda (term) (lower term #f)) original))
-                             (keys (map-projected-terms
+                             (keys (map
                                      (lambda (source action)
                                        ;; Index access precedes this atom's row
                                        ;; matching. Only the prior bound prefix
@@ -185,7 +191,8 @@
                                                "unbound ASCENT expression variable"
                                                payload prior-scope)))
                                          action))
-                                     original terms columns)))
+                                     (project-slot-terms original columns)
+                                     (project-slot-terms terms columns))))
                         ;; Key evaluation precedes row matching. Changed inputs
                         ;; must not read row-local slots left by prior candidates.
                         (vector atom terms keys (compile-parts-matcher terms)

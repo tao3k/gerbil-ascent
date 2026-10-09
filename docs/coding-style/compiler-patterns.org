@@ -860,3 +860,21 @@ Matched native stable-call measurements and controls are documented in
 increased long-plan compilation CPU and allocation and was withdrawn. The
 lesson is to expose proven call facts while measuring the complete chosen
 boundary; a tail-shaped expression alone is not a performance improvement.
+
+* Fuse admitted projection with ordered key construction
+
+Installed Gerbil =1cfb032= =compiler/optimize.ss:163-187= collects shape/type and
+mutation facts before transformation. Its constructor lowering in
+=optimize-call.ss:450-470= records admitted field offsets and constructs ordered
+writes directly. Our atom compiler applies the same separation: calculate the
+immutable width once within admission, then map selected source/slot pairs
+directly into key actions. The private mapper eliminates two temporary selected
+lists and the full-reverse special case. Repeated/arbitrary columns use local
+vectors; increasing columns advance ordered cursors. It neither executes nor
+caches callbacks and leaves the existing prior-scope/payload fallback intact.
+
+Projection factories and separate paired projections failed the fixed sparse
+allocation gate and were withdrawn. The final fused path passes matched native
+whole-rule compilation gates and ordered key/row truth; evidence and scope
+limits are recorded in =t/performance/atom-projection/README.org=. Preparation
+reuse is useful only when the complete chosen path improves under measurement.

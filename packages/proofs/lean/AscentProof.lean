@@ -1,3 +1,4 @@
+import CanonicalIndex
 import Withholding
 import ExecutionFeedback
 import UnsanitizedPaths

@@ -26,7 +26,7 @@ for all these states.
 | Flix language-integrated Datalog | [[file:scheme-dsl/flix-l25.org][note]] | Dedicated reading; Program/private-name/solve boundaries |
 | FlowLog | [[file:scheme-dsl/flowlog-fl25.org][note]] | Dedicated reading; recursive physical-plan workload comparison pending |
 | Scallop | [[file:agent-inference/scallop-s23.org][note]] | Dedicated reading; weighted/differentiable execution unimplemented |
-| Souffle | [[file:../related-work-matrix.org][note]] | Matrix only; dedicated synthesis/index-selection artifact study pending |
+| Souffle | [[file:scheme-dsl/souffle-s16.org][note]] | Dedicated synthesis/index-selection method reading; canonical native chain planning implemented; RAM/C++ and full workloads pending |
 | Differential dataflow | [[file:../related-work-matrix.org][note]] | Matrix only; dedicated timestamps/iterate/delta study pending |
 | DBSP | [[file:scheme-dsl/dbsp-b22.org][note]] | Dedicated reading; derivative circuit implementation pending |
 | DRedc | [[file:scheme-dsl/deletion-h18.org][note]] | Dedicated reading; affected-component rederivation exists; DRedc algorithm pending |

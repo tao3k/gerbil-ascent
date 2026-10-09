@@ -5,6 +5,17 @@
 Feature owner: [[file:../index.org][feature index]]. This page retains the original
 source dates and qualification boundaries. Current evidence is commit-specific.
 
+* Canonical demand planning (2026-10-09)
+
+[[file:../../research/scheme-dsl/souffle-s16.org][Souffle method reading]] maps the existing maximum-matching planner to
+primitive-search chain coverage. Normalized demands now have lexicographic
+order before augmentation: equal demand sets generate equal physical layouts,
+including equal minima with several legal chain choices. The 128-family native
+partition oracle now compares three alternate demand enumerations per family.
+Lean =CanonicalIndex= adds five inventory/determinism laws and Quint adds bounded
+collection/publication controls. Existing minimality, prefix lookup and owner
+publication gates remain separate. No application speedup is inferred.
+
 * Curried physical index implementation (2026-10-06)
 
 The admitted rule analysis now supplies logical column requirements to each

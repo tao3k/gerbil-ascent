@@ -643,7 +643,7 @@ _check-quint group='all': prepare-quint
     #!/usr/bin/env bash
     set -euo pipefail
     group="{{ group }}"
-    models=(ActorRound ActorRoundCredits ActorSession ActorTestPool CertificateMaterial TerminalTraversal ExecutionFeedback Withholding ProofShapeAdmission ProofPrefix ComponentIndex CountProbe LatticeProjection NativeSessionPublication NegativeProbe NumericProbe OracleTransport PositiveNonmembershipSession ProviderAdmission ProviderFrontier ProviderReplay ProviderRouting ProviderViews ReaderLifetime ReadyComponents SessionTransaction TransitiveComponents)
+    models=(ActorRound ActorRoundCredits ActorSession ActorTestPool CertificateMaterial TerminalTraversal ExecutionFeedback Withholding CanonicalIndex ProofShapeAdmission ProofPrefix ComponentIndex CountProbe LatticeProjection NativeSessionPublication NegativeProbe NumericProbe OracleTransport PositiveNonmembershipSession ProviderAdmission ProviderFrontier ProviderReplay ProviderRouting ProviderViews ReaderLifetime ReadyComponents SessionTransaction TransitiveComponents)
     case "$group" in
       all) ;;
       Nonmembership) models=(CertificateMaterial TerminalTraversal ExecutionFeedback Withholding ProofShapeAdmission ProofPrefix CountProbe NegativeProbe NumericProbe PositiveNonmembershipSession SessionTransaction NativeSessionPublication) ;;
@@ -689,6 +689,7 @@ _check-quint group='all': prepare-quint
         ProviderFrontier) main=ProviderFrontierFixture; constants='Fault = "none"\nSeeded = FALSE'; invariants='ExactFrontier FrontierComplete DeliveredExact ConsumerSnapshot' ;;
         ProviderReplay) constants='Nodes = {0,1}\nScopes = {0,1}\nMutation = "none"'; invariants='PublishedExact JournalExact OrderExact HeldExact RefusalAtomic' ;;
         ProviderRouting) constants='Mutation = "none"'; invariants=CompleteExact ;;
+        CanonicalIndex) constants='Mutation = "none"'; invariants='Private Canonical' ;;
         Withholding) constants='Mutation = "none"'; invariants='Private Bound Protected ExactCut' ;;
         ExecutionFeedback) constants='Mutation = "none"'; invariants='Qualified ExactDifferences ExactMatch InconclusivePrivate' ;;
         ProofPrefix) constants='Mutation = "none"'; invariants='ExactPrefix GroundedPrefix PublishedGrounded RefusalPrivate PublicationPhase' ;;
@@ -825,6 +826,7 @@ _check-quint group='all': prepare-quint
             ReadyComponents) for capacity in 1 3; do sed "s/Capacity = 2/Capacity = $capacity/" "$base" > "$temp/$model-capacity.cfg"; execute "capacity-$capacity" "$temp/$model-capacity.cfg" 0; done; fault prerequisite Prerequisites; fault early CompleteReturn; fault snapshot DependencySnapshot; fault tail CompletedDelivery; fault credit CompletedDelivery ;;
             TransitiveComponents) fault split SCCExact; fault stale ReachExact; fault reject RefusalAtomic; for mutation in raw diagonal old; do fault "$mutation" DeltaExact; done; fault chain ParentChains; fault members MemberPartition; fault size SizeExact; fault adjacency PrivateArcs ;;
             OracleTransport) fault early CompleteReaders; fault swallow ReaderClean; fault tail CompleteBytes; fault interrupt ReaderErrorSound ;;
+            CanonicalIndex) fault early Private; fault omit Canonical; fault duplicate Canonical; fault order Canonical ;;
             Withholding) fault early Private; fault local Protected; fault stale Bound; fault missing Protected ;;
             ExecutionFeedback) fault stale Qualified; fault partial Qualified; fault missing ExactDifferences; fault extra ExactDifferences ;;
             ProofPrefix) fault early ExactPrefix; fault forward GroundedPrefix; fault source GroundedPrefix; fault partial RefusalPrivate ;;

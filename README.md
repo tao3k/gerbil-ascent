@@ -98,7 +98,7 @@ mined with confidence thresholds rather than established as universal laws.
 - [Flix: A Design for Language-Integrated Datalog](https://doi.org/10.1145/3763126) (2025) — first-class program and private predicate boundaries.
 - [FlowLog: Efficient and Extensible Datalog via Incrementality](https://www.vldb.org/pvldb/vol19/p361-zhao.pdf) (PVLDB 2025; VLDB 2026) — recursive plan and incremental engine experiments.
 - [Scallop: A Language for Neurosymbolic Programming](https://doi.org/10.1145/3591280) (2023) — weighted and differentiable semantics for a separate training path.
-- [Soufflé: On Synthesis of Program Analyzers](https://souffle-lang.github.io/pdf/cav16.pdf) (2016)
+- [Soufflé: On Synthesis of Program Analyzers](https://souffle-lang.github.io/pdf/cav16.pdf) (2016) — [dedicated reading](docs/research/scheme-dsl/souffle-s16.org), chain-index planning and canonical physical layouts.
 - [Differential dataflow](https://www.cidrdb.org/cidr2013/Papers/CIDR13_Paper111.pdf) (2013)
 - [DBSP: Automatic Incremental View Maintenance for Rich Query Languages](https://www.vldb.org/pvldb/vol16/p1601-budiu.pdf) (2023)
 - [Optimised Maintenance of Datalog Materialisations](https://doi.org/10.1609/aaai.v32i1.11554) (2018)

@@ -472,6 +472,18 @@
                                   (and (not (= 0 (bitwise-and mask (arithmetic-shift 1 i)))) (list-ref universe i))) (iota 7)))
                   (layout (gerbil-ascent-index-sharing-layout requirements))
                   (physical (make-hash-table)))
+             ;; Same demand set, different encounter order, column order and
+             ;; multiplicity: compare physical choices, not just root counts.
+             (for-each
+              (lambda (variant)
+                (let (other (gerbil-ascent-index-sharing-layout variant))
+                  (for-each (lambda (columns)
+                    (check-equal? (or (hash-get other columns) columns)
+                                  (or (hash-get layout columns) columns))) requirements)))
+              (list (reverse requirements)
+                    (append (map reverse requirements) requirements '(()))
+                    (append (cdr (append requirements '(())))
+                            (if (pair? requirements) (list (car requirements)) []))))
              (for-each (lambda (columns)
                          (let (permutation (or (hash-get layout columns) columns))
                            (hash-put! physical permutation #t)

@@ -118,6 +118,16 @@
      (and (< left right) (distinct-ordered-columns? (cdr columns))))
     (else #t)))
 
+;;; Fix the tie order before maximum matching. Hash inventory order must not
+;;; choose which of several equally minimal physical layouts is published.
+;; : (-> OrderedColumns OrderedColumns Boolean)
+(def (columns-lexicographic<? left right)
+  (cond ((null? left) (pair? right))
+        ((null? right) #f)
+        ((< (car left) (car right)) #t)
+        ((> (car left) (car right)) #f)
+        (else (columns-lexicographic<? (cdr left) (cdr right)))))
+
 ;;; Admission owns detached sorted spines; an adjacent comparison rejects
 ;;; duplicates without allocating a second hash table for every requirement.
 ;; : (-> ColumnRequirements (Vector OrderedColumns))
@@ -132,7 +142,7 @@
          (unless (distinct-ordered-columns? ordered)
            (error "repeated index sharing columns" columns))
          (unless (null? ordered) (hash-put! unique ordered #t)))) requirements)
-    (list->vector (hash-keys unique))))
+    (list->vector (list-sort columns-lexicographic<? (hash-keys unique)))))
 
 ;;; Maximum bipartite matching on strict subset edges yields a chain cover.
 ;;; Only chains with multiple logical requirements change physical storage;

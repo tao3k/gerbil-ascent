@@ -209,6 +209,28 @@
             (check-equal? (finite-evidence-closure certificate) []))
           (displayln "FINITE-MATERIAL-VERIFIED " width " " copies) (force-output)))
         '((1 3 complete) (1 4 bounded) (8 3 complete) (9 3 bounded))))
+    (test-case "nested positive joins retain exact work admission and atomic refusal"
+      (let* ((input (reasoning-source-snapshot 'nested-work 0
+                     '((left 1 ((1) (2))) (right 1 ((3) (4))))))
+             (datum '(candidate (relation pair 2)
+                       (rule (pair ?x ?y) (left ?x) (right ?y))
+                       (query pair ?x ?y) (limits 8 16 32)))
+             (receipt (reasoning-attempt input datum))
+             (spec (candidate-inspect input datum))
+             (digest (reasoning-receipt-candidate-digest receipt))
+             (rows (reasoning-receipt-rows receipt))
+             (complete (candidate-finite-evidence input spec digest 'complete rows 12)))
+        (check-equal? (reasoning-receipt-status receipt) 'complete)
+        (check-equal? (length rows) 4)
+        ;; Two outer probes plus four inner probes, over two saturation passes.
+        (check-equal? (finite-evidence-status complete) 'complete)
+        (check-equal? (candidate-verify-finite-evidence input spec digest 'complete rows complete 12) 'valid)
+        (for-each (lambda (budget)
+          (let (refused (candidate-finite-evidence input spec digest 'complete rows budget))
+            (check-equal? (finite-evidence-status refused) 'bounded)
+            (check-equal? (finite-evidence-closure refused) [])
+            (check-equal? (candidate-verify-finite-evidence input spec digest 'complete rows complete budget) 'bounded)))
+          '(1 2 5 11))))
     (test-case "negation and count have an exact snapshot-relative closure"
       (let* ((snapshot (source 1 '((1 3))))
              (datum (program '(query summary 1 1))))

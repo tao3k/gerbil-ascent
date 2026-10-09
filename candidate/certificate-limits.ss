@@ -7,7 +7,7 @@
 ;;; budget does not replace these independent material-size limits.
 (export +max-certificate-relations+ +max-certificate-rows+
         +max-certificate-cells+ +max-certificate-row-arity+
-        bounded-list-length unique-rows?
+        bounded-list-length unique-rows? certificate-for-each-while
         make-certificate-material-budget certificate-material-reserve!)
 
 (def +max-certificate-relations+ 64)
@@ -77,3 +77,14 @@
          #f
          (begin (hash-put! seen row #t) #t)))
      rows)))
+
+;;; Invocation-owned stop state is checked before inspecting each next item.
+;;; A visitor may exhaust a nested work/material budget. Its return value is
+;;; irrelevant (duplicate insertion may return false without exhausting it).
+;;; False means stopped, including when the last visitor caused refusal.
+(def (certificate-for-each-while proceed? visit items)
+  (let walk ((remaining items))
+    (cond
+     ((not (proceed?)) #f)
+     ((null? remaining) #t)
+     (else (visit (car remaining)) (walk (cdr remaining))))))

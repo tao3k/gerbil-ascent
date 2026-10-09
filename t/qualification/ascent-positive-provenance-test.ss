@@ -40,6 +40,23 @@
 
 (def ascent-positive-provenance-test
   (test-suite "bounded positive provenance"
+    (test-case "nested positive proof joins stop without publishing pending nodes"
+      (let* ((input (reasoning-source-snapshot 'nested-proof 0
+                     '((left 1 ((1) (2))) (right 1 ((3) (4))))))
+             (spec (make-reasoning-candidate '((pair . 2)) []
+                     (list (vector '(pair ?x ?y) '((left ?x) (right ?y)) 9))
+                     (vector '(pair ?x ?y) 10) '(8 16 32)))
+             (rows '((1 3) (1 4) (2 3) (2 4)))
+             (complete (candidate-positive-proof input spec 'nested 'complete rows 12)))
+        (check-equal? (positive-proof-status complete) 'complete)
+        (check-equal? (candidate-verify-positive-proof input spec 'nested 'complete rows complete 12) #t)
+        (check-equal? (map proof-node-label (filter (lambda (node) (eq? (proof-node-kind node) 'source))
+                                             (positive-proof-nodes complete))) '(1 2 1 2))
+        (for-each (lambda (budget)
+          (let (refused (candidate-positive-proof input spec 'nested 'complete rows budget))
+            (check-equal? (positive-proof-status refused) 'bounded)
+            (check-equal? (positive-proof-nodes refused) [])
+            (check-equal? (positive-proof-roots refused) []))) '(1 2 5 11))))
     (test-case "public attempt binds native completion to replayable proof"
       (let* ((snapshot
               (reasoning-source-snapshot

@@ -9,7 +9,8 @@
 ;;; Node inputs always refer to earlier nodes, so the list is a finite DAG.
 (import (only-in :gerbil-ascent/candidate/datum candidate-copy-pairs)
         (only-in :gerbil-ascent/candidate/certificate-limits
-                 make-certificate-material-budget certificate-material-reserve!)
+                 make-certificate-material-budget certificate-material-reserve!
+                 certificate-for-each-while)
         (only-in :gerbil-ascent/candidate/types
                  reasoning-snapshot-identity reasoning-snapshot-generation
                  reasoning-snapshot-digest reasoning-snapshot-relations
@@ -132,6 +133,7 @@
         (def (facts name)
           (let (relation (hash-get index name))
             (if relation (proof-relation-nodes relation) [])))
+        (def (active?) (not bounded?))
         (def (known? name row)
           (let (relation (hash-get index name))
             (and relation (hash-get (proof-relation-members relation) row))))
@@ -158,21 +160,23 @@
                                        label (candidate-copy-pairs inputs)))
               (set! next-id (+ next-id 1))
               (install! node))))
-        (for-each
+        (certificate-for-each-while active?
          (lambda (entry)
-           (for-each
-            (lambda (row position)
-              (add! 'source (car entry) row position []))
-            (caddr entry) (iota (length (caddr entry)) 1)))
+           (let (position 0)
+             (certificate-for-each-while active?
+              (lambda (row)
+                (set! position (+ position 1))
+                (add! 'source (car entry) row position []))
+              (caddr entry))))
          (reasoning-snapshot-relations snapshot))
-        (for-each
+        (certificate-for-each-while active?
          (lambda (fact)
            (add! 'candidate (vector-ref fact 0) (vector-ref fact 1)
                  (vector-ref fact 2) []))
          (reasoning-candidate-facts spec))
         (let saturate ()
           (let ((pending []) (pending-count 0) (pending-index #f))
-            (for-each
+            (certificate-for-each-while active?
              (lambda (rule)
                (let ((head (vector-ref rule 0))
                      (body (vector-ref rule 1))
@@ -211,7 +215,7 @@
                                            clause bindings))
                                  (when next
                                    (walk (cdr remaining) next inputs)))))
-                           (for-each
+                           (certificate-for-each-while active?
                             (lambda (node)
                               (unless bounded?
                                 (set! steps (+ steps 1))

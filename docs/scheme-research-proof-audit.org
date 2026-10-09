@@ -400,3 +400,48 @@ inside the original allowance; all five original lifecycle gates and all seven
 new shared-key gates pass. These complete construction/query/extension controls
 retain CPU and allocation admission together. No threshold or semantic contract
 was relaxed; local performance evidence alone does not establish final-head CI.
+
+* Terminal replay traversal (2026-10-09)
+
+B23 sections 1 and 3 distinguish logical fact enumeration from its concrete
+representation ([[https://kmicinski.com/assets/byods.pdf][Bring Your Own Data Structures to Datalog]]).
+We retain that boundary in independent certificate replay: enumerated rows are
+frozen logical inputs, while resource refusal is an invocation-owned operational
+state. The paper does not establish our certificate budget or stopping policy.
+This implementation refinement makes refusal terminal for actual traversal,
+not just for the final unpublished result.
+
+Previously, a finite positive join used =for-each=: after a nested branch
+exhausted work, enclosing rows still invoked =step!=. Seed installation also
+continued membership checks after material refusal. Positive provenance guarded
+callbacks but still traversed the tail; source position labels additionally
+allocated an =iota= list before any refusal. All those paths now use
+=certificate-for-each-while= with the same invocation liveness predicate.
+A duplicate insertion returning false remains a live callback; return values
+never decide resource admission. Positive source labels increment while visiting
+and retain the same one-based position in each relation. Reservation limits,
+probe costs, completed results, and unpublished bounded results are unchanged.
+
+=TerminalTraversal.lean= proves five laws for an operational callback trace:
+an initially stopped traversal visits nothing; trace length is bounded by input
+length; concatenation propagates invocation liveness; any refused prefix absorbs
+arbitrary suffixes; fully live input is traversed exactly. Booleans describe
+post-callback liveness, not callback return values. This abstraction assumes
+frozen finite enumeration and faithful propagation of invocation state; it does
+not prove row binding, certificate soundness, or elapsed-time/heap limits.
+
+=TerminalTraversal.qnt= exhausts 11 states. Bounds, failure-frozen position and
+completed enumeration hold. Four faults (tail scanning, resumption, ignored
+refusal, premature completion) each violate their designated invariant. Existing
+material, negation and aggregate models continue to own their admission rules.
+
+Native tests use an unread improper tail as a traversal sentinel, verifying
+initial refusal, refusal after one callback and nested refusal without inspecting
+that tail. This is an internal traversal control, not admission of malformed
+certificates. Live callbacks returning false still enumerate all inputs. A
+separate two-by-two join checks completed native output, independent finite
+verification, source proof labels and positive DAG verification. Both replays
+complete at 12 charged probes; budgets 1, 2, 5 and 11 refuse without partial
+publication. Existing material-cap, reducer, graph and nonmembership controls
+remain active. Removing suffix work and eager source ordinals is a structural
+optimization; no end-to-end speedup is inferred from these correctness receipts.

@@ -10,7 +10,7 @@
         (only-in :gerbil-ascent/candidate/certificate-limits
                  +max-certificate-relations+ +max-certificate-rows+
                  +max-certificate-cells+ +max-certificate-row-arity+
-                 bounded-list-length unique-rows?
+                 bounded-list-length unique-rows? certificate-for-each-while
                  make-certificate-material-budget certificate-material-reserve!)
         (only-in :gerbil-ascent/candidate/program-identity
                  candidate-finite-program-fingerprint)
@@ -102,6 +102,7 @@
          (material (make-certificate-material-budget))
          (derived-count 0)
          (derived-limit (cadr (reasoning-candidate-limits spec))))
+        (def (active?) (not bounded?))
         (def (rows name)
           ;; The record is constructed above and stays local to this replay.
           (using (relation (cdr (candidate-required-entry name tables)) :- replay-relation)
@@ -111,7 +112,7 @@
             relation.frontier))
         (def (add-row! name row derived?)
           (using (relation (cdr (candidate-required-entry name tables)) :- replay-relation)
-            (if (hash-get relation.present row)
+            (if (or bounded? (hash-get relation.present row))
               #f
               (begin
                 (when derived?
@@ -128,8 +129,9 @@
                     (set! relation.dirty? #t)
                     #t))))))
         (def (step!)
-          (set! steps (+ steps 1))
-          (when (> steps work-budget) (set! bounded? #t))
+          (unless bounded?
+            (set! steps (+ steps 1))
+            (when (> steps work-budget) (set! bounded? #t)))
           (not bounded?))
         (def (evaluate-rule rule)
           (let ((head (vector-ref rule 0))
@@ -190,7 +192,7 @@
                                (walk (cdr clauses)
                                      (cons (cons output value) bindings)))))))
                       (else
-                       (for-each
+                       (certificate-for-each-while active?
                         (lambda (row)
                           (when (step!)
                             (let (next (candidate-bind-atom clause row bindings))
@@ -203,12 +205,12 @@
     (if (not levels)
       (values 'unsupported [])
       (begin
-        (for-each
+        (certificate-for-each-while active?
          (lambda (entry)
-           (for-each (lambda (row) (add-row! (car entry) row #f))
+           (certificate-for-each-while active? (lambda (row) (add-row! (car entry) row #f))
                      (caddr entry)))
          (reasoning-snapshot-relations snapshot))
-        (for-each
+        (certificate-for-each-while active?
          (lambda (fact)
            (add-row! (vector-ref fact 0) (vector-ref fact 1) #f))
          (reasoning-candidate-facts spec))
@@ -217,7 +219,7 @@
           (when (and (<= level maximum) (not bounded?))
             (let repeat ()
               (let (changed? #f)
-                (for-each
+                (certificate-for-each-while active?
                  (lambda (rule)
                    (when (and (not bounded?)
                               (= (cdr (candidate-required-entry

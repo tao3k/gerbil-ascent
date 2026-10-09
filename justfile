@@ -643,10 +643,10 @@ _check-quint group='all': prepare-quint
     #!/usr/bin/env bash
     set -euo pipefail
     group="{{ group }}"
-    models=(ActorRound ActorRoundCredits ActorSession ActorTestPool CertificateMaterial ComponentIndex CountProbe LatticeProjection NativeSessionPublication NegativeProbe NumericProbe OracleTransport PositiveNonmembershipSession ProviderAdmission ProviderFrontier ProviderReplay ProviderRouting ProviderViews ReaderLifetime ReadyComponents SessionTransaction TransitiveComponents)
+    models=(ActorRound ActorRoundCredits ActorSession ActorTestPool CertificateMaterial TerminalTraversal ComponentIndex CountProbe LatticeProjection NativeSessionPublication NegativeProbe NumericProbe OracleTransport PositiveNonmembershipSession ProviderAdmission ProviderFrontier ProviderReplay ProviderRouting ProviderViews ReaderLifetime ReadyComponents SessionTransaction TransitiveComponents)
     case "$group" in
       all) ;;
-      Nonmembership) models=(CertificateMaterial CountProbe NegativeProbe NumericProbe PositiveNonmembershipSession SessionTransaction NativeSessionPublication) ;;
+      Nonmembership) models=(CertificateMaterial TerminalTraversal CountProbe NegativeProbe NumericProbe PositiveNonmembershipSession SessionTransaction NativeSessionPublication) ;;
       ProviderViews) models=(ProviderViews ReaderLifetime) ;;
       *) found=0; for model in "${models[@]}"; do if [[ "$model" = "$group" ]]; then found=1; fi; done; [[ "$found" = 1 ]] || { echo "Unknown Quint feature: $group" >&2; exit 2; }; models=("$group") ;;
     esac
@@ -689,6 +689,7 @@ _check-quint group='all': prepare-quint
         ProviderFrontier) main=ProviderFrontierFixture; constants='Fault = "none"\nSeeded = FALSE'; invariants='ExactFrontier FrontierComplete DeliveredExact ConsumerSnapshot' ;;
         ProviderReplay) constants='Nodes = {0,1}\nScopes = {0,1}\nMutation = "none"'; invariants='PublishedExact JournalExact OrderExact HeldExact RefusalAtomic' ;;
         ProviderRouting) constants='Mutation = "none"'; invariants=CompleteExact ;;
+        TerminalTraversal) constants='Mutation = "none"'; invariants='Bounds FailureFrozen CompletedScan' ;;
         CertificateMaterial) constants='Mutation = "none"'; invariants='CountExact UsageBounds ReservedBeforeCopy NoPartialPublication FailureTerminal' ;;
         NegativeProbe) constants='Mutation = "none"'; invariants='AbsenceSound WitnessSound FailureTerminal Bounds' ;;
         NumericProbe) constants='Mutation = "none"'; invariants='TypedPrefix PrefixValue PublicationExact Unpublished Bounds' ;;
@@ -820,6 +821,7 @@ _check-quint group='all': prepare-quint
             ReadyComponents) for capacity in 1 3; do sed "s/Capacity = 2/Capacity = $capacity/" "$base" > "$temp/$model-capacity.cfg"; execute "capacity-$capacity" "$temp/$model-capacity.cfg" 0; done; fault prerequisite Prerequisites; fault early CompleteReturn; fault snapshot DependencySnapshot; fault tail CompletedDelivery; fault credit CompletedDelivery ;;
             TransitiveComponents) fault split SCCExact; fault stale ReachExact; fault reject RefusalAtomic; for mutation in raw diagonal old; do fault "$mutation" DeltaExact; done; fault chain ParentChains; fault members MemberPartition; fault size SizeExact; fault adjacency PrivateArcs ;;
             OracleTransport) fault early CompleteReaders; fault swallow ReaderClean; fault tail CompleteBytes; fault interrupt ReaderErrorSound ;;
+            TerminalTraversal) fault tail FailureFrozen; fault resume FailureFrozen; fault skip FailureFrozen; fault early CompletedScan ;;
             CertificateMaterial) fault seed-skip CountExact; fault late ReservedBeforeCopy; fault partial NoPartialPublication; fault resume FailureTerminal ;;
             NegativeProbe) fault early AbsenceSound; fault refusal AbsenceSound; fault resume FailureTerminal ;;
             NumericProbe) fault type-skip TypedPrefix; fault empty PrefixValue; fault zero PrefixValue; fault early PublicationExact; fault refusal Unpublished ;;

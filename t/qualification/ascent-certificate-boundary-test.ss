@@ -7,7 +7,7 @@
         (only-in :gerbil-ascent/candidate/certificate-limits
                  +max-certificate-relations+ +max-certificate-rows+
                  +max-certificate-cells+ +max-certificate-row-arity+
-                 bounded-list-length unique-rows?
+                 bounded-list-length unique-rows? certificate-for-each-while
                  make-certificate-material-budget certificate-material-reserve!)
         (only-in :gerbil-ascent/candidate/program-identity
                  candidate-finite-program-fingerprint
@@ -23,6 +23,32 @@
 
 (def ascent-certificate-boundary-test
   (test-suite "certificate material and identity boundaries"
+    (test-case "refusal leaves the unread tail untouched and callbacks are not admission"
+      (let ((live? #f) (seen []))
+        ;; The disabled traversal must not even inspect an invalid input spine.
+        (check-equal? (certificate-for-each-while (lambda () live?)
+          (lambda (row) (error "unreachable visitor" row)) 'unread) #f)
+        (set! live? #t)
+        (check-equal? (certificate-for-each-while (lambda () live?)
+          (lambda (row) (set! seen (cons row seen)) (set! live? #f))
+          '(first . unread)) #f)
+        (check-equal? seen '(first))
+        ;; Duplicate/no-op callback results must not truncate live traversals.
+        (set! live? #t)
+        (set! seen [])
+        (check-equal? (certificate-for-each-while (lambda () live?)
+          (lambda (row) (set! seen (cons row seen)) #f) '(a b c)) #t)
+        (check-equal? (reverse seen) '(a b c))))
+    (test-case "nested work refusal stops every enclosing traversal"
+      (let ((live? #t) (outer []) (inner []))
+        (check-equal? (certificate-for-each-while (lambda () live?)
+          (lambda (row)
+            (set! outer (cons row outer))
+            (certificate-for-each-while (lambda () live?)
+              (lambda (item) (set! inner (cons item inner)) (set! live? #f))
+              '(probe . unread))) '(branch . unread)) #f)
+        (check-equal? outer '(branch))
+        (check-equal? inner '(probe))))
     (test-case "material refusal is atomic and zero-width rows consume capacity"
       (let (budget (make-certificate-material-budget))
         (check-equal? (certificate-material-reserve! budget (make-list 1025 0)) #f)

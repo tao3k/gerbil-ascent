@@ -1187,3 +1187,25 @@ matched CPU/allocation results and controls. The syntax abstraction is justified
 by shared calling-convention ownership; its presence alone is not a performance
 claim. Repository documentation remains English, and generated artifacts stay
 under ignored cache/library paths.
+
+* Structural terms and one state-advance contract
+
+Gerbil =1cfb032= =core/match.ss:640-688= implements =match <>= as a
+hygienic unary procedure and =match*= with once-bound operands. Runtime
+=core/rule-bindings.ss= applies these forms across the candidate-binding,
+pattern-extension and head-construction protocol. Tagged terms are matched
+as complete structures instead of repeatedly decomposing their car/cdr and
+nesting tag tests. The existing checked environment reader also owns head
+lookup, preserving the distinction between an absent binding and a false value.
+
+A local =advance= syntax rule owns the three state arguments for row traversal.
+It reads the caller's row and term tails at the continuation boundary, after
+user callbacks. Binding these tails eagerly would change observable mutation
+semantics. Pattern output names likewise remain read after invoking the callback.
+The abstraction introduces no reader or continuation closure per row term.
+The named recursive algorithm remains explicit; syntax expresses its repeated
+continuation contract rather than replacing the algorithm with generic dispatch.
+
+See [[file:../../t/performance/term-matching/README.org][structural term qualification]] for the complete-pipeline CPU and allocation
+controls. This change improves expression ownership and reduces repeated source;
+it does not establish a performance improvement.

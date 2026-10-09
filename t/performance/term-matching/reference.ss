@@ -3,7 +3,7 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 ;;; Runtime operations over admitted terms and evaluation-local environments.
-(import (only-in "ordered-call.ss" dispatch-ordered-call))
+(import (only-in :gerbil-ascent/core/ordered-call dispatch-ordered-call))
 (export gerbil-ascent-expression-value gerbil-ascent-bind-row gerbil-ascent-head-row
         gerbil-ascent-binding-values gerbil-ascent-call-with-bindings
         gerbil-ascent-extend-pattern)
@@ -68,11 +68,12 @@
 ;;   %
 (def (gerbil-ascent-extend-pattern outputs matched environment diagnostic)
   (let extend ((names outputs) (values matched))
-    (match* (names values)
-      (([] []) environment)
-      (([name . remaining] [value . rest])
-       (cons (cons name value) (extend remaining rest)))
-      (else (error diagnostic matched outputs)))))
+    (if (null? names)
+      (if (null? values) environment (error diagnostic matched outputs))
+      (if (pair? values)
+        (cons (cons (car names) (car values))
+              (extend (cdr names) (cdr values)))
+        (error diagnostic matched outputs)))))
 
 ;;; Bind one candidate row without mutating the caller's environment. A
 ;;; repeated variable or failed pattern rejects this candidate with #f.
@@ -91,46 +92,59 @@
 ;;     %
 (def (gerbil-ascent-bind-row terms row environment)
   (let loop ((patterns terms) (values row) (bindings environment))
-    (match patterns
-      ([] bindings)
-      ([term . _]
-       (def value (car values))
-       (defrule (advance next-bindings)
-         (loop (cdr patterns) (cdr values) next-bindings))
-       (match term
-         (['wildcard . _] (advance bindings))
-         (['fresh-variable . name]
-          ;; Checked plans prove this name absent, including prior terms.
-          (advance (cons (cons name value) bindings)))
-         (['pattern . payload]
-          ;; Observe outputs after the callback, as in the general protocol.
-          (def matched ((vector-ref payload 1) value))
-          (def outputs (vector-ref payload 0))
-          (and matched
-               (advance (gerbil-ascent-extend-pattern
-                      outputs matched bindings
-                      "ASCENT pattern returned invalid bindings"))))
-         (['literal . expected]
-          (and (equal? expected value) (advance bindings)))
-         (['expression . payload]
-          (and (equal? (gerbil-ascent-expression-value payload bindings) value)
-               (advance bindings)))
-         ([_ . name]
-          (cond
-            ((assq name bindings) =>
-             (lambda (previous)
+    (if (null? patterns)
+      bindings
+      (let* ((term (car patterns))
+             (value (car values))
+             (kind (car term)))
+        (case kind
+          ((wildcard)
+           (loop (cdr patterns) (cdr values) bindings))
+          ((fresh-variable)
+           ;; Private checked plans prove this name absent, including earlier
+           ;; terms in the same atom. No row-time environment search is needed.
+           (loop (cdr patterns) (cdr values)
+                 (cons (cons (cdr term) value) bindings)))
+          ((pattern)
+           (let* ((payload (cdr term))
+                  (matched ((vector-ref payload 1) value))
+                  (outputs (vector-ref payload 0)))
+             (and matched
+                  (loop (cdr patterns) (cdr values)
+                        (gerbil-ascent-extend-pattern
+                         outputs matched bindings
+                         "ASCENT pattern returned invalid bindings")))))
+          ((literal expression)
+           (and (equal? (if (eq? kind 'literal)
+                          (cdr term)
+                          (gerbil-ascent-expression-value
+                           (cdr term) bindings))
+                        value)
+                (loop (cdr patterns) (cdr values) bindings)))
+          (else
+           (let* ((name (cdr term))
+                  (previous (assq name bindings)))
+             (if previous
                (and (equal? (cdr previous) value)
-                    (advance bindings))))
-            (else (advance (cons (cons name value) bindings))))))))))
+                    (loop (cdr patterns) (cdr values) bindings))
+               (loop (cdr patterns) (cdr values)
+                     (cons (cons name value) bindings))))))))))
 
 ;; : (forall (v) (-> [Term] [(Pair Symbol v)] [v]))
 ;; : (-> Terms Environment Row)
 (def (gerbil-ascent-head-row terms environment)
-  (map (match <>
-         (['literal . value] value)
-         (['expression . payload]
-          (gerbil-ascent-expression-value payload environment))
-         (['pattern . _] (error "ASCENT pattern is invalid in a rule head"))
-         (['wildcard . _] (error "ASCENT wildcard is invalid in a rule head"))
-         ([_ . name] (binding-value name environment "unbound ASCENT head variable")))
+  (map (lambda (term)
+         (case (car term)
+           ((literal) (cdr term))
+           ((expression)
+            (gerbil-ascent-expression-value (cdr term) environment))
+           ((pattern)
+            (error "ASCENT pattern is invalid in a rule head"))
+           ((wildcard)
+            (error "ASCENT wildcard is invalid in a rule head"))
+           (else
+            (let (binding (assq (cdr term) environment))
+              (unless binding
+                (error "unbound ASCENT head variable" (cdr term)))
+              (cdr binding)))))
        terms))

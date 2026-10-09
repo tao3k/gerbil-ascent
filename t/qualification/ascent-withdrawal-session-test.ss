@@ -3,6 +3,8 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 (import :std/test (only-in :clan/poo/object .ref .cc .o)
         (only-in :clan/poo/mop validate)
+        (only-in :std/string/misc string-contains)
+        (only-in :gerbil/runtime/gambit call-with-output-string display-exception)
         :gerbil-ascent/candidate/withdrawal-session
         (only-in :gerbil-ascent/candidate/reasoning reasoning-source-snapshot
                  reasoning-attempt reasoning-receipt-bound? reasoning-receipt-rows)
@@ -22,6 +24,27 @@
 (def (source edges) (reasoning-source-snapshot 'withdrawal 0 (list (list 'edge 2 edges))))
 (def (observed session) (candidate-withdrawal-observe session))
 (def (check-set a b) (check-equal? (candidate-same-row-set? a b) #t))
+;;; Release a ready group together; each worker drops the start gate BEFORE
+;;; calling the owner. Native bounded receives/joins expose hangs as failures.
+(def (concurrent calls)
+  (let ((start (make-mutex)) (caller (current-thread)))
+    (mutex-lock! start)
+    (let (workers
+           (map (lambda (call)
+                  (spawn (lambda ()
+                           (thread-send caller 'withdrawal-ready)
+                           (mutex-lock! start) (mutex-unlock! start)
+                           (with-catch
+                             (lambda (failure)
+                               (vector #f (call-with-output-string
+                                           (lambda (out) (display-exception failure out)))))
+                             (lambda () (vector #t (call))))))) calls))
+      (for-each (lambda (_) (check-equal? (thread-receive 3 'timeout) 'withdrawal-ready)) calls)
+      (mutex-unlock! start)
+      (map (lambda (worker)
+             (let (outcome (thread-join! worker 3 'timeout))
+               (check-equal? (vector? outcome) #t)
+               outcome)) workers))))
 ;;; Independent path walk, without candidate/native rule plans or support IDs.
 (def (reference edges)
   (def (reaches? from target)
@@ -45,6 +68,63 @@
                   '(.observe .withdraw .compact .support-size))
         (check-exception (validate GerbilAscentWithdrawalSessionContract
                           (.cc owner '.operations (.o))) (lambda (_) #t))))
+    (test-case "concurrent current-generation withdrawals have exactly one successful publisher"
+      (let* ((owner (candidate-open-withdrawal-session (source '((0 1) (1 2))) proposal))
+             (before (observed owner))
+             (results (concurrent
+                        (map (lambda (n)
+                               (lambda () (candidate-withdrawal-session! owner 0
+                                            (list (list 'edge (+ 1 (modulo n 2))))))) (iota 16))))
+             (accepted (filter (lambda (result) (vector-ref result 0)) results)))
+        (check-equal? (length accepted) 1)
+        (for-each (lambda (result)
+                    (unless (vector-ref result 0)
+                      (check-equal? (if (string-contains (vector-ref result 1) "stale withdrawal generation") #t #f) #t))) results)
+        (let (receipt (vector-ref (car accepted) 1))
+          (check-equal? (reasoning-snapshot-generation (.ref receipt 'source)) 1)
+          (check-set (.ref receipt 'rows)
+                     (reference (caddr (car (reasoning-snapshot-relations (.ref receipt 'source)))))))
+        (check-set (.ref before 'rows) '((0 1) (1 2) (0 2)))
+        (check-equal? (reasoning-snapshot-generation (.ref (observed owner) 'source)) 1)))
+    (test-case "concurrent failed maintenance releases the gate and readers retain complete cuts"
+      (let* ((owner (candidate-open-withdrawal-session (source '((0 1) (1 2))) proposal))
+             (results (concurrent
+                        (map (lambda (n)
+                               (case (modulo n 4)
+                                 ((0) (lambda () (candidate-withdrawal-session! owner 0 '((edge 1)) 1)))
+                                 ((1) (lambda () (candidate-withdrawal-compact! owner 0 1)))
+                                 ((2) (lambda () (observed owner)))
+                                 (else (lambda () (candidate-withdrawal-compact! owner 0))))) (iota 32)))))
+        (check-equal? (length (filter (lambda (result) (vector-ref result 0)) results)) 16)
+        (for-each (lambda (result)
+                    (when (vector-ref result 0)
+                      (let (receipt (vector-ref result 1))
+                        (check-equal? (reasoning-snapshot-generation (.ref receipt 'source)) 0)
+                        (check-set (.ref receipt 'rows) '((0 1) (1 2) (0 2)))))) results)
+        ;; No failed child strands the mutex; a later valid source cut succeeds.
+        (check-set (.ref (candidate-withdrawal-session! owner 0 '((edge 1))) 'rows) '((1 2)))))
+    (test-case "readers racing successive cuts always capture matching source and rows"
+      (let* ((owner (candidate-open-withdrawal-session (source '((0 1) (1 2))) proposal))
+             (results
+               (concurrent
+                 (cons (lambda ()
+                         (for-each (lambda (generation)
+                                     (candidate-withdrawal-session! owner generation '((edge 1)))
+                                     (thread-yield!)
+                                     (candidate-withdrawal-compact! owner (+ generation 1))) '(0 1))
+                         #t)
+                   (map (lambda (_)
+                          (lambda ()
+                            (for-each (lambda (_)
+                                        (let* ((receipt (observed owner))
+                                               (cut (.ref receipt 'source))
+                                               (edges (caddr (car (reasoning-snapshot-relations cut)))))
+                                          (check-equal? (reasoning-snapshot-generation cut) (- 2 (length edges)))
+                                          (check-set (.ref receipt 'rows) (reference edges)))
+                                        (thread-yield!)) (iota 32))
+                            #t)) (iota 8))))))
+        (for-each (lambda (result) (check-equal? (vector->list result) '(#t #t))) results)
+        (check-equal? (reasoning-snapshot-generation (.ref (observed owner) 'source)) 2)))
     (test-case "source occurrence ordinals rebind after every committed generation"
       (let* ((cut (source '((0 1) (0 1) (1 2) (2 1))))
              (receipt (reasoning-attempt cut proposal))

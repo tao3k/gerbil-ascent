@@ -53,8 +53,14 @@ on subsequent cuts. The initial certificate remains bound to its initial cut;
 it is not republished as a fresh certificate for later generations.
 
 Failure preserves the previous cut, including token translation. The owner
-serializes public method calls and rejects reentrant access. Callers must
-serialize concurrent access; this is not a thread lock. Insertions require a
+serializes all four public methods through a private native Gerbil mutex.
+Generation validation, support maintenance, publication and returned observation
+construction occur within one critical section. Waiting callers validate the
+generation after they acquire the gate; concurrent same-generation withdrawals
+have at most one successful publisher. Reads capture matching source and rows
+while holding the same gate. Native =with-dynamic-lock= releases it on failure
+and continuation exits; same-thread reentry is rejected before mutex acquisition.
+There is no FIFO/fairness or async cancellation claim. Insertions require a
 new owner and complete graph admission.
 
 * Explicit bounded support compaction
@@ -107,6 +113,25 @@ maintained positive owner after initialization.
 | Lean StableSourceSupport | Initial coverage, token survival, cumulative cuts and current-founded rule restriction preserve every future source subcut | Native grounding, live-index exactness and token decoding remain representation obligations |
 | Lean ComponentClosure.SourceWithdrawal | Founded overdelete/rederive recovery and surviving occurrence support | Mutable Scheme loop refinement remains open |
 | Quint WithdrawalSession | Frozen logical graph, cumulative membership, token order, retained support coverage and atomic cut/compaction publication; ten fault variants | Finite duplicate-support source registry, no full graph-pruning refinement |
+| Lean SourceOccurrences | A successfully incremented generation rejects a competing request with the old expected generation | Assumes serialized validation; no native mutex extraction |
+| Quint WithdrawalConcurrency | Two callers, equal/successor expected generations, owner exclusivity, failure unlock and bound returned receipts; four fault variants | Finite protocol, exact solver is abstracted; no fairness proof |
+
+Native concurrency Cases release a group of 16 deletion requests together,
+require exactly one success and stale-generation diagnostics for every loser;
+32 mixed failed/valid compactions and readers verify exception release; eight
+readers check 256 complete source/row snapshots while a writer deletes and
+compacts successive cuts. All child receives/joins are bounded at three seconds.
+The start gate is dropped before calling the owner, so it does not serialize
+the workload. The native owner gate introduces no Bash thread scheduling.
+
+The final owner Suite has 16 Cases. Both Quint equal-generation and successor
+fixtures pass; the model rejects four separate protocol faults. These finite
+safety checks do not establish scheduling fairness or a mutable-code refinement.
+The native gate still passes all nine performance Suites within 120 seconds.
+The gated diamond lifecycle reports 6.875 to 4.856 ms paired process CPU and
+17,367,480 to 12,949,664 allocated bytes. Initialization, all cuts and detached
+observations remain inside measurement. This is not a concurrent-throughput
+claim, and no sample count, threshold, heap or time budget changed.
 
 * Matched complete lifecycle costs
 
@@ -158,7 +183,7 @@ Suite after all four support scenarios passed; its negative receipt remains
 retained. The separate native gate passed. These observations do not isolate
 all causes of host scheduling delay.
 
-The connected local qualification comprises 13 withdrawal/compaction Cases and
+The support-compaction qualification at revision =5809a93= comprised 13 withdrawal/compaction Cases and
 12 provenance-kernel Cases, including exhaustion one visit before successful
 compaction, input-owner isolation and retired-token validation after an empty
 graph is compacted. Lean completed all 146 build jobs. Quint explored 9,894

@@ -122,58 +122,59 @@
            (current (vector snapshot (open-support snapshot initial-rows proof-steps) initial-rows
                       (map (lambda (entry) (cons (car entry) (iota (length (caddr entry)) 1)))
                            (reasoning-snapshot-relations snapshot))))
-           (active? #f))
+           (gate (make-mutex 'ascent-withdrawal-owner)))
+      ;; The native dynamic lock releases on exceptions and continuation exits.
+      ;; Reject the owning thread before waiting on its nonrecursive mutex.
+      ;; Other callers wait, then validate against the state they actually own.
+      ;; : (forall (a) (-> (-> a) a))
+      (def (serialized call)
+        (when (eq? (mutex-state gate) (current-thread))
+          (error "reentrant withdrawal owner call"))
+        (with-dynamic-lock gate call))
       (def (observe)
-        (when active? (error "withdrawal observation during transaction"))
         (let ((cut (vector-ref current 0)) (visible-rows (vector-ref current 2)))
           (.o source: (owned-snapshot cut (reasoning-snapshot-generation cut)
                                      (reasoning-snapshot-relations cut))
               rows: (candidate-copy-pairs visible-rows))))
       (def (withdraw! generation selectors budget)
-        (when active? (error "reentrant withdrawal transaction"))
         (unless (and (exact-integer? generation)
                      (= generation (reasoning-snapshot-generation (vector-ref current 0)))
                      (exact-integer? budget) (> budget 0))
           (error "stale withdrawal generation or invalid budget"))
-        (dynamic-wind
-          (lambda () (set! active? #t))
-          (lambda ()
-            (let-values (((cut occurrences stable)
-                          (withdraw-source-cut (vector-ref current 0) (vector-ref current 3) selectors)))
-              (let-values (((support rows _work)
-                            (candidate-provenance-preview-withdraw (vector-ref current 1) stable budget)))
-                ;; Initial graph admission covers all ground instances. Positive
-                ;; deletion only retires source seeds: DRed computes the founded
-                ;; remaining closure without another native fixed-point solve.
-                ;; Every allocation and bounded phase completes before one swap.
-                (let (next (vector cut support (candidate-copy-pairs rows) occurrences))
-                  (set! current next)))))
-          (lambda () (set! active? #f)))
+        (let-values (((cut occurrences stable)
+                      (withdraw-source-cut (vector-ref current 0) (vector-ref current 3) selectors)))
+          (let-values (((support rows _work)
+                        (candidate-provenance-preview-withdraw (vector-ref current 1) stable budget)))
+            ;; Initial graph admission covers all ground instances. Positive
+            ;; deletion only retires source seeds: DRed computes the founded
+            ;; remaining closure without another native fixed-point solve.
+            ;; Every allocation and bounded phase completes before one swap.
+            (let (next (vector cut support (candidate-copy-pairs rows) occurrences))
+              (set! current next))))
         (observe))
       (def (support-size)
-        (when active? (error "support observation during transaction"))
         (let-values (((node-count edge-count root-count) (provenance-maintenance-size (vector-ref current 1))))
           (.o nodes: node-count edges: edge-count roots: root-count)))
       (def (compact! generation budget)
-        (when active? (error "reentrant compaction transaction"))
         (unless (and (exact-integer? generation)
                      (= generation (reasoning-snapshot-generation (vector-ref current 0)))
                      (exact-integer? budget) (> budget 0))
           (error "stale compaction generation or invalid budget"))
-        (dynamic-wind
-          (lambda () (set! active? #t))
-          (lambda ()
-            (let-values (((support _work) (candidate-provenance-compact (vector-ref current 1) budget)))
-              ;; Maintenance changes representation, not source generation or
-              ;; public rows. A failed bounded build leaves the old owner intact.
-              (let (next (vector (vector-ref current 0) support (vector-ref current 2) (vector-ref current 3)))
-                (set! current next))))
-          (lambda () (set! active? #f)))
+        (let-values (((support _work) (candidate-provenance-compact (vector-ref current 1) budget)))
+          ;; Maintenance changes representation, not source generation or
+          ;; public rows. A failed bounded build leaves the old owner intact.
+          (let (next (vector (vector-ref current 0) support (vector-ref current 2) (vector-ref current 3)))
+            (set! current next)))
         (observe))
       (validate GerbilAscentWithdrawalSessionContract
         (.o (:: @ (.ref GerbilAscentWithdrawalSessionContract 'proto))
-            (.operations (.o (.observe observe) (.withdraw withdraw!)
-                             (.compact compact!) (.support-size support-size))))))))
+            (.operations
+              (.o (.observe (lambda () (serialized observe)))
+                  (.withdraw (lambda (generation selectors budget)
+                               (serialized (lambda () (withdraw! generation selectors budget)))))
+                  (.compact (lambda (generation budget)
+                              (serialized (lambda () (compact! generation budget)))))
+                  (.support-size (lambda () (serialized support-size))))))))))
 
 (def (withdrawal-observe session) ((.ref (.ref session '.operations) '.observe)))
 (.defgeneric (withdrawal-update session generation selectors budget) slot: .withdraw)

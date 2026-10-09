@@ -34,4 +34,12 @@ theorem stale_preserves (old next : Cut Source Evidence) (expected : Nat)
     publish old next expected true = old := by simp [publish, stale]
 theorem accepted_publication (old next : Cut Source Evidence) :
     publish old next old.generation true = next := by simp [publish]
+/-- Rechecking under a serialized owner rejects a second request carrying the
+same expected generation after the first publication increments it. -/
+theorem competing_request_rejected (old next later : Cut Source Evidence)
+    (advance : next.generation = old.generation + 1) :
+    publish next later old.generation true = next := by
+  apply stale_preserves
+  rw [advance]
+  exact Nat.ne_of_lt (Nat.lt_succ_self old.generation)
 end Ascent.SourceOccurrences

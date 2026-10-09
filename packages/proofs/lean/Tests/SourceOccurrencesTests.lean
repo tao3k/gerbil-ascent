@@ -9,3 +9,11 @@ example : withdraw (withdraw [10, 10, 20] [1]) [1] = [20] := by decide
 example : withdraw [10, 10, 20] [1, 2] = [20] := by decide
 example : withdraw [10, 20] [2] = [10] := by decide
 example : withdraw (withdraw [10, 10, 20] [1]) [1] ≠ [10] := by decide
+
+example (old next later : Cut (List Nat) (List Nat))
+    (advance : next.generation = old.generation + 1) :
+    publish next later old.generation true = next :=
+  competing_request_rejected old next later advance
+
+example : publish (Cut.mk 1 [20] [20]) (Cut.mk 2 [] []) 0 true =
+    (Cut.mk 1 [20] [20]) := by decide

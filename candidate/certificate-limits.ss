@@ -7,12 +7,27 @@
 ;;; budget does not replace these independent material-size limits.
 (export +max-certificate-relations+ +max-certificate-rows+
         +max-certificate-cells+ +max-certificate-row-arity+
-        bounded-list-length unique-rows?)
+        bounded-list-length unique-rows?
+        make-certificate-material-budget certificate-material-reserve!)
 
 (def +max-certificate-relations+ 64)
 (def +max-certificate-rows+ 4096)
 (def +max-certificate-cells+ 32768)
 (def +max-certificate-row-arity+ 1024)
+
+;; Private invocation-owned state; refusal leaves both counters unchanged.
+(defstruct certificate-material (rows cells))
+(def (make-certificate-material-budget)
+  (make-certificate-material 0 0))
+(def (certificate-material-reserve! budget row)
+  (let (width (bounded-list-length row +max-certificate-row-arity+))
+    (and width
+         (< (certificate-material-rows budget) +max-certificate-rows+)
+         (<= (+ (certificate-material-cells budget) width) +max-certificate-cells+)
+         (begin
+           (certificate-material-rows-set! budget (+ (certificate-material-rows budget) 1))
+           (certificate-material-cells-set! budget (+ (certificate-material-cells budget) width))
+           #t))))
 
 ;;; Inspect at most the cap's pairs, including for a cyclic input. Checking
 ;;; length after a complete list traversal cannot enforce this boundary.

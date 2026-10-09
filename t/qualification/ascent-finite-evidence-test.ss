@@ -4,6 +4,7 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 (import (only-in :std/test check-equal? test-suite test-case)
+        (only-in :gerbil-ascent/candidate/types make-reasoning-candidate)
         (only-in :gerbil-ascent/candidate/program candidate-inspect)
         (only-in :gerbil-ascent/candidate/reasoning
                  reasoning-source-snapshot reasoning-attempt
@@ -110,6 +111,42 @@
 
 (def ascent-finite-evidence-test
   (test-suite "finite stratified replay evidence"
+    (test-case "finite replay enforces exact schema and source row arity boundaries"
+      (def (check-material input expected)
+        (let* ((spec (make-reasoning-candidate '((target . 1)) [] [] (vector '(target 0) 0) '(1 1 1)))
+               (certificate (candidate-finite-evidence input spec 'digest 'complete [] 100)))
+          (check-equal? (finite-evidence-status certificate) expected)
+          (if (eq? expected 'complete)
+            (check-equal? (candidate-verify-finite-evidence input spec 'digest 'complete [] certificate 100) 'valid)
+            (check-equal? (finite-evidence-closure certificate) []))))
+      (for-each (lambda (count)
+        (check-material (reasoning-source-snapshot 'schema-material 0
+          (map (lambda (i) (list (string->symbol (string-append "seed" (number->string i))) 1 [])) (iota count)))
+          (if (= count 63) 'complete 'bounded))) '(63 64))
+      (for-each (lambda (width)
+        (check-material (reasoning-source-snapshot 'arity-material 0
+          (list (list 'seed width (list (make-list width 0)))))
+          (if (= width 1024) 'complete 'bounded))) '(1024 1025)))
+    (test-case "finite replay reserves seeds and derived rows within certificate material limits"
+      (for-each (lambda (control)
+        (let* ((width (car control)) (copies (cadr control))
+               (names (map (lambda (i) (string->symbol (string-append "copy" (number->string i)))) (iota copies)))
+               (terms (map (lambda (i) (string->symbol (string-append "?v" (number->string i)))) (iota width)))
+               (input (reasoning-source-snapshot 'finite-material 0
+                        (list (list 'seed width (map (lambda (i) (cons i (make-list (- width 1) 0))) (iota 1024))))))
+               (spec (make-reasoning-candidate
+                       (map (lambda (name) (cons name width)) names) []
+                       (map (lambda (name i) (vector (cons name terms) (list (cons 'seed terms)) i)) names (iota copies))
+                       (vector (cons (car names) (make-list width -1)) 99) '(1024 4096 4096)))
+               (certificate (candidate-finite-evidence input spec 'digest 'complete [] 20000)))
+          (check-equal? (finite-evidence-status certificate) (caddr control))
+          (if (eq? (caddr control) 'complete)
+            (begin
+              (check-equal? (apply + (map (lambda (entry) (length (caddr entry))) (finite-evidence-closure certificate))) 4096)
+              (check-equal? (candidate-verify-finite-evidence input spec 'digest 'complete [] certificate 20000) 'valid))
+            (check-equal? (finite-evidence-closure certificate) []))
+          (displayln "FINITE-MATERIAL-VERIFIED " width " " copies) (force-output)))
+        '((1 3 complete) (1 4 bounded) (8 3 complete) (9 3 bounded))))
     (test-case "negation and count have an exact snapshot-relative closure"
       (let* ((snapshot (source 1 '((1 3))))
              (datum (program '(query summary 1 1))))

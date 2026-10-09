@@ -643,10 +643,10 @@ _check-quint group='all': prepare-quint
     #!/usr/bin/env bash
     set -euo pipefail
     group="{{ group }}"
-    models=(ActorRound ActorRoundCredits ActorSession ActorTestPool ComponentIndex LatticeProjection NativeSessionPublication OracleTransport PositiveNonmembershipSession ProviderAdmission ProviderFrontier ProviderReplay ProviderRouting ProviderViews ReaderLifetime ReadyComponents SessionTransaction TransitiveComponents)
+    models=(ActorRound ActorRoundCredits ActorSession ActorTestPool CertificateMaterial ComponentIndex LatticeProjection NativeSessionPublication OracleTransport PositiveNonmembershipSession ProviderAdmission ProviderFrontier ProviderReplay ProviderRouting ProviderViews ReaderLifetime ReadyComponents SessionTransaction TransitiveComponents)
     case "$group" in
       all) ;;
-      Nonmembership) models=(PositiveNonmembershipSession SessionTransaction NativeSessionPublication) ;;
+      Nonmembership) models=(CertificateMaterial PositiveNonmembershipSession SessionTransaction NativeSessionPublication) ;;
       ProviderViews) models=(ProviderViews ReaderLifetime) ;;
       *) found=0; for model in "${models[@]}"; do if [[ "$model" = "$group" ]]; then found=1; fi; done; [[ "$found" = 1 ]] || { echo "Unknown Quint feature: $group" >&2; exit 2; }; models=("$group") ;;
     esac
@@ -689,6 +689,7 @@ _check-quint group='all': prepare-quint
         ProviderFrontier) main=ProviderFrontierFixture; constants='Fault = "none"\nSeeded = FALSE'; invariants='ExactFrontier FrontierComplete DeliveredExact ConsumerSnapshot' ;;
         ProviderReplay) constants='Nodes = {0,1}\nScopes = {0,1}\nMutation = "none"'; invariants='PublishedExact JournalExact OrderExact HeldExact RefusalAtomic' ;;
         ProviderRouting) constants='Mutation = "none"'; invariants=CompleteExact ;;
+        CertificateMaterial) constants='Mutation = "none"'; invariants='CountExact UsageBounds ReservedBeforeCopy NoPartialPublication FailureTerminal' ;;
         ProviderViews) constants="Rows = {0,1,2}\nBudget = 2\nMutation = \"none\"\nExplorationBound = $views_cutoff"; invariants='AtomicPublication FrozenRead ReaderAlive CurrentReply LogicalBudget'; constraint=Explore ;;
         ReaderLifetime) constants='Rows = {0,1,2}\nReaders = {1,2}\nBudget = 2\nMutation = "none"'; invariants='ReaderAlive AcceptedCurrent CreditBalance'; properties=ReaderCompletion; specification=spec ;;
         ReadyComponents) constants='Tasks = {1,2,3}\nCapacity = 2\nMutation = "none"'; invariants='Partition Prerequisites CapacityBound CompleteReturn DependencySnapshot CompletedDelivery' ;;
@@ -816,6 +817,7 @@ _check-quint group='all': prepare-quint
             ReadyComponents) for capacity in 1 3; do sed "s/Capacity = 2/Capacity = $capacity/" "$base" > "$temp/$model-capacity.cfg"; execute "capacity-$capacity" "$temp/$model-capacity.cfg" 0; done; fault prerequisite Prerequisites; fault early CompleteReturn; fault snapshot DependencySnapshot; fault tail CompletedDelivery; fault credit CompletedDelivery ;;
             TransitiveComponents) fault split SCCExact; fault stale ReachExact; fault reject RefusalAtomic; for mutation in raw diagonal old; do fault "$mutation" DeltaExact; done; fault chain ParentChains; fault members MemberPartition; fault size SizeExact; fault adjacency PrivateArcs ;;
             OracleTransport) fault early CompleteReaders; fault swallow ReaderClean; fault tail CompleteBytes; fault interrupt ReaderErrorSound ;;
+            CertificateMaterial) fault seed-skip CountExact; fault late ReservedBeforeCopy; fault partial NoPartialPublication; fault resume FailureTerminal ;;
           esac
         }
         # Calls run as simple commands in independent subshells: failures terminate

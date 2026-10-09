@@ -224,3 +224,40 @@ assertion fail. This is a discriminator for early reservation, not a universal
 heap bound: indexes, terms, input references and temporary joins have separate
 costs. Large compressed Provider results still require a separately designed
 compressed invariant certificate; they are not admitted by raising these limits.
+
+* Shared material reservation: Scheme, Lean and Quint (2026-10-09)
+
+Finite stratified replay had the same late-size-check gap as absence proof
+construction. =candidate/certificate-limits.ss= now owns a private invocation
+row/cell budget. Both =candidate/provenance.ss= (absence only) and
+=candidate/finite-evidence.ss= reserve each distinct row before copying it into
+their private index. Source and derived rows share the quota; duplicate
+membership is checked first. Finite replay rejects an oversized combined schema
+before installing seeds. Final shape and independent semantic verification
+remain separate gates. A refusal preserves the helper's counters; each producer
+then enters its terminal =bounded= path and returns no partial material.
+
+| Native responsibility | Lean correspondence | Quint discriminator |
+|-----------------------+---------------------+---------------------|
+| Check arity, rows and cells before copying | =reserve= and =accepted_bounds= | =UsageBounds= and =ReservedBeforeCopy=; late-copy fault |
+| Count distinct seed and derived reservations | =accepted_exact= and =successful_trace_exact= | =CountExact=; omitted-seed fault |
+| Preserve counters on refusal | =refused_unchanged= and =refused_iff= | Reservation precedes copying; native refusal/retry control |
+| Bound every successful finite trace | =successful_trace_bounds=, assuming admitted initial counters | Exact-width finite state exploration |
+| Stop failed producers; publish no partial closure | =blocked_trace_stays_blocked= models option propagation | =FailureTerminal= and =NoPartialPublication=; resume/partial-publication faults |
+
+[[file:../packages/proofs/lean/CertificateMaterial.lean][Lean]] quantifies over natural caps and arbitrary finite width traces. Native
+decoding, scalar equality and deduplication supply those widths; the theorem
+does not prove these representation assumptions. [[file:../packages/proofs/quint/CertificateMaterial.qnt][Quint]] uses four row identities
+(including zero-width and over-arity rows), a two-row quota and a three-cell
+quota. Its reachable state set has 30 distinct states; all four faults violate
+their designated invariants. =Complete= assumes the independently established
+replay fixed point. Existing Session models retain generation/ABA ownership.
+There is no unbounded liveness, general heap or extraction claim.
+
+Native =std/test= checks finite replay's exact/overflowing total rows and cells,
+independent verification of exact-boundary certificates, and atomic refusal
+followed by legal zero-width reservation at fully consumed cell capacity.
+These checks complement the earlier absence and ordinary-witness controls.
+A22 least-fixed-point semantics and B23 concretization motivate the architecture;
+resource refusal is our policy, not a new deductive consequence or a compressed
+certificate theorem.

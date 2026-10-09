@@ -7,7 +7,8 @@
         (only-in :gerbil-ascent/candidate/certificate-limits
                  +max-certificate-relations+ +max-certificate-rows+
                  +max-certificate-cells+ +max-certificate-row-arity+
-                 bounded-list-length unique-rows?)
+                 bounded-list-length unique-rows?
+                 make-certificate-material-budget certificate-material-reserve!)
         (only-in :gerbil-ascent/candidate/program-identity
                  candidate-finite-program-fingerprint
                  candidate-positive-program-fingerprint))
@@ -22,6 +23,17 @@
 
 (def ascent-certificate-boundary-test
   (test-suite "certificate material and identity boundaries"
+    (test-case "material refusal is atomic and zero-width rows consume capacity"
+      (let (budget (make-certificate-material-budget))
+        (check-equal? (certificate-material-reserve! budget (make-list 1025 0)) #f)
+        (for-each (lambda (_) (check-equal? (certificate-material-reserve! budget (make-list 1024 0)) #t)) (iota 32))
+        (check-equal? (certificate-material-reserve! budget '(0)) #f)
+        ;; Refusing one cell did not consume a row or corrupt full cell capacity.
+        (for-each (lambda (i)
+          (check-equal? (certificate-material-reserve! budget []) #t)
+          (when (zero? (modulo (+ i 1) 512))
+            (displayln "MATERIAL-ZERO-ROWS " (+ i 1)) (force-output))) (iota 4064))
+        (check-equal? (certificate-material-reserve! budget []) #f)))
     (test-case "all finite lengths and caps preserve the admission boundary"
       (check-equal? (list +max-certificate-relations+ +max-certificate-rows+
                           +max-certificate-cells+ +max-certificate-row-arity+)

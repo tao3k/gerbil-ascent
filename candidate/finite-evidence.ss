@@ -10,7 +10,8 @@
         (only-in :gerbil-ascent/candidate/certificate-limits
                  +max-certificate-relations+ +max-certificate-rows+
                  +max-certificate-cells+ +max-certificate-row-arity+
-                 bounded-list-length unique-rows?)
+                 bounded-list-length unique-rows?
+                 make-certificate-material-budget certificate-material-reserve!)
         (only-in :gerbil-ascent/candidate/program-identity
                  candidate-finite-program-fingerprint)
         (only-in :gerbil-ascent/candidate/types
@@ -98,6 +99,7 @@
                schema))
          (steps 0)
          (bounded? #f)
+         (material (make-certificate-material-budget))
          (derived-count 0)
          (derived-limit (cadr (reasoning-candidate-limits spec))))
         (def (rows name)
@@ -116,6 +118,8 @@
                   (set! derived-count (+ derived-count 1))
                   (when (> derived-count derived-limit)
                     (set! bounded? #t)))
+                (unless (or bounded? (certificate-material-reserve! material row))
+                  (set! bounded? #t))
                 (if bounded?
                   #f
                   (let (owned (candidate-copy-pairs row))
@@ -197,6 +201,8 @@
                         (rows (car clause)))))))))
             (walk body [])
             changed?))
+    (if (> (length schema) +max-certificate-relations+)
+      (values 'bounded [])
     (if (not levels)
       (values 'unsupported [])
       (begin
@@ -230,7 +236,7 @@
                     (map (lambda (entry)
                            (list (car entry) (replay-relation-arity (cdr entry))
                                  (rows (car entry))))
-                         tables)))))))
+                         tables))))))))
 
 ;; : (-> InspectedCandidate Closure Rows)
 (def (query-rows spec closure)

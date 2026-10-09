@@ -1,3 +1,4 @@
+import UnsanitizedPaths
 import ProofDag
 import BoundedSpine
 import TerminalTraversal

@@ -3,7 +3,18 @@
 
 #+TITLE: ASCENT / BYODS Closure Matrix and Proof Gaps
 #+DATE: 2026-10-05
-#+STATUS: audited; full replication remains open
+#+STATUS: built-in engineering baseline qualified; full workload replication remains open
+
+* Current engineering acceptance and new-paper research (2026-10-09)
+
+The built-in BYODS Provider/frontier/shared-index engineering baseline is
+implemented and qualified by the current native/Rust/Lean/Quint CI. Keep its
+accepted mechanisms as regression gates. Full paper application replication,
+matched benefits and universal native extraction retain separate obligations
+below. Those obligations do not classify the implemented baseline as missing
+work or prevent advancing the README head papers. The [[file:research/paper-coverage.org][27-paper coverage audit]]
+corrects reading and acceptance statuses; IRIS now has a dedicated reading and
+finite Scheme path application with Lean and existing Session Quint checks.
 
 * Closure conclusions and criteria
 
@@ -14,7 +25,7 @@ obligation for full replication; passing finite scenarios does not establish
 complete coverage of a paper.
 
 The objective remains complete ASCENT behavior and BYODS design coverage.
-Overall completion has not yet been established. Native cases, finite Rust
+Full workload replication has not yet been established. Native cases, finite Rust
 comparisons, abstract Lean theorems and finite TLC exploration answer distinct
 questions. Case counts or passing CI cannot replace missing functionality or
 proofs. This matrix aligns the original scope, recent actor implementation and

@@ -1,0 +1,23 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+#+TITLE: Taint paths: finite graph acceptance
+#+DATE: 2026-10-09
+
+[[file:../../research/agent-inference/iris-ir25.org][IRIS method reading]] owns paper correspondence and remaining Java/model gates.
+[[file:../../../applications/taint-paths.ss][Program construction]] uses ordinary sources, relations, stratified negation and
+Session replacement. The caller owns finite graph extraction and source/sink/
+sanitizer specifications. An alert means an unsanitized graph path only.
+
+[[file:../../../packages/proofs/lean/UnsanitizedPaths.lean][Six Lean laws]] establish path/filter equivalence, endpoint admission, sanitizer
+antitonicity and edge monotonicity. Native vector/hash/row encoding and actual
+stratum completion remain separate correspondence premises. Existing
+[[file:../../../packages/proofs/quint/SessionTransaction.qnt][SessionTransaction]] owns atomic source/result publication, stale work and
+refusal. Its local check explores 1081 distinct states and four fault variants;
+no new protocol replica is added for this application.
+
+[[file:../../../t/qualification/ascent-taint-paths-test.ss][Native qualification]] compares 512 graph/sanitizer combinations with independent
+graph search, plus interior blocking, bypass and zero-edge controls. Session
+replacement checks removal/restoration, held old results and zero-budget refusal.
+Local execution passes three Cases; whole-revision CI remains a separate gate.
+Java extraction, CodeQL parity, model proposal quality, real-code vulnerabilities
+and the published IRIS benchmark are not qualified by this finite application.

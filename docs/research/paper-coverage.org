@@ -1,0 +1,70 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+#+TITLE: README paper coverage and engineering acceptance audit
+#+DATE: 2026-10-09
+
+* Reading and implementation are separate statuses
+
+This inventory audits all 27 papers named in README against repository notes
+and implementation owners. A bibliography entry or screening paragraph is not
+a dedicated method/artifact study. A dedicated reading is not benchmark
+replication. Native engineering qualification is not universal native extraction.
+README now exposes this inventory instead of using one “Papers studied” label
+for all these states.
+
+| README paper | Repository reading | Current transfer and remaining work |
+|--------------+--------------------+-------------------------------------|
+| LLM-MatLogic | [[file:agent-inference/matlogic-ml26.org][note]] | Dedicated reading; WD26 finite executor fixture; model/KGQA benchmark pending |
+| DatalogBench | [[file:agent-inference/datalogbench-db26.org][note]] | Dedicated reading; held-out synthesis/mutation corpus pending |
+| IRIS | [[file:agent-inference/iris-ir25.org][note]] | Dedicated reading added; finite sanitizer-path Program, Lean and Session checks |
+| BRINK | [[file:agent-inference/2026-logic-ai-screen.org][note]] | Screen only; no dedicated artifact study or admitted mined-rule benchmark |
+| Datafun | [[file:scheme-dsl/datafun-f16.org][note]] | Dedicated reading; checked finite operators/fixed-point laws |
+| Higher-order seminaive evaluation | [[file:scheme-dsl/datafun-s20.org][note]] | Dedicated reading; higher-order derivative execution remains a research seam |
+| BYODS | [[file:scheme-dsl/byods-b23.org][note]] | Built-in Provider/frontier/shared-index engineering baseline qualified; full paper workloads separate |
+| Mono Types | [[file:scheme-dsl/mono-types-x25.org][note]] | Dedicated reading; monotone observation/finite-domain lowering constraints |
+| Ascent | [[file:scheme-dsl/ascent-a22.org][note]] | Dedicated reading; current native/Rust comparison baseline |
+| Flix language-integrated Datalog | [[file:scheme-dsl/flix-l25.org][note]] | Dedicated reading; Program/private-name/solve boundaries |
+| FlowLog | [[file:scheme-dsl/flowlog-fl25.org][note]] | Dedicated reading; recursive physical-plan workload comparison pending |
+| Scallop | [[file:agent-inference/scallop-s23.org][note]] | Dedicated reading; weighted/differentiable execution unimplemented |
+| Souffle | [[file:../related-work-matrix.org][note]] | Matrix only; dedicated synthesis/index-selection artifact study pending |
+| Differential dataflow | [[file:../related-work-matrix.org][note]] | Matrix only; dedicated timestamps/iterate/delta study pending |
+| DBSP | [[file:scheme-dsl/dbsp-b22.org][note]] | Dedicated reading; derivative circuit implementation pending |
+| DRedc | [[file:scheme-dsl/deletion-h18.org][note]] | Dedicated reading; affected-component rederivation exists; DRedc algorithm pending |
+| egglog | [[file:../related-work-matrix.org][note]] | Matrix only; equality saturation/congruence semantics unimplemented |
+| Formulog | [[file:../related-work-matrix.org][note]] | Matrix only; SMT terms/solver boundary unimplemented |
+| microKanren | [[file:scheme-dsl/microkanren-h13.org][note]] | Dedicated reading; separate search semantics; no stream-search executor |
+| First-class Datalog constraints | [[file:scheme-dsl/flix-f20.org][note]] | Dedicated reading; composition/stratification transfer |
+| First-class facts | [[file:agent-inference/2026-logic-ai-screen.org][note]] | Screen only; nested fact identity/domain contract pending |
+| Provenance semirings | [[file:../related-work-matrix.org][note]] | Matrix only; bounded DAG evidence exists; polynomial annotation semantics unimplemented |
+| Revisiting semiring provenance | [[file:../related-work-matrix.org][note]] | Matrix only; dedicated recursive annotation semantics study pending |
+| PUG | [[file:agent-inference/pug-p18.org][note]] | Dedicated reading; bounded Why/Why-Not transfer; full PUG replication pending |
+| Large-scale Datalog provenance | [[file:../related-work-matrix.org][note]] | Bibliography-level coverage; dedicated artifact study pending |
+| Dedalus | [[file:../temporal-causality-module-design.org][note]] | Temporal overview; dedicated temporal/distributed semantics study pending |
+| Structural-model causes | [[file:../temporal-causality-module-design.org][note]] | Temporal overview; counterfactual cause model unimplemented |
+
+* BYODS baseline and replication
+
+The built-in Provider/frontier/shared-index mainline has Scheme implementations,
+independent native/Rust controls, Lean laws and Quint protocols. Its current
+engineering regression gates passed in revision =92475f6=, including all three
+oracle jobs and Scheme performance/source/native checks
+([[https://github.com/tao3k/gerbil-ascent/actions/runs/37915327136][completed CI]]). Preserve this accepted baseline rather than repeatedly treating
+its mechanisms as absent implementation. Later revisions require their own CI.
+
+Full Steensgaard input/partition correspondence is accepted. Complete upstream
+Polonius reference observations and native complete-rule fixtures are accepted;
+the full =clap-rs= native Scheme application comparison remains open. PageRank,
+LLVM/index-sharing application replication, matched whole-application benefits
+and universal native extraction remain distinct research work. The feature
+[[file:../features/steensgaard/acceptance.org][Steensgaard]] and [[file:../features/polonius/acceptance.org][Polonius]] pages specify those source-bound limits.
+
+* Connected next work
+
+This audit advances IRIS from screening into a dedicated method reading and a
+finite executable path contract. Its Program is an application of existing
+stratified evaluation; Lean states path semantics and SessionTransaction Quint
+owns replacement/refusal/publication. Native graph and retained tests connect
+those boundaries. No Java extractor, CodeQL equivalence, LLM-labeling experiment
+or CWE-Bench-Java result is implied. The next missing head-paper artifact is
+DB26 held-out candidate semantics and ML26 raw model proposal/specification
+comparison; the existing WD26 gold executor is the common snapshot baseline.

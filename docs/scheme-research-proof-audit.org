@@ -534,3 +534,21 @@ ID and an inexact numeric ID. Finite replay and absence suites retain their
 independent controls; the 5120-node ordinary proof still verifies at its exact
 capacity. These tests connect the actual mutable-vector implementation to the
 stated contract independently of Lean and Quint, without claiming extraction.
+
+* README coverage correction and IRIS transfer (2026-10-09)
+
+The [[file:research/paper-coverage.org][27-paper audit]] separates dedicated readings, screens, implemented transfers
+and published workload replication. The BYODS built-in engineering baseline
+is qualified; old related-work wording about intermittent 20-edge failures
+has been replaced with current ownership and acceptance links. Complete
+Steensgaard partition and upstream Polonius reference acceptance differ from
+the still-open full native clap-rs, PageRank and LLVM application comparisons.
+Keep accepted mechanisms under regression while advancing the head papers.
+
+The new [[file:research/agent-inference/iris-ir25.org][IRIS reading]] connects its section 3.1 path definition to
+[[file:../applications/taint-paths.ss][an ordinary Scheme Program]]. Each recursive extension preserves sanitizer
+exclusion at the intermediate vertex. Six UnsanitizedPaths Lean laws and the
+existing SessionTransaction Quint checks align semantics and replacement/
+publication. Three native Cases include 512 independent finite graph comparisons.
+This closes the finite path transfer, with graph extraction, model-generated
+specifications and real-Java benchmark evidence retained as distinct next gates.

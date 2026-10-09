@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 #+TITLE: B23 reading: BYODS concretization and delta visibility
-#+STATUS: paper-to-code research; no new provider parity or performance receipt
+#+STATUS: built-in engineering baseline qualified; full paper workloads tracked separately
 #+DATE: 2026-10-04
 #+FILETAGS: :research:byods:datalog:provider:
 
@@ -49,7 +49,7 @@ Rust delta path can omit it. Scheme emits it. That counterexample is a
 particularly useful BYODS discriminator; it must remain a reported
 upstream divergence, not be copied into the Scheme semantics.
 
-* Next paired experiment
+* Historical paired experiment specification
 
 1. Freeze a finite directed graph, one grouped graph, provider version,
    program and source order. Use an independent graph model to compute
@@ -90,3 +90,10 @@ Do not append cross-feature implementation history to this overview.
 - [[file:../../features/source-lifecycle/byods.org][Source Lifecycle: byods]]
 - [[file:../../features/steensgaard/byods.org][Steensgaard: byods]]
 - [[file:../../features/transitive/byods.org][Transitive: byods]]
+
+* Current engineering acceptance (2026-10-09)
+
+The [[file:../paper-coverage.org][current coverage audit]] records the qualified built-in Provider/frontier/index
+baseline and current CI. The paired experiment above is historical planning,
+not an assertion that these mechanisms remain unimplemented. Full paper
+applications and universal native refinement retain their own acceptance rows.

@@ -53,9 +53,14 @@ just test
 `just oracle` runs the Rust comparison; `just performance` runs the
 benchmark suite. See `just --list` for focused checks.
 
-## Papers studied
+## Papers and current research coverage
 
-This list brings together the papers examined in the
+The [paper coverage audit](docs/research/paper-coverage.org) distinguishes
+dedicated readings, initial screens, implemented transfers and benchmark gates.
+The built-in BYODS Provider/frontier/shared-index engineering baseline is
+qualified; full paper application replication is tracked separately.
+
+This list brings together the papers referenced in the
 [related-work matrix](docs/related-work-matrix.org),
 [Scheme DSL readings](docs/research/scheme-dsl/index.org),
 [agent inference readings](docs/research/agent-inference/index.org), and

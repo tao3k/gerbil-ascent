@@ -26,6 +26,7 @@ cross-feature scope and ordering in the [[file:../scheme-paper-closure.org][clos
 | Equivalence | [[file:equivalence/acceptance.org][acceptance]] / [[file:equivalence/byods.org][byods]] / [[file:equivalence/compiler.org][compiler]] / [[file:equivalence/design.org][design]] / [[file:equivalence/proofs.org][proofs]] |
 | Index Admission | [[file:index-admission/acceptance.org][acceptance]] / [[file:index-admission/byods.org][byods]] / [[file:index-admission/compiler.org][compiler]] / [[file:index-admission/design.org][design]] / [[file:index-admission/proofs.org][proofs]] |
 | Lattices | [[file:lattices/acceptance.org][acceptance]] / [[file:lattices/byods.org][byods]] / [[file:lattices/compiler.org][compiler]] / [[file:lattices/design.org][design]] / [[file:lattices/proofs.org][proofs]] |
+| Taint Paths | [[file:taint-paths/acceptance.org][acceptance]] |
 | Polonius | [[file:polonius/acceptance.org][acceptance]] |
 | Positive Evaluation | [[file:positive-evaluation/acceptance.org][acceptance]] / [[file:positive-evaluation/byods.org][byods]] / [[file:positive-evaluation/compiler.org][compiler]] / [[file:positive-evaluation/proofs.org][proofs]] |
 | Provider Admission | [[file:provider-admission/byods.org][byods]] / [[file:provider-admission/proofs.org][proofs]] |

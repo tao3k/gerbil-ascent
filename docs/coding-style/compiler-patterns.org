@@ -1051,3 +1051,22 @@ the first equal value's identity. Keep the ordering premise next to the
 optimized expression and qualify duplicate members, repeated keys, overlapping
 owners and visitor parity. Complete freeze/publication controls are recorded in
 =t/performance/frozen-routing/README.org=.
+
+* Lower query constraints before constructing output rows
+
+Gerbil =1cfb032= =compiler/optimize-call.ss:390-415= resolves class and
+constructor implementation before expression emission, retaining checked
+dispatch for behavior that remains open. Apply the same staging discipline to
+query geometry: =table/eqrel.ss= checks keys, captures local coordinate
+constraints in final private records, then selects owned members before writing
+rows. =using= applies only to those constructor-owned constraints. The selected
+value is the stored member, including when a caller supplies an equal string.
+
+The abstraction covers a traversal protocol. Compile both coordinate
+constraints, select forward/backward candidates, preserve right-member order
+when both orientations apply, and emit each forward/reverse pair in its original
+sequence. Do not replace an ordered symmetric frontier with two concatenated
+rectangles. Conflicting repeated keys and prefix mismatches admit no rows;
+full export keeps its direct writer. Complete merge-and-query A/B and the
+independent eager ordering controls are in
+=t/performance/eqrel-selection/README.org=, including the small-query overhead.

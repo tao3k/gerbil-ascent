@@ -5,21 +5,7 @@
 ;;; Private index algorithms. The evaluator owns cache invalidation.
 
 (export gerbil-ascent-index-build gerbil-ascent-index-extend! gerbil-ascent-index-order!
-        gerbil-ascent-index-key gerbil-ascent-index-row-snapshot gerbil-ascent-index-batch!)
-
-;;; Native update invokes the callback synchronously. Bind each row in the
-;;; caller's key expression, while one private slot/callback belongs to the
-;;; entire batch. Fresh cons cells preserve previously returned bucket spines.
-;;; The index expression is evaluated once; key evaluation precedes publication.
-;; : (-> Index Rows RowBinding KeyExpression Index)
-(defrule (gerbil-ascent-index-batch! index rows row key)
-  (let* ((target index) (row-slot (vector #f))
-         (prepend-row (lambda (bucket) (cons (vector-ref row-slot 0) (or bucket [])))))
-    (for-each (lambda (row)
-      (let (selected key)
-        (vector-set! row-slot 0 row)
-        (hash-update! target selected prepend-row #f))) rows)
-    target))
+        gerbil-ascent-index-key gerbil-ascent-index-row-snapshot)
 
 ;;; Copy admitted outer/row spines while preserving field value identity.
 ;;; Custom lookup callers must finish bounded row-shape admission first.
@@ -98,7 +84,20 @@
   ;; it. One private slot supplies the row to a single batch callback, keeping
   ;; lexical bindings stable and avoiding one captured closure per input row.
   ;; Prepending creates a fresh spine; no previously returned bucket is edited.
-  (if (increasing-columns? columns)
-    (let (steps (column-steps columns))
-      (gerbil-ascent-index-batch! index new-rows row (stepped-key row steps)))
-    (gerbil-ascent-index-batch! index new-rows row (gerbil-ascent-index-key row columns))))
+  (let* ((row-slot (vector #f))
+         (prepend-row (lambda (bucket) (cons (vector-ref row-slot 0) (or bucket [])))))
+    (if (increasing-columns? columns)
+      (let (steps (column-steps columns))
+        (for-each
+         (lambda (row)
+           (let (key (stepped-key row steps))
+             (vector-set! row-slot 0 row)
+             (hash-update! index key prepend-row #f)))
+         new-rows))
+      (for-each
+       (lambda (row)
+         (let (key (gerbil-ascent-index-key row columns))
+           (vector-set! row-slot 0 row)
+           (hash-update! index key prepend-row #f)))
+       new-rows)))
+  index)

@@ -1070,3 +1070,22 @@ rectangles. Conflicting repeated keys and prefix mismatches admit no rows;
 full export keeps its direct writer. Complete merge-and-query A/B and the
 independent eager ordering controls are in
 =t/performance/eqrel-selection/README.org=, including the small-query overhead.
+
+* Express a synchronous batch protocol with hygienic syntax
+
+Gerbil =1cfb032= =runtime/table.ss:439-465= uses =defrules __table-update!= to
+share hash/probe/update control while binding the caller's algorithm parts.
+The update callback runs synchronously before publication. In ASCENT,
+=table/funs.ss= now owns one =defrule= for batch index insertion. Its row binder
+belongs to the caller's key expression; private slot/callback names are hygienic.
+Each batch owns one callback, each row computes its key before update, and every
+bucket prepend preserves previously returned spines.
+
+=table/access.ss= reuses this protocol for canonical scalar keys; ordered and
+arbitrary composite projections use the same template without a per-row
+projection closure. Open Provider dispatch stays under its existing owner.
+This is a shared construction protocol rather than a collection of copied
+loops. Native syntax controls check evaluation counts, lexical shadowing,
+empty input and held-bucket identity. Complete build/append/query A/B is in
+=t/performance/index-batch/README.org=, including tiny-call allocation cost and
+the arbitrary-column CPU control.

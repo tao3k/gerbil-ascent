@@ -6,11 +6,25 @@
         (only-in :gerbil-ascent/table/provider gerbil-ascent-hash-index-provider)
         :gerbil-ascent/table/access
         (only-in :gerbil-ascent/table/funs gerbil-ascent-index-build gerbil-ascent-index-extend!
-                 gerbil-ascent-index-key)
+                 gerbil-ascent-index-key gerbil-ascent-index-batch!)
         :gerbil-ascent/t/performance/index-build/fixture)
 (export ascent-index-build-test)
 (def ascent-index-build-test
   (test-suite "Owned physical index construction"
+    (test-case "batch syntax evaluates owners once and keys before publishing each row"
+      (let ((index (make-hash-table)) (owners 0) (batches 0) (keys 0)
+            (source '((#f first) (#f second) (other third))) (row 'outside))
+        (check-equal? (eq? index
+          (gerbil-ascent-index-batch! (begin (set! owners (+ owners 1)) index)
+            (begin (set! batches (+ batches 1)) source) row
+            (begin (set! keys (+ keys 1)) (car row)))) #t)
+        (check-equal? (list owners batches keys row) '(1 1 3 outside))
+        (let ((held (hash-get index #f)) (incoming '(#f fourth)))
+          (gerbil-ascent-index-batch! index (list incoming) row (car row))
+          (check-equal? held '((#f second) (#f first)))
+          (check-equal? (eq? (car (hash-get index #f)) incoming) #t)
+          (check-equal? (eq? (cdr (hash-get index #f)) held) #t))
+        (check-equal? (eq? (gerbil-ascent-index-batch! index [] row (error "empty key evaluated")) index) #t)))
     (test-case "public cursor projection agrees with independent columns and preserves field identities"
       (let* ((fields (map (lambda (n) (vector n)) (iota 96)))
              (columns-family (list [] '(0) '(95) '(0 1 2 3) '(1 31 63 95)

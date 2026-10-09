@@ -4,10 +4,9 @@
 
 ;;; Physical index access owned by one engine. Only the canonical built-in
 ;;; provider has trusted hash buckets; every other receiver keeps dispatch.
-(import (only-in "funs.ss" gerbil-ascent-index-build gerbil-ascent-index-extend!
+(import (only-in "reference-funs.ss" gerbil-ascent-index-build gerbil-ascent-index-extend!
                  gerbil-ascent-index-order! gerbil-ascent-index-row-snapshot)
-        (only-in "funs.ss" gerbil-ascent-index-batch!)
-        (only-in "provider.ss" gerbil-ascent-canonical-hash-index-provider?
+        (only-in :gerbil-ascent/table/provider gerbil-ascent-canonical-hash-index-provider?
                  gerbil-ascent-index-provider-build gerbil-ascent-index-provider-extend!
                  gerbil-ascent-index-provider-lookup))
 (export gerbil-ascent-physical-index-build gerbil-ascent-physical-index-extend!
@@ -18,7 +17,12 @@
 ;;; provider keys remain lists, and custom receivers retain their own index.
 ;; : (-> Index Rows Column Index)
 (def (extend-scalar-index! index rows column)
-  (gerbil-ascent-index-batch! index rows row (list-ref row column)))
+    (for-each
+     (lambda (row)
+       (let (key (list-ref row column))
+         (hash-put! index key (cons row (or (hash-get index key) [])))))
+     rows)
+  index)
 
 ;;; The engine selects this only for a canonical one-column physical index.
 ;;; Its scalar key is already evaluated; no list wrapper crosses this boundary.

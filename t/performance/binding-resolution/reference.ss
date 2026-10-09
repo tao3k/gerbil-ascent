@@ -3,8 +3,8 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 ;;; Invocation-owned graph admission and rule emission. The compiler receiver
 ;;; selects constructors once; traversal contains no prototype dispatch.
-(import "operator-descriptor.ss" "operator-analysis.ss"
- (only-in "objects.ss" gerbil-ascent-atom gerbil-ascent-variable))
+(import :gerbil-ascent/program/operator-descriptor :gerbil-ascent/program/operator-analysis
+ (only-in :gerbil-ascent/program/objects gerbil-ascent-atom gerbil-ascent-variable))
 (export lower-operator-graph)
 
 ;;; A lexical variable owns one immutable POO term, reused by every atom
@@ -14,14 +14,6 @@
 
 (def (variable-atom name variables)
   (gerbil-ascent-atom name variables))
-
-;; Resolve and check each identity once, before any instance memo lookup.
-;; The ordered result is the node's lexical instance key and parameter value.
-(def (resolve-operator-bindings free active)
-  (map (lambda (parameter)
-         (let (binding (assq parameter active))
-           (unless binding (error "operator fixed-point parameter escaped its body"))
-           (cdr binding))) free))
 
 (def (copy-rule make-rule target source arity)
   (let (variables (fresh-variables arity))
@@ -80,19 +72,6 @@
         name))
     (def (add-rule rule)
       (set! rules (cons rule rules)))
-    ;; Input producers preserve their own emission order. Publish one copy
-    ;; rule per resolved relation identity, before allocating variable terms.
-    ;; Duplicate first inputs need neither a hash table nor a second rule.
-    (def (emit-union-rules! name arity produce)
-      (let ((first #f) (seen #f))
-        (produce (lambda (input)
-          (unless (if seen (hash-get seen input) (eq? first input))
-            (cond (seen (hash-put! seen input #t))
-                  (first
-                   (set! seen (make-hash-table-eq))
-                   (hash-put! seen first #t) (hash-put! seen input #t))
-                  (else (set! first input)))
-            (add-rule (copy-rule make-rule name input arity)))))))
     ;; Cache a node under the actual lexical relation handles it captures.
     ;; Descriptor identity owns the outer table; binding lists own instances.
     (def (remember node name bindings)
@@ -109,8 +88,11 @@
             (inputs (relational-op-inputs node)))
         (case kind
           ((union)
-           (emit-union-rules! name (relational-op-arity node)
-             (lambda (emit!) (for-each emit! input-names))))
+           (for-each
+            (lambda (input)
+              (add-rule
+               (copy-rule make-rule name input (relational-op-arity node))))
+            input-names))
           ((join)
            (let-values (((left-vars right-vars)
                          (join-variables node)))
@@ -177,13 +159,21 @@
     ;; rejected even if an instance of it was compiled under another binding.
     (def (emit node active)
       (let (free (free-parameters node free-cache))
-        (let* ((bindings (resolve-operator-bindings free active))
+        (for-each
+         (lambda (parameter)
+           (unless (assq parameter active)
+             (error "operator fixed-point parameter escaped its body")))
+         free)
+        (let* ((bindings (map (lambda (parameter) (cdr (assq parameter active))) free))
                (kind (relational-op-kind node))
                (instances (hash-get memo node))
                (cached (and instances (hash-get instances bindings))))
           (cond
            ((eq? kind 'parameter)
-            (car bindings))
+            (let (binding (assq node active))
+              (unless binding
+                (error "operator fixed-point parameter escaped its body"))
+              (cdr binding)))
            (cached cached)
            ((eq? kind 'source)
             (let* ((data (relational-op-data node))
@@ -211,10 +201,12 @@
               ;; it back into the fixed-point relation adds no tuples.
               (let (body-active (cons (cons parameter name) active))
                 (if (eq? (relational-op-kind body) 'union)
-                  (emit-union-rules! name (relational-op-arity node)
-                    (lambda (emit!)
-                      (for-each (lambda (branch) (emit! (emit branch body-active)))
-                                (relational-op-inputs body))))
+                  (for-each
+                   (lambda (branch)
+                     (add-rule
+                      (copy-rule make-rule name (emit branch body-active)
+                                 (relational-op-arity node))))
+                   (relational-op-inputs body))
                   (add-rule
                    (copy-rule make-rule name (emit body body-active)
                               (relational-op-arity node)))))

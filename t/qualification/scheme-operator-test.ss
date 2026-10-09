@@ -437,7 +437,9 @@
                              (loop (- n 1) (relational-op-union node node))))))))
         (let-values (((program output) (relational-op-compile graph 64 256 256)))
           (check-equal? (length (.ref program 'relations)) 24)
-          (check-equal? (length (.ref program 'rules)) 46)
+          ;; Each diamond copies one resolved input once; the fix adds two
+          ;; distinct inputs. Private relation count and solved rows stay exact.
+          (check-equal? (length (.ref program 'rules)) 24)
           (check-equal? (relational-query-name (relational-solve (relational-admit program)) output) '((7))))
         (check-exception (relational-op-compile escaped 64 256 256) true)
         (check-exception (relational-op-reference escaped) true)
@@ -491,7 +493,8 @@
                       seed (relational-op-union mapped mapped)))))))
         (let-values (((program output) (relational-op-compile fixed 32 256 512)))
           (check-equal? (length (.ref program 'relations)) 5)
-          (check-equal? (length (.ref program 'rules)) 5)
+          ;; One mapping rule, one mapped union copy, two distinct fix inputs.
+          (check-equal? (length (.ref program 'rules)) 4)
           (check-equal? (length (.ref program 'source-handles)) 2)
           (check-equal?
            (same-rows? (relational-query-name
@@ -523,7 +526,9 @@
                            (relational-solve (relational-admit program)) output)
                           expected) #t))
            (check-equal? (same-rows? (relational-op-reference graph) expected) #t))
-         (list same-input different-inputs) '(((10)) ((10) (20))) '(4 7) '(2 4) '(3 4))))
+         ;; Same input: one mapping and one union copy. Distinct bindings still
+         ;; require two mappings and two union copies.
+         (list same-input different-inputs) '(((10)) ((10) (20))) '(4 7) '(2 4) '(2 4))))
     (test-case "fixed-point placeholder is local to its builder"
       (let* ((seed (relational-op-source 'seed 1 '((1))))
              (identity-fix

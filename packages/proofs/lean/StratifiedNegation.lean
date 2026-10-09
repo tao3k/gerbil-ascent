@@ -443,4 +443,96 @@ theorem post_union_loses_direct (direct via blocked : row → Prop) (value : row
       ¬ postUnionNegation direct via blocked value := by
   exact ⟨Or.inl present, fun wrong => wrong.2 excluded⟩
 
+/-- Frozen-row probe outcomes. Each inspected row costs one unit; an absence
+    continuation costs one more. `none` is refusal, never an absence result. -/
+def negativeProbe (fuel : Nat) : List Bool → Option (Bool × Nat)
+  | [] => match fuel with
+    | 0 => none
+    | remaining + 1 => some (false, remaining)
+  | matched :: rest => match fuel with
+    | 0 => none
+    | remaining + 1 => if matched then some (true, remaining) else negativeProbe remaining rest
+
+theorem negativeProbe_truth (rows : List Bool) (fuel left : Nat) (found : Bool)
+    (h : negativeProbe fuel rows = some (found, left)) :
+    found = rows.any id := by
+  induction rows generalizing fuel with
+  | nil => cases fuel <;> simp [negativeProbe] at h ⊢; exact h.1
+  | cons value rest ih =>
+    cases fuel with
+    | zero => simp [negativeProbe] at h
+    | succ fuel =>
+      cases value with
+      | false => simpa using ih fuel h
+      | true => simp [negativeProbe] at h; simpa using h.1
+
+theorem negativeProbe_remaining (rows : List Bool) (fuel left : Nat) (found : Bool)
+    (h : negativeProbe fuel rows = some (found, left)) : left < fuel := by
+  induction rows generalizing fuel with
+  | nil => cases fuel <;> simp [negativeProbe] at h; cases h; omega
+  | cons value rest ih =>
+    cases fuel with
+    | zero => simp [negativeProbe] at h
+    | succ fuel =>
+      cases value with
+      | false => have := ih fuel h; omega
+      | true => simp [negativeProbe] at h; cases h; omega
+
+theorem negativeProbe_absence_cost (rows : List Bool) (fuel left : Nat)
+    (h : negativeProbe fuel rows = some (false, left)) :
+    fuel = left + rows.length + 1 := by
+  induction rows generalizing fuel with
+  | nil => cases fuel <;> simp [negativeProbe] at h; cases h; simp
+  | cons value rest ih =>
+    cases fuel with
+    | zero => simp [negativeProbe] at h
+    | succ fuel =>
+      cases value with
+      | false => have := ih fuel h; simp only [List.length_cons]; omega
+      | true => simp [negativeProbe] at h
+
+theorem negativeProbe_first_match (rest : List Bool) (fuel : Nat) :
+    negativeProbe (fuel + 1) (true :: rest) = some (true, fuel) := by
+  simp [negativeProbe]
+
+theorem negativeProbe_sufficient (rows : List Bool) (fuel : Nat)
+    (enough : rows.length + 1 ≤ fuel) :
+    ∃ left, negativeProbe fuel rows = some (rows.any id, left) := by
+  induction rows generalizing fuel with
+  | nil =>
+    cases fuel with
+    | zero => simp at enough
+    | succ fuel => exact ⟨fuel, rfl⟩
+  | cons value rest ih =>
+    cases fuel with
+    | zero => simp at enough
+    | succ fuel =>
+      cases value with
+      | true => exact ⟨fuel, by simp [negativeProbe]⟩
+      | false =>
+        have hr : rest.length + 1 ≤ fuel := by simp only [List.length_cons] at enough; omega
+        obtain ⟨left, hl⟩ := ih fuel hr
+        exact ⟨left, by simpa [negativeProbe] using hl⟩
+
+theorem negativeProbe_binding_truth (rows : List row) (bind : env → row → Option env)
+    (input : env) (fuel left : Nat) (found : Bool)
+    (h : negativeProbe fuel (rows.map (fun value => (bind input value).isSome)) =
+      some (found, left)) : found = true ↔ matchingRow rows bind input := by
+  have ht := negativeProbe_truth _ fuel left found h
+  have mapped : (rows.map (fun value => (bind input value).isSome)).any id =
+      rows.any (fun value => (bind input value).isSome) := by simp
+  rw [mapped] at ht
+  rw [ht]
+  exact any_matching_iff rows bind input
+
+theorem negativeProbe_preserves_negation (rows : List row) (bind : env → row → Option env)
+    (input output : env) (fuel left : Nat) (found : Bool)
+    (h : negativeProbe fuel (rows.map (fun value => (bind input value).isSome)) =
+      some (found, left)) :
+    output ∈ visitClause (.negation rows bind) input ↔ output = input ∧ found = false := by
+  rw [visitClause_iff]
+  simp only [ClauseHolds]
+  have truth := negativeProbe_binding_truth rows bind input fuel left found h
+  cases found <;> simp_all
+
 end Ascent.StratifiedNegation

@@ -150,12 +150,13 @@
                       ((not)
                        (let* ((atom (cadr clause))
                               (matched? #f))
-                         (for-each
-                          (lambda (row)
-                            (when (step!)
-                              (when (candidate-bind-atom atom row bindings)
-                                (set! matched? #t))))
-                          (rows (car atom)))
+                         ;; One witness rejects negation. Absence requires the
+                         ;; entire frozen relation and its final charged step.
+                         (let probe ((remaining (rows (car atom))))
+                           (when (and (pair? remaining) (step!))
+                             (if (candidate-bind-atom atom (car remaining) bindings)
+                               (set! matched? #t)
+                               (probe (cdr remaining)))))
                          (when (and (not bounded?) (not matched?)
                                     (step!))
                            (walk (cdr clauses) bindings))))

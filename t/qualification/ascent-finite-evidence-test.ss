@@ -111,6 +111,26 @@
 
 (def ascent-finite-evidence-test
   (test-suite "finite stratified replay evidence"
+    (test-case "negative probes stop at witnesses and charge complete absence"
+      (def (check-probe rows literal budget expected native-rows)
+        (let* ((input (reasoning-source-snapshot 'negative-probe 0 (list (list 'known 1 rows))))
+               (datum (list 'candidate '(relation answer 1)
+                            (list 'rule '(answer 7) (list 'not (list 'known literal)))
+                            '(query answer 7) '(limits 1024 16 32)))
+               (spec (candidate-inspect input datum))
+               (certificate (candidate-finite-evidence input spec 'probe 'complete native-rows budget)))
+          (check-equal? (finite-evidence-status certificate) expected)
+          (if (eq? expected 'complete)
+            (check-equal? (candidate-verify-finite-evidence input spec 'probe 'complete native-rows certificate budget) 'valid)
+            (check-equal? (finite-evidence-closure certificate) []))))
+      (let (rows (map list (iota 1024)))
+        (check-probe rows 0 1 'complete [])
+        (check-probe rows 1023 1023 'bounded [])
+        (check-probe rows 1023 1024 'complete [])
+        (check-probe rows -1 2049 'bounded '((7)))
+        (check-probe rows -1 2050 'complete '((7))))
+      (check-probe [] -1 1 'bounded '((7)))
+      (check-probe [] -1 2 'complete '((7))))
     (test-case "finite replay enforces exact schema and source row arity boundaries"
       (def (check-material input expected)
         (let* ((spec (make-reasoning-candidate '((target . 1)) [] [] (vector '(target 0) 0) '(1 1 1)))

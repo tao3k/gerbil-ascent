@@ -261,3 +261,43 @@ These checks complement the earlier absence and ordinary-witness controls.
 A22 least-fixed-point semantics and B23 concretization motivate the architecture;
 resource refusal is our policy, not a new deductive consequence or a compressed
 certificate theorem.
+
+* Frozen negative probes: witness stopping and charged absence (2026-10-09)
+
+Re-reading [[https://plg.uwaterloo.ca/~olhotak/pubs/oopsla20c.pdf][F20]], §4.7, confirms the lower-stratum premise: negative
+dependencies refer strictly to earlier completed strata. Our transfer is to
+probe a frozen relation for one matching binding. A matching row rejects the
+negative clause immediately; proving absence still requires all rows. This is
+our implementation decision, not a cost theorem from the paper. A22's positive
+immediate-consequence semantics (§2.1) does not itself justify negation.
+
+=candidate/finite-evidence.ss= previously kept scanning after a witness, which
+could turn an already decided negative clause into =bounded=. It now stops at
+the first witness or budget refusal. The existing final absence-continuation
+step remains charged, and refusal never supplies an absence continuation.
+The stratum scheduler, binding function and independent verifier are unchanged.
+
+[[file:../packages/proofs/lean/StratifiedNegation.lean][StratifiedNegation]] adds seven laws for the budgeted probe: completed
+truth equals =List.any=, remaining fuel decreases, absence costs exactly the
+row count plus one, a first witness ignores any suffix, row count plus one is
+sufficient, binding truth agrees with =matchingRow=, and completed probes
+preserve the existing negative-clause environment semantics. Eight compile-time
+examples discriminate first/last witnesses, refusal and the extra absence step.
+Rows and binding outcomes are supplied; frozen relation enumeration and native
+binding correctness remain explicit representation obligations.
+
+[[file:../packages/proofs/quint/NegativeProbe.qnt][NegativeProbe]] owns the finite probe/refusal protocol. It checks witness
+and absence soundness, terminal failure and position/fuel bounds. Intentional
+early-absence, refusal-as-absence and resume-after-refusal variants must violate
+their designated invariants. The finite input lists and budgets are exploration
+controls, not general liveness or source-publication claims.
+The correct model has 40 reachable states; all three fault controls produce
+the expected invariant counterexample.
+
+Native controls use a 1024-row relation. A first-row witness completes with
+one charged probe; a last-row witness needs 1024. Absence needs 1025 per
+evaluation and 2050 across the two actual fixed-point passes; 2049 refuses.
+An empty relation similarly needs two charged continuations across both passes.
+Every completed certificate is independently verified at the same budget.
+These exact operation controls establish removed probes, not a wall-clock or
+whole-engine speedup. No semantic, material or work limit is increased.

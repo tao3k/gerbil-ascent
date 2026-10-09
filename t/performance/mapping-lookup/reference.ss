@@ -3,16 +3,15 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 ;;; Insertion changes for the finite positive relation operator graph.
-(import (only-in "operator.ss"
+(import (only-in :gerbil-ascent/program/operator
                  relational-op-kind relational-op-inputs
                  relational-op-data relational-transform?
                  relational-transform-parameter
                  relational-transform-body
                  relational-transform-input-arity
                  relational-op-count-join! relational-op-count-fix!)
-        (only-in "scheme-checked.ss" relational-copy-rows)
-        (only-in :std/list/list append-map delete-duplicates/hash take)
-        (only-in :std/list/list-builder with-list-builder))
+        (only-in :gerbil-ascent/program/scheme-checked relational-copy-rows)
+        (only-in :std/list/list append-map delete-duplicates/hash take))
 
 (export relational-op-delta-change)
 
@@ -83,56 +82,15 @@
        (map (lambda (row)
               (map (lambda (column) (list-ref row column)) columns))
             rows)))
-    ;; Finite mapping descriptors own frozen rows. Publish an ordered lookup
-    ;; once per descriptor in this invocation, shared by base and frontiers.
-    ;; Index only on demand: an empty change never visits the mapping table.
-    (def mapping-indexes #f)
-    (def (mapping-index node)
-      (or (and mapping-indexes (hash-get mapping-indexes node))
-          (let* ((data (relational-op-data node))
-                 (width (vector-ref data 0))
-                 (index (make-hash-table))
-                 (keys
-                  (with-list-builder (put!)
-                    (for-each
-                     (lambda (entry)
-                       (let* ((key (take entry width))
-                              (bucket (hash-get index key)))
-                         (unless bucket (put! key))
-                         (hash-put! index key
-                                    (cons (list-tail entry width)
-                                          (or bucket [])))))
-                     (vector-ref data 1)))))
-            ;; These bucket spines belong to the index; table row tails do not.
-            ;; Retain descriptor order so append-map observes the same rows.
-            (for-each (lambda (key)
-                        (hash-put! index key (reverse! (hash-ref index key))))
-                      keys)
-            (unless mapping-indexes
-              (set! mapping-indexes (make-hash-table-eq)))
-            (hash-put! mapping-indexes node index)
-            index)))
-    (def (scan-mapping node row)
-      (let* ((data (relational-op-data node))
-             (width (vector-ref data 0)))
-        (with-list-builder (put!)
-          (for-each
-           (lambda (entry)
-             (when (equal? row (take entry width))
-               (put! (list-tail entry width))))
-           (vector-ref data 1)))))
-    (def (flatmap node rows)
-      (if (null? rows) []
-        (let* ((published (and mapping-indexes
-                               (hash-get mapping-indexes node)))
-               ;; One query needs one scan. Multiple queries amortize an index;
-               ;; a later singleton frontier reuses an already published one.
-               (index (or published
-                          (and (pair? (cdr rows)) (mapping-index node))))
-               (lookup (if index
-                         (lambda (row) (or (hash-get index row) []))
-                         (cut scan-mapping node <>))))
-          (normalize (append-map lookup rows)))))
+    (def (flatmap rows width table)
+      (normalize
+       (append-map
+        (lambda (row)
+          (map (lambda (entry) (list-tail entry width))
+               (filter (lambda (entry)
+                         (equal? row (take entry width)))
+                       table)))
+        rows)))
     ;;; Bindings contain (before . added) sets. Replacing every binding by
     ;;; its grown set and an empty delta makes external changes stable while
     ;;; a recursive frontier advances through its fixed-point body.
@@ -188,7 +146,8 @@
           ((project)
            (project (derivative (car inputs) environment) data))
           ((flatmap)
-           (flatmap node (derivative (car inputs) environment)))
+           (flatmap (derivative (car inputs) environment)
+                    (vector-ref data 0) (vector-ref data 1)))
           ((apply)
            (let-values (((base delta)
                          (change (car inputs) environment)))
@@ -253,10 +212,12 @@
           ((flatmap)
            (let-values (((base delta)
                          (change (car inputs) environment)))
-             (let (result (flatmap node base))
+             (let (result (flatmap base (vector-ref data 0)
+                                   (vector-ref data 1)))
                (values result
                        (difference
-                        (flatmap node delta)
+                        (flatmap delta (vector-ref data 0)
+                                 (vector-ref data 1))
                         result)))))
           ((apply)
            (let-values (((base delta)

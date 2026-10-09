@@ -4,30 +4,10 @@
 
 ;;; Actor Session source transactions. Cuts own row list spines and dense slot
 ;;; headers. Published cuts are read-only; a failed preparation changes nothing.
-(import (only-in "source-log.ss" gerbil-ascent-source-log-rows))
 (export gerbil-ascent-make-source-cut gerbil-ascent-source-cut-rows
         gerbil-ascent-source-cut-update)
-(defstruct source-slot (base additions rows count) final: #t)
-(defstruct source-change (position rows count) final: #t)
+(defstruct source-slot (rows count))
 (defstruct source-cut (slots count))
-
-;;; Published slots own row spines. Delay only header materialization, not
-;;; caller admission or copying. Atomic force shares one ordered result among
-;;; readers; the thunk captures log roots, never a previous cut or its cache.
-;; : (-> OwnedRows ReversedAdditions Natural SourceSlot)
-(def (published-source-slot base additions count)
-  (make-source-slot base additions
-    (if (null? additions) base
-      (delay-atomic (gerbil-ascent-source-log-rows base additions))) count))
-
-;;; Detached incoming rows extend only the reversed addition spine. Historical
-;;; row headers are shared read-only until the selected cut is observed.
-;; : (-> SourceSlot OwnedRows Natural SourceSlot)
-(def (append-source-slot previous rows count)
-  (if (null? rows) previous
-    (published-source-slot (source-slot-base previous)
-      (foldl cons (source-slot-additions previous) rows)
-      (+ (source-slot-count previous) count))))
 
 (def (source-position positions name)
   (let (slot (hash-get positions name))
@@ -52,13 +32,13 @@
        (let* ((position (source-position positions (car entry)))
               (rows (source-copy-rows arities position (car entry) (cdr entry)))
               (size (length rows)))
-         (vector-set! slots position (published-source-slot rows [] size))
+         (vector-set! slots position (make-source-slot rows size))
          (set! count (+ count size)))) sources)
     (make-source-cut slots count)))
 
 ;; : (-> SourceCut Natural Rows)
 (def (gerbil-ascent-source-cut-rows cut position)
-  (force (source-slot-rows (vector-ref (source-cut-slots cut) position))))
+  (source-slot-rows (vector-ref (source-cut-slots cut) position)))
 
 ;; gerbil-ascent-source-cut-update
 ;; : (-> SourceCut NamePositions Arities [(Name . Rows)] Boolean Natural SourceCut)
@@ -82,7 +62,7 @@
                          ;; Validate the entire batch before duplicates/budget,
                          ;; but retain no copied row spines on rejected work.
                          (source-check-rows! arities position (car entry) rows)
-                         (make-source-change position rows (length rows)))) replacements))
+                         (cons position (make-source-slot rows (length rows))))) replacements))
          ;; Empty/single replacements cannot duplicate a position. Do not build
          ;; a transaction membership table for the common single-source update.
          (seen (and (pair? prepared) (pair? (cdr prepared)) (make-hash-table-eq)))
@@ -90,26 +70,27 @@
          (count (source-cut-count cut)))
     (for-each
      (lambda (entry)
-       (let* ((position (source-change-position entry))
+       (let* ((position (car entry)) (incoming (cdr entry))
               (previous (vector-ref old-slots position)))
          (when seen
            (when (hash-get seen position)
              (error "duplicate ASCENT actor Session replacement"))
            (hash-put! seen position #t))
-         (set! count (+ count (source-change-count entry)
+         (set! count (+ count (source-slot-count incoming)
                        (if append? 0 (- (source-slot-count previous))))))) prepared)
     (when (> count limit) (error "ASCENT actor Session input fact budget exceeded"))
-    ;; Only admitted work allocates detached row spines and persistent logs.
+    ;; Only admitted work allocates detached row spines and append prefixes.
     ;; Preparation leaves old slot headers, rows and counts untouched.
     (let (slots (vector-copy old-slots))
       (for-each
        (lambda (entry)
-         (let* ((position (source-change-position entry))
+         (let* ((position (car entry)) (incoming (cdr entry))
                 (previous (vector-ref old-slots position))
                 (rows (map (lambda (row) (map (lambda (value) value) row))
-                           (source-change-rows entry))))
+                           (source-slot-rows incoming))))
            (vector-set! slots position
              (if append?
-               (append-source-slot previous rows (source-change-count entry))
-               (published-source-slot rows [] (source-change-count entry)))))) prepared)
+               (make-source-slot (append (source-slot-rows previous) rows)
+                                 (+ (source-slot-count previous) (source-slot-count incoming)))
+               (make-source-slot rows (source-slot-count incoming)))))) prepared)
       (make-source-cut slots count))))

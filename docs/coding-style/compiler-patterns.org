@@ -1008,3 +1008,27 @@ POO variable terms, and projections select those terms without rebuilding them.
 The public object protocol, pure graph algorithms and private variable scope
 remain separate owners. =t/performance/operator-flow/README.org= records full
 compiler A/B, independent semantic controls and rejected measurements.
+
+* Separate source admission from persistent atomic publication
+
+Gerbil =1cfb032= =compiler/method.ss= delays shared method registration through
+=delay-atomic=. =core/sugar.ss:1012= expresses that contract as a macro;
+=runtime/control.ss:15= owns mutex protection and unwind-safe release. Apply
+the contract where multiple readers need one immutable result rather than
+recreating thread synchronization in the consumer.
+
+Actor source transactions in =program/source-cut.ss= use private final
+=source-change= records for borrowed admission inputs and =source-slot= records
+for detached owned state. Validate and budget the entire transaction before
+copying rows. Successful appends extend the existing reversed =source-log=;
+ordered header publication is atomic and deferred until observation. A promise
+captures its base and addition roots, never a preceding cut or its cached
+publication. Replacement resets the log and empty append retains its slot.
+This keeps snapshot ownership, historical sharing and concurrency in one flow.
+
+Defer only work whose contract permits it: caller rows are detached before the
+update returns, while ordered header materialization may wait. Preserved cuts,
+duplicate rows, false values and eight simultaneous readers are qualified in
+unit tests. Complete source-workflow A/B includes held-cut publication and an
+observe-every-update control. The latter has a small overhead, documented with
+the batch gains in =t/performance/source-cut-log/README.org=.

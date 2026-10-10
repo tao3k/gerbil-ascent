@@ -14,7 +14,7 @@ for all these states.
 
 | README paper | Repository reading | Current transfer and remaining work |
 |--------------+--------------------+-------------------------------------|
-| LLM-MatLogic | [[file:agent-inference/scoped-witness.org][note]] | Wikidata scoped exclusion executor, two-hop witness scope, gold/proposal grading and shared 256/1,024-input Scheme/Lean/Quint correspondence implemented; raw model/KGQA benchmark pending |
+| LLM-MatLogic | [[file:agent-inference/scoped-witness.org][note]] | Wikidata scoped exclusion, single/branch-scoped two-hop witnesses, branch union, gold/proposal grading and shared finite Scheme/Lean/Quint corpora implemented; raw model/KGQA benchmark pending |
 | DatalogBench | [[file:agent-inference/candidate-feedback.org][note]] | Dedicated reading; finite held-out graph/mutant discriminator implemented; model/Souffle corpus pending |
 | IRIS | [[file:agent-inference/taint-paths.org][note]] | Dedicated reading added; finite sanitizer-path Program, Lean and Session checks |
 | BRINK | [[file:agent-inference/withholding.org][note]] | Dedicated method reading; whole-batch finite withholding implemented; upstream mined-rule/KG-RAG experiments pending |

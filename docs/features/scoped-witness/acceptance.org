@@ -1,14 +1,110 @@
 # SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
-#+TITLE: Scoped two-hop witnesses before answer projection
+#+TITLE: Scoped two-hop witnesses and branch-local union
 #+DATE: 2026-10-10
 
 * Paper requirement and implemented meaning
 
-[[https://proceedings.mlr.press/v306/miao26e.html][scoped witness execution MatLogic]] section 2.1 distinguishes witness information lost by
+[[https://proceedings.mlr.press/v306/miao26e.html][LLM-MatLogic: Executable Exchange Contracts for Knowledge-Graph Query Answering with Scoped Negation]] section 2.1 distinguishes witness information lost by
 projection from exclusions drifting across disjunctive branches. Its cameo/lead
 example has identical projected answers but different exclusion outcomes.
 An answer-only post-filter cannot recover the missing witness attribute.
+
+* Branch scoped witness implementation
+
+=gerbil-ascent-branch-scoped-witness-program= extends the executable contract to
+multiple named scopes over one shared edge relation. It constructs an ordinary
+POO Program and uses the existing stratified evaluator and retained Session.
+The caller supplies scope identities as ordinary admitted values; the builder
+does not certify an LLM's intended branch assignment or generate identity tokens.
+
+| Source | Rows | Meaning |
+|--------+------+---------|
+| =branch_edge= | =(s,w)= | Shared graph edges |
+| =branch_start= | =(scope,s)= | Start selection within this scope |
+| =branch_target= | =(scope,t)= | Target selection within this scope |
+| =branch_blocked= | =(scope,w)= | Intermediate exclusion within this scope |
+| =branch_direct= | =(scope,s,t)= | Separate unmasked support within this scope |
+
+The outputs retain the scope through exclusion and witness projection:
+
+- =branch_witness(scope,s,w,t)= requires both selected endpoints, the two edges
+  and the absence of =branch_blocked(scope,w)=.
+- =branch_answer(scope,s,t)= projects an allowed witness or selects direct
+  support with both endpoints selected under the *same* scope.
+- =branch_union(s,t)= projects the scope from a completed branch answer.
+
+Two scopes may support the same endpoint pair. Blocking every intermediate
+witness in one scope must leave the other's witnesses and answer intact. A
+direct branch also keeps its own identity even when no two-hop path exists.
+Start, target and direct rows with different scope identities cannot join.
+All row material and exhaustion behavior remain under native Program budgets.
+This is a two-hop disjunctive union; arbitrary path lengths, conjunction groups,
+typed EEC slots, matrix masks and full knowledge-graph completeness remain open.
+
+** One shared finite correspondence corpus
+
+=BranchScopedWitness.qnt= uses the same =evaluate= function for its transition
+and deterministic corpus export. The four shared edges, four independent
+scope/middle exclusions and two direct-branch bits give 1,024 inputs. Each
+vector is =[id,witnessMask,answerMask,unionBit]=. Witness slots are
+=(alpha,1), (alpha,2), (beta,1), (beta,2)=; answer slots are =alpha,beta=.
+The endpoints are 0 and 3, and edges are =0→1→3= and =0→2→3=.
+
+[[file:../../../packages/proofs/lean/BranchScopedWitness.lean][Lean semantics]] proves mask locality, preservation of a surviving branch in
+the union, and direct-support preservation over arbitrary scope and vertex
+types. Three kernel-checked finite theorems connect the bit grader to witness,
+branch-answer and union predicates; union reuses the branch theorem rather than
+rechecking its complete relation decision tree. Modular finite decision procedures avoid
+duplicating the full relation decision tree during typeclass synthesis; no
+=native_decide=, =sorry= or new axiom is used.
+
+[[file:../../../t/qualification/ascent-branch-scoped-witness-test.ss][Native qualification]] replays all corpus inputs through actual Program/Session
+owners, checking exact full rows, completion and the published scope identities.
+Sixteen retained owners cover the edge masks; each owner runs before replacement
+and direct rows change only when their two-bit mask changes. Separate controls
+exercise symbolic identities, cross-scope selection failure and held result
+generations. The corpus is not a source/compiler refinement proof or a model
+benchmark.
+
+| Quint injected fault | Invariant | Native regression |
+|----------------------+-----------+-------------------|
+| =crossMask= | =ExactWitnesses= | Complete local exclusion preserves the other scope |
+| =switchMask= | =ExactWitnesses= | Each exclusion attaches to its named scope |
+| =forgetScope= | =ExactWitnesses= | Equal projected answers still retain both witness identities |
+| =collapseBranch= | =ExactBranches= | Direct support preserves its branch identity |
+
+These are deliberate faulty implementations in the model, not four discovered
+production defects. The correct Scheme behavior must pass the corresponding
+named regressions. CI regenerates the corpus and compares both current Quint
+output and the frozen native fixture against the independent Lean grader with
+=just check-branch-scoped-witness-conformance=.
+
+** Local validation
+
+- Native branch Suite: seven Cases and all 1,024 states passed in 9 seconds.
+- Quint: 2,048 initial/complete states checked; all four injected faults yielded
+  the required counterexample (exit 12), and the complete harness exited 0.
+- The first finite Lean attempt failed instance synthesis: expanded relation
+  decisions reached size 155 against the default 128. Factoring witness,
+  answer and union decision procedures fixes that structure without changing
+  the finite domain, assertions or native resource limits.
+- =check-branch-scoped-witness-conformance= passed: the proof module built in
+  30 seconds and all current/frozen vectors matched the independent Lean grader.
+  A separate import-only CLI loads the checked =olean=, avoiding a second proof
+  elaboration during data comparison. This is a reuse mechanism, not a stable
+  wall-clock performance claim.
+- A tampered vector changes row 512 from branch =beta= to =alpha= while
+  retaining the same witness mask and union bit. The Lean CLI rejected it
+  with exit 1, so union-only agreement cannot hide branch identity corruption.
+- The axiom audit reports no dependencies for the three general locality and
+  surviving-branch theorems. Finite =decide= correspondence uses Lean's standard
+  =propext= and =Quot.sound= foundations; no project-specific axiom is added.
+- The existing compiled single-scope regression passed all seven Cases;
+  policy qualification completed with 42 findings and zero errors.
+- Exact revision CI is recorded separately from these local receipts.
+
+* Single-scope witness implementation
 
 [[file:../../../applications/scoped-witness.ss][gerbil-ascent-scoped-witness-program]] constructs an ordinary POO-native
 Program with finite edge, selected start, selected target, blocked-node and

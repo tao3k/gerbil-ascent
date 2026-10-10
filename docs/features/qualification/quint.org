@@ -140,6 +140,20 @@ Lean grader; ordinary Gerbil tests replay the same artifact with real native
 receipts and check the abstraction premises. This feedback model is additional to
 the historical migration inventory above.
 
+* Branch scoped witness qualification (2026-10-10)
+
+[[file:../scoped-witness/acceptance.org][Branch scoped witnesses]] adds a 2,048-state model to the all gate. Its
+four injected faults cross scope masks, swap attachments, erase witness scope
+and collapse branch answers. All must fail their named exact-output invariant;
+the correct model also checks the final union and unpublished state. Each
+fault maps to a native regression under the same name.
+
+The transition evaluator exports all 1,024 inputs. CI runs
+=check-branch-scoped-witness-conformance= to compare current/frozen vectors with
+Lean's independent, kernel-checked finite witness/answer/union grader. Scheme
+checks exact scope-tagged rows from real Program/Session outputs. This bounded
+bridge does not establish full EEC or source/compiler refinement.
+
 * Scoped witness qualification (2026-10-10)
 
 [[file:../scoped-witness/acceptance.org][ScopedWitness]] adds a 512-state model to the all gate. Late/global filtering,

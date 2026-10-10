@@ -48,8 +48,11 @@ program/scheme-language.ss        |                          |
 table/expression --------> core/binary-relation <------ core/binary-program
 POO demand adapter         binary relation algorithms  bounded evaluation
 
-temporal/lens -----------> temporal/graph ------------> core/dependency-graph
-time and evidence          symbolic cut adapter        dense SCC traversal
+temporal/lens -----------> temporal/projection ------> temporal/graph ---> core/dependency-graph
+proof and composition       invocation graph facts      cut adapter          dense SCC traversal
+       |                          |
+       +----> temporal/value <----+
+              inert contracts and canonical capture
 
 candidate/program --------> candidate/datum <--------- candidate/reasoning
 candidate/types ----------> inert bounds and pair copy <--- proof/provenance
@@ -371,3 +374,30 @@ messages are not Case progress or pass evidence. The public build procedure,
 native test scheduling and testing implementations are unchanged by this batch.
 Final staged review removes three redundant trailing blank lines only; the
 Scheme reader audit is rerun and still preserves every definition and export.
+
+* Temporal construction, projection and evidence have separate owners
+
+=temporal/value.ss= owns public POO value construction, checked inert coordinates,
+canonical sorting, invocation-local uniqueness admission and detached projections.
+=temporal/projection.ss= consumes detached coordinates; native =defstruct= records
+name graph state and a compact projection result. Gerbil =with= binds the two
+coordinate shapes together. Node indexes remain local to projection; the result
+exposes edges, ordered diagnostics and first rejection without graph internals.
+=temporal/lens.ss= retains snapshot content binding, native receipt production,
+replay verification and solve/fork/compare composition. The public facade reexports
+the same constructors; no transitional public wrapper model is introduced.
+
+This follows Gerbil =core/match.ss:672-689= for structural bindings and
+=compiler/optimize.ss:28-35= for invocation-owned facts. Public extensibility uses
+POO; private finite graph state uses named records; pure algorithms remain named
+procedures. Adding generic dispatch to every graph field would obscure ownership.
+
+Constructor uniqueness replaces quadratic suffix =member= scans with one value
+hash traversal, retaining caps, duplicate errors and source evaluation order.
+=t/performance/temporal-contract/= freezes the previous complete module and
+measures both constructors plus detached projections with ASP Scheme's API.
+50 matched pairs qualify 9001 ->806 us at 256 events/512 edges and 609 ->191 us
+at 64 events/128 edges. Allocation rises 2.8%/10.1%; fixed small/empty and allocation
+gates pass. These constructor measurements do not qualify a whole-solve gain.
+Earlier indexed horizon and cycle algorithms remain in the projection owner;
+module separation itself carries no CPU-speedup claim.

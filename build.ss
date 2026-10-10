@@ -99,6 +99,8 @@
     "candidate/withholding"
     "candidate/withdrawal-session"
     "temporal/graph"
+    "temporal/value"
+    "temporal/projection"
     "temporal/lens"
     "interface/request"))
 

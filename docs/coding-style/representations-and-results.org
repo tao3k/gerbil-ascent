@@ -84,3 +84,25 @@ introduce none. Coding Style links, paired Org blocks and diff formatting pass
 static checks. Logs stay in ignored =.cache/ascent/storage-state-records/=.
 These focused local checks do not establish a whole-suite, matched SS timing,
 AOT application or remote CI result.
+
+* Study: prepare applicability, independently replay, then project
+
+=temporal/lens.ss= uses one private final =temporal-binding= to name invocation
+coordinates, the admitted cut and its fresh content-bound snapshot. It follows
+the installed compiler's named metadata fields and applicability-before-
+transformation pattern. The public POO answer remains extensible; a private
+record is not exposed as its extension model.
+
+=prepare-binding=, =complete-receipt?= and =answer-projection= express the whole
+flow shared by solve and verification. Exact finite replay already establishes
+closure/query truth, so verification consumes that established fact directly.
+It still rebuilds the current cut, binds every coordinate, checks founded
+proofs for nonempty answers, preserves total output limits and compares the
+whole projected answer. It no longer needs to produce and validate another
+certificate merely to validate the caller's existing certificate. Fork and
+comparison compose this same checked boundary. A POO kind tag or a detached
+wire projection alone never permits reuse.
+
+[[file:../../t/performance/temporal-replay/README.org][Matched complete consumers]]
+qualify this semantic flow. CPU evidence from verification is not an initial
+solve or general execution throughput claim.

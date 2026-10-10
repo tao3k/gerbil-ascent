@@ -10,11 +10,9 @@
         (only-in :clan/poo/object .o .ref)
         :gerbil-ascent/temporal/value
         :gerbil-ascent/temporal/projection
-        (only-in :gerbil-ascent/candidate/finite-evidence finite-evidence-closure)
         (only-in :gerbil-ascent/candidate/reasoning
                  reasoning-source-snapshot reasoning-attempt
                  reasoning-receipt-status reasoning-receipt-rows
-                 reasoning-receipt-stratified reasoning-stratified-evidence-finite
                  reasoning-verify-finite-receipt
                  reasoning-verify-stratified-receipt))
 
@@ -41,68 +39,41 @@
      (rule (reach ?x ?y) (root ?x) (parent ?x ?y))
      (rule (reach ?x ?z) (reach ?x ?y) (parent ?y ?z))
      (query reach ?x ?y) (limits 1024 4096 4096)))
-(def reach-output-limit (cadddr (assq 'limits (cdr reach-candidate))))
-
-;;; One invocation owns detached coordinates, cut admission and its binding.
-;;; Verification rebuilds this boundary; it never borrows an answer's snapshot.
-(defstruct temporal-binding (lens source root scope cut snapshot) final: #t)
-;; : (forall (scope) (-> TemporalLens TemporalSource Symbol scope TemporalBinding))
-(def (prepare-binding lens source root scope)
-  (unless (and (temporal-lens? lens) (temporal-source? source) (id? root))
-    (error "invalid temporal solve input"))
-  (let* ((l (temporal-projection lens)) (s (temporal-projection source))
-         (cut (project-temporal-cut l s root))
-         (snapshot (reasoning-source-snapshot
-                    (snapshot-identity l s root scope) (car l)
-                    (list (list 'parent 2 (temporal-cut-projection-edges cut))
-                          (list 'root 1 (list (list root)))))))
-    (make-temporal-binding l s root scope cut snapshot)))
-
-;; : (-> (Maybe ReasoningReceipt) ReasoningSnapshot Boolean)
-(def (complete-receipt? receipt snapshot)
-  (and receipt (eq? (reasoning-receipt-status receipt) 'complete)
-       (eq? (reasoning-verify-finite-receipt receipt snapshot reach-candidate 100000) 'valid)
-       ;; Native output limits include source rows as well as derived rows.
-       ;; Read the supplied closure only after independent replay admitted it.
-       (<= (apply + (map (lambda (entry) (length (caddr entry)))
-                        (finite-evidence-closure
-                         (reasoning-stratified-evidence-finite
-                          (reasoning-receipt-stratified receipt))))) reach-output-limit)
-       (or (null? (reasoning-receipt-rows receipt))
-           (eq? (reasoning-verify-stratified-receipt receipt snapshot reach-candidate 100000) 'valid))))
-
-;; : (-> TemporalBinding Symbol [Row] AnswerData)
-(def (answer-projection binding status rows)
-  (using (binding :- temporal-binding)
-    (let (rejection (temporal-cut-projection-rejection binding.cut))
-      (list status binding.lens binding.source binding.root rows
-            (if rejection (list (list rejection))
-              (temporal-cut-projection-frontier binding.cut)) binding.scope))))
-
-;; : (-> ReasoningReceipt Symbol [Row])
-(def (receipt-root-rows receipt root)
-  (list-sort row<? (filter (lambda (row) (eq? (car row) root))
-                          (reasoning-receipt-rows receipt))))
 
 ;; : (forall (scope) (-> TemporalLens TemporalSource Symbol scope TemporalAnswer))
 ;; : (-> Lens Source Root Scope Answer)
 (def (solve lens source root scope-value)
-  (using (binding (prepare-binding lens source root scope-value) :- temporal-binding)
-    (let* ((snapshot binding.snapshot)
-           (frontier (temporal-cut-projection-frontier binding.cut))
-           (rejection (temporal-cut-projection-rejection binding.cut))
-           (receipt (and (not rejection) (null? frontier)
-                         (reasoning-attempt snapshot reach-candidate 100000 100000)))
-           (valid (complete-receipt? receipt snapshot))
-           (rows (if valid (receipt-root-rows receipt root) []))
-           (status (cond (rejection 'rejected)
-                         ((pair? frontier) 'partial)
-                         (valid 'complete) (else 'unknown)))
-           (answer (value-object 'ascent.temporal-answer.v1
-                     (answer-projection binding status rows))))
-      ;; Evidence objects are retained separately from the copied projection.
-      (let ((receipt-value receipt) (snapshot-value snapshot))
-        (.o (:: @ answer) receipt: receipt-value snapshot: snapshot-value)))))
+  (unless (and (temporal-lens? lens) (temporal-source? source) (id? root))
+    (error "invalid temporal solve input"))
+  (let* ((l (temporal-projection lens)) (s (temporal-projection source))
+         (generation (car l)) (projection (project-temporal-cut l s root))
+         (edges (temporal-cut-projection-edges projection))
+         (frontier (temporal-cut-projection-frontier projection))
+         (rejection (temporal-cut-projection-rejection projection)))
+      (let* ((snapshot (reasoning-source-snapshot
+                        (snapshot-identity l s root scope-value) generation (list (list 'parent 2 edges) (list 'root 1 (list (list root))))))
+             (receipt (and (not rejection) (null? frontier)
+                           (reasoning-attempt snapshot reach-candidate 100000 100000)))
+             (valid (and receipt (eq? (reasoning-receipt-status receipt) 'complete)
+                         (eq? (reasoning-verify-finite-receipt
+                               receipt snapshot reach-candidate 100000) 'valid)
+                         (or (null? (reasoning-receipt-rows receipt))
+                             (eq? (reasoning-verify-stratified-receipt
+                                   receipt snapshot reach-candidate 100000) 'valid))))
+             (rows (if valid
+                     (list-sort row<?
+                                (filter (lambda (row) (eq? (car row) root))
+                                        (reasoning-receipt-rows receipt))) []))
+             (status (cond (rejection 'rejected)
+                           ((pair? frontier) 'partial)
+                           (valid 'complete) (else 'unknown))))
+        ;; Evidence objects are retained separately from the copied projection.
+        (let (answer (value-object 'ascent.temporal-answer.v1
+                       (list status l s root rows
+                             (if rejection (list (list rejection))
+                               frontier) scope-value)))
+          (let ((receipt-value receipt) (snapshot-value snapshot))
+            (.o (:: @ answer) receipt: receipt-value snapshot: snapshot-value))))))
 
 ;; : (-> TemporalLens TemporalSource Symbol TemporalAnswer)
 ;; : (-> Lens Source Root Answer)
@@ -171,15 +142,19 @@
 (def (temporal-verify lens source root answer)
   (unless (and (temporal-lens? lens) (temporal-source? source)
                (temporal-answer? answer)) (error "invalid temporal verification input"))
-  (using (binding (prepare-binding lens source root (temporal-scope answer)) :- temporal-binding)
-    (let (receipt (and (eq? (temporal-status answer) 'complete)
-                      (not (temporal-cut-projection-rejection binding.cut))
-                      (null? (temporal-cut-projection-frontier binding.cut))
-                      (temporal-receipt answer)))
-      (if (and (complete-receipt? receipt binding.snapshot)
-               (equal? (answer-projection binding 'complete (receipt-root-rows receipt root))
-                       (temporal-projection answer)))
-        'valid 'invalid))))
+  (let (fresh (solve lens source root (temporal-scope answer)))
+    (if (and (eq? (temporal-status answer) 'complete)
+             (eq? (temporal-status fresh) 'complete)
+             (equal? (temporal-projection fresh) (temporal-projection answer))
+             (let ((receipt (temporal-receipt answer))
+                   (snapshot (.ref fresh 'snapshot)))
+               (and receipt
+                    (eq? (reasoning-verify-finite-receipt
+                          receipt snapshot reach-candidate 100000) 'valid)
+                    (or (null? (temporal-rows answer))
+                        (eq? (reasoning-verify-stratified-receipt
+                              receipt snapshot reach-candidate 100000) 'valid)))))
+      'valid 'invalid)))
 
 ;;; Evidence boundary: composed operations recheck actual receipts before
 ;;; consuming complete projections, including objects extended by the caller.

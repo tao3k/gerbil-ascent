@@ -774,3 +774,34 @@ callback traces/counts, exact budgets, publication isolation and 2^80 keys.
 ASP Policy passes all changed production owners and the new Suite with zero
 findings. The preceding =c90f272= unit has six successful exact-head CI jobs in
 run =38038056373=. Broader engine/bridge execution remains separate audit work.
+
+* Temporal verification through composed consumers
+
+The wider module audit found repeated production work in =temporal/lens.ss=:
+=temporal-verify= regenerated a complete solve and its certificates before
+independently replaying the supplied receipt. =temporal-fork= and
+=temporal-compare= repeatedly traversed that same sequence.
+
+The coordinated flow now names invocation-local binding preparation,
+independent receipt replay and complete answer projection. Private final
+records express field ownership; public POO values and historical wire lists
+retain their extension/projection contracts. Verification rebuilds the current
+cut and content digest rather than trusting retained snapshot metadata.
+Certificate replay checks exact closure/query truth, founded evidence for
+nonempty answers, and the engine's total output budget. Rejected/open cuts,
+forged coordinate projections, absent evidence and mutated receipts retain
+explicit rejection. Composed consumers still enter that verified boundary.
+
+[[file:../../t/performance/temporal-replay/README.org][Temporal replay qualification]]
+freezes the complete prior module and specifies seven complete public operations,
+independent expected truth and fixed CPU/allocation gates. Measurements cover
+verification/comparison/fork consumers; they do not claim faster initial solve
+or general actor throughput.
+
+The seven original gates pass in one exclusive native process. Complete
+verification improves median CPU 14306 -> 497 us, comparison 25613 -> 510 us,
+and fork 57779 -> 10516 us; verification allocation falls 24269864 -> 458456
+bytes. Cold solve is a regression control, not a promoted speedup: 10/20 CPU
+wins and 320 extra allocated bytes. Open-cut verification has no material CPU
+change. Two competing-compiler diagnostics remain excluded in the cache.
+No proof work budget or performance gate changed after sampling.

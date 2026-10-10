@@ -544,6 +544,11 @@ check-feedback-conformance: prepare-quint
     .cache/ascent/tools/quint/node_modules/.bin/quint repl -q --backend typescript -r packages/proofs/quint/ExecutionFeedback.qnt::ExecutionFeedback conformance .exit > .cache/ascent/feedback-conformance/quint.json
     cd packages/proofs/lean && lake build FeedbackConformance && lake env lean --run FeedbackConformance.lean ../../../.cache/ascent/feedback-conformance/quint.json ../../../t/qualification/fixtures/feedback/conformance.json
 
+check-scoped-witness-conformance: prepare-quint
+    mkdir -p .cache/ascent/scoped-witness-conformance
+    .cache/ascent/tools/quint/node_modules/.bin/quint repl -q --backend typescript -r packages/proofs/quint/ScopedWitness.qnt::ScopedWitness conformance .exit > .cache/ascent/scoped-witness-conformance/quint.json
+    cd packages/proofs/lean && lake build ScopedWitness && lake env lean --run ScopedWitness.lean ../../../.cache/ascent/scoped-witness-conformance/quint.json ../../../t/qualification/fixtures/scoped-witness/conformance.json
+
 check-lean-proofs:
     #!/usr/bin/env bash
     set -euo pipefail
@@ -637,6 +642,7 @@ _check-quint group='all': prepare-quint
     set -euo pipefail
     group="{{ group }}"
     models=(MinimumHeight WithdrawalConcurrency WithdrawalSession ChangePlan ActorRound ActorRoundCredits ActorSession ActorTestPool CertificateMaterial TerminalTraversal ExecutionFeedback Withholding CanonicalIndex DerivationCounts ProofShapeAdmission ProofPrefix ComponentIndex CountProbe LatticeProjection NativeSessionPublication NegativeProbe NumericProbe OracleTransport PositiveNonmembershipSession ProviderAdmission ProviderFrontier ProviderReplay ProviderRouting ProviderViews ReaderLifetime ReadyComponents SessionTransaction TransitiveComponents)
+    models+=(ScopedWitness)
     case "$group" in
       all) ;;
       Nonmembership) models=(CertificateMaterial TerminalTraversal ExecutionFeedback Withholding ProofShapeAdmission ProofPrefix CountProbe NegativeProbe NumericProbe PositiveNonmembershipSession SessionTransaction NativeSessionPublication) ;;
@@ -690,6 +696,7 @@ _check-quint group='all': prepare-quint
         CanonicalIndex) constants='Mutation = "none"'; invariants='Private Canonical' ;;
         Withholding) constants='Mutation = "none"'; invariants='Private Bound Protected ExactCut' ;;
         ExecutionFeedback) constants='Mutation = "none"'; invariants='Qualified ExactDifferences ExactMatch InconclusivePrivate' ;;
+        ScopedWitness) constants='Mutation = "none"'; invariants='ExactWitnesses ExactAnswer Private' ;;
         ProofPrefix) constants='Mutation = "none"'; invariants='ExactPrefix GroundedPrefix PublishedGrounded RefusalPrivate PublicationPhase' ;;
         ProofShapeAdmission) constants='Mutation = "none"'; invariants='AllocationAfterAdmission AdmittedShape RefusalUnpublished PublicationAfterIndex' ;;
         TerminalTraversal) constants='Mutation = "none"'; invariants='Bounds FailureFrozen CompletedScan' ;;
@@ -832,6 +839,7 @@ _check-quint group='all': prepare-quint
             CanonicalIndex) fault early Private; fault omit Canonical; fault duplicate Canonical; fault order Canonical ;;
             Withholding) fault early Private; fault local Protected; fault stale Bound; fault missing Protected ;;
             ExecutionFeedback) fault stale Qualified; fault partial Qualified; fault missing ExactDifferences; fault extra ExactDifferences; fault referenceStale Qualified; fault referencePartial Qualified; fault query Qualified ;;
+            ScopedWitness) fault late ExactWitnesses; fault global ExactAnswer; fault anyBlocked ExactWitnesses; fault forget ExactWitnesses ;;
             ProofPrefix) fault early ExactPrefix; fault forward GroundedPrefix; fault source GroundedPrefix; fault partial RefusalPrivate ;;
             ProofShapeAdmission) fault early AllocationAfterAdmission; fault roots AdmittedShape; fault improper AdmittedShape; fault partial RefusalUnpublished ;;
             TerminalTraversal) fault tail FailureFrozen; fault resume FailureFrozen; fault skip FailureFrozen; fault early CompletedScan ;;

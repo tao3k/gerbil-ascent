@@ -14,7 +14,7 @@ require LeanPoo from git
 lean_lib AscentProof where
   roots := #[`MinimumHeight, `StableSourceSupport, `SourceOccurrences, `OrderedMapping, `AscentProof, `DerivationCounts, `CanonicalIndex, `Withholding, `ExecutionFeedback, `UnsanitizedPaths, `ProofDag, `BoundedSpine, `TerminalTraversal, `NumericReduction, `CountReduction, `CertificateMaterial, `AtomicBinding, `CappedArithmetic, `DependencyInvalidation, `DescriptorScope,
              `FiniteFlowPacking, `PoloniusInitialization, `ProviderRectangles, `ProviderRouting, `CurriedDictionary, `ProviderEncoding, `ProviderAdmission, `ProviderIteration, `LatticeProjection, `StrictDependencies, `PendingKeys, `LatticeAdmission, `PipeCapture, `FunctionalDependency, `EquivalenceComponents, `DirectedFrontier,
-             `FeedbackConformance, `FiniteHeight, `FiniteOperators, `LexicalLowering,
+             `ScopedWitness, `FeedbackConformance, `FiniteHeight, `FiniteOperators, `LexicalLowering,
              `NativeBitmapWorklist, `NativeGraphWorklist,
              `PositiveNonmembership,
              `RecursiveLowering,

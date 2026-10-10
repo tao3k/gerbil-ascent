@@ -76,6 +76,7 @@
     "applications/polonius-paths"
     "applications/finite-flow-program"
     "applications/taint-paths"
+    "applications/scoped-witness"
     "core/binary-program"
     "candidate/closure"
     "candidate/datum"

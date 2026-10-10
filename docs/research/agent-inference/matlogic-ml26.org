@@ -50,10 +50,19 @@ identity, retrieval provenance and the actual model study remain open.
 
 * Code correspondence and missing boundary
 
+The [[file:../../features/scoped-witness/acceptance.org][scoped-witness application]] now makes the section 2.1 timing example
+executable: retain =(start,middle,target)=, exclude only the middle before
+projection, and preserve separate direct support. Two allowed/blocked
+alternatives to one answer exercise information lost by answer-only filtering.
+A shared 256-input corpus checks the actual Scheme Program/Session, Quint
+transition evaluator and executable Lean semantics; four named faults test
+late/global filtering, alternative loss and missing witness output. This is
+an explicit two-hop scope contract, not the full EEC or sparse-matrix schedule.
+
 | Paper stage | Relevant code | What the code currently establishes |
 |-------------+---------------+-------------------------------------|
 | Model's executable request | [[file:../../../candidate/program.ss][=candidate/program.ss=]] | Parses and inspects inert proposed relations, facts, rules, query and limits; checks binding safety and declared negative atoms. It does not know whether the model chose the intended graph predicate or exclusion scope. |
-| Fixed graph and program | [[file:../../../candidate/reasoning.ss][=candidate/reasoning.ss=]], [[file:../../../program/scheme-language.ss][=program/scheme-language.ss=]] | Binds an attempt to a copied source snapshot and checked Scheme rule program. Whole-program dependency checks and stratified negation belong to admission; no MatLogic matrix execution is implemented. |
+| Fixed graph and program | [[file:../../../candidate/reasoning.ss][=candidate/reasoning.ss=]], [[file:../../../program/scheme-language.ss][=program/scheme-language.ss=]], [[file:../../../applications/scoped-witness.ss][scoped witness Program]] | Binds an attempt to a copied source snapshot and checked Scheme rule program. Explicit intermediate exclusion precedes projection in the two-hop application. Whole-program dependency checks and stratified negation belong to admission; no MatLogic matrix execution is implemented. |
 | Answer plus witness | [[file:../../../candidate/reasoning.ss][=candidate/reasoning.ss=]], [[file:../../../candidate/stratified-provenance.ss][=candidate/stratified-provenance.ss=]], [[file:../../../candidate/nonmembership.ss][=candidate/nonmembership.ss=]] | The direct path/cut receipt is limited to an exact two-rule graph case. Optional, budgeted stratified replay can represent grounded alternatives after finite-closure verification; ground absence is relative to a closed finite model. None certifies that Freebase or a retrieved subgraph contains every real-world fact. |
 | Graph storage and repeated queries | [[file:../../../table/storage.ss][=table/storage.ss=]], [[file:../../../table/provider.ss][=table/provider.ss=]], [[file:../../../program/session.ss][=program/session.ss=]] | Provider and Session boundaries can be tested for exact graph rows and immutable result generations. BYODS specialization is eligible only when its relation meaning matches the task; =eqrel= is not directed reachability. |
 
@@ -78,8 +87,9 @@ measure specification loss. Repeat eligible positive paths through
 Set and =trrel= storage only after both are independently proved to
 denote the same relation on that fixture.
 
-This is a proposed test, not a claim that ASCENT already runs the
-paper's benchmark. Full KG truth, NL intent, and incomplete-subgraph
+The end-to-end model study remains proposed. WD26 and the shared scope/feedback
+corpora already implement its finite executor controls; they do not establish
+that ASCENT runs the paper's benchmark. Full KG truth, NL intent, and incomplete-subgraph
 answers remain distinct from finite Datalog closure.
 
 [[file:index.org][Agent inference index]]; [[file:2026-logic-ai-screen.org][code-anchored screen]].

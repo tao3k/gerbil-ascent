@@ -1,0 +1,89 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+#+TITLE: Scoped two-hop witnesses before answer projection
+#+DATE: 2026-10-10
+
+* Paper requirement and implemented meaning
+
+[[https://proceedings.mlr.press/v306/miao26e.html][ML26 MatLogic]] section 2.1 distinguishes witness information lost by
+projection from exclusions drifting across disjunctive branches. Its cameo/lead
+example has identical projected answers but different exclusion outcomes.
+An answer-only post-filter cannot recover the missing witness attribute.
+
+[[file:../../../applications/scoped-witness.ss][gerbil-ascent-scoped-witness-program]] constructs an ordinary POO-native
+Program with finite edge, selected start, selected target, blocked-node and
+direct-support sources. It emits:
+
+- =scope_witness(s,w,t)= when =s= is selected, =t= is selected, both edges
+  =s→w= and =w→t= exist, and only the intermediate =w= is not blocked.
+- =scope_answer(s,t)= when at least one such witness exists, or a selected
+  direct-support row =(s,t)= exists in the separate branch.
+
+The blocked predicate has one explicit scope: the intermediate node of the
+two-hop branch. It does not exclude the start/target as such or constrain
+direct support. The negation runs while =w= remains bound, before the answer
+projection rule. Another allowed witness can support the same answer after
+one witness is excluded. Both =scope_witness= triples and answer pairs remain
+observable through the normal result =rows-of= API.
+
+This is a two-hop Datalog transfer, not arbitrary path closure, MatLogic's
+sparse-matrix executor, full EEC plan parsing or a model KGQA replication.
+Starts, targets, direct support and source completeness are caller premises.
+The witness triples are derived rows, not attested certificates of source
+authority or a complete set of real-world facts. Standard admission and the
+unchanged input/fact/output budgets remain the Program's owner.
+
+* One finite corpus for all three implementations
+
+[[file:../../../packages/proofs/quint/ScopedWitness.qnt][Quint evaluate]] serves both the model's publication transition and exporter.
+The [[file:../../../t/qualification/fixtures/scoped-witness/conformance.json][frozen corpus]] enumerates all 256 inputs: four edge bits for
+=(0,1),(1,3),(0,2),(2,3)=; three blocked bits for nodes 1,2,3; and one
+direct-support bit for =(0,3)=. Each output is =[id,witnessMask,answerBit]=,
+where the two witness bits select =(0,1,3)= and =(0,2,3)=.
+
+[[file:../../../packages/proofs/lean/ScopedWitness.lean][Lean]] defines witness/answer semantics for an arbitrary vertex type,
+proves witness projection, direct-branch preservation and antitonicity under
+growing exclusions. A general information-loss theorem proves that an
+answer-only function cannot distinguish two identical projections whose
+correctly masked answers differ; additional witness/source information is an
+explicit requirement. The corpus contains this discriminator: unmasked input
+IDs 3 and 12 have the same answer, while the identical middle-1 exclusion at
+IDs 19 and 28 yields different answers. Lean then supplies an independent
+executable finite grader.
+Kernel-checked =decide= theorems relate all finite witness bits and answers
+to those declarative semantics. No new axioms or =native_decide= are used.
+=just check-scoped-witness-conformance= regenerates current Quint results and
+requires both them and the frozen corpus to equal that Lean grader. Formal CI
+runs this gate alongside the existing feedback correspondence check.
+
+[[file:../../../t/qualification/ascent-scoped-witness-test.ss][The native Suite]] consumes the same corpus using 16 retained Sessions,
+not 256 repeated Program admissions. Each owner runs once before replacement;
+blocked sources change across the input enumeration, and each direct source
+changes once. It asserts all witness triples and answer pairs, with real
+progress every 64 inputs. Named controls correspond to the four model faults:
+
+| Fault | Native control | Required behavior |
+|-------+----------------+-------------------|
+| late | ScopedWitness/late | A blocked intermediate cannot survive merely because the endpoint is allowed |
+| global | ScopedWitness/global | Blocking intermediate and endpoint nodes cannot erase independent direct support |
+| anyBlocked | ScopedWitness/anyBlocked | One blocked route cannot erase another allowed witness for the same answer |
+| forget | ScopedWitness/forget | A correct answer still requires the complete expected witness rows |
+
+Additional controls use symbolic vertices and unselected starts/targets, and
+replace edge/blocked sources while holding an older result. Old witness/answer
+rows must remain intact. The model explores 512 initial/publication states;
+all four injected faults produce the designated invariant violation (exit 12).
+Neither finite enumeration nor these general semantic laws prove the Scheme
+compiler or an arbitrary source extraction pipeline correct.
+
+* Local validation and boundaries
+
+The initial source Suite exposed a test lifecycle error: replacing a source
+before the first Session run. The fixture now follows the existing protocol;
+this was not counted as a production defect or suppressed by a longer timeout.
+The corrected source Suite passed. Lean kernel checking, current/frozen corpus
+comparison and the correct/four-fault Quint gate passed. Final native compiled
+qualification passed all seven Cases, including the complete 256-input corpus,
+in 13 seconds. Policy reported 42 findings and zero errors. Remote exact-revision
+CI remains a separate delivery gate.
+No deadline, heap limit or existing performance contract was relaxed.

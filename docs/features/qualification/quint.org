@@ -140,6 +140,15 @@ Lean grader; ordinary Gerbil tests replay the same artifact with real native
 receipts and check the abstraction premises. This feedback model is additional to
 the historical migration inventory above.
 
+* Scoped witness qualification (2026-10-10)
+
+[[file:../scoped-witness/acceptance.org][ScopedWitness]] adds a 512-state model to the all gate. Late/global filtering,
+discarding an allowed alternative and forgetting witness rows each violate
+the named invariant. Its actual transition evaluator exports all 256 initial
+input observations; formal CI compares current/frozen outputs with the
+kernel-checked Lean witness semantics, and native Scheme Sessions consume
+that same corpus. Named native Cases cover all four mutation identifiers.
+
 * Whole-batch withholding qualification (2026-10-09)
 
 [[file:../withholding/acceptance.org][Withholding]] adds a 28-state finite publication model to all/Nonmembership.

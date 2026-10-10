@@ -14,7 +14,7 @@ for all these states.
 
 | README paper | Repository reading | Current transfer and remaining work |
 |--------------+--------------------+-------------------------------------|
-| LLM-MatLogic | [[file:agent-inference/matlogic-ml26.org][note]] | WD26 finite executor, same-source gold/proposal grading and automated 1,024-state Scheme/Lean/Quint result correspondence implemented; raw model/KGQA benchmark pending |
+| LLM-MatLogic | [[file:agent-inference/matlogic-ml26.org][note]] | WD26 executor, two-hop witness scope, gold/proposal grading and shared 256/1,024-input Scheme/Lean/Quint correspondence implemented; raw model/KGQA benchmark pending |
 | DatalogBench | [[file:agent-inference/datalogbench-db26.org][note]] | Dedicated reading; finite held-out graph/mutant discriminator implemented; model/Souffle corpus pending |
 | IRIS | [[file:agent-inference/iris-ir25.org][note]] | Dedicated reading added; finite sanitizer-path Program, Lean and Session checks |
 | BRINK | [[file:agent-inference/brink-b26.org][note]] | Dedicated method reading; whole-batch finite withholding implemented; upstream mined-rule/KG-RAG experiments pending |
@@ -73,6 +73,10 @@ Lean premises and Quint fault exploration qualify this finite transfer.
 One shared corpus now links the current Quint transition evaluator, a
 kernel-checked executable Lean grader and production Scheme receipt replay,
 with automatic regeneration and comparison in CI.
+The scoped-witness Program now addresses witness loss before projection with
+a separate 256-input three-language corpus, general Lean scope laws and four
+named filtering/evidence faults. Its two-hop scope and independent direct
+branch are explicit; arbitrary EEC plans and matrix propagation remain open.
 
 Remaining head-paper experiments include ML26 raw model proposal/specification
 comparison and BRINK released mined-rule groundings with versioned real-KG

@@ -7,7 +7,7 @@ source dates and qualification boundaries. Current evidence is commit-specific.
 
 * Positive body / frontier joint progress (2026-10-05)
 
-B23 section 3.2, especially Lemmas 3.2-3.4 and Theorem 3.5 (pages 8-9), was
+Provider concretization section 3.2, especially Lemmas 3.2-3.4 and Theorem 3.5 (pages 8-9), was
 reread. The paper separates single-step decomposition, historical coverage of
 old facts, abstract data structure gamma contracts and iteration equivalence.
 The implementation must retain all four obligations.
@@ -42,10 +42,10 @@ decomposition remain unproved; no native extraction is claimed.
 
 | Paper / design stage | Next Lean statement | Next Quint obligation | Native correspondence gate |
 |----------------------+---------------------+----------------------+----------------------------|
-| A22 section 4 / B23 section 3.2 | Binder/index behavior to environment transitions; historical all-old head coverage to full naive/semi-naive iteration equivalence | Frontiers retain their cut during dispatch/consumption; failure never installs partial round results | Compiled pivot positions, source/delta selection, index lookup completeness and row equality |
-| F16 / S20 | Finite descriptor domains to rank; typed function change translation separate from relation delta | Bounded/provisional results retain status; cancellation drain and result publication | Arbitrary host closures still need totality/monotonicity constraints; fact budgets do not imply termination |
-| H18 / B22 | Founded rederivation, source dependency frames and correctness after retraction; current algorithms are neither DRedc nor signed-weight DBSP | Source/result atomicity and ABA isolation across repeated updates, failure and resume | Multiple supports, unfounded cycles, lower-stratum changes and external Provider rollback |
-| H13 / F20 / L25 | Native correspondence for hygiene, generativity, fragment composition / lexical lowering | Cross-owner/cut lifecycle only; lexical semantics belongs to Lean | Macro expansion and native descriptors to the proved IR |
+| rule planning section 4 / Provider concretization section 3.2 | Binder/index behavior to environment transitions; historical all-old head coverage to full naive/semi-naive iteration equivalence | Frontiers retain their cut during dispatch/consumption; failure never installs partial round results | Compiled pivot positions, source/delta selection, index lookup completeness and row equality |
+| functional fixed points / higher-order change | Finite descriptor domains to rank; typed function change translation separate from relation delta | Bounded/provisional results retain status; cancellation drain and result publication | Arbitrary host closures still need totality/monotonicity constraints; fact budgets do not imply termination |
+| deletion rederivation / incremental view maintenance | Founded rederivation, source dependency frames and correctness after retraction; current algorithms are neither DRedc nor signed-weight DBSP | Source/result atomicity and ABA isolation across repeated updates, failure and resume | Multiple supports, unfounded cycles, lower-stratum changes and external Provider rollback |
+| relational kernel / fragment composition / program lifecycle | Native correspondence for hygiene, generativity, fragment composition / lexical lowering | Cross-owner/cut lifecycle only; lexical semantics belongs to Lean | Macro expansion and native descriptors to the proved IR |
 
 Finite TLC safety exploration does not establish unbounded temporal theorems.
 Unbounded protocol proofs and Scheme trace refinement remain Quint work. General
@@ -74,7 +74,7 @@ The rule set and rule bodies may be empty; round numbers have no upper bound.
 The theorem assumes neither successful native results nor termination.
 Equality at every round alone does not imply finite convergence. Termination
 still requires FiniteHeight's finite-height/progress premises and descriptor
-correspondence. B23's general abstract lattice join, gamma/injection and
+correspondence. Provider concretization's general abstract lattice join, gamma/injection and
 gamma-total/delta contracts need separate connections; arbitrary caller
 Providers are not assumed to satisfy them.
 

@@ -22,9 +22,9 @@ native encoding/equality and asynchronous trace refinement remain open; no
 whole-framework closure or end-to-end performance gain follows from this fix.
 
 
-* A22 native correspondence: complete custom index candidate tuples
+* rule planning native correspondence: complete custom index candidate tuples
 
-[[https://thomas.gilray.org/pdf/seamless-deductive.pdf][A22 Section 4, index selection and code generation]] derives lookup layouts from
+[[https://thomas.gilray.org/pdf/seamless-deductive.pdf][rule planning Section 4, index selection and code generation]] derives lookup layouts from
 join columns and iterates the returned tuples in generated rule loops. In the
 Rust embedding the relation tuple type carries its width. For this Scheme
 implementation's extensible IndexProvider receiver, the corresponding premise
@@ -68,9 +68,9 @@ concretization remain separate obligations. No relation-membership scan,
 performance result or general Provider semantic refinement is claimed here.
 
 
-* B23 native correspondence: custom index candidates belong to their lane
+* Provider concretization native correspondence: custom index candidates belong to their lane
 
-[[https://kmicinski.com/assets/byods.pdf][B23 Section 4, PDF page 11]] requires all logical indexes of a relation to
+[[https://kmicinski.com/assets/byods.pdf][Provider concretization Section 4, PDF page 11]] requires all logical indexes of a relation to
 agree on concretization. Its total/delta interface additionally distinguishes
 which represented facts each lane may enumerate. In this implementation the
 storage Provider owns represented facts; the IndexProvider receives the
@@ -104,12 +104,12 @@ replacement, aliases and existing extension-failure revocation. The
 This establishes a checked subset-of-snapshot condition under the existing
 stable-value premise. It does not prove lookup completeness, uniqueness,
 Provider callback purity, mutable nested-value stability or general storage
-concretization. B23's semi-naive equivalence theorem still needs its other
+concretization. Provider concretization's semi-naive equivalence theorem still needs its other
 premises; this check alone does not establish that theorem for native Scheme.
 
-* B23 native correspondence: custom lookup coverage and unique enumeration
+* Provider concretization native correspondence: custom lookup coverage and unique enumeration
 
-[[https://kmicinski.com/assets/byods.pdf][B23 Section 4, PDF page 11]] defines key lookup as enumeration of all tuples
+[[https://kmicinski.com/assets/byods.pdf][Provider concretization Section 4, PDF page 11]] defines key lookup as enumeration of all tuples
 corresponding to a key. The previous native boundary admitted complete tuple
 shape and snapshot membership, but a proper subset of matching members still
 silently removed rule consequences. Repeated candidates also multiplied
@@ -130,7 +130,7 @@ lookup key. That count must equal the witness's expected count. Under stable
 values and admitted column projection, the matching candidate set is a subset
 of the represented key set; equal finite cardinality therefore establishes
 coverage. A different-key candidate cannot compensate for a missing match.
-This is our concrete implementation argument, not a new claim that the B23
+This is our concrete implementation argument, not a new claim that the Provider concretization
 semi-naive theorem has been extracted from native code.
 
 All checks precede term callbacks, rule heads and aggregate invocation. The
@@ -157,9 +157,9 @@ Stable nested values, callback purity, field equality laws, storage Provider
 concretization and universal native-to-proof extraction remain premises or
 separate obligations. No Lean/Quint source is changed by this implementation.
 
-* B23 native correspondence: protect lookup keys and column headers
+* Provider concretization native correspondence: protect lookup keys and column headers
 
-[[https://kmicinski.com/assets/byods.pdf][B23 Section 4 and Figure 1, PDF pages 11-12]] expose key lookup through a
+[[https://kmicinski.com/assets/byods.pdf][Provider concretization Section 4 and Figure 1, PDF pages 11-12]] expose key lookup through a
 shared Rust key reference. Our Scheme transfer cannot treat a mutable list
 passed to an open receiver as an immutable borrow. The tuple fields retain
 their existing stable-value premise, but the list header itself belongs to
@@ -194,9 +194,9 @@ header-copy work proportional to selected key width on custom receiver calls.
 No runtime improvement, general storage refinement or new theorem is claimed.
 
 
-* B23 native correspondence: isolate custom index row spines
+* Provider concretization native correspondence: isolate custom index row spines
 
-[[https://kmicinski.com/assets/byods.pdf][B23 Sections 3.1, 3.3 and 4]] distinguish represented facts, their injection
+[[https://kmicinski.com/assets/byods.pdf][Provider concretization Sections 3.1, 3.3 and 4]] distinguish represented facts, their injection
 and total/delta enumeration. In our Scheme split the storage/evaluation
 owner supplies those facts; a physical IndexProvider cannot overwrite them
 through a borrowed list. This is a concrete ownership requirement of the
@@ -239,7 +239,7 @@ No Lean/Quint source is changed by this Scheme implementation.
 
 * General Provider and custom-index admission progress (2026-10-07)
 
-B23 Section 3.3 equations (1)/(2) permit overlapping total/delta concretizations
+Provider concretization Section 3.3 equations (1)/(2) permit overlapping total/delta concretizations
 and require newly visible facts in delta. ProviderAdmission now states these
 abstract laws and derives arbitrary finite positive-body completeness directly
 from them, alongside growth and soundness. The Domain record is a proof-level

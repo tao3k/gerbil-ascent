@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-#+TITLE: X25 reading: mono types as a typed reasoning-language boundary
+#+TITLE: monotone containers reading: mono types as a typed reasoning-language boundary
 #+STATUS: primary-source and code-anchored research; no native mono type implemented
 #+DATE: 2026-10-05
 #+FILETAGS: :research:datalog:mono-types:language:proof:
@@ -59,8 +59,8 @@ participates in fixed-point evaluation.
 | =table/provider.ss= and =table/storage.ss= | Physical relation Providers and indexes | BYODS concretization and delta laws govern physical new-fact exposure; mono types govern source-language observations. One does not imply the other |
 | =program/session.ss= | Source replacement and withdrawal create a new completed snapshot | Recompute or prove a separate decremental algebra; =add= alone cannot justify reusing a container after source withdrawal |
 
-The [[file:datafun-f16.org][Datafun]] and [[file:datafun-s20.org][semi-naive Datafun]] notes cover typed monotonicity
-and finite higher-order change. [[file:byods-b23.org][BYODS]] covers concrete and delta
+The [[file:functional-fixed-points.org][Datafun]] and [[file:higher-order-change.org][semi-naive Datafun]] notes cover typed monotonicity
+and finite higher-order change. [[file:provider-concretization.org][BYODS]] covers concrete and delta
 Provider behavior. The [[file:../../scheme-compiler-proof-bridge.org][compiler proof bridge]] proves an abstract positive
 lowering kernel and finite-rank laws, but no native Scheme mono-type
 translation. The paper's Rocq proofs cannot be counted as Lean proofs of

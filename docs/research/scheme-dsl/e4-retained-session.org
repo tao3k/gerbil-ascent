@@ -17,8 +17,8 @@ Does admitting a first-class transformer once into the existing native
 Session retain the useful rule and relation state across calls while
 preserving its finite set meaning?
 
-[[https://www.cl.cam.ac.uk/~nk480/seminaive-datafun.pdf][Datafun S20]] studies a typed higher-order seminaive transformation for
-its language (§§5–9). [[file:dbsp-b22.org][DBSP B22]] frames view maintenance as a stream of
+[[https://www.cl.cam.ac.uk/~nk480/seminaive-datafun.pdf][Datafun higher-order change]] studies a typed higher-order seminaive transformation for
+its language (§§5–9). [[file:incremental-view-maintenance.org][DBSP incremental view maintenance]] frames view maintenance as a stream of
 snapshots and changes (§§1–3); its introduction notes that simply
 reconstructing the full dataset from each change does not itself yield
 an efficient incremental query. These papers motivate a *stateful
@@ -72,7 +72,7 @@ The composed Scheme language now uses =relational-session-transaction!=
 for =(fragment label rows)= updates spanning *different* fragments.
 Named =relational-program= sessions expose =relational-program-transaction!=
 with =(name . rows)= entries. Both reuse the same checked row boundary
-and the native Session's prospective solve. The [[file:deletion-h18.org][H18 deletion reading]] explains
+and the native Session's prospective solve. The [[file:deletion-rederivation.org][deletion rederivation deletion reading]] explains
 why recursive support counts or a different change algebra would be
 needed before replacing that full recomputation.
 
@@ -182,7 +182,7 @@ finite closure. These noisy timings preserve the retained-insertion
 hypothesis but do not isolate native rule work from admission, allocation
 or host contention. No optimizer change is admitted on this evidence.
 Whole-snapshot recomputation remains the withdrawal baseline; the
-[[file:deletion-h18.org][alternative-support and mixed-update gate]] must
+[[file:deletion-rederivation.org][alternative-support and mixed-update gate]] must
 pass before replacing it.
 
 * Remaining discriminators
@@ -199,5 +199,5 @@ pass before replacing it.
 - Keep the finite interpreter as a semantic check for operator rules;
   avoid claiming it shares the native Session's internal algorithm.
 
-[[file:reflection.org][Research reflection]]; [[file:datafun-s20.org][Datafun S20 note]];
+[[file:reflection.org][Research reflection]]; [[file:higher-order-change.org][Datafun higher-order change note]];
 [[file:../../scheme-relational-language-design.org][Scheme language design]].

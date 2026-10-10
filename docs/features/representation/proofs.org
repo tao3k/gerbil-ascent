@@ -12,8 +12,8 @@ source dates and qualification boundaries. Current evidence is commit-specific.
 
 Research inspection baseline: PR #1 =eb99600da0db227339e1f630c3a10ef706661ba7=.
 The following are design obligations derived from the inspected interfaces,
-not additional runtime capabilities or newly passed native tests. S20 §4.2,
-H18 §3–4, L25 §3.7 and B22 §4 were revisited for this audit. The earlier
+not additional runtime capabilities or newly passed native tests. higher-order change §4.2,
+deletion rederivation §3–4, program lifecycle §3.7 and incremental view maintenance §4 were revisited for this audit. The earlier
 receipt and CI observations above retain their historical source boundaries.
 
 ** Identity and equality have different owners
@@ -27,10 +27,10 @@ receipt and CI observations above retain their historical source boundaries.
 | Source occurrence | =candidate/provenance-graph.ss=: distinct frozen source positions supporting a row | Removing one of two identical occurrences leaves membership; removing the last founded support removes the row. Selectors retain original positions; derived rows never enter the source log |
 | Source authority | Caller/POO boundary, outside certificate hashing | A verified certificate establishes consistency with supplied inputs. It does not establish origin, freshness or completeness of those inputs |
 
-L25 §3.7 requires fresh private names on each evaluated rho abstraction.
+program lifecycle §3.7 requires fresh private names on each evaluated rho abstraction.
 Our transfer decision is a generativity and observable-equivalence obligation,
 not permission to alpha-normalize certificate bytes. Existing protocol tags and
-ordered encodings stay at their wire boundary. H18's distinction between
+ordered encodings stay at their wire boundary. deletion rederivation's distinction between
 recursive and nonrecursive derivations likewise cannot be replaced by counting
 equal output rows: a cycle without a remaining founded input must disappear.
 
@@ -92,9 +92,9 @@ remain distinct from native failure qualification.
 
 | Change family | Paper premise and present scope | Gate before optimization |
 |---------------+---------------------------------+--------------------------|
-| Increasing typed change | S20 §4.2 defines =df x dx= relating =f(x)= to =g(y)= when =dx= relates =x= to =y=. Current typed lowering has no such function-change translation | Define the change relation per admitted type and prove simultaneous function/argument application preservation. Tiny tests must include a changed argument and a change visible only at an unsampled input |
-| Source withdrawal | H18 keeps recursive and nonrecursive support distinct; recursive counters become useful only after overdeletion. Native Session currently invalidates/rederives affected components; the positive grounded kernel is a separate product | Prove source-only logs, support completeness and founded recovery before replacing component rederivation with grounded maintenance. Keep unrooted-cycle and last-support controls |
-| Signed stream change | B22 §4 represents changes with signed weights and derives set operators from Z-set operators. No corresponding circuit algebra is implemented here | Specify accumulation and set distinctness boundaries, then prove correspondence with snapshot solve. Duplicate source occurrences are not automatically signed multiplicities |
+| Increasing typed change | higher-order change §4.2 defines =df x dx= relating =f(x)= to =g(y)= when =dx= relates =x= to =y=. Current typed lowering has no such function-change translation | Define the change relation per admitted type and prove simultaneous function/argument application preservation. Tiny tests must include a changed argument and a change visible only at an unsampled input |
+| Source withdrawal | deletion rederivation keeps recursive and nonrecursive support distinct; recursive counters become useful only after overdeletion. Native Session currently invalidates/rederives affected components; the positive grounded kernel is a separate product | Prove source-only logs, support completeness and founded recovery before replacing component rederivation with grounded maintenance. Keep unrooted-cycle and last-support controls |
+| Signed stream change | incremental view maintenance §4 represents changes with signed weights and derives set operators from Z-set operators. No corresponding circuit algebra is implemented here | Specify accumulation and set distinctness boundaries, then prove correspondence with snapshot solve. Duplicate source occurrences are not automatically signed multiplicities |
 
 The ordered next work is therefore: concrete type/value interpretation;
 descriptor and rule-step preservation; separate batch/provisional transaction
@@ -107,8 +107,8 @@ MRR Rust integration keep their existing later gates.
 
 * Representation ownership review (2026-10-07)
 
-The [[file:../provider-views/design.org::#provider-owned-views][Provider-owned view review]] reads implementation =93e81c1= and reopens B23
-sections 3.3/4/5.1 and S20 sections 6.3/7. Its next architectural unit connects
+The [[file:../provider-views/design.org::#provider-owned-views][Provider-owned view review]] reads implementation =93e81c1= and reopens Provider concretization
+sections 3.3/4/5.1 and higher-order change sections 6.3/7. Its next architectural unit connects
 compressed storage to actual rule reads, delta, budgets, actor view lifetime and
 result ownership. Current =.extend-rows= and engine buffers retain expanded
 pairs; lazy result reversal does not establish compressed relation storage.

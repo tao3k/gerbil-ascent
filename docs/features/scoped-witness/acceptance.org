@@ -5,7 +5,7 @@
 
 * Paper requirement and implemented meaning
 
-[[https://proceedings.mlr.press/v306/miao26e.html][ML26 MatLogic]] section 2.1 distinguishes witness information lost by
+[[https://proceedings.mlr.press/v306/miao26e.html][scoped witness execution MatLogic]] section 2.1 distinguishes witness information lost by
 projection from exclusions drifting across disjunctive branches. Its cameo/lead
 example has identical projected answers but different exclusion outcomes.
 An answer-only post-filter cannot recover the missing witness attribute.

@@ -5,9 +5,9 @@
 Feature owner: [[file:../index.org][feature index]]. This page retains the original
 source dates and qualification boundaries. Current evidence is commit-specific.
 
-* B23 active-domain eqrel concretization (2026-10-06)
+* Provider concretization active-domain eqrel concretization (2026-10-06)
 
-The [[https://kmicinski.com/assets/byods.pdf][B23 primary paper]] sections 3.1 and 3.3 motivate a representation-specific
+The [[https://kmicinski.com/assets/byods.pdf][Provider concretization primary paper]] sections 3.1 and 3.3 motivate a representation-specific
 closure/frontier instance, rather than assuming arbitrary Providers satisfy
 Set semantics. =EquivalenceComponents= constructs active-domain reflexivity,
 symmetry and transitivity after each injection, least closure after every
@@ -21,7 +21,7 @@ This advances eqrel's semantic instance. General gamma/join/injection laws,
 other non-Set/custom lattice instances, universal Scheme equality/component
 extraction and native actor trace refinement remain distinct work. Existing
 Quint publication/credit/failure models are unchanged; Lean owns these algebraic
-laws. Published B23 performance does not establish a Scheme speedup.
+laws. Published Provider concretization performance does not establish a Scheme speedup.
 
 
 * UF root frontier proof progress (2026-10-07)
@@ -32,6 +32,6 @@ conclusion for that abstract construction. The SCC Quint publication model now
 constructs emitted delta rather than assigning its oracle value, and admits
 new endpoint activation explicitly. Three frontier mutations discriminate the
 previous model's missing coverage. Native optimized remapping and grouped
-encoding still require implementation correspondence; complete B23 replication
+encoding still require implementation correspondence; complete Provider concretization replication
 and its application experiments remain governed by the matrix above.
 

@@ -1,14 +1,14 @@
 # SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-#+TITLE: F16 reading: Datafun and the boundary of functional fixed points
+#+TITLE: functional fixed points reading: Datafun and the boundary of functional fixed points
 #+STATUS: deep research note; no Scheme monotonicity or termination proof
 #+DATE: 2026-09-30
 #+FILETAGS: :research:datafun:scheme-dsl:
 
 * Bibliography
 :PROPERTIES:
-:CUSTOM_ID: datafun-f16
+:CUSTOM_ID: functional-fixed-points
 :SOURCE_PDF: https://www.cl.cam.ac.uk/~nk480/datafun.pdf
 :ACCESSED: 2026-09-30
 :END:
@@ -29,7 +29,7 @@ from one.  The URL and locators are the saved research source.
 | §3.4.1, PDF p. 4 | An explicit upper bound makes the state space finite-height | Explore an admitted finite domain | Datafun's clamping need not be our behavior |
 | §4.1, Fig. 5, PDF pp. 6–7 | Discrete application clears the monotone context | Keep changing relations out of opaque Scheme calls | Captured state is not statically visible |
 | §4.3–4.4, PDF p. 7 | Conditional and singleton introduction restrict changing inputs | Projection and filtering have distinct obligations | Generic procedures bypass these checks |
-| §9, PDF p. 12 | Higher-order optimization was future work in 2016 | Preserve our first-order join plan now | [[file:datafun-s20.org][The 2020 follow-up]] later addresses this question |
+| §9, PDF p. 12 | Higher-order optimization was future work in 2016 | Preserve our first-order join plan now | [[file:higher-order-change.org][The 2020 follow-up]] later addresses this question |
 
 * Core semantic distinction
 :PROPERTIES:
@@ -132,7 +132,7 @@ being placed behind =relation-view=.  A restricted declaration with
 executable admission checks is a plausible first step.  A Datafun-like
 monotonicity checker would be a separate, larger language project.
 This 2016 paper treats higher-order fixed-point optimization as
-research.  The [[file:datafun-s20.org][2020 follow-up]] later develops a
+research.  The [[file:higher-order-change.org][2020 follow-up]] later develops a
 semi-naive transformation for typed higher-order Datafun, so the
 historical observation must not be read as a permanent impossibility.
 Neither paper supplies matched performance evidence for this Gerbil

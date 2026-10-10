@@ -5,6 +5,16 @@
 Current module boundaries and algorithm ownership. Study notes and receipts retain their original revision and scope;
 historical source paths and timings are not current qualification claims.
 
+* Feature names connect research and implementation
+
+Name research notes, document headings, index entries and test descriptions after
+the implementation responsibility, such as =scoped-witness=, =candidate-feedback=
+and =provider-concretization=. Use the same name in the Scheme implementation,
+Lean/Quint correspondence and acceptance links where that responsibility exists.
+Each research note retains the full paper title, authors, venue and primary-source
+link. Publication years belong in the source citation. An unimplemented research
+mechanism must keep its pending status visible.
+
 * Runtime bindings have one core owner
 
 =core/rule-bindings.ss= owns environment projection, callback invocation,

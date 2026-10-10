@@ -1,14 +1,14 @@
 # SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-#+TITLE: H13 reading: µKanren's Scheme core and its search boundary
+#+TITLE: relational kernel reading: µKanren's Scheme core and its search boundary
 #+STATUS: research note; not an execution-equivalence claim
 #+DATE: 2026-09-30
 #+FILETAGS: :research:microkanren:scheme-dsl:
 
 * Bibliography
 :PROPERTIES:
-:CUSTOM_ID: microkanren-h13
+:CUSTOM_ID: relational-kernel
 :SOURCE_PDF: https://www.schemeworkshop.org/2013/papers/HemannMuKanren2013.pdf
 :ACCESSED: 2026-09-30
 :END:

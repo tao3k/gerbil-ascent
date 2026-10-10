@@ -44,9 +44,9 @@ An item closes only when all of the following evidence agrees:
 6. Verify ASCENT CI and pinned reference versions against the final GitHub
    commit. External consumer integration and consumer pins are separate work.
 
-Sources: [[https://thomas.gilray.org/pdf/seamless-deductive.pdf][A22]] and [[https://kmicinski.com/assets/byods.pdf][B23]], reread on 2026-10-05.
-A22 presents parallelization as future work; the current actor architecture adds
-engineering obligations. B23's custom data structure interface and application
+Sources: [[https://thomas.gilray.org/pdf/seamless-deductive.pdf][rule planning]] and [[https://kmicinski.com/assets/byods.pdf][Provider concretization]], reread on 2026-10-05.
+rule planning presents parallelization as future work; the current actor architecture adds
+engineering obligations. Provider concretization's custom data structure interface and application
 experiments require separate acceptance. Published performance numbers do not
 constitute Scheme performance evidence.
 
@@ -110,7 +110,7 @@ implementation correspondence.
 
 * BYODS design coverage
 
-B23 section 3 concretization and total/delta conditions, section 4 interfaces,
+Provider concretization section 3 concretization and total/delta conditions, section 4 interfaces,
 and section 5 data structures and applications each require acceptance.
 Three built-in closure Providers alone do not cover the entire paper.
 
@@ -135,8 +135,8 @@ loader has its own CI gate after an interpreter import failure escaped native
 qualification. This slice advances implementation correspondence; the complete
 paper applications and universal native refinements above remain open.
 
-The [[file:scheme-research-proof-audit.org][research/proof audit]] maps F16/S20 monotone types and finite height, H13
-binding, F20/L25 embedding, H18 deletion, B22 change maintenance and provenance.
+The [[file:scheme-research-proof-audit.org][research/proof audit]] maps functional fixed points/higher-order change monotone types and finite height, relational kernel
+binding, fragment composition/program lifecycle embedding, deletion rederivation deletion, incremental view maintenance change maintenance and provenance.
 Its native refinement, arbitrary syntax/host value, general maintenance and
 semantic benefit gaps remain applicable. ProviderFrontier does not discharge
 those separate statements. Existing proof models express named contracts or
@@ -164,7 +164,7 @@ specific obligations; historical progress paragraphs do not close a package.
 | 5. API and diagnostic coverage | program/syntax.ss, summary.ss, schema and admission owners | Inventory every pinned Rust syntax/attribute/API/diagnostic family, implement the admitted Scheme counterparts, and retain declared semantic divergences with independent negative admission cases. |
 | 6. Concurrent extensibility and partitioning | actor eligibility, component-worker and Provider owners | Define lawful concurrent custom-domain/lattice capabilities before enabling them; implement large-task partitioning and ownership-safe execution, including cancel, late/duplicate output and exact semantic controls. |
 | 7. Maintenance and evidence | source-log.ss, update-selection.ss, candidate/provenance-graph.ss and stratified evidence | Integrate finer grounded maintenance with retained Session transactions without changing candidate authority; validate founded alternatives, simultaneous withdrawal, negation/aggregate observations and each claimed provenance valuation. |
-| 8. Typed function changes | program/higher-order.ss and operator lowering | Implement an actual S20 insertion-change compiler transformation with base-dependent function/argument changes, lexical captures and nested arrows; prove preservation against full evaluation before claiming saved work. |
+| 8. Typed function changes | program/higher-order.ss and operator lowering | Implement an actual higher-order change insertion-change compiler transformation with base-dependent function/argument changes, lexical captures and nested arrows; prove preservation against full evaluation before claiming saved work. |
 | 9. Complete paper applications | native Scheme application modules and independent truth/oracle fixtures | Deliver Steensgaard, Polonius, PageRank and LLVM/index-sharing counterparts with complete program/input identity and full outputs. Small graph fixtures do not replace the paper workloads. |
 | 10. Whole-application benefit | existing native benchmark framework and structured evidence | Paired identical-input semantic controls and alternating measurements covering admission, planning, invalidation, solve and publication; record work, CPU, wall, allocation and peak memory, including regressions. |
 

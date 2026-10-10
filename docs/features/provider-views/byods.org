@@ -14,7 +14,7 @@ binary rectangle laws under explicit disjointness and frontier premises;
 =ProviderViews= explores ownership/publication and detects five seeded faults.
 Independent Floyd checks connect native views to concrete graph observations.
 This validates the next representation unit without claiming the evaluator has
-stopped retaining all pairs or that B23's application speedups are reproduced.
+stopped retaining all pairs or that Provider concretization's application speedups are reproduced.
 
 
 * Component ownership and shared-reader refinement (2026-10-07)

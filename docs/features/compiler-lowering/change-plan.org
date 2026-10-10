@@ -84,12 +84,12 @@ cases. The existing SessionTransaction model/faults requalify the surrounding
 publication contract; they do not mechanically map this record implementation.
 The surrounding owner must serialize mutation of a maintenance state.
 
-The WD26 native Suite now combines BRINK withholding, scoped queries and DB26
+The Wikidata scoped exclusion native Suite now combines BRINK withholding, scoped queries and candidate execution feedback
 full-row feedback. Withholding Boston's direct country fact preserves its admin
 path but loses its scoped answer because the capital exclusion still applies.
 The independent reference exposes that loss; stale receipts fail the new cut.
 This finite executor experiment has no model synthesis score.
-Another WD26 case withdraws the Massachusetts-to-US administrative edge from a
+Another Wikidata scoped exclusion case withdraws the Massachusetts-to-US administrative edge from a
 complete positive grounded graph. Its preview, an independent source-pair walk
 and a fresh generation-bound candidate solve must agree on the remaining cities;
 the old state and receipt remain bound to the original cut.

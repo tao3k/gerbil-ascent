@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-#+TITLE: WD26 fixture: scoped exclusion on pinned Wikidata entity revisions
+#+TITLE: Wikidata scoped exclusion fixture: scoped exclusion on pinned Wikidata entity revisions
 #+STATUS: bounded executable fixture; no model score or world-completeness claim
 #+DATE: 2026-10-05
 #+FILETAGS: :research:wikidata:reasoning:qualification:
@@ -88,4 +88,4 @@ by itself establish natural-language intent fidelity. The tiny extract
 does not qualify [[https://proceedings.mlr.press/v306/miao26e.html][MatLogic]]'s reported benchmark, a population
 estimate, or an MRR publication path.
 
-[[file:reasoning-language-formal-agenda.org][Reasoning-language agenda]]; [[file:matlogic-ml26.org][MatLogic reading]].
+[[file:reasoning-language-formal-agenda.org][Reasoning-language agenda]]; [[file:scoped-witness.org][MatLogic reading]].

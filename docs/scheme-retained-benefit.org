@@ -242,7 +242,7 @@ objects and is neither live heap nor peak RSS. No speed threshold, selected
 retry or significance claim was used. Shared-host interference remains possible;
 timings from parallel CI are not automatically new qualified cost receipts.
 
-The support-withdrawal and cyclic cases connect H18's support distinction to
+The support-withdrawal and cyclic cases connect deletion rederivation's support distinction to
 the admitted source-update path; they do not implement DRedc or DBSP signed
 circuits. =SourceUpdateFrame.source_frame= / =completed_reuse= retain
 =readsMatch= and completed-fixed-point premises. Rejection and old-snapshot

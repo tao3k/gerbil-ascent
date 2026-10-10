@@ -3,7 +3,7 @@
 #+TITLE: Taint paths: finite graph acceptance
 #+DATE: 2026-10-09
 
-[[file:../../research/agent-inference/iris-ir25.org][IRIS method reading]] owns paper correspondence and remaining Java/model gates.
+[[file:../../research/agent-inference/taint-paths.org][IRIS method reading]] owns paper correspondence and remaining Java/model gates.
 [[file:../../../applications/taint-paths.ss][Program construction]] uses ordinary sources, relations, stratified negation and
 Session replacement. The caller owns finite graph extraction and source/sink/
 sanitizer specifications. An alert means an unsanitized graph path only.

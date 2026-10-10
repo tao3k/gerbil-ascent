@@ -7,7 +7,7 @@ source dates and qualification boundaries. Current evidence is commit-specific.
 
 * Completed closure reuse has a different state obligation (2026-10-06)
 
-B23 §3.3, PDF pp. 7–9, relates each represented total/delta pair to its
+Provider concretization §3.3, PDF pp. 7–9, relates each represented total/delta pair to its
 concretization. It does not establish that copying enumerated closure rows
 reconstructs an arbitrary Provider's private mutable state. In this Scheme
 implementation, =gerbil-ascent-update-eligible?= admits exact Set storage or
@@ -37,7 +37,7 @@ boundary. See [[file:../../evidence/scheme-reuse-owner-20261006/receipt.json][th
 
 * Source reconstruction retires incremental state (2026-10-07)
 
-B23 §3, PDF pp. 5–9, distinguishes injected source facts from a Provider's
+Provider concretization §3, PDF pp. 5–9, distinguishes injected source facts from a Provider's
 concretized relation. Recovery has a corresponding Scheme ownership rule:
 the new candidate is built from retained source logs, not from the interrupted
 materialized relation or its counters. This rule is an implementation inference;
@@ -72,7 +72,7 @@ ownership; it makes no theorem, rollback or speedup claim.
 
 * Eager recomputation must preserve Session snapshot ownership (2026-10-07)
 
-B23's concretization maps private relation state to facts used by evaluation.
+Provider concretization's concretization maps private relation state to facts used by evaluation.
 In a mutable host language, accepting or enumerating those facts also needs
 an ownership boundary: external list mutation must not rewrite an admitted
 source cut or the facts of a previously published result. This is a Scheme
@@ -106,7 +106,7 @@ to fresh committed round boundaries. See
 
 * Source admission recovery follows the complete flush footprint (2026-10-07)
 
-B23 §3.3 decomposes a database into total and delta states for semi-naïve
+Provider concretization §3.3 decomposes a database into total and delta states for semi-naïve
 iteration; Theorem 3.5 relates the resulting semantics to naïve evaluation.
 Its §5.5 separates logical index requirements from physical representations.
 These logical conditions do not specify recovery from mutable host exceptions.

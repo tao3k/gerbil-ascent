@@ -7,7 +7,7 @@ source dates and qualification boundaries. Current evidence is commit-specific.
 
 * General Provider and custom-index admission progress (2026-10-07)
 
-B23 Section 3.3 equations (1)/(2) permit overlapping total/delta concretizations
+Provider concretization Section 3.3 equations (1)/(2) permit overlapping total/delta concretizations
 and require newly visible facts in delta. ProviderAdmission now states these
 abstract laws and derives arbitrary finite positive-body completeness directly
 from them, alongside growth and soundness. The Domain record is a proof-level
@@ -28,7 +28,7 @@ for proof ownership, implementation seams and admission evidence.
 
 * Multi-column Provider lookup (2026-10-07)
 
-The B23 Section 4 logical-index obligation now has universal selected-coordinate,
+The Provider concretization Section 4 logical-index obligation now has universal selected-coordinate,
 candidate-coverage, ordered-output, key-permutation and repeated-key laws in
 ProviderRouting. Separate Quint checks exercise independent lazy row/parts cursor
 completion and four incorrect traversals. The source correspondence is explicit:

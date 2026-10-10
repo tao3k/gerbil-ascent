@@ -67,7 +67,7 @@ It includes allocation and assignment injection plus the full store/load/field
 join. Its explicit arm includes symmetry/reflexivity and transitivity rules.
 The rule source is pinned at
 [[https://github.com/s-arash/ascent/blob/03f4f792442ecaf9e4f178a6a1b5840eab526388/byods/ascent-byods-rels/examples/steensgaard/main.rs][the upstream Steensgaard application]].
-B23 Section 5.2 motivates this application; its paper timings are not Scheme
+Provider concretization Section 5.2 motivates this application; its paper timings are not Scheme
 measurements.
 
 Scheme's independent partition saturation and Rust's independent undirected
@@ -90,7 +90,7 @@ count 440,438,706 implied pairs, with a largest class of 20,956 members. This
 qualifies full-input cardinality agreement in the Rust reference, not full
 Scheme solving, tuple-by-tuple full-data correspondence or continuous peak memory. Inspection identifies a concrete
 architecture gap: current eqrel component state still emits expanded pairs into
-the engine's eager row buffers. B23's linear storage argument requires retaining
+the engine's eager row buffers. Provider concretization's linear storage argument requires retaining
 implicit total/delta equivalence views, not merely fewer closure rules. The
 current complete rule program and finite speed measurements do not establish
 that memory bound. Compressed eqrel publication, source recovery and ordered

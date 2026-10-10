@@ -70,7 +70,7 @@ zero with native module/harness markers and explicit =OK=. Policy build exited
 zero with 17 findings and no errors. An intermediate malformed fixture is
 retained as development history, separate from the semantic counterexample.
 
-The [[file:../../research/scheme-dsl/byods-b23.org][B23 follow-up]] explains the concretization/index distinction as an
+The [[file:../../research/scheme-dsl/provider-concretization.org][Provider concretization follow-up]] explains the concretization/index distinction as an
 implementation inference. No algebraic theorem or performance claim is added.
 The 545-file Scheme source digest was checked unchanged across the final
 qualification. Full CI remains bound to the subsequent pushed revision.
@@ -102,7 +102,7 @@ the prior 32-fact result. The existing deletion matrix covers source log order,
 duplicates, lattice budgets, independent reuse and successive withdrawals.
 Policy build exited zero with 17 findings and no errors.
 
-The [[file:../../research/scheme-dsl/byods-b23.org][B23 follow-up]] distinguishes source injection logs, concretized relation
+The [[file:../../research/scheme-dsl/provider-concretization.org][Provider concretization follow-up]] distinguishes source injection logs, concretized relation
 facts and transient engine counters. This is a code-supported recovery design
 inference, not an extension of the paper's theorem to arbitrary callback
 exceptions. Full CI remains bound to the subsequent pushed revision.
@@ -136,7 +136,7 @@ replacement and nonpositive updates, resumed rounds and failed resume recovery;
 delete/update checks retain source order, budgets and rollback behavior.
 Policy build exited zero with 17 findings and no errors.
 
-The [[file:../../research/scheme-dsl/byods-b23.org][B23 ownership follow-up]] is an implementation inference from stable
+The [[file:../../research/scheme-dsl/provider-concretization.org][Provider concretization ownership follow-up]] is an implementation inference from stable
 concretized facts. It does not prove arbitrary host effects or add a theorem
 or performance qualification. Full CI must be read at the new pushed revision.
 
@@ -172,7 +172,7 @@ fresh custom-index lookup rejected duplicate result rows, and pending recovery
 fell back to the committed source cut. Its failing runs and diagnostic are
 retained separately. This slice qualifies distinct-row pending reconstruction;
 it does not qualify a replay that itself fails or external callback rollback.
-The [[file:../../research/scheme-dsl/byods-b23.org][B23 flush-footprint inference]] connects the implementation boundary to
+The [[file:../../research/scheme-dsl/provider-concretization.org][Provider concretization flush-footprint inference]] connects the implementation boundary to
 §3.3's total/delta decomposition and §5.5's logical/physical index distinction.
 No Lean/Quint theorem or performance claim is added. Full CI remains tied to
 the subsequently pushed revision.

@@ -67,7 +67,7 @@ withdrawals, lattice reused budget and opaque/mutable reuse refusal. The
 [[file:../../evidence/scheme-reuse-owner-20261006/receipt.json][receipt]] binds these checks to source and log digests. These are focused
 local results; full remote CI must be read at the new pushed revision.
 
-The [[file:../../research/scheme-dsl/byods-b23.org][B23 follow-up]] distinguishes concretized total/delta facts from private
+The [[file:../../research/scheme-dsl/provider-concretization.org][Provider concretization follow-up]] distinguishes concretized total/delta facts from private
 Provider reconstruction. Custom and graph storage do not qualify for completed
 closure reuse. No theorem owner, public Provider protocol or performance
 qualification changed in this slice.

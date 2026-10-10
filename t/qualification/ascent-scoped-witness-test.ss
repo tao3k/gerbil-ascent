@@ -18,7 +18,7 @@
   (check-equal? (length actual) (length expected))
   (for-each (lambda (row) (check-equal? (and (member row actual) #t) #t)) expected))
 (def ascent-scoped-witness-test
-  (test-suite "ML26 witness scope before projection"
+  (test-suite "Scoped witness execution before projection"
     (test-case "all 256 foreign input states agree on witnesses and answers"
       (let ((corpus (call-with-input-file "t/qualification/fixtures/scoped-witness/conformance.json" read-json))
             (sessions (make-hash-table-eqv)))

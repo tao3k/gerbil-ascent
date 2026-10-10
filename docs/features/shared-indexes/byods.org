@@ -18,7 +18,7 @@ layout faults must produce the named consistency/lifetime counterexamples.
 Native direct-column truth also checks changing caller-owned headers between
 helper calls and malicious callback header mutation. Declared engine layouts
 and mutable low-level helper inputs have different ownership contracts; the
-protocol model covers the former. The [[file:proofs.org::*B23 constructed column projection and index layout lifetime (2026-10-08)][implementation/proof correspondence]] and
+protocol model covers the former. The [[file:proofs.org::*Provider concretization constructed column projection and index layout lifetime (2026-10-08)][implementation/proof correspondence]] and
 [[file:../../evidence/scheme-column-projection-20261008/receipt.json][source-bound acceptance]] retain native hash equality, curried visitors and
 complete application benefit as further obligations.
 
@@ -33,7 +33,7 @@ restoration from occurrence permutations. Quint separately checks reusable
 cached views through private extension, failure and rebuild, retaining the
 held-reader invariant. Native qualification enumerates all six three-column
 permutations and every prefix depth over 64 source histories with direct-column
-truth and frozen-reference comparisons. See [[file:proofs.org::*B23 curried collection, ordinal restoration and cached views (2026-10-08)][the proof/implementation bridge]] and
+truth and frozen-reference comparisons. See [[file:proofs.org::*Provider concretization curried collection, ordinal restoration and cached views (2026-10-08)][the proof/implementation bridge]] and
 [[file:qualification.org::*Curried collection qualification][feature qualification]]. Full native hash/trie refinement, complete native adapter
 extraction and complete application benefit remain separate acceptance gates.
 
@@ -46,7 +46,7 @@ comparison of that key implements the original logical constraints. Distinct
 columns admit arbitrary positional values, including false fields. Missing
 columns and overlong requests have explicit rejection laws. Native malformed
 requests are checked across cold, warm and extended views without changing
-published results. See [[file:proofs.org::*B23 constructed logical key adaptation (2026-10-08)][the adapter bridge]] and
+published results. See [[file:proofs.org::*Provider concretization constructed logical key adaptation (2026-10-08)][the adapter bridge]] and
 [[file:qualification.org::*Logical key adaptation qualification][feature qualification]]. The Quint lifecycle model remains separate from
 positional algebra. Complete native extraction and paper-scale application
 benefits are not established by these laws.
@@ -60,7 +60,7 @@ permutation is derived from construction and unique covered child inventories;
 the restored result equals the direct ordered filter through finite histories.
 Duplicate and missing inventory controls reject broken enumeration. Native
 tests add sparse layouts at depths one through five with all prefixes, row
-identity and held readers. See [[file:proofs.org::*B23 constructed curried trie and prefix occurrences (2026-10-08)][the construction bridge]] and
+identity and held readers. See [[file:proofs.org::*Provider concretization constructed curried trie and prefix occurrences (2026-10-08)][the construction bridge]] and
 [[file:qualification.org::*Trie construction qualification][feature qualification]]. Per-node native hash extraction, primitive
 correspondence and complete application benefits remain distinct obligations.
 
@@ -68,7 +68,7 @@ correspondence and complete application benefits remain distinct obligations.
 
 The section 5.5 nested-dictionary representation is now modeled by constructed
 inventories at each path, with independent sibling enumeration orders, rather
-than a common global key list. [[file:proofs.org::*B23 materialized per-node inventories (2026-10-08)][Lean establishes occurrence-preserving lookup]];
+than a common global key list. [[file:proofs.org::*Provider concretization materialized per-node inventories (2026-10-08)][Lean establishes occurrence-preserving lookup]];
 native Scheme checks its concrete observable result. Quint explores shared-root
 publication and failure recovery. The paper's representation argument is not
 promoted to a measured memory or application-speed claim without matched data.

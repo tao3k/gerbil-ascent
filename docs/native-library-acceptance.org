@@ -97,7 +97,7 @@ semantic equivalence. Change the insertion algorithm only for a
 repeatable matched gain on the same program and budget. A deletion
 algorithm needs alternative-support, last-support, cycle, lower-stratum
 and failed-update cases before it can replace recomputation. See
-[[file:research/scheme-dsl/deletion-h18.org][the deletion discriminator]].
+[[file:research/scheme-dsl/deletion-rederivation.org][the deletion discriminator]].
 The [[file:research/scheme-dsl/e4-retained-session.org][current local
 rerun]] checks identical outputs but ran under high host load; it does
 not admit an optimizer change. This gate therefore retains the existing
@@ -146,7 +146,7 @@ checks are specified in [[file:llm-reasoning-library-plan.org::*Integrated ASCEN
 The next work is organized by capability and its admission gate.
 
 The first joint acceptance case now follows one input through the
-[[file:research/scheme-dsl/ascent-a22.org][Ascent paper's fixed-point boundary]],
+[[file:research/scheme-dsl/rule-planning.org][Ascent paper's fixed-point boundary]],
 pinned Rust 0.8.0, this Scheme Library, and the POO Flow Python model
 caller. =model_study_negation_count_matches_finite_expectations= in
 =rust/ascent-oracle/tests/integration/clause_composition.rs= pins the Rust

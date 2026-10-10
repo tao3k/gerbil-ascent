@@ -16,7 +16,7 @@ insertion through recursion while preserving the complete set meaning,
 and avoid work that a second complete interpretation performs? This is
 the local E4 discriminator in [[file:reflection.org::#scheme-dsl-ab-protocol][the preregistered comparison]].
 
-The [[https://www.rntz.net/files/seminaive-datafun.pdf][Datafun S20 paper]] defines a typed higher-order change translation and
+The [[https://www.rntz.net/files/seminaive-datafun.pdf][Datafun higher-order change paper]] defines a typed higher-order change translation and
 proves correctness for its calculus (§§5–8). Its evaluation (§9, PDF
 pp. 25–26) reports that the raw translation alone brings only a modest
 gain in its two chosen workloads; simplification of zero changes is
@@ -108,4 +108,4 @@ Flix, Ascent or the native indexed rule engine.
 - Give deletions and changing nested fixed points separate equivalence
   arguments. The insertion equation does not justify either one.
 
-[[file:datafun-s20.org][S20 reading]]; [[file:reflection.org][research reflection]].
+[[file:higher-order-change.org][higher-order change reading]]; [[file:reflection.org][research reflection]].

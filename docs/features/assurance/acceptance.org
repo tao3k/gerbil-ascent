@@ -9,7 +9,7 @@ source dates and qualification boundaries. Current evidence is commit-specific.
 
 [[file:../../scheme-trrel-uf-design.org][Implementation design]] and [[file:../../evidence/scheme-trrel-uf-20261005/receipt.json][qualification receipt]] supersede the previously
 identified missing UF representation. That historical receipt remains immutable;
-this follow-up closes the implementation gap, not all B23 formal/performance gaps.
+this follow-up closes the implementation gap, not all Provider concretization formal/performance gaps.
 
 The subsequent rebased union-find snapshot passes 76 native modules and 648
 Cases with successful parent final verification. It has native SCC compression

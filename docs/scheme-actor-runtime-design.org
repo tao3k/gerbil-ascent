@@ -100,11 +100,11 @@ work; ticker messages do not satisfy the test progress gate.
 
 | Source | Verified premise | Runtime obligation |
 |--------+------------------+--------------------|
-| [[https://thomas.gilray.org/pdf/seamless-deductive.pdf][A22]], §4, PDF pp. 6–7 | Join-column index selection, dependency SCCs and total/delta variants remain visible in the compiler | Parallel partitions preserve binder/key completeness and consume the same frozen logical frontier |
-| [[https://kmicinski.com/assets/byods.pdf][B23]], §3.3, PDF pp. 7–9 | Total/delta concretizations must expose newly implied facts to semi-naive consumers | Worker completion includes Provider expansion; raw insertion batches alone cannot close a round |
-| [[https://www.cl.cam.ac.uk/~nk480/datafun.pdf][F16]], §5.2–5.3, Lemma 4 | Monotonicity plus finite height establishes least-fixed-point termination | Round merge must preserve the operator/order; actor scheduling alone supplies neither premise |
-| [[https://arxiv.org/pdf/2203.16684][B22]], §2 and §5–6 | Synchronous stream positions and recursive iteration positions have distinct semantic roles | Separate transaction generation from inner round. Our positive set union does not implement signed Z-set change semantics |
-| [[file:research/scheme-dsl/deletion-h18.org][H18]] and [[file:research/scheme-dsl/datafun-s20.org][S20]] | Recursive support recovery and higher-order typed changes have their own premises | Initially retain affected-component rederivation; parallel scheduling does not authorize new deletion or function-delta semantics |
+| [[https://thomas.gilray.org/pdf/seamless-deductive.pdf][rule planning]], §4, PDF pp. 6–7 | Join-column index selection, dependency SCCs and total/delta variants remain visible in the compiler | Parallel partitions preserve binder/key completeness and consume the same frozen logical frontier |
+| [[https://kmicinski.com/assets/byods.pdf][Provider concretization]], §3.3, PDF pp. 7–9 | Total/delta concretizations must expose newly implied facts to semi-naive consumers | Worker completion includes Provider expansion; raw insertion batches alone cannot close a round |
+| [[https://www.cl.cam.ac.uk/~nk480/datafun.pdf][functional fixed points]], §5.2–5.3, Lemma 4 | Monotonicity plus finite height establishes least-fixed-point termination | Round merge must preserve the operator/order; actor scheduling alone supplies neither premise |
+| [[https://arxiv.org/pdf/2203.16684][incremental view maintenance]], §2 and §5–6 | Synchronous stream positions and recursive iteration positions have distinct semantic roles | Separate transaction generation from inner round. Our positive set union does not implement signed Z-set change semantics |
+| [[file:research/scheme-dsl/deletion-rederivation.org][deletion rederivation]] and [[file:research/scheme-dsl/higher-order-change.org][higher-order change]] | Recursive support recovery and higher-order typed changes have their own premises | Initially retain affected-component rederivation; parallel scheduling does not authorize new deletion or function-delta semantics |
 
 The scheduling protocol is our synthesis. None of these papers proves the
 Gerbil actor implementation, cancellation protocol or performance claim.
@@ -260,13 +260,13 @@ closure or native refinement of all =ActorRound.qnt= actions.
 
 ** Paper obligations mapped to this slice
 
-[[https://thomas.gilray.org/pdf/seamless-deductive.pdf][A22]], §4, printed pp.82–83, derives SCC dependency ordering and partitions
+[[https://thomas.gilray.org/pdf/seamless-deductive.pdf][rule planning]], §4, printed pp.82–83, derives SCC dependency ordering and partitions
 new/delta/total before semi-naive traversal. Frozen round views and the complete
 merge barrier preserve that separation. This implementation still schedules the
 existing stratum, not the paper's SCC DAG independently; SCC scheduling therefore
 remains an explicit next obligation.
 
-[[https://kmicinski.com/assets/byods.pdf][B23]], §3.3, printed pp.264:8–9, requires total/delta concretizations to expose
+[[https://kmicinski.com/assets/byods.pdf][Provider concretization]], §3.3, printed pp.264:8–9, requires total/delta concretizations to expose
 all implied facts; a new implied tuple may not bypass delta. Canonical Set is the
 first admitted parallel subset. Custom Provider/lattice paths retain serial
 execution until their concretization and ordering contracts have a native
@@ -341,13 +341,13 @@ the POO slot expression. Both rejected attempts remain in the evidence receipt.
 
 ** Research and proof correspondence
 
-[[https://arxiv.org/pdf/2203.16684][B22]], §6, pp.9–10, separates the outer update time from inner recursive time
+[[https://arxiv.org/pdf/2203.16684][incremental view maintenance]], §6, pp.9–10, separates the outer update time from inner recursive time
 through nested streams indexed by pairs of naturals. Our Session generation and
 inner solver round are distinct coordinates inspired by that separation. The
 fresh-cut Set implementation is not DBSP signed-change incrementalization, and
 the generation counter is not a runtime cutoff.
 
-[[https://thomas.gilray.org/pdf/seamless-deductive.pdf][A22]], §4, pp.82–83, traverses the SCC graph in dependency order. The current
+[[https://thomas.gilray.org/pdf/seamless-deductive.pdf][rule planning]], §4, pp.82–83, traverses the SCC graph in dependency order. The current
 Session actor owns a complete cut and runs the existing stratum worker engine;
 it does not yet dispatch ready independent SCCs. That future scheduler must
 retain component-local round completion while releasing independent ready SCCs.
@@ -451,12 +451,12 @@ do not prove the complete Gerbil/Tarjan/head-projection/VM refinement or livenes
 
 ** Paper obligations and performance boundary
 
-[[https://thomas.gilray.org/pdf/seamless-deductive.pdf][A22]], §4, pp.82–83, identifies SCC dependency order and local total/delta/new
+[[https://thomas.gilray.org/pdf/seamless-deductive.pdf][rule planning]], §4, pp.82–83, identifies SCC dependency order and local total/delta/new
 state. The implementation now maps those premises to component-local native
 state and ready predecessor admission. Its owner-controlled global publication
 condition is retained when topological traversal becomes asynchronous dispatch.
 
-[[https://kmicinski.com/assets/byods.pdf][B23]], §3.3, p.264:9, shows why implied facts must not skip delta into total.
+[[https://kmicinski.com/assets/byods.pdf][Provider concretization]], §3.3, p.264:9, shows why implied facts must not skip delta into total.
 The SCC subset remains canonical Set/hash storage with no lattice or field
 callbacks. Custom Provider concurrency requires its own concretization and
 mutation contract; Set union alone does not establish that contract.
@@ -508,7 +508,7 @@ operations own a mutex; lowering is outside critical sections. Concurrent cold
 callers may build equivalent duplicate metadata. Single-flight compilation,
 weak-key lifetime and native allocation ownership are not proven here.
 
-[[https://thomas.gilray.org/pdf/seamless-deductive.pdf][A22]], §4, pp.82–83, computes SCCs and incrementalization before generated
+[[https://thomas.gilray.org/pdf/seamless-deductive.pdf][rule planning]], §4, pp.82–83, computes SCCs and incrementalization before generated
 execution. We infer an ownership requirement for our architecture: immutable
 component lowering belongs to the declaration lifetime, while relation state
 belongs to a solve. This cache implements that separation for our relation SCC
@@ -556,7 +556,7 @@ root. Empty batches leave the total version unchanged. All indexes are private;
 a failed extension cannot publish a completed SCC. Existing credit, join,
 cancellation and owner global budget/publication rules remain in force.
 
-[[https://thomas.gilray.org/pdf/seamless-deductive.pdf][A22]], §4, pp.82–83, assigns indexes to relation usage and maintains them
+[[https://thomas.gilray.org/pdf/seamless-deductive.pdf][rule planning]], §4, pp.82–83, assigns indexes to relation usage and maintains them
 when generated kernels insert derived rows. We apply that obligation to the
 worker's dynamic total relation. The paper does not prove our native physical
 cache/version installation, which is a separate qualification boundary.
@@ -617,8 +617,8 @@ reset and refused-credit preservation. Existing Quint credit/drain checks cover
 capacities 1/2/3 plus an early-return negative control; they do not model this
 counter or refine the native VM. Generations remain unbounded.
 
-This is an implementation inference from our owner-credit protocol. A22's
-SCC/delta planning and B23's Provider contracts do not establish a cancellation
+This is an implementation inference from our owner-credit protocol. rule planning's
+SCC/delta planning and Provider concretization's Provider contracts do not establish a cancellation
 protocol or authorize concurrent custom Providers. Measurements and limits are
 recorded in [[file:evidence/scheme-credit-observation-20261005/receipt.json][the receipt]]. No overall Runtime, LLM or multicore benefit is established.
 

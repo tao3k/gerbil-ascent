@@ -9,7 +9,7 @@ source dates and qualification boundaries. Current evidence is commit-specific.
 
 ** Research question and algebraic repair
 
-B23 section 3.2 requires newly implied facts to traverse the delta observation;
+Provider concretization section 3.2 requires newly implied facts to traverse the delta observation;
 Theorem 3.5 relies on that history condition. The previous rectangle theorem
 transported an =Exact= frontier premise. The follow-up now derives it from
 =DirectedFrontier.uf_emitted_exact=, candidate encoding and component homogeneity.

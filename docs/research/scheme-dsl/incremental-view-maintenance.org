@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-#+TITLE: B22: DBSP and retained recursive view maintenance
+#+TITLE: incremental view maintenance: DBSP and retained recursive view maintenance
 #+STATUS: paper reading; local transfer remains bounded
 #+DATE: 2026-10-01
 #+FILETAGS: :research:scheme-dsl:incremental:recursion:
@@ -68,7 +68,7 @@ completed snapshot, the local Session integration fails its semantic
 gate regardless of timing. If matched lifecycle cost is not lower on a
 target workload, retain the semantic API without a performance claim.
 
-[[file:datafun-s20.org][Datafun S20]]; [[file:e4-retained-session.org][local retained receipt]].
+[[file:higher-order-change.org][Datafun higher-order change]]; [[file:e4-retained-session.org][local retained receipt]].
 
 * Current implementation reconciliation (2026-10-04)
 

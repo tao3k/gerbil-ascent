@@ -1,14 +1,14 @@
 # SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-#+TITLE: S20 reading: higher-order semi-naive evaluation in Datafun
+#+TITLE: higher-order change reading: higher-order semi-naive evaluation in Datafun
 #+STATUS: research note; no Gerbil optimization claim
 #+DATE: 2026-09-30
 #+FILETAGS: :research:datafun:incrementalization:scheme-dsl:
 
 * Bibliography
 :PROPERTIES:
-:CUSTOM_ID: datafun-s20
+:CUSTOM_ID: higher-order-change
 :SOURCE_PDF: https://www.rntz.net/files/seminaive-datafun.pdf
 :DOI: 10.1145/3371090
 :ACCESSED: 2026-09-30
@@ -17,11 +17,11 @@
 Michael Arntzenius and Neel Krishnaswami, [[https://www.rntz.net/files/seminaive-datafun.pdf][Seminaïve Evaluation for a
 Higher-Order Functional Language]], POPL 2020.  PDF page numbers below
 count from one.  This paper advances the optimization question left
-open by the [[file:datafun-f16.org][2016 Datafun paper]].
+open by the [[file:functional-fixed-points.org][2016 Datafun paper]].
 
 * Evidence ledger
 
-#+NAME: datafun-s20-evidence
+#+NAME: higher-order-change-evidence
 | Locator | Paper contribution | Relevance | Transfer limit |
 |---------+--------------------+-----------+----------------|
 | Abstract, PDF p. 1 | Extends semi-naive transformation to higher-order Datafun programs | Higher-order recursion need not lose all delta optimization | Transformation is for Datafun's typed calculus |
@@ -31,7 +31,7 @@ open by the [[file:datafun-f16.org][2016 Datafun paper]].
 
 * Design consequence
 :PROPERTIES:
-:CUSTOM_ID: datafun-s20-consequence
+:CUSTOM_ID: higher-order-change-consequence
 :END:
 
 The 2016 paper's later-work statement about higher-order optimization is

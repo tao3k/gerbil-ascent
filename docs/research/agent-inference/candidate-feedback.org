@@ -1,14 +1,14 @@
 # SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-#+TITLE: DB26: Agent-written Datalog needs execution evidence
+#+TITLE: candidate execution feedback: Agent-written Datalog needs execution evidence
 #+STATUS: reading of an unreviewed arXiv v1; not gerbil-ascent evidence
 #+DATE: 2026-09-30
 #+FILETAGS: :research:agent:datalog:benchmark:
 
 * Source
 :PROPERTIES:
-:CUSTOM_ID: agent-db26
+:CUSTOM_ID: agent-candidate-execution-feedback
 :SOURCE_PDF: https://arxiv.org/pdf/2609.37233
 :SOURCE_HTML: https://arxiv.org/html/2609.37233v1
 :VERSION: arXiv v1, submitted 2026-09-29
@@ -21,10 +21,10 @@ useful hypotheses, not a settled cross-model benchmark result.
 
 * Evidence ledger
 :PROPERTIES:
-:CUSTOM_ID: agent-db26-evidence
+:CUSTOM_ID: agent-candidate-execution-feedback-evidence
 :END:
 
-#+NAME: db26-evidence
+#+NAME: candidate-execution-feedback-evidence
 | Locator | Paper result | Transfer to our Library | Limit |
 |---------+--------------+-------------------------+-------|
 | Abstract; §§4–5 | 136 tasks, held-out execution grading; oracle checked by mutation analysis | Grade candidate programs on full outputs across input variants | Their dialect is Soufflé, not Gerbil Scheme |

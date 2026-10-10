@@ -16,9 +16,9 @@ complete VM/hash/parent refinement remains open. [[file:../../scheme-trrel-uf-de
 matched Provider cost controls and whole-engine performance boundaries.
 
 
-* B23 directed concretization and retained frontier (2026-10-06)
+* Provider concretization directed concretization and retained frontier (2026-10-06)
 
-The B23 primary paper sections 3.3 and 5.3-5.4 were reread to connect delta
+The Provider concretization primary paper sections 3.3 and 5.3-5.4 were reread to connect delta
 visibility with directional closure and SCC representation. =DirectedFrontier=
 now supplies a reusable active-domain directed state, exact public UF and
 strict trrel frontier decompositions, UF least insertion and finite latent

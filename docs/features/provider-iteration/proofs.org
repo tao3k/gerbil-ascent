@@ -42,8 +42,8 @@ excess-repeat and missing-occurrence rejection, alias recovery, incremental
 all counts and delta isolation. Checked Session now reconstructs the duplicate
 pending cut with 34 occurrences, two copies of (0 0), the accepted new row and
 an unchanged old result. Both append targets exclude their triggering row.
-The [[file:../../research/scheme-dsl/byods-b23.org][research follow-up]] distinguishes B23's powerset concretization from the
-finite natural-number occurrence annotation described in GKT07 §2–3. This
+The [[file:../../research/scheme-dsl/provider-concretization.org][research follow-up]] distinguishes Provider concretization's powerset concretization from the
+finite natural-number occurrence annotation described in provenance semirings §2–3. This
 closes the preceding qualified hash-receiver replay limitation while retaining
 field stability and successful fresh replay premises. It does not implement
 recursive bag Datalog, arbitrary callback rollback or new performance claims.

@@ -1,14 +1,14 @@
 # SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-#+TITLE: A22 reading: Ascent rules and the Scheme language boundary
+#+TITLE: rule planning reading: Ascent rules and the Scheme language boundary
 #+STATUS: research note; not an implementation or parity receipt
 #+DATE: 2026-09-30
 #+FILETAGS: :research:ascent:scheme-dsl:
 
 * Bibliography and evidence map
 :PROPERTIES:
-:CUSTOM_ID: ascent-a22
+:CUSTOM_ID: rule-planning
 :SOURCE_PDF: https://thomas.gilray.org/pdf/seamless-deductive.pdf
 :ACCESSED: 2026-09-30
 :END:
@@ -117,7 +117,7 @@ lowering hides a recursive dependency or disables a useful join index.
 Ascent's lattice is a partial map from ordinary key columns to a value
 joined at each key (§3.1, PDF p. 5).  Its finite-height abstraction of
 numbers is another answer to the unbounded-growth problem identified
-in the [[file:datafun-f16.org::#datafun-termination][Datafun note]] (§3.1,
+in the [[file:functional-fixed-points.org::#datafun-termination][Datafun note]] (§3.1,
 PDF p. 6).  This does not mean an arbitrary Scheme =join= procedure
 has the required order laws or finite height.  The current POO lattice
 declaration checks that a join is a procedure, while semantic laws

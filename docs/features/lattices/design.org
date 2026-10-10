@@ -7,7 +7,7 @@ source dates and qualification boundaries. Current evidence is commit-specific.
 
 * Keyed replacement lattice and settled projection (2026-10-07)
 
-B23 Sections 3.2 and 5.6 require separate reasoning for map lattices whose
+Provider concretization Sections 3.2 and 5.6 require separate reasoning for map lattices whose
 concretization returns only the current value for each key. Improving a value
 can remove an earlier concrete tuple. Abstract map growth therefore does not
 imply Set inclusion of materialized rows. The general monotone-gamma iteration
@@ -61,10 +61,10 @@ hashes and actual counterexample states, without committing execution logs.
 
 * Strict dependency and pending-key refinement (2026-10-07)
 
-B23 Section 5.6 current-value materialization can replace an earlier tuple.
+Provider concretization Section 5.6 current-value materialization can replace an earlier tuple.
 The compiler must therefore classify a positive lattice-to-ordinary read as
 strict, even though an ordinary positive read has weight zero. This is our
-native observation boundary; it is not inferred from B23's monotone-gamma
+native observation boundary; it is not inferred from Provider concretization's monotone-gamma
 iteration theorem and does not extend that theorem to arbitrary map lattices.
 
 | Obligation | Universal Lean owner | Operational/native owner |

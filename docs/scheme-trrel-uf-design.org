@@ -14,7 +14,7 @@ not the ordinary transitive-state constructor. Binary and grouped ternary rows
 retain the admitted Provider's reflexive directed-closure behavior and exact
 new concrete frontier, including false-valued/grouped keys and duplicates.
 
-The design follows B23 §5.4's SCC/union-find representation seam, adapted to
+The design follows Provider concretization §5.4's SCC/union-find representation seam, adapted to
 Scheme's storage extension interface. It does not claim the original Rust
 algorithm has been copied instruction-for-instruction or its complexity and
 application measurements reproduced. See [[https://kmicinski.com/assets/byods.pdf][the paper]] and [[file:scheme-paper-closure.org][whole-paper closure matrix]].

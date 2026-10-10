@@ -1,14 +1,14 @@
 # SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-#+TITLE: H18: deletion and rederivation across a Datalog materialisation
+#+TITLE: deletion rederivation: deletion and rederivation across a Datalog materialisation
 #+STATUS: primary-source reading and next algorithm discriminator
 #+DATE: 2026-10-01
 #+FILETAGS: :research:scheme-dsl:deletion:datalog:
 
 * Source and question
 :PROPERTIES:
-:CUSTOM_ID: deletion-h18-source
+:CUSTOM_ID: deletion-rederivation-source
 :SOURCE_PDF: https://ojs.aaai.org/index.php/AAAI/article/view/11554/11413
 :DOI: 10.1609/aaai.v32i1.11554
 :ACCESSED: 2026-10-01
@@ -27,10 +27,10 @@ transaction is a semantic baseline, not a deletion algorithm.
 
 * Evidence ledger
 :PROPERTIES:
-:CUSTOM_ID: deletion-h18-ledger
+:CUSTOM_ID: deletion-rederivation-ledger
 :END:
 
-#+NAME: deletion-h18-evidence
+#+NAME: deletion-rederivation-evidence
 | Location | Paper's result or scope | Consequence for this Library |
 |----------+-------------------------+------------------------------|
 | §2, PDF p. 2 | Defines safe, stratified Datalog, recursive and nonrecursive rules per stratum, and a materialisation for explicit facts | Our admission and dependency planner must identify these categories before any analogous deletion transform |
@@ -55,7 +55,7 @@ neither of which is established by our current set-valued Session.
 
 * Local semantic gate and falsifiers
 :PROPERTIES:
-:CUSTOM_ID: deletion-h18-local-gate
+:CUSTOM_ID: deletion-rederivation-local-gate
 :END:
 
 The current =relational-session-transaction!= accepts checked source
@@ -68,7 +68,7 @@ closure, filtering, counts and maxima. It also checks that malformed,
 duplicate and over-budget updates preserve the prior result and source
 state. The named =relational-program= path has the same atomic owner.
 
-#+NAME: deletion-h18-next-experiments
+#+NAME: deletion-rederivation-next-experiments
 | Case | Independent reference | Observation required before an incremental claim |
 |------+-----------------------+--------------------------------------------------|
 | One edge withdrawn from two supporting paths | Fresh finite closure after each update | Alternate support survives, including recursive cycles |
@@ -87,7 +87,7 @@ alternative-path and cyclic cases even if they make the incremental
 method slower. No result from the current transaction test establishes
 incremental deletion performance.
 
-[[file:dbsp-b22.org][DBSP note]]; [[file:reflection.org][research reflection]];
+[[file:incremental-view-maintenance.org][DBSP note]]; [[file:reflection.org][research reflection]];
 [[file:../../scheme-relational-language-design.org][Scheme language design]].
 
 * Current implementation reconciliation (2026-10-04)
@@ -107,7 +107,7 @@ negation derivative, lattice inverse or signed trace is introduced.
 
 * Positive support restriction (2026-10-10)
 
-The authoritative H18 PDF was rechecked for §3.1 and §4: its DRedc mechanism
+The authoritative deletion rederivation PDF was rechecked for §3.1 and §4: its DRedc mechanism
 separates derivation counts and addresses rule evaluation. Our explicit graph
 compaction is a repository-derived deletion-only representation optimization,
 not an implementation or replication of that count algorithm. Lean's

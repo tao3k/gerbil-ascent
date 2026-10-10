@@ -22,20 +22,20 @@ source contributes from our proposed transfer into Gerbil.
 #+NAME: history-map
 | Period | Source | Language move | Boundary for our design |
 |--------+--------+---------------+-------------------------|
-| 2013 | [[file:microkanren-h13.org][H13 µKanren]] | Tiny relational kernel, Scheme functions/macros for goals | Stream search is not bottom-up completion |
-| 2016 | [[file:datafun-f16.org][F16 Datafun]] | Higher-order functions with tracked monotonicity and finite fixed points | Opaque Scheme closures inherit no proof |
-| 2020 | [[file:flix-f20.org][F20 Flix]] | First-class Datalog constraint sets and composition | Check the assembled program, including stratification |
-| 2020 | [[file:datafun-s20.org][S20 Datafun]] | Seminaive evaluation extended to typed higher-order changes | A typed change transform is required |
-| 2022 | [[file:ascent-a22.org][A22 Ascent]] | Datalog-like rules embedded in Rust with compiler planning | Keep visible joins/dependencies, not Rust spelling |
-| 2022 | [[file:dbsp-b22.org][B22 DBSP]] | Stream calculus for incremental view maintenance, including recursion | Retained update state and complete snapshots are distinct from one-shot differences |
-| 2025 | [[file:flix-l25.org][L25 Flix]] | Integrated program values, private names, inject/solve/query | Design explicit phases and relation identities |
+| 2013 | [[file:relational-kernel.org][relational kernel µKanren]] | Tiny relational kernel, Scheme functions/macros for goals | Stream search is not bottom-up completion |
+| 2016 | [[file:functional-fixed-points.org][functional fixed points Datafun]] | Higher-order functions with tracked monotonicity and finite fixed points | Opaque Scheme closures inherit no proof |
+| 2020 | [[file:fragment-composition.org][fragment composition Flix]] | First-class Datalog constraint sets and composition | Check the assembled program, including stratification |
+| 2020 | [[file:higher-order-change.org][higher-order change Datafun]] | Seminaive evaluation extended to typed higher-order changes | A typed change transform is required |
+| 2022 | [[file:rule-planning.org][rule planning Ascent]] | Datalog-like rules embedded in Rust with compiler planning | Keep visible joins/dependencies, not Rust spelling |
+| 2022 | [[file:incremental-view-maintenance.org][incremental view maintenance DBSP]] | Stream calculus for incremental view maintenance, including recursion | Retained update state and complete snapshots are distinct from one-shot differences |
+| 2025 | [[file:program-lifecycle.org][program lifecycle Flix]] | Integrated program values, private names, inject/solve/query | Design explicit phases and relation identities |
 
 * 2013: µKanren makes the host-language boundary small
 :PROPERTIES:
 :CUSTOM_ID: history-microkanren
 :END:
 
-Hemann and Friedman's [[file:microkanren-h13.org][µKanren]] reduces relational search to
+Hemann and Friedman's [[file:relational-kernel.org][µKanren]] reduces relational search to
 a small goal/stream kernel.  Scheme functions and macros build richer
 goal syntax above it.  This is an instructive architecture for a
 Scheme-native interface: lexical functions can combine relational
@@ -46,14 +46,14 @@ Answer order and availability during an unfinished search matter.
 Our evaluator derives bottom-up sets to a fixed point.  Thus the
 portable idea is a small kernel under Scheme abstractions; goal
 constructors or fairness results do not transfer as the rule engine.
-The [[file:microkanren-h13.org::#microkanren-kernel-boundary][reading note]] records the discriminator.
+The [[file:relational-kernel.org::#microkanren-kernel-boundary][reading note]] records the discriminator.
 
 * 2016: Datafun treats monotonicity as a language property
 :PROPERTIES:
-:CUSTOM_ID: history-datafun-f16
+:CUSTOM_ID: history-functional-fixed-points
 :END:
 
-[[file:datafun-f16.org][Datafun]] makes a stronger move: it tracks where a function is
+[[file:functional-fixed-points.org][Datafun]] makes a stronger move: it tracks where a function is
 monotone, so higher-order functional expressions can participate in
 fixed points.  Its finite-height structure also bounds iteration.
 The two obligations are separate.  A stable function that emits one
@@ -65,15 +65,15 @@ function =f= fixed, taking the union of its rows over a growing input
 relation is monotone in that relation.  This does not prove =f= stable
 under mutation, pure, terminating, or free of hidden relation reads.
 Nor does it give Datafun's type-based proof for arbitrary Scheme
-closures.  The [[file:datafun-f16.org::#datafun-termination][finite-height analysis]] motivates a
+closures.  The [[file:functional-fixed-points.org::#datafun-termination][finite-height analysis]] motivates a
 separate completed-closure claim versus explicit resource failure.
 
 * 2020: Flix makes whole rule sets composable values
 :PROPERTIES:
-:CUSTOM_ID: history-flix-f20
+:CUSTOM_ID: history-fragment-composition
 :END:
 
-[[file:flix-f20.org][First-class Datalog constraints in Flix]] shift composition above
+[[file:fragment-composition.org][First-class Datalog constraints in Flix]] shift composition above
 individual rules.  A program can build and combine constraint sets;
 well-formedness and stratification then concern the combined set.
 This suggests Scheme functions should return parameterized fragment
@@ -81,15 +81,15 @@ values.  Relation identity, import/export shape, and admission of the
 assembled program are more important than copying any Flix surface
 token.  Existing Gerbil =ascent-fragment= and POO declarations are a
 starting point, but they do not provide Flix's static row-polymorphic
-assurance.  The [[file:flix-f20.org::#flix-composition-boundary][composition reading]] identifies that
+assurance.  The [[file:fragment-composition.org::#flix-composition-boundary][composition reading]] identifies that
 limit and the negative-cycle test.
 
 * 2020: higher-order seminaive evaluation becomes a typed problem
 :PROPERTIES:
-:CUSTOM_ID: history-datafun-s20
+:CUSTOM_ID: history-higher-order-change
 :END:
 
-The [[file:datafun-s20.org][Datafun seminaive work]] derives changes for higher-order
+The [[file:higher-order-change.org][Datafun seminaive work]] derives changes for higher-order
 values in a typed calculus.  It undermines a simplistic assumption
 that higher-order functions must always require full recomputation.
 It does not justify applying a delta shortcut to an opaque Gerbil
@@ -101,10 +101,10 @@ would be that new IR, with a naive interpreter as reference.
 
 * 2022: Ascent shows the value of planner-visible rules
 :PROPERTIES:
-:CUSTOM_ID: history-ascent-a22
+:CUSTOM_ID: history-rule-planning
 :END:
 
-[[file:ascent-a22.org][Ascent]] presents deductive rules embedded in Rust.  Its compiler
+[[file:rule-planning.org][Ascent]] presents deductive rules embedded in Rust.  Its compiler
 can see relation atoms, binding patterns, dependencies, and join
 structure, enabling indexing and seminaive work.  Host expression,
 pattern, guard, and generator spellings solve a Rust embedding problem.
@@ -112,15 +112,15 @@ They are not part of the relational theorem that our Scheme interface
 must preserve. A native Scheme rule with visible relation atoms retains
 the planner-visible core; explicit term
 projections and admitted relation views can handle local computation.
-The [[file:ascent-a22.org::#ascent-rule-boundary][Ascent note]] records what cannot be inferred
+The [[file:rule-planning.org::#ascent-rule-boundary][Ascent note]] records what cannot be inferred
 from Rust performance or syntax.
 
 * 2022: DBSP distinguishes snapshots from changes
 :PROPERTIES:
-:CUSTOM_ID: history-dbsp-b22
+:CUSTOM_ID: history-incremental-view-maintenance
 :END:
 
-[[file:dbsp-b22.org][DBSP]] develops a stream account of incremental view maintenance,
+[[file:incremental-view-maintenance.org][DBSP]] develops a stream account of incremental view maintenance,
 including recursive queries. Its setup separates a database snapshot,
 an update, and the change to a view; its recursive construction keeps
 state across input updates. For our Scheme Library this sharpens the
@@ -132,10 +132,10 @@ DBSP stream-circuit proof.
 
 * 2025: Flix exposes the program lifecycle
 :PROPERTIES:
-:CUSTOM_ID: history-flix-l25
+:CUSTOM_ID: history-program-lifecycle
 :END:
 
-The later [[file:flix-l25.org][Flix language design]] makes program values, private
+The later [[file:program-lifecycle.org][Flix language design]] makes program values, private
 predicate names, data injection, solving, and querying explicit.  It
 helps articulate two different times at which "higher-order" can
 occur: Scheme functions may construct a program before admission;

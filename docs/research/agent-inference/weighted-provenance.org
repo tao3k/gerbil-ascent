@@ -1,14 +1,14 @@
 # SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-#+TITLE: S23: Differentiable relational reasoning is a separate contract
+#+TITLE: weighted provenance: Differentiable relational reasoning is a separate contract
 #+STATUS: research comparison; no differentiable gerbil-ascent claim
 #+DATE: 2026-09-30
 #+FILETAGS: :research:agent:training:logic:
 
 * Source
 :PROPERTIES:
-:CUSTOM_ID: agent-s23
+:CUSTOM_ID: agent-weighted-provenance
 :SOURCE_PDF: https://www.cis.upenn.edu/~mhnaik/papers/pldi23.pdf
 :DOI: 10.1145/3591280
 :END:
@@ -19,7 +19,7 @@ reasoning using provenance semirings.
 
 * Evidence ledger
 
-#+NAME: s23-evidence
+#+NAME: weighted-provenance-evidence
 | Source point | Result | Transfer hypothesis | Limit |
 |--------------+--------+---------------------+-------|
 | Abstract; §1 | Relational symbolic programs can participate in neural tasks | Consider a training-framework adapter after a sound semantic boundary | Scheme Ascent's set-valued closure is not automatically differentiable |

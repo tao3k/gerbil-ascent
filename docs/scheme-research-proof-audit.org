@@ -7,9 +7,9 @@
 * Audit decision
 
 At this audit's baseline, the [[file:research/scheme-dsl/index.org][DSL source ledger]] contained eight papers:
-A22, F16, H13, F20, S20 and L25 concerned the language/kernel; H18 and
-B22 added deletion and incremental-maintenance constraints. Later B23, X25,
-FL25 and S24 readings add Provider, physical-plan and nested-fact
+rule planning, functional fixed points, relational kernel, fragment composition, higher-order change and program lifecycle concerned the language/kernel; deletion rederivation and
+incremental view maintenance added deletion and incremental-maintenance constraints. Later Provider concretization, monotone containers,
+recursive physical planning and first-class facts readings add Provider, physical-plan and nested-fact
 questions without extending the audited proof coverage. These are
 distinct from the separate
 [[file:research/agent-inference/index.org][agent-inference collection]]. The next step is to connect paper assumptions
@@ -38,14 +38,14 @@ not results the authors established for Gerbil.
 
 | Paper and primary source | Transfer and current implementation | Remaining proof and discriminator |
 |--------------------------+-------------------------------------+-----------------------------------|
-| [[https://thomas.gilray.org/pdf/seamless-deductive.pdf][A22 Ascent]], §3–4 | Visible atoms, modes, SCCs and indexes: =program/planning.ss=, =core/dependency-graph.ss=, =core/rule-semantics.ss= | Relate admitted atoms and selected delta plans to the immediate-consequence operator; complete rows, strata and timeout statuses must agree with the pinned oracle |
-| [[https://www.cl.cam.ac.uk/~nk480/datafun.pdf][F16 Datafun]], §4–5 | Discrete/stable captures versus monotone recursive inputs; finite domains: =program/scheme-checked.ss= and =program/higher-order.ss= | Prove descriptor typing and domain/cardinality laws supply Lean rank premises. Finite output per call and fact budgets are not termination proofs; reject successor escape and increasing one-key lattice |
-| [[https://www.schemeworkshop.org/2013/papers/HemannMuKanren2013.pdf][H13 µKanren]], §3–5 | Small semantic kernel with Scheme constructors/macros above it: =program/interface.ss= | Scope/hygiene and expanded-IR preservation. Do not transfer stream interleaving/fairness into bottom-up saturation; cyclic answer sets do not prove search equivalence |
-| [[https://plg.uwaterloo.ca/~olhotak/pubs/oopsla20c.pdf][F20 first-class constraints]], typing/composition/stratification | Assemble inert fragments, check the whole dependency graph: =program/scheme-admission.ss= | Mechanize assembled schema and strict negative-edge validation; two valid fragments forming a negative cycle must reject. Current runtime admission is weaker than Flix static typing |
-| [[https://www.rntz.net/files/seminaive-datafun.pdf][S20 higher-order semi-naive]], §4.2–4.3, §6–7 | Admitted typed arrows lower to positive operator IR: =program/higher-order.ss= and =program/operator.ss= | Existing lowering does not implement the paper's typed function-change translation. Prove current lowering first; then define an insertion-only change action and semantic preservation before optimizing function deltas |
-| [[https://plg.uwaterloo.ca/~olhotak/pubs/oopsla25b.pdf][L25 Flix design]], §3.7–3.9 / §4 | Fresh private predicate identities, explicit construct/admit/solve/query: =program/objects.ss=, =program/result.ss= | Alpha-renaming/generativity and lexical substitution theorem; repeated constructors and reordered composition must preserve public observations. Purity alone does not establish totality |
-| [[https://ojs.aaai.org/index.php/AAAI/article/view/11554][H18 DRedc]], §3–4 | Multi-support and founded recursion matter: [[file:scheme-support-graph-design.org][support graph]]; native Session uses [[file:scheme-session-deletion-design.org][affected-component rederivation]] | Current Session is not DRedc. Prove source logs exclude derived facts; support completeness and founded rederivation before finer maintenance. Retain last-support, two-path, unrooted-cycle and failed-update cases |
-| [[https://arxiv.org/abs/2203.16684][B22 DBSP]], recursive incremental circuits | Separate retained update cost from full reconstruction: =program/session.ss=, =program/reuse.ss= | No signed-weight stream algebra or derivative circuit exists here. Match initialization, admission, invalidation, solve and publication costs; full semantics first, then work/time/allocation measurements |
+| [[https://thomas.gilray.org/pdf/seamless-deductive.pdf][rule planning Ascent]], §3–4 | Visible atoms, modes, SCCs and indexes: =program/planning.ss=, =core/dependency-graph.ss=, =core/rule-semantics.ss= | Relate admitted atoms and selected delta plans to the immediate-consequence operator; complete rows, strata and timeout statuses must agree with the pinned oracle |
+| [[https://www.cl.cam.ac.uk/~nk480/datafun.pdf][functional fixed points Datafun]], §4–5 | Discrete/stable captures versus monotone recursive inputs; finite domains: =program/scheme-checked.ss= and =program/higher-order.ss= | Prove descriptor typing and domain/cardinality laws supply Lean rank premises. Finite output per call and fact budgets are not termination proofs; reject successor escape and increasing one-key lattice |
+| [[https://www.schemeworkshop.org/2013/papers/HemannMuKanren2013.pdf][relational kernel µKanren]], §3–5 | Small semantic kernel with Scheme constructors/macros above it: =program/interface.ss= | Scope/hygiene and expanded-IR preservation. Do not transfer stream interleaving/fairness into bottom-up saturation; cyclic answer sets do not prove search equivalence |
+| [[https://plg.uwaterloo.ca/~olhotak/pubs/oopsla20c.pdf][fragment composition first-class constraints]], typing/composition/stratification | Assemble inert fragments, check the whole dependency graph: =program/scheme-admission.ss= | Mechanize assembled schema and strict negative-edge validation; two valid fragments forming a negative cycle must reject. Current runtime admission is weaker than Flix static typing |
+| [[https://www.rntz.net/files/seminaive-datafun.pdf][higher-order change higher-order semi-naive]], §4.2–4.3, §6–7 | Admitted typed arrows lower to positive operator IR: =program/higher-order.ss= and =program/operator.ss= | Existing lowering does not implement the paper's typed function-change translation. Prove current lowering first; then define an insertion-only change action and semantic preservation before optimizing function deltas |
+| [[https://plg.uwaterloo.ca/~olhotak/pubs/oopsla25b.pdf][program lifecycle Flix design]], §3.7–3.9 / §4 | Fresh private predicate identities, explicit construct/admit/solve/query: =program/objects.ss=, =program/result.ss= | Alpha-renaming/generativity and lexical substitution theorem; repeated constructors and reordered composition must preserve public observations. Purity alone does not establish totality |
+| [[https://ojs.aaai.org/index.php/AAAI/article/view/11554][deletion rederivation DRedc]], §3–4 | Multi-support and founded recursion matter: [[file:scheme-support-graph-design.org][support graph]]; native Session uses [[file:scheme-session-deletion-design.org][affected-component rederivation]] | Current Session is not DRedc. Prove source logs exclude derived facts; support completeness and founded rederivation before finer maintenance. Retain last-support, two-path, unrooted-cycle and failed-update cases |
+| [[https://arxiv.org/abs/2203.16684][incremental view maintenance DBSP]], recursive incremental circuits | Separate retained update cost from full reconstruction: =program/session.ss=, =program/reuse.ss= | No signed-weight stream algebra or derivative circuit exists here. Match initialization, admission, invalidation, solve and publication costs; full semantics first, then work/time/allocation measurements |
 
 * Current proof ownership
 
@@ -194,13 +194,13 @@ refinement and asymptotic live-space laws remain distinct obligations.
 
 * Absence certificate construction budget (2026-10-09)
 
-The [[https://thomas.gilray.org/pdf/seamless-deductive.pdf][A22 paper]], §2.1, defines positive evaluation by the least fixed point of
+The [[https://thomas.gilray.org/pdf/seamless-deductive.pdf][rule planning paper]], §2.1, defines positive evaluation by the least fixed point of
 the immediate-consequence operator. Our absence verifier uses an independently
 checked finite inductive invariant: it contains the supplied seeds, is closed
 under every admitted rule instance, and excludes the ground target. Exhausting
 a work or material budget establishes none of these conditions.
 
-The [[https://kmicinski.com/assets/byods.pdf][B23 paper]], §3 and §5.1, separates relation concretization from its physical
+The [[https://kmicinski.com/assets/byods.pdf][Provider concretization paper]], §3 and §5.1, separates relation concretization from its physical
 representation; an equivalence class can represent quadratically many tuples.
 This motivates auditing downstream consumers as well as the Provider. It does
 not establish that our explicit proof-node or certificate representation is
@@ -258,17 +258,17 @@ Native =std/test= checks finite replay's exact/overflowing total rows and cells,
 independent verification of exact-boundary certificates, and atomic refusal
 followed by legal zero-width reservation at fully consumed cell capacity.
 These checks complement the earlier absence and ordinary-witness controls.
-A22 least-fixed-point semantics and B23 concretization motivate the architecture;
+rule planning least-fixed-point semantics and Provider concretization concretization motivate the architecture;
 resource refusal is our policy, not a new deductive consequence or a compressed
 certificate theorem.
 
 * Frozen negative probes: witness stopping and charged absence (2026-10-09)
 
-Re-reading [[https://plg.uwaterloo.ca/~olhotak/pubs/oopsla20c.pdf][F20]], §4.7, confirms the lower-stratum premise: negative
+Re-reading [[https://plg.uwaterloo.ca/~olhotak/pubs/oopsla20c.pdf][fragment composition]], §4.7, confirms the lower-stratum premise: negative
 dependencies refer strictly to earlier completed strata. Our transfer is to
 probe a frozen relation for one matching binding. A matching row rejects the
 negative clause immediately; proving absence still requires all rows. This is
-our implementation decision, not a cost theorem from the paper. A22's positive
+our implementation decision, not a cost theorem from the paper. rule planning's positive
 immediate-consequence semantics (§2.1) does not itself justify negation.
 
 =candidate/finite-evidence.ss= previously kept scanning after a witness, which
@@ -304,7 +304,7 @@ whole-engine speedup. No semantic, material or work limit is increased.
 
 * Streaming count over completed logical rows (2026-10-09)
 
-Re-reading [[https://kmicinski.com/assets/byods.pdf][B23]], §3, keeps tuple enumeration separate from the physical
+Re-reading [[https://kmicinski.com/assets/byods.pdf][Provider concretization]], §3, keeps tuple enumeration separate from the physical
 representation: its concretization supplies logical tuples. Our count transfer
 therefore counts matching frozen rows, not storage entries or representatives.
 The paper's core positive calculus does not prove our aggregate or budget policy.
@@ -341,7 +341,7 @@ there is no measured wall-clock or whole-engine performance claim.
 
 * Numeric streaming folds and absorbing type failure (2026-10-09)
 
-Re-reading [[https://kmicinski.com/assets/byods.pdf][B23]], §3, keeps the concretized relation as the semantic
+Re-reading [[https://kmicinski.com/assets/byods.pdf][Provider concretization]], §3, keeps the concretized relation as the semantic
 input. Its total/delta coverage can overlap; adding aggregate results from
 overlapping pivot batches would double-count. This implementation instead reads
 the complete frozen, deduplicated replay relation after the lower stratum has
@@ -403,7 +403,7 @@ was relaxed; local performance evidence alone does not establish final-head CI.
 
 * Terminal replay traversal (2026-10-09)
 
-B23 sections 1 and 3 distinguish logical fact enumeration from its concrete
+Provider concretization sections 1 and 3 distinguish logical fact enumeration from its concrete
 representation ([[https://kmicinski.com/assets/byods.pdf][Bring Your Own Data Structures to Datalog]]).
 We retain that boundary in independent certificate replay: enumerated rows are
 frozen logical inputs, while resource refusal is an invocation-owned operational
@@ -448,7 +448,7 @@ optimization; no end-to-end speedup is inferred from these correctness receipts.
 
 * Bounded positive proof shape admission (2026-10-09)
 
-A22 section 2.1 defines ground predicate tuples and Horn-clause antecedents
+rule planning section 2.1 defines ground predicate tuples and Horn-clause antecedents
 ([[https://thomas.gilray.org/pdf/seamless-deductive.pdf][Seamless Deductive Inference via Macros]]). Those semantic shapes motivate
 checking the admitted relation arity and positive-atom dependency count before
 replaying an externally held DAG. The paper does not specify certificate parsing,
@@ -492,7 +492,7 @@ ordinary witness remain checked alongside the finite replay and absence suites.
 
 * Validated positive DAG prefix and semantic soundness (2026-10-09)
 
-A22 section 2.1 defines immediate consequences using substitutions whose body
+rule planning section 2.1 defines immediate consequences using substitutions whose body
 facts are already present ([[https://thomas.gilray.org/pdf/seamless-deductive.pdf][Seamless Deductive Inference via Macros]]). Positive
 proof verification must therefore establish a grounded predecessor for every
 antecedent. This is distinct from complete native query agreement: agreement
@@ -545,7 +545,7 @@ Steensgaard partition and upstream Polonius reference acceptance differ from
 the still-open full native clap-rs, PageRank and LLVM application comparisons.
 Keep accepted mechanisms under regression while advancing the head papers.
 
-The new [[file:research/agent-inference/iris-ir25.org][IRIS reading]] connects its section 3.1 path definition to
+The new [[file:research/agent-inference/taint-paths.org][IRIS reading]] connects its section 3.1 path definition to
 [[file:../applications/taint-paths.ss][an ordinary Scheme Program]]. Each recursive extension preserves sanitizer
 exclusion at the intermediate vertex. Six UnsanitizedPaths Lean laws and the
 existing SessionTransaction Quint checks align semantics and replacement/
@@ -553,9 +553,9 @@ publication. Three native Cases include 512 independent finite graph comparisons
 This closes the finite path transfer, with graph extraction, model-generated
 specifications and real-Java benchmark evidence retained as distinct next gates.
 
-* DB26 finite execution feedback transfer, 2026-10-09
+* candidate execution feedback finite execution feedback transfer, 2026-10-09
 
-[[file:features/candidate-feedback/acceptance.org][Candidate feedback]] connects the dedicated DB26 reading to native snapshot-bound
+[[file:features/candidate-feedback/acceptance.org][Candidate feedback]] connects the dedicated candidate execution feedback reading to native snapshot-bound
 complete row differences, independent held-out graph controls, five Lean laws
 and a 128-state Quint publication gate with four rejected fault variants.
 This transfers the finite discriminator; model synthesis and the released

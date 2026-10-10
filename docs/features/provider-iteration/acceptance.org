@@ -8,7 +8,7 @@ source dates and qualification boundaries. Current evidence is commit-specific.
 * Abstract Provider mainline closure (2026-10-07)
 
 ProviderIteration closes the conditional complete-join injection and abstract
-merged-snapshot round-equivalence component of B23 Section 3. All-old head
+merged-snapshot round-equivalence component of Provider concretization Section 3. All-old head
 coverage is derived from prior execution; arbitrary natural-number histories
 agree. The proof constructs the least closed state above the seed and connects
 stabilization and parameterized finite rank to convergence to it. Gamma need

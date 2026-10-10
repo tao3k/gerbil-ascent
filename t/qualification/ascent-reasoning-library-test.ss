@@ -650,7 +650,7 @@
                            (kg-reference withdrawn-direct))
             (kg-check-rows (relational-program-query old 'answer)
                            (kg-reference kg-direct-country))))))
-    (test-case "WD26 withholding preserves body paths without certifying scoped answers"
+    (test-case "Wikidata scoped exclusion withholding preserves body paths without certifying scoped answers"
       (let* ((source (kg-snapshot 1 kg-direct-country))
              (cut (reasoning-withhold-source-snapshot source 2
                     '(((directCountry Q100 Q30)
@@ -680,7 +680,7 @@
         (check-equal? (reasoning-verify-stratified-receipt changed cut gold 20000) 'valid)
         (check-equal? (reasoning-verify-stratified-receipt original cut gold 20000) 'invalid)
         (kg-check-rows (reasoning-receipt-rows original) reference)))
-    (test-case "WD26 grounded withdrawal preview agrees with a fresh bound receipt"
+    (test-case "Wikidata scoped exclusion grounded withdrawal preview agrees with a fresh bound receipt"
       (let* ((source (kg-snapshot 1 kg-direct-country))
              (p '(candidate (relation adminPath 2) (relation viaAdmin 2)
                    (rule (adminPath ?x ?y) (admin ?x ?y))
@@ -714,7 +714,7 @@
                          (reasoning-compare-rows cut p fresh rows)) 'match)
           (check-equal? (reasoning-feedback-reason
                          (reasoning-compare-rows cut p first rows)) 'unbound))))
-    (test-case "WD26 publishes source cut native rows and complete support through one owner"
+    (test-case "Wikidata scoped exclusion publishes source cut native rows and complete support through one owner"
       (let* ((source (kg-snapshot 1 kg-direct-country))
              (p '(candidate (relation adminPath 2) (relation viaAdmin 2)
                    (rule (adminPath ?x ?y) (admin ?x ?y))

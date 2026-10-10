@@ -41,16 +41,16 @@ language or a new authority for source facts.
 
 | Work | What is worth transferring | What does not follow |
 |------+---------------------------+----------------------|
-| [[https://thomas.gilray.org/pdf/seamless-deductive.pdf][Ascent A22]], §§2–4; [[file:../scheme-dsl/ascent-a22.org][reading]] | Rule atoms, bound columns and SCC dependencies remain visible to indexing and semi-naive planning; set and lattice facts have distinct update meanings | Rust macro spelling, host expression purity and performance do not transfer to Scheme |
-| [[https://www.cl.cam.ac.uk/~nk480/datafun.pdf][Datafun F16]] and [[https://www.rntz.net/files/seminaive-datafun.pdf][S20]]; [[file:../scheme-dsl/datafun-f16.org][F16]]/[[file:../scheme-dsl/datafun-s20.org][S20]] | Typed monotonicity, finite-height fixed points and higher-order changes provide proof targets for admitted descriptors | A finite output per step, a budget, or a Scheme function annotation is not a termination or change theorem |
-| [[https://kmicinski.com/assets/byods.pdf][BYODS B23]]; [[file:../scheme-dsl/byods-b23.org][reading]] | Provider concretization and delta must expose every new logical fact | Faster storage does not establish the required semantic laws |
-| [[https://drops.dagstuhl.de/entities/document/10.4230/LIPIcs.ECOOP.2025.33][Mono Types X25]], ECOOP 2025; [[file:../scheme-dsl/mono-types-x25.org][reading]] | First-class containers need monotone, insertion-order-independent observable reads; Rocq theory and real program-analysis studies make this a serious language seam | The interface has no deletion law or termination guarantee; unoptimized nested-map lowering regresses in its interval case |
-| [[https://plg.uwaterloo.ca/~olhotak/pubs/oopsla25b.pdf][Flix L25]]; [[file:../scheme-dsl/flix-l25.org][reading]] | First-class program values, fresh private names, whole-program checks and explicit solve/query phases | Flix's static typing and effect guarantees do not become native Scheme guarantees |
+| [[https://thomas.gilray.org/pdf/seamless-deductive.pdf][Ascent rule planning]], §§2–4; [[file:../scheme-dsl/rule-planning.org][reading]] | Rule atoms, bound columns and SCC dependencies remain visible to indexing and semi-naive planning; set and lattice facts have distinct update meanings | Rust macro spelling, host expression purity and performance do not transfer to Scheme |
+| [[https://www.cl.cam.ac.uk/~nk480/datafun.pdf][Datafun functional fixed points]] and [[https://www.rntz.net/files/seminaive-datafun.pdf][higher-order change]]; [[file:../scheme-dsl/functional-fixed-points.org][functional fixed points]]/[[file:../scheme-dsl/higher-order-change.org][higher-order change]] | Typed monotonicity, finite-height fixed points and higher-order changes provide proof targets for admitted descriptors | A finite output per step, a budget, or a Scheme function annotation is not a termination or change theorem |
+| [[https://kmicinski.com/assets/byods.pdf][BYODS Provider concretization]]; [[file:../scheme-dsl/provider-concretization.org][reading]] | Provider concretization and delta must expose every new logical fact | Faster storage does not establish the required semantic laws |
+| [[https://drops.dagstuhl.de/entities/document/10.4230/LIPIcs.ECOOP.2025.33][Mono Types monotone containers]], ECOOP 2025; [[file:../scheme-dsl/monotone-containers.org][reading]] | First-class containers need monotone, insertion-order-independent observable reads; Rocq theory and real program-analysis studies make this a serious language seam | The interface has no deletion law or termination guarantee; unoptimized nested-map lowering regresses in its interval case |
+| [[https://plg.uwaterloo.ca/~olhotak/pubs/oopsla25b.pdf][Flix program lifecycle]]; [[file:../scheme-dsl/program-lifecycle.org][reading]] | First-class program values, fresh private names, whole-program checks and explicit solve/query phases | Flix's static typing and effect guarantees do not become native Scheme guarantees |
 | [[https://www.vldb.org/pvldb/vol18/p651-micinski.pdf][Datalog with First-Class Facts]], PVLDB 2024 / VLDB 2025 | Fact identities and tree-structured data can become rule-triggering values; its Datalog-only subset terminates | General restricted chase may have no finite fixed point; neither a candidate digest nor MRR =FactId= is the paper's Skolem fact identity |
-| [[https://proceedings.mlr.press/v306/miao26e.html][LLM-MatLogic ML26]] and [[https://arxiv.org/abs/2609.37233][DatalogBench DB26]]; [[file:matlogic-ml26.org][ML26]]/[[file:datalogbench-db26.org][DB26]] | Real-KG scoped constraints/witnesses and execution-tested rule generation provide model-facing falsifiers | ML26's KG matrix is not Datalog; DB26 is a Soufflé-dialect preprint; published scores do not predict Gerbil or MRR results |
+| [[https://proceedings.mlr.press/v306/miao26e.html][LLM-MatLogic scoped witness execution]] and [[https://arxiv.org/abs/2609.37233][DatalogBench candidate execution feedback]]; [[file:scoped-witness.org][scoped witness execution]]/[[file:candidate-feedback.org][candidate execution feedback]] | Real-KG scoped constraints/witnesses and execution-tested rule generation provide model-facing falsifiers | scoped witness execution's KG matrix is not Datalog; candidate execution feedback is a Soufflé-dialect preprint; published scores do not predict Gerbil or MRR results |
 
 The selection favors a semantic law, an executable workload and a
-specific code seam. Paper age alone is not the filter: A22 and F16 have
+specific code seam. Paper age alone is not the filter: rule planning and functional fixed points have
 greater language-design value here than generic early agent workflows.
 The [[file:2026-logic-ai-screen.org][screen]] records the narrower real-KG and real-code evidence.
 
@@ -543,7 +543,7 @@ fail or never produce a complete result.
 
 * First falsifiable study
 
-The [[file:wikidata-scope-wd26.org][WD26 fixture]] starts this study with twelve selected claims from
+The [[file:wikidata-scoped-exclusion.org][Wikidata scoped exclusion fixture]] starts this study with twelve selected claims from
 seven Wikidata entity revisions, a pinned target entity, a gold structured program and
 two local source generations. Its independently computed finite set
 answer discriminates branch-local exclusion from exclusion after union.

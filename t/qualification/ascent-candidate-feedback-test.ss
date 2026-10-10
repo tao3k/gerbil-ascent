@@ -34,11 +34,11 @@
                           (if (eq? variant 'wrong-join) '(edge ?x ?z) '(edge ?y ?z)))))
           '((query path ?x ?y) (limits 16 64 128))))
 (def (snapshot generation pairs)
-  (reasoning-source-snapshot 'db26-graph generation (list (list 'edge 2 pairs))))
+  (reasoning-source-snapshot 'candidate-feedback-graph generation (list (list 'edge 2 pairs))))
 (def (compare source p wanted)
   (reasoning-compare-rows source p (reasoning-attempt source p #f) wanted))
 (def ascent-candidate-feedback-test
-  (test-suite "DB26 candidate execution feedback"
+  (test-suite "Candidate execution feedback"
     (test-case "frozen proposals on 64 held-out graphs with exact differences"
       (let (kills (make-hash-table-eq))
         (for-each
@@ -62,7 +62,7 @@
                   (when (eq? (reasoning-feedback-status feedback) 'mismatch) (hash-put! kills variant #t))))
               '(correct no-base no-step wrong-join reverse-base)))
            (when (zero? (modulo (+ mask 1) 8))
-             (displayln "DB26-GRAPHS " (+ mask 1) "/64") (force-output))) (iota 64))
+             (displayln "CANDIDATE-FEEDBACK-GRAPHS " (+ mask 1) "/64") (force-output))) (iota 64))
         (for-each (lambda (v) (check-equal? (hash-get kills v) #t)) '(no-base no-step wrong-join reverse-base))))
     (test-case "a demonstration pass fails on the held-out chain"
       (let (p (proposal 'wrong-join))
@@ -110,10 +110,10 @@
             (else '((rule (answer ?city) (joined ?city)))))
           (list query '(limits 16 64 128))))
 (def (scoped-source generation)
-  (reasoning-source-snapshot 'ml26-scope-control generation
+  (reasoning-source-snapshot 'scoped-comparison-control generation
     '((route 1 ((0) (1) (2))) (direct 1 ((0))) (capital 1 ((0) (2))))))
 (def ascent-scoped-attempt-feedback-test
-  (test-suite "ML26 same-source proposal comparison"
+  (test-suite "Same-source proposal comparison"
     (test-case "complete scope errors have exact missing and extra rows"
       (let* ((source (scoped-source 0)) (gold (scoped-proposal 'gold))
              (reference (reasoning-attempt source gold #f))

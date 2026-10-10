@@ -30,9 +30,9 @@ See [[file:../../evidence/scheme-frontier-coverage-20261006/receipt.json][qualif
 representation/async refinement remain separate obligations.
 
 
-* B23 native correspondence: revoke failed custom reads (2026-10-06)
+* Provider concretization native correspondence: revoke failed custom reads (2026-10-06)
 
-[[https://kmicinski.com/assets/byods.pdf][B23 Section 4, PDF page 11]] connects index reads with concretization and
+[[https://kmicinski.com/assets/byods.pdf][Provider concretization Section 4, PDF page 11]] connects index reads with concretization and
 requires logical indices of one relation to agree. Its formal interface does
 not define exception recovery for effectful Scheme receiver callbacks. This
 implementation gap is ours: build and extend already handle failed mutable

@@ -1,14 +1,14 @@
 # SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-#+TITLE: P18: Why and why-not are provenance queries
+#+TITLE: why/why-not explanation: Why and why-not are provenance queries
 #+STATUS: paper reading; recursive and Agent semantics remain open
 #+DATE: 2026-09-30
 #+FILETAGS: :research:agent:provenance:
 
 * Source
 :PROPERTIES:
-:CUSTOM_ID: agent-p18
+:CUSTOM_ID: agent-why-why-not-explanation
 :SOURCE_PDF: https://arxiv.org/pdf/1808.05752
 :DOI: 10.1007/s00778-018-0518-5
 :END:
@@ -19,7 +19,7 @@ version, 2018).  PDF page numbers below use the 32-page extended PDF.
 
 * Evidence ledger
 
-#+NAME: p18-evidence
+#+NAME: why-why-not-explanation-evidence
 | PDF locator | Author result | Transfer hypothesis | Boundary |
 |-------------+---------------+---------------------+----------|
 | Abstract; §1, PDF pp. 2–3 | Why and why-not questions ask for relevant provenance, not just result rows | Make =explain= a separate bounded query | Paper treats nonrecursive first-order Datalog with negation |

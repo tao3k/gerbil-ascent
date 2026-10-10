@@ -7,7 +7,7 @@ source dates and qualification boundaries. Current evidence is commit-specific.
 
 * Frontier verification and full-paper closure (2026-10-05)
 
-The [[file:../../scheme-paper-closure.org][paper closure matrix]] distinguishes the entire B23 target from bounded
+The [[file:../../scheme-paper-closure.org][paper closure matrix]] distinguishes the entire Provider concretization target from bounded
 built-in Provider receipts. =ProviderFrontier.lean= proves three local laws;
 =ProviderFrontier.qnt= explores eqrel injection and delivery, rejecting raw-only
 frontiers and dropped consumption. Native tests compare each expansion against
@@ -94,7 +94,7 @@ pairs. Public ordered export replays a frozen injection journal; source replay
 continues to use only authoritative sources. See the
 [[file:../../evidence/scheme-relation-views-20261007/receipt.json][source-bound native/cost receipt]].
 
-This makes B23's distinction between representation and concretization concrete
+This makes Provider concretization's distinction between representation and concretization concrete
 in the engine. Sparse keyed observation, repeated grouped joins, retained updates
 and ordered full export have separate costs. Full export regenerates both a
 transient graph owner and output tuples; a descriptor count is not a whole-engine

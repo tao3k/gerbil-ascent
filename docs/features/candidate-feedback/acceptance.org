@@ -5,7 +5,7 @@
 
 * Design and ownership
 
-[[file:../../research/agent-inference/datalogbench-db26.org][DB26 reading]] motivates separating static admission, native completion and
+[[file:../../research/agent-inference/candidate-feedback.org][candidate execution feedback reading]] motivates separating static admission, native completion and
 semantic agreement. [[file:../../../candidate/feedback.ss][reasoning-compare-rows]] consumes the existing snapshot,
 proposal and receipt, plus a caller-owned finite reference for the full query
 row. It checks snapshot identity/generation/content and proposal content before
@@ -21,9 +21,9 @@ receipt establishes the reference's authority or natural-language fidelity.
 A match applies only to this reference, query and snapshot; it is not program
 equivalence or a proof/certificate verification result.
 
-* Same-source gold executor comparison (ML26)
+* Same-source gold executor comparison (scoped witness execution)
 
-The [[file:../../research/agent-inference/matlogic-ml26.org][MatLogic reading]] motivates distinguishing a scope specification error
+The [[file:../../research/agent-inference/scoped-witness.org][MatLogic reading]] motivates distinguishing a scope specification error
 from successful execution of that wrong specification. =reasoning-compare-attempts=
 accepts already executed candidate and gold proposals, retaining the exact
 existing executor and source boundary:
@@ -159,7 +159,7 @@ The original four Cases, four comparison Cases and seven named correspondence
 Cases pass locally (15 total). Focused
 Lean kernel checking and the expanded Quint gate also pass. Remote
 whole-revision CI is a separate delivery gate. No model-generated proposal,
-Souffle corpus execution, published DB26 score or general equivalence is claimed.
+Souffle corpus execution, published candidate execution feedback score or general equivalence is claimed.
 
 The additional conformance Case passes all 1,024 observations in native compiled
 execution (12 seconds locally), and current Quint/frozen/Lean comparison passes.
@@ -169,10 +169,10 @@ as an alternate accepted corpus. No timeout, heap or performance contract change
 
 * Initial CI timeout and execution-only consumer correction
 
-Revision =e888940= passed all four DB26 compiled Cases in CI, but the full
+Revision =e888940= passed all four candidate execution feedback compiled Cases in CI, but the full
 semantic roster reached the unchanged 120-second invocation deadline during
 the subsequent BYODS invariant Suite (exit 124). This is rejected aggregate
-qualification, not a DB26 semantic failure. Execution grading does not consume
+qualification, not a candidate execution feedback semantic failure. Execution grading does not consume
 optional positive certificates, so =reasoning-attempt= now accepts =#f= for
 that work budget and omits both replays. Default certificate production and
 its regression Suite remain active. The 320 native attempts and exact row

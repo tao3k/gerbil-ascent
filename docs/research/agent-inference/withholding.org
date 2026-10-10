@@ -24,7 +24,7 @@ rejects their intersection, then publishes a copied higher-generation snapshot.
 It preserves the original snapshot and its full reference rows. Existing
 reasoning execution and independently verified finite evidence recover a withheld
 answer under an explicitly supplied composition rule. A direct-lookup proposal
-loses that answer; DB26 complete row feedback reports it as missing.
+loses that answer; candidate execution feedback complete row feedback reports it as missing.
 
 This is a deterministic dataset-cut mechanism. It does not validate that the
 provided body entails the head. Caller-supplied groundings require separately

@@ -113,11 +113,11 @@ planner changes. Model benefit and performance require separate paired runs.
 
 * Paper correspondence
 
-- [[https://www.cl.cam.ac.uk/~nk480/datafun.pdf][Datafun F16]], section 2: monotonicity and finite-height obligations are distinct.
+- [[https://www.cl.cam.ac.uk/~nk480/datafun.pdf][Datafun functional fixed points]], section 2: monotonicity and finite-height obligations are distinct.
   Our finite graph supports a structural argument, not its general type theorem.
-- [[https://plg2.cs.uwaterloo.ca/~olhotak/pubs/oopsla20c.pdf][Flix F20]], sections 1 and 4: first-class constraints and stratification.
+- [[https://plg2.cs.uwaterloo.ca/~olhotak/pubs/oopsla20c.pdf][Flix fragment composition]], sections 1 and 4: first-class constraints and stratification.
   Our whole-program runtime admission differs from its static analysis.
-- [[https://www.rntz.net/files/seminaive-datafun.pdf][Datafun S20]], sections 4 onward: higher-order changes require their own
+- [[https://www.rntz.net/files/seminaive-datafun.pdf][Datafun higher-order change]], sections 4 onward: higher-order changes require their own
   semantics. Our positive finite insertion subset is narrower.
 - [[https://www.vldb.org/pvldb/vol16/p1601-budiu.pdf][DBSP]], sections 4.1 and 4.3: signed changes and stateful maintenance.
   Current replacement recomputation does not implement that transformation.

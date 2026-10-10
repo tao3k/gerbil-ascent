@@ -55,7 +55,7 @@ truth and full-suite qualification are recorded with source bindings.
 
 All ten package acceptance criteria remain active. In particular this
 representation change does not admit the full OpenJDK application or its
-performance and peak-memory claims. See the B23 research section and the
+performance and peak-memory claims. See the Provider concretization research section and the
 compressed-equivalence evidence receipt for the exact tested boundary.
 
 The [[file:../../evidence/scheme-eqrel-views-20261007/receipt.json][compressed equivalence receipt]] records 86 native modules / 829 Cases,
@@ -85,7 +85,7 @@ cover the ordered algorithm, dispatcher and bounds; Quint owns declared-layout
 publication and old-reader lifetime, with three discriminating layout faults.
 Independent native truth checks 96-field projections, value identities,
 mutable helper inputs, callback header isolation, 256 retained histories and
-compiled self joins. See [[file:proofs.org::*B23 constructed column projection and index layout lifetime (2026-10-08)][the proof/implementation bridge]] and
+compiled self joins. See [[file:proofs.org::*Provider concretization constructed column projection and index layout lifetime (2026-10-08)][the proof/implementation bridge]] and
 [[file:../../evidence/scheme-column-projection-20261008/receipt.json][the acceptance receipt]].
 
 This closes the stepped-projection algebra obligation recorded on 2026-10-07.
@@ -110,12 +110,12 @@ Quint adds query cache admission independently of old held readers. Extension,
 failed mutation and wrong rebuild views have their own =ViewConsistent= fault
 controls. Native tests cover six physical permutations and every prefix depth
 across 64 retained histories, independent direct-column truth, frozen reference,
-cache identity and held spines. The [[file:proofs.org::*B23 curried collection, ordinal restoration and cached views (2026-10-08)][implementation/proof bridge]] and
+cache identity and held spines. The [[file:proofs.org::*Provider concretization curried collection, ordinal restoration and cached views (2026-10-08)][implementation/proof bridge]] and
 [[file:qualification.org::*Curried collection qualification][feature qualification]] record the exact source and evidence boundaries.
 
 Constructed logical key search and physical-prefix adaptation now have six
 executable Lean laws in =IndexedPositiveTraversal.SharedIndex=. The
-[[file:proofs.org::*B23 constructed logical key adaptation (2026-10-08)][adapter bridge]] derives the physical comparison from the supplied logical
+[[file:proofs.org::*Provider concretization constructed logical key adaptation (2026-10-08)][adapter bridge]] derives the physical comparison from the supplied logical
 field function and prefix coverage; distinct-column positional lookup also
 admits arbitrary values. Native malformed-key tests protect cold, warm and
 extended views. Quint retains exclusive ownership of the lifecycle protocol.
@@ -125,7 +125,7 @@ visitor correspondence and complete paper application benefits retain their
 gates. The existing benchmark compares a cumulative lifecycle against its older
 frozen reference; it does not attribute all observed gains to this change.
 
-The [[file:proofs.org::*B23 constructed curried trie and prefix occurrences (2026-10-08)][constructed trie bridge]] adds nine laws: single insertion equals recursive
+The [[file:proofs.org::*Provider concretization constructed curried trie and prefix occurrences (2026-10-08)][constructed trie bridge]] adds nine laws: single insertion equals recursive
 grouping, finite batch histories preserve that representation, nested collection
 preserves occurrence counts, prefix reads implement direct filtering, and fresh
 ordinal insertion histories restore the exact ordered result. This derives the
@@ -140,7 +140,7 @@ limits. Quint continues to own cache and publication lifecycle separately.
 The constructed per-node inventory obligation now has eight Lean laws and
 native heterogeneous-key conformance in the existing index-entry Suite.
 The exact law, primitive correspondence and measured command boundaries are
-recorded in [[file:proofs.org::*B23 materialized per-node inventories (2026-10-08)][the construction bridge]] and [[file:qualification.org::*Materialized dictionary qualification][qualification]].
+recorded in [[file:proofs.org::*Provider concretization materialized per-node inventories (2026-10-08)][the construction bridge]] and [[file:qualification.org::*Materialized dictionary qualification][qualification]].
 Shared-root lifecycle authoring has moved to Quint, with the same invariants
 and defect controls. The [[file:../qualification/quint.org][migration inventory]] distinguishes this completed model
 from the remaining protocol sources. This does not close arbitrary native hash

@@ -1,14 +1,14 @@
 # SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-#+TITLE: L25 reading: Flix as a language-integrated Datalog system
+#+TITLE: program lifecycle reading: Flix as a language-integrated Datalog system
 #+STATUS: research note; no feature equivalence claim
 #+DATE: 2026-09-30
 #+FILETAGS: :research:flix:language-design:scheme-dsl:
 
 * Bibliography
 :PROPERTIES:
-:CUSTOM_ID: flix-l25
+:CUSTOM_ID: program-lifecycle
 :SOURCE_PDF: https://plg.uwaterloo.ca/~olhotak/pubs/oopsla25b.pdf
 :DOI: 10.1145/3763126
 :ACCESSED: 2026-09-30
@@ -16,12 +16,12 @@
 
 Magnus Madsen and Ondřej Lhoták, [[https://plg.uwaterloo.ca/~olhotak/pubs/oopsla25b.pdf][Flix: A Design for Language-Integrated
 Datalog]], OOPSLA 2025.  PDF page numbers below count from one.  The
-paper is a systems overview that builds on the [[file:flix-f20.org][2020
+paper is a systems overview that builds on the [[file:fragment-composition.org][2020
 first-class constraints paper]].
 
 * Evidence ledger
 
-#+NAME: flix-l25-evidence
+#+NAME: program-lifecycle-evidence
 | Locator | Paper design | Scheme research implication | Limit |
 |---------+--------------+-----------------------------+-------|
 | §3.3, PDF pp. 6–7 | Explicit inject and query bridge collections and solved relations | Separate data loading, program composition, solve, and result projection | No need to copy Flix syntax |
@@ -33,7 +33,7 @@ first-class constraints paper]].
 
 * Architecture implications
 :PROPERTIES:
-:CUSTOM_ID: flix-l25-architecture
+:CUSTOM_ID: program-lifecycle-architecture
 :END:
 
 Flix makes a Datalog program a value that can be built, passed,

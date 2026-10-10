@@ -396,7 +396,7 @@ the rejected GitHub head. No performance speedup is inferred from worker count.
 
 * Positive Set actor round implementation update (2026-10-05)
 
-The [[file:scheme-actor-runtime-design.org][actor runtime design]] now maps the A22 round/SCC and B23 concretization
+The [[file:scheme-actor-runtime-design.org][actor runtime design]] now maps the rule planning round/SCC and Provider concretization concretization
 premises to actual =program/actor-round.ss= integration: frozen frontiers,
 private frames/indexes, credit-bounded candidates, one owner merge and terminal
 drain before commit. Native tests and Lean/Quint gates cover this admitted pure
@@ -409,8 +409,8 @@ closure, model gain or MRR integration is asserted.
 The [[file:scheme-actor-runtime-design.org][actor runtime design]] now has an implemented source-cut owner and independent
 compute worker. Cancel increments generation, refuses old publication and waits
 for assigned worker/monitor drain; failure restores committed sources. Native
-lifecycle tests and Quint publication/drain checks accompany the code. B22's
-outer/inner natural time distinction motivates generation versus round; A22's
+lifecycle tests and Quint publication/drain checks accompany the code. incremental view maintenance's
+outer/inner natural time distinction motivates generation versus round; rule planning's
 ready-SCC dependency scheduling remains a next implementation obligation.
 The actor constructor uses fresh engines, not retained incremental reuse. No
 performance gain or whole-runtime closure is asserted.
@@ -422,8 +422,8 @@ projection to actual native component workers. Completed predecessors release
 successors without waiting for unrelated active SCCs; each SCC retains local
 round completion, one owner charges global unique-row budgets, and the complete
 cut remains the Session publication unit. Native independent truth/rendezvous
-Cases and Quint prerequisite/drain gates accompany this slice. A22's SCC
-order/local state is implemented for pure Set cuts; B23 Provider concretization
+Cases and Quint prerequisite/drain gates accompany this slice. rule planning's SCC
+order/local state is implemented for pure Set cuts; Provider concretization Provider concretization
 remains a separate contract. A matched exploratory native timing probe retains
 serial and SCC 1/2/4 observations without asserting general multicore speedup.
 

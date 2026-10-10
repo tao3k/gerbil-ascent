@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-#+TITLE: ML26 reading: executable scoped negation on knowledge graphs
+#+TITLE: scoped witness execution reading: executable scoped negation on knowledge graphs
 #+STATUS: finite scope executor and same-source proposal comparison implemented; model KGQA pending
 #+DATE: 2026-10-10
 #+FILETAGS: :research:knowledge-graph:negation:llm:datalog:
@@ -31,7 +31,7 @@ snapshot, query and evidence boundary in this repository.
 
 * Executable transfer
 
-The [[file:wikidata-scope-wd26.org][WD26 fixture]] already checks branch-scoped exclusion on pinned finite
+The [[file:wikidata-scoped-exclusion.org][Wikidata scoped exclusion fixture]] already checks branch-scoped exclusion on pinned finite
 Wikidata claims. The [[file:../../features/candidate-feedback/acceptance.org][candidate feedback contract]] now adds
 =reasoning-compare-attempts=: compare submitted and gold program receipts only
 after independent same-source/content binding, completion and exact full query
@@ -87,7 +87,7 @@ measure specification loss. Repeat eligible positive paths through
 Set and =trrel= storage only after both are independently proved to
 denote the same relation on that fixture.
 
-The end-to-end model study remains proposed. WD26 and the shared scope/feedback
+The end-to-end model study remains proposed. Wikidata scoped exclusion and the shared scope/feedback
 corpora already implement its finite executor controls; they do not establish
 that ASCENT runs the paper's benchmark. Full KG truth, NL intent, and incomplete-subgraph
 answers remain distinct from finite Datalog closure.

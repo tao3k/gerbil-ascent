@@ -1,14 +1,14 @@
 # SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-#+TITLE: F20 reading: Flix first-class Datalog constraints
+#+TITLE: fragment composition reading: Flix first-class Datalog constraints
 #+STATUS: research note; Scheme composition remains a proposal
 #+DATE: 2026-09-30
 #+FILETAGS: :research:flix:scheme-dsl:
 
 * Bibliography
 :PROPERTIES:
-:CUSTOM_ID: flix-f20
+:CUSTOM_ID: fragment-composition
 :SOURCE_PDF: https://plg.uwaterloo.ca/~olhotak/pubs/oopsla20c.pdf
 :DOI: 10.1145/3428193
 :ACCESSED: 2026-09-30
@@ -18,7 +18,7 @@ Magnus Madsen and Ondřej Lhoták, [[https://plg.uwaterloo.ca/~olhotak/pubs/oops
 with First-Class Datalog Constraints]], OOPSLA 2020.  The [[https://doc.flix.dev/fixpoints.html][Flix fixpoints
 documentation]] is a current implementation reference.  The paper PDF
 is the primary research source; its page numbers below count from one.
-The [[file:flix-l25.org][2025 systems paper]] adds later design decisions
+The [[file:program-lifecycle.org][2025 systems paper]] adds later design decisions
 about private predicate identities, injection, queries, and effects.
 
 * Evidence ledger

@@ -186,7 +186,7 @@ column still describes evidence needed for broader claims.
 | Lattice state | Explicit order and join contract, separate from set relations | A user join needs law and height evidence | Finite-model law checks and closure comparison |
 | Lifecycle | Construct/inject, admit, solve, query as distinct stages | Late composition and source replacement change answers | Negation-sensitive late composition and repeated query |
 | Source withdrawal | Recompute the accepted snapshot until deletion semantics are proved | Increasing-delta theory does not justify deletion | Failure-atomic replacement with full output comparison |
-| Higher-order delta | First specialize fragments to inspectable IR; research typed operator changes later | Datafun S20's proof concerns a typed calculus | Naive versus transformed full-result equivalence and scale |
+| Higher-order delta | First specialize fragments to inspectable IR; research typed operator changes later | Datafun higher-order change's proof concerns a typed calculus | Naive versus transformed full-result equivalence and scale |
 
 Within the internal priority, design the native grammar, semantic IR
 and admission boundary; rewrite the implementation against their
@@ -211,7 +211,7 @@ The same transaction owner now accepts checked updates across distinct
 fragments and from a direct named program. One end-to-end qualification
 uses an independent finite model for recursive reachability, negation,
 finite mapping, grouped count and a max lattice, then checks both
-withdrawal and failure rollback. [[file:research/scheme-dsl/deletion-h18.org][H18]] makes explicit that this is
+withdrawal and failure rollback. [[file:research/scheme-dsl/deletion-rederivation.org][deletion rederivation]] makes explicit that this is
 atomic recomputation, pending any support-aware deletion algorithm.
 The LLM candidate/observation contract follows the admitted Scheme
 core; it cannot claim stronger semantics than that core provides.

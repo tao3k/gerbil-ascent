@@ -69,7 +69,7 @@ rules.
  (bounds 4 4 8))
 #+end_src
 
-The left arrow follows the rule direction in Rust Ascent and the A22 paper.
+The left arrow follows the rule direction in Rust Ascent and the rule planning paper.
 Scheme syntax adds lexical capture. Source rows and bounds are evaluated at
 declaration time; predicates, generators and aggregators run when their rule
 is evaluated. Bare rule identifiers denote logic variables. Use
@@ -141,10 +141,10 @@ lattice-source and replacement updates use the accepted source snapshot.
 
 * Extensions and evidence
 
-A22 motivates embedded rules and fixed-point semantics. B23 motivates
+rule planning motivates embedded rules and fixed-point semantics. Provider concretization motivates
 relation-specific storage; the existing POO Provider boundary owns that
 feature, and a declarative provider slot can be added after its syntax and
-validation have an independent Rust comparison. F16 motivates
+validation have an independent Rust comparison. functional fixed points motivates
 monotonicity-aware future forms; arbitrary Scheme procedures are not
 silently admitted as monotone.
 
@@ -155,7 +155,7 @@ readability does not close those gaps.
 
 * Rust 0.8.0 syntax inventory and next design
 
-The pinned =ascent_macro-0.8.0/src/ascent_syntax.rs= parser and A22 Figure 1
+The pinned =ascent_macro-0.8.0/src/ascent_syntax.rs= parser and rule planning Figure 1
 include declarations, facts, multiple heads, positive and negated atoms,
 conditions, =let=, =if let=, generators, aggregates, disjunction, relation
 patterns and expressions, local macro definitions, source inclusion and

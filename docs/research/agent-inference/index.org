@@ -6,7 +6,7 @@
 #+DATE: 2026-09-30
 #+FILETAGS: :research:llm:inference:
 
-Dedicated [[file:brink-b26.org][BRINK method reading]] connects whole-batch evidence protection to
+Dedicated [[file:withholding.org][BRINK method reading]] connects whole-batch evidence protection to
 [[file:../../features/withholding/acceptance.org][native snapshot withholding and finite qualification]].
 
 * Question and scope
@@ -26,7 +26,7 @@ The sources below use different logics and workloads.  Their results
 are design evidence, not proof that our Library already has the API.
 The [[file:reasoning-language-formal-agenda.org][reasoning-language and formal agenda]] ranks the ASCENT/PL language
 papers, maps the MRR boundary, and states the remaining Lean/Quint gates.
-The [[file:wikidata-scope-wd26.org][WD26 finite KG fixture]] pins Wikidata entity revisions and tests
+The [[file:wikidata-scoped-exclusion.org][Wikidata scoped exclusion finite KG fixture]] pins Wikidata entity revisions and tests
 branch-scoped exclusion against an independent set walk; it has no
 model-generated proposal yet.
 The first concrete checker is =gerbil-ascent=; POO Flow owns workflow
@@ -37,16 +37,16 @@ adapters such as [[file:serving-sglang-vllm.org][SGLang/vLLM]] follow that
 contract; they are lower priority than its executable Scheme fixture.
 
 #+NAME: agent-source-ledger
-| Key | Primary source | Our note | Applicable question |
+| Feature | Primary source | Our note | Applicable question |
 |-----+----------------+----------+---------------------|
-| ML26 | [[https://proceedings.mlr.press/v306/miao26e.html][LLM-MatLogic, ICML 2026]] | [[file:matlogic-ml26.org][reading]] | Can model-specified graph negation keep its branch scope and witness through execution? |
-| DB26 | [[https://arxiv.org/abs/2609.37233][DatalogBench, arXiv v1]] | [[file:datalogbench-db26.org][reading]] | Can LLM-written recursive rules pass execution tests, not just parsing? |
-| FL25 | [[https://www.vldb.org/pvldb/vol19/p361-zhao.pdf][FlowLog, PVLDB 2025 / VLDB 2026]] | [[file:../scheme-dsl/flowlog-fl25.org][reading]] | Which plan/physical choices preserve a recursive result while reducing work on real graphs? |
-| B23 | [[https://kmicinski.com/assets/byods.pdf][BYODS, OOPSLA 2023]] | [[file:../scheme-dsl/byods-b23.org][reading]] | Do specialized relation Providers expose every new fact through delta? |
-| X25 | [[https://drops.dagstuhl.de/entities/document/10.4230/LIPIcs.ECOOP.2025.33][Mono Types, ECOOP 2025]] | [[file:../scheme-dsl/mono-types-x25.org][reading]] | Can first-class container observations preserve a finite fixed point after lowering? |
-| IR25 | [[https://proceedings.iclr.cc/paper_files/paper/2025/file/582d4e27fa24168f3af1f4582655034b-Paper-Conference.pdf][IRIS, ICLR 2025]] | [[file:iris-ir25.org][dedicated reading and finite transfer]] | Does a generated source/sink specification improve real-code analysis without hiding false alerts? |
-| P18 | [[https://arxiv.org/abs/1808.05752][PUG extended paper]] | [[file:pug-p18.org][reading]] | What is a bounded why/why-not explanation? |
-| S23 | [[https://doi.org/10.1145/3591280][Scallop, PLDI]] | [[file:scallop-s23.org][reading]] | What extra semantics would a differentiable training integration require? |
+| scoped witness execution | [[https://proceedings.mlr.press/v306/miao26e.html][LLM-MatLogic, ICML 2026]] | [[file:scoped-witness.org][reading]] | Can model-specified graph negation keep its branch scope and witness through execution? |
+| candidate execution feedback | [[https://arxiv.org/abs/2609.37233][DatalogBench, arXiv v1]] | [[file:candidate-feedback.org][reading]] | Can LLM-written recursive rules pass execution tests, not just parsing? |
+| recursive physical planning | [[https://www.vldb.org/pvldb/vol19/p361-zhao.pdf][FlowLog, PVLDB 2025 / VLDB 2026]] | [[file:../scheme-dsl/recursive-physical-planning.org][reading]] | Which plan/physical choices preserve a recursive result while reducing work on real graphs? |
+| Provider concretization | [[https://kmicinski.com/assets/byods.pdf][BYODS, OOPSLA 2023]] | [[file:../scheme-dsl/provider-concretization.org][reading]] | Do specialized relation Providers expose every new fact through delta? |
+| monotone containers | [[https://drops.dagstuhl.de/entities/document/10.4230/LIPIcs.ECOOP.2025.33][Mono Types, ECOOP 2025]] | [[file:../scheme-dsl/monotone-containers.org][reading]] | Can first-class container observations preserve a finite fixed point after lowering? |
+| taint path qualification | [[https://proceedings.iclr.cc/paper_files/paper/2025/file/582d4e27fa24168f3af1f4582655034b-Paper-Conference.pdf][IRIS, ICLR 2025]] | [[file:taint-paths.org][dedicated reading and finite transfer]] | Does a generated source/sink specification improve real-code analysis without hiding false alerts? |
+| why/why-not explanation | [[https://arxiv.org/abs/1808.05752][PUG extended paper]] | [[file:why-not-explanations.org][reading]] | What is a bounded why/why-not explanation? |
+| weighted provenance | [[https://doi.org/10.1145/3591280][Scallop, PLDI]] | [[file:weighted-provenance.org][reading]] | What extra semantics would a differentiable training integration require? |
 | Serve | [[https://docs.sglang.io/docs/advanced_features/tool_parser][SGLang]] / [[https://docs.vllm.ai/en/latest/features/tool_calling/][vLLM]] official docs | [[file:serving-sglang-vllm.org][interface study]] | How does a deployed model call and observe the Library? |
 
 * Cross-source inference
@@ -65,10 +65,10 @@ A later revision is a separate experimental condition, not evidence
 that the model understood the rule on its first attempt. The general
 workflow can use =observe -> propose -> check -> explain -> choose
 another step or stop=. This is our synthesis, not an API these papers
-jointly prescribe. DB26 shows that fixing syntax and declarations can
-still leave recursive semantic errors; ML26 shows that executable
+jointly prescribe. candidate execution feedback shows that fixing syntax and declarations can
+still leave recursive semantic errors; scoped witness execution shows that executable
 constraints can also be specified with the wrong scope.
-P18 shows why explanations are a separate query over provenance rather
+why/why-not explanation shows why explanations are a separate query over provenance rather
 than a natural-language retelling of the returned row.
 The Library supplies evidence and checks at inference time; model
 judgment remains distinct from a checker result. Preserve the raw first
@@ -149,7 +149,7 @@ integration.  It does not turn the Library into a model-step scheduler or
 the training framework.  If a training/inference framework is chosen,
 first test a discrete adapter that consumes complete, bounded candidate
 outputs and explanations under exact source/program identities.  A
-differentiable layer is a separate research path: [[file:scallop-s23.org][Scallop]] shows
+differentiable layer is a separate research path: [[file:weighted-provenance.org][Scallop]] shows
 why weighted provenance and gradient semantics would be required.
 An FFI or tensor conversion alone does not supply those semantics.
 
@@ -164,17 +164,17 @@ not itself validate LLM-proposed facts, rule meaning or evidence admission.
 
 * Reading order
 
-Start with the [[file:2026-logic-ai-screen.org][core screen]] and [[file:matlogic-ml26.org][ML26]] for real-KG
-scope and witnesses, then [[file:datalogbench-db26.org][DB26]] for generated rule correctness. Read
-[[file:../scheme-dsl/byods-b23.org][B23]] and [[file:../scheme-dsl/flowlog-fl25.org][FL25]] beside the Scheme Provider, planner and Session
-code, followed by the [[file:../scheme-dsl/datafun-f16.org][F16]]/[[file:../scheme-dsl/datafun-s20.org][S20]] functional boundary. The
-[[file:../scheme-dsl/mono-types-x25.org][X25]] reading tests whether a first-class container can preserve that boundary.
-[[file:pug-p18.org][P18]] gives the separate explanation semantics; [[file:scallop-s23.org][S23]]
+Start with the [[file:2026-logic-ai-screen.org][core screen]] and [[file:scoped-witness.org][scoped witness execution]] for real-KG
+scope and witnesses, then [[file:candidate-feedback.org][candidate execution feedback]] for generated rule correctness. Read
+[[file:../scheme-dsl/provider-concretization.org][Provider concretization]] and [[file:../scheme-dsl/recursive-physical-planning.org][recursive physical planning]] beside the Scheme Provider, planner and Session
+code, followed by the [[file:../scheme-dsl/functional-fixed-points.org][functional fixed points]]/[[file:../scheme-dsl/higher-order-change.org][higher-order change]] functional boundary. The
+[[file:../scheme-dsl/monotone-containers.org][monotone containers]] reading tests whether a first-class container can preserve that boundary.
+[[file:why-not-explanations.org][why/why-not explanation]] gives the separate explanation semantics; [[file:weighted-provenance.org][weighted provenance]]
 frames the optional training-framework question.
 For an actual deployed-model interface, read
 [[file:serving-sglang-vllm.org][SGLang/vLLM serving research]].
 
 * Minimum-height proof fragment reading
 
-The [[file:provenance-z19.org][Z19 method study]] distinguishes minimal-height annotations and
+The [[file:proof-height.org][proof height method study]] distinguishes minimal-height annotations and
 fragments from current witnesses, complete ground graphs and natural counts.

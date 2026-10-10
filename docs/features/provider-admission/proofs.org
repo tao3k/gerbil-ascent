@@ -5,9 +5,9 @@
 Feature owner: [[file:../index.org][feature index]]. This page retains the original
 source dates and qualification boundaries. Current evidence is commit-specific.
 
-* B23 native correspondence: isolate storage injection spines (2026-10-06)
+* Provider concretization native correspondence: isolate storage injection spines (2026-10-06)
 
-[[https://kmicinski.com/assets/byods.pdf][B23 Sections 3.1 and 3.3]] express injection and concretization as operations
+[[https://kmicinski.com/assets/byods.pdf][Provider concretization Sections 3.1 and 3.3]] express injection and concretization as operations
 on abstract relation state. The Scheme implementation supplies concrete row
 snapshots to a StorageProvider. An independent ownership condition is needed
 so retaining those lists cannot modify source authority or previously
@@ -46,9 +46,9 @@ Copying costs scale with supplied all/pending snapshots and the emitted batch.
 No new Lean/TLA source, provider speedup or general refinement is claimed.
 
 
-* B23 native correspondence: custom state readiness through publication (2026-10-06)
+* Provider concretization native correspondence: custom state readiness through publication (2026-10-06)
 
-[[https://kmicinski.com/assets/byods.pdf][B23 Sections 3.1 and 3.3]] describe injection and represented total/delta
+[[https://kmicinski.com/assets/byods.pdf][Provider concretization Sections 3.1 and 3.3]] describe injection and represented total/delta
 facts. Scheme callbacks introduce another obligation: an exception must not
 leave a reusable private state that remembers a fact the evaluator never
 published. No rollback operation exists in the arbitrary StorageProvider API.
@@ -90,9 +90,9 @@ Native extraction and those remaining Provider laws still require separate
 work. No Lean/Quint source is changed by this implementation.
 
 
-* B23 native correspondence: graph state readiness beyond kernel preflight (2026-10-06)
+* Provider concretization native correspondence: graph state readiness beyond kernel preflight (2026-10-06)
 
-[[https://kmicinski.com/assets/byods.pdf][B23 Section 3.3]] requires represented facts to cross the evaluator's
+[[https://kmicinski.com/assets/byods.pdf][Provider concretization Section 3.3]] requires represented facts to cross the evaluator's
 appropriate total/delta frontier. A kernel's successful private injection and
 a complete engine publication are separate events. The native graph Providers
 have atomic budget preflight in their raw APIs, but a later field checker or

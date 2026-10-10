@@ -7,7 +7,7 @@ source dates and qualification boundaries. Current evidence is commit-specific.
 
 * Canonical demand planning (2026-10-09)
 
-[[file:../../research/scheme-dsl/souffle-s16.org][Souffle method reading]] maps the existing maximum-matching planner to
+[[file:../../research/scheme-dsl/index-planning.org][Souffle method reading]] maps the existing maximum-matching planner to
 primitive-search chain coverage. Normalized demands now have lexicographic
 order before augmentation: equal demand sets generate equal physical layouts,
 including equal minima with several legal chain choices. The 128-family native
@@ -26,7 +26,7 @@ each chain's permutation covers every assigned logical requirement as a prefix.
 The default hash receiver, singleton requirements and arbitrary custom
 Providers retain their existing representations. Requirements are planned only
 when an explicit curried receiver first needs an actual physical lookup. This implements the layout-sharing mechanism discussed in
-[[https://kmicinski.com/assets/byods.pdf][B23 section 5.5]], rather than renaming the former cache.
+[[https://kmicinski.com/assets/byods.pdf][Provider concretization section 5.5]], rather than renaming the former cache.
 
 A physical trie stores each input occurrence at one full-depth leaf. Ordinals
 restore exact relation order when selecting a shorter prefix; ordered view
@@ -118,7 +118,7 @@ withdrawn seeds, and =constructed_sources= proves preservation of unaffected
 seeds. =constructed_recovery= supplies both premises to exact least-model
 recovery. Neither stability nor dependency closure is supplied by the caller.
 Complete native grounding/representation remains an explicit bridge; this does
-not establish H18 DRedc recursive/nonrecursive counter maintenance or B22 DBSP.
+not establish deletion rederivation DRedc recursive/nonrecursive counter maintenance or incremental view maintenance DBSP.
 
 The existing native graph suite now checks all 729 simultaneous withdrawal
 cuts across 64 three-node graphs against independent Floyd matrix closure.
@@ -150,7 +150,7 @@ must separately qualify this combined source.
 
 * Certified minimum physical chains (2026-10-06)
 
-The B23 index-sharing planner now checks its search result independently before
+The Provider concretization index-sharing planner now checks its search result independently before
 returning any layout. It verifies reciprocal matching endpoints, actual strict
 subset edges, alternating reachability, coverage of every edge, and equality of
 cover and matching cardinalities. Chain traversal separately rejects duplicate
@@ -171,9 +171,9 @@ results and the negative complete-solve cost result. No model or Rust result is
 implied by minimum physical root count.
 
 
-* B23 constructed column projection and index layout lifetime (2026-10-08)
+* Provider concretization constructed column projection and index layout lifetime (2026-10-08)
 
-B23 section 4, printed page 264:11, requires keyed reads and ReadAll to agree
+Provider concretization section 4, printed page 264:11, requires keyed reads and ReadAll to agree
 on a relation's concretization. The [[https://kmicinski.com/assets/byods.pdf][primary paper]] motivates the obligation;
 the cursor algorithm below is our Scheme implementation choice. It does not
 come from a new paper claim or establish all of section 4.
@@ -223,9 +223,9 @@ whole-application benefit remain separate obligations. No measured speedup,
 physical-memory reduction or complete paper replication is claimed.
 
 
-* B23 curried collection, ordinal restoration and cached views (2026-10-08)
+* Provider concretization curried collection, ordinal restoration and cached views (2026-10-08)
 
-B23 section 5.5, printed pages 264:16--17, uses nested dictionaries and adapters
+Provider concretization section 5.5, printed pages 264:16--17, uses nested dictionaries and adapters
 so one physical chain serves multiple logical indexes. The
 [[https://kmicinski.com/assets/byods.pdf][primary paper]] motivates shared lookup; Scheme additionally preserves ordered
 row occurrences, including duplicates. The earlier =SharedIndex.prefix_lookup=
@@ -298,7 +298,7 @@ GitHub's Scheme job repeats this native lifecycle gate through that Justfile
 entry; no Python supervisor or additional test entry layer is introduced.
 
 
-* B23 constructed logical key adaptation (2026-10-08)
+* Provider concretization constructed logical key adaptation (2026-10-08)
 
 Section 5.5 of the [[https://kmicinski.com/assets/byods.pdf][primary paper]] separates a logical index from its nested
 physical dictionary. =SharedIndex.keyValue= now mirrors the native =value-of=
@@ -332,7 +332,7 @@ Native trie extraction, primitive hash/equality/sort implementation contracts,
 rectangle visitors and complete paper applications remain separate gates.
 
 
-* B23 constructed curried trie and prefix occurrences (2026-10-08)
+* Provider concretization constructed curried trie and prefix occurrences (2026-10-08)
 
 Section 5.5 of the [[https://kmicinski.com/assets/byods.pdf][primary paper]] uses nested maps to serve physical prefixes.
 The earlier ordinal restoration theorem accepted an occurrence permutation as
@@ -379,7 +379,7 @@ the unchanged =ComponentIndex= model is qualified separately, without adding
 positional or trie algebra to its state machine. See the
 [[file:qualification.org::*Trie construction qualification][feature qualification]]. No new performance samples are claimed.
 
-* B23 materialized per-node inventories (2026-10-08)
+* Provider concretization materialized per-node inventories (2026-10-08)
 
 =CurriedDictionary.lean= derives distinct child keys from the actual source
 rows at each path. Every node may enumerate these keys in a different order;

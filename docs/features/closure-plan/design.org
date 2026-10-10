@@ -36,7 +36,7 @@ the existing stability contract.
 
 ** One implementation and research chain
 
-[[https://kmicinski.com/assets/byods.pdf][B23 section 3.2 and Theorem 3.5]] require total/delta concretizations to cover
+[[https://kmicinski.com/assets/byods.pdf][Provider concretization section 3.2 and Theorem 3.5]] require total/delta concretizations to cover
 the current relation and ensure newly implied facts traverse delta before total.
 This implementation uses exact positive Set difference, a stronger local
 instance of that history requirement. It does not generalize that contract to

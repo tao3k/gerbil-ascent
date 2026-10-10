@@ -31,7 +31,7 @@ rejects rather than returning a truncated result marked complete.
 
 * Research and evidence boundaries
 
-[[file:../../research/agent-inference/provenance-z19.org][Z19 method reading]] supplies min/max annotation relaxation. Existing all-tree
+[[file:../../research/agent-inference/proof-height.org][proof height method reading]] supplies min/max annotation relaxation. Existing all-tree
 natural derivation counts retain their separate semantics: recursive counts
 can diverge while minimum founded height remains finite.
 

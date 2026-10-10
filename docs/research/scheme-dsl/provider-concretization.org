@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-#+TITLE: B23 reading: BYODS concretization and delta visibility
+#+TITLE: Provider concretization reading: BYODS concretization and delta visibility
 #+STATUS: built-in engineering baseline qualified; full paper workloads tracked separately
 #+DATE: 2026-10-04
 #+FILETAGS: :research:byods:datalog:provider:

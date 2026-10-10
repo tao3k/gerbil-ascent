@@ -41,14 +41,14 @@ key-adaptation laws and malformed requests on 2026-10-08:
 | just test-file t/qualification/ascent-index-entry-test.ss | 27 cases; OK; exit 0; 32 seconds |
 | just test-native t/qualification/ascent-index-entry-test.ss | 27 cases; native marker and OK; exit 0; 5 seconds execution |
 
-The [[file:proofs.org::*B23 constructed logical key adaptation (2026-10-08)][algorithm bridge]] retains coverage, native exception abstraction and
+The [[file:proofs.org::*Provider concretization constructed logical key adaptation (2026-10-08)][algorithm bridge]] retains coverage, native exception abstraction and
 primitive representation contracts. Production Scheme was unchanged.
 
 * Trie construction qualification
 
 The 2026-10-08 continuation adds nine laws for recursive dictionary construction,
 insertion, histories, prefix occurrence counts and fresh ordinal restoration.
-The [[file:proofs.org::*B23 constructed curried trie and prefix occurrences (2026-10-08)][construction bridge]] states the functional map and inventory assumptions.
+The [[file:proofs.org::*Provider concretization constructed curried trie and prefix occurrences (2026-10-08)][construction bridge]] states the functional map and inventory assumptions.
 
 | Command | Result |
 |---------+--------|

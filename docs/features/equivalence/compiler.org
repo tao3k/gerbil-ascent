@@ -7,7 +7,7 @@ source dates and qualification boundaries. Current evidence is commit-specific.
 
 * Equivalence Provider insertion and exact frontier (2026-10-06)
 
-=EquivalenceComponents= instantiates B23's equivalence concretization with an
+=EquivalenceComponents= instantiates Provider concretization's equivalence concretization with an
 explicit active-node domain. Unseen nodes are not globally reflexive. Adding
 an edge first admits its endpoints, then joins their components with both
 cross products. =insert_least= proves the smallest symmetric/transitive
@@ -35,7 +35,7 @@ controls run in the same suite. See the
 This closes the algebraic eqrel instance and qualifies these native finite
 observations. It does not extract Gambit hash equality, component-pointer
 identity, membership-list iteration, budget arithmetic or row ordering into
-Lean. B23's general custom lattice contracts and universal native actor
+Lean. Provider concretization's general custom lattice contracts and universal native actor
 completion/trace refinement remain separate obligations. Quint continues to
 own private-state publication, failure and credit lifecycle; no duplicate
 algebraic protocol model is introduced. No runtime speedup is claimed.

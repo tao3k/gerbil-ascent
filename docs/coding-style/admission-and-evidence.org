@@ -781,3 +781,31 @@ Candidate, build declaration and modified test source hashes remain identical
 to the qualified snapshot. The 65-Case receipt remains a source-scoped local
 result; it is not a claim that the incoming higher-order changes were tested
 by this study.
+
+* Study: Candidate construction through receipt publication
+
+[[file:../../t/performance/candidate-flow/README.org][Candidate construction and execution flow]] retains complete frozen constructors,
+inspection and receipt execution from =189a691=. Gerbil =1cfb032= compiler fact
+ownership and native structural binding guide private schema/scope indexes and
+named stage results. Public POO contracts and independent proof verification
+remain the extension and trust boundaries.
+
+Repeated validation of every newly constructed term, atom, rule and program
+rebuilds nested Core responsibility evidence. Inert Candidate lowering now owns
+one synchronous construction scope and validates the entire POO program tree
+before it escapes. Ordinary constructors still validate immediately; the internal
+scope entry is excluded from the public interface. Invalid nested terms and roots
+must fail, and failed construction must restore ordinary validation. The scope
+cannot contain supplied procedures or expose partially constructed children.
+
+Schema authority, rule membership, ordered hypothetical fact partition and graph
+record selection have explicit private owners. Receipt prepare, solve, observation
+and proof publication have named stages rather than a single nested decision tree.
+Proof-production diagnostics cannot erase native completion, and current source,
+proposal and certificate binding are independently rechecked at verification.
+
+The paired ASP study reports complete construction separately from complete
+execution receipts. Natural GC participates in timed consumers; forced collection
+for VM-wide allocation measurement belongs to a separate equal-result phase.
+Numeric gates and failed experiments remain part of the receipt. No lookup-only
+CPU result is promoted to an end-to-end gain.

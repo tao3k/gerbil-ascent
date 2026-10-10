@@ -31,11 +31,11 @@ model/application benefit claims retain their stated obligations.
 * Connected compiler representation closure (2026-10-06)
 
 The finite-vector traversal package is now followed by stored head and key
-correspondence in the existing proof owners. This continues the A22/B23
+correspondence in the existing proof owners. This continues the rule planning/Provider concretization
 compiler/index sequence: ordinary binding, dense action lowering, finite dirty
 traversal, declared head reads and selected prior-prefix keys. The new key law
 keeps =KnownColumns= explicit, preserving the distinction between an available
-cell and a logically bound variable. S20 function/argument change translation
+cell and a logically bound variable. higher-order change function/argument change translation
 is still a separate transfer argument; these Set/slot laws do not supply it.
 
 The native positive-plan discriminator checks actual compiled tagged pairs and
@@ -54,7 +54,7 @@ refinement, typed change algebra and measured application benefit remain
 distinct obligations. MR is a future consumer of the accepted library.
 
 
-* A22 native correspondence: checked delta ordinals and one projection owner
+* rule planning native correspondence: checked delta ordinals and one projection owner
 
 This Scheme implementation slice starts from PR #1 revision
 =0c042d4a014fd7251dae95eb63b736d8f6c298d1=. It follows the admitted compiler
@@ -103,7 +103,7 @@ semantic correspondence work.
 
 * Native key lowering checks the prior binding prefix (2026-10-06)
 
-B23 lookup keys are evaluated before the current atom's candidate matching.
+Provider concretization lookup keys are evaluated before the current atom's candidate matching.
 The stored-action correspondence above keeps KnownColumns explicit; a cell
 existing in a frame does not mean its logical variable was bound in the prior
 prefix. =core/positive-plan.ss= now enforces that distinction during lowering.

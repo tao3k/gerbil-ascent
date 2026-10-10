@@ -61,7 +61,7 @@ paper performance result is attributed to this change.
 
 * Physical index revocation and engine publication are separate (2026-10-07)
 
-B23 §3.3, PDF pp. 7–9, requires represented total/delta facts to remain
+Provider concretization §3.3, PDF pp. 7–9, requires represented total/delta facts to remain
 consistent with the concretization; §4 adds indexes as implementation
 structures. Those premises do not specify exception recovery for a mutable
 index callback after engine admission. A cache's revoked version is therefore
@@ -96,7 +96,7 @@ entrypoints, Session restoration and old snapshot stability. See
 
 * General Provider and custom-index admission progress (2026-10-07)
 
-B23 Section 3.3 equations (1)/(2) permit overlapping total/delta concretizations
+Provider concretization Section 3.3 equations (1)/(2) permit overlapping total/delta concretizations
 and require newly visible facts in delta. ProviderAdmission now states these
 abstract laws and derives arbitrary finite positive-body completeness directly
 from them, alongside growth and soundness. The Domain record is a proof-level

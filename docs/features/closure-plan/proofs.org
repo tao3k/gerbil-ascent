@@ -33,20 +33,20 @@ authorization and is not a dependency of these implementation/proof milestones.
 No new paid model call is authorized by this scope revision.
 Historical MR scheduling statements below are superseded by this library scope.
 
-Primary sources reopened for this scope revision are [[https://thomas.gilray.org/pdf/seamless-deductive.pdf][A22]],
-[[https://kmicinski.com/assets/byods.pdf][B23]], [[https://www.rntz.net/files/seminaive-datafun.pdf][S20]], [[https://ojs.aaai.org/index.php/AAAI/article/view/11554][H18]], and the [[https://arxiv.org/abs/2203.16684][B22 record]] with
+Primary sources reopened for this scope revision are [[https://thomas.gilray.org/pdf/seamless-deductive.pdf][rule planning]],
+[[https://kmicinski.com/assets/byods.pdf][Provider concretization]], [[https://www.rntz.net/files/seminaive-datafun.pdf][higher-order change]], [[https://ojs.aaai.org/index.php/AAAI/article/view/11554][deletion rederivation]], and the [[https://arxiv.org/abs/2203.16684][incremental view maintenance record]] with
 its [[https://www.vldb.org/pvldb/vol16/p1601-budiu.pdf][2023 published DBSP paper]]. This is a design synthesis for the library,
 not a transfer of their implementation results or formal verification claims.
 
 The immediate research question is how actual admitted descriptors, finite
 scalar/row representations and emitted native actions discharge the premises
 of the existing consequence/lowering theorems. Close that representation bridge
-before counting additional abstract theorems as compiler verification. B23
+before counting additional abstract theorems as compiler verification. Provider concretization
 Theorem 3.5 also needs the actual concretization and total/delta contracts;
-index optimality alone does not provide them. S20 requires an executable typed
+index optimality alone does not provide them. higher-order change requires an executable typed
 change transformation with discrete base inputs; the newly proved composition
-interface is necessary evidence, not the transformation itself. H18 support
-counts and B22 signed streams require separate algorithm decisions before
+interface is necessary evidence, not the transformation itself. deletion rederivation support
+counts and incremental view maintenance signed streams require separate algorithm decisions before
 optimizing the existing founded-recovery baseline.
 
 
@@ -95,7 +95,7 @@ separate stated build resource contract.
    for the admitted grammar. Additional abstract lemmas alone do not close R1.
 3. Ordinary Set iteration is proved for every Nat round in =SemiNaive=.
    Arbitrary Provider gamma/injection and total/delta contracts, user lattices
-   and S20 higher-order function changes remain separate obligations.
+   and higher-order change higher-order function changes remain separate obligations.
 4. Ready-component scheduling and credit/drain publication are implemented for
    pure canonical Set components. Preserve dependency cuts and terminal
    completeness while removing global waiting. General Provider concurrency
@@ -103,7 +103,7 @@ separate stated build resource contract.
 5. Existing TLC models have unbounded Nat semantics but finite exploration;
    =Spec= alone establishes neither invariance nor liveness. Unbounded temporal
    proof and native event correspondence remain Quint responsibilities.
-6. A physical index cache is not B23 index sharing. Sharing requires a layout
+6. A physical index cache is not Provider concretization index sharing. Sharing requires a layout
    and selection algorithm that covers logical lookup requirements, then
    application measurements. Provider fixture gains cannot establish whole
    application or real-model benefits.
@@ -120,12 +120,12 @@ closure scope; it introduces no new language version, namespace or wrapper frame
 | Order / existing scope | Paper and concrete implementation deliverable | Formal responsibility | Acceptance gate |
 |------------------------+----------------------------------------------+-----------------------+-----------------|
 | 0 / release evidence | Current native package, harness and pinned oracle; preserve the qualified compiler-layer ownership, complete registry and actual process/module progress controls; earlier heap/progress failures remain rejected historical evidence | Existing proofs and temporal controls remain independent evidence | Full native module registry, explicit Cases/OK/exit propagation, all oracle shards including full scale, formal and final-head CI pass on the same source; retain rejected runs and watchdog limits |
-| 1 / R1-R2 admitted compiler | A22 section 4, F16 section 5.3, H13 kernel boundary, F20/L25 composition: connect higher-order descriptors, lexical captures, finite domains, row equality, generated actions, indexes and complete positive component output; owners: program/higher-order.ss, program/operator.ss, core/positive-plan.ss, program/component-worker.ss | Lean: compose DescriptorScope, LexicalLowering, RecursiveLowering, FiniteHeight, PositiveSlots, IndexedIteration and GroundedBinding with actual representation obligations. Derive terminal premises from admitted execution rather than assume native completion | Shared captures, fresh identities, empty/zero-arity domains, nested arrows, duplicate rows, repeated variables, host expressions and impurity discriminators; independently computed output equals the least model for the admitted finite subset. Budget failure remains distinct from proved termination |
-| 2 / R1-R3 Provider and indexes | B23 sections 3-4 and 5.5: specify gamma, injection, total/delta enumeration and lookup contracts; implement shared physical index layout/selection from actual logical requirements; owners: table/storage.ss, table/provider.ss, program/index.ss | Lean: establish Provider contract instances and semantic lookup/frontier preservation; prove sharing coverage and representation equivalence. Quint: staged root installation and version visibility only | Independently enumerate represented rows and every emitted frontier; repeated/grouped/producer interactions, failed insertion and rollback pass. Shared layouts cover every required lookup and reduce physical structures on a discriminating workload; minimal layout and runtime benefit are separate claims |
+| 1 / R1-R2 admitted compiler | rule planning section 4, functional fixed points section 5.3, relational kernel kernel boundary, fragment composition/program lifecycle composition: connect higher-order descriptors, lexical captures, finite domains, row equality, generated actions, indexes and complete positive component output; owners: program/higher-order.ss, program/operator.ss, core/positive-plan.ss, program/component-worker.ss | Lean: compose DescriptorScope, LexicalLowering, RecursiveLowering, FiniteHeight, PositiveSlots, IndexedIteration and GroundedBinding with actual representation obligations. Derive terminal premises from admitted execution rather than assume native completion | Shared captures, fresh identities, empty/zero-arity domains, nested arrows, duplicate rows, repeated variables, host expressions and impurity discriminators; independently computed output equals the least model for the admitted finite subset. Budget failure remains distinct from proved termination |
+| 2 / R1-R3 Provider and indexes | Provider concretization sections 3-4 and 5.5: specify gamma, injection, total/delta enumeration and lookup contracts; implement shared physical index layout/selection from actual logical requirements; owners: table/storage.ss, table/provider.ss, program/index.ss | Lean: establish Provider contract instances and semantic lookup/frontier preservation; prove sharing coverage and representation equivalence. Quint: staged root installation and version visibility only | Independently enumerate represented rows and every emitted frontier; repeated/grouped/producer interactions, failed insertion and rollback pass. Shared layouts cover every required lookup and reduce physical structures on a discriminating workload; minimal layout and runtime benefit are separate claims |
 | 3 / R3 actor execution | Preserve ready SCC dispatch, immutable reads, one merge owner and credited tail completion. Define partitioning for a large SCC and explicit custom Provider/lattice ownership before enabling either; owners: program/component-plan.ss, positive-components.ss, actor-round.ss, actor-session.ss | Lean: finite computation and merge/index algebra. Quint: work identity, dependency cuts, stale replies, cancellation, drain, close and native event refinement; state fairness assumptions for any progress claim | Independent truth under reordered/delayed/duplicate completion and failures; bounded capacity and no incomplete publication; demonstrate successor dispatch before unrelated work finishes. Claim multicore benefit only after matched measurements |
-| 4 / R3-R4 updates and evidence | H18 sections 3-4 and B22: retain source occurrences separately from derived facts; connect affected-component rederivation, complete alternatives and founded witnesses; owners: program/source-log.ss, update-selection.ss, reuse.ss, candidate provenance/support | Lean: FunctionalDependency, SourceUpdateFrame and founded/stratum-relative evidence laws. Quint: source/result transaction, pending/resume, ABA and failed publication | Fresh recomputation after every accepted update agrees; final-support removal, multiple supports, unrooted cycles, lower-stratum changes, interrupted updates, tampering and exhaustion retain exact status. DRedc and DBSP names require their actual algorithms, not equivalent final rows alone |
-| 5 / R1-R5 higher-order change semantics | S20 sections 4.2-4.3 and 6-7: define typed insertion changes for admitted relation/arrow types and implement an actual preserving compiler transformation; owners: program/higher-order.ss, operator.ss and lowering | Lean: recursive insertion-change validity and base-dependent application/composition laws now exist; connect an actual compiler transformation to that relation, including discrete-base variance and changed lexical captures. Ordinary Set body pivots are not function derivatives; deletion is a separate contract | Compare transformed and full evaluation on shared/captured/nested functions and fixed points. Report semantic equality before operation counts or speed. Full finite lowering preservation precedes optimization of function changes |
-| 6 / R5 full application acceptance | B23 section 5: complete Scheme Steensgaard, Polonius, PageRank and LLVM/index-sharing counterparts with pinned input identity; qualify lattice/concurrency prerequisites for workloads that need them | Reuse completed semantic/protocol contracts; add a proof only for a concrete new obligation exposed by the application | Complete outputs and reproducible datasets; paired identical-input/semantic controls with alternating order; admission, planning, invalidation, solve and publication cost boundaries; work, CPU, wall, allocation and peak memory reported separately. Retain regressions and upstream differences |
+| 4 / R3-R4 updates and evidence | deletion rederivation sections 3-4 and incremental view maintenance: retain source occurrences separately from derived facts; connect affected-component rederivation, complete alternatives and founded witnesses; owners: program/source-log.ss, update-selection.ss, reuse.ss, candidate provenance/support | Lean: FunctionalDependency, SourceUpdateFrame and founded/stratum-relative evidence laws. Quint: source/result transaction, pending/resume, ABA and failed publication | Fresh recomputation after every accepted update agrees; final-support removal, multiple supports, unrooted cycles, lower-stratum changes, interrupted updates, tampering and exhaustion retain exact status. DRedc and DBSP names require their actual algorithms, not equivalent final rows alone |
+| 5 / R1-R5 higher-order change semantics | higher-order change sections 4.2-4.3 and 6-7: define typed insertion changes for admitted relation/arrow types and implement an actual preserving compiler transformation; owners: program/higher-order.ss, operator.ss and lowering | Lean: recursive insertion-change validity and base-dependent application/composition laws now exist; connect an actual compiler transformation to that relation, including discrete-base variance and changed lexical captures. Ordinary Set body pivots are not function derivatives; deletion is a separate contract | Compare transformed and full evaluation on shared/captured/nested functions and fixed points. Report semantic equality before operation counts or speed. Full finite lowering preservation precedes optimization of function changes |
+| 6 / R5 full application acceptance | Provider concretization section 5: complete Scheme Steensgaard, Polonius, PageRank and LLVM/index-sharing counterparts with pinned input identity; qualify lattice/concurrency prerequisites for workloads that need them | Reuse completed semantic/protocol contracts; add a proof only for a concrete new obligation exposed by the application | Complete outputs and reproducible datasets; paired identical-input/semantic controls with alternating order; admission, planning, invalidation, solve and publication cost boundaries; work, CPU, wall, allocation and peak memory reported separately. Retain regressions and upstream differences |
 | Separate research / R6 actual model comprehension | Freeze current actual Scheme module/task bytes only after compiler/publication stabilization; native scoring owns truth, Python owns byte transport | No theorem certifies model understanding. Native inert normalization and truth computation remain independent controls | Newly approved exact-source paid batch; no semantic instructions, tutorials, examples, answer-prefill, repairs or truth-guided selection. Compare raw interface acceptance, semantic correctness, reasoning and genuine post-response feedback against history-only control; include every timeout/rejection in denominators |
 
 Milestone 0 is the release gate, not a reason to stop useful design/proof work.
@@ -140,14 +140,14 @@ composition, as detailed in [[file:../../scheme-compiler-proof-bridge.org][the c
 shared index design can progress alongside it using an explicit interface, but
 release claims require the integrated path. Milestone 3 must respect milestone
 2's capabilities; adding threads does not make a custom Provider safe.
-Milestone 4 can advance on the existing admitted grammar. S20 changes and
+Milestone 4 can advance on the existing admitted grammar. higher-order change changes and
 application optimizations must not redefine semantics silently.
 
 Library closure requires every adopted paper obligation to identify its exact
 location, native owner, semantic/protocol theorem and independently executed
-falsifier. A22 owns the consequence/compiler boundary; B23 owns Provider
-concretization, emitted frontiers and physical layout; S20 owns typed changes
-and variance. H18 support maintenance and B22 signed-stream circuits are
+falsifier. rule planning owns the consequence/compiler boundary; Provider concretization owns Provider
+concretization, emitted frontiers and physical layout; higher-order change owns typed changes
+and variance. deletion rederivation support maintenance and incremental view maintenance signed-stream circuits are
 different algorithms: snapshot equality alone cannot qualify either name.
 Complete application outputs and measured cost remain milestone 6; no MR
 adapter or model score can discharge these library obligations.
@@ -157,16 +157,16 @@ adapter or model score can discharge these library obligations.
 :CUSTOM_ID: native-compiler-correspondence
 :END:
 
-The 2026-10-06 rereading of A22 section 4, B23 section 3.3 and section
-5.5, and S20 sections 4.2-4.3 selects the admitted callback-free compiler
+The 2026-10-06 rereading of rule planning section 4, Provider concretization section 3.3 and section
+5.5, and higher-order change sections 4.2-4.3 selects the admitted callback-free compiler
 path as the next connected obligation. This is a library obligation. MR/MRR
 bindings and model comprehension cannot establish it.
 
-A22 generates nested rule loops and an SCC evaluation path. Its clause-order
+rule planning generates nested rule loops and an SCC evaluation path. Its clause-order
 restriction is a binding prerequisite, not a proof that arbitrary Scheme
-callbacks commute. B23 equations (1)-(2) require total/delta concretizations
+callbacks commute. Provider concretization equations (1)-(2) require total/delta concretizations
 to cover represented facts and include all newly implied facts in delta;
-raw inserted rows are insufficient for closure Providers. S20 defines an
+raw inserted rows are insufficient for closure Providers. higher-order change defines an
 arrow change using both the old argument and its change; existing rule pivots
 are not a derivative of a higher-order closure. These premises constrain
 separate native owners, even when all three eventually produce relation rows.
@@ -229,13 +229,13 @@ type. A resource budget can interrupt a computation; it cannot prove semantic
 termination. TLC exploration cutoffs bound checker work, not native generation
 semantics. No fixed generation constant is introduced by this correspondence.
 
-B23's minimum physical-index count permits several layouts with different
+Provider concretization's minimum physical-index count permits several layouts with different
 lookup costs. Representation minimality, allocation reduction and whole solve
-CPU/peak-memory benefit therefore remain separate gates. S20 optimization
+CPU/peak-memory benefit therefore remain separate gates. higher-order change optimization
 must wait for an actual typed compiler transformation preserving changed
 captures and fixed-point meaning; insertion validity algebra alone is not
 that transformation. Deletion/support maintenance continues under its own
-H18/B22 contracts rather than being renamed an arrow delta.
+deletion rederivation/incremental view maintenance contracts rather than being renamed an arrow delta.
 
 *** Immediate implementation order
 
@@ -256,29 +256,29 @@ models stay responsible for temporal execution and publication only.
 
 ** Paper coverage and proof ownership
 
-The [[file:../../research/scheme-dsl/index.org][source ledger]] now lists twelve sources. This audit reopened A22, B23,
-F16, H13, F20, S20, H18, B22 and L25 primary sources. Existing locators remain
-in their paper notes. X25, FL25 and S24 retain screened transfer questions;
+The [[file:../../research/scheme-dsl/index.org][source ledger]] now lists twelve sources. This audit reopened rule planning, Provider concretization,
+functional fixed points, relational kernel, fragment composition, higher-order change, deletion rederivation, incremental view maintenance and program lifecycle primary sources. Existing locators remain
+in their paper notes. monotone containers, recursive physical planning and first-class facts retain screened transfer questions;
 they are not promoted to implemented or proved coverage by this audit.
 
-- A22: preserve rule/planner information and composition. Its original
+- rule planning: preserve rule/planner information and composition. Its original
   parallelization discussion is future work; Gerbil actor correctness is our
   own engineering obligation.
-- F16: finite-height and monotonicity justify termination for the admitted
+- functional fixed points: finite-height and monotonicity justify termination for the admitted
   fixed-point domain. Resource caps and finite output per callback do not
   establish these premises.
-- H13, F20 and L25: small kernel, explicit binding identity and checked
+- relational kernel, fragment composition and program lifecycle: small kernel, explicit binding identity and checked
   whole-program composition. Search-stream fairness and Flix static guarantees
   do not transfer automatically to this native bottom-up/runtime admission.
-- B23: connect abstract relation meaning and emitted delta before physical
+- Provider concretization: connect abstract relation meaning and emitted delta before physical
   optimization; full replication includes index sharing and application gates
   retained in [[file:../../scheme-paper-closure.org][the closure matrix]].
-- S20: typed function-change translation requires a separate preservation
+- higher-order change: typed function-change translation requires a separate preservation
   argument. Existing concrete Set iteration history covers its stated subset.
-- H18 and B22: founded deletion and incremental circuit algebra are distinct
+- deletion rederivation and incremental view maintenance: founded deletion and incremental circuit algebra are distinct
   designs. A fresh-equivalent retained update is semantic evidence, not proof
   of a DRedc or signed-weight circuit implementation.
-- X25/FL25/S24: monotone container observations, logical/physical planning and
+- monotone containers/recursive physical planning/first-class facts: monotone container observations, logical/physical planning and
   nested fact identity respectively require explicit capability, equivalence
   and termination contracts before language expansion.
 
@@ -326,8 +326,8 @@ located paper premise, our explicit transfer decision, the actual Scheme
 representation and algorithm, a matching formal statement, and an independent
 native discriminator. No leg alone marks the work package closed.
 
-On 2026-10-04 all eight primary sources above were reopened. S20 change
-structures are in §4.2–4.3 (PDF pp. 10–11), not §5. F16 §5.3 Lemma 4
+On 2026-10-04 all eight primary sources above were reopened. higher-order change change
+structures are in §4.2–4.3 (PDF pp. 10–11), not §5. functional fixed points §5.3 Lemma 4
 requires a monotone map on a finite-height pointed poset. These are the next
 semantic prerequisites, not evidence of our implementation's correctness.
 
@@ -335,18 +335,18 @@ semantic prerequisites, not evidence of our implementation's correctness.
 
 | Package and paper premise | Architecture decision and Scheme owner | Proof obligation and executable discriminator |
 |---------------------------+----------------------------------------+-----------------------------------------------|
-| Finite signatures and termination: F16 §5.2–5.3, Lemma 4 | =program/higher-order.ss= admits explicit finite relation and arrow types. Stable captured atoms, arity and arrow structure must be validated before normalization; =program/finite-arithmetic.ss= only evaluates capped formulas | Connect semantic inhabitants, relation rank and pointwise function rank to =FiniteHeight= and =CappedArithmetic=. Independently enumerate tiny domains, including empty domain / zero arity, repeated atoms, nested arrows and budget boundaries. Malformed or cyclic type/term descriptors must reject before recursive analysis |
-| Binding and compilation: H13 §3/§5, L25 §3.7/§4.3, A22 §4 | Keep Scheme construction above a small inspectable kernel. =program/operator.ss= owns descriptor identity and environment-sensitive memoization; =program/higher-order.ss= owns captured lexical values and elimination | Relate accepted concrete descriptors to =DescriptorScope=, =LexicalLowering= and =RecursiveLowering=, then emitted rules to the consequence operator. Shared node under different bindings, same printed name under distinct identities, repeated constructors and capture substitution are discriminators |
-| Whole-program composition: F20 §4.2, Definitions 4.3–4.6 / Theorem 4.8; L25 §4.2 | =program/scheme-admission.ss= checks the assembled dependency graph before explicit solve. Our runtime admission is a different assurance from Flix's compile-time analysis | Prove valid admitted strata satisfy positive nonstrict / negative strict dependency inequalities. Compose individually valid fragments into a negative cycle and require rejection; reorder valid composition and compare public observations |
-| Transaction and deletion: H18 §3–4; B22 recursive circuits | =program/session.ss= and reuse/update selection maintain source logs and invalidate affected components. Keep explicit source facts separate from derived facts; current recomputation is not DRedc or DBSP | Map dependency and source-count premises to =SourceUpdateFrame= / =FunctionalDependency=, and private work/publication to the Quint models. Independent fresh recomputation after each transaction must match; two supports, final-support removal, unrooted cycle, ABA, stale publication and interrupted budget/domain failure preserve their stated visible-state contracts |
-| Complete finite evidence: H18 support distinction; A22 inspectable rule instances | Support/provenance owners represent alternative rule instances and founded witnesses separately; absence refers to a completed closed stratum and exact program/source identity | Test independently enumerated alternatives, cyclic support, duplicate witnesses, negative/group observations, tampering and size exhaustion. Numeric semirings and lattice histories require their own algebra, not a renamed graph |
-| Change semantics and measured benefit: S20 §4.2–4.3/§6–7; B22 | Specify a typed insertion change for every admitted type before implementing higher-order deltas. A function change depends on both base input and input change; deletion remains outside that insertion contract | State and prove application/change and lowering preservation before comparing optimized and full evaluation. Use the same semantics, dependency versions, inputs and lifecycle cost boundary; report work counts, CPU, wall and allocation separately, including negative outcomes |
+| Finite signatures and termination: functional fixed points §5.2–5.3, Lemma 4 | =program/higher-order.ss= admits explicit finite relation and arrow types. Stable captured atoms, arity and arrow structure must be validated before normalization; =program/finite-arithmetic.ss= only evaluates capped formulas | Connect semantic inhabitants, relation rank and pointwise function rank to =FiniteHeight= and =CappedArithmetic=. Independently enumerate tiny domains, including empty domain / zero arity, repeated atoms, nested arrows and budget boundaries. Malformed or cyclic type/term descriptors must reject before recursive analysis |
+| Binding and compilation: relational kernel §3/§5, program lifecycle §3.7/§4.3, rule planning §4 | Keep Scheme construction above a small inspectable kernel. =program/operator.ss= owns descriptor identity and environment-sensitive memoization; =program/higher-order.ss= owns captured lexical values and elimination | Relate accepted concrete descriptors to =DescriptorScope=, =LexicalLowering= and =RecursiveLowering=, then emitted rules to the consequence operator. Shared node under different bindings, same printed name under distinct identities, repeated constructors and capture substitution are discriminators |
+| Whole-program composition: fragment composition §4.2, Definitions 4.3–4.6 / Theorem 4.8; program lifecycle §4.2 | =program/scheme-admission.ss= checks the assembled dependency graph before explicit solve. Our runtime admission is a different assurance from Flix's compile-time analysis | Prove valid admitted strata satisfy positive nonstrict / negative strict dependency inequalities. Compose individually valid fragments into a negative cycle and require rejection; reorder valid composition and compare public observations |
+| Transaction and deletion: deletion rederivation §3–4; incremental view maintenance recursive circuits | =program/session.ss= and reuse/update selection maintain source logs and invalidate affected components. Keep explicit source facts separate from derived facts; current recomputation is not DRedc or DBSP | Map dependency and source-count premises to =SourceUpdateFrame= / =FunctionalDependency=, and private work/publication to the Quint models. Independent fresh recomputation after each transaction must match; two supports, final-support removal, unrooted cycle, ABA, stale publication and interrupted budget/domain failure preserve their stated visible-state contracts |
+| Complete finite evidence: deletion rederivation support distinction; rule planning inspectable rule instances | Support/provenance owners represent alternative rule instances and founded witnesses separately; absence refers to a completed closed stratum and exact program/source identity | Test independently enumerated alternatives, cyclic support, duplicate witnesses, negative/group observations, tampering and size exhaustion. Numeric semirings and lattice histories require their own algebra, not a renamed graph |
+| Change semantics and measured benefit: higher-order change §4.2–4.3/§6–7; incremental view maintenance | Specify a typed insertion change for every admitted type before implementing higher-order deltas. A function change depends on both base input and input change; deletion remains outside that insertion contract | State and prove application/change and lowering preservation before comparing optimized and full evaluation. Use the same semantics, dependency versions, inputs and lifecycle cost boundary; report work counts, CPU, wall and allocation separately, including negative outcomes |
 
-The support/provenance package specifies our finite evidence product; H18's
+The support/provenance package specifies our finite evidence product; deletion rederivation's
 maintenance algorithm is not itself a complete provenance algebra. The change
-package uses S20's logical change relation as its reference. Do not assume an
+package uses higher-order change's logical change relation as its reference. Do not assume an
 ordinary pointwise function delta or a simple monoid action automatically
-implements that relation. B22's signed-weight circuit is a separate design.
+implements that relation. incremental view maintenance's signed-weight circuit is a separate design.
 
 ** Historical first slice: type representation to semantic height
 
@@ -438,10 +438,10 @@ protocol checks; Lean retains the separate checkpoint and index algebra. These s
 distinct from the future native actor implementation and a performance receipt.
 
 The twelve DSL ledger sources were revisited at their current owner seams:
-A22/B23 for binder, index and frontier completeness; F16/S20 for monotonicity,
-finite height and typed changes; F20/L25/H13 for composition, private identity
-and Scheme construction; H18/B22 for source deletion and transaction/iteration
-separation; X25/FL25/S24 for container, physical-plan and nested-fact boundaries.
+rule planning/Provider concretization for binder, index and frontier completeness; functional fixed points/higher-order change for monotonicity,
+finite height and typed changes; fragment composition/program lifecycle/relational kernel for composition, private identity
+and Scheme construction; deletion rederivation/incremental view maintenance for source deletion and transaction/iteration
+separation; monotone containers/recursive physical planning/first-class facts for container, physical-plan and nested-fact boundaries.
 FlowLog's publisher PDF could not be fetched this round; its
 [[https://arxiv.org/pdf/2511.00865][author preprint]] supplies the logical/physical IR reading. No source is taken
 as proof of Gerbil actor scheduling, multicore execution or model benefit.
@@ -476,7 +476,7 @@ The [[file:../../scheme-paper-closure.org][current closure matrix]] lists every 
 index-sharing/lattice/application obligations and remaining native refinement
 seams. =ProviderFrontier= adds local concrete partition, required new-fact
 emission and binary-join partition laws plus finite injection/consumer and
-mutation controls. It does not complete B23 Theorem 3.5. Bounded native graph
+mutation controls. It does not complete Provider concretization Theorem 3.5. Bounded native graph
 frontier traces are checked at each insertion rather than only at final closure.
 Overall replication remains open until the listed implementation and proof gaps
 are closed; previous passing suite counts are not full-paper coverage evidence.

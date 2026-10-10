@@ -5,7 +5,7 @@
 
 * Contract
 
-[[file:../../research/agent-inference/brink-b26.org][BRINK reading]] identifies global evidence protection and original-KG answer
+[[file:../../research/agent-inference/withholding.org][BRINK reading]] identifies global evidence protection and original-KG answer
 completion. [[file:../../../candidate/withholding.ss][reasoning-withhold-source-snapshot]] accepts a valid source snapshot,
 a strictly higher generation, and at most 64 groundings. Each grounding is a
 head atom plus a nonempty list of body atoms. Atoms must match a declared

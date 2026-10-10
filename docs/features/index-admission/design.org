@@ -7,7 +7,7 @@ source dates and qualification boundaries. Current evidence is commit-specific.
 
 * General provider laws and custom index occurrence admission (2026-10-07)
 
-Rechecking B23 Section 3.3, equations (1) and (2), and Section 4 exposed a proof
+Rechecking Provider concretization Section 3.3, equations (1) and (2), and Section 4 exposed a proof
 coverage gap. The ordered bucket calculus is appropriate for canonical indexes
 and receivers satisfying its ordering premise. The custom index boundary already
 checks key coverage and occurrence caps, but a Set-only observation discards
@@ -31,7 +31,7 @@ occurrences reading the merged concrete snapshot. =domain_body_partition=
 connects it directly to the abstract Domain laws, including repeated relation
 occurrences. Tests construct an overlapping powerset Provider and reject the
 partition-only design that sends a newly visible fact exclusively to total.
-These statements supply a general positive-body component of B23's argument;
+These statements supply a general positive-body component of Provider concretization's argument;
 they do not mechanize the entire abstract-lattice iteration theorem, joins,
 injection, termination, arbitrary lattices or every runtime callback.
 
@@ -92,7 +92,7 @@ TLC configurations, 64 fault controls and 25 native index cases with final =OK=.
 
 * Multi-column Provider routing correspondence (2026-10-07)
 
-B23 Section 4 requires every logical index to enumerate the corresponding
+Provider concretization Section 4 requires every logical index to enumerate the corresponding
 represented tuples. The native rectangle router chooses a small descriptor
 bucket, then checks the remaining constraints. Its optimized row/parts visitor
 uses stored members rather than query representatives. Choosing a cheaper bucket

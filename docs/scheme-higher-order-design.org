@@ -151,7 +151,7 @@ measurement of compiler speedup or application benefit.
 
 * Typed change boundary and exact frontier extraction
 
-The [[https://www.rntz.net/files/seminaive-datafun.pdf][S20 paper]], sections 4.2--4.3 and figure 10, gives a function change
+The [[https://www.rntz.net/files/seminaive-datafun.pdf][higher-order change paper]], sections 4.2--4.3 and figure 10, gives a function change
 both its base input and that input's change. Its base input is discrete;
 monotonicity in the input change does not imply monotonicity in the base.
 The existing native arrow descriptors admit the positive monotone grammar.
@@ -171,7 +171,7 @@ The next preserving transformation must distinguish value/update meaning from
 exact frontier accounting, carry both base and input change through application,
 and preserve fresh lexical identities. Relation-valued fixed points and the
 existing function-valued fixed-point extension require their own statements;
-the S20 recursion rule and discreteness cannot be transferred by name. Native
+the higher-order change recursion rule and discreteness cannot be transferred by name. Native
 complete recomputation is the reference, not evidence of an implemented
 higher-order derivative. Examples and axiom reports remain under =Tests=.
 

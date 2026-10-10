@@ -75,17 +75,17 @@ The [reasoning-language and formal agenda](docs/research/agent-inference/reasoni
 connects ASCENT, MRR and Lean without treating their boundaries as proved integration.
 The [protocol verification contract](docs/features/qualification/quint.org) adopts
 Quint protocol authoring alongside Lean and records the complete source migration.
-The [pinned Wikidata fixture](docs/research/agent-inference/wikidata-scope-wd26.org)
+The [pinned Wikidata fixture](docs/research/agent-inference/wikidata-scoped-exclusion.org)
 starts the executor check for branch-scoped exclusion over a finite real-KG extract.
 
 ### Model reasoning and executable inference: current evidence
 
-- [LLM-MatLogic: Executable Exchange Contracts for Knowledge-Graph Query Answering with Scoped Negation](https://proceedings.mlr.press/v306/miao26e.html) (ICML 2026) — [dedicated reading](docs/research/agent-inference/matlogic-ml26.org), [two-hop witness scope before projection](docs/features/scoped-witness/acceptance.org) and [same-source gold/proposal comparison](docs/features/candidate-feedback/acceptance.org); model KGQA pending.
+- [LLM-MatLogic: Executable Exchange Contracts for Knowledge-Graph Query Answering with Scoped Negation](https://proceedings.mlr.press/v306/miao26e.html) (ICML 2026) — [dedicated reading](docs/research/agent-inference/scoped-witness.org), [two-hop witness scope before projection](docs/features/scoped-witness/acceptance.org) and [same-source gold/proposal comparison](docs/features/candidate-feedback/acceptance.org); model KGQA pending.
 - [DatalogBench: Evaluating Large Language Models on Text-to-Datalog Synthesis](https://arxiv.org/abs/2609.37233) (2026 preprint) — generated recursive rules checked by execution, with preprint and dialect limits.
 - [IRIS: LLM-Assisted Static Analysis for Detecting Security Vulnerabilities](https://proceedings.iclr.cc/paper_files/paper/2025/file/582d4e27fa24168f3af1f4582655034b-Paper-Conference.pdf) (ICLR 2025) — real-code candidate specifications and CodeQL results; adjacent language and high false-alert cost.
 
 [BRINK](https://aclanthology.org/2026.eacl-long.114/) (EACL 2026), now covered by a
-[dedicated reading and finite withholding implementation](docs/research/agent-inference/brink-b26.org), is a
+[dedicated reading and finite withholding implementation](docs/research/agent-inference/withholding.org), is a
 useful incomplete-KG evaluation comparator, not a semantic oracle: it
 removes observed facts while preserving rule-body paths, but its rules are
 mined with confidence thresholds rather than established as universal laws.
@@ -100,7 +100,7 @@ mined with confidence thresholds rather than established as universal laws.
 - [Flix: A Design for Language-Integrated Datalog](https://doi.org/10.1145/3763126) (2025) — first-class program and private predicate boundaries.
 - [FlowLog: Efficient and Extensible Datalog via Incrementality](https://www.vldb.org/pvldb/vol19/p361-zhao.pdf) (PVLDB 2025; VLDB 2026) — recursive plan and incremental engine experiments.
 - [Scallop: A Language for Neurosymbolic Programming](https://doi.org/10.1145/3591280) (2023) — weighted and differentiable semantics for a separate training path.
-- [Soufflé: On Synthesis of Program Analyzers](https://souffle-lang.github.io/pdf/cav16.pdf) (2016) — [dedicated reading](docs/research/scheme-dsl/souffle-s16.org), chain-index planning and canonical physical layouts.
+- [Soufflé: On Synthesis of Program Analyzers](https://souffle-lang.github.io/pdf/cav16.pdf) (2016) — [dedicated reading](docs/research/scheme-dsl/index-planning.org), chain-index planning and canonical physical layouts.
 - [Differential dataflow](https://www.cidrdb.org/cidr2013/Papers/CIDR13_Paper111.pdf) (2013)
 - [DBSP: Automatic Incremental View Maintenance for Rich Query Languages](https://www.vldb.org/pvldb/vol16/p1601-budiu.pdf) (2023)
 - [Optimised Maintenance of Datalog Materialisations](https://doi.org/10.1609/aaai.v32i1.11554) (2018)
@@ -112,10 +112,10 @@ mined with confidence thresholds rather than established as universal laws.
 
 ### Provenance and time
 
-- [Provenance Semirings](https://www.cs.ucdavis.edu/~green/papers/pods07.pdf) (2007) — [dedicated reading and bounded natural annotations](docs/research/agent-inference/provenance-p07.org).
+- [Provenance Semirings](https://www.cs.ucdavis.edu/~green/papers/pods07.pdf) (2007) — [dedicated reading and bounded natural annotations](docs/research/agent-inference/provenance-annotations.org).
 - [Revisiting Semiring Provenance for Datalog](https://proceedings.kr.org/2022/10/kr2022-0010-bourgaux-et-al.pdf) (2022) — all-tree versus minimum-depth semantics and recursive convergence boundaries.
 - [PUG: A Framework and Practical Implementation for Why & Why-Not Provenance](https://arxiv.org/abs/1808.05752) (2018)
-- [Provenance for Large-scale Datalog](https://arxiv.org/abs/1907.05045) (2019) — [minimum-height reading and bounded support queries](docs/research/agent-inference/provenance-z19.org).
+- [Provenance for Large-scale Datalog](https://arxiv.org/abs/1907.05045) (2019) — [minimum-height reading and bounded support queries](docs/research/agent-inference/proof-height.org).
 - [Dedalus: Datalog in Time and Space](https://www2.eecs.berkeley.edu/Pubs/TechRpts/2009/EECS-2009-173.html) (2009)
 - [Causes and Explanations: A Structural-Model Approach. Part I: Causes](https://doi.org/10.1093/bjps/axi147) (2005)
 

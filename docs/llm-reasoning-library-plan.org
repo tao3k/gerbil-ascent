@@ -216,12 +216,12 @@ edge a user intended.
 #+NAME: llm-library-paper-decisions
 | Research | Useful result | Implementation decision | Falsifier |
 |----------+---------------+-------------------------+-----------|
-| [[file:research/scheme-dsl/ascent-a22.org][Ascent A22]] | Declarative rules with indexed, semi-naive fixed-point evaluation | Keep the relational rule graph and visible dependencies | A composed rule cannot be inspected or matches the finite model incorrectly |
-| [[file:research/scheme-dsl/datafun-f16.org][Datafun F16]] and [[file:research/scheme-dsl/datafun-s20.org][S20]] | Monotonicity and higher-order delta need a typed semantic account | Treat pointwise Scheme functions as declared adapters; defer verified higher-order change semantics | A hidden mutable read changes closure under the same admitted program |
-| [[file:research/scheme-dsl/flix-f20.org][Flix F20]] and [[file:research/scheme-dsl/flix-l25.org][L25]] | First-class constraints and composition make library reuse plausible | Try Scheme-built fragment values with fresh private relation handles | Two fragment instances capture each other's private relations |
-| [[file:research/agent-inference/datalogbench-db26.org][DatalogBench DB26]] | Recursive programs can compile yet be semantically wrong | Test complete outputs and near-miss joins, not compile rate alone | Wrong recursive join passes the independent model corpus |
-| [[file:research/agent-inference/matlogic-ml26.org][LLM-MatLogic ML26]] | A valid executable graph constraint can still carry the wrong scope | Keep source snapshot, branch scope and witness visible before final-answer projection | A scoped exclusion is treated as a global absence claim |
-| [[file:research/agent-inference/pug-p18.org][PUG P18]] | Why/Why-Not needs explicit provenance semantics | Start with positive path witness and finite graph absence; defer general provenance | One support is presented as a complete explanation |
+| [[file:research/scheme-dsl/rule-planning.org][Ascent rule planning]] | Declarative rules with indexed, semi-naive fixed-point evaluation | Keep the relational rule graph and visible dependencies | A composed rule cannot be inspected or matches the finite model incorrectly |
+| [[file:research/scheme-dsl/functional-fixed-points.org][Datafun functional fixed points]] and [[file:research/scheme-dsl/higher-order-change.org][higher-order change]] | Monotonicity and higher-order delta need a typed semantic account | Treat pointwise Scheme functions as declared adapters; defer verified higher-order change semantics | A hidden mutable read changes closure under the same admitted program |
+| [[file:research/scheme-dsl/fragment-composition.org][Flix fragment composition]] and [[file:research/scheme-dsl/program-lifecycle.org][program lifecycle]] | First-class constraints and composition make library reuse plausible | Try Scheme-built fragment values with fresh private relation handles | Two fragment instances capture each other's private relations |
+| [[file:research/agent-inference/candidate-feedback.org][DatalogBench candidate execution feedback]] | Recursive programs can compile yet be semantically wrong | Test complete outputs and near-miss joins, not compile rate alone | Wrong recursive join passes the independent model corpus |
+| [[file:research/agent-inference/scoped-witness.org][LLM-MatLogic scoped witness execution]] | A valid executable graph constraint can still carry the wrong scope | Keep source snapshot, branch scope and witness visible before final-answer projection | A scoped exclusion is treated as a global absence claim |
+| [[file:research/agent-inference/why-not-explanations.org][PUG why/why-not explanation]] | Why/Why-Not needs explicit provenance semantics | Start with positive path witness and finite graph absence; defer general provenance | One support is presented as a complete explanation |
 
 The table maps papers to hypotheses; it does not transfer their proofs
 or benchmark scores to this implementation.
@@ -327,16 +327,16 @@ does not substitute for the others.
 | Evidence semantics | ASCENT receipt bound to the same snapshot, candidate and budget | =complete= answer, =valid= finite verifier verdict and founded proof verdict are asserted independently; stale generation and changed candidate fail | One support is not all derivations; a complete finite closure does not certify source completeness or intent |
 | Model behavior | POO Flow Python Testing reads existing ASCENT source and invokes its public boundary; prompts, held-out source cases and expected native results are frozen before calls | Report execution correctness, diagnostic use, receipt-verdict interpretation and unsupported claims per task, with raw responses, budget and hashes | No conclusion about internal cognition, general model benefit or permission to act follows from a small sample |
 
-The [[file:research/scheme-dsl/ascent-a22.org][Ascent paper]] and
+The [[file:research/scheme-dsl/rule-planning.org][Ascent paper]] and
 [[file:related-work-matrix.org][BYODS comparison]] motivate the Rust oracle
-and representation discriminator. [[file:research/scheme-dsl/deletion-h18.org][Deletion maintenance]]
-and [[file:research/scheme-dsl/dbsp-b22.org][DBSP]] make alternate support
+and representation discriminator. [[file:research/scheme-dsl/deletion-rederivation.org][Deletion maintenance]]
+and [[file:research/scheme-dsl/incremental-view-maintenance.org][DBSP]] make alternate support
 and recomputation the first update comparison; no retained deletion
 algorithm is admitted without matched output and cost receipts.
-[[file:research/agent-inference/pug-p18.org][PUG]] motivates explicit
+[[file:research/agent-inference/why-not-explanations.org][PUG]] motivates explicit
 Why/Why-Not scope, while the finite closure above justifies absence only
 inside its supplied closed snapshot.
-[[file:research/agent-inference/datalogbench-db26.org][DatalogBench]] motivates
+[[file:research/agent-inference/candidate-feedback.org][DatalogBench]] motivates
 execution scoring and separate diagnostic feedback; its published
 model scores do not transfer to this Library.
 

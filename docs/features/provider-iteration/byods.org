@@ -7,7 +7,7 @@ source dates and qualification boundaries. Current evidence is commit-specific.
 
 * Concretized support and admitted row occurrences are distinct (2026-10-07)
 
-B23 §3 models concretization into a powerset, with an idempotent join. Equal
+Provider concretization §3 models concretization into a powerset, with an idempotent join. Equal
 facts therefore have one logical support element. Our Scheme source interface
 also retains ordered initial rows, including duplicate occurrences and their
 input-budget cost. A physical index receives that current row snapshot. A
@@ -20,7 +20,7 @@ provides a useful distinction: natural-number annotations express tuple
 multiplicity, while the ordinary relation records support. We use that
 counting idea only for a finite physical snapshot witness; our Datalog heads
 still use existing Set admission. This change does not implement recursive bag
-Datalog or provenance polynomial evaluation, nor extend B23's theorem to
+Datalog or provenance polynomial evaluation, nor extend Provider concretization's theorem to
 mutable callbacks.
 
 For each physical all/delta entry at version v, let M_v(r) be the number of

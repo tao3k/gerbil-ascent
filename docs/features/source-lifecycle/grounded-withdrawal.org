@@ -109,7 +109,7 @@ maintained positive owner after initialization.
 | Layer | Gate | Boundary |
 |-------+------+----------|
 | Native semantic Suite | 64 graphs and all single cuts; all alternating-position sequences with compaction against uncompressed owners, independent walks AND fresh native receipts; mixed sources, duplicates, constants, rollback and held observations | Finite corpus, no native extraction proof |
-| WD26 | Administrative source cut, independent walk, maintained rows and fresh receipt agree | Finite extract, no model synthesis score |
+| Wikidata scoped exclusion | Administrative source cut, independent walk, maintained rows and fresh receipt agree | Finite extract, no model synthesis score |
 | Lean StableSourceSupport | Initial coverage, token survival, cumulative cuts and current-founded rule restriction preserve every future source subcut | Native grounding, live-index exactness and token decoding remain representation obligations |
 | Lean ComponentClosure.SourceWithdrawal | Founded overdelete/rederive recovery and surviving occurrence support | Mutable Scheme loop refinement remains open |
 | Quint WithdrawalSession | Frozen logical graph, cumulative membership, token order, retained support coverage and atomic cut/compaction publication; ten fault variants | Finite duplicate-support source registry, no full graph-pruning refinement |
@@ -191,10 +191,10 @@ generated / 3,796 distinct finite states and rejected all ten fault variants.
 
 * Research boundary
 
-The [[file:../../research/scheme-dsl/deletion-h18.org][deletion study]] now has an executable grounded DRed owner. This is not
+The [[file:../../research/scheme-dsl/deletion-rederivation.org][deletion study]] now has an executable grounded DRed owner. This is not
 DRedc: no recursive/nonrecursive derivation-count optimization is added.
-The [[file:../../research/scheme-dsl/differential-m13.org][signed trace]] and
-[[file:../../research/agent-inference/provenance-z19.org][minimum-height annotation]] designs remain open. Results from these finite
+The [[file:../../research/scheme-dsl/differential-updates.org][signed trace]] and
+[[file:../../research/agent-inference/proof-height.org][minimum-height annotation]] designs remain open. Results from these finite
 lifecycle measurements do not establish large-data, general Session, lattice,
 or whole-provider performance.
 

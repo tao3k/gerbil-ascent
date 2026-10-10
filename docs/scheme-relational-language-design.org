@@ -26,12 +26,12 @@ The current executable admission and performance gates are stated in
 separate historical research claim.
 
 This document proposes a first gate for review.  It draws conceptual
-constraints from [[file:research/scheme-dsl/ascent-a22.org][Ascent A22]],
-[[file:research/scheme-dsl/datafun-f16.org][Datafun F16]],
-[[file:research/scheme-dsl/datafun-s20.org][Datafun S20]],
-[[file:research/scheme-dsl/flix-f20.org][Flix F20]],
-[[file:research/scheme-dsl/flix-l25.org][Flix L25]] and
-[[file:research/scheme-dsl/microkanren-h13.org][µKanren H13]].  Their
+constraints from [[file:research/scheme-dsl/rule-planning.org][Ascent rule planning]],
+[[file:research/scheme-dsl/functional-fixed-points.org][Datafun functional fixed points]],
+[[file:research/scheme-dsl/higher-order-change.org][Datafun higher-order change]],
+[[file:research/scheme-dsl/fragment-composition.org][Flix fragment composition]],
+[[file:research/scheme-dsl/program-lifecycle.org][Flix program lifecycle]] and
+[[file:research/scheme-dsl/relational-kernel.org][µKanren relational kernel]].  Their
 [[file:research/scheme-dsl/index.org][source ledger]] records precise
 PDF locators and transfer limits.  None proves arbitrary Gerbil
 procedures pure, terminating, monotone or incrementally maintainable.
@@ -87,7 +87,7 @@ operator graphs. A transformer application is explicit in that graph.
 The reference change meaning compares two complete interpretations.
 The finite positive graph also has a structural insertion-change
 interpreter, including a recursive frontier. This is not a general
-typed change calculus or a measured speedup. Datafun S20 motivates
+typed change calculus or a measured speedup. Datafun higher-order change motivates
 the broader path but does not validate our implementation. Reuse of
 the existing evaluator remains an engineering choice to justify
 against the new semantics.
@@ -146,7 +146,7 @@ For positive source growth, define the reference change of operator
 the reference meaning. The finite graph has a structural delta rule
 that must match it on finite models; source
 withdrawal has a separate recompute path until deletion changes are
-specified.  Datafun S20 establishes a typed higher-order change
+specified.  Datafun higher-order change establishes a typed higher-order change
 calculus for its own language, not a theorem about this proposed IR.
 
 The implemented finite subset lowers operators to positive rules and
@@ -405,7 +405,7 @@ For a composed program, =relational-session-transaction!= takes
 =relational-program= path uses =relational-program-transaction!= with
 =(name . rows)= pairs. Both call the same checked source-update owner;
 the combined qualification checks recursion, negation, count and max
-after changing five source fragments together. The [[file:research/scheme-dsl/deletion-h18.org][deletion study]] records
+after changing five source fragments together. The [[file:research/scheme-dsl/deletion-rederivation.org][deletion study]] records
 why current set results cannot yet support a DRedc-style withdrawal.
 The engine may recompute during replacement, so an invalid or
 over-budget update can fail at that call.

@@ -24,35 +24,35 @@ or permission to act.
 
 | Paper | Core result relevant here | gerbil-ascent position | MRR/Agent question | Next falsifiable receipt |
 |-------+---------------------------+------------------------+--------------------+-------------------------|
-| A22: Ascent | Embedded macro rules, semi-naive fixed points, lattices | Selected Scheme/Rust 0.8.0 differential fixtures pass; the [[file:rust-parity.org][parity matrix]] lists open surface | Can bounded closure expose complete candidate support for one source generation? | Finish missing Rust 0.8.0 fixtures, invalid programs, concurrent execution, and SS scale receipts |
-| B23: BYODS | Concrete/delta relation semantics | Built-in Provider/frontier/shared-index engineering baseline qualified by current native/Rust/Lean/Quint gates; full Steensgaard partition accepted; complete Polonius reference and native fixtures accepted, full clap-rs native comparison pending; [[file:research/paper-coverage.org][current audit]] replaces historical small-fixture performance wording | Does a specialized representation preserve admitted facts and supports? | Keep accepted mechanisms under regression; complete PageRank/LLVM and source-bound full Polonius application comparisons |
-| S16: Soufflé | Rule specialization, index selection and parallel compiled analyses | Bound-column hash lookup and local SS scenarios only | Can a chosen plan meet a task budget without changing evidence? | Same rules and facts across default/custom indexes; report output, memory, latency and p95 |
-| D13: Differential dataflow | Versioned deltas for nested iterative computation and parallel dataflow | Reentrant concurrent snapshots pass; retained updates and intra-program parallelism open | Which prior candidate decisions become stale after source revision? | Insert/delete cycle and multi-support graph; compare every generation with full recomputation and record work |
-| D23: DBSP | Algebraic incremental maintenance across aggregation and recursion | No derivative program or retained incremental state | Is exact re-evaluation affordable for an Agent's evolving context? | Freeze rule pack and source sequence; compare derivative and full results, support receipts, memory and update cost |
-| H18: Materialisation maintenance | DRed, Backward/Forward and Counting hybrids for deletions | Snapshot recomputation only | Does removing one support invalidate only the right claims and decisions? | Diamond/cycle deletions with surviving support; compare H18 and D23 strategies to full recomputation |
-| F16: Datafun | Monotonicity tracked by types for higher-order fixed points | Bounds and stratification checks exist; no general monotonicity/lattice-law admission | Which user functions can safely participate in recursive reasoning? | Admit/reject monotone and nonmonotone rule/lattice fixtures; verify termination and typed errors |
-| E23: egglog | Datalog fixed points with equality saturation and congruence closure | BYODS equivalence snapshots exist; no rewrite or e-graph authority | Can a rule or physical plan be optimized with a checkable equivalence witness? | Replay equivalent and inequivalent rewrites against an independent oracle before plan admission |
-| F20: Formulog | Typed Datalog plus SMT formulas for static analysis | No SMT clause/provider | Can constraints improve a coding Agent's candidate analysis without treating solver output as source truth? | Freeze a constraint-heavy case, solver version, timeout and independent satisfiability oracle |
-| P07: Provenance semirings | Algebraic annotations for alternative derivations and recursive fixed points | Evaluator returns rows, not complete provenance polynomials | Which exact sources support a result under multiple derivations? | Compare finite diamond support annotations and withdrawal with MRR's admitted lineage |
-| P22: Recursive Datalog provenance | Recursive annotation semantics can diverge and are not interchangeable | No public recursive provenance contract | What finite explanation is sound for a cyclic claim? | Choose one semantics; test cyclic equations, bounded witnesses, truncation and alternate support |
+| rule planning: Ascent | Embedded macro rules, semi-naive fixed points, lattices | Selected Scheme/Rust 0.8.0 differential fixtures pass; the [[file:rust-parity.org][parity matrix]] lists open surface | Can bounded closure expose complete candidate support for one source generation? | Finish missing Rust 0.8.0 fixtures, invalid programs, concurrent execution, and SS scale receipts |
+| Provider concretization: BYODS | Concrete/delta relation semantics | Built-in Provider/frontier/shared-index engineering baseline qualified by current native/Rust/Lean/Quint gates; full Steensgaard partition accepted; complete Polonius reference and native fixtures accepted, full clap-rs native comparison pending; [[file:research/paper-coverage.org][current audit]] replaces historical small-fixture performance wording | Does a specialized representation preserve admitted facts and supports? | Keep accepted mechanisms under regression; complete PageRank/LLVM and source-bound full Polonius application comparisons |
+| index planning: Soufflé | Rule specialization, index selection and parallel compiled analyses | Bound-column hash lookup and local SS scenarios only | Can a chosen plan meet a task budget without changing evidence? | Same rules and facts across default/custom indexes; report output, memory, latency and p95 |
+| differential updates: Differential dataflow | Versioned deltas for nested iterative computation and parallel dataflow | Reentrant concurrent snapshots pass; retained updates and intra-program parallelism open | Which prior candidate decisions become stale after source revision? | Insert/delete cycle and multi-support graph; compare every generation with full recomputation and record work |
+| incremental view maintenance: DBSP | Algebraic incremental maintenance across aggregation and recursion | No derivative program or retained incremental state | Is exact re-evaluation affordable for an Agent's evolving context? | Freeze rule pack and source sequence; compare derivative and full results, support receipts, memory and update cost |
+| deletion rederivation: Materialisation maintenance | DRed, Backward/Forward and Counting hybrids for deletions | Snapshot recomputation only | Does removing one support invalidate only the right claims and decisions? | Diamond/cycle deletions with surviving support; compare deletion rederivation and incremental view maintenance strategies to full recomputation |
+| functional fixed points: Datafun | Monotonicity tracked by types for higher-order fixed points | Bounds and stratification checks exist; no general monotonicity/lattice-law admission | Which user functions can safely participate in recursive reasoning? | Admit/reject monotone and nonmonotone rule/lattice fixtures; verify termination and typed errors |
+| equality saturation: egglog | Datalog fixed points with equality saturation and congruence closure | BYODS equivalence snapshots exist; no rewrite or e-graph authority | Can a rule or physical plan be optimized with a checkable equivalence witness? | Replay equivalent and inequivalent rewrites against an independent oracle before plan admission |
+| SMT constraint checking: Formulog | Typed Datalog plus SMT formulas for static analysis | No SMT clause/provider | Can constraints improve a coding Agent's candidate analysis without treating solver output as source truth? | Freeze a constraint-heavy case, solver version, timeout and independent satisfiability oracle |
+| provenance annotations: Provenance semirings | Algebraic annotations for alternative derivations and recursive fixed points | Evaluator returns rows, not complete provenance polynomials | Which exact sources support a result under multiple derivations? | Compare finite diamond support annotations and withdrawal with MRR's admitted lineage |
+| recursive provenance: Recursive Datalog provenance | Recursive annotation semantics can diverge and are not interchangeable | No public recursive provenance contract | What finite explanation is sound for a cyclic claim? | Choose one semantics; test cyclic equations, bounded witnesses, truncation and alternate support |
 
 * Priority and ownership
 
 1. Qualify the Scheme-native language against its own admission contract and
-   independent finite models. A22/B23 parity remains a separate historical
+   independent finite models. rule planning/Provider concretization parity remains a separate historical
    research track; it does not define validity or block native language work.
    Rust fixtures discriminate selected behavior and cost, without imposing
    Rust syntax or compatibility aliases on the public Scheme grammar.
    The pinned BYODS providers accept binary and ternary declarations;
    wider grouping is a separate extension proposal.
-2. Use D13/D23/H18 to compare retained updates with full recomputation after
+2. Use differential updates/incremental view maintenance/deletion rederivation to compare retained updates with full recomputation after
    every insertion and deletion.  Equality includes the fact set and MRR's
    required supports for the same generation; an update-cost claim also needs
    a cold/warm workload receipt.
-3. Use F16 to specify which user-supplied procedures and lattice joins can be
-   admitted safely.  E23 and F20 are separate optional extensions, each with
+3. Use functional fixed points to specify which user-supplied procedures and lattice joins can be
+   admitted safely.  equality saturation and SMT constraint checking are separate optional extensions, each with
    its own equivalence or constraint oracle.
-4. Keep P07/P22 provenance semantics in MRR.  gerbil-ascent may emit bounded
+4. Keep provenance annotations/recursive provenance provenance semantics in MRR.  gerbil-ascent may emit bounded
    candidate evidence, but it cannot assign source authority or select the
    meaning of an admitted explanation.
 
@@ -66,31 +66,31 @@ consumer of admitted evidence, not the oracle for it.
 
 * Bibliography and attribution
 
-- A22 — Arash Sahebolamri, Thomas Gilray, and Kristopher Micinski (2022),
+- rule planning — Arash Sahebolamri, Thomas Gilray, and Kristopher Micinski (2022),
   [[https://doi.org/10.1145/3497776.3517779][Seamless Deductive Inference via Macros]], CC 2022.
-- B23 — Arash Sahebolamri, Langston Barrett, Scott Moore, and Kristopher
+- Provider concretization — Arash Sahebolamri, Langston Barrett, Scott Moore, and Kristopher
   Micinski (2023), [[https://doi.org/10.1145/3622840][Bring Your Own Data Structures to Datalog]],
   OOPSLA2 2023.
-- S16 — Herbert Jordan, Bernhard Scholz, and Pavle Subotic (2016),
+- index planning — Herbert Jordan, Bernhard Scholz, and Pavle Subotic (2016),
   [[https://souffle-lang.github.io/pdf/cav16.pdf][Soufflé: On Synthesis of Program Analyzers]], CAV 2016.
-- D13 — Frank McSherry, Derek G. Murray, Rebecca Isaacs, and Michael Isard
+- differential updates — Frank McSherry, Derek G. Murray, Rebecca Isaacs, and Michael Isard
   (2013), [[https://www.cidrdb.org/cidr2013/Papers/CIDR13_Paper111.pdf][Differential dataflow]], CIDR 2013.
-- D23 — Mihai Budiu, Tej Chajed, Frank McSherry, Leonid Ryzhyk, and Val
+- incremental view maintenance — Mihai Budiu, Tej Chajed, Frank McSherry, Leonid Ryzhyk, and Val
   Tannen (2023), [[https://www.vldb.org/pvldb/vol16/p1601-budiu.pdf][DBSP: Automatic Incremental View Maintenance for Rich Query
   Languages]], PVLDB 16(7).  This cites the published five-author paper;
   the earlier [[https://arxiv.org/abs/2203.16684][arXiv version]] lists four authors.
-- H18 — Pan Hu, Boris Motik, and Ian Horrocks (2018),
+- deletion rederivation — Pan Hu, Boris Motik, and Ian Horrocks (2018),
   [[https://doi.org/10.1609/aaai.v32i1.11554][Optimised Maintenance of Datalog Materialisations]], AAAI 2018.
-- F16 — Michael Arntzenius and Neelakantan R. Krishnaswami (2016),
+- functional fixed points — Michael Arntzenius and Neelakantan R. Krishnaswami (2016),
   [[https://doi.org/10.1145/3022670.2951948][Datafun: a Functional Datalog]], ICFP 2016.
-- E23 — Yihong Zhang, Yisu Remy Wang, Oliver Flatt, David Cao, Philip
+- equality saturation — Yihong Zhang, Yisu Remy Wang, Oliver Flatt, David Cao, Philip
   Zucker, Eli Rosenthal, Zachary Tatlock, and Max Willsey (2023),
   [[https://doi.org/10.1145/3591239][Better Together: Unifying Datalog and Equality Saturation]], PLDI 2023.
-- F20 — Aaron Bembenek, Michael Greenberg, and Stephen Chong (2020),
+- SMT constraint checking — Aaron Bembenek, Michael Greenberg, and Stephen Chong (2020),
   [[https://doi.org/10.1145/3428209][Formulog: Datalog for SMT-Based Static Analysis]], OOPSLA 2020.
-- P07 — Todd J. Green, Grigoris Karvounarakis, and Val Tannen (2007),
+- provenance annotations — Todd J. Green, Grigoris Karvounarakis, and Val Tannen (2007),
   [[https://www.cs.ucdavis.edu/~green/papers/pods07.pdf][Provenance Semirings]], PODS 2007.
-- P22 — Camille Bourgaux, Pierre Bourhis, Liat Peterfreund, and Michael
+- recursive provenance — Camille Bourgaux, Pierre Bourhis, Liat Peterfreund, and Michael
   Thomazo (2022), [[https://proceedings.kr.org/2022/10/kr2022-0010-bourgaux-et-al.pdf][Revisiting Semiring Provenance for Datalog]], KR 2022.
 
 [[https://github.com/rust-lang/datafrog][Datafrog]] is an implementation comparator, not a paper in this

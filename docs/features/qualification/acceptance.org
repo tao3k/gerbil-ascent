@@ -58,9 +58,9 @@ its identity cannot be inherited by those applications.
 
 | Application | Complete semantic boundary | Required independent acceptance and remaining implementation |
 |------------+----------------------------+------------------------------------------------------------|
-| Polonius, B23 sections 5.3 and 5.5 | Initialization/move-path facts, variable use/drop liveness, universal/placeholder initialization, point-indexed subset and loan propagation, illegal accesses and illegal placeholder subsets | Port all preprocessing and naive rules together; compare every declared output with the pinned reference engine. Compare explicit, transitive and shared-index representations on the same complete input. Point isolation, loan kill, dead origins, unknown placeholder subsets and field permutations need negative controls. |
-| PageRank, B23 section 5.6 | Two recursive map-lattice rules over weighted adjacency, predecessor-indexed contributions, damping and rank sums | Implement lawful contribution-map joins and the chosen numeric domain before running the complete graphs. Compare every node's rank and the stopping certificate with a matrix-based independent oracle. State finite numeric stabilization or a certified approximation contract; a fact/work budget is not a convergence proof. |
-| LLVM, B23 section 5.7 | LLVM parsing, allocation-site abstraction, context-sensitive inclusion analysis, indirect calls and loads/stores | Pin parser/input identity and complete rules; compare operand points-to, allocation points-to and calls, including contexts. A graph reachability or index-sharing fixture does not replace this analysis. Preserve the paper's unsupported instruction and abstraction boundaries. |
+| Polonius, Provider concretization sections 5.3 and 5.5 | Initialization/move-path facts, variable use/drop liveness, universal/placeholder initialization, point-indexed subset and loan propagation, illegal accesses and illegal placeholder subsets | Port all preprocessing and naive rules together; compare every declared output with the pinned reference engine. Compare explicit, transitive and shared-index representations on the same complete input. Point isolation, loan kill, dead origins, unknown placeholder subsets and field permutations need negative controls. |
+| PageRank, Provider concretization section 5.6 | Two recursive map-lattice rules over weighted adjacency, predecessor-indexed contributions, damping and rank sums | Implement lawful contribution-map joins and the chosen numeric domain before running the complete graphs. Compare every node's rank and the stopping certificate with a matrix-based independent oracle. State finite numeric stabilization or a certified approximation contract; a fact/work budget is not a convergence proof. |
+| LLVM, Provider concretization section 5.7 | LLVM parsing, allocation-site abstraction, context-sensitive inclusion analysis, indirect calls and loads/stores | Pin parser/input identity and complete rules; compare operand points-to, allocation points-to and calls, including contexts. A graph reachability or index-sharing fixture does not replace this analysis. Preserve the paper's unsupported instruction and abstraction boundaries. |
 
 Polonius field order requires explicit schema translation: raw
 =loan_invalidated_at= has =(Point, Loan)= columns, while the naive solver uses
@@ -81,7 +81,7 @@ copy of the same model does not close numeric convergence, parsing or complete
 rule correspondence. Package 9 remains open for the other applications and
 package 10 remains open for matched end-to-end benefits. MR/MRR is deferred.
 
-Primary references: [[https://kmicinski.com/assets/byods.pdf][B23, sections 5.3 and 5.5--5.7]];
+Primary references: [[https://kmicinski.com/assets/byods.pdf][Provider concretization, sections 5.3 and 5.5--5.7]];
 [[https://github.com/s-arash/polonius/blob/7fe7cca808115828b1105c86003a768a6749383f/polonius-engine/src/facts.rs][pinned Polonius schema]];
 [[https://github.com/s-arash/polonius/blob/7fe7cca808115828b1105c86003a768a6749383f/polonius-engine/src/output/naive.rs][pinned reference naive rules]].
 

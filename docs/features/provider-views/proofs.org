@@ -20,7 +20,7 @@ At this unit's qualified revision (=2040128=), the evaluator still materializes
 that frontier at its row boundary.
 Thus this acceptance unit validates the representation/lifetime design; the
 whole-engine representation migration and measured benefit remain separately
-required before claiming B23's compressed-storage application result.
+required before claiming Provider concretization's compressed-storage application result.
 
 ** BYODS validation coverage after the frozen-view unit
 
@@ -97,7 +97,7 @@ The complete Steensgaard program instantiates allocation/assignment injection
 and field-matched store/load consequences. Independent partition and graph
 saturation, Rust explicit/eqrel comparison, retained withdrawal and actor
 cancellation controls qualify this finite application correspondence. The
-then-eager eqrel buffers retained a concrete B23 storage gap. The later
+then-eager eqrel buffers retained a concrete Provider concretization storage gap. The later
 compressed equivalence publication section supersedes that representation
 limitation. Full application and resource acceptance require their own
 source-bound evidence; universal native refinement remains separate.
@@ -107,7 +107,7 @@ worker comparisons. See the [[file:../../scheme-trrel-uf-design.org][implementat
 
 * Canonical equivalence representation bridge (2026-10-07)
 
-The B23 equivalence representation audit identified an implementation gap:
+The Provider concretization equivalence representation audit identified an implementation gap:
 weighted components existed, but the canonical engine retained every implied
 pair. Native =eqrel= now constructs frozen component-square totals and exact
 cross-component frontiers, with logical budget preflight and ordered explicit

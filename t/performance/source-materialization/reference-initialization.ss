@@ -5,9 +5,10 @@
 ;;; Initial source admission owns the engine's fresh row/state buffers.
 (import :gerbil-ascent/core/relation-view
         (only-in :clan/poo/object .ref)
-        (only-in "lattice-frontier.ss" make-lattice-frontier lattice-frontier-stage!
+        (only-in :gerbil-ascent/program/lattice-frontier make-lattice-frontier lattice-frontier-stage!
                  lattice-frontier-rows)
-        (only-in "admission.ss" gerbil-ascent-initialize-source-row!)
+        (only-in :gerbil-ascent/program/admission gerbil-ascent-initialize-source-row!
+                 gerbil-ascent-admit-source-row!)
         (only-in :gerbil-ascent/core/rule-semantics gerbil-ascent-lattice-key
                  gerbil-ascent-lattice-value gerbil-ascent-joined-row)
         (only-in :gerbil-ascent/table/storage gerbil-ascent-storage-engine-state
@@ -17,38 +18,6 @@
                  gerbil-ascent-storage-view-extension! gerbil-ascent-storage-freeze-view)
         (only-in :gerbil-ascent/table/provider gerbil-ascent-canonical-hash-index-provider?))
 (export make-initial-source-state gerbil-ascent-initialize-sources!)
-
-;;; Callback traversal must read the next list node after materialization.
-;;; A pure Set can use the native fold's functional occurrence count instead.
-;; : (forall (r) (-> AdmissionMode [r] (AdmissionBindings r) (-> r Void) (U Natural Void)))
-;; : (-> AdmissionMode SourceRows AdmissionBindings MaterializationSyntax (U Natural Void))
-;; | doc m%
-;;     Expand ordered checks before the selected materialization algorithm.
-;;     The pure form returns a count through foldl without a checker closure.
-;;     The callbacks form preserves for-each traversal and runtime checker state.
-;;
-;;     # Examples
-;;
-;;     ```scheme
-;;     (source-admission-loop pure rows
-;;       (row name width count input-limit output-limit) (admit! row))
-;;     ;; => final accepted source count, for exact Set without callbacks
-;;     ```
-;;   %
-(defrules source-admission-loop (pure callbacks)
-  ((_ pure rows (row name width source-count input-limit output-limit) body ...)
-   (foldl
-    (lambda (row source-count)
-      (unless (and (list? row) (= (length row) width))
-        (error "invalid ASCENT relation row" name row))
-      (let (next-count (+ source-count 1))
-        (when (or (> next-count input-limit) (> next-count output-limit))
-          (error "ASCENT source fact budget exceeded"))
-        body ...
-        next-count))
-    source-count rows))
-  ((_ callbacks rows (row check-source!) body ...)
-   (for-each (lambda (row) (check-source! row) body ...) rows)))
 
 ;;; Private vectors are borrowed only during construction of one engine.
 ;;; The record names their roles; no mutable declaration or result is retained.
@@ -67,7 +36,7 @@
 ;;     ```
 ;;   %
 (defstruct initial-source-state
-  (all delta all-size delta-size storage-states seen lattice-rows) final: #t)
+  (all delta all-size delta-size storage-states seen lattice-rows))
 
 ;; gerbil-ascent-initialize-sources!
 ;; : (forall (r s b) (-> [r] s b Natural Natural (Values Natural Natural)))
@@ -85,19 +54,18 @@
 ;;     ```
 ;;   %
 (def (gerbil-ascent-initialize-sources! relations schema buffers input-limit output-limit)
-  (using (buffers :- initial-source-state)
-   (let ((names (vector-ref schema 1)) (arity (vector-ref schema 2))
+  (let ((names (vector-ref schema 1)) (arity (vector-ref schema 2))
         (field-checkers (vector-ref schema 3))
         (storage-extensions (vector-ref schema 6))
         (lattice-joins (vector-ref schema 7)) (kinds (vector-ref schema 8))
         (storage-providers (vector-ref schema 9))
-        (all buffers.all)
-        (delta buffers.delta)
-        (all-size buffers.all-size)
-        (delta-size buffers.delta-size)
-        (storage-states buffers.storage-states)
-        (seen buffers.seen)
-        (lattice-rows buffers.lattice-rows)
+        (all (initial-source-state-all buffers))
+        (delta (initial-source-state-delta buffers))
+        (all-size (initial-source-state-all-size buffers))
+        (delta-size (initial-source-state-delta-size buffers))
+        (storage-states (initial-source-state-storage-states buffers))
+        (seen (initial-source-state-seen buffers))
+        (lattice-rows (initial-source-state-lattice-rows buffers))
         (source-count 0) (source-materialized-count 0))
     (let (index 0)
       (for-each
@@ -106,24 +74,6 @@
                (width (vector-ref arity index))
                (rows (.ref relation 'rows))
                (kind (vector-ref kinds index))
-               (check (vector-ref field-checkers index))
-               (provider (vector-ref storage-providers index))
-               (set-storage? (gerbil-ascent-canonical-set-storage-provider? provider))
-               (native-set? (and (eq? kind 'relation) set-storage? (not check)))
-               ;; Allocate this effectful checker only for callback paths.
-               (check-source!
-                (and (not native-set?)
-                     (lambda (row)
-                       (unless (and (list? row) (= (length row) width))
-                         (error "invalid ASCENT relation row" name row))
-                       (when check (check row))
-                       (set! source-count (+ source-count 1))
-                       (when (or (> source-count input-limit) (> source-count output-limit))
-                         (error "ASCENT source fact budget exceeded")))))
-               (native-view?
-                (and (gerbil-ascent-canonical-view-storage-provider? provider)
-                     (gerbil-ascent-canonical-hash-index-provider?
-                      (vector-ref (vector-ref schema 5) index))))
                (present (make-hash-table))
                (frontier #f))
           (unless (list? rows)
@@ -134,10 +84,17 @@
             (vector-set! storage-states index
               (gerbil-ascent-storage-engine-state
                (vector-ref storage-providers index))))
-          (cond
-           ((eq? kind 'lattice)
-            (source-admission-loop callbacks rows
-              (row check-source!)
+          (for-each
+           (lambda (row)
+             (unless (and (list? row) (= (length row) width))
+               (error "invalid ASCENT relation row" name row))
+             (let (check (vector-ref field-checkers index))
+               (when check (check row)))
+             (set! source-count (+ source-count 1))
+             (when (or (> source-count input-limit)
+                       (> source-count output-limit))
+               (error "ASCENT source fact budget exceeded"))
+             (if (eq? kind 'lattice)
                (let* ((key (gerbil-ascent-lattice-key row))
                       (keyed (vector-ref lattice-rows index))
                       (previous (hash-get keyed key))
@@ -147,7 +104,8 @@
                                       (gerbil-ascent-lattice-value previous)
                                       (gerbil-ascent-lattice-value row)))
                                 row)))
-                 (when check (check merged))
+                 (let (check (vector-ref field-checkers index))
+                   (when check (check merged)))
                  (hash-put! keyed key merged)
                  (unless previous
                    (set! source-materialized-count
@@ -155,41 +113,32 @@
                  (unless frontier (set! frontier (make-lattice-frontier)))
                  ;; Source admission records every accepted occurrence, even
                  ;; when joining leaves its value equal to the previous row.
-                 (lattice-frontier-stage! frontier key merged))))
-           (native-view?
-            (source-admission-loop callbacks rows
-              (row check-source!)
+                 (lattice-frontier-stage! frontier key merged))
+               ;; Initial duplicates remain rows; the exact built-in Set
+               ;; extension only wraps this row in a temporary list.
+               (cond
+                ((and (gerbil-ascent-canonical-view-storage-provider? (vector-ref storage-providers index))
+                      (gerbil-ascent-canonical-hash-index-provider? (vector-ref (vector-ref schema 5) index)))
                  (let (frontier (gerbil-ascent-storage-view-extension!
                                  (vector-ref storage-states index) row
                                  (- output-limit source-materialized-count)))
-                   (when check (gerbil-ascent-for-each-row check frontier))
+                   (let (check (vector-ref field-checkers index))
+                     (when check (gerbil-ascent-for-each-row check frontier)))
                    (set! source-materialized-count (+ source-materialized-count (gerbil-ascent-row-count frontier)))
-                   (gerbil-ascent-storage-admit-state! (vector-ref storage-states index)))))
-           (set-storage?
-            ;; Callback-bearing rows cross the checked boundary a second time:
-            ;; the first callback may have mutated their shape or field values.
-            (if check
-              (source-admission-loop callbacks rows
-                (row check-source!)
+                   (gerbil-ascent-storage-admit-state! (vector-ref storage-states index))))
+                ((gerbil-ascent-canonical-set-storage-provider?
+                    (vector-ref storage-providers index))
                  (set! source-materialized-count
-                   (gerbil-ascent-initialize-source-row! row width check
-                     present all index source-materialized-count output-limit)))
-              ;; Exact Set storage with no callbacks cannot replace or mutate
-              ;; a validated row. Build its private reversed spine locally;
-              ;; retain every duplicate and the original membership/budget order.
-              (let (accepted (vector-ref all index))
-                (set! source-count
-              (source-admission-loop pure rows
-                  (row name width source-count input-limit output-limit)
-                  (hash-put! present row #t)
-                  (set! source-materialized-count (+ source-materialized-count 1))
-                  (when (> source-materialized-count output-limit)
-                    (error "ASCENT source fact budget exceeded"))
-                  (set! accepted (cons row accepted))))
-                (vector-set! all index accepted))))
-           (else
-            (source-admission-loop callbacks rows
-              (row check-source!)
+                   ;; With no field callback, nothing can invalidate the
+                   ;; shape checked above. Exact Set storage returns row.
+                   ;; Callback-bearing rows still cross the checked boundary.
+                   (let (check (vector-ref field-checkers index))
+                     (if check
+                       (gerbil-ascent-initialize-source-row! row width check
+                         present all index source-materialized-count output-limit)
+                       (gerbil-ascent-admit-source-row! row present all index
+                         source-materialized-count output-limit)))))
+                (else
                  (let (materialized
                        ((vector-ref storage-extensions index)
                         (vector-ref storage-states index)
@@ -201,12 +150,14 @@
                     (lambda (stored)
                       (set! source-materialized-count
                         (gerbil-ascent-initialize-source-row! stored width
-                          check present all index
+                          (vector-ref field-checkers index) present all index
                           source-materialized-count output-limit)))
                     materialized)
                    (gerbil-ascent-storage-admit-state!
-                    (vector-ref storage-states index))))))
-          (when native-view?
+                    (vector-ref storage-states index)))))))
+           rows)
+          (when (and (gerbil-ascent-canonical-view-storage-provider? (vector-ref storage-providers index))
+                     (gerbil-ascent-canonical-hash-index-provider? (vector-ref (vector-ref schema 5) index)))
             ;; Query planning follows source admission to preserve diagnostics.
             ;; Build only a frozen carrier here; routing is selected afterwards.
             (vector-set! all index (gerbil-ascent-storage-freeze-view (vector-ref storage-states index) #f)))
@@ -218,4 +169,4 @@
           (vector-set! delta-size index
             (vector-ref all-size index))
           (set! index (+ index 1)))) relations))
-    (values source-count source-materialized-count))))
+    (values source-count source-materialized-count)))

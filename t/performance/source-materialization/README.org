@@ -42,10 +42,13 @@ environment option or SDK rebuild is introduced. All logs/receipts stay in
 
 * Frozen baseline and controls
 
-The frozen evaluator, Session, source-snapshot, reuse, selection and Result owners are
+The frozen evaluator, Session, source-snapshot, reuse, selection, Result and initialization owners are
 from =75b1d2dc7a3fc712eb92dbdaeb4ec6f7d236e131=. Only their module import paths
 change; frozen owners refer to each other and share the remaining production
-helpers. Preparation and initial source appends/run are outside timing. Each
+helpers. Initialization is now frozen independently as well: original blob
+=f46c1564384b5e504c251c8db33bc78785ce93c9=. This prevents the old evaluator
+from silently adopting the new admission algorithm. Preparation and initial
+source appends/run are outside timing. Each
 consumer executes four full transactions or eager replacements and forces all
 ordered public source/output rows. Eight sources each have 1024 base rows and
 one persistent append. The small control has no extra sources. Rejected
@@ -145,3 +148,40 @@ without a live engine falls back to ordinary completed-result reads. The current
 qualified unit is retained source transaction/publication handoff. Eager replay
 CPU remains open; full solving/construction and cross-platform claims remain
 outside these receipts.
+
+* Fresh admission closes the eager replay gate
+
+The final initializer selects lattice/view/Set/custom storage once per relation.
+Its private syntax has two traversal modes: a callback-free exact Set uses the
+native =foldl= occurrence counter and builds one private reversed row spine;
+callback paths keep =for-each= and the original shape/field/expansion/quota order.
+This distinction matters when a callback changes a borrowed source list header:
+=foldl= prefetches the next node, while the old native =for-each= reads it after
+the callback. The executable control checks independent rows and callback traces
+for both engines. No per-row checker closure is allocated on the pure Set path.
+
+Final direct-gxi complete-consumer receipts (fixed =75b1d2d= baseline):
+
+| Consumer | Old CPU us | New CPU us | Wins / 20 | Old bytes | New bytes | Gate |
+|----------+------------+------------+-----------+-----------+-----------+------|
+| retained | 17326 | 4921 | 20 | 22034992 | 11382896 | pass |
+| rejected | 14699 | 5150 | 20 | 20429104 | 11990192 | pass |
+| replay | 6102 | 4220 | 19 | 13441904 | 11342512 | pass |
+| small | 457 | 444 | 9 | 1171504 | 1187952 | pass |
+
+The replay CPU median decreases 30.8%; all unchanged gates pass. This compares
+the combined complete production flow with the original baseline, not an isolated
+incremental or general solver speedup. The full eager solve remains immediate.
+A dispatch-only attempt failed replay (5782 -> 6326 us); an intermediate runtime
+checker failed the small control (870 -> 1135 us). Those negative receipts remain
+in =.cache=. Gates, sample counts, workload and allocation method are unchanged.
+
+Final semantic qualification uses the original seven Suites plus
+=ascent-initial-admission-test.ss=, =ascent-lattice-frontier-test.ss=,
+=ascent-lattice-program-test.ss=, =ascent-byods-invariants-test.ss= and
+=ascent-byods-index-test.ss=: 126 Cases in 12 modules pass, with final =OK=.
+Wall time is 73.50 s and user CPU time 16.63 s. The owner policy report has zero
+findings. Final logs/receipts are =*-traversal-final.log/.ss=,
+=gerbil-test-traversal-final.log= and =policy-traversal-final.log= in the existing
+ignored cache directory. Run the existing official test command with the five
+additional files; no custom runner or SDK build is required.

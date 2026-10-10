@@ -15,13 +15,15 @@
                  "t/performance/source-log/" "t/performance/storage-batch/"
                  "t/qualification/ascent-source-" "t/qualification/ascent-timeout-test.ss"
                  "t/qualification/ascent-storage-batch-test.ss"
+                 "t/qualification/ascent-initial-admission-test.ss"
                  "t/qualification/ascent-withdrawal-session-test.ss"
                  "t/native/artifact-admission.ss")))
            (hash->list (artifact-sources)))))
 (def (main library)
   (let (sources (owned-sources))
-    (make '("program/source-snapshot" "program/update-selection" "program/result" "program/reuse"
+    (make '("program/initialization" "program/source-snapshot" "program/update-selection" "program/result" "program/reuse"
             "program/evaluate" "program/session"
+          "t/performance/source-materialization/reference-initialization"
           "t/performance/source-materialization/reference-snapshot"
           "t/performance/source-materialization/reference-result"
           "t/performance/source-materialization/reference-selection"

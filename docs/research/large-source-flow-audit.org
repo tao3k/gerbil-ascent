@@ -417,3 +417,80 @@ foreign/stale evidence, caller mutation isolation, derived/count counterexamples
 rejected acceptance, provider recovery, graph withdrawal, timeouts and budgets.
 Six production owners pass ASP Policy with zero findings. Root =build.ss= has no
 change from this unit; all logs and scalar receipts remain ignored in =.cache=.
+
+* Relation-specialized fresh admission
+
+The eager source replacement path still constructs and solves a fresh candidate
+before adoption. Its initialization selected lattice, native view, canonical Set
+and custom expansion behavior again for every row, including exact provider/index
+identity checks and repeated row-buffer access. The revised
+=program/initialization.ss= selects the algorithm once per relation. A private
+=source-admission-loop= form owns ordered shape validation, field checking and
+source occurrence budget charging; each algorithm retains its own expansion,
+merge and materialized budget boundaries. No callback result is cached.
+
+An exact Set with no field callback now collects a fresh reversed row spine
+locally and writes the relation buffer once after admission. Membership insertion
+still precedes the materialized output budget check. Duplicates retain their row
+identity, order and budget charge. Callback-bearing Set rows retain the second
+shape/field validation because the first callback may mutate the source row.
+Custom expansion and native view state acceptance retain their original order;
+lattice sources still stage every accepted occurrence. Complexity remains linear
+in admitted source/expansion rows; this work removes repeated dispatch and buffer
+operations rather than changing the solver's algorithm or eager error timing.
+
+Gerbil =1cfb032= =compiler/compile.ss:319-337= demonstrates a declarative traversal
+form that owns its ordering and lexical bindings. The admission form applies
+that boundary to runtime row traversal. Its state carrier is a private final
+record, borrowed once through native =using= slot access. It introduces no new
+public methods, build entry protocol or runtime environment options.
+
+The frozen initialization from =75b1d2d= is attached to the existing frozen
+complete evaluator. Native tests additionally compare independent full engine
+construction, callback/expansion traces, callback mutation rejection, duplicate
+source quota, prior expansion's materialized quota, Set multiplicity, lattice
+merge and graph closure. Full consumer timing retains the original four workloads
+and fixed gates. These are comparisons with the original =75b1d2d= flow, not an
+isolated attribution of the earlier publication changes to this new unit.
+
+An initial syntax-owned counter triggered ASP's
+=GERBIL-SCHEME-AGENT-POLICY-013=: the parser treats any =set!= in a macro datum
+as global macro state. A runtime-checker variant removed that finding but failed
+the fixed small-consumer CPU control (870 -> 1135 us). Gerbil's native =foldl=
+(runtime/util.ss:268-273) removes the extra checker closure and returns the
+occurrence total through its accumulator. It prefetches the next list node,
+whereas the original native =for-each= reads it after the callback. The executable
+borrowed-source-header control exposed that semantic difference.
+
+The final syntax has two closed modes. =pure= applies only to exact Set with no
+field callback and returns the functional count; =callbacks= preserves native
+=for-each= and runtime checker state for field, storage and lattice callbacks.
+The checker is allocated only in callback modes. Both keep their original quota
+and materialization order. The final owner report passes with zero findings;
+no dependency or gate is changed. The header control checks both frozen and
+current engines against independent ordered rows and callback traces.
+
+The final complete consumers retain 20 alternating CPU pairs, 20 ASP benchmark
+admissions and five dedicated cumulative allocation pairs against =75b1d2d=.
+All original CPU/allocation gates pass:
+
+| Consumer | Old CPU us | New CPU us | Wins / 20 | Old bytes | New bytes |
+|----------+------------+------------+-----------+-----------+-----------|
+| Accepted retained cuts | 17326 | 4921 | 20 | 22034992 | 11382896 |
+| Rejected prospective cuts | 14699 | 5150 | 20 | 20429104 | 11990192 |
+| Native eager replay | 6102 | 4220 | 19 | 13441904 | 11342512 |
+| Small retained control | 457 | 444 | 9 | 1171504 | 1187952 |
+
+Eager replay now qualifies the fixed >=10% CPU / >=16-win gate: the complete
+consumer CPU median falls 30.8%, with allocation down 15.6%. Accepted and rejected
+consumer CPU medians fall 71.6% and 65.0%. These compare the combined production
+flow with the fixed original baseline; they do not isolate this unit's incremental
+speedup or establish wall-clock/other-platform/general-solver improvements.
+The full eager solve and its immediate errors remain in place.
+
+The final official =gxi :gerbil/tools/gxtest= run passes 126 Cases in 12 modules,
+with final =OK=, wall time 73.50 s and CPU user time 16.63 s. The previous 123/125
+Case receipts and earlier CPU failures remain in ignored =.cache=; they are not
+substituted for this final source qualification. Complete final receipts are
+=.cache/ascent/source-materialization/*-traversal-final.log= and =.ss=, plus
+=gerbil-test-traversal-final.log= and =policy-traversal-final.log=.

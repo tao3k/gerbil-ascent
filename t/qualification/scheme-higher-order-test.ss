@@ -3,6 +3,7 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 (import (only-in :gerbil-ascent/program/finite-arithmetic
                  relational-capped-product relational-capped-power)
+        (only-in :std/error Error-irritants)
         (only-in :std/test check-equal? check-exception test-case test-suite)
         (only-in :gerbil-ascent/program/higher-order
                  relational-relation-type relational-arrow-type relational-type=?
@@ -75,6 +76,24 @@
 
 (def scheme-higher-order-test
   (test-suite "Finite positive higher-order descriptors"
+    (test-case "indexed domain admission preserves false atoms and current mutable support"
+      (for-each
+       (lambda (width)
+         (let* ((domain (cons #f (cons #\x (iota width))))
+                (type (relational-relation-type 1 domain))
+                (rows (append '((#f) (#\x)) (map list (iota width)))))
+           (check-rows (solve (relational-typed-source 'indexed type rows)) rows)
+           ;; Repeated calls must observe removal from the public domain spine.
+           (set-car! (relational-type-right type) 'replacement)
+           (check-exception (relational-typed-source 'indexed type rows) true)))
+       '(14 15 30)))
+    (test-case "indexed mapping retains all input checks before output checks"
+      (let* ((type (relational-relation-type 1 (iota 32)))
+             (source (relational-typed-source 'indexed type '((0))))
+             (entries (append (make-list 17 '((0) (99))) '(((98) (0))))))
+        (check-equal?
+         (with-catch Error-irritants (lambda () (relational-typed-flatmap source type entries)))
+         '(98))))
     (test-case "scalar tags and duplicate domains preserve complete row membership"
       (let* ((atoms '(0 #f a #\a))
              (type (relational-relation-type 1 (append atoms atoms)))

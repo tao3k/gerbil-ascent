@@ -215,3 +215,25 @@ storage, per-rule execution and their publication responsibilities remain in the
 engine. It introduces no deferred transaction semantics or new public bulk API.
 Scoped typed compilation remains a separate budget-preserving study; no gains
 are claimed for those unimplemented units.
+
+* Follow-through: typed finite-domain admission
+
+The next coherent typed flow separates scoped traversal, checked node rebuilding
+and structural lowering, with one owner for the exact expansion counter.
+=check-domain!= selects an invocation-local membership predicate for the whole
+row segment, replacing repeated finite-domain scans in source and mapping
+construction and compiler rebuilding. Public mutable domains are freshly read;
+scoped visits and constructor checks still precede owned-copy reuse.
+
+Frozen complete native construction/compilation consumers reduce wide source
+CPU 57.8% and mapping CPU 62.8%, with 20/20 wins each. Small/empty and allocation
+regression gates pass; allocation slightly increases. This does not establish
+solve-speed improvement. See [[file:../../t/performance/typed-admission/README.org][typed admission receipts]] for the matched
+reference, fixed gates and remaining evidence boundaries. Shared descriptor
+reconstruction still occurs after each scoped visit; safely removing that work
+requires a separate validation/reuse design and remains open.
+
+The two independent native Suites pass 40 Cases in 10.05 seconds, and the
+production file passes ASP Policy with zero findings. This completes the
+finite-domain admission unit; it leaves shared-descriptor reuse and the other
+unmeasured audit flows open.

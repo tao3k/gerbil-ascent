@@ -83,12 +83,50 @@ binding content, malformed references and detached publication.
 The model uses finite sets and Boolean qualification premises; the production
 implementation derives those premises from snapshots, digest binding and native
 execution status. This is a documented abstraction correspondence with native
-regression controls, not automatic execution of a TLC-generated trace and not
-a proof of the Scheme compiler, digest implementation or hash-table refinement.
+regression controls. The shared finite corpus below now checks that correspondence
+automatically; it is not a proof of the Scheme compiler, digest implementation
+or general hash-table refinement.
 A counterexample that violates actual behavior must become a failing native
 regression, an owner-scoped repair and a rerun of all corresponding gates.
 An injected fault already rejected by production remains a regression control;
 it does not justify an artificial production edit.
+
+* Executable finite conformance bridge
+
+[[file:../../../packages/proofs/quint/ExecutionFeedback.qnt][Quint's evaluate]] is now the pure function used by both the actual =grade=
+transition and the corpus exporter. =conformance= deterministically enumerates
+all 1,024 initial states, not random samples or seven hand-selected examples.
+The [[file:../../../t/qualification/fixtures/feedback/conformance.json][frozen JSON corpus]] stores =[id,status,missingMask,extraMask]=. Status codes
+are 0=inconclusive, 1=match, 2=mismatch. The input ID packs two answer-set bits,
+two reference-set bits, then candidate binding, candidate completion, paired
+comparison, gold binding, gold completion and identical query bits in that order.
+Row masks range from 0 to 3 for the fixed unary tuples =(0)= and =(1)=.
+
+[[file:../../../packages/proofs/lean/FeedbackConformance.lean][The executable Lean grader]] independently calculates the same observations.
+Kernel-checked finite theorems establish match iff qualified extensional equality,
+exact missing/extra membership, and refusal with empty differences. The proofs
+use =decide=, without =native_decide= or new axioms. =just check-feedback-conformance=
+regenerates current Quint output and requires both it and the frozen corpus to
+equal Lean's complete ordered result. This is a formal CI gate; malformed output,
+missing IDs, changed result fields or a stale frozen corpus fail comparison.
+
+[[file:../../../t/qualification/ascent-feedback-conformance-test.ss][The production Scheme replay]] consumes that same frozen corpus through ordinary
+Gerbil test discovery. It creates real snapshots and executes inert proposals,
+using generation changes for unbound observations and actual resource exhaustion
+for incomplete observations. It verifies binding, completion, query equality
+and complete answer rows from public receipts before comparing native feedback
+with foreign result fields. Both public comparison APIs are covered. No receipt
+constructor, mock completion flag or replacement Scheme grader is used.
+Admission receipts are cached within this Case; repeated input flags do not
+trigger another solve. Actual progress is reported every 128 comparisons.
+
+The finite replay and the formal regeneration check are independent CI consumers
+of one artifact, so changing any one implementation or the corpus cannot silently
+count as three-way agreement. This closes finite result correspondence for these
+1,024 states. Arbitrary tuples, full digest/source implementation refinement,
+concurrent source mutation, model-language intent and TLC counterexample trace
+serialization remain outside this gate. Detailed refusal reasons remain covered
+by the seven named native regressions above.
 
 * Assurance correspondence
 
@@ -122,6 +160,12 @@ Cases pass locally (15 total). Focused
 Lean kernel checking and the expanded Quint gate also pass. Remote
 whole-revision CI is a separate delivery gate. No model-generated proposal,
 Souffle corpus execution, published DB26 score or general equivalence is claimed.
+
+The additional conformance Case passes all 1,024 observations in native compiled
+execution (12 seconds locally), and current Quint/frozen/Lean comparison passes.
+A deliberately corrupted status observation is rejected by the Lean CLI
+(exit 1). This negative control is retained as validation evidence, not committed
+as an alternate accepted corpus. No timeout, heap or performance contract changed.
 
 * Initial CI timeout and execution-only consumer correction
 

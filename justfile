@@ -537,6 +537,13 @@ _admission-copy-benchmark:
     if grep -E 'ERROR|Heap overflow|Stack overflow' "$output_file" >/dev/null; then exit 1; fi
 
 # LeanPoo-backed ASCENT proof package. The Lake manifest fixes dependencies.
+# Compare regenerated Quint observations and the frozen Scheme corpus with
+# the executable Lean contract. Ordinary Gerbil tests consume the same corpus.
+check-feedback-conformance: prepare-quint
+    mkdir -p .cache/ascent/feedback-conformance
+    .cache/ascent/tools/quint/node_modules/.bin/quint repl -q --backend typescript -r packages/proofs/quint/ExecutionFeedback.qnt::ExecutionFeedback conformance .exit > .cache/ascent/feedback-conformance/quint.json
+    cd packages/proofs/lean && lake build FeedbackConformance && lake env lean --run FeedbackConformance.lean ../../../.cache/ascent/feedback-conformance/quint.json ../../../t/qualification/fixtures/feedback/conformance.json
+
 check-lean-proofs:
     #!/usr/bin/env bash
     set -euo pipefail

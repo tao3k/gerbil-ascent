@@ -133,7 +133,11 @@ rows each violate the designated invariant (exit 12). Seven corresponding
 production Scheme Cases use the same mutation identifiers, real executor
 receipts and exact refusal/difference assertions. Lean states the matching
 qualification and set-difference laws; the acceptance page records the
-abstraction and source-refinement boundary. This feedback model is additional to
+abstraction and source-refinement boundary. The model's actual =evaluate=
+function also exports all 1,024 initial observations. Formal CI regenerates
+them and compares them and the frozen artifact with a kernel-checked executable
+Lean grader; ordinary Gerbil tests replay the same artifact with real native
+receipts and check the abstraction premises. This feedback model is additional to
 the historical migration inventory above.
 
 * Whole-batch withholding qualification (2026-10-09)

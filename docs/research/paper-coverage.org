@@ -14,7 +14,7 @@ for all these states.
 
 | README paper | Repository reading | Current transfer and remaining work |
 |--------------+--------------------+-------------------------------------|
-| LLM-MatLogic | [[file:agent-inference/matlogic-ml26.org][note]] | WD26 finite executor and same-source gold/proposal grading implemented with Lean/Quint gates; raw model/KGQA benchmark pending |
+| LLM-MatLogic | [[file:agent-inference/matlogic-ml26.org][note]] | WD26 finite executor, same-source gold/proposal grading and automated 1,024-state Scheme/Lean/Quint result correspondence implemented; raw model/KGQA benchmark pending |
 | DatalogBench | [[file:agent-inference/datalogbench-db26.org][note]] | Dedicated reading; finite held-out graph/mutant discriminator implemented; model/Souffle corpus pending |
 | IRIS | [[file:agent-inference/iris-ir25.org][note]] | Dedicated reading added; finite sanitizer-path Program, Lean and Session checks |
 | BRINK | [[file:agent-inference/brink-b26.org][note]] | Dedicated method reading; whole-batch finite withholding implemented; upstream mined-rule/KG-RAG experiments pending |
@@ -70,6 +70,9 @@ ML26 now has an executable gold/proposal comparison gate in the same feedback
 owner: both receipts independently bind and complete against one source, and
 full query identity precedes exact set differences. Frozen scope controls,
 Lean premises and Quint fault exploration qualify this finite transfer.
+One shared corpus now links the current Quint transition evaluator, a
+kernel-checked executable Lean grader and production Scheme receipt replay,
+with automatic regeneration and comparison in CI.
 
 Remaining head-paper experiments include ML26 raw model proposal/specification
 comparison and BRINK released mined-rule groundings with versioned real-KG

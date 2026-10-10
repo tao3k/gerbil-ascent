@@ -38,6 +38,12 @@ after independent same-source/content binding, completion and exact full query
 agreement. Frozen scope controls produce exact missing/extra rows under the
 same native executor, with Lean qualification premises and Quint fault controls.
 This makes gold-versus-proposal grading available without rerunning execution.
+The feedback transfer now has a shared 1,024-state finite corpus: Quint's actual
+transition evaluator exports it, Lean checks current/frozen results against a
+kernel-checked executable grader, and Scheme replays public APIs with real
+native receipts while checking the input abstraction premises. CI rejects
+regeneration or native result drift. This strengthens result correspondence;
+it does not change the model-experiment or arbitrary-source proof boundary.
 It does not supply a model proposal, certify gold intent, implement MatLogic's
 matrix schedule or reproduce its benchmark. Raw response capture, model/request
 identity, retrieval provenance and the actual model study remain open.

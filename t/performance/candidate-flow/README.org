@@ -163,3 +163,14 @@ admission. Wide/medium reuse their completed 50-allocation-pair receipts named
 Construction CPU reductions are about 61.4%, 60.4% and 74.4%; their allocation
 reductions are about 60.1%, 60.0% and 72.7%. Complete graph/proof rows establish
 their own bounded controls; construction results do not establish solver gains.
+
+* Allocation counter qualification boundary (2026-10-10)
+
+The historical allocation pairs above sampled process-statistics slot 16 at
+forced-GC boundaries. The lattice-frontier study observed negative differences
+in a fully static executable, both with that recipe and with Gambit's dedicated
+=##get-bytes-allocated!= counter. Historical byte counts and allocation gates
+are therefore withdrawn pending a corrected gxi receipt. Historical CPU and
+semantic receipts remain separate evidence. The runner now samples the dedicated
+cumulative counter directly around the complete consumer and rejects a negative
+difference. This change does not inherit the preceding allocation PASS.

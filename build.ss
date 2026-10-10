@@ -56,6 +56,7 @@
     "program/admission"
     "program/view-replay"
     "program/view-state"
+    "program/lattice-frontier"
     "program/initialization"
     "program/source-snapshot"
     "program/result"

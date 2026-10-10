@@ -848,3 +848,24 @@ through the migrated production consumer. These are mechanism and semantic
 checks, not a CPU, allocation or wall-clock speedup claim. The source/log
 identities are in
 [[file:../evidence/scheme-retained-preparation-cache-20261006/receipt.json][the retained preparation receipt]].
+
+* Own the lattice admission and publication protocol
+
+Study native Gerbil =src/std/struct/lru.ss= for private final records, explicit
+factories and typed =using= field contracts. Apply the ownership boundary to
+=program/lattice-frontier.ss=: one table and one node per key, with exact
+last-update sequence and a separately materialized output spine. Joining and
+budgets belong to the engine, while membership/order belong to the frontier.
+A private positional protocol needs no public generic hierarchy.
+
+Keep caller semantics explicit. Source admission stages every accepted
+occurrence; derived admission stages only effective changes. An equal value
+can therefore affect source order without affecting derived order. Preserve
+this distinction in the complete flow rather than deduplicating both callers
+through an overly broad helper. Lookups leave ordering untouched. Clear state
+only after publication, and keep held result spines independent of mutable nodes.
+
+Unique arrivals already have the required order. Sorting after a key revisit
+avoids allocation for every update; a linked-node attempt reduced allocation
+but failed the repeated-key CPU gate. Choose the representation with matched
+complete consumers and negative controls, not a shorter isolated helper.

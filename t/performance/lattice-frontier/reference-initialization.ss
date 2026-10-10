@@ -5,9 +5,7 @@
 ;;; Initial source admission owns the engine's fresh row/state buffers.
 (import :gerbil-ascent/core/relation-view
         (only-in :clan/poo/object .ref)
-        (only-in "lattice-frontier.ss" make-lattice-frontier lattice-frontier-stage!
-                 lattice-frontier-rows)
-        (only-in "admission.ss" gerbil-ascent-initialize-source-row!
+        (only-in :gerbil-ascent/program/admission gerbil-ascent-initialize-source-row!
                  gerbil-ascent-admit-source-row!)
         (only-in :gerbil-ascent/core/rule-semantics gerbil-ascent-lattice-key
                  gerbil-ascent-lattice-value gerbil-ascent-joined-row)
@@ -39,8 +37,8 @@
   (all delta all-size delta-size storage-states seen lattice-rows))
 
 ;; gerbil-ascent-initialize-sources!
-;; : (forall (r s b) (-> [r] s b Natural Natural (Values Natural Natural)))
-;; : (-> [Relation] Schema InitialSourceState Natural Natural (Values Natural Natural))
+;; : (forall (r s b) (-> r s b Natural Natural (Values Natural Natural)))
+;; : (-> (List Relation) Schema InitialSourceState Natural Natural (Values Natural Natural))
 ;; | doc m%
 ;;     Admit source rows in declaration order into fresh engine-owned buffers.
 ;;     Preserve field checks, input/output limits, final lattice update order
@@ -67,15 +65,15 @@
         (seen (initial-source-state-seen buffers))
         (lattice-rows (initial-source-state-lattice-rows buffers))
         (source-count 0) (source-materialized-count 0))
-    (let (index 0)
-      (for-each
-       (lambda (relation)
-        (let* ((name (vector-ref names index))
+    (let initialize ((remaining relations) (index 0))
+      (unless (null? remaining)
+        (let* ((relation (car remaining))
+               (name (vector-ref names index))
                (width (vector-ref arity index))
                (rows (.ref relation 'rows))
                (kind (vector-ref kinds index))
                (present (make-hash-table))
-               (frontier #f))
+               (lattice-events []))
           (unless (list? rows)
             (error "invalid ASCENT relation rows" name rows))
           (when (eq? kind 'lattice)
@@ -110,10 +108,7 @@
                  (unless previous
                    (set! source-materialized-count
                      (+ source-materialized-count 1)))
-                 (unless frontier (set! frontier (make-lattice-frontier)))
-                 ;; Source admission records every accepted occurrence, even
-                 ;; when joining leaves its value equal to the previous row.
-                 (lattice-frontier-stage! frontier key merged))
+                 (set! lattice-events (cons key lattice-events)))
                ;; Initial duplicates remain rows; the exact built-in Set
                ;; extension only wraps this row in a temporary list.
                (cond
@@ -162,11 +157,22 @@
             ;; Build only a frozen carrier here; routing is selected afterwards.
             (vector-set! all index (gerbil-ascent-storage-freeze-view (vector-ref storage-states index) #f)))
           (when (eq? kind 'lattice)
-            (vector-set! all index (if frontier (lattice-frontier-rows frontier) [])))
+            (let ((keyed (vector-ref lattice-rows index))
+                  (visited (make-hash-table))
+                  (accepted []))
+              ;; Source rows are already joined by key. Materialize each
+              ;; final row once, in last-source-update order.
+              (for-each
+               (lambda (key)
+                 (unless (hash-get visited key)
+                   (hash-put! visited key #t)
+                   (set! accepted (cons (hash-get keyed key) accepted))))
+               lattice-events)
+              (vector-set! all index (reverse accepted))))
           (vector-set! seen index present)
           (vector-set! delta index (vector-ref all index))
           (vector-set! all-size index (gerbil-ascent-row-count (vector-ref all index)))
           (vector-set! delta-size index
             (vector-ref all-size index))
-          (set! index (+ index 1)))) relations))
+          (initialize (cdr remaining) (+ index 1)))))
     (values source-count source-materialized-count)))

@@ -5,35 +5,33 @@
 ;;; Generic stratified semi-naive evaluator. Mutable row buffers belong to one
 ;;; session; public declarations and returned snapshots are POO values.
 (import :gerbil-ascent/core/relation-view
-        (only-in "view-state.ss" gerbil-ascent-view-relation? gerbil-ascent-stage-view! gerbil-ascent-frontier-count
+        (only-in :gerbil-ascent/program/view-state gerbil-ascent-view-relation? gerbil-ascent-stage-view! gerbil-ascent-frontier-count
                  gerbil-ascent-view-journal-event gerbil-ascent-view-export-cut
                  gerbil-ascent-commit-view! gerbil-ascent-empty-view gerbil-ascent-add-frontier
                  make-view-routing-state gerbil-ascent-initialize-view-cuts! gerbil-ascent-route-view-sources!)
-        (only-in "positive-components.ss" gerbil-ascent-run-positive-components! gerbil-ascent-component-mode?)
-        (only-in "actor-round.ss" gerbil-ascent-run-actor-round! gerbil-ascent-actor-round-eligible?)
-        (only-in "source-log.ss" gerbil-ascent-source-log-rows)
-        (only-in "source-snapshot.ss" gerbil-ascent-source-snapshot
+        (only-in :gerbil-ascent/program/positive-components gerbil-ascent-run-positive-components! gerbil-ascent-component-mode?)
+        (only-in :gerbil-ascent/program/actor-round gerbil-ascent-run-actor-round! gerbil-ascent-actor-round-eligible?)
+        (only-in :gerbil-ascent/program/source-log gerbil-ascent-source-log-rows)
+        (only-in :gerbil-ascent/program/source-snapshot gerbil-ascent-source-snapshot
                  gerbil-ascent-prepare-source-snapshot source-snapshot-program)
         (only-in :clan/poo/object .o .ref object?)
         (only-in :clan/poo/mop validate)
         (only-in :std/iter for iter Iterator &Iterator-next!)
-        (only-in "initialization.ss" make-initial-source-state gerbil-ascent-initialize-sources!)
-        (only-in "lattice-frontier.ss" make-lattice-frontier lattice-frontier-ref
-                 lattice-frontier-stage! lattice-frontier-rows lattice-frontier-clear!)
-        (only-in "admission.ss" gerbil-ascent-admit-source-row!
+        (only-in :gerbil-ascent/t/performance/lattice-frontier/reference-initialization make-initial-source-state gerbil-ascent-initialize-sources!)
+        (only-in :gerbil-ascent/program/admission gerbil-ascent-admit-source-row!
                  gerbil-ascent-check-replacement-rows! gerbil-ascent-prepare-storage-batch)
-        (only-in "result.ss" gerbil-ascent-publication-cache
+        (only-in :gerbil-ascent/program/result gerbil-ascent-publication-cache
                  gerbil-ascent-publish-rows gerbil-ascent-snapshot-rows gerbil-ascent-snapshot-sizes
                  gerbil-ascent-result-observation gerbil-ascent-make-published-result)
-        (only-in "planning.ss" gerbil-ascent-prepare-program)
+        (only-in :gerbil-ascent/program/planning gerbil-ascent-prepare-program)
         (only-in :gerbil-ascent/core/positive-plan gerbil-ascent-run-positive-plan!
                  gerbil-ascent-emit-heads!)
-        (only-in "index.ss" gerbil-ascent-make-row-indexes row-indexes-rows row-indexes-visit-parts row-indexes-advance! row-indexes-plan-rules! row-indexes-plan-actions!)
-        (only-in "types.ss" GerbilAscentSessionContract)
-        (only-in "reuse.ss" gerbil-ascent-prepare-native-reuse
+        (only-in :gerbil-ascent/program/index gerbil-ascent-make-row-indexes row-indexes-rows row-indexes-visit-parts row-indexes-advance! row-indexes-plan-rules! row-indexes-plan-actions!)
+        (only-in :gerbil-ascent/program/types GerbilAscentSessionContract)
+        (only-in :gerbil-ascent/program/reuse gerbil-ascent-prepare-native-reuse
                  gerbil-ascent-activate-rules gerbil-ascent-activate-selected-rules
                  gerbil-ascent-seed-native-reuse! make-closure-seed-state native-reuse-affected)
-        (only-in "analysis.ss" gerbil-ascent-program-analysis
+        (only-in :gerbil-ascent/program/analysis gerbil-ascent-program-analysis
                  gerbil-ascent-program-schema)
         (only-in :gerbil-ascent/core/rule-semantics gerbil-ascent-lattice-feeds-relation?
                  gerbil-ascent-lattice-key
@@ -333,7 +331,7 @@
          (let ((pending (make-vector count []))
                (pending-seen (make-vector count #f))
                (pending-injections (make-vector count []))
-               (pending-lattices (make-vector count #f))
+               (pending-lattice-keys (make-vector count []))
                (pending-count 0)
                (component-mode? (gerbil-ascent-component-mode? session? workers canceled? analysis schema)))
             (def (admit-stored! index pending-table stored)
@@ -351,11 +349,10 @@
             (def (emit-row! atom row)
               (let* ((index (vector-ref atom 0))
                      (pending-table
-                      (and (not (vector-ref lattice-joins index))
                       (or (vector-ref pending-seen index)
                           (let (fresh (make-hash-table))
                             (vector-set! pending-seen index fresh)
-                          fresh)))))
+                          fresh))))
                 (let (check (vector-ref field-checkers index))
                   (when check (check row)))
                 (cond
@@ -368,13 +365,8 @@
                     (set! pending-count (+ pending-count (gerbil-ascent-frontier-count frontier)))
                     (vector-set! pending index (gerbil-ascent-add-frontier (vector-ref pending index) frontier))))
                  ((vector-ref lattice-joins index)
-                  (let* ((frontier
-                          (or (vector-ref pending-lattices index)
-                              (let (fresh (make-lattice-frontier))
-                                (vector-set! pending-lattices index fresh)
-                                fresh)))
-                         (key (gerbil-ascent-lattice-key row))
-                         (staged (lattice-frontier-ref frontier key))
+                  (let* ((key (gerbil-ascent-lattice-key row))
+                         (staged (hash-get pending-table key))
                          (prior (or staged
                                     (hash-get (vector-ref lattice-rows index)
                                               key)))
@@ -387,8 +379,11 @@
                     (let (check (vector-ref field-checkers index))
                       (when check (check merged)))
                     (unless (and prior (equal? merged prior))
-                      (when (lattice-frontier-stage! frontier key merged)
-                        (set! pending-count (+ pending-count 1))))))
+                      (unless staged
+                        (set! pending-count (+ pending-count 1)))
+                      (hash-put! pending-table key merged)
+                      (vector-set! pending-lattice-keys index
+                        (cons key (vector-ref pending-lattice-keys index))))))
                  (else
                   (if (gerbil-ascent-canonical-set-storage-provider?
                        (vector-ref storage-providers index))
@@ -658,8 +653,19 @@
                     (vector-set! pending-injections index []))
                   (begin
                 (if (vector-ref lattice-joins index)
-                  (let (frontier (vector-ref pending-lattices index))
-                    (let (staged-rows (if frontier (lattice-frontier-rows frontier) []))
+                  (let ((table (vector-ref pending-seen index))
+                        (visited (make-hash-table))
+                        (rows []))
+                    ;; The last update for each key wins this round. Replay
+                    ;; key events in reverse arrival order to retain the
+                    ;; previous deterministic pending-row order.
+                    (for-each
+                     (lambda (key)
+                       (unless (hash-get visited key)
+                         (hash-put! visited key #t)
+                         (set! rows (cons (hash-get table key) rows))))
+                     (vector-ref pending-lattice-keys index))
+                    (let (staged-rows (reverse rows))
                       (vector-set! pending index staged-rows)
                       (unless (null? staged-rows)
                         (vector-set! all index
@@ -667,7 +673,8 @@
                            (reverse staged-rows)
                            (filter
                             (lambda (existing)
-                              (not (lattice-frontier-ref frontier
+                              (not (hash-get
+                                    table
                                     (gerbil-ascent-lattice-key existing))))
                             (vector-ref all index))))
                         (for-each
@@ -710,9 +717,8 @@
                     (+ 1 (vector-ref delta-version index))))
                 (when (pair? (vector-ref pending index))
                   (vector-set! pending index [])
-                  (if (vector-ref lattice-joins index)
-                    (lattice-frontier-clear! (vector-ref pending-lattices index))
-                    (hash-clear! (vector-ref pending-seen index))))
+                  (vector-set! pending-lattice-keys index [])
+                  (hash-clear! (vector-ref pending-seen index)))
                 ))
                 (commit (+ index 1))))
             ;; Private storage state becomes reusable only after the entire

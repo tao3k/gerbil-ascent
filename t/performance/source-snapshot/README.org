@@ -119,3 +119,14 @@ The first transaction precheck also passed (3548->1584 us, same allocation
 medians); it remains =transaction-first.ss=. Its smaller absolute times do not
 replace the final matched run. No universal solver, cold-start or wall-clock
 improvement follows from these steady source-update results.
+
+* Allocation counter qualification boundary (2026-10-10)
+
+The historical allocation pairs above sampled process-statistics slot 16 at
+forced-GC boundaries. The lattice-frontier study observed negative differences
+in a fully static executable, both with that recipe and with Gambit's dedicated
+=##get-bytes-allocated!= counter. Historical byte counts and allocation gates
+are therefore withdrawn pending a corrected gxi receipt. Historical CPU and
+semantic receipts remain separate evidence. The runner now samples the dedicated
+cumulative counter directly around the complete consumer and rejects a negative
+difference. This change does not inherit the preceding allocation PASS.

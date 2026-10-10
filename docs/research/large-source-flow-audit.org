@@ -287,3 +287,63 @@ observation, first errors, caller mutation isolation and ordered complete output
 The production owner passes ASP Policy with zero findings. This closes the
 public export/source-handle indexing unit; retained engine execution ownership
 and the other unmeasured audit flows remain open.
+
+* Follow-through: lattice admission and ordered round publication
+
+This unit spans initial source admission, derived staging and round publication
+in =program/initialization.ss=, =program/evaluate.ss= and the private
+=program/lattice-frontier.ss=. It replaces repeated key-event spines and
+publication-time visited tables with one node per key and exact last-update
+sequence. Unique arrivals need no sorting; a revisit triggers ordered
+materialization at publication. Untouched lattices allocate no frontier.
+Native Gerbil's =src/std/struct/lru.ss= supplies the compact final-record and
+typed field ownership idioms. Joining, checks, charging and publication remain
+with their original engine owners. Source occurrences and effective derived
+changes retain their different order contracts.
+
+The final matched direct-gxi qualification compares complete consumers against
+frozen evaluator and initializer commit
+=8722780bb191e9c81fbfe2093b3c410f9e863df2=. Descriptors are prepared before clocks;
+fresh engine admission and complete outputs are measured, including twelve
+retained publications for sparse/Set. Twenty alternating CPU pairs, twenty ASP
+benchmark admissions and five allocation pairs pass all seven fixed gates:
+
+| Consumer | Old CPU us | New CPU us | Wins / 20 | Old bytes | New bytes |
+|----------+------------+------------+-----------+-----------+-----------|
+| Sparse retained updates | 3022 | 1855 | 20 | 26364208 | 26233456 |
+| Repeated derived keys | 988 | 922 | 16 | 963184 | 862448 |
+| Repeated initial source keys | 520 | 588 | 1 | 431136 | 332848 |
+| Distinct derived keys | 2025 | 1841 | 18 | 1884528 | 1781552 |
+| Cold sparse engine | 430 | 284 | 20 | 778016 | 400448 |
+| Small retained engine | 108 | 107 | 15 | 316768 | 311168 |
+| Set control | 305 | 309 | 9 | 1113680 | 1113712 |
+
+Sparse CPU improves 38.6%, but its final allocation improvement is only 0.5%.
+The preceding 71% allocation observation does not qualify the final code and
+is superseded. Initial source CPU increases 68 us (13.1%) while allocation
+falls 22.8%; it passes the unchanged 110% plus 20 us control gate. Set CPU
+slightly increases. These controls preclude a universal solver speedup claim.
+The first linked-node implementation failed the repeated-key CPU gate; that
+negative receipt remains in =.cache/ascent/lattice-frontier/=.
+
+Native =gxi :gerbil/tools/gxtest= passes 44 Cases across three Suites in 14.41
+seconds. The runner contains no custom process scheduler. Cases exhaust all
+729 six-event traces and preserve initial occurrence order, callback and first
+error order, field/budget admission, held snapshots, resume and custom storage.
+The source-order test initially expected private instead of public projection
+order; native testing caught the oracle error and the corrected independent
+expectation agrees with both engines. ASP Policy passes the three production
+owners with zero findings. Root =build.ss= adds only module registration.
+
+Allocation qualification discovered nonmonotone static-executable samples,
+including dedicated-counter samples. Those receipts were rejected; no SDK
+root cause has been established. Direct gxi with the compiled project libraries
+qualifies =##get-bytes-allocated!= around each complete consumer, rejecting
+negative differences. The earlier candidate-flow, source-snapshot,
+typed-admission, typed-sharing and declaration-names allocation claims/gates
+are withdrawn pending qualification of their corrected runners. Their CPU
+and semantic results remain separate evidence. They were not rerun in this unit.
+
+See [[file:../../t/performance/lattice-frontier/README.org][lattice frontier qualification]] for entry points, frozen source blobs,
+fixed gates and measurement boundaries. This closes this lattice flow unit;
+other engine and compiler audit flows remain open.

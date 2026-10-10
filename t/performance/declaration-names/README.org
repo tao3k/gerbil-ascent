@@ -91,3 +91,14 @@ application/proof/workflow changes stay outside this closure. Canonical producti
 artifact admission is unchanged. Logs, executables, failures and raw samples stay
 under ignored =.cache/ascent/declaration-names/=; these receipts are local native
 evidence, not remote CI qualification.
+
+* Allocation counter qualification boundary (2026-10-10)
+
+The historical allocation pairs above sampled process-statistics slot 16 at
+forced-GC boundaries. The lattice-frontier study observed negative differences
+in a fully static executable, both with that recipe and with Gambit's dedicated
+=##get-bytes-allocated!= counter. Historical byte counts and allocation gates
+are therefore withdrawn pending a corrected gxi receipt. Historical CPU and
+semantic receipts remain separate evidence. The runner now samples the dedicated
+cumulative counter directly around the complete consumer and rejects a negative
+difference. This change does not inherit the preceding allocation PASS.

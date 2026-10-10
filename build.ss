@@ -92,6 +92,7 @@
     "candidate/program"
     "candidate/funs"
     "candidate/grounding-plan"
+    "candidate/finite-plan"
     "candidate/provenance"
     "candidate/provenance-graph"
     "candidate/support-dependencies"

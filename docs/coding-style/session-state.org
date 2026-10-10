@@ -1002,3 +1002,26 @@ remain explicit algorithm contracts.
 gates for the compact-offset revision. Sparse and truncated consumers improve
 CPU/allocation, while small inputs have measured overhead. Exact large-ID tests
 ensure representation specialization never narrows the public numeric domain.
+
+* Study: carry admitted expression plans through a complete evidence lifetime
+
+Gerbil =compiler/optimize-base.ss:24-29= allocates identity tables with one
+optimizer instance; =core/contract.ss:401-432= exposes native typed expression
+bindings. The finite evidence flow resolves admitted names into private relation
+references and carries ordered head/atom/scalar expressions with final rule/clause
+records. Prepared plans retain no rows, frontiers or evaluated bindings. Native
+=match= selects scalar operators once; each execution still checks current first
+binding, false-value presence, exact integer domains and output freshness.
+
+Preparation, probe accounting and publication have distinct owners in the same
+flow. Independent verification prepares its own whole replay. Every admitted row
+is detached once; when replay owners end, certificate publication takes the private
+closure rather than cloning it again. This transfer is justified by lifetime and
+mutation tests, not by treating arbitrary caller data as immutable. External row
+grammar admission must precede structural hashing.
+
+[[file:../../t/performance/finite-plan/README.org][Complete finite qualification]] preserves the rejected plan-only experiment and reports
+whole generation-plus-verification improvements for wide/reduction inputs. Small
+inputs have measured overhead. Exact work controls and unchanged reduction scans
+ensure expression preparation does not become uncharged evaluation or cached
+verification trust.

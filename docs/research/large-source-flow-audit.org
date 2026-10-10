@@ -703,3 +703,37 @@ owner and new Suite with zero findings. Gerbil invocation-owned tables and nativ
 ordered builders motivate this whole admission/traversal/publication boundary.
 The preceding =ac46b62= evidence unit now has six successful exact-head CI jobs
 in run =38035720855=.
+
+* Finite evidence admission, expression execution and publication
+
+The finite model consumer repeated relation-name association searches, head/atom
+classification and scalar syntax dispatch inside every probe and saturation
+round. The producer also deep-copied a closure whose admitted rows and private
+entry/frontier spines were already detached. External uniqueness hashing preceded
+row grammar admission, exposing structural hashing to malformed external rows.
+
+The complete production unit introduces invocation-owned typed final rule/clause
+plans. Relations resolve once into replay-private references; head, atom and fixed
+scalar expressions are prepared before repeated execution. Plans borrow no rows
+or frozen frontiers. Each verification independently prepares and executes its
+own replay. Ordered probes, unsuccessful work, absence charging, full reduction
+scans, strata/round visibility and exact budgets remain unchanged. Publication
+transfers the already detached closure after replay owners end. External row
+width/scalars are admitted before structural uniqueness hashing.
+
+[[file:../../t/performance/finite-plan/README.org][Frozen complete finite consumers]] include generation, every closure entry and independent
+verified replay. Against preceding =71ac687=, wide CPU falls 4244 -> 3560 us
+(16.1%, 17/20 wins), allocation 4130912 -> 3210592 bytes (22.3%). Reduction
+CPU falls 1107 -> 910 us (17.8%, 20/20 wins). Negation is essentially unchanged;
+small CPU rises 38 -> 40 us with 5680 additional bytes. All fixed gates pass.
+The initial plan-only variant failed wide and remains recorded; the production
+ownership/scalar revision was requalified without changing gates or samples.
+
+Seven native modules pass 61 Cases with final =OK=, including exact budget
+comparisons, malformed external rows, publication isolation and unchanged finite,
+stratified and positive controls. ASP Policy passes changed production owners and
+the new Suite with zero findings. Learning from Gerbil's invocation-local identity
+tables, native typed bindings and ordered expression composition is applied to
+this entire evidence boundary. Solver planning, bridge/session execution and
+general workload performance remain separate audit work. Preceding =71ac687=
+now has six successful exact-head CI jobs in run =38036942726=.

@@ -13,8 +13,10 @@ Gerbil =1cfb032= =compiler/optimize-call.ss:89-125= guards substitution using
 arity/mutation facts and preserves ordered operand bindings. Its
 =core/contract.ss:401-445= supplies typed expression binding through =using=.
 The application is preparation of admitted expressions followed by execution,
-not a new evaluator for arbitrary user code. Fixed scalar clauses retain the
-existing evaluator. Plans are rebuilt for each call; no validation or producer
+not a new evaluator for arbitrary user code. At this qualification's revision,
+fixed scalar clauses retained the existing evaluator; the subsequent
+[[file:../finite-plan/README.org][finite evidence unit]] prepares their admitted operators with matched interpreter
+controls. Plans are rebuilt for each call; no validation or producer
 result is cached across mutable source/proposal boundaries.
 
 The plan is used by positive proof saturation, final query matching and complete

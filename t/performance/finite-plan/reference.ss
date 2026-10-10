@@ -6,9 +6,7 @@
 ;;; Exact finite replay for the inspected candidate subset. This is a
 ;;; snapshot-relative model check, not general recursive provenance.
 ;;; The replay does not call the ASCENT planner, evaluator or solver.
-(import :gerbil-ascent/candidate/finite-plan
-        (only-in :gerbil-ascent/candidate/grounding-plan prepare-grounding-atom)
-        (only-in :gerbil-ascent/candidate/datum candidate-copy-pairs)
+(import (only-in :gerbil-ascent/candidate/datum candidate-copy-pairs)
         (only-in :gerbil-ascent/candidate/certificate-limits
                  +max-certificate-relations+ +max-certificate-rows+
                  +max-certificate-cells+ +max-certificate-row-arity+
@@ -23,10 +21,11 @@
                  reasoning-candidate-facts
                  reasoning-candidate-rules reasoning-candidate-query
                  reasoning-candidate-limits)
-        (only-in :gerbil-ascent/candidate/program scalar?)
+        (only-in :gerbil-ascent/candidate/program candidate-variable? scalar?)
         (only-in :gerbil-ascent/candidate/funs
                  candidate-same-row-set?
                  candidate-schema-of candidate-required-entry
+                 candidate-bind-atom candidate-fixed-clause
                  candidate-strata-of))
 
 (export candidate-finite-evidence candidate-verify-finite-evidence
@@ -62,6 +61,7 @@
                    (and count
                         (begin (set! rows (+ rows count)) #t)))
                  (<= rows +max-certificate-rows+)
+                 (unique-rows? (caddr entry))
                  (andmap
                   (lambda (row)
                     (let (width
@@ -72,9 +72,17 @@
                            (begin (set! cells (+ cells width))
                                   #t)
                            (andmap scalar? row))))
-                  (caddr entry))
-                 (unique-rows? (caddr entry))))
+                  (caddr entry))))
           closure schema))))
+
+;; : (forall (v) (-> (List v) (Bindings v) (Row v)))
+;; : (-> Terms Bindings Row)
+(def (instantiate terms bindings)
+  (map (lambda (term)
+         (if (candidate-variable? term)
+           (cdr (candidate-required-entry term bindings))
+           term))
+       terms))
 
 ;;; Returns exact relation sets or bounded/unsupported. The input is an
 ;;; already inspected candidate. Work counts every relation-row probe and
@@ -89,79 +97,81 @@
                  (cons (car entry)
                        (make-replay-relation (cdr entry) [] (make-hash-table) [] #f)))
                schema))
-         (relations (list->hash-table-eq tables))
-         (resolve (lambda (name)
-                    (or (hash-get relations name)
-                        (error "candidate is missing inspected entry" name))))
-         (plans (and levels (map (lambda (rule) (prepare-finite-rule rule resolve levels)) rules)))
          (steps 0)
          (bounded? #f)
          (material (make-certificate-material-budget))
          (derived-count 0)
          (derived-limit (cadr (reasoning-candidate-limits spec))))
         (def (active?) (not bounded?))
-        (def (rows (relation :- replay-relation))
+        (def (rows name)
           ;; The record is constructed above and stays local to this replay.
-          (when relation.dirty?
-            (set! relation.frontier (reverse relation.reversed))
-            (set! relation.dirty? #f))
-          relation.frontier)
-        (def (add-row! (relation :- replay-relation) row derived?)
-          (if (or bounded? (hash-get relation.present row))
-            #f
-            (begin
-              (when derived?
-                (set! derived-count (+ derived-count 1))
-                (when (> derived-count derived-limit)
-                  (set! bounded? #t)))
-              (unless (or bounded? (certificate-material-reserve! material row))
-                (set! bounded? #t))
-              (if bounded?
-                #f
-                (let (owned (candidate-copy-pairs row))
-                  (hash-put! relation.present owned #t)
-                  (set! relation.reversed (cons owned relation.reversed))
-                  (set! relation.dirty? #t)
-                  #t)))))
+          (using (relation (cdr (candidate-required-entry name tables)) :- replay-relation)
+            (when relation.dirty?
+              (set! relation.frontier (reverse relation.reversed))
+              (set! relation.dirty? #f))
+            relation.frontier))
+        (def (add-row! name row derived?)
+          (using (relation (cdr (candidate-required-entry name tables)) :- replay-relation)
+            (if (or bounded? (hash-get relation.present row))
+              #f
+              (begin
+                (when derived?
+                  (set! derived-count (+ derived-count 1))
+                  (when (> derived-count derived-limit)
+                    (set! bounded? #t)))
+                (unless (or bounded? (certificate-material-reserve! material row))
+                  (set! bounded? #t))
+                (if bounded?
+                  #f
+                  (let (owned (candidate-copy-pairs row))
+                    (hash-put! relation.present owned #t)
+                    (set! relation.reversed (cons owned relation.reversed))
+                    (set! relation.dirty? #t)
+                    #t))))))
         (def (step!)
           (unless bounded?
             (set! steps (+ steps 1))
             (when (> steps work-budget) (set! bounded? #t)))
           (not bounded?))
-        (def (evaluate-rule (rule :- finite-rule))
-          (let ((body rule.body) (changed? #f))
+        (def (evaluate-rule rule)
+          (let ((head (vector-ref rule 0))
+                (body (vector-ref rule 1))
+                (changed? #f))
             (def (walk clauses bindings)
               (unless bounded?
                 (if (null? clauses)
-                  (when (add-row! rule.relation (rule.head bindings) #t)
+                  (when (add-row! (car head)
+                                  (instantiate (cdr head) bindings) #t)
                     (set! changed? #t))
-                  (using (clause (car clauses) :- finite-clause)
-                    (case clause.kind
-                      ((fixed)
+                  (let (clause (car clauses))
+                    (case (car clause)
+                      ((where compute)
                        (when (step!)
-                         (let (next (clause.apply bindings))
+                         (let (next (candidate-fixed-clause clause bindings))
                            (when next (walk (cdr clauses) next)))))
                       ((not)
-                       (let (matched? #f)
+                       (let* ((atom (cadr clause))
+                              (matched? #f))
                          ;; One witness rejects negation. Absence requires the
                          ;; entire frozen relation and its final charged step.
-                         (let probe ((remaining (rows clause.relation)))
+                         (let probe ((remaining (rows (car atom))))
                            (when (and (pair? remaining) (step!))
-                             (if (clause.apply (car remaining) bindings)
+                             (if (candidate-bind-atom atom (car remaining) bindings)
                                (set! matched? #t)
                                (probe (cdr remaining)))))
                          (when (and (not bounded?) (not matched?)
                                     (step!))
                            (walk (cdr clauses) bindings))))
                       ((reduce)
-                       (let* ((output clause.output)
-                              (operator clause.operator)
+                       (let* ((output (cadr clause))
+                              (operator (caddr clause))
+                              (atom (cadddr clause))
                               (mode (car operator))
                               (accumulator (and (memq mode '(count sum)) 0))
                               (numeric? #t))
-                         (let probe ((remaining (rows clause.relation)))
+                         (let probe ((remaining (rows (car atom))))
                            (when (and (pair? remaining) (step!))
-                              (let (next (clause.apply (car remaining) bindings))
+                              (let (next (candidate-bind-atom atom (car remaining) bindings))
                                 (when next
                                   (if (eq? mode 'count)
                                     (set! accumulator (+ accumulator 1))
@@ -185,9 +195,9 @@
                        (certificate-for-each-while active?
                         (lambda (row)
                           (when (step!)
-                            (let (next (clause.apply row bindings))
+                            (let (next (candidate-bind-atom clause row bindings))
                               (when next (walk (cdr clauses) next)))))
-                        (rows clause.relation))))))))
+                        (rows (car clause)))))))))
             (walk body [])
             changed?))
     (if (> (length schema) +max-certificate-relations+)
@@ -197,12 +207,12 @@
       (begin
         (certificate-for-each-while active?
          (lambda (entry)
-           (certificate-for-each-while active? (lambda (row) (add-row! (resolve (car entry)) row #f))
+           (certificate-for-each-while active? (lambda (row) (add-row! (car entry) row #f))
                      (caddr entry)))
          (reasoning-snapshot-relations snapshot))
         (certificate-for-each-while active?
          (lambda (fact)
-           (add-row! (resolve (vector-ref fact 0)) (vector-ref fact 1) #f))
+           (add-row! (vector-ref fact 0) (vector-ref fact 1) #f))
          (reasoning-candidate-facts spec))
         (let stratum ((level 0)
                       (maximum (apply max (map cdr levels))))
@@ -210,26 +220,28 @@
             (let repeat ()
               (let (changed? #f)
                 (certificate-for-each-while active?
-                 (lambda ((rule :- finite-rule))
-                   (when (and (not bounded?) (= rule.level level))
+                 (lambda (rule)
+                   (when (and (not bounded?)
+                              (= (cdr (candidate-required-entry
+                                       (car (vector-ref rule 0)) levels))
+                                 level))
                      (when (evaluate-rule rule)
                        (set! changed? #t))))
-                 plans)
+                 rules)
                 (when (and changed? (not bounded?)) (repeat))))
             (stratum (+ level 1) maximum)))
         (values (if bounded? 'bounded 'complete)
                 (if bounded? []
                     (map (lambda (entry)
                            (list (car entry) (replay-relation-arity (cdr entry))
-                                 (rows (cdr entry))))
+                                 (rows (car entry))))
                          tables))))))))
 
 ;; : (-> InspectedCandidate Closure Rows)
 (def (query-rows spec closure)
   (let* ((query (vector-ref (reasoning-candidate-query spec) 0))
-         (entry (candidate-required-entry (car query) closure))
-         (match-row (prepare-grounding-atom query)))
-    (filter (lambda (row) (and (match-row row []) #t))
+         (entry (candidate-required-entry (car query) closure)))
+    (filter (lambda (row) (and (candidate-bind-atom query row []) #t))
             (caddr entry))))
 
 ;;; The generator compares independent replay with a completed native
@@ -246,10 +258,7 @@
      (reasoning-snapshot-digest snapshot) candidate-digest
      (candidate-finite-program-fingerprint spec)
      (candidate-copy-pairs (vector-ref (reasoning-candidate-query spec) 0))
-     ;; finite-replay copied every admitted row and built private frontier and
-     ;; entry spines. Its owners end here: transfer this closure to the receipt.
-     ;; External certificates still undergo admission and independent replay.
-     work-budget closure))
+     work-budget (candidate-copy-pairs closure)))
   (if (or (not (reasoning-snapshot-valid? snapshot))
           (not (eq? native-status 'complete)))
     (result 'unsupported [])

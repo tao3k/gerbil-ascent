@@ -1,0 +1,102 @@
+#+TITLE: Complete finite evidence replay plans
+
+* Production flow and source learning
+
+The unit covers finite certificate generation, ordered closure publication and
+independent certificate verification. Gerbil =1cfb032=
+=compiler/optimize-base.ss:24-29= owns identity tables per optimizer invocation;
+=core/contract.ss:401-432= binds typed expressions with =using=. Existing native
+=with=, =match= and =foldr= support admitted rule layouts and ordered expression
+composition. Private final =finite-rule= / =finite-clause= records carry resolved
+relations and prepared expressions through one replay. They retain no rows,
+frontiers, evaluated bindings or result across calls.
+
+Relation names, head getters, atom terms and fixed scalar operators are resolved
+before repeated execution. The shared scalar preparation checks current binding
+presence, first binding, exact numeric domains and already-bound outputs on each
+call. Positive proof generation uses the same expression layer; its independent
+proof verifier retains direct interpretation.
+
+Each finite verifier still admits the external certificate and independently
+replays the whole candidate. Row probes, unsuccessful matches, final absence
+steps, reduction scans after invalid numeric values, round visibility, strata,
+material limits and exact work outcomes are preserved. No producer closure is
+used as verification truth. Rows are copied at replay admission; the final
+private closure is transferred to its certificate after replay owners end,
+avoiding a second deep copy. Separate generation calls and independently returned
+verified closures remain isolated. External row grammar and size are admitted
+before structural uniqueness hashing.
+
+* Frozen complete consumers and fixed gates
+
+Baseline =71ac687dfd552818134ba0dc0e337cac08a188a0= freezes
+=candidate/finite-evidence.ss= byte for byte in =reference.ss=, original blob
+=f7934aa062cba7b143fafea078b57a1ade03660e=. Other candidate inspection, snapshot,
+strata and material-budget dependencies are shared. Neither arm invokes the
+native solver. Prepared snapshot/candidate/independent expected rows are outside
+timing. Both arms generate a full certificate, independently verify/replay it
+and project status, every ordered closure entry, verdict and verified closure
+inside timing. Complete projections must match; query rows also match independent
+mathematical expectations.
+
+Wide uses 16 source/derived relation pairs, 64 source rows each, an even filter
+and doubled output. Negation excludes two independently specified source values.
+Reduction sums 128 weight rows grouped by eight keys, including empty sum groups.
+Small uses one two-row source/derived pair. All inputs remain within unchanged
+finite material limits.
+
+Before first timing, gates fixed 20 alternating CPU pairs, 20 ASP Scheme API
+admissions and five dedicated cumulative allocation pairs. Wide/reduction need
+<=90% CPU and >=16 wins; negation/small permit <=110% CPU +20 us. Allocation
+permits <=110% baseline +8192 bytes. Native CPU includes natural GC; allocation
+samples reject negative differences. Arms run sequentially without compilation
+or tests alongside timing. No sample, gate, budget or timeout was relaxed.
+
+| Complete generation plus independent replay | Old CPU us | New CPU us | Wins / 20 | Old bytes | New bytes |
+|--------------------------------------------+------------+------------+-----------+-----------+-----------|
+| Wide scalar relations                      |       4244 |       3560 |        17 |   4130912 |   3210592 |
+| Negation                                   |        653 |        650 |        14 |    549760 |    526304 |
+| Reduction                                  |       1107 |        910 |        20 |    672848 |    646576 |
+| Small                                      |         38 |         40 |         5 |     66960 |     72640 |
+
+All fixed gates pass. Wide CPU/allocation falls 16.1%/22.3%; reduction CPU falls
+17.8% and allocation 3.9%. Negation CPU is essentially unchanged. Small pays
+2 us and 5680 bytes. These are full finite evidence consumer measurements on
+this VM, without a solver or general throughput claim.
+
+The shared expression layer also passes the existing positive grounding controls
+under their unchanged =c7da281= frozen baselines and gates: proof 1020 -> 840 us
+(16/20 wins), graph with verified opening 2036 -> 1814 us (18/20), and small
+26 -> 26 us (8/20). Allocation remains 695216 -> 706512,
+1839296 -> 1864224 and 52672 -> 54048 bytes. These controls establish continued
+admission of the prior flow, not an incremental gain against =ac46b62=.
+
+The initial plan-only variant failed wide (4057 -> 4274 us, 10 wins,
+4130912 -> 4174176 bytes). Its receipt/log remain
+=.cache/ascent/finite-plan/wide-rejected-initial.*=. Production then removed the
+redundant publication copy and prepared fixed scalar operations, followed by
+native requalification under the same gates. A new scalar test initially passed
+an incorrect argument count to =for-each=; it was repaired before qualification.
+No unchanged failing implementation was rerun to obtain a better timing sample.
+
+* Native qualification and reproduction
+
+Seven official GxTest modules pass 61 Cases, with no Case errors/failures,
+=HARNESS-OK= and final =OK=. New Cases compare scalar operators with the original
+interpreter across missing, false, duplicate, bound-output and 2^64 bindings;
+compare full frozen consumers; check 591 exact work-budget combinations; reject
+cyclic/improper/nested rows; and test certificate/input/returned-closure isolation.
+Existing 2047/2048 reduction, invalid numeric order, material bounds, finite
+replay, stratified evidence and positive matching controls remain unchanged.
+ASP Policy passes the three production owners and new Suite with zero findings.
+Root =build.ss= adds only the production module registration. Raw logs/receipts
+stay in ignored =.cache/ascent/finite-plan/=. No SDK rebuild is involved.
+
+#+begin_src sh
+GERBIL_PATH="$PWD/.gerbil" GERBIL_LOADPATH="$PWD/.gerbil/lib:$PWD" LIBRARY_PATH=/opt/homebrew/opt/openssl@3/lib gxi t/performance/finite-plan/build.ss "$PWD/.gerbil/lib"
+GERBIL_PATH="$PWD/.gerbil" GERBIL_LOADPATH="$PWD/.gerbil/lib:$PWD" gxi -:max-heap=2G,debug=q :gerbil/tools/gxtest -v 5 t/qualification/ascent-finite-plan-test.ss t/qualification/ascent-finite-evidence-test.ss t/qualification/scheme-finite-replay-test.ss t/qualification/ascent-stratified-proof-test.ss t/qualification/scheme-stratified-provenance-test.ss t/qualification/ascent-grounding-plan-test.ss t/qualification/ascent-positive-provenance-test.ss
+GERBIL_PATH="$PWD/.gerbil" GERBIL_LOADPATH="$PWD/.gerbil/lib:$PWD" gxi -:max-heap=3G,debug=q t/performance/finite-plan/runner.ss wide .cache/ascent/finite-plan/wide-final.ss
+#+end_src
+
+Run =negation=, =reduction= and =small= separately with their corresponding
+receipt paths. =runner.ss= calls the ASP Scheme benchmark API directly.

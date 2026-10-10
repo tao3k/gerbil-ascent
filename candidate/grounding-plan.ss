@@ -4,7 +4,7 @@
 (import (only-in "program.ss" candidate-variable?)
         (only-in "funs.ss" candidate-fixed-clause))
 (export (struct-out grounding-rule) (struct-out grounding-clause)
-        prepare-grounding-rule prepare-grounding-atom)
+        prepare-grounding-rule prepare-grounding-atom prepare-grounding-head prepare-grounding-fixed)
 
 ;; : (-> Symbol HeadRenderer GroundingClauses Label GroundingRule)
 (defstruct grounding-rule (name head body label) final: #t)
@@ -58,14 +58,71 @@
 ;;   %
 (def (prepare-grounding-rule rule)
   (with (#(head body label) rule)
+    (make-grounding-rule (car head) (prepare-grounding-head head)
+      (map (lambda (clause)
+             (if (memq (car clause) '(where compute))
+               (make-grounding-clause #f (prepare-grounding-fixed clause))
+               (make-grounding-clause (car clause) (prepare-grounding-atom clause)))) body)
+      label)))
+
+;; prepare-grounding-head
+;; : (forall (a) (-> (Atom a) (-> (Bindings a) (Row a))))
+;; : (-> InspectedHead HeadRenderer)
+;; | doc m%
+;;     Resolve an admitted head in term order using invocation-local getters.
+;;     Every head variable must be bound by completed body evaluation.
+;;
+;;     # Examples
+;;
+;;     ```scheme
+;;     ((prepare-grounding-head '(p ?x 7)) '((?x . #f)))
+;;     ;; => '(#f 7)
+;;     ```
+;;   %
+(def (prepare-grounding-head head)
     (let (getters (map (lambda (term)
                         (if (candidate-variable? term)
                           (lambda (bindings) (cdr (assq term bindings)))
                           (lambda (_) term))) (cdr head)))
-      (make-grounding-rule (car head)
-        (lambda (bindings) (map (lambda (get) (get bindings)) getters))
-        (map (lambda (clause)
-               (if (memq (car clause) '(where compute))
-                 (make-grounding-clause #f (lambda (bindings) (candidate-fixed-clause clause bindings)))
-                 (make-grounding-clause (car clause) (prepare-grounding-atom clause)))) body)
-        label))))
+      (lambda (bindings) (map (lambda (get) (get bindings)) getters))))
+
+;; prepare-grounding-fixed
+;; : (forall (a) (-> (FixedClause a) (-> (Bindings a) (Maybe (Bindings a)))))
+;; : (-> InspectedScalarClause BindingEvaluator)
+;; | doc m%
+;;     Resolve the admitted scalar operator and operand names once. Each call
+;;     checks current binding presence and numeric domains; false values remain
+;;     present values. Computation refuses an already bound output.
+;;
+;;     # Examples
+;;
+;;     ```scheme
+;;     ((prepare-grounding-fixed '(compute ?y (identity ?x))) '((?x . #f)))
+;;     ;; => '((?y . #f) (?x . #f))
+;;     ```
+;;   %
+(def (prepare-grounding-fixed clause)
+  (match clause
+    (['where ['even? name]]
+     (lambda (bindings)
+       (cond ((assq name bindings)
+              => (lambda (input)
+                   (and (exact-integer? (cdr input)) (even? (cdr input)) bindings)))
+             (else #f))))
+    (['where ['< left right]]
+     (lambda (bindings)
+       (let ((a (assq left bindings)) (b (assq right bindings)))
+         (and a b (exact-integer? (cdr a)) (exact-integer? (cdr b))
+              (< (cdr a) (cdr b)) bindings))))
+    (['compute output ['identity name]]
+     (lambda (bindings)
+       (let (input (assq name bindings))
+         (and input (not (assq output bindings))
+              (cons (cons output (cdr input)) bindings)))))
+    (['compute output ['+ left right]]
+     (lambda (bindings)
+       (let ((a (assq left bindings)) (b (assq right bindings)))
+         (and a b (not (assq output bindings))
+              (exact-integer? (cdr a)) (exact-integer? (cdr b))
+              (cons (cons output (+ (cdr a) (cdr b))) bindings)))))
+    (else (lambda (bindings) (candidate-fixed-clause clause bindings)))))

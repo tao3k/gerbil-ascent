@@ -1,0 +1,14 @@
+{
+  "schema": "ascent.retained-inference-correspondence.v1",
+  "observations": 32,
+  "changedSourceStaleAnswerFaultsDetected": 8,
+  "publishedSubgoalExtensionObservations": 32,
+  "corpusSha256": "214fb6918f3e1ca17e9c671e8047203d981ee035f0c4bae0e2c482f842bec175",
+  "librarySha256": "c2acb2751350f5590ca0a0dbb25aa9cb43d35b4b0716b11f2327802030ec5420",
+  "producerHashes": {
+    "python/src/ascent_engine/evidence.py": "5bbc08a2006a7b25f2b97d0958ff01443a9dad14890d78aa1989225a3e5ac9e9",
+    "python/src/ascent_test_support/retained_inference.py": "28bbf26d96bd66e8f2eacdd5890805dbba7c417d224abf44d6392e5d438eccf7",
+    "packages/proofs/lean/RetainedInference.lean": "2ec4b3897ceeb4502d5a0e3a7369e942b157729a63128075ae6b147dec98db7d",
+    "packages/proofs/quint/RetainedInference.qnt": "8b8ae1358cdaa90b6f4fa30be4175a947f1f54d0a44bd87de2a7247d4dc2cc9e"
+  }
+}

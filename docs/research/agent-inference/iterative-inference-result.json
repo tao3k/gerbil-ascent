@@ -1,0 +1,3211 @@
+{
+  "schema": "ascent.iterative-inference-result.v1",
+  "planSha256": "cac6380fcc6fc27e42e5c7f95a5fdfa7958211da7cd7bcd527d07fbfeaada730",
+  "scope": "Development test of the corrected iterative mechanism; reused structural families, not independent held-out evidence.",
+  "providerCalls": 14,
+  "peakEstimateUsd": 0.033432096,
+  "episodes": [
+    {
+      "case": "mentor-chain",
+      "arm": "raw-fact-reasoning",
+      "attempts": [
+        {
+          "turn": 1,
+          "providerCalls": 1,
+          "requestSha256": "af80ee22bc5be33a4b7f4aefc28561c3c896f2b5e15974a05933f388ae9b055e",
+          "usage": {
+            "input_tokens": 529,
+            "input_tokens_details": {
+              "cached_tokens": 0
+            },
+            "output_tokens": 406,
+            "output_tokens_details": {
+              "reasoning_tokens": 381
+            },
+            "total_tokens": 935
+          },
+          "providerSeconds": 2.5483900829858612,
+          "providerOutcome": "completed_ungraded",
+          "correct": false,
+          "sourceIdentity": "968c8031ed3290d40a091d8b974d4c63910e2cf6a5a9df7c5b75705f8863fc0c",
+          "action": {
+            "action": "scan",
+            "relations": [
+              "mentor",
+              "cast",
+              "directed",
+              "citizen",
+              "selected_country"
+            ]
+          },
+          "outcome": "evidence_progress",
+          "feedback": {
+            "sourceIdentity": "968c8031ed3290d40a091d8b974d4c63910e2cf6a5a9df7c5b75705f8863fc0c",
+            "relations": {
+              "mentor": [
+                [
+                  "holdout0_actor10",
+                  "holdout0_actor11"
+                ],
+                [
+                  "holdout0_actor11",
+                  "holdout0_actor0"
+                ],
+                [
+                  "holdout0_actor9",
+                  "holdout0_actor1"
+                ],
+                [
+                  "holdout0_actor8",
+                  "holdout0_actor9"
+                ],
+                [
+                  "holdout0_actor7",
+                  "holdout0_actor8"
+                ],
+                [
+                  "holdout0_actor6",
+                  "holdout0_actor7"
+                ],
+                [
+                  "holdout0_actor5",
+                  "holdout0_actor6"
+                ],
+                [
+                  "holdout0_actor4",
+                  "holdout0_actor5"
+                ],
+                [
+                  "holdout0_actor3",
+                  "holdout0_actor4"
+                ],
+                [
+                  "holdout0_actor2",
+                  "holdout0_actor3"
+                ],
+                [
+                  "holdout0_actor1",
+                  "holdout0_actor2"
+                ],
+                [
+                  "holdout0_actor0",
+                  "holdout0_actor1"
+                ]
+              ],
+              "cast": [
+                [
+                  "holdout0_film0",
+                  "holdout0_actor0"
+                ],
+                [
+                  "holdout0_film0",
+                  "holdout0_actor1"
+                ],
+                [
+                  "holdout0_film0",
+                  "holdout0_actor2"
+                ],
+                [
+                  "holdout0_film1",
+                  "holdout0_actor1"
+                ],
+                [
+                  "holdout0_film1",
+                  "holdout0_actor3"
+                ],
+                [
+                  "holdout0_film2",
+                  "holdout0_actor2"
+                ],
+                [
+                  "holdout0_film2",
+                  "holdout0_actor4"
+                ],
+                [
+                  "holdout0_film3",
+                  "holdout0_actor5"
+                ],
+                [
+                  "holdout0_film3",
+                  "holdout0_actor6"
+                ],
+                [
+                  "holdout0_film4",
+                  "holdout0_actor6"
+                ],
+                [
+                  "holdout0_film4",
+                  "holdout0_actor7"
+                ],
+                [
+                  "holdout0_film5",
+                  "holdout0_actor8"
+                ],
+                [
+                  "holdout0_film5",
+                  "holdout0_actor9"
+                ]
+              ],
+              "directed": [
+                [
+                  "holdout0_film0",
+                  "holdout0_director0"
+                ],
+                [
+                  "holdout0_film1",
+                  "holdout0_director1"
+                ],
+                [
+                  "holdout0_film2",
+                  "holdout0_director2"
+                ],
+                [
+                  "holdout0_film3",
+                  "holdout0_director0"
+                ],
+                [
+                  "holdout0_film4",
+                  "holdout0_director1"
+                ],
+                [
+                  "holdout0_film5",
+                  "holdout0_director2"
+                ]
+              ],
+              "citizen": [
+                [
+                  "holdout0_director0",
+                  "holdout0_country0"
+                ],
+                [
+                  "holdout0_director1",
+                  "holdout0_country1"
+                ],
+                [
+                  "holdout0_director2",
+                  "holdout0_country0"
+                ]
+              ],
+              "selected_country": [
+                [
+                  "holdout0_country0"
+                ]
+              ]
+            }
+          },
+          "schemeSeconds": 8.804199751466513e-05
+        },
+        {
+          "turn": 2,
+          "providerCalls": 1,
+          "requestSha256": "0ba09a1f4eddbe512c072a0a623a6732d6f328dbcd2e15dd4c68e71a00b7498d",
+          "usage": {
+            "input_tokens": 1256,
+            "input_tokens_details": {
+              "cached_tokens": 1024
+            },
+            "output_tokens": 2497,
+            "output_tokens_details": {
+              "reasoning_tokens": 2417
+            },
+            "total_tokens": 3753
+          },
+          "providerSeconds": 9.411357375007356,
+          "providerOutcome": "completed_ungraded",
+          "correct": true,
+          "sourceIdentity": "968c8031ed3290d40a091d8b974d4c63910e2cf6a5a9df7c5b75705f8863fc0c",
+          "action": {
+            "action": "answer",
+            "answer": [
+              "holdout0_actor0",
+              "holdout0_actor2",
+              "holdout0_actor3",
+              "holdout0_actor4",
+              "holdout0_actor6",
+              "holdout0_actor7",
+              "holdout0_actor8",
+              "holdout0_actor9",
+              "holdout0_actor10",
+              "holdout0_actor11"
+            ]
+          },
+          "outcome": "verified_answer",
+          "feedback": {
+            "verification": "verified"
+          },
+          "schemeSeconds": 3.908301005139947e-05
+        }
+      ],
+      "evidenceJournal": [],
+      "effort": {
+        "attempts": 2,
+        "modelCalls": 2,
+        "inputTokens": 1785,
+        "outputIncludingReasoningTokens": 2903,
+        "observedReasoningTokens": 2798,
+        "reasoningUsageComplete": true,
+        "modelUsageComplete": true,
+        "schemeSeconds": 0.0001271250075660646,
+        "verified": true,
+        "firstVerifiedAttempt": 2,
+        "adaptive": false,
+        "totalModelTokens": 4688
+      }
+    },
+    {
+      "case": "mentor-chain",
+      "arm": "scheme-evidence",
+      "attempts": [
+        {
+          "turn": 1,
+          "providerCalls": 1,
+          "requestSha256": "07d147fb81d1b752f1bf2ee2defaaf0cf538d3829e7c2af68aa948e195204517",
+          "usage": {
+            "input_tokens": 966,
+            "input_tokens_details": {
+              "cached_tokens": 0
+            },
+            "output_tokens": 2439,
+            "output_tokens_details": {
+              "reasoning_tokens": 2237
+            },
+            "total_tokens": 3405
+          },
+          "providerSeconds": 10.776315208000597,
+          "providerOutcome": "completed_ungraded",
+          "correct": false,
+          "sourceIdentity": "968c8031ed3290d40a091d8b974d4c63910e2cf6a5a9df7c5b75705f8863fc0c",
+          "action": {
+            "action": "query",
+            "contract": {
+              "relations": [
+                {
+                  "name": "witness",
+                  "types": [
+                    "Actor",
+                    "Actor",
+                    "Actor",
+                    "Film",
+                    "Director",
+                    "Country"
+                  ]
+                }
+              ],
+              "rules": [
+                {
+                  "head": [
+                    {
+                      "relation": "witness",
+                      "terms": [
+                        {
+                          "var": "x"
+                        },
+                        {
+                          "var": "y"
+                        },
+                        {
+                          "var": "z"
+                        },
+                        {
+                          "var": "f"
+                        },
+                        {
+                          "var": "d"
+                        },
+                        {
+                          "var": "c"
+                        }
+                      ]
+                    }
+                  ],
+                  "body": [
+                    {
+                      "relation": "mentor",
+                      "terms": [
+                        {
+                          "var": "x"
+                        },
+                        {
+                          "var": "y"
+                        }
+                      ]
+                    },
+                    {
+                      "relation": "mentor",
+                      "terms": [
+                        {
+                          "var": "y"
+                        },
+                        {
+                          "var": "z"
+                        }
+                      ]
+                    },
+                    {
+                      "relation": "cast",
+                      "terms": [
+                        {
+                          "var": "f"
+                        },
+                        {
+                          "var": "z"
+                        }
+                      ]
+                    },
+                    {
+                      "relation": "directed",
+                      "terms": [
+                        {
+                          "var": "f"
+                        },
+                        {
+                          "var": "d"
+                        }
+                      ]
+                    },
+                    {
+                      "relation": "citizen",
+                      "terms": [
+                        {
+                          "var": "d"
+                        },
+                        {
+                          "var": "c"
+                        }
+                      ]
+                    },
+                    {
+                      "relation": "selected_country",
+                      "terms": [
+                        {
+                          "var": "c"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "queries": [
+              "witness"
+            ]
+          },
+          "outcome": "evidence_progress",
+          "feedback": {
+            "sourceIdentity": "968c8031ed3290d40a091d8b974d4c63910e2cf6a5a9df7c5b75705f8863fc0c",
+            "pathIdentity": "5bca00ba8c28d539fe4e8e926cb0edf43530c5aa45fb3a283bdc40ea1d05b407",
+            "retainedPath": false,
+            "retainedCompleted": false,
+            "result": {
+              "relations": {
+                "witness": [
+                  [
+                    "holdout0_actor10",
+                    "holdout0_actor11",
+                    "holdout0_actor0",
+                    "holdout0_film0",
+                    "holdout0_director0",
+                    "holdout0_country0"
+                  ],
+                  [
+                    "holdout0_actor11",
+                    "holdout0_actor0",
+                    "holdout0_actor1",
+                    "holdout0_film0",
+                    "holdout0_director0",
+                    "holdout0_country0"
+                  ],
+                  [
+                    "holdout0_actor9",
+                    "holdout0_actor1",
+                    "holdout0_actor2",
+                    "holdout0_film0",
+                    "holdout0_director0",
+                    "holdout0_country0"
+                  ],
+                  [
+                    "holdout0_actor9",
+                    "holdout0_actor1",
+                    "holdout0_actor2",
+                    "holdout0_film2",
+                    "holdout0_director2",
+                    "holdout0_country0"
+                  ],
+                  [
+                    "holdout0_actor8",
+                    "holdout0_actor9",
+                    "holdout0_actor1",
+                    "holdout0_film0",
+                    "holdout0_director0",
+                    "holdout0_country0"
+                  ],
+                  [
+                    "holdout0_actor7",
+                    "holdout0_actor8",
+                    "holdout0_actor9",
+                    "holdout0_film5",
+                    "holdout0_director2",
+                    "holdout0_country0"
+                  ],
+                  [
+                    "holdout0_actor6",
+                    "holdout0_actor7",
+                    "holdout0_actor8",
+                    "holdout0_film5",
+                    "holdout0_director2",
+                    "holdout0_country0"
+                  ],
+                  [
+                    "holdout0_actor4",
+                    "holdout0_actor5",
+                    "holdout0_actor6",
+                    "holdout0_film3",
+                    "holdout0_director0",
+                    "holdout0_country0"
+                  ],
+                  [
+                    "holdout0_actor3",
+                    "holdout0_actor4",
+                    "holdout0_actor5",
+                    "holdout0_film3",
+                    "holdout0_director0",
+                    "holdout0_country0"
+                  ],
+                  [
+                    "holdout0_actor2",
+                    "holdout0_actor3",
+                    "holdout0_actor4",
+                    "holdout0_film2",
+                    "holdout0_director2",
+                    "holdout0_country0"
+                  ],
+                  [
+                    "holdout0_actor0",
+                    "holdout0_actor1",
+                    "holdout0_actor2",
+                    "holdout0_film0",
+                    "holdout0_director0",
+                    "holdout0_country0"
+                  ],
+                  [
+                    "holdout0_actor0",
+                    "holdout0_actor1",
+                    "holdout0_actor2",
+                    "holdout0_film2",
+                    "holdout0_director2",
+                    "holdout0_country0"
+                  ]
+                ]
+              },
+              "complete": true
+            }
+          },
+          "schemeSeconds": 0.021199165988946334
+        },
+        {
+          "turn": 2,
+          "providerCalls": 1,
+          "requestSha256": "e9d8a2a8766b4bd2a1f40edcb40ab33428560b7b008242a5059215900132ac65",
+          "usage": {
+            "input_tokens": 2084,
+            "input_tokens_details": {
+              "cached_tokens": 1920
+            },
+            "output_tokens": 980,
+            "output_tokens_details": {
+              "reasoning_tokens": 900
+            },
+            "total_tokens": 3064
+          },
+          "providerSeconds": 4.614286791998893,
+          "providerOutcome": "completed_ungraded",
+          "correct": true,
+          "sourceIdentity": "968c8031ed3290d40a091d8b974d4c63910e2cf6a5a9df7c5b75705f8863fc0c",
+          "action": {
+            "action": "answer",
+            "answer": [
+              "holdout0_actor0",
+              "holdout0_actor2",
+              "holdout0_actor3",
+              "holdout0_actor4",
+              "holdout0_actor6",
+              "holdout0_actor7",
+              "holdout0_actor8",
+              "holdout0_actor9",
+              "holdout0_actor10",
+              "holdout0_actor11"
+            ]
+          },
+          "outcome": "verified_answer",
+          "feedback": {
+            "verification": "verified"
+          },
+          "schemeSeconds": 8.620900916866958e-05
+        }
+      ],
+      "evidenceJournal": [
+        {
+          "sourceIdentity": "968c8031ed3290d40a091d8b974d4c63910e2cf6a5a9df7c5b75705f8863fc0c",
+          "pathIdentity": "5bca00ba8c28d539fe4e8e926cb0edf43530c5aa45fb3a283bdc40ea1d05b407",
+          "retainedPath": false,
+          "retainedCompleted": false,
+          "result": {
+            "relations": {
+              "witness": [
+                [
+                  "holdout0_actor10",
+                  "holdout0_actor11",
+                  "holdout0_actor0",
+                  "holdout0_film0",
+                  "holdout0_director0",
+                  "holdout0_country0"
+                ],
+                [
+                  "holdout0_actor11",
+                  "holdout0_actor0",
+                  "holdout0_actor1",
+                  "holdout0_film0",
+                  "holdout0_director0",
+                  "holdout0_country0"
+                ],
+                [
+                  "holdout0_actor9",
+                  "holdout0_actor1",
+                  "holdout0_actor2",
+                  "holdout0_film0",
+                  "holdout0_director0",
+                  "holdout0_country0"
+                ],
+                [
+                  "holdout0_actor9",
+                  "holdout0_actor1",
+                  "holdout0_actor2",
+                  "holdout0_film2",
+                  "holdout0_director2",
+                  "holdout0_country0"
+                ],
+                [
+                  "holdout0_actor8",
+                  "holdout0_actor9",
+                  "holdout0_actor1",
+                  "holdout0_film0",
+                  "holdout0_director0",
+                  "holdout0_country0"
+                ],
+                [
+                  "holdout0_actor7",
+                  "holdout0_actor8",
+                  "holdout0_actor9",
+                  "holdout0_film5",
+                  "holdout0_director2",
+                  "holdout0_country0"
+                ],
+                [
+                  "holdout0_actor6",
+                  "holdout0_actor7",
+                  "holdout0_actor8",
+                  "holdout0_film5",
+                  "holdout0_director2",
+                  "holdout0_country0"
+                ],
+                [
+                  "holdout0_actor4",
+                  "holdout0_actor5",
+                  "holdout0_actor6",
+                  "holdout0_film3",
+                  "holdout0_director0",
+                  "holdout0_country0"
+                ],
+                [
+                  "holdout0_actor3",
+                  "holdout0_actor4",
+                  "holdout0_actor5",
+                  "holdout0_film3",
+                  "holdout0_director0",
+                  "holdout0_country0"
+                ],
+                [
+                  "holdout0_actor2",
+                  "holdout0_actor3",
+                  "holdout0_actor4",
+                  "holdout0_film2",
+                  "holdout0_director2",
+                  "holdout0_country0"
+                ],
+                [
+                  "holdout0_actor0",
+                  "holdout0_actor1",
+                  "holdout0_actor2",
+                  "holdout0_film0",
+                  "holdout0_director0",
+                  "holdout0_country0"
+                ],
+                [
+                  "holdout0_actor0",
+                  "holdout0_actor1",
+                  "holdout0_actor2",
+                  "holdout0_film2",
+                  "holdout0_director2",
+                  "holdout0_country0"
+                ]
+              ]
+            },
+            "complete": true
+          }
+        }
+      ],
+      "effort": {
+        "attempts": 2,
+        "modelCalls": 2,
+        "inputTokens": 3050,
+        "outputIncludingReasoningTokens": 3419,
+        "observedReasoningTokens": 3137,
+        "reasoningUsageComplete": true,
+        "modelUsageComplete": true,
+        "schemeSeconds": 0.021285374998115003,
+        "verified": true,
+        "firstVerifiedAttempt": 2,
+        "adaptive": false,
+        "totalModelTokens": 6469
+      }
+    },
+    {
+      "case": "anti-existential",
+      "arm": "scheme-evidence",
+      "attempts": [
+        {
+          "turn": 1,
+          "providerCalls": 1,
+          "requestSha256": "f8edf8d03a0ed136418cac6ae209a4b9d1eefd2501d6bd46314bfe8c3b1bd81d",
+          "usage": {
+            "input_tokens": 947,
+            "input_tokens_details": {
+              "cached_tokens": 512
+            },
+            "output_tokens": 4148,
+            "output_tokens_details": {
+              "reasoning_tokens": 3807
+            },
+            "total_tokens": 5095
+          },
+          "providerSeconds": 17.396328958013328,
+          "providerOutcome": "completed_ungraded",
+          "correct": false,
+          "sourceIdentity": "48a6ea1f050769a4740cf17816d8f7d49e7a96d01f22c53a2af3fcabe732ad4d",
+          "action": {
+            "action": "query",
+            "contract": {
+              "relations": [
+                {
+                  "name": "banned_actor",
+                  "types": [
+                    "Actor"
+                  ]
+                },
+                {
+                  "name": "qualifies",
+                  "types": [
+                    "Actor",
+                    "Film",
+                    "Director",
+                    "Country"
+                  ]
+                },
+                {
+                  "name": "eligible_actor",
+                  "types": [
+                    "Actor",
+                    "Film",
+                    "Director",
+                    "Country"
+                  ]
+                }
+              ],
+              "rules": [
+                {
+                  "head": [
+                    {
+                      "relation": "banned_actor",
+                      "terms": [
+                        {
+                          "var": "Actor"
+                        }
+                      ]
+                    }
+                  ],
+                  "body": [
+                    {
+                      "relation": "cast",
+                      "terms": [
+                        {
+                          "var": "Film"
+                        },
+                        {
+                          "var": "Actor"
+                        }
+                      ]
+                    },
+                    {
+                      "relation": "banned_film",
+                      "terms": [
+                        {
+                          "var": "Film"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "head": [
+                    {
+                      "relation": "qualifies",
+                      "terms": [
+                        {
+                          "var": "Actor"
+                        },
+                        {
+                          "var": "Film"
+                        },
+                        {
+                          "var": "Director"
+                        },
+                        {
+                          "var": "Country"
+                        }
+                      ]
+                    }
+                  ],
+                  "body": [
+                    {
+                      "relation": "actor_domain",
+                      "terms": [
+                        {
+                          "var": "Actor"
+                        }
+                      ]
+                    },
+                    {
+                      "relation": "cast",
+                      "terms": [
+                        {
+                          "var": "Film"
+                        },
+                        {
+                          "var": "Actor"
+                        }
+                      ]
+                    },
+                    {
+                      "relation": "directed",
+                      "terms": [
+                        {
+                          "var": "Film"
+                        },
+                        {
+                          "var": "Director"
+                        }
+                      ]
+                    },
+                    {
+                      "relation": "citizen",
+                      "terms": [
+                        {
+                          "var": "Director"
+                        },
+                        {
+                          "var": "Country"
+                        }
+                      ]
+                    },
+                    {
+                      "relation": "selected_country",
+                      "terms": [
+                        {
+                          "var": "Country"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "head": [
+                    {
+                      "relation": "eligible_actor",
+                      "terms": [
+                        {
+                          "var": "Actor"
+                        },
+                        {
+                          "var": "Film"
+                        },
+                        {
+                          "var": "Director"
+                        },
+                        {
+                          "var": "Country"
+                        }
+                      ]
+                    }
+                  ],
+                  "body": [
+                    {
+                      "relation": "qualifies",
+                      "terms": [
+                        {
+                          "var": "Actor"
+                        },
+                        {
+                          "var": "Film"
+                        },
+                        {
+                          "var": "Director"
+                        },
+                        {
+                          "var": "Country"
+                        }
+                      ]
+                    },
+                    {
+                      "relation": "banned_actor",
+                      "terms": [
+                        {
+                          "var": "Actor"
+                        }
+                      ],
+                      "not": true
+                    }
+                  ]
+                }
+              ]
+            },
+            "queries": [
+              "eligible_actor"
+            ]
+          },
+          "outcome": "evidence_progress",
+          "feedback": {
+            "sourceIdentity": "48a6ea1f050769a4740cf17816d8f7d49e7a96d01f22c53a2af3fcabe732ad4d",
+            "pathIdentity": "771df3d7854b9a45ec911ef4b887da3e82fbaa247673770b4ba12e2748b51162",
+            "retainedPath": false,
+            "retainedCompleted": false,
+            "result": {
+              "complete": true,
+              "relations": {
+                "eligible_actor": [
+                  [
+                    "holdout2_actor4",
+                    "holdout2_film2",
+                    "holdout2_director2",
+                    "holdout2_country0"
+                  ],
+                  [
+                    "holdout2_actor5",
+                    "holdout2_film3",
+                    "holdout2_director0",
+                    "holdout2_country0"
+                  ],
+                  [
+                    "holdout2_actor6",
+                    "holdout2_film3",
+                    "holdout2_director0",
+                    "holdout2_country0"
+                  ],
+                  [
+                    "holdout2_actor8",
+                    "holdout2_film5",
+                    "holdout2_director2",
+                    "holdout2_country0"
+                  ],
+                  [
+                    "holdout2_actor9",
+                    "holdout2_film5",
+                    "holdout2_director2",
+                    "holdout2_country0"
+                  ]
+                ]
+              }
+            }
+          },
+          "schemeSeconds": 0.030149208003422245
+        },
+        {
+          "turn": 2,
+          "providerCalls": 1,
+          "requestSha256": "4a85bd6952a5fd859e30554a485ee5b539ed9ffb4f058ef690ac411096e329a1",
+          "usage": {
+            "input_tokens": 1819,
+            "input_tokens_details": {
+              "cached_tokens": 768
+            },
+            "output_tokens": 397,
+            "output_tokens_details": {
+              "reasoning_tokens": 352
+            },
+            "total_tokens": 2216
+          },
+          "providerSeconds": 2.4177719590079505,
+          "providerOutcome": "completed_ungraded",
+          "correct": true,
+          "sourceIdentity": "48a6ea1f050769a4740cf17816d8f7d49e7a96d01f22c53a2af3fcabe732ad4d",
+          "action": {
+            "action": "answer",
+            "answer": [
+              "holdout2_actor4",
+              "holdout2_actor5",
+              "holdout2_actor6",
+              "holdout2_actor8",
+              "holdout2_actor9"
+            ]
+          },
+          "outcome": "verified_answer",
+          "feedback": {
+            "verification": "verified"
+          },
+          "schemeSeconds": 3.0499999411404133e-05
+        }
+      ],
+      "evidenceJournal": [
+        {
+          "sourceIdentity": "48a6ea1f050769a4740cf17816d8f7d49e7a96d01f22c53a2af3fcabe732ad4d",
+          "pathIdentity": "771df3d7854b9a45ec911ef4b887da3e82fbaa247673770b4ba12e2748b51162",
+          "retainedPath": false,
+          "retainedCompleted": false,
+          "result": {
+            "complete": true,
+            "relations": {
+              "eligible_actor": [
+                [
+                  "holdout2_actor4",
+                  "holdout2_film2",
+                  "holdout2_director2",
+                  "holdout2_country0"
+                ],
+                [
+                  "holdout2_actor5",
+                  "holdout2_film3",
+                  "holdout2_director0",
+                  "holdout2_country0"
+                ],
+                [
+                  "holdout2_actor6",
+                  "holdout2_film3",
+                  "holdout2_director0",
+                  "holdout2_country0"
+                ],
+                [
+                  "holdout2_actor8",
+                  "holdout2_film5",
+                  "holdout2_director2",
+                  "holdout2_country0"
+                ],
+                [
+                  "holdout2_actor9",
+                  "holdout2_film5",
+                  "holdout2_director2",
+                  "holdout2_country0"
+                ]
+              ]
+            }
+          }
+        }
+      ],
+      "effort": {
+        "attempts": 2,
+        "modelCalls": 2,
+        "inputTokens": 2766,
+        "outputIncludingReasoningTokens": 4545,
+        "observedReasoningTokens": 4159,
+        "reasoningUsageComplete": true,
+        "modelUsageComplete": true,
+        "schemeSeconds": 0.03017970800283365,
+        "verified": true,
+        "firstVerifiedAttempt": 2,
+        "adaptive": false,
+        "totalModelTokens": 7311
+      }
+    },
+    {
+      "case": "anti-existential",
+      "arm": "raw-fact-reasoning",
+      "attempts": [
+        {
+          "turn": 1,
+          "providerCalls": 1,
+          "requestSha256": "19184f556d21ddab418c69becb38dd2c97efc23aea3cae876b2fc09af6604fac",
+          "usage": {
+            "input_tokens": 510,
+            "input_tokens_details": {
+              "cached_tokens": 128
+            },
+            "output_tokens": 360,
+            "output_tokens_details": {
+              "reasoning_tokens": 329
+            },
+            "total_tokens": 870
+          },
+          "providerSeconds": 2.7965157500002533,
+          "providerOutcome": "completed_ungraded",
+          "correct": false,
+          "sourceIdentity": "48a6ea1f050769a4740cf17816d8f7d49e7a96d01f22c53a2af3fcabe732ad4d",
+          "action": {
+            "action": "scan",
+            "relations": [
+              "actor_domain",
+              "banned_film",
+              "cast",
+              "directed",
+              "citizen",
+              "selected_country"
+            ]
+          },
+          "outcome": "evidence_progress",
+          "feedback": {
+            "sourceIdentity": "48a6ea1f050769a4740cf17816d8f7d49e7a96d01f22c53a2af3fcabe732ad4d",
+            "relations": {
+              "actor_domain": [
+                [
+                  "holdout2_actor0"
+                ],
+                [
+                  "holdout2_actor1"
+                ],
+                [
+                  "holdout2_actor2"
+                ],
+                [
+                  "holdout2_actor3"
+                ],
+                [
+                  "holdout2_actor4"
+                ],
+                [
+                  "holdout2_actor5"
+                ],
+                [
+                  "holdout2_actor6"
+                ],
+                [
+                  "holdout2_actor7"
+                ],
+                [
+                  "holdout2_actor8"
+                ],
+                [
+                  "holdout2_actor9"
+                ],
+                [
+                  "holdout2_actor10"
+                ],
+                [
+                  "holdout2_actor11"
+                ]
+              ],
+              "banned_film": [
+                [
+                  "holdout2_film0"
+                ]
+              ],
+              "cast": [
+                [
+                  "holdout2_film0",
+                  "holdout2_actor0"
+                ],
+                [
+                  "holdout2_film0",
+                  "holdout2_actor1"
+                ],
+                [
+                  "holdout2_film0",
+                  "holdout2_actor2"
+                ],
+                [
+                  "holdout2_film1",
+                  "holdout2_actor1"
+                ],
+                [
+                  "holdout2_film1",
+                  "holdout2_actor3"
+                ],
+                [
+                  "holdout2_film2",
+                  "holdout2_actor2"
+                ],
+                [
+                  "holdout2_film2",
+                  "holdout2_actor4"
+                ],
+                [
+                  "holdout2_film3",
+                  "holdout2_actor5"
+                ],
+                [
+                  "holdout2_film3",
+                  "holdout2_actor6"
+                ],
+                [
+                  "holdout2_film4",
+                  "holdout2_actor6"
+                ],
+                [
+                  "holdout2_film4",
+                  "holdout2_actor7"
+                ],
+                [
+                  "holdout2_film5",
+                  "holdout2_actor8"
+                ],
+                [
+                  "holdout2_film5",
+                  "holdout2_actor9"
+                ]
+              ],
+              "directed": [
+                [
+                  "holdout2_film0",
+                  "holdout2_director0"
+                ],
+                [
+                  "holdout2_film1",
+                  "holdout2_director1"
+                ],
+                [
+                  "holdout2_film2",
+                  "holdout2_director2"
+                ],
+                [
+                  "holdout2_film3",
+                  "holdout2_director0"
+                ],
+                [
+                  "holdout2_film4",
+                  "holdout2_director1"
+                ],
+                [
+                  "holdout2_film5",
+                  "holdout2_director2"
+                ]
+              ],
+              "citizen": [
+                [
+                  "holdout2_director0",
+                  "holdout2_country0"
+                ],
+                [
+                  "holdout2_director1",
+                  "holdout2_country1"
+                ],
+                [
+                  "holdout2_director2",
+                  "holdout2_country0"
+                ]
+              ],
+              "selected_country": [
+                [
+                  "holdout2_country0"
+                ]
+              ]
+            }
+          },
+          "schemeSeconds": 0.0002505419834051281
+        },
+        {
+          "turn": 2,
+          "providerCalls": 1,
+          "requestSha256": "14dec599dd77114f0d47437e673d9f7cab30aaa0f4a1e1e20fd2c2c9520079fe",
+          "usage": {
+            "input_tokens": 1164,
+            "input_tokens_details": {
+              "cached_tokens": 256
+            },
+            "output_tokens": 1628,
+            "output_tokens_details": {
+              "reasoning_tokens": 1583
+            },
+            "total_tokens": 2792
+          },
+          "providerSeconds": 7.343414125003619,
+          "providerOutcome": "completed_ungraded",
+          "correct": true,
+          "sourceIdentity": "48a6ea1f050769a4740cf17816d8f7d49e7a96d01f22c53a2af3fcabe732ad4d",
+          "action": {
+            "action": "answer",
+            "answer": [
+              "holdout2_actor4",
+              "holdout2_actor5",
+              "holdout2_actor6",
+              "holdout2_actor8",
+              "holdout2_actor9"
+            ]
+          },
+          "outcome": "verified_answer",
+          "feedback": {
+            "verification": "verified"
+          },
+          "schemeSeconds": 2.8000009479001164e-05
+        }
+      ],
+      "evidenceJournal": [],
+      "effort": {
+        "attempts": 2,
+        "modelCalls": 2,
+        "inputTokens": 1674,
+        "outputIncludingReasoningTokens": 1988,
+        "observedReasoningTokens": 1912,
+        "reasoningUsageComplete": true,
+        "modelUsageComplete": true,
+        "schemeSeconds": 0.0002785419928841293,
+        "verified": true,
+        "firstVerifiedAttempt": 2,
+        "adaptive": false,
+        "totalModelTokens": 3662
+      }
+    },
+    {
+      "case": "recursive-mentor",
+      "arm": "raw-fact-reasoning",
+      "attempts": [
+        {
+          "turn": 1,
+          "providerCalls": 1,
+          "requestSha256": "8b2db95ba18b0b89225f1085f8c3e46ea48e88c9464ab1cc1b10386a4ba334d8",
+          "usage": {
+            "input_tokens": 513,
+            "input_tokens_details": {
+              "cached_tokens": 128
+            },
+            "output_tokens": 606,
+            "output_tokens_details": {
+              "reasoning_tokens": 591
+            },
+            "total_tokens": 1119
+          },
+          "providerSeconds": 3.1368208750209305,
+          "providerOutcome": "completed_ungraded",
+          "correct": false,
+          "sourceIdentity": "80fca1c9b4b93479684a99a7d97f0ed3be69ce3574bb7201fcc2e9f213b3ae47",
+          "action": {
+            "action": "scan",
+            "relations": [
+              "mentor",
+              "target"
+            ]
+          },
+          "outcome": "evidence_progress",
+          "feedback": {
+            "sourceIdentity": "80fca1c9b4b93479684a99a7d97f0ed3be69ce3574bb7201fcc2e9f213b3ae47",
+            "relations": {
+              "mentor": [
+                [
+                  "holdout3_actor10",
+                  "holdout3_actor11"
+                ],
+                [
+                  "holdout3_actor11",
+                  "holdout3_actor0"
+                ],
+                [
+                  "holdout3_actor8",
+                  "holdout3_actor9"
+                ],
+                [
+                  "holdout3_actor7",
+                  "holdout3_actor8"
+                ],
+                [
+                  "holdout3_actor6",
+                  "holdout3_actor7"
+                ],
+                [
+                  "holdout3_actor5",
+                  "holdout3_actor6"
+                ],
+                [
+                  "holdout3_actor4",
+                  "holdout3_actor5"
+                ],
+                [
+                  "holdout3_actor3",
+                  "holdout3_actor4"
+                ],
+                [
+                  "holdout3_actor2",
+                  "holdout3_actor3"
+                ],
+                [
+                  "holdout3_actor1",
+                  "holdout3_actor2"
+                ],
+                [
+                  "holdout3_actor0",
+                  "holdout3_actor1"
+                ],
+                [
+                  "holdout3_actor9",
+                  "holdout3_actor10"
+                ]
+              ],
+              "target": [
+                [
+                  "holdout3_actor0"
+                ]
+              ]
+            }
+          },
+          "schemeSeconds": 6.866600597277284e-05
+        },
+        {
+          "turn": 2,
+          "providerCalls": 1,
+          "requestSha256": "c3e682a4536941454ddee1fa0728681c545721cf22f2877f81982a3fa01b1b34",
+          "usage": {
+            "input_tokens": 847,
+            "input_tokens_details": {
+              "cached_tokens": 640
+            },
+            "output_tokens": 849,
+            "output_tokens_details": {
+              "reasoning_tokens": 755
+            },
+            "total_tokens": 1696
+          },
+          "providerSeconds": 4.0737570420023985,
+          "providerOutcome": "completed_ungraded",
+          "correct": true,
+          "sourceIdentity": "80fca1c9b4b93479684a99a7d97f0ed3be69ce3574bb7201fcc2e9f213b3ae47",
+          "action": {
+            "action": "answer",
+            "answer": [
+              "holdout3_actor0",
+              "holdout3_actor1",
+              "holdout3_actor2",
+              "holdout3_actor3",
+              "holdout3_actor4",
+              "holdout3_actor5",
+              "holdout3_actor6",
+              "holdout3_actor7",
+              "holdout3_actor8",
+              "holdout3_actor9",
+              "holdout3_actor10",
+              "holdout3_actor11"
+            ]
+          },
+          "outcome": "verified_answer",
+          "feedback": {
+            "verification": "verified"
+          },
+          "schemeSeconds": 0.004234833002556115
+        }
+      ],
+      "evidenceJournal": [],
+      "effort": {
+        "attempts": 2,
+        "modelCalls": 2,
+        "inputTokens": 1360,
+        "outputIncludingReasoningTokens": 1455,
+        "observedReasoningTokens": 1346,
+        "reasoningUsageComplete": true,
+        "modelUsageComplete": true,
+        "schemeSeconds": 0.004303499008528888,
+        "verified": true,
+        "firstVerifiedAttempt": 2,
+        "adaptive": false,
+        "totalModelTokens": 2815
+      }
+    },
+    {
+      "case": "recursive-mentor",
+      "arm": "scheme-evidence",
+      "attempts": [
+        {
+          "turn": 1,
+          "providerCalls": 1,
+          "requestSha256": "162de35f5863d1e3e82246002ecc66ecc06efc8a6a84266304c5d70aa6e67fca",
+          "usage": {
+            "input_tokens": 950,
+            "input_tokens_details": {
+              "cached_tokens": 512
+            },
+            "output_tokens": 7814,
+            "output_tokens_details": {
+              "reasoning_tokens": 7364
+            },
+            "total_tokens": 8764
+          },
+          "providerSeconds": 33.03441395799746,
+          "providerOutcome": "completed_ungraded",
+          "correct": false,
+          "sourceIdentity": "80fca1c9b4b93479684a99a7d97f0ed3be69ce3574bb7201fcc2e9f213b3ae47",
+          "action": {
+            "action": "query",
+            "contract": {
+              "relations": [
+                {
+                  "name": "reach",
+                  "types": [
+                    "Actor",
+                    "Actor"
+                  ]
+                },
+                {
+                  "name": "witness",
+                  "types": [
+                    "Actor",
+                    "Actor",
+                    "Actor"
+                  ]
+                }
+              ],
+              "rules": [
+                {
+                  "head": [
+                    {
+                      "relation": "reach",
+                      "terms": [
+                        {
+                          "var": "X"
+                        },
+                        {
+                          "var": "Y"
+                        }
+                      ]
+                    }
+                  ],
+                  "body": [
+                    {
+                      "relation": "mentor",
+                      "terms": [
+                        {
+                          "var": "X"
+                        },
+                        {
+                          "var": "Y"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "head": [
+                    {
+                      "relation": "reach",
+                      "terms": [
+                        {
+                          "var": "X"
+                        },
+                        {
+                          "var": "Y"
+                        }
+                      ]
+                    }
+                  ],
+                  "body": [
+                    {
+                      "relation": "mentor",
+                      "terms": [
+                        {
+                          "var": "X"
+                        },
+                        {
+                          "var": "Z"
+                        }
+                      ]
+                    },
+                    {
+                      "relation": "reach",
+                      "terms": [
+                        {
+                          "var": "Z"
+                        },
+                        {
+                          "var": "Y"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "head": [
+                    {
+                      "relation": "witness",
+                      "terms": [
+                        {
+                          "var": "X"
+                        },
+                        {
+                          "var": "T"
+                        },
+                        {
+                          "var": "T"
+                        }
+                      ]
+                    }
+                  ],
+                  "body": [
+                    {
+                      "relation": "mentor",
+                      "terms": [
+                        {
+                          "var": "X"
+                        },
+                        {
+                          "var": "T"
+                        }
+                      ]
+                    },
+                    {
+                      "relation": "target",
+                      "terms": [
+                        {
+                          "var": "T"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "head": [
+                    {
+                      "relation": "witness",
+                      "terms": [
+                        {
+                          "var": "X"
+                        },
+                        {
+                          "var": "Y"
+                        },
+                        {
+                          "var": "T"
+                        }
+                      ]
+                    }
+                  ],
+                  "body": [
+                    {
+                      "relation": "mentor",
+                      "terms": [
+                        {
+                          "var": "X"
+                        },
+                        {
+                          "var": "Y"
+                        }
+                      ]
+                    },
+                    {
+                      "relation": "reach",
+                      "terms": [
+                        {
+                          "var": "Y"
+                        },
+                        {
+                          "var": "T"
+                        }
+                      ]
+                    },
+                    {
+                      "relation": "target",
+                      "terms": [
+                        {
+                          "var": "T"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "queries": [
+              "witness(X,Y,T)"
+            ]
+          },
+          "outcome": "action_failure",
+          "feedback": {
+            "error": "use scan for raw relations; query must build derived evidence"
+          },
+          "schemeSeconds": 5.587501800619066e-05
+        },
+        {
+          "turn": 2,
+          "providerCalls": 1,
+          "requestSha256": "f3230f1c8fa5c0edee8d13c59c26b2af0d5abaf4b66bcaa01b0354fed0e8af9e",
+          "usage": {
+            "input_tokens": 1514,
+            "input_tokens_details": {
+              "cached_tokens": 768
+            },
+            "output_tokens": 332,
+            "output_tokens_details": {
+              "reasoning_tokens": 314
+            },
+            "total_tokens": 1846
+          },
+          "providerSeconds": 2.142368458007695,
+          "providerOutcome": "completed_ungraded",
+          "correct": false,
+          "sourceIdentity": "80fca1c9b4b93479684a99a7d97f0ed3be69ce3574bb7201fcc2e9f213b3ae47",
+          "action": {
+            "action": "scan",
+            "relations": [
+              "mentor",
+              "target"
+            ]
+          },
+          "outcome": "evidence_progress",
+          "feedback": {
+            "sourceIdentity": "80fca1c9b4b93479684a99a7d97f0ed3be69ce3574bb7201fcc2e9f213b3ae47",
+            "relations": {
+              "mentor": [
+                [
+                  "holdout3_actor10",
+                  "holdout3_actor11"
+                ],
+                [
+                  "holdout3_actor11",
+                  "holdout3_actor0"
+                ],
+                [
+                  "holdout3_actor8",
+                  "holdout3_actor9"
+                ],
+                [
+                  "holdout3_actor7",
+                  "holdout3_actor8"
+                ],
+                [
+                  "holdout3_actor6",
+                  "holdout3_actor7"
+                ],
+                [
+                  "holdout3_actor5",
+                  "holdout3_actor6"
+                ],
+                [
+                  "holdout3_actor4",
+                  "holdout3_actor5"
+                ],
+                [
+                  "holdout3_actor3",
+                  "holdout3_actor4"
+                ],
+                [
+                  "holdout3_actor2",
+                  "holdout3_actor3"
+                ],
+                [
+                  "holdout3_actor1",
+                  "holdout3_actor2"
+                ],
+                [
+                  "holdout3_actor0",
+                  "holdout3_actor1"
+                ],
+                [
+                  "holdout3_actor9",
+                  "holdout3_actor10"
+                ]
+              ],
+              "target": [
+                [
+                  "holdout3_actor0"
+                ]
+              ]
+            }
+          },
+          "schemeSeconds": 8.887500734999776e-05
+        },
+        {
+          "turn": 3,
+          "providerCalls": 1,
+          "requestSha256": "bdc048af363856b838896efae6de2212d50edd678ec067f035196f775507ebdc",
+          "usage": {
+            "input_tokens": 1800,
+            "input_tokens_details": {
+              "cached_tokens": 1152
+            },
+            "output_tokens": 2088,
+            "output_tokens_details": {
+              "reasoning_tokens": 1685
+            },
+            "total_tokens": 3888
+          },
+          "providerSeconds": 9.71069562502089,
+          "providerOutcome": "completed_ungraded",
+          "correct": false,
+          "sourceIdentity": "80fca1c9b4b93479684a99a7d97f0ed3be69ce3574bb7201fcc2e9f213b3ae47",
+          "action": {
+            "action": "query",
+            "contract": {
+              "relations": [
+                {
+                  "name": "reach",
+                  "types": [
+                    "Actor",
+                    "Actor"
+                  ]
+                },
+                {
+                  "name": "witness",
+                  "types": [
+                    "Actor",
+                    "Actor",
+                    "Actor"
+                  ]
+                }
+              ],
+              "rules": [
+                {
+                  "head": [
+                    {
+                      "relation": "reach",
+                      "terms": [
+                        {
+                          "var": "X"
+                        },
+                        {
+                          "var": "Y"
+                        }
+                      ]
+                    }
+                  ],
+                  "body": [
+                    {
+                      "relation": "mentor",
+                      "terms": [
+                        {
+                          "var": "X"
+                        },
+                        {
+                          "var": "Y"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "head": [
+                    {
+                      "relation": "reach",
+                      "terms": [
+                        {
+                          "var": "X"
+                        },
+                        {
+                          "var": "Y"
+                        }
+                      ]
+                    }
+                  ],
+                  "body": [
+                    {
+                      "relation": "mentor",
+                      "terms": [
+                        {
+                          "var": "X"
+                        },
+                        {
+                          "var": "Z"
+                        }
+                      ]
+                    },
+                    {
+                      "relation": "reach",
+                      "terms": [
+                        {
+                          "var": "Z"
+                        },
+                        {
+                          "var": "Y"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "head": [
+                    {
+                      "relation": "witness",
+                      "terms": [
+                        {
+                          "var": "X"
+                        },
+                        {
+                          "var": "T"
+                        },
+                        {
+                          "var": "T"
+                        }
+                      ]
+                    }
+                  ],
+                  "body": [
+                    {
+                      "relation": "target",
+                      "terms": [
+                        {
+                          "var": "T"
+                        }
+                      ]
+                    },
+                    {
+                      "relation": "mentor",
+                      "terms": [
+                        {
+                          "var": "X"
+                        },
+                        {
+                          "var": "T"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "head": [
+                    {
+                      "relation": "witness",
+                      "terms": [
+                        {
+                          "var": "X"
+                        },
+                        {
+                          "var": "Y"
+                        },
+                        {
+                          "var": "T"
+                        }
+                      ]
+                    }
+                  ],
+                  "body": [
+                    {
+                      "relation": "target",
+                      "terms": [
+                        {
+                          "var": "T"
+                        }
+                      ]
+                    },
+                    {
+                      "relation": "mentor",
+                      "terms": [
+                        {
+                          "var": "X"
+                        },
+                        {
+                          "var": "Y"
+                        }
+                      ]
+                    },
+                    {
+                      "relation": "reach",
+                      "terms": [
+                        {
+                          "var": "Y"
+                        },
+                        {
+                          "var": "T"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "queries": [
+              "witness(X,Y,T)"
+            ]
+          },
+          "outcome": "action_failure",
+          "feedback": {
+            "error": "use scan for raw relations; query must build derived evidence"
+          },
+          "schemeSeconds": 4.124999395571649e-05
+        },
+        {
+          "turn": 4,
+          "providerCalls": 1,
+          "requestSha256": "6ab875face9d3197c00eeb8ad57ae88539422f1710fbf7b71d839f3da680687a",
+          "usage": {
+            "input_tokens": 2225,
+            "input_tokens_details": {
+              "cached_tokens": 1408
+            },
+            "output_tokens": 1293,
+            "output_tokens_details": {
+              "reasoning_tokens": 1186
+            },
+            "total_tokens": 3518
+          },
+          "providerSeconds": 5.775944666005671,
+          "providerOutcome": "completed_ungraded",
+          "correct": false,
+          "sourceIdentity": "80fca1c9b4b93479684a99a7d97f0ed3be69ce3574bb7201fcc2e9f213b3ae47",
+          "action": {
+            "action": "answer",
+            "answer": [
+              "holdout3_actor0",
+              "holdout3_actor1",
+              "holdout3_actor2",
+              "holdout3_actor3",
+              "holdout3_actor4",
+              "holdout3_actor5",
+              "holdout3_actor6",
+              "holdout3_actor7",
+              "holdout3_actor8",
+              "holdout3_actor9",
+              "holdout3_actor10",
+              "holdout3_actor11"
+            ]
+          },
+          "outcome": "action_failure",
+          "feedback": {
+            "error": "Scheme evidence is required before an assisted answer"
+          },
+          "schemeSeconds": 1.1416996130719781e-05
+        }
+      ],
+      "evidenceJournal": [],
+      "effort": {
+        "attempts": 4,
+        "modelCalls": 4,
+        "inputTokens": 6489,
+        "outputIncludingReasoningTokens": 11527,
+        "observedReasoningTokens": 10549,
+        "reasoningUsageComplete": true,
+        "modelUsageComplete": true,
+        "schemeSeconds": 0.0001974170154426247,
+        "verified": false,
+        "firstVerifiedAttempt": null,
+        "adaptive": false,
+        "totalModelTokens": 18016
+      }
+    }
+  ],
+  "pairs": [
+    {
+      "case": "mentor-chain",
+      "baseline": {
+        "attempts": 2,
+        "modelCalls": 2,
+        "inputTokens": 1785,
+        "outputIncludingReasoningTokens": 2903,
+        "observedReasoningTokens": 2798,
+        "reasoningUsageComplete": true,
+        "modelUsageComplete": true,
+        "schemeSeconds": 0.0001271250075660646,
+        "verified": true,
+        "firstVerifiedAttempt": 2,
+        "adaptive": false,
+        "totalModelTokens": 4688
+      },
+      "assisted": {
+        "attempts": 2,
+        "modelCalls": 2,
+        "inputTokens": 3050,
+        "outputIncludingReasoningTokens": 3419,
+        "observedReasoningTokens": 3137,
+        "reasoningUsageComplete": true,
+        "modelUsageComplete": true,
+        "schemeSeconds": 0.021285374998115003,
+        "verified": true,
+        "firstVerifiedAttempt": 2,
+        "adaptive": false,
+        "totalModelTokens": 6469
+      },
+      "modelTurnReduction": 0.0,
+      "reasoningTokenReduction": -0.1211579699785561,
+      "allModelTokenReduction": -0.37990614334470996
+    },
+    {
+      "case": "anti-existential",
+      "baseline": {
+        "attempts": 2,
+        "modelCalls": 2,
+        "inputTokens": 1674,
+        "outputIncludingReasoningTokens": 1988,
+        "observedReasoningTokens": 1912,
+        "reasoningUsageComplete": true,
+        "modelUsageComplete": true,
+        "schemeSeconds": 0.0002785419928841293,
+        "verified": true,
+        "firstVerifiedAttempt": 2,
+        "adaptive": false,
+        "totalModelTokens": 3662
+      },
+      "assisted": {
+        "attempts": 2,
+        "modelCalls": 2,
+        "inputTokens": 2766,
+        "outputIncludingReasoningTokens": 4545,
+        "observedReasoningTokens": 4159,
+        "reasoningUsageComplete": true,
+        "modelUsageComplete": true,
+        "schemeSeconds": 0.03017970800283365,
+        "verified": true,
+        "firstVerifiedAttempt": 2,
+        "adaptive": false,
+        "totalModelTokens": 7311
+      },
+      "modelTurnReduction": 0.0,
+      "reasoningTokenReduction": -1.1752092050209204,
+      "allModelTokenReduction": -0.9964500273074823
+    },
+    {
+      "case": "recursive-mentor",
+      "baseline": {
+        "attempts": 2,
+        "modelCalls": 2,
+        "inputTokens": 1360,
+        "outputIncludingReasoningTokens": 1455,
+        "observedReasoningTokens": 1346,
+        "reasoningUsageComplete": true,
+        "modelUsageComplete": true,
+        "schemeSeconds": 0.004303499008528888,
+        "verified": true,
+        "firstVerifiedAttempt": 2,
+        "adaptive": false,
+        "totalModelTokens": 2815
+      },
+      "assisted": {
+        "attempts": 4,
+        "modelCalls": 4,
+        "inputTokens": 6489,
+        "outputIncludingReasoningTokens": 11527,
+        "observedReasoningTokens": 10549,
+        "reasoningUsageComplete": true,
+        "modelUsageComplete": true,
+        "schemeSeconds": 0.0001974170154426247,
+        "verified": false,
+        "firstVerifiedAttempt": null,
+        "adaptive": false,
+        "totalModelTokens": 18016
+      },
+      "modelTurnReduction": null,
+      "reasoningTokenReduction": null,
+      "allModelTokenReduction": null
+    }
+  ],
+  "frozenPlan": {
+    "schema": "ascent.iterative-inference-plan.v1",
+    "maxTurns": 4,
+    "maxProviderCalls": 24,
+    "maxOutputTokens": 65536,
+    "conservativePeakCeilingUsd": 3,
+    "library": "libascent.dylib",
+    "librarySha256": "c2acb2751350f5590ca0a0dbb25aa9cb43d35b4b0716b11f2327802030ec5420",
+    "cases": [
+      {
+        "name": "mentor-chain",
+        "question": "Return actors x with a directed mentor edge x->y and y->z, where z acts in a film whose director has the selected_country. The two mentor edges must share y; cast, directed and citizen must share the same film and director. Actors may repeat along the path; do not require x itself to act. Use only the supplied finite relations. Return unique actor identifiers.",
+        "source": {
+          "domains": {
+            "Film": [
+              "holdout0_film0",
+              "holdout0_film1",
+              "holdout0_film2",
+              "holdout0_film3",
+              "holdout0_film4",
+              "holdout0_film5"
+            ],
+            "Actor": [
+              "holdout0_actor0",
+              "holdout0_actor1",
+              "holdout0_actor2",
+              "holdout0_actor3",
+              "holdout0_actor4",
+              "holdout0_actor5",
+              "holdout0_actor6",
+              "holdout0_actor7",
+              "holdout0_actor8",
+              "holdout0_actor9",
+              "holdout0_actor10",
+              "holdout0_actor11"
+            ],
+            "Director": [
+              "holdout0_director0",
+              "holdout0_director1",
+              "holdout0_director2"
+            ],
+            "Country": [
+              "holdout0_country0",
+              "holdout0_country1"
+            ]
+          },
+          "rows": {
+            "cast": [
+              [
+                "holdout0_film0",
+                "holdout0_actor0"
+              ],
+              [
+                "holdout0_film0",
+                "holdout0_actor1"
+              ],
+              [
+                "holdout0_film0",
+                "holdout0_actor2"
+              ],
+              [
+                "holdout0_film1",
+                "holdout0_actor1"
+              ],
+              [
+                "holdout0_film1",
+                "holdout0_actor3"
+              ],
+              [
+                "holdout0_film2",
+                "holdout0_actor2"
+              ],
+              [
+                "holdout0_film2",
+                "holdout0_actor4"
+              ],
+              [
+                "holdout0_film3",
+                "holdout0_actor5"
+              ],
+              [
+                "holdout0_film3",
+                "holdout0_actor6"
+              ],
+              [
+                "holdout0_film4",
+                "holdout0_actor6"
+              ],
+              [
+                "holdout0_film4",
+                "holdout0_actor7"
+              ],
+              [
+                "holdout0_film5",
+                "holdout0_actor8"
+              ],
+              [
+                "holdout0_film5",
+                "holdout0_actor9"
+              ]
+            ],
+            "directed": [
+              [
+                "holdout0_film0",
+                "holdout0_director0"
+              ],
+              [
+                "holdout0_film1",
+                "holdout0_director1"
+              ],
+              [
+                "holdout0_film2",
+                "holdout0_director2"
+              ],
+              [
+                "holdout0_film3",
+                "holdout0_director0"
+              ],
+              [
+                "holdout0_film4",
+                "holdout0_director1"
+              ],
+              [
+                "holdout0_film5",
+                "holdout0_director2"
+              ]
+            ],
+            "citizen": [
+              [
+                "holdout0_director0",
+                "holdout0_country0"
+              ],
+              [
+                "holdout0_director1",
+                "holdout0_country1"
+              ],
+              [
+                "holdout0_director2",
+                "holdout0_country0"
+              ]
+            ],
+            "mentor": [
+              [
+                "holdout0_actor10",
+                "holdout0_actor11"
+              ],
+              [
+                "holdout0_actor11",
+                "holdout0_actor0"
+              ],
+              [
+                "holdout0_actor9",
+                "holdout0_actor1"
+              ],
+              [
+                "holdout0_actor8",
+                "holdout0_actor9"
+              ],
+              [
+                "holdout0_actor7",
+                "holdout0_actor8"
+              ],
+              [
+                "holdout0_actor6",
+                "holdout0_actor7"
+              ],
+              [
+                "holdout0_actor5",
+                "holdout0_actor6"
+              ],
+              [
+                "holdout0_actor4",
+                "holdout0_actor5"
+              ],
+              [
+                "holdout0_actor3",
+                "holdout0_actor4"
+              ],
+              [
+                "holdout0_actor2",
+                "holdout0_actor3"
+              ],
+              [
+                "holdout0_actor1",
+                "holdout0_actor2"
+              ],
+              [
+                "holdout0_actor0",
+                "holdout0_actor1"
+              ]
+            ],
+            "actor_domain": [
+              [
+                "holdout0_actor0"
+              ],
+              [
+                "holdout0_actor1"
+              ],
+              [
+                "holdout0_actor2"
+              ],
+              [
+                "holdout0_actor3"
+              ],
+              [
+                "holdout0_actor4"
+              ],
+              [
+                "holdout0_actor5"
+              ],
+              [
+                "holdout0_actor6"
+              ],
+              [
+                "holdout0_actor7"
+              ],
+              [
+                "holdout0_actor8"
+              ],
+              [
+                "holdout0_actor9"
+              ],
+              [
+                "holdout0_actor10"
+              ],
+              [
+                "holdout0_actor11"
+              ]
+            ],
+            "banned_film": [
+              [
+                "holdout0_film0"
+              ]
+            ],
+            "selected_country": [
+              [
+                "holdout0_country0"
+              ]
+            ],
+            "target": [
+              [
+                "holdout0_actor0"
+              ]
+            ]
+          }
+        },
+        "withdrawal": {
+          "relation": "mentor",
+          "row": [
+            "holdout0_actor11",
+            "holdout0_actor0"
+          ]
+        }
+      },
+      {
+        "name": "anti-existential",
+        "question": "Return actors in actor_domain with at least one film whose director has selected_country AND with no appearance in any banned_film. The second condition excludes the entire actor if ANY banned-film appearance exists, even if a different film qualifies. Use only the supplied finite relations. Return unique actor identifiers.",
+        "source": {
+          "domains": {
+            "Film": [
+              "holdout2_film0",
+              "holdout2_film1",
+              "holdout2_film2",
+              "holdout2_film3",
+              "holdout2_film4",
+              "holdout2_film5"
+            ],
+            "Actor": [
+              "holdout2_actor0",
+              "holdout2_actor1",
+              "holdout2_actor2",
+              "holdout2_actor3",
+              "holdout2_actor4",
+              "holdout2_actor5",
+              "holdout2_actor6",
+              "holdout2_actor7",
+              "holdout2_actor8",
+              "holdout2_actor9",
+              "holdout2_actor10",
+              "holdout2_actor11"
+            ],
+            "Director": [
+              "holdout2_director0",
+              "holdout2_director1",
+              "holdout2_director2"
+            ],
+            "Country": [
+              "holdout2_country0",
+              "holdout2_country1"
+            ]
+          },
+          "rows": {
+            "cast": [
+              [
+                "holdout2_film0",
+                "holdout2_actor0"
+              ],
+              [
+                "holdout2_film0",
+                "holdout2_actor1"
+              ],
+              [
+                "holdout2_film0",
+                "holdout2_actor2"
+              ],
+              [
+                "holdout2_film1",
+                "holdout2_actor1"
+              ],
+              [
+                "holdout2_film1",
+                "holdout2_actor3"
+              ],
+              [
+                "holdout2_film2",
+                "holdout2_actor2"
+              ],
+              [
+                "holdout2_film2",
+                "holdout2_actor4"
+              ],
+              [
+                "holdout2_film3",
+                "holdout2_actor5"
+              ],
+              [
+                "holdout2_film3",
+                "holdout2_actor6"
+              ],
+              [
+                "holdout2_film4",
+                "holdout2_actor6"
+              ],
+              [
+                "holdout2_film4",
+                "holdout2_actor7"
+              ],
+              [
+                "holdout2_film5",
+                "holdout2_actor8"
+              ],
+              [
+                "holdout2_film5",
+                "holdout2_actor9"
+              ]
+            ],
+            "directed": [
+              [
+                "holdout2_film0",
+                "holdout2_director0"
+              ],
+              [
+                "holdout2_film1",
+                "holdout2_director1"
+              ],
+              [
+                "holdout2_film2",
+                "holdout2_director2"
+              ],
+              [
+                "holdout2_film3",
+                "holdout2_director0"
+              ],
+              [
+                "holdout2_film4",
+                "holdout2_director1"
+              ],
+              [
+                "holdout2_film5",
+                "holdout2_director2"
+              ]
+            ],
+            "citizen": [
+              [
+                "holdout2_director0",
+                "holdout2_country0"
+              ],
+              [
+                "holdout2_director1",
+                "holdout2_country1"
+              ],
+              [
+                "holdout2_director2",
+                "holdout2_country0"
+              ]
+            ],
+            "mentor": [
+              [
+                "holdout2_actor10",
+                "holdout2_actor11"
+              ],
+              [
+                "holdout2_actor11",
+                "holdout2_actor0"
+              ],
+              [
+                "holdout2_actor9",
+                "holdout2_actor1"
+              ],
+              [
+                "holdout2_actor8",
+                "holdout2_actor9"
+              ],
+              [
+                "holdout2_actor7",
+                "holdout2_actor8"
+              ],
+              [
+                "holdout2_actor6",
+                "holdout2_actor7"
+              ],
+              [
+                "holdout2_actor5",
+                "holdout2_actor6"
+              ],
+              [
+                "holdout2_actor4",
+                "holdout2_actor5"
+              ],
+              [
+                "holdout2_actor3",
+                "holdout2_actor4"
+              ],
+              [
+                "holdout2_actor2",
+                "holdout2_actor3"
+              ],
+              [
+                "holdout2_actor1",
+                "holdout2_actor2"
+              ],
+              [
+                "holdout2_actor0",
+                "holdout2_actor1"
+              ]
+            ],
+            "actor_domain": [
+              [
+                "holdout2_actor0"
+              ],
+              [
+                "holdout2_actor1"
+              ],
+              [
+                "holdout2_actor2"
+              ],
+              [
+                "holdout2_actor3"
+              ],
+              [
+                "holdout2_actor4"
+              ],
+              [
+                "holdout2_actor5"
+              ],
+              [
+                "holdout2_actor6"
+              ],
+              [
+                "holdout2_actor7"
+              ],
+              [
+                "holdout2_actor8"
+              ],
+              [
+                "holdout2_actor9"
+              ],
+              [
+                "holdout2_actor10"
+              ],
+              [
+                "holdout2_actor11"
+              ]
+            ],
+            "banned_film": [
+              [
+                "holdout2_film0"
+              ]
+            ],
+            "selected_country": [
+              [
+                "holdout2_country0"
+              ]
+            ],
+            "target": [
+              [
+                "holdout2_actor0"
+              ]
+            ]
+          }
+        },
+        "withdrawal": {
+          "relation": "cast",
+          "row": [
+            "holdout2_film0",
+            "holdout2_actor2"
+          ]
+        }
+      },
+      {
+        "name": "recursive-mentor",
+        "question": "Return actors that can reach an actor in target through ONE OR MORE directed mentor edges. Include any path length, including cycles; zero-length paths alone do not qualify. An actor in target qualifies only if it also has a positive-length path to target. Use only the supplied finite relations. Return unique actor identifiers.",
+        "source": {
+          "domains": {
+            "Film": [
+              "holdout3_film0",
+              "holdout3_film1",
+              "holdout3_film2",
+              "holdout3_film3",
+              "holdout3_film4",
+              "holdout3_film5"
+            ],
+            "Actor": [
+              "holdout3_actor0",
+              "holdout3_actor1",
+              "holdout3_actor2",
+              "holdout3_actor3",
+              "holdout3_actor4",
+              "holdout3_actor5",
+              "holdout3_actor6",
+              "holdout3_actor7",
+              "holdout3_actor8",
+              "holdout3_actor9",
+              "holdout3_actor10",
+              "holdout3_actor11"
+            ],
+            "Director": [
+              "holdout3_director0",
+              "holdout3_director1",
+              "holdout3_director2"
+            ],
+            "Country": [
+              "holdout3_country0",
+              "holdout3_country1"
+            ]
+          },
+          "rows": {
+            "cast": [
+              [
+                "holdout3_film0",
+                "holdout3_actor0"
+              ],
+              [
+                "holdout3_film0",
+                "holdout3_actor1"
+              ],
+              [
+                "holdout3_film0",
+                "holdout3_actor2"
+              ],
+              [
+                "holdout3_film1",
+                "holdout3_actor1"
+              ],
+              [
+                "holdout3_film1",
+                "holdout3_actor3"
+              ],
+              [
+                "holdout3_film2",
+                "holdout3_actor2"
+              ],
+              [
+                "holdout3_film2",
+                "holdout3_actor4"
+              ],
+              [
+                "holdout3_film3",
+                "holdout3_actor5"
+              ],
+              [
+                "holdout3_film3",
+                "holdout3_actor6"
+              ],
+              [
+                "holdout3_film4",
+                "holdout3_actor6"
+              ],
+              [
+                "holdout3_film4",
+                "holdout3_actor7"
+              ],
+              [
+                "holdout3_film5",
+                "holdout3_actor8"
+              ],
+              [
+                "holdout3_film5",
+                "holdout3_actor9"
+              ]
+            ],
+            "directed": [
+              [
+                "holdout3_film0",
+                "holdout3_director0"
+              ],
+              [
+                "holdout3_film1",
+                "holdout3_director1"
+              ],
+              [
+                "holdout3_film2",
+                "holdout3_director2"
+              ],
+              [
+                "holdout3_film3",
+                "holdout3_director0"
+              ],
+              [
+                "holdout3_film4",
+                "holdout3_director1"
+              ],
+              [
+                "holdout3_film5",
+                "holdout3_director2"
+              ]
+            ],
+            "citizen": [
+              [
+                "holdout3_director0",
+                "holdout3_country0"
+              ],
+              [
+                "holdout3_director1",
+                "holdout3_country1"
+              ],
+              [
+                "holdout3_director2",
+                "holdout3_country0"
+              ]
+            ],
+            "mentor": [
+              [
+                "holdout3_actor10",
+                "holdout3_actor11"
+              ],
+              [
+                "holdout3_actor11",
+                "holdout3_actor0"
+              ],
+              [
+                "holdout3_actor8",
+                "holdout3_actor9"
+              ],
+              [
+                "holdout3_actor7",
+                "holdout3_actor8"
+              ],
+              [
+                "holdout3_actor6",
+                "holdout3_actor7"
+              ],
+              [
+                "holdout3_actor5",
+                "holdout3_actor6"
+              ],
+              [
+                "holdout3_actor4",
+                "holdout3_actor5"
+              ],
+              [
+                "holdout3_actor3",
+                "holdout3_actor4"
+              ],
+              [
+                "holdout3_actor2",
+                "holdout3_actor3"
+              ],
+              [
+                "holdout3_actor1",
+                "holdout3_actor2"
+              ],
+              [
+                "holdout3_actor0",
+                "holdout3_actor1"
+              ],
+              [
+                "holdout3_actor9",
+                "holdout3_actor10"
+              ]
+            ],
+            "actor_domain": [
+              [
+                "holdout3_actor0"
+              ],
+              [
+                "holdout3_actor1"
+              ],
+              [
+                "holdout3_actor2"
+              ],
+              [
+                "holdout3_actor3"
+              ],
+              [
+                "holdout3_actor4"
+              ],
+              [
+                "holdout3_actor5"
+              ],
+              [
+                "holdout3_actor6"
+              ],
+              [
+                "holdout3_actor7"
+              ],
+              [
+                "holdout3_actor8"
+              ],
+              [
+                "holdout3_actor9"
+              ],
+              [
+                "holdout3_actor10"
+              ],
+              [
+                "holdout3_actor11"
+              ]
+            ],
+            "banned_film": [
+              [
+                "holdout3_film0"
+              ]
+            ],
+            "selected_country": [
+              [
+                "holdout3_country0"
+              ]
+            ],
+            "target": [
+              [
+                "holdout3_actor0"
+              ]
+            ]
+          }
+        },
+        "withdrawal": {
+          "relation": "mentor",
+          "row": [
+            "holdout3_actor0",
+            "holdout3_actor1"
+          ]
+        }
+      }
+    ],
+    "arms": [
+      "raw-fact-reasoning",
+      "scheme-evidence"
+    ],
+    "scope": "Development test of the corrected iterative mechanism; reused structural families, not independent held-out evidence.",
+    "primaryMetric": "First independently verified answer: model turns and cumulative input/output/reasoning tokens, including scans, queries, failed answers and correction. Unsatisfied episodes are censored.",
+    "sourceBoundary": "Both arms have identical raw-fact scan access. First action is a raw scan in control and a derived witness query in assisted condition. Assisted answers require prior completed Scheme evidence.",
+    "verificationFeedback": "Only verified or not_verified; no gold answers or missing-actor list.",
+    "producerHashes": {
+      "python/src/ascent_test_support/iterative_inference_study.py": "4a3e4e670eadf71af717539bc3e972cfca8a5add1960bd69ed1904186fd4f78e",
+      "python/src/ascent_test_support/inference_reuse_study.py": "0a77a71780666dac35711a971fea080bae09ca087c27dff509d9403327c8c159",
+      "python/src/ascent_test_support/inference_effort.py": "c77a8c72df02b7300a60a1f10210d40b137dfef2b07cd8a6ffb15442c1894a78",
+      "python/src/ascent_test_support/model_study.py": "3c4bb43f62bf3094b826550edd39c3578d464857428d2b079ddd2e7d92326948",
+      "python/src/ascent_test_support/movie_study.py": "0956f05be94e7093d39e6df6a007eaa81ab0848317fd79e279cffb7ad285ee2a",
+      "python/src/ascent_test_support/query_contract.py": "3c15a9a3cf03e42953787b20614067a5b960550f3ca8bcd1ed5eb38af27e61ba",
+      "python/src/ascent_engine/evidence.py": "f14129d13a5352558504398a21b6e4714d10ff0423a2aca8a8226b21ba9dd63f",
+      "python/src/ascent_engine/__init__.py": "c5de0e37d07d4596175b22bb38cc4a73348573c8951d77cf8126229112be904d"
+    }
+  },
+  "originalFileSha256": "1849be26549b3b9cac6c66d7dac0355962af5afdf1d0c57bc8df6b2253508a1f",
+  "adaptiveRecovery": {
+    "schema": "ascent.iterative-evidence-recovery.v1",
+    "adaptive": true,
+    "primaryScoresChanged": false,
+    "maxAdditionalCalls": 2,
+    "primaryAttempts": 4,
+    "primarySha256": "1849be26549b3b9cac6c66d7dac0355962af5afdf1d0c57bc8df6b2253508a1f",
+    "planSha256": "cac6380fcc6fc27e42e5c7f95a5fdfa7958211da7cd7bcd527d07fbfeaada730",
+    "producerSha256": "ac39d4b44220fa50426b9e4ac54a1e57db3c10b2f52e865219abb901b4597849",
+    "attempts": [
+      {
+        "providerCalls": 1,
+        "adaptive": true,
+        "correct": false,
+        "usage": {
+          "input_tokens": 2131,
+          "input_tokens_details": {
+            "cached_tokens": 384
+          },
+          "output_tokens": 3198,
+          "output_tokens_details": {
+            "reasoning_tokens": 2686
+          },
+          "total_tokens": 5329
+        },
+        "providerSeconds": 13.96408087501186,
+        "providerOutcome": "completed_ungraded",
+        "requestSha256": "2735a950b5fe2776c3627b3f3f38a482e0293bf4a3a85ef3aa4908c5a9497b5c",
+        "action": {
+          "action": "query",
+          "contract": {
+            "relations": [
+              {
+                "name": "reach",
+                "types": [
+                  "Actor",
+                  "Actor"
+                ]
+              },
+              {
+                "name": "witness",
+                "types": [
+                  "Actor",
+                  "Actor",
+                  "Actor"
+                ]
+              }
+            ],
+            "rules": [
+              {
+                "head": [
+                  {
+                    "relation": "reach",
+                    "terms": [
+                      {
+                        "var": "X"
+                      },
+                      {
+                        "var": "Y"
+                      }
+                    ]
+                  }
+                ],
+                "body": [
+                  {
+                    "relation": "mentor",
+                    "terms": [
+                      {
+                        "var": "X"
+                      },
+                      {
+                        "var": "Y"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "head": [
+                  {
+                    "relation": "reach",
+                    "terms": [
+                      {
+                        "var": "X"
+                      },
+                      {
+                        "var": "Y"
+                      }
+                    ]
+                  }
+                ],
+                "body": [
+                  {
+                    "relation": "mentor",
+                    "terms": [
+                      {
+                        "var": "X"
+                      },
+                      {
+                        "var": "Z"
+                      }
+                    ]
+                  },
+                  {
+                    "relation": "reach",
+                    "terms": [
+                      {
+                        "var": "Z"
+                      },
+                      {
+                        "var": "Y"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "head": [
+                  {
+                    "relation": "witness",
+                    "terms": [
+                      {
+                        "var": "X"
+                      },
+                      {
+                        "var": "T"
+                      },
+                      {
+                        "var": "T"
+                      }
+                    ]
+                  }
+                ],
+                "body": [
+                  {
+                    "relation": "mentor",
+                    "terms": [
+                      {
+                        "var": "X"
+                      },
+                      {
+                        "var": "T"
+                      }
+                    ]
+                  },
+                  {
+                    "relation": "target",
+                    "terms": [
+                      {
+                        "var": "T"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "head": [
+                  {
+                    "relation": "witness",
+                    "terms": [
+                      {
+                        "var": "X"
+                      },
+                      {
+                        "var": "Y"
+                      },
+                      {
+                        "var": "T"
+                      }
+                    ]
+                  }
+                ],
+                "body": [
+                  {
+                    "relation": "mentor",
+                    "terms": [
+                      {
+                        "var": "X"
+                      },
+                      {
+                        "var": "Y"
+                      }
+                    ]
+                  },
+                  {
+                    "relation": "reach",
+                    "terms": [
+                      {
+                        "var": "Y"
+                      },
+                      {
+                        "var": "T"
+                      }
+                    ]
+                  },
+                  {
+                    "relation": "target",
+                    "terms": [
+                      {
+                        "var": "T"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          "queries": [
+            "witness"
+          ]
+        },
+        "feedback": {
+          "sourceIdentity": "80fca1c9b4b93479684a99a7d97f0ed3be69ce3574bb7201fcc2e9f213b3ae47",
+          "pathIdentity": "29bea8b9777d0ca8f470dc6ef13e1ff8969a6b1202743eaed24c1b9e05f9dd9f",
+          "retainedPath": false,
+          "retainedCompleted": false,
+          "result": {
+            "complete": true,
+            "relations": {
+              "witness": [
+                [
+                  "holdout3_actor11",
+                  "holdout3_actor0",
+                  "holdout3_actor0"
+                ],
+                [
+                  "holdout3_actor10",
+                  "holdout3_actor11",
+                  "holdout3_actor0"
+                ],
+                [
+                  "holdout3_actor9",
+                  "holdout3_actor10",
+                  "holdout3_actor0"
+                ],
+                [
+                  "holdout3_actor8",
+                  "holdout3_actor9",
+                  "holdout3_actor0"
+                ],
+                [
+                  "holdout3_actor7",
+                  "holdout3_actor8",
+                  "holdout3_actor0"
+                ],
+                [
+                  "holdout3_actor6",
+                  "holdout3_actor7",
+                  "holdout3_actor0"
+                ],
+                [
+                  "holdout3_actor5",
+                  "holdout3_actor6",
+                  "holdout3_actor0"
+                ],
+                [
+                  "holdout3_actor4",
+                  "holdout3_actor5",
+                  "holdout3_actor0"
+                ],
+                [
+                  "holdout3_actor3",
+                  "holdout3_actor4",
+                  "holdout3_actor0"
+                ],
+                [
+                  "holdout3_actor2",
+                  "holdout3_actor3",
+                  "holdout3_actor0"
+                ],
+                [
+                  "holdout3_actor1",
+                  "holdout3_actor2",
+                  "holdout3_actor0"
+                ],
+                [
+                  "holdout3_actor0",
+                  "holdout3_actor1",
+                  "holdout3_actor0"
+                ]
+              ]
+            }
+          }
+        }
+      },
+      {
+        "providerCalls": 1,
+        "adaptive": true,
+        "correct": true,
+        "usage": {
+          "input_tokens": 3096,
+          "input_tokens_details": {
+            "cached_tokens": 512
+          },
+          "output_tokens": 2119,
+          "output_tokens_details": {
+            "reasoning_tokens": 2025
+          },
+          "total_tokens": 5215
+        },
+        "providerSeconds": 9.466615707991878,
+        "providerOutcome": "completed_ungraded",
+        "requestSha256": "7676121aa39679a7e950df6c3f6c5dce791436f16d62841d2de2bb5af3fc8d24",
+        "action": {
+          "action": "answer",
+          "answer": [
+            "holdout3_actor0",
+            "holdout3_actor1",
+            "holdout3_actor2",
+            "holdout3_actor3",
+            "holdout3_actor4",
+            "holdout3_actor5",
+            "holdout3_actor6",
+            "holdout3_actor7",
+            "holdout3_actor8",
+            "holdout3_actor9",
+            "holdout3_actor10",
+            "holdout3_actor11"
+          ]
+        },
+        "feedback": {
+          "verification": "verified"
+        }
+      }
+    ],
+    "cumulativeEffort": {
+      "attempts": 6,
+      "modelCalls": 6,
+      "inputTokens": 11716,
+      "outputIncludingReasoningTokens": 16844,
+      "observedReasoningTokens": 15260,
+      "reasoningUsageComplete": true,
+      "modelUsageComplete": true,
+      "schemeSeconds": 0.0001974170154426247,
+      "verified": true,
+      "firstVerifiedAttempt": 6,
+      "adaptive": true,
+      "totalModelTokens": 28560
+    },
+    "outcome": "verified"
+  },
+  "responseIdentities": {
+    "anti-existential-scheme-evidence-2.response.json": "5552da898e223dfd31a2a63bc00d573d27c8ed99dbb34f8b550fcd71754ebb72",
+    "anti-existential-scheme-evidence-1.response.json": "f308617f187ea030ced8493e8b81c3d0101f7db64939de5225ca72c10a90ea05",
+    "recursive-mentor-raw-fact-reasoning-1.response.json": "734b4140385e56738077411b548afa03626459fcea4379d695f85cec830ec493",
+    "recursive-mentor-scheme-evidence-2.response.json": "a7e258bba911f86e815c72bf979ee9563e3aa4da6205161cfa75fca22f3ecaf1",
+    "recursive-mentor-scheme-evidence-1.response.json": "8c166f82f142df3c18312cc7bfd6e6dfc1477b7c6459d0522e42af47f7ce332f",
+    "recursive-mentor-raw-fact-reasoning-2.response.json": "c642d5936f3e1e6c3215032ad13132d821745ae7f9afddd85de95b8dbda84ba6",
+    "recursive-mentor-scheme-evidence-4.response.json": "3a2fa8869aefb05d930ba678fea7ccce5af830dcb91ab7ae58a58394c1683d62",
+    "anti-existential-raw-fact-reasoning-1.response.json": "11dfe1cd1ad2706609246d430be41f3fecbdaeed49edee8b8303c5b57f1c55f7",
+    "anti-existential-raw-fact-reasoning-2.response.json": "36a0a8d39b140ea7c090a4f5b33afac2af8727f1ebf0458bf74bbb5272eeb47c",
+    "recursive-mentor-scheme-evidence-3.response.json": "42bee30c119508f95e0fd5b48534404142c67e45f64efdc3c9948d6ea02ee4aa",
+    "mentor-chain-raw-fact-reasoning-1.response.json": "832af1ca4989405853e5be4f734e9a6c30885cea5939c5ff02c23d4647baf308",
+    "mentor-chain-scheme-evidence-2.response.json": "90cbece7e21d47314844846e99d828372e50857aea8d5dadd33d4959e0f5ff08",
+    "mentor-chain-raw-fact-reasoning-2.response.json": "60c9740638079d6140d9c16d19206e67ca6e25e2531a07f0c3cb20f14d24e511",
+    "mentor-chain-scheme-evidence-1.response.json": "cb26478ef5b1848eca320dcfa44741276aed08e3bbb134fa53c07d2fb639648f"
+  },
+  "futureProtocolFix": "queries requires bare relation names; add schema pattern, specific feedback, and regression. Preserve primary failure and count original 4 attempts plus 2 recovery attempts."
+}

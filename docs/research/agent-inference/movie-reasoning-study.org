@@ -459,3 +459,189 @@ Provider 前缀缓存与 Scheme 语义复用分别计数。模型源事实使用
 完整39次用量、原始失败、模型自我审查、请求/响应身份、来源迁移检查和 statement 证据指针，
 集中保存在 [[file:complex-movie-result.json][complex-movie-result.json]]；新增冻结题见
 [[file:country-qualified-movie-plan.json][country-qualified-movie-plan.json]]。
+
+* Retained inference: structural holdouts and repeated controls
+
+** 实验目标与冻结边界
+
+本轮分开测量首次生成查询、完全相同任务再次执行、事实撤回后复用查询逻辑。
+前一轮 reuse 仅缓存物化视图，每道题仍调用模型，14.3% 不代表第二次路径复用。
+本轮直接使用 CFFI Session：首次 open/run、重复 run(0)、来源变化 replace/run。
+Python 负责实验编排和 provider IO，关系推理及来源更新由 Scheme 执行。
+首次指首次生成契约，不是 OS 进程或模型服务冷启动；API 估算不包含机器费用。
+
+四种此前电影试验未测的结构，各用独立命名的合成实体。
+每个来源包含 12 个 Actor、6 个 Film、3 个 Director、2 个 Country，不是新真实 Wikidata 数据。
+每种结构两轮独立模型生成，首次调用先后顺序轮换，每轮三个执行阶段。
+直接回答每阶段调用模型；紧凑接口仅首次调用，之后保留相同程序会话。
+原题与事实不变时通用答案缓存也能零调用，另外报告这一公平基线。
+来源变化后旧答案不能使用，已有程序在新来源上执行并生成新答案。
+
+冻结计划后调用模型。错误和输出预算耗尽保留，主实验不自动修复或重试。
+首次契约失败使其后两个复用阶段也失败，不能把不可执行路径计为免费正确答案。
+两轮重复用于发现波动，不足以证明统计稳定性；合成独立实体不覆盖真实世界分布。
+编译器只有自然语言、关系类型和含义，没有事实、实体域或金标准。
+直接回答获得完整同源事实，Scheme 对源数据的拥有是本实验处理条件。
+
+** 完整题目与预先核对的事实变化
+
+*** mentor-chain
+
+Return actors x with a directed mentor edge x->y and y->z, where z acts in a film whose director has the selected_country. The two mentor edges must share y; cast, directed and citizen must share the same film and director. Actors may repeat along the path; do not require x itself to act. Use only the supplied finite relations. Return unique actor identifiers.
+
+撤回：{'relation': 'mentor', 'row': ['holdout0_actor11', 'holdout0_actor0']}。独立集合 oracle 与 Scheme 金标准已核对；撤回前 10 个答案，撤回后 8 个答案。
+
+*** witness-local-exclusion
+
+Return actors with at least one film directed by a director with selected_country, with that supporting film not in banned_film. Exclude individual supporting films before projecting actor: acting in a banned film must not exclude an actor who also has another qualifying, unbanned film. Use only the supplied finite relations. Return unique actor identifiers.
+
+撤回：{'relation': 'cast', 'row': ['holdout1_film2', 'holdout1_actor2']}。独立集合 oracle 与 Scheme 金标准已核对；撤回前 6 个答案，撤回后 5 个答案。
+
+*** anti-existential
+
+Return actors in actor_domain with at least one film whose director has selected_country AND with no appearance in any banned_film. The second condition excludes the entire actor if ANY banned-film appearance exists, even if a different film qualifies. Use only the supplied finite relations. Return unique actor identifiers.
+
+撤回：{'relation': 'cast', 'row': ['holdout2_film0', 'holdout2_actor2']}。独立集合 oracle 与 Scheme 金标准已核对；撤回前 5 个答案，撤回后 6 个答案。
+
+*** recursive-mentor
+
+Return actors that can reach an actor in target through ONE OR MORE directed mentor edges. Include any path length, including cycles; zero-length paths alone do not qualify. An actor in target qualifies only if it also has a positive-length path to target. Use only the supplied finite relations. Return unique actor identifiers.
+
+撤回：{'relation': 'mentor', 'row': ['holdout3_actor0', 'holdout3_actor1']}。独立集合 oracle 与 Scheme 金标准已核对；撤回前 12 个答案，撤回后 11 个答案。
+
+** Reflection、论文与机制改造
+
+准备本轮前已读取已有 reflection，冻结其文件身份并记录设计决定：规则头必须是数组；
+AND/OR 明确编码；支持路径排除与实体级反存在分开；不枚举事实上下文；
+保留程序会话；撤回来源后禁止沿用旧完成答案。新 reflection 单独记录，不改写主成绩。
+
+[[https://proceedings.mlr.press/v306/miao26e.html][LLM-MatLogic]] 强调作用域排除和规格/执行错误分离，
+据此设计 witness-local-exclusion 和 anti-existential。
+[[https://arxiv.org/abs/2609.37233][DatalogBench]] 使用留出输入执行评分和经变异验证的 oracle，
+据此加入递归、独立有限 oracle 和错误控制；本轮未移植其完整基准。
+[[https://arxiv.org/abs/1808.05752][PUG]] 将 why/why-not 查询转成求取相关解释的 Datalog 程序。
+据此为漏答构造 Scheme support 查询，获取连接证据元组；本实现未复现其完整 provenance 模型。
+
+搜索、大模型与引擎的分工：检索关系含义与来源身份，模型指定题意，
+Scheme 查找连接/排除/递归证据，后续同意图任务复用程序并更新来源。
+本次只有冻结有限关系及支持元组的检索，没有外部搜索服务或其费用。
+自然语言相似度不能证明意图等价；新题意和新 schema 需要重新接纳。
+
+** Lean、Quint 与实际执行
+
+RetainedInference 的 Lean 条件证明区分答案接纳与查询路径复用：
+答案接纳要求来源与查询身份一致，来源或查询改变则拒绝旧答案。
+Quint 与 Lean 枚举全部 16 个两节点有向图及撤回阶段，共 32 个观察。
+实际 Scheme CFFI 重放同一语料，检查 retained/fresh 一致、run(0) 返回完成结果，
+并识别 8 个事实撤回后仍返回旧答案的故障控制。这里是有限值枚举，不是 TLC 状态探索。
+四种 12-actor 结构另通过 Scheme 与独立集合 oracle 检查。
+这些证明不覆盖任意自然语言编译器、整个 C ABI 或模型推理正确性。
+
+** 单次契约生成与复用的资源记录（不是逐轮增强主指标）
+
+主实验四个结构、两轮重复、三阶段，共 24 个任务配置，每配置两组，共 48 个执行观察。
+真实模型调用 32 次：直接回答 24、紧凑契约首次生成 8，Scheme 重复及更新共 16 次零模型调用。
+另有漏答反思和预算恢复各一次，本批总计 34 次真实模型调用。
+原始单次评分：直接回答 21/24，紧凑接口 21/24，均为 87.5%。
+分阶段：直接首次 8/8、重复 7/8、更新 6/8；紧凑接口三个阶段均 7/8。
+首次失败不能拥有可复用程序，后续两个阶段同步计失败。
+
+API 高峰价敏感性估算：直接三阶段 0.092302 美元，紧凑生成 0.106118 美元，
+紧凑组反而高 15.0%。直接原题答案缓存也能略去重复调用；与该基线相比紧凑组高 104.8%。
+这只是费用账，并不能判断模型到正确答案所需推理是否减少。
+重复阶段模型调用下降到零有明确证据，但不能掩盖首次的失败及高额推理。
+一次契约耗尽 65536 输出 token，没有可见契约；约 0.079 美元的耗费必须累计保留。
+原驱动将空响应误报为 admission NoneType；已修复未来驱动在接纳前拒绝 incomplete，
+保留 output_budget_exhausted。原始文件与评分不改，根因另记录 completionAudit。
+
+漏答反思不提供金标准，模型第二次回答正确；它提出“误用 banned_film”作为诊断。
+这是模型的解释，未能验证原始内部思维的实际因果机制。
+Scheme support 查询证实 actor8→actor9→actor1 与 film0/director0/country0 的完整证据仍存在。
+此反思的证据是在模型纠正后检索，因此不能据此声称 Scheme 在纠正过程中帮助了模型。
+预算恢复将该适应性题分解为单个作用域明确的存在查询，不发送事实或答案。
+恢复消耗 2102 输出 token（1981 reasoning），其首次、重复、更新均正确；原始 65536 不扣除。
+两项诊断费用分别 0.008829 与 0.002803 美元，连同主实验约 0.210051 美元。
+恢复属于适应性探针，不作为新的独立留出成绩。
+
+[[file:inference-reuse-result.json][原始结果、冻结计划、诊断与审计]]；
+[[file:retained-inference-correspondence.json][实际 CFFI 32 观察凭据]]。
+
+* Iterative Scheme evidence: 模型每轮推理中的证据增强
+
+** 修正后的研究对象与两个验证
+
+核心闭环是：模型提出要查证的子问题，Scheme 建立并接纳证据，
+证据与来源身份进入下一轮，模型继续推理、补证或纠错，直到答案通过验证。
+模型的 thinking 不等于外部可重复验证的证据链；Scheme 不读取或声称验证隐藏思维。
+验证一：每题直到首次正确答案的累计模型轮次、reasoning token、全部模型 token 和检索/执行工作。
+验证二：已验证同题意、同来源任务再次出现，直接执行已有路径，零模型调用。
+验证二不能替代验证一；第一轮建立路径与所有失败/反思/修复开销必须纳入总账。
+
+前面的单次 API 费用对照不是该增强机制的主指标；output_tokens 包含 reasoning，
+但单次总量不能回答“几轮才找到正确答案”。新的 inference_effort 只累计到第一次通过验证，
+失败和 query/scan 都计入，未成功的轨迹标为未完成。实际模型调用缺 usage 时为未知，不能算零。
+可见答案的字节数不定义推理节省。原始事实相同但提供了执行工具，这是实验处理条件。
+
+** 已落地的接口与来源失效
+
+EvidenceStore 为真实 Scheme CFFI 会话提供原始关系扫描、规则执行、证据发布与复用。
+完整求值后的 derived relation 发布为带 path/source 身份的只读证据别名。
+第二轮规则可以直接引用第一轮别名，继续连接子目标，不必重新声明其规则。
+模型不能改写原始事实、证据别名或向派生关系注入事实。
+相同路径调用 run(0)，来源替换后旧派生别名与依赖消费者失效，基础查询路径更新后重新求值。
+此功能已在真实 Scheme 上验证两段子目标组合、重复命中、撤回拒绝及重新建链。
+
+EvidenceStore 的接纳保证是给定规则的有限来源推导，不是自然语言意图等价证明。
+自然语言题意改变不能依靠相似度自动复用，当前实验也未实现广泛自然语言搜索匹配。
+Lean 增加子目标关系等价条件下的扩展正确性；Quint 的有限语料与 Scheme 重放
+另外检查 32 个已发布子目标扩展观察，不声称完整模型/引擎 refinement。
+
+** 第一版多轮开发探针与处理条件审计
+
+三种既有结构（导师链、实体级反存在、递归导师可达），六条轨迹，共 13 次模型调用。
+导师链原始事实组：scan→错误答案→正确答案，3 轮，6235 reasoning token。
+Scheme 组：query 建立 12 条六列 witness→根据证据正确回答，2 轮，4584 reasoning token。
+该题轮数减少 33.3%，reasoning token 减少 26.5%，已包含首次生成 witness 的推理开销。
+但其余两题的“辅助组”只扫描事实，没有调用 Scheme 建链，因此不构成引擎增强证据。
+所有原始记录保留，不能拿这一次 3→2 宣称稳定收益。
+[[file:iterative-evidence-prototype-result.json][第一版结果和处理条件审计]]。
+
+** 收紧处理条件的完整多轮对照
+
+首轮控制组只能 scan，辅助组只能 query 并保留多列 witness；辅助答案必须已有完成证据。
+每题最多四轮，两组可读取同一原始来源；verifier 仅反馈 verified/not_verified，不给金标准。
+使用既有结构作为机制开发集，不冒充独立留出集。本轮 14 次模型调用、六条轨迹。
+
+| 题目 | 控制组到首次正确轮数 | Scheme 组到首次正确轮数 | 控制 reasoning | Scheme reasoning |
+|------+---------------------+------------------------+----------------+------------------|
+| mentor-chain | 2 | 2 | 2798 | 3137 |
+| anti-existential | 2 | 2 | 1912 | 4159 |
+| recursive-mentor | 2 | 四轮未通过 | 1346 | 已消耗 10549 |
+
+主实验成功率：控制组 3/3，Scheme 组 2/3。前两题 reasoning 分别增加 12.1% 和 117.5%。
+不能给未完成的递归轨迹计算“到正确答案的节省比例”。本轮没有证明 40%–50% 目标。
+更长证据与首次查询合成的开销可能抵消后续推理收益，不能预设 Scheme 每题必然省 token。
+
+递归题规则可以成立，但把查询选择器写成 witness(X,Y,T)，实际 ABI 需要裸关系名 witness。
+原错误反馈笼统，模型重复该格式；最终答案因无已接纳 Scheme 证据而被拒绝，处理条件未放松。
+未来接口已增加关系名 pattern、明确协议文字、具体错误反馈与回归测试。
+另做两轮适应性延续：先修正 query，Scheme 返回递归 witness，再由模型回答并通过验证。
+累计原四轮与两轮恢复，共六轮，15260 reasoning token；原主实验仍是未完成，不改为四轮成功。
+这次恢复闭合了接口缺口，但不是新留出成绩，也不是缩短推理的证据。
+[[file:iterative-inference-result.json][完整轨迹、逐轮动作、Scheme 证据和恢复记录]]。
+
+** 统一后续主线
+
+从机制开发转向独立实体、独立结构组合与更大选择性差异的留出任务，冻结后不调参。
+比较相同正确性门槛、相同轮次/恢复政策的完整轨迹；重复对照要计入首轮建链，
+并分开报告成功率、首次正确轮数、累计 reasoning、检索/执行工作、稳态路径复用。
+将已验证子目标的别名复用与较小的算子接口作为减少重复规则合成的实现方向；
+跨轮子目标引用的实际 Scheme 回归已通过，其真实模型收益尚未单独验证。
+每批准备前读取 reflection，把规格、传输、执行、检索缺口转成明确回归，
+同时保留原始失败。预算不是当前瓶颈，任务难度、意图接纳与样本覆盖仍限制结论。
+
+** 本轮交付验证
+
+15 个定向测试通过：8 个轨迹/协议单元测试、6 个真实 Scheme 留出/撤回检查、1 个跨轮证据组合集成测试。
+Lean/Quint 与实际 Scheme 的 32 观察对应、32 个子目标扩展及 8 个陈旧答案故障控制通过。
+记录的是冻结 CFFI 库的本地验证，最新源码的 Ubuntu CI 另行验证；没有等待 macOS 作为主线门槛。

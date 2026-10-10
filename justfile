@@ -549,7 +549,12 @@ check-feedback-conformance: prepare-quint
     .cache/ascent/tools/quint/node_modules/.bin/quint repl -q --backend typescript -r packages/proofs/quint/ExecutionFeedback.qnt::ExecutionFeedback conformance .exit > .cache/ascent/feedback-conformance/quint.json
     cd packages/proofs/lean && lake build FeedbackConformance && lake env lean --run FeedbackConformance.lean ../../../.cache/ascent/feedback-conformance/quint.json ../../../t/qualification/fixtures/feedback/conformance.json
 
-check-materialized-movie-conformance: prepare-quint
+check-retained-inference-conformance: prepare-quint
+    mkdir -p .cache/ascent/retained-inference-conformance
+    .cache/ascent/tools/quint/node_modules/.bin/quint repl -q --backend typescript -r packages/proofs/quint/RetainedInference.qnt::RetainedInference conformance .exit > .cache/ascent/retained-inference-conformance/quint.json
+    cd packages/proofs/lean && lake env lean --run RetainedInference.lean ../../../.cache/ascent/retained-inference-conformance/quint.json ../../../t/qualification/fixtures/inference-reuse/conformance.json
+
+check-materialized-movie-conformance: prepare-quint check-retained-inference-conformance
     mkdir -p .cache/ascent/complex-movie-conformance
     .cache/ascent/tools/quint/node_modules/.bin/quint repl -q --backend typescript -r packages/proofs/quint/MaterializedMovieQuery.qnt::MaterializedMovieQuery conformance .exit > .cache/ascent/complex-movie-conformance/quint.json
     cd packages/proofs/lean && lake env lean --run MaterializedMovieQuery.lean ../../../.cache/ascent/complex-movie-conformance/quint.json ../../../t/qualification/fixtures/complex-movie/conformance.json

@@ -1,0 +1,2927 @@
+{
+  "schema": "ascent.inference-reuse-result.v1",
+  "planSha256": "bbe64be5b4358ae7e6d21a90c52cc10121f3d105b8d6aa8f2e74e932c9ba90e7",
+  "providerCalls": 32,
+  "peakEstimateUsd": 0.198419232,
+  "records": [
+    {
+      "case": "mentor-chain",
+      "repetition": 0,
+      "phase": "cold",
+      "arm": "direct",
+      "providerCalls": 1,
+      "requestSha256": "c6813686bac6805beab8768f35d43feed9678887f13b9a34949d64570b1992cc",
+      "sourceIdentity": "bce43ebac269ebaed84d309fad7c9865a747406b5728a3ad8796f3ceae38e2d1",
+      "outcome": "correct",
+      "usage": {
+        "input_tokens": 1213,
+        "input_tokens_details": {
+          "cached_tokens": 0
+        },
+        "output_tokens": 12595,
+        "output_tokens_details": {
+          "reasoning_tokens": 12514
+        },
+        "total_tokens": 13808
+      },
+      "providerSeconds": 51.72108262500842,
+      "correct": true,
+      "peakEstimateUsd": 0.0154779
+    },
+    {
+      "case": "mentor-chain",
+      "repetition": 0,
+      "phase": "cold",
+      "arm": "compact",
+      "providerCalls": 1,
+      "requestSha256": "b592bf67b02fbf73ff8a75fe2bc4d5d7be6038891226943289e670addcce5951",
+      "sourceIdentity": "bce43ebac269ebaed84d309fad7c9865a747406b5728a3ad8796f3ceae38e2d1",
+      "outcome": "correct",
+      "usage": {
+        "input_tokens": 866,
+        "input_tokens_details": {
+          "cached_tokens": 256
+        },
+        "output_tokens": 2071,
+        "output_tokens_details": {
+          "reasoning_tokens": 1931
+        },
+        "total_tokens": 2937
+      },
+      "providerSeconds": 9.55842112499522,
+      "correct": true,
+      "peakEstimateUsd": 0.002669736,
+      "contractSha256": "cc1572bdbb679676689c5d99d40ecbbf6b874cf293220b4894e4d2b5f01e3ef3",
+      "answer": [
+        [
+          "holdout0_actor10"
+        ],
+        [
+          "holdout0_actor11"
+        ],
+        [
+          "holdout0_actor9"
+        ],
+        [
+          "holdout0_actor8"
+        ],
+        [
+          "holdout0_actor7"
+        ],
+        [
+          "holdout0_actor6"
+        ],
+        [
+          "holdout0_actor4"
+        ],
+        [
+          "holdout0_actor3"
+        ],
+        [
+          "holdout0_actor2"
+        ],
+        [
+          "holdout0_actor0"
+        ]
+      ],
+      "schemeSeconds": 0.03393437498016283,
+      "zeroBudgetRetained": false
+    },
+    {
+      "case": "mentor-chain",
+      "repetition": 0,
+      "phase": "repeat",
+      "arm": "direct",
+      "providerCalls": 1,
+      "requestSha256": "c6813686bac6805beab8768f35d43feed9678887f13b9a34949d64570b1992cc",
+      "sourceIdentity": "bce43ebac269ebaed84d309fad7c9865a747406b5728a3ad8796f3ceae38e2d1",
+      "outcome": "correct",
+      "usage": {
+        "input_tokens": 1213,
+        "input_tokens_details": {
+          "cached_tokens": 1024
+        },
+        "output_tokens": 17263,
+        "output_tokens_details": {
+          "reasoning_tokens": 17191
+        },
+        "total_tokens": 18476
+      },
+      "providerSeconds": 71.63994091699715,
+      "correct": true,
+      "peakEstimateUsd": 0.020778444
+    },
+    {
+      "case": "mentor-chain",
+      "repetition": 0,
+      "phase": "repeat",
+      "arm": "compact",
+      "providerCalls": 0,
+      "peakEstimateUsd": 0,
+      "sourceIdentity": "bce43ebac269ebaed84d309fad7c9865a747406b5728a3ad8796f3ceae38e2d1",
+      "correct": true,
+      "answer": [
+        [
+          "holdout0_actor10"
+        ],
+        [
+          "holdout0_actor11"
+        ],
+        [
+          "holdout0_actor9"
+        ],
+        [
+          "holdout0_actor8"
+        ],
+        [
+          "holdout0_actor7"
+        ],
+        [
+          "holdout0_actor6"
+        ],
+        [
+          "holdout0_actor4"
+        ],
+        [
+          "holdout0_actor3"
+        ],
+        [
+          "holdout0_actor2"
+        ],
+        [
+          "holdout0_actor0"
+        ]
+      ],
+      "outcome": "correct",
+      "schemeSeconds": 0.0001642499992158264,
+      "zeroBudgetRetained": true
+    },
+    {
+      "case": "mentor-chain",
+      "repetition": 0,
+      "phase": "updated",
+      "arm": "direct",
+      "providerCalls": 1,
+      "requestSha256": "5e9c5ea6cec99e66c299a2facff543016a3f402a2f326c90bae30ffdd07d5fe4",
+      "sourceIdentity": "084a436b8d3414ecb8055f845d0a4b91efda0350f7cc6b8ce7b60d1b5cfc5030",
+      "outcome": "answer_mismatch",
+      "usage": {
+        "input_tokens": 1197,
+        "input_tokens_details": {
+          "cached_tokens": 640
+        },
+        "output_tokens": 1759,
+        "output_tokens_details": {
+          "reasoning_tokens": 1708
+        },
+        "total_tokens": 2956
+      },
+      "providerSeconds": 7.757063291996019,
+      "correct": false,
+      "peakEstimateUsd": 0.00228174
+    },
+    {
+      "case": "mentor-chain",
+      "repetition": 0,
+      "phase": "updated",
+      "arm": "compact",
+      "providerCalls": 0,
+      "peakEstimateUsd": 0,
+      "sourceIdentity": "084a436b8d3414ecb8055f845d0a4b91efda0350f7cc6b8ce7b60d1b5cfc5030",
+      "correct": true,
+      "answer": [
+        [
+          "holdout0_actor9"
+        ],
+        [
+          "holdout0_actor8"
+        ],
+        [
+          "holdout0_actor7"
+        ],
+        [
+          "holdout0_actor6"
+        ],
+        [
+          "holdout0_actor4"
+        ],
+        [
+          "holdout0_actor3"
+        ],
+        [
+          "holdout0_actor2"
+        ],
+        [
+          "holdout0_actor0"
+        ]
+      ],
+      "outcome": "correct",
+      "schemeSeconds": 0.0060942909913137555,
+      "zeroBudgetRetained": false
+    },
+    {
+      "case": "witness-local-exclusion",
+      "repetition": 0,
+      "phase": "cold",
+      "arm": "direct",
+      "providerCalls": 1,
+      "requestSha256": "66c04b311e28d8bd32354e97d0467b6cbae479ea04297494a3f232cb9b5535c1",
+      "sourceIdentity": "a048c1f863b431c84a5e506b9eb99218c1a973248fb1ce7c59bf7909182e82fb",
+      "outcome": "correct",
+      "usage": {
+        "input_tokens": 1202,
+        "input_tokens_details": {
+          "cached_tokens": 0
+        },
+        "output_tokens": 1319,
+        "output_tokens_details": {
+          "reasoning_tokens": 1275
+        },
+        "total_tokens": 2521
+      },
+      "providerSeconds": 6.127026583009865,
+      "correct": true,
+      "peakEstimateUsd": 0.0019433999999999999
+    },
+    {
+      "case": "witness-local-exclusion",
+      "repetition": 0,
+      "phase": "cold",
+      "arm": "compact",
+      "providerCalls": 1,
+      "requestSha256": "0d1808fdae4e08bcbe1bd4a484044cc7cc71e4c8cdbe5540b732c3e91eeaf867",
+      "sourceIdentity": "a048c1f863b431c84a5e506b9eb99218c1a973248fb1ce7c59bf7909182e82fb",
+      "outcome": "correct",
+      "usage": {
+        "input_tokens": 855,
+        "input_tokens_details": {
+          "cached_tokens": 384
+        },
+        "output_tokens": 5015,
+        "output_tokens_details": {
+          "reasoning_tokens": 4894
+        },
+        "total_tokens": 5870
+      },
+      "providerSeconds": 22.277688000001945,
+      "correct": true,
+      "peakEstimateUsd": 0.006161604,
+      "contractSha256": "478c98e392eaecdb0ffb7670f6c1c7dcb754fed8b0d1f4784ac2dc935846458d",
+      "answer": [
+        [
+          "holdout1_actor2"
+        ],
+        [
+          "holdout1_actor4"
+        ],
+        [
+          "holdout1_actor5"
+        ],
+        [
+          "holdout1_actor6"
+        ],
+        [
+          "holdout1_actor8"
+        ],
+        [
+          "holdout1_actor9"
+        ]
+      ],
+      "schemeSeconds": 0.01689533400349319,
+      "zeroBudgetRetained": false
+    },
+    {
+      "case": "witness-local-exclusion",
+      "repetition": 0,
+      "phase": "repeat",
+      "arm": "direct",
+      "providerCalls": 1,
+      "requestSha256": "66c04b311e28d8bd32354e97d0467b6cbae479ea04297494a3f232cb9b5535c1",
+      "sourceIdentity": "a048c1f863b431c84a5e506b9eb99218c1a973248fb1ce7c59bf7909182e82fb",
+      "outcome": "correct",
+      "usage": {
+        "input_tokens": 1202,
+        "input_tokens_details": {
+          "cached_tokens": 1024
+        },
+        "output_tokens": 1852,
+        "output_tokens_details": {
+          "reasoning_tokens": 1808
+        },
+        "total_tokens": 3054
+      },
+      "providerSeconds": 8.743741374986712,
+      "correct": true,
+      "peakEstimateUsd": 0.002281944
+    },
+    {
+      "case": "witness-local-exclusion",
+      "repetition": 0,
+      "phase": "repeat",
+      "arm": "compact",
+      "providerCalls": 0,
+      "peakEstimateUsd": 0,
+      "sourceIdentity": "a048c1f863b431c84a5e506b9eb99218c1a973248fb1ce7c59bf7909182e82fb",
+      "correct": true,
+      "answer": [
+        [
+          "holdout1_actor2"
+        ],
+        [
+          "holdout1_actor4"
+        ],
+        [
+          "holdout1_actor5"
+        ],
+        [
+          "holdout1_actor6"
+        ],
+        [
+          "holdout1_actor8"
+        ],
+        [
+          "holdout1_actor9"
+        ]
+      ],
+      "outcome": "correct",
+      "schemeSeconds": 0.00016133300960063934,
+      "zeroBudgetRetained": true
+    },
+    {
+      "case": "witness-local-exclusion",
+      "repetition": 0,
+      "phase": "updated",
+      "arm": "direct",
+      "providerCalls": 1,
+      "requestSha256": "76f0058b015a16423709a1c8c093cd20e4e5eab947bb704b64a767aa76a3e359",
+      "sourceIdentity": "da39bbfea09ddc3e1a892ff12f4d02875d5cd34ebe668d5c937c6234bd28a618",
+      "outcome": "correct",
+      "usage": {
+        "input_tokens": 1186,
+        "input_tokens_details": {
+          "cached_tokens": 256
+        },
+        "output_tokens": 1489,
+        "output_tokens_details": {
+          "reasoning_tokens": 1452
+        },
+        "total_tokens": 2675
+      },
+      "providerSeconds": 7.548171500005992,
+      "correct": true,
+      "peakEstimateUsd": 0.002067336
+    },
+    {
+      "case": "witness-local-exclusion",
+      "repetition": 0,
+      "phase": "updated",
+      "arm": "compact",
+      "providerCalls": 0,
+      "peakEstimateUsd": 0,
+      "sourceIdentity": "da39bbfea09ddc3e1a892ff12f4d02875d5cd34ebe668d5c937c6234bd28a618",
+      "correct": true,
+      "answer": [
+        [
+          "holdout1_actor4"
+        ],
+        [
+          "holdout1_actor5"
+        ],
+        [
+          "holdout1_actor6"
+        ],
+        [
+          "holdout1_actor8"
+        ],
+        [
+          "holdout1_actor9"
+        ]
+      ],
+      "outcome": "correct",
+      "schemeSeconds": 0.0006570830009877682,
+      "zeroBudgetRetained": false
+    },
+    {
+      "case": "anti-existential",
+      "repetition": 0,
+      "phase": "cold",
+      "arm": "direct",
+      "providerCalls": 1,
+      "requestSha256": "b96f5d6375840f05f35724d942e142fadb86c84f0c1fa6aae806d6b6683b1bd8",
+      "sourceIdentity": "856af24eeab2520e69dff65750d2cb6386dfe77489043cae610712eae6c0a80e",
+      "outcome": "correct",
+      "usage": {
+        "input_tokens": 1195,
+        "input_tokens_details": {
+          "cached_tokens": 0
+        },
+        "output_tokens": 544,
+        "output_tokens_details": {
+          "reasoning_tokens": 507
+        },
+        "total_tokens": 1739
+      },
+      "providerSeconds": 2.657511291996343,
+      "correct": true,
+      "peakEstimateUsd": 0.0010113
+    },
+    {
+      "case": "anti-existential",
+      "repetition": 0,
+      "phase": "cold",
+      "arm": "compact",
+      "providerCalls": 1,
+      "requestSha256": "c940355ba97d07d575b3565d6cccfb594e5de7112d70148bd868a7aed4b3571f",
+      "sourceIdentity": "856af24eeab2520e69dff65750d2cb6386dfe77489043cae610712eae6c0a80e",
+      "outcome": "correct",
+      "usage": {
+        "input_tokens": 848,
+        "input_tokens_details": {
+          "cached_tokens": 384
+        },
+        "output_tokens": 2794,
+        "output_tokens_details": {
+          "reasoning_tokens": 2587
+        },
+        "total_tokens": 3642
+      },
+      "providerSeconds": 13.041844083025353,
+      "correct": true,
+      "peakEstimateUsd": 0.0034943039999999997,
+      "contractSha256": "75cd25d85742175047031387055ddb79a1c256c19e3cfeb3baf01afba24eaba4",
+      "answer": [
+        [
+          "holdout2_actor4"
+        ],
+        [
+          "holdout2_actor5"
+        ],
+        [
+          "holdout2_actor6"
+        ],
+        [
+          "holdout2_actor8"
+        ],
+        [
+          "holdout2_actor9"
+        ]
+      ],
+      "schemeSeconds": 0.017382499994710088,
+      "zeroBudgetRetained": false
+    },
+    {
+      "case": "anti-existential",
+      "repetition": 0,
+      "phase": "repeat",
+      "arm": "direct",
+      "providerCalls": 1,
+      "requestSha256": "b96f5d6375840f05f35724d942e142fadb86c84f0c1fa6aae806d6b6683b1bd8",
+      "sourceIdentity": "856af24eeab2520e69dff65750d2cb6386dfe77489043cae610712eae6c0a80e",
+      "outcome": "correct",
+      "usage": {
+        "input_tokens": 1195,
+        "input_tokens_details": {
+          "cached_tokens": 1024
+        },
+        "output_tokens": 515,
+        "output_tokens_details": {
+          "reasoning_tokens": 478
+        },
+        "total_tokens": 1710
+      },
+      "providerSeconds": 2.646693208022043,
+      "correct": true,
+      "peakEstimateUsd": 0.000675444
+    },
+    {
+      "case": "anti-existential",
+      "repetition": 0,
+      "phase": "repeat",
+      "arm": "compact",
+      "providerCalls": 0,
+      "peakEstimateUsd": 0,
+      "sourceIdentity": "856af24eeab2520e69dff65750d2cb6386dfe77489043cae610712eae6c0a80e",
+      "correct": true,
+      "answer": [
+        [
+          "holdout2_actor4"
+        ],
+        [
+          "holdout2_actor5"
+        ],
+        [
+          "holdout2_actor6"
+        ],
+        [
+          "holdout2_actor8"
+        ],
+        [
+          "holdout2_actor9"
+        ]
+      ],
+      "outcome": "correct",
+      "schemeSeconds": 0.001063707983121276,
+      "zeroBudgetRetained": true
+    },
+    {
+      "case": "anti-existential",
+      "repetition": 0,
+      "phase": "updated",
+      "arm": "direct",
+      "providerCalls": 1,
+      "requestSha256": "08b0426fb0dca57b77bc494a0ea024f2525652551ee6ffb2fe96c7c2fbd5a117",
+      "sourceIdentity": "b3afe741e1b6e9f2960f68a4bc8186b389d1737d332507bb6f6f1138ece435b8",
+      "outcome": "correct",
+      "usage": {
+        "input_tokens": 1179,
+        "input_tokens_details": {
+          "cached_tokens": 256
+        },
+        "output_tokens": 613,
+        "output_tokens_details": {
+          "reasoning_tokens": 569
+        },
+        "total_tokens": 1792
+      },
+      "providerSeconds": 3.0801292910182383,
+      "correct": true,
+      "peakEstimateUsd": 0.001014036
+    },
+    {
+      "case": "anti-existential",
+      "repetition": 0,
+      "phase": "updated",
+      "arm": "compact",
+      "providerCalls": 0,
+      "peakEstimateUsd": 0,
+      "sourceIdentity": "b3afe741e1b6e9f2960f68a4bc8186b389d1737d332507bb6f6f1138ece435b8",
+      "correct": true,
+      "answer": [
+        [
+          "holdout2_actor2"
+        ],
+        [
+          "holdout2_actor4"
+        ],
+        [
+          "holdout2_actor5"
+        ],
+        [
+          "holdout2_actor6"
+        ],
+        [
+          "holdout2_actor8"
+        ],
+        [
+          "holdout2_actor9"
+        ]
+      ],
+      "outcome": "correct",
+      "schemeSeconds": 0.001047540979925543,
+      "zeroBudgetRetained": false
+    },
+    {
+      "case": "recursive-mentor",
+      "repetition": 0,
+      "phase": "cold",
+      "arm": "direct",
+      "providerCalls": 1,
+      "requestSha256": "c03c924f4c600736b73b71996ed4fc2ce1f811b05059b376f0f0ebeacc53ea34",
+      "sourceIdentity": "3ff37aa784a8d964fcfee1765ee773260c1d0674638788b1eff361eb5db55ee2",
+      "outcome": "correct",
+      "usage": {
+        "input_tokens": 1197,
+        "input_tokens_details": {
+          "cached_tokens": 0
+        },
+        "output_tokens": 986,
+        "output_tokens_details": {
+          "reasoning_tokens": 900
+        },
+        "total_tokens": 2183
+      },
+      "providerSeconds": 4.556081082992023,
+      "correct": true,
+      "peakEstimateUsd": 0.0015423
+    },
+    {
+      "case": "recursive-mentor",
+      "repetition": 0,
+      "phase": "cold",
+      "arm": "compact",
+      "providerCalls": 1,
+      "requestSha256": "304b3c5ce6d6f4e63b1ba192ff20a26892442757a2bcd551ea36f2ddc2afeb5d",
+      "sourceIdentity": "3ff37aa784a8d964fcfee1765ee773260c1d0674638788b1eff361eb5db55ee2",
+      "outcome": "correct",
+      "usage": {
+        "input_tokens": 850,
+        "input_tokens_details": {
+          "cached_tokens": 384
+        },
+        "output_tokens": 3581,
+        "output_tokens_details": {
+          "reasoning_tokens": 3245
+        },
+        "total_tokens": 4431
+      },
+      "providerSeconds": 16.03661154099973,
+      "correct": true,
+      "peakEstimateUsd": 0.004439304,
+      "contractSha256": "46435d4ce7ace26c4123830dd0d085242599525551aad036e4fbea28a3bde29d",
+      "answer": [
+        [
+          "holdout3_actor11"
+        ],
+        [
+          "holdout3_actor10"
+        ],
+        [
+          "holdout3_actor9"
+        ],
+        [
+          "holdout3_actor8"
+        ],
+        [
+          "holdout3_actor7"
+        ],
+        [
+          "holdout3_actor6"
+        ],
+        [
+          "holdout3_actor5"
+        ],
+        [
+          "holdout3_actor4"
+        ],
+        [
+          "holdout3_actor3"
+        ],
+        [
+          "holdout3_actor2"
+        ],
+        [
+          "holdout3_actor1"
+        ],
+        [
+          "holdout3_actor0"
+        ]
+      ],
+      "schemeSeconds": 0.01679495899588801,
+      "zeroBudgetRetained": false
+    },
+    {
+      "case": "recursive-mentor",
+      "repetition": 0,
+      "phase": "repeat",
+      "arm": "direct",
+      "providerCalls": 1,
+      "requestSha256": "c03c924f4c600736b73b71996ed4fc2ce1f811b05059b376f0f0ebeacc53ea34",
+      "sourceIdentity": "3ff37aa784a8d964fcfee1765ee773260c1d0674638788b1eff361eb5db55ee2",
+      "outcome": "correct",
+      "usage": {
+        "input_tokens": 1197,
+        "input_tokens_details": {
+          "cached_tokens": 1024
+        },
+        "output_tokens": 677,
+        "output_tokens_details": {
+          "reasoning_tokens": 580
+        },
+        "total_tokens": 1874
+      },
+      "providerSeconds": 3.2343770829902496,
+      "correct": true,
+      "peakEstimateUsd": 0.000870444
+    },
+    {
+      "case": "recursive-mentor",
+      "repetition": 0,
+      "phase": "repeat",
+      "arm": "compact",
+      "providerCalls": 0,
+      "peakEstimateUsd": 0,
+      "sourceIdentity": "3ff37aa784a8d964fcfee1765ee773260c1d0674638788b1eff361eb5db55ee2",
+      "correct": true,
+      "answer": [
+        [
+          "holdout3_actor11"
+        ],
+        [
+          "holdout3_actor10"
+        ],
+        [
+          "holdout3_actor9"
+        ],
+        [
+          "holdout3_actor8"
+        ],
+        [
+          "holdout3_actor7"
+        ],
+        [
+          "holdout3_actor6"
+        ],
+        [
+          "holdout3_actor5"
+        ],
+        [
+          "holdout3_actor4"
+        ],
+        [
+          "holdout3_actor3"
+        ],
+        [
+          "holdout3_actor2"
+        ],
+        [
+          "holdout3_actor1"
+        ],
+        [
+          "holdout3_actor0"
+        ]
+      ],
+      "outcome": "correct",
+      "schemeSeconds": 0.0005247910157777369,
+      "zeroBudgetRetained": true
+    },
+    {
+      "case": "recursive-mentor",
+      "repetition": 0,
+      "phase": "updated",
+      "arm": "direct",
+      "providerCalls": 1,
+      "requestSha256": "b14b157811ceb8fa0244f70292ea75e60092c8c253451659b5dd1fad6110c4fe",
+      "sourceIdentity": "07462ed486208d15f78ef5fb2ed663b0a60c5fc58817a3f266adcaed9efe13b7",
+      "outcome": "correct",
+      "usage": {
+        "input_tokens": 1181,
+        "input_tokens_details": {
+          "cached_tokens": 768
+        },
+        "output_tokens": 564,
+        "output_tokens_details": {
+          "reasoning_tokens": 475
+        },
+        "total_tokens": 1745
+      },
+      "providerSeconds": 2.752234791027149,
+      "correct": true,
+      "peakEstimateUsd": 0.000805308
+    },
+    {
+      "case": "recursive-mentor",
+      "repetition": 0,
+      "phase": "updated",
+      "arm": "compact",
+      "providerCalls": 0,
+      "peakEstimateUsd": 0,
+      "sourceIdentity": "07462ed486208d15f78ef5fb2ed663b0a60c5fc58817a3f266adcaed9efe13b7",
+      "correct": true,
+      "answer": [
+        [
+          "holdout3_actor11"
+        ],
+        [
+          "holdout3_actor10"
+        ],
+        [
+          "holdout3_actor9"
+        ],
+        [
+          "holdout3_actor8"
+        ],
+        [
+          "holdout3_actor7"
+        ],
+        [
+          "holdout3_actor6"
+        ],
+        [
+          "holdout3_actor5"
+        ],
+        [
+          "holdout3_actor4"
+        ],
+        [
+          "holdout3_actor3"
+        ],
+        [
+          "holdout3_actor2"
+        ],
+        [
+          "holdout3_actor1"
+        ]
+      ],
+      "outcome": "correct",
+      "schemeSeconds": 0.006630874995607883,
+      "zeroBudgetRetained": false
+    },
+    {
+      "case": "mentor-chain",
+      "repetition": 1,
+      "phase": "cold",
+      "arm": "compact",
+      "providerCalls": 1,
+      "requestSha256": "b592bf67b02fbf73ff8a75fe2bc4d5d7be6038891226943289e670addcce5951",
+      "sourceIdentity": "bce43ebac269ebaed84d309fad7c9865a747406b5728a3ad8796f3ceae38e2d1",
+      "outcome": "correct",
+      "usage": {
+        "input_tokens": 866,
+        "input_tokens_details": {
+          "cached_tokens": 640
+        },
+        "output_tokens": 4945,
+        "output_tokens_details": {
+          "reasoning_tokens": 4805
+        },
+        "total_tokens": 5811
+      },
+      "providerSeconds": 23.501651792001212,
+      "correct": true,
+      "peakEstimateUsd": 0.0060056400000000005,
+      "contractSha256": "cc1572bdbb679676689c5d99d40ecbbf6b874cf293220b4894e4d2b5f01e3ef3",
+      "answer": [
+        [
+          "holdout0_actor10"
+        ],
+        [
+          "holdout0_actor11"
+        ],
+        [
+          "holdout0_actor9"
+        ],
+        [
+          "holdout0_actor8"
+        ],
+        [
+          "holdout0_actor7"
+        ],
+        [
+          "holdout0_actor6"
+        ],
+        [
+          "holdout0_actor4"
+        ],
+        [
+          "holdout0_actor3"
+        ],
+        [
+          "holdout0_actor2"
+        ],
+        [
+          "holdout0_actor0"
+        ]
+      ],
+      "schemeSeconds": 0.018095790990628302,
+      "zeroBudgetRetained": false
+    },
+    {
+      "case": "mentor-chain",
+      "repetition": 1,
+      "phase": "cold",
+      "arm": "direct",
+      "providerCalls": 1,
+      "requestSha256": "c6813686bac6805beab8768f35d43feed9678887f13b9a34949d64570b1992cc",
+      "sourceIdentity": "bce43ebac269ebaed84d309fad7c9865a747406b5728a3ad8796f3ceae38e2d1",
+      "outcome": "correct",
+      "usage": {
+        "input_tokens": 1213,
+        "input_tokens_details": {
+          "cached_tokens": 1024
+        },
+        "output_tokens": 7337,
+        "output_tokens_details": {
+          "reasoning_tokens": 7256
+        },
+        "total_tokens": 8550
+      },
+      "providerSeconds": 29.167661791987484,
+      "correct": true,
+      "peakEstimateUsd": 0.008867243999999998
+    },
+    {
+      "case": "mentor-chain",
+      "repetition": 1,
+      "phase": "repeat",
+      "arm": "direct",
+      "providerCalls": 1,
+      "requestSha256": "c6813686bac6805beab8768f35d43feed9678887f13b9a34949d64570b1992cc",
+      "sourceIdentity": "bce43ebac269ebaed84d309fad7c9865a747406b5728a3ad8796f3ceae38e2d1",
+      "outcome": "answer_mismatch",
+      "usage": {
+        "input_tokens": 1213,
+        "input_tokens_details": {
+          "cached_tokens": 1024
+        },
+        "output_tokens": 10978,
+        "output_tokens_details": {
+          "reasoning_tokens": 10921
+        },
+        "total_tokens": 12191
+      },
+      "providerSeconds": 43.434985083003994,
+      "correct": false,
+      "peakEstimateUsd": 0.013236444
+    },
+    {
+      "case": "mentor-chain",
+      "repetition": 1,
+      "phase": "repeat",
+      "arm": "compact",
+      "providerCalls": 0,
+      "peakEstimateUsd": 0,
+      "sourceIdentity": "bce43ebac269ebaed84d309fad7c9865a747406b5728a3ad8796f3ceae38e2d1",
+      "correct": true,
+      "answer": [
+        [
+          "holdout0_actor10"
+        ],
+        [
+          "holdout0_actor11"
+        ],
+        [
+          "holdout0_actor9"
+        ],
+        [
+          "holdout0_actor8"
+        ],
+        [
+          "holdout0_actor7"
+        ],
+        [
+          "holdout0_actor6"
+        ],
+        [
+          "holdout0_actor4"
+        ],
+        [
+          "holdout0_actor3"
+        ],
+        [
+          "holdout0_actor2"
+        ],
+        [
+          "holdout0_actor0"
+        ]
+      ],
+      "outcome": "correct",
+      "schemeSeconds": 0.0001532500027678907,
+      "zeroBudgetRetained": true
+    },
+    {
+      "case": "mentor-chain",
+      "repetition": 1,
+      "phase": "updated",
+      "arm": "direct",
+      "providerCalls": 1,
+      "requestSha256": "5e9c5ea6cec99e66c299a2facff543016a3f402a2f326c90bae30ffdd07d5fe4",
+      "sourceIdentity": "084a436b8d3414ecb8055f845d0a4b91efda0350f7cc6b8ce7b60d1b5cfc5030",
+      "outcome": "answer_mismatch",
+      "usage": {
+        "input_tokens": 1197,
+        "input_tokens_details": {
+          "cached_tokens": 1024
+        },
+        "output_tokens": 6649,
+        "output_tokens_details": {
+          "reasoning_tokens": 6598
+        },
+        "total_tokens": 7846
+      },
+      "providerSeconds": 27.96942329200101,
+      "correct": false,
+      "peakEstimateUsd": 0.008036844
+    },
+    {
+      "case": "mentor-chain",
+      "repetition": 1,
+      "phase": "updated",
+      "arm": "compact",
+      "providerCalls": 0,
+      "peakEstimateUsd": 0,
+      "sourceIdentity": "084a436b8d3414ecb8055f845d0a4b91efda0350f7cc6b8ce7b60d1b5cfc5030",
+      "correct": true,
+      "answer": [
+        [
+          "holdout0_actor9"
+        ],
+        [
+          "holdout0_actor8"
+        ],
+        [
+          "holdout0_actor7"
+        ],
+        [
+          "holdout0_actor6"
+        ],
+        [
+          "holdout0_actor4"
+        ],
+        [
+          "holdout0_actor3"
+        ],
+        [
+          "holdout0_actor2"
+        ],
+        [
+          "holdout0_actor0"
+        ]
+      ],
+      "outcome": "correct",
+      "schemeSeconds": 0.0025672079937066883,
+      "zeroBudgetRetained": false
+    },
+    {
+      "case": "witness-local-exclusion",
+      "repetition": 1,
+      "phase": "cold",
+      "arm": "compact",
+      "providerCalls": 1,
+      "requestSha256": "0d1808fdae4e08bcbe1bd4a484044cc7cc71e4c8cdbe5540b732c3e91eeaf867",
+      "sourceIdentity": "a048c1f863b431c84a5e506b9eb99218c1a973248fb1ce7c59bf7909182e82fb",
+      "outcome": "admission_or_execution_failure",
+      "usage": {
+        "input_tokens": 855,
+        "input_tokens_details": {
+          "cached_tokens": 640
+        },
+        "output_tokens": 65536,
+        "output_tokens_details": {
+          "reasoning_tokens": 65536
+        },
+        "total_tokens": 66391
+      },
+      "providerSeconds": 195.49890529099503,
+      "correct": false,
+      "peakEstimateUsd": 0.07871154,
+      "failure": "'NoneType' object is not iterable",
+      "schemeSeconds": 6.624992238357663e-06,
+      "zeroBudgetRetained": false
+    },
+    {
+      "case": "witness-local-exclusion",
+      "repetition": 1,
+      "phase": "cold",
+      "arm": "direct",
+      "providerCalls": 1,
+      "requestSha256": "66c04b311e28d8bd32354e97d0467b6cbae479ea04297494a3f232cb9b5535c1",
+      "sourceIdentity": "a048c1f863b431c84a5e506b9eb99218c1a973248fb1ce7c59bf7909182e82fb",
+      "outcome": "correct",
+      "usage": {
+        "input_tokens": 1202,
+        "input_tokens_details": {
+          "cached_tokens": 1024
+        },
+        "output_tokens": 1560,
+        "output_tokens_details": {
+          "reasoning_tokens": 1516
+        },
+        "total_tokens": 2762
+      },
+      "providerSeconds": 7.80219970800681,
+      "correct": true,
+      "peakEstimateUsd": 0.001931544
+    },
+    {
+      "case": "witness-local-exclusion",
+      "repetition": 1,
+      "phase": "repeat",
+      "arm": "direct",
+      "providerCalls": 1,
+      "requestSha256": "66c04b311e28d8bd32354e97d0467b6cbae479ea04297494a3f232cb9b5535c1",
+      "sourceIdentity": "a048c1f863b431c84a5e506b9eb99218c1a973248fb1ce7c59bf7909182e82fb",
+      "outcome": "correct",
+      "usage": {
+        "input_tokens": 1202,
+        "input_tokens_details": {
+          "cached_tokens": 1024
+        },
+        "output_tokens": 804,
+        "output_tokens_details": {
+          "reasoning_tokens": 755
+        },
+        "total_tokens": 2006
+      },
+      "providerSeconds": 3.9963564579957165,
+      "correct": true,
+      "peakEstimateUsd": 0.001024344
+    },
+    {
+      "case": "witness-local-exclusion",
+      "repetition": 1,
+      "phase": "repeat",
+      "arm": "compact",
+      "providerCalls": 0,
+      "peakEstimateUsd": 0,
+      "sourceIdentity": "a048c1f863b431c84a5e506b9eb99218c1a973248fb1ce7c59bf7909182e82fb",
+      "correct": false,
+      "outcome": "admission_or_execution_failure",
+      "failure": "no admitted cold contract",
+      "schemeSeconds": 7.458991603925824e-06,
+      "zeroBudgetRetained": false
+    },
+    {
+      "case": "witness-local-exclusion",
+      "repetition": 1,
+      "phase": "updated",
+      "arm": "direct",
+      "providerCalls": 1,
+      "requestSha256": "76f0058b015a16423709a1c8c093cd20e4e5eab947bb704b64a767aa76a3e359",
+      "sourceIdentity": "da39bbfea09ddc3e1a892ff12f4d02875d5cd34ebe668d5c937c6234bd28a618",
+      "outcome": "correct",
+      "usage": {
+        "input_tokens": 1186,
+        "input_tokens_details": {
+          "cached_tokens": 1024
+        },
+        "output_tokens": 1196,
+        "output_tokens_details": {
+          "reasoning_tokens": 1159
+        },
+        "total_tokens": 2382
+      },
+      "providerSeconds": 5.373507624986814,
+      "correct": true,
+      "peakEstimateUsd": 0.001489944
+    },
+    {
+      "case": "witness-local-exclusion",
+      "repetition": 1,
+      "phase": "updated",
+      "arm": "compact",
+      "providerCalls": 0,
+      "peakEstimateUsd": 0,
+      "sourceIdentity": "da39bbfea09ddc3e1a892ff12f4d02875d5cd34ebe668d5c937c6234bd28a618",
+      "correct": false,
+      "outcome": "admission_or_execution_failure",
+      "failure": "no admitted cold contract",
+      "schemeSeconds": 5.542009603232145e-06,
+      "zeroBudgetRetained": false
+    },
+    {
+      "case": "anti-existential",
+      "repetition": 1,
+      "phase": "cold",
+      "arm": "compact",
+      "providerCalls": 1,
+      "requestSha256": "c940355ba97d07d575b3565d6cccfb594e5de7112d70148bd868a7aed4b3571f",
+      "sourceIdentity": "856af24eeab2520e69dff65750d2cb6386dfe77489043cae610712eae6c0a80e",
+      "outcome": "correct",
+      "usage": {
+        "input_tokens": 848,
+        "input_tokens_details": {
+          "cached_tokens": 640
+        },
+        "output_tokens": 1788,
+        "output_tokens_details": {
+          "reasoning_tokens": 1581
+        },
+        "total_tokens": 2636
+      },
+      "providerSeconds": 8.861667000019224,
+      "correct": true,
+      "peakEstimateUsd": 0.0022118399999999996,
+      "contractSha256": "e4bd95df8fa8d094c1630ecfba0b3dae1dbb6987908e096906f9c354f1a06083",
+      "answer": [
+        [
+          "holdout2_actor4"
+        ],
+        [
+          "holdout2_actor5"
+        ],
+        [
+          "holdout2_actor6"
+        ],
+        [
+          "holdout2_actor8"
+        ],
+        [
+          "holdout2_actor9"
+        ]
+      ],
+      "schemeSeconds": 0.07097795800655149,
+      "zeroBudgetRetained": false
+    },
+    {
+      "case": "anti-existential",
+      "repetition": 1,
+      "phase": "cold",
+      "arm": "direct",
+      "providerCalls": 1,
+      "requestSha256": "b96f5d6375840f05f35724d942e142fadb86c84f0c1fa6aae806d6b6683b1bd8",
+      "sourceIdentity": "856af24eeab2520e69dff65750d2cb6386dfe77489043cae610712eae6c0a80e",
+      "outcome": "correct",
+      "usage": {
+        "input_tokens": 1195,
+        "input_tokens_details": {
+          "cached_tokens": 1024
+        },
+        "output_tokens": 491,
+        "output_tokens_details": {
+          "reasoning_tokens": 450
+        },
+        "total_tokens": 1686
+      },
+      "providerSeconds": 3.0385008750017732,
+      "correct": true,
+      "peakEstimateUsd": 0.0006466439999999999
+    },
+    {
+      "case": "anti-existential",
+      "repetition": 1,
+      "phase": "repeat",
+      "arm": "direct",
+      "providerCalls": 1,
+      "requestSha256": "b96f5d6375840f05f35724d942e142fadb86c84f0c1fa6aae806d6b6683b1bd8",
+      "sourceIdentity": "856af24eeab2520e69dff65750d2cb6386dfe77489043cae610712eae6c0a80e",
+      "outcome": "correct",
+      "usage": {
+        "input_tokens": 1195,
+        "input_tokens_details": {
+          "cached_tokens": 1024
+        },
+        "output_tokens": 614,
+        "output_tokens_details": {
+          "reasoning_tokens": 573
+        },
+        "total_tokens": 1809
+      },
+      "providerSeconds": 3.1394954590068664,
+      "correct": true,
+      "peakEstimateUsd": 0.0007942439999999999
+    },
+    {
+      "case": "anti-existential",
+      "repetition": 1,
+      "phase": "repeat",
+      "arm": "compact",
+      "providerCalls": 0,
+      "peakEstimateUsd": 0,
+      "sourceIdentity": "856af24eeab2520e69dff65750d2cb6386dfe77489043cae610712eae6c0a80e",
+      "correct": true,
+      "answer": [
+        [
+          "holdout2_actor4"
+        ],
+        [
+          "holdout2_actor5"
+        ],
+        [
+          "holdout2_actor6"
+        ],
+        [
+          "holdout2_actor8"
+        ],
+        [
+          "holdout2_actor9"
+        ]
+      ],
+      "outcome": "correct",
+      "schemeSeconds": 0.00027512499946169555,
+      "zeroBudgetRetained": true
+    },
+    {
+      "case": "anti-existential",
+      "repetition": 1,
+      "phase": "updated",
+      "arm": "direct",
+      "providerCalls": 1,
+      "requestSha256": "08b0426fb0dca57b77bc494a0ea024f2525652551ee6ffb2fe96c7c2fbd5a117",
+      "sourceIdentity": "b3afe741e1b6e9f2960f68a4bc8186b389d1737d332507bb6f6f1138ece435b8",
+      "outcome": "correct",
+      "usage": {
+        "input_tokens": 1179,
+        "input_tokens_details": {
+          "cached_tokens": 1024
+        },
+        "output_tokens": 753,
+        "output_tokens_details": {
+          "reasoning_tokens": 709
+        },
+        "total_tokens": 1932
+      },
+      "providerSeconds": 4.529130332986824,
+      "correct": true,
+      "peakEstimateUsd": 0.000956244
+    },
+    {
+      "case": "anti-existential",
+      "repetition": 1,
+      "phase": "updated",
+      "arm": "compact",
+      "providerCalls": 0,
+      "peakEstimateUsd": 0,
+      "sourceIdentity": "b3afe741e1b6e9f2960f68a4bc8186b389d1737d332507bb6f6f1138ece435b8",
+      "correct": true,
+      "answer": [
+        [
+          "holdout2_actor2"
+        ],
+        [
+          "holdout2_actor4"
+        ],
+        [
+          "holdout2_actor5"
+        ],
+        [
+          "holdout2_actor6"
+        ],
+        [
+          "holdout2_actor8"
+        ],
+        [
+          "holdout2_actor9"
+        ]
+      ],
+      "outcome": "correct",
+      "schemeSeconds": 0.002324500004760921,
+      "zeroBudgetRetained": false
+    },
+    {
+      "case": "recursive-mentor",
+      "repetition": 1,
+      "phase": "cold",
+      "arm": "compact",
+      "providerCalls": 1,
+      "requestSha256": "304b3c5ce6d6f4e63b1ba192ff20a26892442757a2bcd551ea36f2ddc2afeb5d",
+      "sourceIdentity": "3ff37aa784a8d964fcfee1765ee773260c1d0674638788b1eff361eb5db55ee2",
+      "outcome": "correct",
+      "usage": {
+        "input_tokens": 850,
+        "input_tokens_details": {
+          "cached_tokens": 640
+        },
+        "output_tokens": 1964,
+        "output_tokens_details": {
+          "reasoning_tokens": 1600
+        },
+        "total_tokens": 2814
+      },
+      "providerSeconds": 9.437027833017055,
+      "correct": true,
+      "peakEstimateUsd": 0.00242364,
+      "contractSha256": "5f6e31bb29e6c547fb6e203ffb9eb1dfc7361762c2c0ca85d03a930d8d2f9209",
+      "answer": [
+        [
+          "holdout3_actor11"
+        ],
+        [
+          "holdout3_actor10"
+        ],
+        [
+          "holdout3_actor9"
+        ],
+        [
+          "holdout3_actor8"
+        ],
+        [
+          "holdout3_actor7"
+        ],
+        [
+          "holdout3_actor6"
+        ],
+        [
+          "holdout3_actor5"
+        ],
+        [
+          "holdout3_actor4"
+        ],
+        [
+          "holdout3_actor3"
+        ],
+        [
+          "holdout3_actor2"
+        ],
+        [
+          "holdout3_actor1"
+        ],
+        [
+          "holdout3_actor0"
+        ]
+      ],
+      "schemeSeconds": 0.021465291996719316,
+      "zeroBudgetRetained": false
+    },
+    {
+      "case": "recursive-mentor",
+      "repetition": 1,
+      "phase": "cold",
+      "arm": "direct",
+      "providerCalls": 1,
+      "requestSha256": "c03c924f4c600736b73b71996ed4fc2ce1f811b05059b376f0f0ebeacc53ea34",
+      "sourceIdentity": "3ff37aa784a8d964fcfee1765ee773260c1d0674638788b1eff361eb5db55ee2",
+      "outcome": "correct",
+      "usage": {
+        "input_tokens": 1197,
+        "input_tokens_details": {
+          "cached_tokens": 1024
+        },
+        "output_tokens": 1042,
+        "output_tokens_details": {
+          "reasoning_tokens": 956
+        },
+        "total_tokens": 2239
+      },
+      "providerSeconds": 5.359936833003303,
+      "correct": true,
+      "peakEstimateUsd": 0.001308444
+    },
+    {
+      "case": "recursive-mentor",
+      "repetition": 1,
+      "phase": "repeat",
+      "arm": "direct",
+      "providerCalls": 1,
+      "requestSha256": "c03c924f4c600736b73b71996ed4fc2ce1f811b05059b376f0f0ebeacc53ea34",
+      "sourceIdentity": "3ff37aa784a8d964fcfee1765ee773260c1d0674638788b1eff361eb5db55ee2",
+      "outcome": "correct",
+      "usage": {
+        "input_tokens": 1197,
+        "input_tokens_details": {
+          "cached_tokens": 1024
+        },
+        "output_tokens": 643,
+        "output_tokens_details": {
+          "reasoning_tokens": 557
+        },
+        "total_tokens": 1840
+      },
+      "providerSeconds": 3.2431605419842526,
+      "correct": true,
+      "peakEstimateUsd": 0.000829644
+    },
+    {
+      "case": "recursive-mentor",
+      "repetition": 1,
+      "phase": "repeat",
+      "arm": "compact",
+      "providerCalls": 0,
+      "peakEstimateUsd": 0,
+      "sourceIdentity": "3ff37aa784a8d964fcfee1765ee773260c1d0674638788b1eff361eb5db55ee2",
+      "correct": true,
+      "answer": [
+        [
+          "holdout3_actor11"
+        ],
+        [
+          "holdout3_actor10"
+        ],
+        [
+          "holdout3_actor9"
+        ],
+        [
+          "holdout3_actor8"
+        ],
+        [
+          "holdout3_actor7"
+        ],
+        [
+          "holdout3_actor6"
+        ],
+        [
+          "holdout3_actor5"
+        ],
+        [
+          "holdout3_actor4"
+        ],
+        [
+          "holdout3_actor3"
+        ],
+        [
+          "holdout3_actor2"
+        ],
+        [
+          "holdout3_actor1"
+        ],
+        [
+          "holdout3_actor0"
+        ]
+      ],
+      "outcome": "correct",
+      "schemeSeconds": 0.001317540998570621,
+      "zeroBudgetRetained": true
+    },
+    {
+      "case": "recursive-mentor",
+      "repetition": 1,
+      "phase": "updated",
+      "arm": "direct",
+      "providerCalls": 1,
+      "requestSha256": "b14b157811ceb8fa0244f70292ea75e60092c8c253451659b5dd1fad6110c4fe",
+      "sourceIdentity": "07462ed486208d15f78ef5fb2ed663b0a60c5fc58817a3f266adcaed9efe13b7",
+      "outcome": "correct",
+      "usage": {
+        "input_tokens": 1181,
+        "input_tokens_details": {
+          "cached_tokens": 1024
+        },
+        "output_tokens": 1981,
+        "output_tokens_details": {
+          "reasoning_tokens": 1902
+        },
+        "total_tokens": 3162
+      },
+      "providerSeconds": 10.494859041995369,
+      "correct": true,
+      "peakEstimateUsd": 0.002430444
+    },
+    {
+      "case": "recursive-mentor",
+      "repetition": 1,
+      "phase": "updated",
+      "arm": "compact",
+      "providerCalls": 0,
+      "peakEstimateUsd": 0,
+      "sourceIdentity": "07462ed486208d15f78ef5fb2ed663b0a60c5fc58817a3f266adcaed9efe13b7",
+      "correct": true,
+      "answer": [
+        [
+          "holdout3_actor11"
+        ],
+        [
+          "holdout3_actor10"
+        ],
+        [
+          "holdout3_actor9"
+        ],
+        [
+          "holdout3_actor8"
+        ],
+        [
+          "holdout3_actor7"
+        ],
+        [
+          "holdout3_actor6"
+        ],
+        [
+          "holdout3_actor5"
+        ],
+        [
+          "holdout3_actor4"
+        ],
+        [
+          "holdout3_actor3"
+        ],
+        [
+          "holdout3_actor2"
+        ],
+        [
+          "holdout3_actor1"
+        ]
+      ],
+      "outcome": "correct",
+      "schemeSeconds": 0.0036147499922662973,
+      "zeroBudgetRetained": false
+    }
+  ],
+  "scope": "Four synthetic structural holdouts, independently named entities; two repeated cold controls. Not a real-world KGQA benchmark.",
+  "summary": {
+    "direct/cold": {
+      "correct": 8,
+      "tasks": 8,
+      "providerCalls": 8,
+      "peakEstimateUsd": 0.032728775999999994
+    },
+    "direct/repeat": {
+      "correct": 7,
+      "tasks": 8,
+      "providerCalls": 8,
+      "peakEstimateUsd": 0.040490952
+    },
+    "direct/updated": {
+      "correct": 6,
+      "tasks": 8,
+      "providerCalls": 8,
+      "peakEstimateUsd": 0.019081896
+    },
+    "compact/cold": {
+      "correct": 7,
+      "tasks": 8,
+      "providerCalls": 8,
+      "peakEstimateUsd": 0.106117608
+    },
+    "compact/repeat": {
+      "correct": 7,
+      "tasks": 8,
+      "providerCalls": 0,
+      "peakEstimateUsd": 0
+    },
+    "compact/updated": {
+      "correct": 7,
+      "tasks": 8,
+      "providerCalls": 0,
+      "peakEstimateUsd": 0
+    }
+  },
+  "threePhaseApiReduction": -0.14968300016043057,
+  "versusExactAnswerCachedDirectApiReduction": -1.0481804984116012,
+  "note": "Both reductions are API estimates, not machine cost. Compare quality before admitting savings. Exact repetition alone has no advantage over a correct generic answer cache.",
+  "frozenPlan": {
+    "schema": "ascent.inference-reuse-plan.v1",
+    "cases": [
+      {
+        "name": "mentor-chain",
+        "question": "Return actors x with a directed mentor edge x->y and y->z, where z acts in a film whose director has the selected_country. The two mentor edges must share y; cast, directed and citizen must share the same film and director. Actors may repeat along the path; do not require x itself to act. Use only the supplied finite relations. Return unique actor identifiers.",
+        "source": {
+          "domains": {
+            "Film": [
+              "holdout0_film0",
+              "holdout0_film1",
+              "holdout0_film2",
+              "holdout0_film3",
+              "holdout0_film4",
+              "holdout0_film5"
+            ],
+            "Actor": [
+              "holdout0_actor0",
+              "holdout0_actor1",
+              "holdout0_actor2",
+              "holdout0_actor3",
+              "holdout0_actor4",
+              "holdout0_actor5",
+              "holdout0_actor6",
+              "holdout0_actor7",
+              "holdout0_actor8",
+              "holdout0_actor9",
+              "holdout0_actor10",
+              "holdout0_actor11"
+            ],
+            "Director": [
+              "holdout0_director0",
+              "holdout0_director1",
+              "holdout0_director2"
+            ],
+            "Country": [
+              "holdout0_country0",
+              "holdout0_country1"
+            ]
+          },
+          "rows": {
+            "cast": [
+              [
+                "holdout0_film0",
+                "holdout0_actor0"
+              ],
+              [
+                "holdout0_film0",
+                "holdout0_actor1"
+              ],
+              [
+                "holdout0_film0",
+                "holdout0_actor2"
+              ],
+              [
+                "holdout0_film1",
+                "holdout0_actor1"
+              ],
+              [
+                "holdout0_film1",
+                "holdout0_actor3"
+              ],
+              [
+                "holdout0_film2",
+                "holdout0_actor2"
+              ],
+              [
+                "holdout0_film2",
+                "holdout0_actor4"
+              ],
+              [
+                "holdout0_film3",
+                "holdout0_actor5"
+              ],
+              [
+                "holdout0_film3",
+                "holdout0_actor6"
+              ],
+              [
+                "holdout0_film4",
+                "holdout0_actor6"
+              ],
+              [
+                "holdout0_film4",
+                "holdout0_actor7"
+              ],
+              [
+                "holdout0_film5",
+                "holdout0_actor8"
+              ],
+              [
+                "holdout0_film5",
+                "holdout0_actor9"
+              ]
+            ],
+            "directed": [
+              [
+                "holdout0_film0",
+                "holdout0_director0"
+              ],
+              [
+                "holdout0_film1",
+                "holdout0_director1"
+              ],
+              [
+                "holdout0_film2",
+                "holdout0_director2"
+              ],
+              [
+                "holdout0_film3",
+                "holdout0_director0"
+              ],
+              [
+                "holdout0_film4",
+                "holdout0_director1"
+              ],
+              [
+                "holdout0_film5",
+                "holdout0_director2"
+              ]
+            ],
+            "citizen": [
+              [
+                "holdout0_director0",
+                "holdout0_country0"
+              ],
+              [
+                "holdout0_director1",
+                "holdout0_country1"
+              ],
+              [
+                "holdout0_director2",
+                "holdout0_country0"
+              ]
+            ],
+            "mentor": [
+              [
+                "holdout0_actor10",
+                "holdout0_actor11"
+              ],
+              [
+                "holdout0_actor11",
+                "holdout0_actor0"
+              ],
+              [
+                "holdout0_actor9",
+                "holdout0_actor1"
+              ],
+              [
+                "holdout0_actor8",
+                "holdout0_actor9"
+              ],
+              [
+                "holdout0_actor7",
+                "holdout0_actor8"
+              ],
+              [
+                "holdout0_actor6",
+                "holdout0_actor7"
+              ],
+              [
+                "holdout0_actor5",
+                "holdout0_actor6"
+              ],
+              [
+                "holdout0_actor4",
+                "holdout0_actor5"
+              ],
+              [
+                "holdout0_actor3",
+                "holdout0_actor4"
+              ],
+              [
+                "holdout0_actor2",
+                "holdout0_actor3"
+              ],
+              [
+                "holdout0_actor1",
+                "holdout0_actor2"
+              ],
+              [
+                "holdout0_actor0",
+                "holdout0_actor1"
+              ]
+            ],
+            "actor_domain": [
+              [
+                "holdout0_actor0"
+              ],
+              [
+                "holdout0_actor1"
+              ],
+              [
+                "holdout0_actor2"
+              ],
+              [
+                "holdout0_actor3"
+              ],
+              [
+                "holdout0_actor4"
+              ],
+              [
+                "holdout0_actor5"
+              ],
+              [
+                "holdout0_actor6"
+              ],
+              [
+                "holdout0_actor7"
+              ],
+              [
+                "holdout0_actor8"
+              ],
+              [
+                "holdout0_actor9"
+              ],
+              [
+                "holdout0_actor10"
+              ],
+              [
+                "holdout0_actor11"
+              ]
+            ],
+            "banned_film": [
+              [
+                "holdout0_film0"
+              ]
+            ],
+            "selected_country": [
+              [
+                "holdout0_country0"
+              ]
+            ],
+            "target": [
+              [
+                "holdout0_actor0"
+              ]
+            ]
+          }
+        },
+        "withdrawal": {
+          "relation": "mentor",
+          "row": [
+            "holdout0_actor11",
+            "holdout0_actor0"
+          ]
+        }
+      },
+      {
+        "name": "witness-local-exclusion",
+        "question": "Return actors with at least one film directed by a director with selected_country, with that supporting film not in banned_film. Exclude individual supporting films before projecting actor: acting in a banned film must not exclude an actor who also has another qualifying, unbanned film. Use only the supplied finite relations. Return unique actor identifiers.",
+        "source": {
+          "domains": {
+            "Film": [
+              "holdout1_film0",
+              "holdout1_film1",
+              "holdout1_film2",
+              "holdout1_film3",
+              "holdout1_film4",
+              "holdout1_film5"
+            ],
+            "Actor": [
+              "holdout1_actor0",
+              "holdout1_actor1",
+              "holdout1_actor2",
+              "holdout1_actor3",
+              "holdout1_actor4",
+              "holdout1_actor5",
+              "holdout1_actor6",
+              "holdout1_actor7",
+              "holdout1_actor8",
+              "holdout1_actor9",
+              "holdout1_actor10",
+              "holdout1_actor11"
+            ],
+            "Director": [
+              "holdout1_director0",
+              "holdout1_director1",
+              "holdout1_director2"
+            ],
+            "Country": [
+              "holdout1_country0",
+              "holdout1_country1"
+            ]
+          },
+          "rows": {
+            "cast": [
+              [
+                "holdout1_film0",
+                "holdout1_actor0"
+              ],
+              [
+                "holdout1_film0",
+                "holdout1_actor1"
+              ],
+              [
+                "holdout1_film0",
+                "holdout1_actor2"
+              ],
+              [
+                "holdout1_film1",
+                "holdout1_actor1"
+              ],
+              [
+                "holdout1_film1",
+                "holdout1_actor3"
+              ],
+              [
+                "holdout1_film2",
+                "holdout1_actor2"
+              ],
+              [
+                "holdout1_film2",
+                "holdout1_actor4"
+              ],
+              [
+                "holdout1_film3",
+                "holdout1_actor5"
+              ],
+              [
+                "holdout1_film3",
+                "holdout1_actor6"
+              ],
+              [
+                "holdout1_film4",
+                "holdout1_actor6"
+              ],
+              [
+                "holdout1_film4",
+                "holdout1_actor7"
+              ],
+              [
+                "holdout1_film5",
+                "holdout1_actor8"
+              ],
+              [
+                "holdout1_film5",
+                "holdout1_actor9"
+              ]
+            ],
+            "directed": [
+              [
+                "holdout1_film0",
+                "holdout1_director0"
+              ],
+              [
+                "holdout1_film1",
+                "holdout1_director1"
+              ],
+              [
+                "holdout1_film2",
+                "holdout1_director2"
+              ],
+              [
+                "holdout1_film3",
+                "holdout1_director0"
+              ],
+              [
+                "holdout1_film4",
+                "holdout1_director1"
+              ],
+              [
+                "holdout1_film5",
+                "holdout1_director2"
+              ]
+            ],
+            "citizen": [
+              [
+                "holdout1_director0",
+                "holdout1_country0"
+              ],
+              [
+                "holdout1_director1",
+                "holdout1_country1"
+              ],
+              [
+                "holdout1_director2",
+                "holdout1_country0"
+              ]
+            ],
+            "mentor": [
+              [
+                "holdout1_actor10",
+                "holdout1_actor11"
+              ],
+              [
+                "holdout1_actor11",
+                "holdout1_actor0"
+              ],
+              [
+                "holdout1_actor9",
+                "holdout1_actor1"
+              ],
+              [
+                "holdout1_actor8",
+                "holdout1_actor9"
+              ],
+              [
+                "holdout1_actor7",
+                "holdout1_actor8"
+              ],
+              [
+                "holdout1_actor6",
+                "holdout1_actor7"
+              ],
+              [
+                "holdout1_actor5",
+                "holdout1_actor6"
+              ],
+              [
+                "holdout1_actor4",
+                "holdout1_actor5"
+              ],
+              [
+                "holdout1_actor3",
+                "holdout1_actor4"
+              ],
+              [
+                "holdout1_actor2",
+                "holdout1_actor3"
+              ],
+              [
+                "holdout1_actor1",
+                "holdout1_actor2"
+              ],
+              [
+                "holdout1_actor0",
+                "holdout1_actor1"
+              ]
+            ],
+            "actor_domain": [
+              [
+                "holdout1_actor0"
+              ],
+              [
+                "holdout1_actor1"
+              ],
+              [
+                "holdout1_actor2"
+              ],
+              [
+                "holdout1_actor3"
+              ],
+              [
+                "holdout1_actor4"
+              ],
+              [
+                "holdout1_actor5"
+              ],
+              [
+                "holdout1_actor6"
+              ],
+              [
+                "holdout1_actor7"
+              ],
+              [
+                "holdout1_actor8"
+              ],
+              [
+                "holdout1_actor9"
+              ],
+              [
+                "holdout1_actor10"
+              ],
+              [
+                "holdout1_actor11"
+              ]
+            ],
+            "banned_film": [
+              [
+                "holdout1_film0"
+              ]
+            ],
+            "selected_country": [
+              [
+                "holdout1_country0"
+              ]
+            ],
+            "target": [
+              [
+                "holdout1_actor0"
+              ]
+            ]
+          }
+        },
+        "withdrawal": {
+          "relation": "cast",
+          "row": [
+            "holdout1_film2",
+            "holdout1_actor2"
+          ]
+        }
+      },
+      {
+        "name": "anti-existential",
+        "question": "Return actors in actor_domain with at least one film whose director has selected_country AND with no appearance in any banned_film. The second condition excludes the entire actor if ANY banned-film appearance exists, even if a different film qualifies. Use only the supplied finite relations. Return unique actor identifiers.",
+        "source": {
+          "domains": {
+            "Film": [
+              "holdout2_film0",
+              "holdout2_film1",
+              "holdout2_film2",
+              "holdout2_film3",
+              "holdout2_film4",
+              "holdout2_film5"
+            ],
+            "Actor": [
+              "holdout2_actor0",
+              "holdout2_actor1",
+              "holdout2_actor2",
+              "holdout2_actor3",
+              "holdout2_actor4",
+              "holdout2_actor5",
+              "holdout2_actor6",
+              "holdout2_actor7",
+              "holdout2_actor8",
+              "holdout2_actor9",
+              "holdout2_actor10",
+              "holdout2_actor11"
+            ],
+            "Director": [
+              "holdout2_director0",
+              "holdout2_director1",
+              "holdout2_director2"
+            ],
+            "Country": [
+              "holdout2_country0",
+              "holdout2_country1"
+            ]
+          },
+          "rows": {
+            "cast": [
+              [
+                "holdout2_film0",
+                "holdout2_actor0"
+              ],
+              [
+                "holdout2_film0",
+                "holdout2_actor1"
+              ],
+              [
+                "holdout2_film0",
+                "holdout2_actor2"
+              ],
+              [
+                "holdout2_film1",
+                "holdout2_actor1"
+              ],
+              [
+                "holdout2_film1",
+                "holdout2_actor3"
+              ],
+              [
+                "holdout2_film2",
+                "holdout2_actor2"
+              ],
+              [
+                "holdout2_film2",
+                "holdout2_actor4"
+              ],
+              [
+                "holdout2_film3",
+                "holdout2_actor5"
+              ],
+              [
+                "holdout2_film3",
+                "holdout2_actor6"
+              ],
+              [
+                "holdout2_film4",
+                "holdout2_actor6"
+              ],
+              [
+                "holdout2_film4",
+                "holdout2_actor7"
+              ],
+              [
+                "holdout2_film5",
+                "holdout2_actor8"
+              ],
+              [
+                "holdout2_film5",
+                "holdout2_actor9"
+              ]
+            ],
+            "directed": [
+              [
+                "holdout2_film0",
+                "holdout2_director0"
+              ],
+              [
+                "holdout2_film1",
+                "holdout2_director1"
+              ],
+              [
+                "holdout2_film2",
+                "holdout2_director2"
+              ],
+              [
+                "holdout2_film3",
+                "holdout2_director0"
+              ],
+              [
+                "holdout2_film4",
+                "holdout2_director1"
+              ],
+              [
+                "holdout2_film5",
+                "holdout2_director2"
+              ]
+            ],
+            "citizen": [
+              [
+                "holdout2_director0",
+                "holdout2_country0"
+              ],
+              [
+                "holdout2_director1",
+                "holdout2_country1"
+              ],
+              [
+                "holdout2_director2",
+                "holdout2_country0"
+              ]
+            ],
+            "mentor": [
+              [
+                "holdout2_actor10",
+                "holdout2_actor11"
+              ],
+              [
+                "holdout2_actor11",
+                "holdout2_actor0"
+              ],
+              [
+                "holdout2_actor9",
+                "holdout2_actor1"
+              ],
+              [
+                "holdout2_actor8",
+                "holdout2_actor9"
+              ],
+              [
+                "holdout2_actor7",
+                "holdout2_actor8"
+              ],
+              [
+                "holdout2_actor6",
+                "holdout2_actor7"
+              ],
+              [
+                "holdout2_actor5",
+                "holdout2_actor6"
+              ],
+              [
+                "holdout2_actor4",
+                "holdout2_actor5"
+              ],
+              [
+                "holdout2_actor3",
+                "holdout2_actor4"
+              ],
+              [
+                "holdout2_actor2",
+                "holdout2_actor3"
+              ],
+              [
+                "holdout2_actor1",
+                "holdout2_actor2"
+              ],
+              [
+                "holdout2_actor0",
+                "holdout2_actor1"
+              ]
+            ],
+            "actor_domain": [
+              [
+                "holdout2_actor0"
+              ],
+              [
+                "holdout2_actor1"
+              ],
+              [
+                "holdout2_actor2"
+              ],
+              [
+                "holdout2_actor3"
+              ],
+              [
+                "holdout2_actor4"
+              ],
+              [
+                "holdout2_actor5"
+              ],
+              [
+                "holdout2_actor6"
+              ],
+              [
+                "holdout2_actor7"
+              ],
+              [
+                "holdout2_actor8"
+              ],
+              [
+                "holdout2_actor9"
+              ],
+              [
+                "holdout2_actor10"
+              ],
+              [
+                "holdout2_actor11"
+              ]
+            ],
+            "banned_film": [
+              [
+                "holdout2_film0"
+              ]
+            ],
+            "selected_country": [
+              [
+                "holdout2_country0"
+              ]
+            ],
+            "target": [
+              [
+                "holdout2_actor0"
+              ]
+            ]
+          }
+        },
+        "withdrawal": {
+          "relation": "cast",
+          "row": [
+            "holdout2_film0",
+            "holdout2_actor2"
+          ]
+        }
+      },
+      {
+        "name": "recursive-mentor",
+        "question": "Return actors that can reach an actor in target through ONE OR MORE directed mentor edges. Include any path length, including cycles; zero-length paths alone do not qualify. An actor in target qualifies only if it also has a positive-length path to target. Use only the supplied finite relations. Return unique actor identifiers.",
+        "source": {
+          "domains": {
+            "Film": [
+              "holdout3_film0",
+              "holdout3_film1",
+              "holdout3_film2",
+              "holdout3_film3",
+              "holdout3_film4",
+              "holdout3_film5"
+            ],
+            "Actor": [
+              "holdout3_actor0",
+              "holdout3_actor1",
+              "holdout3_actor2",
+              "holdout3_actor3",
+              "holdout3_actor4",
+              "holdout3_actor5",
+              "holdout3_actor6",
+              "holdout3_actor7",
+              "holdout3_actor8",
+              "holdout3_actor9",
+              "holdout3_actor10",
+              "holdout3_actor11"
+            ],
+            "Director": [
+              "holdout3_director0",
+              "holdout3_director1",
+              "holdout3_director2"
+            ],
+            "Country": [
+              "holdout3_country0",
+              "holdout3_country1"
+            ]
+          },
+          "rows": {
+            "cast": [
+              [
+                "holdout3_film0",
+                "holdout3_actor0"
+              ],
+              [
+                "holdout3_film0",
+                "holdout3_actor1"
+              ],
+              [
+                "holdout3_film0",
+                "holdout3_actor2"
+              ],
+              [
+                "holdout3_film1",
+                "holdout3_actor1"
+              ],
+              [
+                "holdout3_film1",
+                "holdout3_actor3"
+              ],
+              [
+                "holdout3_film2",
+                "holdout3_actor2"
+              ],
+              [
+                "holdout3_film2",
+                "holdout3_actor4"
+              ],
+              [
+                "holdout3_film3",
+                "holdout3_actor5"
+              ],
+              [
+                "holdout3_film3",
+                "holdout3_actor6"
+              ],
+              [
+                "holdout3_film4",
+                "holdout3_actor6"
+              ],
+              [
+                "holdout3_film4",
+                "holdout3_actor7"
+              ],
+              [
+                "holdout3_film5",
+                "holdout3_actor8"
+              ],
+              [
+                "holdout3_film5",
+                "holdout3_actor9"
+              ]
+            ],
+            "directed": [
+              [
+                "holdout3_film0",
+                "holdout3_director0"
+              ],
+              [
+                "holdout3_film1",
+                "holdout3_director1"
+              ],
+              [
+                "holdout3_film2",
+                "holdout3_director2"
+              ],
+              [
+                "holdout3_film3",
+                "holdout3_director0"
+              ],
+              [
+                "holdout3_film4",
+                "holdout3_director1"
+              ],
+              [
+                "holdout3_film5",
+                "holdout3_director2"
+              ]
+            ],
+            "citizen": [
+              [
+                "holdout3_director0",
+                "holdout3_country0"
+              ],
+              [
+                "holdout3_director1",
+                "holdout3_country1"
+              ],
+              [
+                "holdout3_director2",
+                "holdout3_country0"
+              ]
+            ],
+            "mentor": [
+              [
+                "holdout3_actor10",
+                "holdout3_actor11"
+              ],
+              [
+                "holdout3_actor11",
+                "holdout3_actor0"
+              ],
+              [
+                "holdout3_actor8",
+                "holdout3_actor9"
+              ],
+              [
+                "holdout3_actor7",
+                "holdout3_actor8"
+              ],
+              [
+                "holdout3_actor6",
+                "holdout3_actor7"
+              ],
+              [
+                "holdout3_actor5",
+                "holdout3_actor6"
+              ],
+              [
+                "holdout3_actor4",
+                "holdout3_actor5"
+              ],
+              [
+                "holdout3_actor3",
+                "holdout3_actor4"
+              ],
+              [
+                "holdout3_actor2",
+                "holdout3_actor3"
+              ],
+              [
+                "holdout3_actor1",
+                "holdout3_actor2"
+              ],
+              [
+                "holdout3_actor0",
+                "holdout3_actor1"
+              ],
+              [
+                "holdout3_actor9",
+                "holdout3_actor10"
+              ]
+            ],
+            "actor_domain": [
+              [
+                "holdout3_actor0"
+              ],
+              [
+                "holdout3_actor1"
+              ],
+              [
+                "holdout3_actor2"
+              ],
+              [
+                "holdout3_actor3"
+              ],
+              [
+                "holdout3_actor4"
+              ],
+              [
+                "holdout3_actor5"
+              ],
+              [
+                "holdout3_actor6"
+              ],
+              [
+                "holdout3_actor7"
+              ],
+              [
+                "holdout3_actor8"
+              ],
+              [
+                "holdout3_actor9"
+              ],
+              [
+                "holdout3_actor10"
+              ],
+              [
+                "holdout3_actor11"
+              ]
+            ],
+            "banned_film": [
+              [
+                "holdout3_film0"
+              ]
+            ],
+            "selected_country": [
+              [
+                "holdout3_country0"
+              ]
+            ],
+            "target": [
+              [
+                "holdout3_actor0"
+              ]
+            ]
+          }
+        },
+        "withdrawal": {
+          "relation": "mentor",
+          "row": [
+            "holdout3_actor0",
+            "holdout3_actor1"
+          ]
+        }
+      }
+    ],
+    "repetitions": 2,
+    "maxProviderCalls": 32,
+    "maxOutputTokens": 65536,
+    "upperPeakEstimateUsd": 3.0,
+    "scope": "Four synthetic structural holdouts, independently named entities; two repeated cold controls. Not a real-world KGQA benchmark.",
+    "repeatBaseline": "Direct model is called again; also report identical-request answer-cache control with zero repeat calls.",
+    "reuseKey": "Exact question, schema, contract and engine identity; no natural-language similarity matching.",
+    "sourceUpdate": "Retain rules, replace trusted source rows in Scheme; invalidate completed answer. No model call.",
+    "recovery": "No repair or retry in primary evaluation. Failed contracts remain failures in all retained phases.",
+    "reflectionInputs": {
+      "docs/research/agent-inference/movie-reflection-result.json": "4876ee45a3c7304fedaedae3a0f72bc3a6ebe89c91ad786eaa84431a9f89c364",
+      "docs/research/agent-inference/complex-movie-result.json": "989492ff9d6751c98b6643aa7c77cc992714cf041622776cc960a4ce411f19e8"
+    },
+    "reflectionDecisions": [
+      "Use structured head arrays.",
+      "Union and join explicit in ABI.",
+      "Keep existential witness exclusion distinct from actor-wide exclusion.",
+      "Compile intent without fact enumeration.",
+      "Retain Scheme session; do not call model on exact repeat.",
+      "Withdraw sources and check against independent oracle; never return stale answer."
+    ],
+    "producerHashes": {
+      "python/src/ascent_test_support/inference_reuse_study.py": "ae1871eb23476e625706401aadada8a7f45278e23ec8bc44514c4a8f5828b920",
+      "python/src/ascent_test_support/query_contract.py": "3c15a9a3cf03e42953787b20614067a5b960550f3ca8bcd1ed5eb38af27e61ba",
+      "python/src/ascent_test_support/model_study.py": "3c4bb43f62bf3094b826550edd39c3578d464857428d2b079ddd2e7d92326948",
+      "python/src/ascent_test_support/movie_study.py": "0956f05be94e7093d39e6df6a007eaa81ab0848317fd79e279cffb7ad285ee2a",
+      "python/src/ascent_engine/__init__.py": "c5de0e37d07d4596175b22bb38cc4a73348573c8951d77cf8126229112be904d"
+    },
+    "librarySha256": "c2acb2751350f5590ca0a0dbb25aa9cb43d35b4b0716b11f2327802030ec5420",
+    "priceSource": "https://api-docs.deepseek.com/quick_start/pricing/"
+  },
+  "primaryFileSha256": "83fd67e842b3331ca00ded36bdc3b6a72d6ca9fe1056dc72cbfd2cfa6e4f2904",
+  "reflection": {
+    "schema": "ascent.inference-reuse-reflection.v1",
+    "primaryScoresChanged": false,
+    "goldAnswersSupplied": false,
+    "maxCalls": 1,
+    "failure": {
+      "case": "mentor-chain",
+      "repetition": 0,
+      "phase": "updated",
+      "arm": "direct",
+      "providerCalls": 1,
+      "requestSha256": "5e9c5ea6cec99e66c299a2facff543016a3f402a2f326c90bae30ffdd07d5fe4",
+      "sourceIdentity": "084a436b8d3414ecb8055f845d0a4b91efda0350f7cc6b8ce7b60d1b5cfc5030",
+      "outcome": "answer_mismatch",
+      "usage": {
+        "input_tokens": 1197,
+        "input_tokens_details": {
+          "cached_tokens": 640
+        },
+        "output_tokens": 1759,
+        "output_tokens_details": {
+          "reasoning_tokens": 1708
+        },
+        "total_tokens": 2956
+      },
+      "providerSeconds": 7.757063291996019,
+      "correct": false,
+      "peakEstimateUsd": 0.00228174
+    },
+    "planSha256": "bbe64be5b4358ae7e6d21a90c52cc10121f3d105b8d6aa8f2e74e932c9ba90e7",
+    "resultSha256": "83fd67e842b3331ca00ded36bdc3b6a72d6ca9fe1056dc72cbfd2cfa6e4f2904",
+    "requestSha256": "dd04b8ee70c3be2948e378baa7d150c755bd18884e91c682219ef7deab44d89c",
+    "producerSha256": "162bad8f268208f0c9feb067bca0e4e9054c1e56af8c26b4a4f64b832c577d3f",
+    "librarySha256": "c2acb2751350f5590ca0a0dbb25aa9cb43d35b4b0716b11f2327802030ec5420",
+    "outcome": "correct",
+    "usage": {
+      "input_tokens": 1413,
+      "input_tokens_details": {
+        "cached_tokens": 0
+      },
+      "output_tokens": 7004,
+      "output_tokens_details": {
+        "reasoning_tokens": 6634
+      },
+      "total_tokens": 8417
+    },
+    "providerSeconds": 29.39385420799954,
+    "peakEstimateUsd": 0.008828699999999998,
+    "reflection": {
+      "diagnosis": "The previous answer incorrectly filtered out holdout0_film0 because it appears in banned_film, but the question does not require excluding banned films. The condition only requires z to act in a film whose director has the selected country. holdout0_film0 is directed by holdout0_director0, who is a citizen of holdout0_country0 (the selected country). Therefore z=holdout0_actor1 is valid. The path holdout0_actor8 -> holdout0_actor9 -> holdout0_actor1 yields x=holdout0_actor8, which was omitted.",
+      "correctedAnswer": [
+        "holdout0_actor0",
+        "holdout0_actor2",
+        "holdout0_actor3",
+        "holdout0_actor4",
+        "holdout0_actor6",
+        "holdout0_actor7",
+        "holdout0_actor8",
+        "holdout0_actor9"
+      ],
+      "proposedChecks": [
+        "Do not apply banned_film unless the query explicitly says to exclude banned films; here it is not referenced in the question condition.",
+        "Compute qualifying films as all films F such that directed(F,D) and citizen(D, selected_country), including holdout0_film0 because holdout0_director0 has citizenship holdout0_country0.",
+        "For each qualifying film, collect all cast actors z, then find y with mentor(y,z), then find x with mentor(x,y). Union all such x.",
+        "Verify each candidate path explicitly, e.g., holdout0_actor8 -> holdout0_actor9 -> holdout0_actor1 with holdout0_actor1 in holdout0_film0 directed by holdout0_director0 citizen of holdout0_country0."
+      ]
+    },
+    "schemeMissingAnswerWitnesses": [
+      [
+        "holdout0_actor8",
+        "holdout0_actor9",
+        "holdout0_actor1",
+        "holdout0_film0",
+        "holdout0_director0",
+        "holdout0_country0"
+      ]
+    ]
+  },
+  "recovery": {
+    "schema": "ascent.inference-budget-recovery.v1",
+    "primaryScoresChanged": false,
+    "purpose": "adaptive operator decomposition; not a held-out score",
+    "goldAnswersSupplied": false,
+    "maxCalls": 1,
+    "requestSha256": "ba973ec6cd13f9f4306c0cbecc4e5c854b39d898a22cdb8916134c4ce365dbd3",
+    "usage": {
+      "input_tokens": 936,
+      "input_tokens_details": {
+        "cached_tokens": 0
+      },
+      "output_tokens": 2102,
+      "output_tokens_details": {
+        "reasoning_tokens": 1981
+      },
+      "total_tokens": 3038
+    },
+    "producerSha256": "6df2099f4e8141debfdcdb2f6f9f11dd9cf037737f06f0ff2e3bf721c81ca446",
+    "planSha256": "bbe64be5b4358ae7e6d21a90c52cc10121f3d105b8d6aa8f2e74e932c9ba90e7",
+    "primarySha256": "83fd67e842b3331ca00ded36bdc3b6a72d6ca9fe1056dc72cbfd2cfa6e4f2904",
+    "librarySha256": "c2acb2751350f5590ca0a0dbb25aa9cb43d35b4b0716b11f2327802030ec5420",
+    "providerSeconds": 9.831503334018635,
+    "outcome": "correct",
+    "peakEstimateUsd": 0.0028032000000000005,
+    "checks": [
+      {
+        "phase": "cold",
+        "correct": true,
+        "answers": [
+          [
+            "holdout1_actor2"
+          ],
+          [
+            "holdout1_actor4"
+          ],
+          [
+            "holdout1_actor5"
+          ],
+          [
+            "holdout1_actor6"
+          ],
+          [
+            "holdout1_actor8"
+          ],
+          [
+            "holdout1_actor9"
+          ]
+        ]
+      },
+      {
+        "phase": "repeat",
+        "correct": true,
+        "answers": [
+          [
+            "holdout1_actor2"
+          ],
+          [
+            "holdout1_actor4"
+          ],
+          [
+            "holdout1_actor5"
+          ],
+          [
+            "holdout1_actor6"
+          ],
+          [
+            "holdout1_actor8"
+          ],
+          [
+            "holdout1_actor9"
+          ]
+        ]
+      },
+      {
+        "phase": "updated",
+        "correct": true,
+        "answers": [
+          [
+            "holdout1_actor4"
+          ],
+          [
+            "holdout1_actor5"
+          ],
+          [
+            "holdout1_actor6"
+          ],
+          [
+            "holdout1_actor8"
+          ],
+          [
+            "holdout1_actor9"
+          ]
+        ]
+      }
+    ],
+    "contract": {
+      "relations": [],
+      "rules": [
+        {
+          "head": [
+            {
+              "relation": "answer",
+              "terms": [
+                {
+                  "var": "Actor"
+                }
+              ]
+            }
+          ],
+          "body": [
+            {
+              "relation": "cast",
+              "terms": [
+                {
+                  "var": "Film"
+                },
+                {
+                  "var": "Actor"
+                }
+              ]
+            },
+            {
+              "relation": "directed",
+              "terms": [
+                {
+                  "var": "Film"
+                },
+                {
+                  "var": "Director"
+                }
+              ]
+            },
+            {
+              "relation": "citizen",
+              "terms": [
+                {
+                  "var": "Director"
+                },
+                {
+                  "var": "Country"
+                }
+              ]
+            },
+            {
+              "relation": "selected_country",
+              "terms": [
+                {
+                  "var": "Country"
+                }
+              ]
+            },
+            {
+              "relation": "banned_film",
+              "terms": [
+                {
+                  "var": "Film"
+                }
+              ],
+              "not": true
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "completionAudit": {
+    "originalScoresChanged": false,
+    "case": "witness-local-exclusion",
+    "repetition": 1,
+    "providerOutcome": "output_budget_exhausted",
+    "terminalStatus": "incomplete",
+    "incompleteDetails": {
+      "reason": "max_output_tokens"
+    },
+    "responseSha256": "ce7a1656e6e07991f33de16529bbc806bde1b560a441a2eef6515176bcb69570",
+    "originalAdmissionMessage": "NoneType object is not iterable",
+    "futureDriverFix": "Reject incomplete provider contracts before Scheme admission; preserve provider outcome. Frozen original driver retained locally."
+  },
+  "resourceAccountingBoundary": "API peak-price sensitivity accounting only, not the main measure of inference enhancement. Primary experiment is one-attempt scoring, not first-correct multi-round convergence.",
+  "responseIdentities": {
+    "anti-existential-1-direct-updated.response.json": "67894f756d807f629cd9233cbb1dbedd21f4244004f13ece7793d12fbb8dca48",
+    "anti-existential-0-direct-cold.response.json": "527c7e8860b20c9eed071ad1836e28b6c359f81f559f725e032bb2c12125b492",
+    "mentor-chain-1-direct-repeat.response.json": "3bb11d977a09524cb66154fb81e971592c9bfe7ad59587fc4bcb3799a1b39de1",
+    "mentor-chain-0-direct-updated.response.json": "e6b89e9fec2bae01289e0de6bf49a315853eceb18fe02a84fd4391b34f7536dc",
+    "recursive-mentor-0-direct-updated.response.json": "0b4093e84522257714b2198831c377187c390a562c4e932aa4ed6ceeb654eab6",
+    "mentor-chain-0-direct-cold.response.json": "f758f9045b39f00cb6962eb18d7baf82e8899de96651ee87303a171841b24a06",
+    "witness-local-exclusion-0-compact-cold.response.json": "60268627eb8320c2cbc521dc9bcfec94ffb16683a6695e6c8cc18e6c92ca43b3",
+    "recursive-mentor-0-direct-repeat.response.json": "960e5f950ff993ff304ae125c04cfee0a5b211f1c879aa76f8eff231a0de8b27",
+    "mentor-chain-0-direct-repeat.response.json": "676a81596b9b7bedb4aa5f9798f25c490085b2eaa89ec258918dc23eb16daa79",
+    "witness-local-exclusion-1-compact-cold.response.json": "ce7a1656e6e07991f33de16529bbc806bde1b560a441a2eef6515176bcb69570",
+    "witness-local-exclusion-0-direct-updated.response.json": "51f4d9e2b130bff9752fa955ab5dfcca06efc2c6d4e3e6a461a78dc85f1ad548",
+    "recursive-mentor-1-direct-repeat.response.json": "8093ba5bee049ebc5d3390752edf8f9cb13c27db06ac4eafeb9fb9d556048b1a",
+    "witness-local-exclusion-1-direct-cold.response.json": "f93aa5d942caee3daf9f634b8c594a9d704ffd43b7a163cfa671cd6820734bec",
+    "recursive-mentor-0-direct-cold.response.json": "5252d2fad9269c9cc98fc3d515321893b5ad4aeda9101d2f78c015ee873e20a8",
+    "recursive-mentor-1-compact-cold.response.json": "69a14c9f2941b221c2de45fbeeb29f54ff1a1e4da7c344b41eb37eef5f7a538f",
+    "recursive-mentor-1-direct-cold.response.json": "6a82387290ee10ceb395123ca7a554f3b5526e508cedb523fb69d61407e7c6f3",
+    "witness-local-exclusion-1-direct-updated.response.json": "1419b95dfc80fbe50924ff6675ccf60a42618e9aab2c83a2e2dee3b0cf40aec7",
+    "witness-local-exclusion-1-direct-repeat.response.json": "fa70c090d650436711313eb613ff8021d01521704387cc49f32b7bc0085745c9",
+    "witness-local-exclusion-0-direct-cold.response.json": "bb6a7e5c692dcc259fb47b603b3ebb30be56deeb4b940b90705be93afdb432d6",
+    "anti-existential-0-compact-cold.response.json": "90129c8b0ca072bd6bf776025951bab488c8278150583169e7ed912d6862f2bf",
+    "mentor-chain-0-compact-cold.response.json": "f11f28eedee8816df9cd0e8696e9f2f329b4362c62c4f8e317aea96bbc97fb62",
+    "anti-existential-0-direct-repeat.response.json": "c07b80e4ddff3b652318b50a6c3b63b93b370c4e076cdcbaf57a02b8a515e166",
+    "recursive-mentor-1-direct-updated.response.json": "8eb0247614a23fcf80543e91593b76baa8b9af54de3886f7a55cc1cd446faead",
+    "anti-existential-1-compact-cold.response.json": "91b3e838020dc3c2b458ba1e415b5e9c434a722b33c0e7e88b6012d8ab21b153",
+    "witness-local-exclusion-0-direct-repeat.response.json": "b1d0ae8a64a0f6c7d501b5acff75b38f40b1718cd7e443cbccbee07b76304799",
+    "mentor-chain-1-direct-cold.response.json": "b2f7974dccd6edf52182826b48458de14d86eb544eb8e296f2b3d06d218c46a0",
+    "mentor-chain-1-compact-cold.response.json": "03734bdaf384acc85730f23c1c9bee834b80879d28dca09146f2a3c638858ab4",
+    "recursive-mentor-0-compact-cold.response.json": "727406d7f5e09df2137ee2e306caf70c1c2f9fea62ebc4a22e95f6bd90d26e17",
+    "anti-existential-1-direct-cold.response.json": "5ab71cd22cbd511c05f727c8eea8a78af7c59d9237c87ec392c1724d54a6b730",
+    "anti-existential-1-direct-repeat.response.json": "df7599a3221a62288270d856892f2172119a99ad910b21e082decdf5951cf2a6",
+    "anti-existential-0-direct-updated.response.json": "e7f7f8567be885ed0373acdf89115dbfccd261c1a432bfeb1241f257fd153d4f",
+    "mentor-chain-1-direct-updated.response.json": "757ab27e4912ff803768a9ea256f39d6cc0b18ead776f55e543fb1ce3fe9e365"
+  }
+}

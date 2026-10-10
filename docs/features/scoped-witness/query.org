@@ -1,0 +1,106 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+#+TITLE: Bounded scoped query execution and published path evidence
+#+DATE: 2026-10-10
+
+* Unified execution contract
+
+[[https://proceedings.mlr.press/v306/miao26e.html][LLM-MatLogic: Executable Exchange Contracts for Knowledge-Graph Query Answering with Scoped Negation]], Algorithm 1 and section 3.2, motivate one bounded production, scoped negation, composition and trace chain.
+[[file:../../../applications/scoped-composition.ss][gerbil-ascent-scoped-query-program]] compiles caller vertices, directed edges,
+scope-tagged starts/targets/banned nodes, required groups, members, finite
+candidate pairs and K into one ordinary POO Program. The existing native
+Session owns execution and publishes one immutable evidence cut.
+
+| Stage | Relation | Meaning |
+|-------+----------+---------|
+| Produce | =mask_hop(s,t,k)= | Exact k-edge walk inside declared vertices, 0 ≤ k ≤ K |
+| Produce | =mask_reach(s,t)= | Union of exact layers, including the identity layer |
+| Provenance | =mask_shortest(s,t,k)= | First reachable layer, unique distance per pair |
+| Provenance | =mask_predecessor(s,x,t,k)= | All last edges of shortest k-edge witnesses |
+| Negate | =mask_witness(scope,s,z,t)= | Selected endpoints, banned z, bounded prefix and suffix |
+| Negate | =branch_answer(scope,s,t)= | Selected reachable pair with no exclusion witness |
+| Compose | =group_witness(g,scope,s,t)= | Required-group support before conjunction |
+| Compose | =group_answer(s,t)= | Finite candidate supported in every required group |
+| Trace | =answer_trace(g,scope,s,t,k)= | Final answer, required-group support and shortest distance |
+
+K is an integer in [0,64]; the compiler emits O(K) ordinary rule declarations.
+Input/derived/output budgets retain their existing native admission and execution
+meaning. The existing least-closure and existential two-hop APIs retain their
+explicit contracts; this unified request selects bounded structural masking.
+
+* Semantic and publication boundaries
+
+The explicit paper formula =pre(z)⊗suf(z)= bounds *each side* by K, not their
+combined length. For 0→1→0, K=1 and banned 1, (0,0) is excluded by two one-hop
+sides. Clean alternative paths do not rescue a structurally excluded pair.
+Increasing K can add both reachable pairs and banned witnesses; scoped answers
+are not claimed monotone in K. Masks remain local to the selected scope.
+
+=gerbil-ascent-scoped-query-path(result,s,t)= reconstructs one shortest producer
+path from the completed cut using checked =visit-rows= column selections. Distance
+decreases at every predecessor; zero-hop roots must equal the start. Unreachable
+pairs return false; incomplete results and missing predecessors are rejected.
+The accessor does not search the input graph. A producer path alone is unmasked;
+an =answer_trace= row establishes scope survival and final composition.
+All shortest predecessors are retained, avoiding an order-sensitive single pointer.
+
+Empty required groups reject. No required groups admits only finite candidates
+and has no required-group trace. Source withdrawal updates answers and evidence
+together; previously held cuts remain reconstructible.
+
+* One shared Scheme / Lean / Quint verification chain
+
+[[file:../../../packages/proofs/quint/ScopedQuery.qnt][Quint]] uses the same layer-fold evaluator for model transitions and corpus
+export. Independent expected predicates use matrix powers. All eight subsets of
+the three-node cycle, all 64 scope-mask subsets and K=0,1,2 yield 1,536 complete
+requests and 3,072 pending/completed states. Ten corpus fields retain reach,
+layers, shortest distances, predecessors, exclusion witnesses, branches,
+group answers and final traces. Pending states expose no result relations.
+
+[[file:../../../packages/proofs/lean/ScopedQuery.lean][Lean]] independently grades all fields. Generic kernel theorems connect exact
+hops to inductive walks, establish a shortest witness for bounded reachability,
+and prove shortest predecessors decrease distance. =query_trace_complete=
+connects native missing-group semantics to a bounded shortest trace for every
+required group. The finite exact/minimum tables are linked to those path
+predicates for every graph and k≤2. Existing scope/composition laws are reused.
+No project axiom, =sorry= or =native_decide= is introduced.
+
+[[file:../../../t/qualification/ascent-scoped-query-test.ss][Scheme qualification]] executes the complete public request on 24 retained
+Session owners, compares all shared tables, and reconstructs every shortest
+path through the production accessor, checking its edges against the source.
+Controls cover zero hops, the 2K mask boundary, diamond alternatives, group
+boundaries, source withdrawal, held evidence, publication rejection and budgets.
+
+| Deliberate model fault | Required failure |
+|------------------------+------------------|
+| Ignore K | ExactHops |
+| Globalize scope mask | ExactWitnesses |
+| Drop predecessors | ExactPredecessors |
+| Drop final traces | ExactTraces |
+
+=just check-scoped-query-conformance= compares regenerated and frozen corpora;
+=just _check-quint ScopedQuery= checks states and fault controls. Both are wired
+into formal CI; ordinary Gerbil discovery owns Scheme qualification.
+These faults are injected contract violations, not four production bug claims.
+
+This closes normalized pair requests on a caller-owned finite graph. General
+typed evidence joins, per-atom relation/direction plans, projection across
+different anchors, NL/model specification and real-KG benchmarks remain open.
+Finite cross-language agreement and generic laws are not universal Scheme
+compiler refinement.
+
+* Local verification receipts
+
+- Eight native Cases passed with final =HARNESS-OK=, =OK= and exit 0 in
+  27 seconds, including all 1,536 requests and the K=64 compiler boundary.
+- Existing composition (nine Cases) and least-closure mask (eight Cases)
+  regressions passed with final =OK= and exit 0.
+- Policy-enabled native package build passed. Lean build and independent
+  current/frozen ten-field corpus comparison passed.
+- Quint explored 3,072 states; all four deliberate faults failed their
+  designated invariant with exit 12; the complete harness exited 0.
+- Independently clearing a nonempty hop, mask-witness, predecessor or trace
+  field in the foreign corpus was rejected by Lean comparison.
+
+These are local correctness receipts, not an end-to-end speedup claim or a
+claim that remote CI has completed.

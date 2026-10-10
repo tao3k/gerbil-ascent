@@ -1,6 +1,9 @@
 # SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 #+TITLE: Scoped composition: group disjunction and required-group conjunction
+
+The [[file:query.org][bounded scoped query]] is the unified entry connecting this composer to
+K-hop production, structural exclusions, shortest predecessors and final traces.
 #+DATE: 2026-10-10
 
 * Research requirement and implementation

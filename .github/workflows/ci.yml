@@ -258,7 +258,7 @@ jobs:
           export PATH="$JAVA_HOME/bin:$PATH"
           just check-formal
       - name: Compare Quint and Lean outputs with the Scheme conformance corpus
-        run: just check-feedback-conformance check-scoped-witness-conformance check-branch-scoped-witness-conformance check-scoped-composition-conformance check-scoped-reachability-mask-conformance
+        run: just check-feedback-conformance check-scoped-witness-conformance check-branch-scoped-witness-conformance check-scoped-composition-conformance check-scoped-reachability-mask-conformance check-scoped-query-conformance
       - name: Qualify Python byte IO and process supervision
         run: python3 -m unittest discover -s python/tests -v
   native-and-oracle:

@@ -86,13 +86,17 @@ universal Scheme source refinement.
 
 * Remaining boundaries
 
+[[file:query.org][Bounded scoped query execution]] now implements the unified request with
+K-hop layers, shortest predecessors, group composition and final traces.
+The producer described here retains its finite least-closure contract.
+
 The paper uses bounded K-hop closure; this feature deliberately uses finite
 least closure, with caller budgets governing admission and execution. It does
 not reproduce K, matrix multiplication, typed evidence-slot joins, or the full
 request compiler. =mask_witness= certifies an exclusion with its banned node;
 it does not return a complete admissible path or certify external graph facts.
-Positive path reconstruction, bounded-hop provenance and real-KG evaluation
-remain separate implementation requirements.
+Positive reconstruction and bounded-hop provenance are implemented by that
+unified entry; real-KG evaluation remains open.
 
 * Local validation receipts
 

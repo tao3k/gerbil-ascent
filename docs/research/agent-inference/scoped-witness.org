@@ -72,9 +72,12 @@ This transfer implements two-hop disjunctive composition. The subsequent
 over the same endpoint pairs, following Algorithm 1 lines 19–30. Its shared
 512-input corpus qualifies group membership, empty groups, candidate boundaries
 and published evidence; Lean relates stratified missing-group negation to the
-declarative universal/existential condition. Typed evidence slots and the
-multi-hop matrix plan remain open. Pair relation composition does not replicate
-the paper's general typed evidence-space joins.
+declarative universal/existential condition. The unified
+[[file:../../features/scoped-witness/query.org][bounded scoped query]] now compiles K-hop layers, structural masks, group
+composition and shortest-path traces as one Program. Its 1,536 complete
+requests share Scheme execution, independent Lean grading and Quint transitions.
+Pair relations do not replicate the paper's general typed evidence-space joins
+or its sparse-matrix implementation.
 
 | Paper stage | Relevant code | What the code currently establishes |
 |-------------+---------------+-------------------------------------|
@@ -120,4 +123,6 @@ clean-path substitution on the shared three-node cycle corpus, which is also
 graded by Lean and replayed by Scheme. These are two concrete presentations of
 the same contract distinction: structural pair exclusion and existential
 clean-path survival differ. The
-finite least-closure implementation is not the paper's bounded K-hop executor.
+finite least-closure producer retains its own contract. The unified bounded
+request entry additionally implements K-hop production and shortest predecessor
+publication, preserving the explicit formula's independently bounded mask sides.

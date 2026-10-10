@@ -3,8 +3,10 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 (import (only-in :clan/poo/object .ref)
         :gerbil-ascent/program/objects
-        :gerbil-ascent/applications/scoped-witness)
-(export gerbil-ascent-scoped-composition-program gerbil-ascent-compose-scoped-program)
+        :gerbil-ascent/applications/scoped-witness
+        :gerbil-ascent/applications/scoped-reachability-mask)
+(export gerbil-ascent-scoped-composition-program gerbil-ascent-compose-scoped-program
+        gerbil-ascent-scoped-query-program gerbil-ascent-scoped-query-path)
 
 ;;; Scope exclusion belongs to the existing branch Program. Group composition
 ;;; keeps explicit candidate pairs and required groups, including empty groups.
@@ -56,3 +58,45 @@
                   (gerbil-ascent-negation 'group_failure (list s t))))))
       (.ref base 'max-input-facts) (.ref base 'max-derived-facts)
       (.ref base 'max-output-facts) (.ref base 'source-handles))))
+
+;;; A normalized request compiles the entire P -> N -> C/D chain. Publication
+;;; keeps a distance pointer for every required-group support of a final answer;
+;;; mask_predecessor reconstructs its shortest path by decreasing that distance.
+;; : (forall (v scope group) (-> [(Tuple v)] [(Pair v v)] [(Pair scope v)] [(Pair scope v)] [(Pair scope v)] [(Tuple group)] [(Pair group scope)] [(Pair v v)] Integer Integer Integer Integer Program))
+;; : (-> VertexRows EdgeRows ScopedStarts ScopedTargets ScopedBlocked RequiredGroups GroupMembers CandidatePairs HopLimit InputBudget FactBudget OutputBudget Program)
+(def (gerbil-ascent-scoped-query-program vertices edges starts targets blocked required members candidates hops
+        (input-budget 10000) (fact-budget 10000) (output-budget 20000))
+  (let* ((base (gerbil-ascent-compose-scoped-program
+                (gerbil-ascent-bounded-scoped-reachability-mask-program
+                  vertices edges starts targets blocked hops input-budget fact-budget output-budget)
+                required members candidates))
+         (g (gerbil-ascent-variable 'group)) (scope (gerbil-ascent-variable 'scope))
+         (s (gerbil-ascent-variable 's)) (t (gerbil-ascent-variable 't))
+         (k (gerbil-ascent-variable 'k)))
+    (def (a name . terms) (gerbil-ascent-atom name terms))
+    (gerbil-ascent-program
+      (append (.ref base 'relations) (list (gerbil-ascent-relation 'answer_trace 5 [])))
+      (append (.ref base 'rules)
+        (list (gerbil-ascent-rule (list (a 'answer_trace g scope s t k))
+          (list (a 'group_answer s t) (a 'group_witness g scope s t)
+                (a 'mask_shortest s t k)))))
+      input-budget fact-budget output-budget (.ref base 'source-handles))))
+
+;;; Reconstruct one shortest producer path from a completed published cut.
+;;; Scope admission is carried by answer_trace; an unmasked producer path alone
+;;; is not evidence that its endpoint pair survived any particular scope.
+;; : (forall (v) (-> EvaluationResult v v (Maybe [v])))
+;; : (-> EvaluationResult Vertex Vertex OptionalPath)
+(def (gerbil-ascent-scoped-query-path result s t)
+  (unless (.ref result 'finished) (error "ASCENT scoped query path requires completed execution"))
+  (let ((visit (.ref result 'visit-rows)) (distance #f))
+    (visit 'mask_shortest '(0 1) (list s t) (lambda (row) (set! distance (caddr row))))
+    (and distance
+      (let loop ((target t) (remaining distance) (path (list t)))
+        (if (zero? remaining)
+          (begin (unless (equal? s target) (error "ASCENT scoped query path has invalid zero-hop root")) path)
+          (let (previous #f)
+            (visit 'mask_predecessor '(0 2 3) (list s target remaining)
+              (lambda (row) (unless previous (set! previous (list (cadr row))))))
+            (unless previous (error "ASCENT scoped query path is missing a predecessor"))
+            (loop (car previous) (- remaining 1) (cons (car previous) path))))))))

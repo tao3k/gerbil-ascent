@@ -5,10 +5,9 @@
 ;;; Private retained state over an already verified grounded support graph.
 ;;; Enumeration and verification belong to provenance-graph. Membership indexes
 ;;; never order evidence; every bounded phase still traverses the retained edges.
-(import (only-in "support-cut.ss" grounded-support-withdraw!)
-        (only-in "support-height.ss" grounded-support-heights)
-        (only-in "datum.ss" reasoning-bounded-data? candidate-copy-pairs)
-        (only-in "provenance.ss" positive-proof-nodes positive-proof-roots
+(import (only-in :gerbil-ascent/candidate/support-height grounded-support-heights)
+        (only-in :gerbil-ascent/candidate/datum reasoning-bounded-data? candidate-copy-pairs)
+        (only-in :gerbil-ascent/candidate/provenance positive-proof-nodes positive-proof-roots
                  proof-node-id proof-node-row))
 (export candidate-make-provenance-maintenance provenance-maintenance?
         provenance-maintenance-rows candidate-provenance-withdraw!
@@ -139,7 +138,7 @@
     (let-values (((rows work) (candidate-provenance-withdraw! next selectors max-steps)))
       (values next rows work))))
 
-;;; DRed follows invocation-owned dependencies from ordered source seeds. Every inspected premise and result
+;;; DRed preserves the former edge order. Every inspected premise and result
 ;;; root also consumes work; wide rules cannot hide inside one edge probe.
 ;;; A cycle cannot seed itself;
 ;;; remaining founded source/rule support may restore overdeleted facts.
@@ -172,7 +171,7 @@
         (selected (make-hash-table))
         (removed (hash-copy (provenance-maintenance-removed state)))
         (alive (hash-copy (provenance-maintenance-alive state)))
-        (affected (make-hash-table-eqv)) (seeds []) (steps 0))
+        (affected (make-hash-table-eqv)) (steps 0))
     (for-each (lambda (selector)
                 (hash-put! selected selector #t) (hash-put! removed selector #t))
               (candidate-copy-pairs selectors))
@@ -185,10 +184,29 @@
      (lambda (edge)
        (probe!)
        (when (and (eq? (cadr edge) 'source) (hash-get selected (caddr edge)))
-         (unless (hash-get affected (car edge))
-           (hash-put! affected (car edge) #t)
-           (set! seeds (cons (car edge) seeds))))) edges)
-    (grounded-support-withdraw! edges (reverse seeds) affected alive removed probe!)
+         (hash-put! affected (car edge) #t))) edges)
+    (let overdelete ()
+      (let (changed? #f)
+        (for-each
+         (lambda (edge)
+           (probe!)
+           (when (and (eq? (cadr edge) 'rule)
+                      (not (hash-get affected (car edge)))
+                      (ormap (lambda (id) (probe!) (hash-get affected id)) (cadddr edge)))
+             (hash-put! affected (car edge) #t) (set! changed? #t))) edges)
+        (when changed? (overdelete))))
+    (hash-for-each (lambda (id _) (hash-remove! alive id)) affected)
+    (let rederive ()
+      (let (changed? #f)
+        (for-each
+         (lambda (edge)
+           (probe!)
+           (when (and (hash-get affected (car edge))
+                      (not (hash-get alive (car edge)))
+                      (not (and (eq? (cadr edge) 'source) (hash-get removed (caddr edge))))
+                      (andmap (lambda (id) (probe!) (live-node? alive id)) (cadddr edge)))
+             (hash-put! alive (car edge) #t) (set! changed? #t))) edges)
+        (when changed? (rederive))))
     (let (rows (map (lambda (id) (candidate-copy-pairs
                       (hash-ref (provenance-maintenance-rows-table state) id)))
                    (filter (lambda (id) (probe!) (live-node? alive id))

@@ -589,3 +589,39 @@ zero findings. Receipts stay under =.cache/ascent/support-height/=.
 
 The preceding source-transaction commit =4528237= is now independently qualified
 by all six completed exact-head GitHub CI jobs in run =38032841056=.
+
+* Grounded withdrawal lifecycle
+
+The next full-flow hotspot was DRed's repeated whole-graph overdeletion and
+restoration scans. =candidate/support-cut.ss= now admits one invocation-owned
+dependency index, propagates ordered source seeds, retires affected tentative
+membership and restores only founded support. Native =until= and short-circuit
+=andmap= express propagation and conjunction admission. Withdrawal and height
+share a private final rule protocol in =candidate/support-dependencies.ss=;
+the retained owner still owns validation, copied memberships and atomic ordered
+root publication. Indexes and labels never survive a cut.
+
+Work accounting follows actual admission, queue events, edge/premise inspection,
+affected retirement and root publication. Numeric withdrawal counters change;
+budgets and exhaustion atomicity remain intact. Existing budget tests are
+unmodified. An unsupported cycle cannot self-restore, while remaining source,
+candidate fact or empty-rule support can seed restoration.
+
+[[file:../../t/performance/support-cut/README.org][Frozen complete retained consumers]] cover state creation, preview withdrawal,
+accept/discard, compaction, complete heights and detached rows. Public proof
+construction and independent verification precede timing. Both arms share the
+current height implementation, isolating DRed against preceding =ee2c6ef=.
+All gates were fixed before timing and pass: withdraw CPU 122 -> 86 us,
+alternate-source restoration 306 -> 128 us, discarded preview 154 -> 115 us,
+each winning 20/20 pairs. Allocation falls 18.2%, 27.5% and 14.4%. The small
+control worsens 12 -> 14 us and 36176 -> 40592 bytes, within preset tolerances.
+This is not a whole-solver or public certificate speedup claim.
+
+The three existing height consumers also pass unchanged gates after the shared
+protocol migration. They retain the previously documented transient allocation
+tradeoff. Six native modules pass 56 Cases and final =OK=; the four production
+files and three native witnesses pass ASP Policy with zero findings. SDK build
+options are unchanged. Raw receipts remain under =.cache/ascent/support-cut/=.
+Initial support admission, public certificate construction/verification and
+broader solver execution remain separate audit work; this unit closes retained
+withdrawal propagation and its complete lifecycle controls.

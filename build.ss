@@ -93,6 +93,8 @@
     "candidate/funs"
     "candidate/provenance"
     "candidate/provenance-graph"
+    "candidate/support-dependencies"
+    "candidate/support-cut"
     "candidate/support-height"
     "candidate/provenance-maintenance"
     "candidate/annotations"

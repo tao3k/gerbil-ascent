@@ -938,3 +938,24 @@ use minimum. This is an algorithm/lifetime boundary, not cosmetic nesting remova
 implementation, native boundary checks and fixed gates. Large consumer CPU falls
 82.6%/81.9%; invocation-owned indexes increase transient allocation. Claims exclude
 public proof production/verification and full solver throughput.
+
+* Study: share dependency protocol across complete support flows
+
+Gerbil's final typed internal records (=std/struct/lru.ss:21-27=) and constructor
+owned identity tables (=compiler/optimize-base.ss:24-29=) guide the next boundary:
+withdrawal and height share =support-rule= plus dependency admission, while each
+algorithm owns its table, queue and labels. A private positional protocol is
+enough here; public extensible dispatch is not required for a pure propagation
+algorithm. Native =until= expresses work exhaustion and =andmap= admits only
+the premises actually inspected. Repeated premise occurrences remain explicit.
+
+The maintenance owner validates and copies state before either phase, then
+publishes ordered rows only after both phases complete. A discarded preview or
+exhausted budget cannot mutate the original owner. Founded seeds, rather than
+cyclic reachability alone, drive restoration. This coherent lifetime and
+algorithm boundary replaces both repeated DRed scans.
+
+[[file:../../t/performance/support-cut/README.org][Complete withdrawal qualification]] records frozen consumers, independent truth,
+fixed gates and height controls. Large retained consumers improve CPU and
+allocation; the small consumer has measured overhead. No solver or certificate
+verification claim is derived from these intervals.

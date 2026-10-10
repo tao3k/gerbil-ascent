@@ -1,14 +1,11 @@
 ;;; -*- Gerbil -*-
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+(import "support-dependencies.ss")
 (export grounded-support-heights)
 
 ;;; Private graph computation over already verified support. A call owns its
 ;;; dependency table, labels and pending spine; no annotation survives a subcut.
-;; : (forall (n) (-> n [n] HeightRule))
-;; : (-> NodeId PremiseIds HeightRule)
-(defstruct height-rule (head inputs) final: #t)
-
 ;; grounded-support-heights
 ;; : (forall (n s) (-> [(GroundedEdge n s)] (Membership n) (Membership s) (-> Void) (HeightTable n)))
 ;; : (-> GroundedEdges NodeMembership SourceMembership (-> Void) HeightTable)
@@ -39,7 +36,7 @@
                               => (lambda (height) (set! maximum (max maximum height)) #t))
                              (else #f))) inputs)
              maximum)))
-    (def (relax-rule! (rule :- height-rule))
+    (def (relax-rule! (rule :- support-rule))
       (probe!)
       (cond ((body-height rule.inputs) => (lambda (height) (improve! rule.head (+ height 1))))))
     ;; Finish dependency admission before processing seeds. Sources and empty
@@ -51,12 +48,8 @@
          (when (and (hash-get alive head)
                     (not (and (eq? kind 'source) (hash-get removed label))))
            (if (eq? kind 'rule)
-             (let (rule (make-height-rule head inputs))
-               (if (null? inputs) (improve! head 1)
-                 (for-each (lambda (id)
-                             (probe!)
-                             (hash-put! dependents id
-                               (cons rule (or (hash-get dependents id) [])))) inputs)))
+             (if (null? inputs) (improve! head 1)
+               (index-support-rule! dependents head inputs probe!))
              (improve! head 0))))) edges)
     (until (null? pending)
       (let (id (car pending))

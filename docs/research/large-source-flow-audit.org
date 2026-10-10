@@ -262,3 +262,28 @@ admission remain intact. No early node-only memoization or environment-blind
 lowered-operator sharing is introduced. Generated types without matching owned
 identity conservatively rebuild. Public fragment export/source-handle indexing
 and other unmeasured engine flows remain separate audit work.
+
+* Follow-through: construction-owned declaration names
+
+The public declaration-name unit now has one invocation-owned membership cursor
+and one frozen Fragment export resolver. The cursor reads POO name slots only
+as far as each handle requires, preserving first-force order and earlier invalid
+or duplicate handle diagnostics. It reuses already observed names within that
+construction; fresh constructors inspect fresh declarations. Export admission
+remains ordered, copies immutable symbol values, and publishes a private lookup
+table without retaining the caller's mutable association spine. Public root
+validation remains immediate.
+
+Frozen complete consumers show Program construction CPU decreasing 16.1% and
+export-dense Fragment construction/resolution CPU decreasing 28.8%. All five
+fixed A/B gates pass in 15.90 seconds. Cold evaluation is a control; these results
+do not establish a general solver improvement. Cold, small and empty allocation
+increases remain recorded within the unchanged regression gates. See
+[[file:../../t/performance/declaration-names/README.org][declaration names receipts]] for scale, frozen source identity and full measurements.
+
+Three independent native Suites run concurrently and pass 18 Cases in 39.62
+seconds, including Candidate's 512-graph corpus. Cases preserve lazy name-slot
+observation, first errors, caller mutation isolation and ordered complete outputs.
+The production owner passes ASP Policy with zero findings. This closes the
+public export/source-handle indexing unit; retained engine execution ownership
+and the other unmeasured audit flows remain open.

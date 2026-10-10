@@ -506,3 +506,24 @@ oracle remain in cache. Neither failure changes a performance gate.
 See [[file:../../t/performance/declaration-summary/README.org][declaration summary qualification]] for complete native summary construction
 and descriptor consumption, independent controls and finite ordered-graph
 comparisons. Duplicate-heavy construction gains are not public solve gains.
+
+* Declaration lookup: own the index and preserve observation order
+
+Gerbil compiler =optimize.ss:28-35= creates mutator/type tables inside the
+compilation invocation. Pinned POO =object.ss:196-205= memoizes a slot's first
+successful value on its instance. Together these support a construction-owned
+declaration membership predicate: keep a private remaining cursor and observed
+name table, advance only until the current request matches, and reuse observed
+names for subsequent requests. Eagerly collecting every name would force slots
+beyond an earlier success or invalid handle. The predicate owns lookup mechanics;
+the caller keeps symbol, duplicate and declaration checks in their original order.
+
+For Fragment exports, ordered admission finishes before publishing a resolver.
+Store immutable label/handle symbols in a private identity table rather than
+retain mutable caller pairs. Each constructor starts fresh. This separates
+admission, lookup and publication without adding a runtime dispatch hierarchy
+to a pure lookup operation. Public POO validation still checks the complete root.
+
+See [[file:../../t/performance/declaration-names/README.org][declaration lookup qualification]] for matched full consumers, callback traces,
+diagnostic precedence and mutation controls. Allocation costs on small/empty
+inputs remain explicit; lookup complexity alone is not a performance receipt.

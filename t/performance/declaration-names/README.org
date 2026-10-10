@@ -1,0 +1,93 @@
+#+title: Construction-owned declaration names
+
+* Source and production ownership
+
+Frozen =reference.ss= is =program/objects.ss= at =36bc956= (full revision in
+=benchmark.ss=), original blob =8f582e41d2aae92b155c323c9081a5d0f728e5f3=.
+Only its relative types import is redirected to =:gerbil-ascent/program/types=.
+Both consumers use the same current POO contracts, relation declarations and
+native evaluator. Timed public constructors retain complete immediate validation.
+
+Gerbil =1cfb032= =compiler/optimize.ss:28-35= owns lookup facts per invocation.
+POO =gerbil-poo/object.ss:196-205= memoizes a slot's first successful value.
+Apply these concrete contracts to one declaration preparation flow:
+
+- Fragment export admission checks associations in original order, retaining
+  only immutable label/handle symbols in one private identity table. The table
+  stops changing before its resolver is published. Input pair mutation cannot
+  rewrite the resolver; lookup and duplicate detection no longer rescan lists.
+- Source handle admission owns a seen-symbol table and a lazy declaration-name
+  predicate. The cursor advances only as far as each requested handle needs;
+  cached slot values retain the original first-force order. It does not eagerly
+  force names past a satisfied request or an earlier duplicate/type error.
+- The returned source-handle list preserves input order and owns its spine.
+  Declaration lookup indexes are local to one construction; later constructions
+  observe the current declarations and refined POO objects.
+
+The original public validation/extension axes remain with POO. No validation
+cache, private inert shortcut or engine update policy is added here.
+
+* Complete consumers and fixed gates
+
+Relations and export inputs are prepared outside clocks. Every timed call uses
+a fresh public Program or Fragment, validates its complete declaration tree and
+forces the ordered handles plus every relation name/arity/source-row field.
+Fragment calls additionally resolve every export; cold calls create a fresh
+public Program, execute native evaluation and force all source results.
+Independent input/export/set-truth checks run outside performance clocks.
+
+| Scenario | Relations | Exports | Consumer |
+| program | 512 | 512 prepared | Program construction and ordered publication |
+| fragment | 64 | 2048 | Fragment construction and all export resolution |
+| cold | 64 | 64 prepared | Public Program construction, native cold solve and all rows |
+| small | 2 | 2 | Full Fragment consumer |
+| empty | 0 | 0 | Full empty Fragment consumer |
+
+Input/derived/output budgets are 4096. Targets require <=90% baseline CPU and
+>=16/20 wins; cold/small/empty controls allow <=110% plus 20 microseconds.
+All allocation gates allow <=110% plus 4096 bytes. Gates were fixed before
+sampling. Twenty alternating CPU pairs retain natural GC; ASP
+=benchmark-run/result= separately admits twenty optimized complete consumers.
+Five forced-GC allocation pairs use monotone cumulative VM statistic 16. Every
+observation matches the frozen complete consumer projection.
+
+* Local accepted receipts
+
+| Scenario | Old CPU us | New CPU us | Wins | Old bytes | New bytes | Real s |
+| program | 111698 | 93708 | 16/20 | 182171344 | 182169040 | 12.03 |
+| fragment | 17690 | 12603 | 20/20 | 23464288 | 23100992 | 2.31 |
+| cold | 13227 | 12693 | 16/20 | 23259152 | 23278352 | 1.45 |
+| small | 654 | 645 | 10/20 | 950144 | 958064 | 0.08 |
+| empty | 79 | 80 | 7/20 | 239264 | 247664 | 0.03 |
+
+All five fixed gates pass in 15.90 seconds. Complete public Program construction
+CPU decreases 16.1%; export-dense Fragment construction/resolution decreases
+28.8%. Cold solve is a control, not a claimed general solver speed improvement.
+Cold/small/empty allocation increases remain visible within the fixed bounds;
+empty adds 8400 bytes and one microsecond at these medians. The production owner
+passes native ASP Policy with zero findings.
+
+Three independent native Suites pass 18 Cases in 39.62 seconds: declaration names
+(6), POO primitives (3), and Candidate flow (9). Candidate includes all 512
+directed three-node graphs. Every Suite has MODULE-OK, HARNESS-OK and OK;
+the supervisor exits zero after joining all children. Computed name callbacks,
+first-error diagnostics, mutable caller spines and fresh refined declarations
+are checked against the frozen constructor or an independent expected value.
+
+* Reproduction and evidence boundaries
+
+Use existing repository Gerbil package/load paths and Darwin OpenSSL library path.
+=gxi t/performance/declaration-names/build.ss <absolute .gerbil/lib> <binary>=
+builds the runner; append =qualify= to link native Suites. Run the runner
+=<scenario> <receipt-path>= sequentially. Qualification uses independent native
+processes, capacity =min(cpu-count,suite-count)=, ordered Cases per Suite, and
+joins every child before propagating failure. No test behavior enters build.ss.
+
+An initial frozen-reference build rejected its relative types import; the next
+whole-workspace artifact guard correctly rejected concurrent application edits.
+The accepted build binds the actual program/core/table/candidate source closure,
+these native fixtures and their Candidate reference imports. Unrelated concurrent
+application/proof/workflow changes stay outside this closure. Canonical production
+artifact admission is unchanged. Logs, executables, failures and raw samples stay
+under ignored =.cache/ascent/declaration-names/=; these receipts are local native
+evidence, not remote CI qualification.

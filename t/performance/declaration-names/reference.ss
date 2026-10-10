@@ -10,7 +10,7 @@
                  gerbil-ascent-hash-index-provider)
         (only-in :gerbil-ascent/table/storage
                  gerbil-ascent-set-storage-provider)
-        (only-in "types.ss"
+        (only-in :gerbil-ascent/program/types
                  GerbilAscentRelationContract
                  GerbilAscentLatticeContract
                  GerbilAscentTermContract
@@ -446,52 +446,38 @@
 (def (fragment-export-resolver export-values)
   (unless (list? export-values)
     (error "invalid ASCENT fragment exports" export-values))
-  (let (entries (make-hash-table-eq))
-    (for-each
-      (lambda (entry)
+  (let loop ((remaining export-values) (seen []) (copied []))
+    (if (null? remaining)
+      (let (entries (reverse copied))
+        (lambda (label)
+          (let (entry (assq label entries))
+            (unless entry
+              (error "unknown relational fragment export" label))
+            (cdr entry))))
+      (let (entry (car remaining))
         (unless (and (pair? entry)
                      (symbol? (car entry))
                      (symbol? (cdr entry))
-                     (not (hash-get entries (car entry))))
+                     (not (memq (car entry) seen)))
           (error "invalid or duplicate ASCENT fragment export" entry))
-        ;; Both symbols are immutable. Retain their values, never the caller's
-        ;; association spine, and freeze the table before resolver publication.
-        (hash-put! entries (car entry) (cdr entry))) export-values)
-    (lambda (label)
-      (or (hash-get entries label)
-          (error "unknown relational fragment export" label)))))
-
-;;; POO slots memoize their first value. Advance the declaration cursor only
-;;; as far as each request needs, retaining the original first-force order.
-;;; This index belongs to one construction; later calls inspect fresh objects.
-;; : (forall (a) (-> [a] (-> Symbol Boolean)))
-;; : (-> RelationDeclarations DeclaredNamePredicate)
-(def (declared-name-membership relations)
-  (let ((remaining relations) (names (make-hash-table-eq)))
-    (lambda (name)
-      (or (hash-get names name)
-          (let scan ()
-            (and (not (null? remaining))
-                 (let (found (.ref (car remaining) 'name))
-                   (set! remaining (cdr remaining))
-                   (hash-put! names found #t)
-                   (or (eq? found name) (scan)))))))))
+        (loop (cdr remaining)
+              (cons (car entry) seen)
+              (cons (cons (car entry) (cdr entry)) copied))))))
 
 (def (checked-source-handles relations source-handle-values)
   (unless (list? source-handle-values)
     (error "invalid ASCENT source handles" source-handle-values))
-  (def seen (make-hash-table-eq))
-  (def declared? (declared-name-membership relations))
-  (let loop ((remaining source-handle-values) (copied []))
+  (let loop ((remaining source-handle-values) (seen []))
     (if (null? remaining)
-      (reverse copied)
+      (reverse seen)
       (let (name (car remaining))
         (unless (and (symbol? name)
-                     (not (hash-get seen name))
-                     (declared? name))
+                     (not (memq name seen))
+                     (ormap (lambda (relation)
+                              (eq? (.ref relation 'name) name))
+                            relations))
           (error "invalid or duplicate ASCENT source handle" name))
-        (hash-put! seen name #t)
-        (loop (cdr remaining) (cons name copied))))))
+        (loop (cdr remaining) (cons name seen))))))
 
 (def (gerbil-ascent-fragment relation-values rule-values
                              (export-values []) (source-handle-values []))

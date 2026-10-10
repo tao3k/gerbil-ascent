@@ -97,6 +97,7 @@ remain separate implementation requirements.
 * Local validation receipts
 
 - Eight native Cases, including all 512 shared inputs, passed in 10 seconds;
+  the final nonempty-source-handle control also passed all eight Cases in 7 seconds;
   the existing nine-Case scoped composition regression passed in 9 seconds.
 - Quint explored 1,024 states; each of four deliberate mutations failed its
   required invariant with exit 12; the complete harness exited 0.

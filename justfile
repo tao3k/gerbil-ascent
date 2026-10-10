@@ -56,15 +56,20 @@ _test-file path heap='2G':
     export GERBIL_PATH="{{ gerbil_package_prefix }}"
     export GERBIL_LOADPATH="${ASCENT_TEST_LIBRARY:+$ASCENT_TEST_LIBRARY:}${GERBIL_LOADPATH:+$GERBIL_LOADPATH:}{{ justfile_directory() }}"
     test_module="{{ path }}"
+    test_args=(-v 5 "$test_module")
     if [[ -n "${ASCENT_TEST_LIBRARY:-}" ]]; then
         compiled="$ASCENT_TEST_LIBRARY/gerbil-ascent/${test_module%.ss}.ssi"
         test -f "$compiled"
         test_module="$compiled"
+        test_args=(-v 5 "$test_module")
         runner=({{ gxi_command }} {{ gerbil_test_runtime_options }} :gerbil/tools/gxtest)
+    elif [[ -d "$test_module" ]]; then
+        runner=({{ gxi_command }} {{ gerbil_test_runtime_options }} tools/test-modules.ss batched "{{ heap }}")
+        test_args=("$test_module")
     else
         runner=({{ gerbil_command }} -:max-heap={{ heap }},debug=q test)
     fi
-    timeout "${ASCENT_GXTEST_TIMEOUT:-120s}" "${runner[@]}" -v 5 "$test_module" 2>&1 | tee "$output_file"
+    timeout "${ASCENT_GXTEST_TIMEOUT:-120s}" "${runner[@]}" "${test_args[@]}" 2>&1 | tee "$output_file"
     if grep -E 'ERROR (CHECK|CASE|HARNESS|MODULE)|Heap overflow|Stack overflow' "$output_file" >/dev/null; then exit 1; fi
     awk -f "{{ justfile_directory() }}/tools/assert-test-cases.awk" "$output_file"
     if [[ -d "$test_module" ]]; then grep -F 'MODULE-OK ' "$output_file" >/dev/null; else grep -Fx "MODULE-OK $test_module" "$output_file" >/dev/null; fi
@@ -72,7 +77,7 @@ _test-file path heap='2G':
     grep -x 'OK' "$output_file" >/dev/null
     printf '[ascent-test] PASS %s (%ss)\n' "{{ path }}" "$((SECONDS - started))"
 
-# Ordinary test discovery and execution belong to Gerbil.
+# Native GxTest owns every Suite; the Scheme pool uses GERBIL_BUILD_CORES for directories.
 test heap='2G':
     ASCENT_GXTEST_TIMEOUT="${ASCENT_GXTEST_TIMEOUT:-180s}" just test-file t/qualification "{{ heap }}"
 
@@ -91,7 +96,7 @@ test-performance-contracts: prepare-test-library
     for name in ascent-withdrawal-support-performance ascent-change-plan-performance ascent-source-cut-allocation ascent-component-index-performance ascent-actor-credit-performance ascent-trrel-uf-performance ascent-steensgaard-performance ascent-relation-view-performance scheme-library-lifecycle-performance; do
         modules+=("$library/$name-test.ssi")
     done
-    {{ test_library_environment }} timeout "${ASCENT_GXTEST_TIMEOUT:-120s}" {{ gxi_command }} -:max-heap=2G,debug=q tools/test-performance-contracts.ss "${modules[@]}" 2>&1 | tee "$output"
+    {{ test_library_environment }} timeout "${ASCENT_GXTEST_TIMEOUT:-120s}" {{ gxi_command }} -:max-heap=2G,debug=q tools/test-modules.ss isolated 2G "${modules[@]}" 2>&1 | tee "$output"
     if grep -E 'ERROR (CHECK|CASE|HARNESS|MODULE)|Heap overflow|Stack overflow' "$output" >/dev/null; then exit 1; fi
     awk -f tools/assert-test-cases.awk "$output"
     test "$(grep -c '^MODULE-OK ' "$output")" -eq "${#modules[@]}"

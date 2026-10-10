@@ -202,7 +202,7 @@ or whole-provider performance.
 
 The combined nine-Suite GxTest hit its unchanged 120-second deadline during
 the older change-plan Suite, before the new support Suite ran. The gate now
-uses =tools/test-performance-contracts.ss= with the declared ASP testing memory
+uses =tools/test-modules.ss= with the declared ASP testing memory
 and process-isolation profiles. Every child is the standard native GxTest with
 2 GiB; each Suite runs in a fresh process. Existing Scheme workgroups and ASP's
 native core-capacity projection dispatch independent Suites concurrently;

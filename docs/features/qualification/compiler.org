@@ -8,7 +8,8 @@ source dates and qualification boundaries. Current evidence is commit-specific.
 * Standard test entry and native source inventory (2026-10-08)
 
 Current commands are =just test= and =just test-performance-contracts=.
-Ordinary semantic Suites execute once through upstream GxTest source discovery.
+Ordinary semantic Suites execute once through upstream GxTest. The current
+source dispatch is described in the 2026-10-10 entry below.
 The duplicate full =test-compiled= pass was removed on 2026-10-09. Performance
 contracts retain compiled consumers, and DSL closure keeps its native executable
 and source-binding checks. The semantic roster and assertions are unchanged.
@@ -16,7 +17,7 @@ and source-binding checks. The semantic roster and assertions are unchanged.
 =just prepare-test-library= prepares only native performance consumer Suites,
 reference/support modules and production dependencies using upstream =std/make=.
 It no longer precompiles the entire semantic Suite roster. Compiler capacity
-comes from ASP's machine-capacity projection; no project test scheduler is added.
+comes from ASP's machine-capacity projection.
 CI still requires =production-rebuilt=0= after the production build. Existing
 source, performance and AOT deadlines remain unchanged.
 
@@ -534,3 +535,64 @@ isolation and second-initialization checks. This verifies worker execution with
 reusable plans; existing fresh solve/admission checks retain their own owner.
 The change addresses aggregate test work without extending the 120-second
 compiled semantic deadline. See [[file:../withholding/acceptance.org][the rejected initial CI and current boundary]].
+
+* Standard source qualification through native batches (2026-10-10)
+
+Exact revision =bd77446= passed formal and all three oracle checks but failed
+Scheme: the single source-directory process exhausted its unchanged 180-second
+command deadline while still completing BYODS assertions. The scoped group
+corpus completed in approximately one second; no stopped Case or semantic
+mismatch preceded the deadline. This is a failed aggregate qualification receipt.
+
+The existing compiled-performance runner is now =tools/test-modules.ss=.
+It supports source directories and explicit compiled modules. Directory file
+selection preserves native GxTest's flat =*-test.ss= boundary; each native
+GxTest child still owns import validation, exported Suite/Case discovery,
+assertions and final verdict. Ordinary =just test= selects the declared ASP
+batch profile. =testing-interface-test-file-batches= balances compatible files
+using =GERBIL_BUILD_CORES= and machine capacity. No second concurrency knob or
+Bash discovery/scheduling loop is introduced. Performance consumers keep the
+process-isolation profile and sequential matched pairs inside each Suite.
+
+Every child retains the existing 2 GiB heap ceiling. The ordinary parent keeps
+its 180-second total deadline; performance keeps 120 seconds. No corpus or
+assertion is removed, no extra compilation pass is introduced, and single-file
+=just test-file= keeps the normal Gerbil dispatcher. The coordinator copies
+real Case/module/progress output live, then drains separate UUID-owned batch
+logs contiguously for the existing Case audit. Worker failures are captured in
+separate owner slots; after the pool quiesces and logs drain, the first typed
+process failure is raised. =MODULE-OK= or =HARNESS-OK= cannot conceal a child
+whose native =main= returns nonzero.
+
+An intermediate per-module process implementation completed 117/123 local
+source modules and still exceeded 180 seconds. That rejected attempt showed
+startup/import repetition remained significant. Native compatible batching
+replaces that attempt; it does not widen its deadline. A first dispatch probe
+also rejected misplaced =-v= arguments; the directory coordinator receives
+its own arguments while each child receives native verbosity 5.
+
+Intentional failure with a healthy sibling verifies that both logs are retained,
+the healthy sibling completes, and the parent still rejects the run. An ordinary
+export without a Suite verifies that zero discovered Cases remain a failure.
+Temporary injected failures are not part of the committed source roster.
+Exact-head Linux CI remains a separate qualification gate from local receipts.
+
+** Local receipts and their limits
+
+The native batched source entry passed all 123 modules / 1,070 Cases in
+104 seconds, with final =OK= and exit zero under the unchanged 180-second
+bound. Native capacity selected 12 workers and 12 compatible batches. This
+shared-checkout roster includes the concurrent retained-source-snapshot
+feature, subsequently committed in =abe32db=. Source versus compiled
+qualification remains distinct; the ordinary pass did not compile a second
+semantic Suite roster.
+
+An isolated compiled relation-view performance module passed its three Cases
+through the promoted runner. A prior two-module compiled probe passed four
+Cases, including library lifecycle. The intentional failed Case with its
+healthy sibling returned nonzero after both logs drained; the healthy Case
+completed. A valid module exporting an ordinary value and no TestSuite was
+rejected by the Case audit with exit 1. These checks establish error propagation,
+complete discovery and dispatch behavior, not a matched throughput speedup.
+The rejected per-module run and the passing batched run had differing shared
+host load; their elapsed times must not be promoted into an end-to-end ratio.

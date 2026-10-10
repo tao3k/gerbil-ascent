@@ -124,12 +124,16 @@ results. They do not certify this migration or a later commit. Final-commit
 GitHub checks remain the independent delivery gate. No new model-provider calls,
 Scheme runtime changes or performance benefits are claimed by this migration.
 
-* Execution feedback qualification (2026-10-09)
+* Execution feedback qualification (2026-10-10)
 
 [[file:../candidate-feedback/acceptance.org][ExecutionFeedback]] is registered in the existing all/Nonmembership gates.
-The finite correct configuration explores 128 distinct states. Stale binding,
-partial completion, omitted missing rows and omitted extra rows each violate
-the designated invariant (exit 12). This new feedback model is additional to
+The finite correct configuration explores 2,048 distinct states. Stale/partial
+candidate or gold qualification, a changed query and omitted missing/extra
+rows each violate the designated invariant (exit 12). Seven corresponding
+production Scheme Cases use the same mutation identifiers, real executor
+receipts and exact refusal/difference assertions. Lean states the matching
+qualification and set-difference laws; the acceptance page records the
+abstraction and source-refinement boundary. This feedback model is additional to
 the historical migration inventory above.
 
 * Whole-batch withholding qualification (2026-10-09)

@@ -55,6 +55,41 @@ itself can match: this explicitly preserves the distinction between executor
 agreement and natural-language intent. These are specification controls, not
 raw model responses or a KGQA population score.
 
+* Scheme, Lean and Quint correspondence
+
+The seven injected faults are engineering obligations, not a count of found
+production bugs. Each now has an independently named native Case using actual
+=reasoning-attempt= receipts and the production =reasoning-compare-attempts= API.
+No fabricated receipt or replacement admission function is used. The Case
+suffix is identical to the Quint =Mutation= value, so CI reports can be joined
+by that identifier.
+
+| Quint mutation / native Case suffix | Required production behavior | Scheme owner | Lean semantic obligation |
+|-----------------------------------+------------------------------+--------------+--------------------------|
+| stale | Identical rows from an old candidate generation are inconclusive, with empty differences | receipt-feedback-reason | comparison_requires_candidate |
+| partial | A genuinely unfinished candidate cannot be graded | receipt-feedback-reason | comparison_requires_candidate |
+| missing | Global exclusion loses city 0; return exactly that missing row and mismatch | compare-qualified-rows | Missing; mismatch_witness; no_differences_iff_exact |
+| extra | Omitted exclusion adds city 2; return exactly that extra row and mismatch | compare-qualified-rows | Extra; mismatch_witness; no_differences_iff_exact |
+| referenceStale | Identical gold rows from an old generation are inconclusive | reasoning-compare-attempts | comparison_requires_reference |
+| referencePartial | A genuinely unfinished gold attempt cannot grade a completed candidate | reasoning-compare-attempts | comparison_requires_reference |
+| query | Equal tuple arity with changed query constant is inconclusive | reasoning-compare-attempts | comparison_requires_reference |
+
+Every native refusal Case also requires empty missing/extra lists. The
+missing/extra Cases require completed receipts and independently fixed exact
+row expectations. These tests fail if a corresponding observable gate or
+difference is lost. The original corpus still exercises duplicate rows,
+binding content, malformed references and detached publication.
+
+The model uses finite sets and Boolean qualification premises; the production
+implementation derives those premises from snapshots, digest binding and native
+execution status. This is a documented abstraction correspondence with native
+regression controls, not automatic execution of a TLC-generated trace and not
+a proof of the Scheme compiler, digest implementation or hash-table refinement.
+A counterexample that violates actual behavior must become a failing native
+regression, an owner-scoped repair and a rerun of all corresponding gates.
+An injected fault already rejected by production remains a regression control;
+it does not justify an artificial production edit.
+
 * Assurance correspondence
 
 [[file:../../../packages/proofs/lean/ExecutionFeedback.lean][Lean laws]] establish absence of both differences iff extensional equality,
@@ -82,7 +117,8 @@ it. Additional controls cover withdrawal/current generation, proposal mismatch,
 undeclared helper diagnostics, refused execution, duplicate rows, malformed and
 cyclic references, material bound and detached differences.
 
-The original four Cases and four added comparison Cases pass locally. Focused
+The original four Cases, four comparison Cases and seven named correspondence
+Cases pass locally (15 total). Focused
 Lean kernel checking and the expanded Quint gate also pass. Remote
 whole-revision CI is a separate delivery gate. No model-generated proposal,
 Souffle corpus execution, published DB26 score or general equivalence is claimed.

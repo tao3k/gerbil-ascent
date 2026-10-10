@@ -7,7 +7,8 @@
                  reasoning-attempt reasoning-receipt-status reasoning-receipt-rows
                  reasoning-receipt-proof reasoning-receipt-nonmembership
                  reasoning-receipt-diagnostics reasoning-diagnostic-code))
-(export ascent-candidate-feedback-test ascent-scoped-attempt-feedback-test)
+(export ascent-candidate-feedback-test ascent-scoped-attempt-feedback-test
+        ascent-feedback-correspondence-test)
 (def (append-map f rows) (apply append (map f rows)))
 (def edges '((0 1) (0 2) (1 0) (1 2) (2 0) (2 1)))
 (def (graph mask)
@@ -177,3 +178,56 @@
         (set-car! (car (reasoning-feedback-missing f)) 9)
         (check-equal? (reasoning-feedback-missing
                        (reasoning-compare-attempts source p r gold reference)) '((0)))))))
+
+;;; Each Case ID is the matching ExecutionFeedback Quint mutation. These
+;;; controls call the production Scheme API with real executor receipts; they
+;;; do not construct a synthetic receipt or reimplement its admission gate.
+(def (check-feedback-correspondence fault)
+  (let* ((source (scoped-source 1)) (gold (scoped-proposal 'gold))
+         (reference (reasoning-attempt source gold #f)))
+    (def (compare p r gp gr)
+      (reasoning-compare-attempts source p r gp gr))
+    (def (assert-refused feedback reason)
+      (check-equal? (reasoning-feedback-status feedback) 'inconclusive)
+      (check-equal? (reasoning-feedback-reason feedback) reason)
+      (check-equal? (reasoning-feedback-missing feedback) [])
+      (check-equal? (reasoning-feedback-extra feedback) []))
+    (case fault
+      ((stale referenceStale)
+       ;; Identical rows and proposals; only the source generation differs.
+       (let (old (reasoning-attempt (scoped-source 0) gold #f))
+         (if (eq? fault 'stale)
+           (assert-refused (compare gold old gold reference) 'unbound)
+           (assert-refused (compare gold reference gold old) 'reference-unbound))))
+      ((partial referencePartial)
+       (let* ((limited (append (reverse (cdr (reverse gold))) '((limits 16 1 1))))
+              (unfinished (reasoning-attempt source limited #f)))
+         (check-equal? (eq? (reasoning-receipt-status unfinished) 'complete) #f)
+         (if (eq? fault 'partial)
+           (assert-refused (compare limited unfinished gold reference)
+                           (reasoning-receipt-status unfinished))
+           (assert-refused (compare gold reference limited unfinished) 'reference-incomplete))))
+      ((query)
+       (let* ((p (scoped-proposal 'gold '(query answer 0)))
+              (r (reasoning-attempt source p #f)))
+         (check-equal? (reasoning-receipt-status r) 'complete)
+         (assert-refused (compare p r gold reference) 'query-mismatch)))
+      ((missing extra)
+       (let* ((p (scoped-proposal (if (eq? fault 'missing) 'global 'positive)))
+              (r (reasoning-attempt source p #f))
+              (f (compare p r gold reference)))
+         (check-equal? (reasoning-receipt-status r) 'complete)
+         (check-equal? (reasoning-feedback-status f) 'mismatch)
+         (check-equal? (reasoning-feedback-reason f) #f)
+         (check-equal? (reasoning-feedback-missing f) (if (eq? fault 'missing) '((0)) []))
+         (check-equal? (reasoning-feedback-extra f) (if (eq? fault 'extra) '((2)) [])))))))
+
+(def ascent-feedback-correspondence-test
+  (test-suite "ExecutionFeedback Scheme and Quint fault correspondence"
+    (test-case "ExecutionFeedback/stale" (check-feedback-correspondence 'stale))
+    (test-case "ExecutionFeedback/partial" (check-feedback-correspondence 'partial))
+    (test-case "ExecutionFeedback/missing" (check-feedback-correspondence 'missing))
+    (test-case "ExecutionFeedback/extra" (check-feedback-correspondence 'extra))
+    (test-case "ExecutionFeedback/referenceStale" (check-feedback-correspondence 'referenceStale))
+    (test-case "ExecutionFeedback/referencePartial" (check-feedback-correspondence 'referencePartial))
+    (test-case "ExecutionFeedback/query" (check-feedback-correspondence 'query))))

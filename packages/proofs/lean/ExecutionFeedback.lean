@@ -52,6 +52,10 @@ def AdmittedComparison (bound complete referenceBound referenceComplete sameQuer
     (actual expected : Row → Prop) :=
   bound ∧ complete ∧ referenceBound ∧ referenceComplete ∧ sameQuery ∧ Exact actual expected
 
+theorem comparison_requires_candidate
+    (h : AdmittedComparison bound complete referenceBound referenceComplete sameQuery actual expected) :
+    bound ∧ complete := ⟨h.1, h.2.1⟩
+
 theorem comparison_requires_reference
     (h : AdmittedComparison bound complete referenceBound referenceComplete sameQuery actual expected) :
     referenceBound ∧ referenceComplete ∧ sameQuery :=

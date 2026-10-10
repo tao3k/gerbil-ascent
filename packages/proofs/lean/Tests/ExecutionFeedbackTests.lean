@@ -10,6 +10,10 @@ example : Exact (fun x : Nat => x = 1 ∨ x = 1) (fun x => x = 1) := by simp [Ex
 example (actual expected : Nat → Prop) :
     ¬ AdmittedComparison True True False True True actual expected := fun h => h.2.2.1
 example (actual expected : Nat → Prop) :
+    ¬ AdmittedComparison False True True True True actual expected := fun h => h.1
+example (actual expected : Nat → Prop) :
+    ¬ AdmittedComparison True False True True True actual expected := fun h => h.2.1
+example (actual expected : Nat → Prop) :
     ¬ AdmittedComparison True True True False True actual expected := fun h => h.2.2.2.1
 example (actual expected : Nat → Prop) :
     ¬ AdmittedComparison True True True True False actual expected := fun h => h.2.2.2.2.1
